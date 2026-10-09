@@ -18,6 +18,8 @@ Commit as `Ben-Verheven <299968296+Ben-Verheven@users.noreply.github.com>`. The 
 
 Never read the three files in one-app/data/. 5.8 MB, ~1.6M tokens; reading one ends the session. First 300 characters if you need the shape. The same goes for Pocket's `atlas-index` line: cut it away.
 
+Before touching a part, read its note: notes/INDEX.md lists them, one line each. They hold the bugs already paid for and the design choices I made, which nothing else records.
+
 Find before you read. NAMES.md gives every class and id and where it lives: grep it, never read it. MAP.md gives every section with its line number; read that range. Opening a whole room file should be a decision you can defend.
 
 Start visual questions with a picture: node tools/seed.js one-app/index.html photographs every room in a throwaway browser.
@@ -46,6 +48,6 @@ Run `python3 tools/finish.py`: indexes, lint, and every room asked whether it st
 
 Copy the repository's one-app/, tools/ and documents into my folder one-app-source-cowork, and pocket/index.html into Pocket-app-source-cowork as Pocket.html. Then close it there the OneDrive way: finish.py builds in a folder without .git. The project instructions for that way are in one-app-source-cowork/Claude outputs/project-instructions-onedrive.txt.
 
-## Memory
+## Notes, not memory
 
-Don't write one-time things to memory. Only ever write to memory what is of general use to this project, and correct any memory line a change makes untrue. Make sure that facts are not duplicated between this file, memory and the project files: they should only occur once.
+What is learnt about this project goes into notes/, in the note for that part, committed with the change. No assistant memory, which other sessions cannot see. Don't write one-time things there. Correct any line a change makes untrue. A fact occurs once: in this file, PROJECT.md, a note or a code comment, never two of them.

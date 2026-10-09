@@ -15,7 +15,7 @@ the OneDrive folder it came from is the way back, and a copy on disk is
 what that way opens. That one fact still decides most of the
 architecture.
 
-**This file is the only description of how the app works.** Four things
+**This file is the only description of how the app works.** Five things
 are written down about this project and each has exactly one job:
 
 | | |
@@ -24,6 +24,7 @@ are written down about this project and each has exactly one job:
 | **`PROJECT.md`** (this) | how the app works, and *why* each rule exists |
 | `README.md` | how Mark opens it, on which device, and how he goes back. Nothing else |
 | `MAP.md`, `NAMES.md` | generated indexes. Never hand-written |
+| `notes/` | what no code file records: bugs already paid for, and Mark's design choices, one note per part. `notes/INDEX.md` lists them |
 
 Pocket keeps its own pair beside it, for the same two jobs at its own
 scale: `pocket/POCKET.md` (how Pocket is built and changed) and

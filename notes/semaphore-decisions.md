@@ -1,0 +1,29 @@
+---
+name: brokerage-timeline-one-app
+description: Mark's decisions for the Semaphore room — the nightly agents and their Dispatches inbox, leads, cards, the Board and Coming up
+---
+
+- Went with a Supabase inbox for the Semaphore update agent: suggestions only, which he accepts or dismisses in the Semaphore room
+- Chose the combined schedule: a daily run of ~3 arenas (cut from ~10 to ~5 on 2026-09-18, to ~3 on 2026-09-30, to save usage) plus a weekly run looking for new calls and brokerage events (~35 min, at most 2 new arenas since 2026-09-30)
+- The daily watch looks only for real brokerage/matchmaking opportunities (and partner-search tools); no plain info days or call webinars unless they have a matchmaking part, and no call dates (2026-09-30); since 2026-10-06 it brings only links to those events and tools, no dates or info
+- Wants all scheduled agents (Semaphore and Atlas) to run at night, so they do not start and eat into his morning 5-hour usage window
+- Chose to allow Supabase in his organisation's network settings so the cloud agent can reach it, over the Supabase connector or a folder route
+- Chose a gatekeeper with a password of its own over handing the agent the app's Supabase key, so the agent can only read a trimmed board and add suggestions
+- Chose **Dispatches**, a third view beside Board and Brokerage, over findings inside the arena panel or cards on the brokerage wall
+- Chose that accepting an uncertain date puts it straight on the board marked uncertain, rather than opening the date editor prefilled
+- Built and running since 2026-09-18: the Dispatches view, the `semaphore_inbox` table, the `semaphore-agent` edge function, and two scheduled tasks (weekly Mon 01:00, daily weekdays 01:30 his time; the Atlas tasks follow at 02:00 Mon/Wed/Fri and Tue 02:30; all set in UTC, so an hour earlier after the October clock change)
+- Wants a lead presented the same way everywhere; chose the Ledger's lead card as the standard, shut until pressed in both rooms (over always-open in the Semaphore, or due-ones-open), with each room keeping its own colours (2026-10-06)
+- Wants a lead's steps drawn as a "ruit": Spotted splits into two contact paths (researchers contacted / lead contacted) that merge again at Talking; keep the name "Talking"; the shut lead card shows the match, with match and date less prominent than the name; chose the layout with the ruit at the left of both lines (2026-10-06)
+- A lead's day no longer raises its arena card on the Semaphore wall; the Ledger's board carries lead days now (2026-10-06)
+- Wants what the agents brought marked subtly as new, on both the rotation card and the slide-in, kept in sync; and wants to reorder links on both (2026-10-06)
+- Chose for the rotation cards a phase line ("Open · next deadline … · in N d") over a strip of time (calls as bars, brokerage diamonds, today line), with links in a separate band; card fronts sized to content (2026-10-07)
+- Chose for the Board a status column beside the names (Open / Opens / Between), word only with no day count, sortable by status in the order Opens, Open, Between; brokerage marks a bit smaller (2026-10-07)
+- Chose a dashed outline as the one way to draw "uncertain" across the whole Semaphore (cards, board, legend), replacing the board's haze (2026-10-07)
+- The view switcher reads Cards · Board · Coming up (Coming up added 2026-10-08); Dispatches is not in it — chose to place it as its own button on the right, beside the cloud chip, since it is an inbox and not a way of looking at the board (2026-10-09)
+- Removed the Semaphore's Filters panel and everything in it (type/tag/certainty/layer filters, the time-window controls, the colour key), plus the Quick add and Types header buttons; added a Search button in their place. Chose that the board always shows last month plus the next 12 months (2026-10-09)
+- "Both contacted" leads are the most important and go on top of the stack (2026-10-08)
+- Wants a day's leads shown when clicking a day in the Ledger's todo overview, but not at once — behind an expandable button or line (2026-10-08)
+- Chose Pocket's spine shape for the Semaphore's Coming up, as a top-level view beside Board rather than a Cards sub-tab; removing an event there must remove it from the whole app (2026-10-08)
+- Wants every brokerage event linked to its own website (a `url` on the date); chose a nightly catch-up task doing 2 events a night, soonest first, which deletes itself when done ("Semaphore event websites catch-up"); the websites arrive in Dispatches as link findings carrying `replaces_date_id` (2026-10-08)
+- Pressing a brokerage diamond (on the Board or a card) goes to Coming up and shows that event there, rather than opening the arena panel; brokerage events can be added from Coming up and then show everywhere (2026-10-08)
+- Wants events in Coming up stampable with days-since, the stamp kept in sync with pinned links of the same site; website buttons there must show the whole address, never cut off (2026-10-09)

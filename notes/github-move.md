@@ -1,0 +1,9 @@
+---
+name: master-app-one-app-project
+description: Why One App moved to GitHub, and the conditions Mark set for it: free plan, data behind a login, as efficient as before, and a way back
+---
+
+- Wants to turn One App into a cloud project on GitHub, with proper GitHub security rather than his current personal login, and to integrate Pocket into that same project; full screen on iPad/iPhone is a welcome side benefit, not the main goal (2026-10-09)
+- For the GitHub move: wants to stay on GitHub's free plan; does not mind the Atlas being public (sees it as public data); what must be private is the Supabase data, which should sit behind a login (2026-10-09)
+- Hard condition for the GitHub move: once migrated, updating and developing the app must be as efficient as now or more (token-wise included), and he wants to be able to revert to the old OneDrive way of working (2026-10-09)
+- Going with GitHub only (no Cloudflare): a public repo hosted on GitHub Pages, with the Supabase data behind a login (2026-10-09)

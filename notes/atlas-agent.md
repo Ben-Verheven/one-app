@@ -1,0 +1,14 @@
+---
+name: atlas-agent
+description: The Atlas people-watch agents — Mark's decisions on rhythm, scope and where findings land; sister of the Semaphore agent in [semaphore-decisions](semaphore-decisions.md)
+---
+
+- Wants a scheduled agent that watches the Atlas's researchers for news, especially employment at TU/e (people leaving and arriving), from TU/e pages, their own websites and other public info
+- Two rounds: a people check on a one-year cycle (1 person Mon/Wed/Fri, ~156 a year for 152 people) and a newcomer sweep of the groups twice a year (~2 groups a week, 51 groups) — set 2026-09-30 to save usage
+- Scope (settled 2026-09-23): three things and nothing else — whether someone still works at TU/e; where they sit and at what rank (group, department, full/associate/assistant professor, group leader); and research content not yet in the Atlas (interests, topics, methods, application areas), especially in their own words. No other formal accomplishments: no prizes, grants, honours, board seats, publication lists or link-collecting
+- Asked for the rank to become data in the Atlas rather than a note (2026-09-23), and chose a ten-night catch-up over letting the nightly agent fill 152 ranks two a night. That task is **Atlas rank catch-up** — nightly, ~9 people from Pure, deletes itself when nobody is left; the nightly agent keeps the rank up to date afterwards
+- The gatekeeper edge function is what lets the agents see a rank they should compare against (`rank` on roster and person, read off the edit list). A change to the app's own rank layer that the agents must know about means re-pasting `supabase/4-atlas-agent-function.ts` into Supabase — Mark does that by hand, so say so plainly when it is needed
+- Chose a findings view inside the Atlas room (accept/dismiss, like Semaphore's Dispatches) over putting them in Semaphore's Dispatches
+- Chose a fourth Atlas tab, **News**, over a News block in the left rail (compared on a mock-up sheet drawn in the real room, 2026-09-18)
+- Chose that an accepted "new info" finding is listed under "Since the database" on the dossier AND offers "add to description" (opens the editor with the passage appended for him to reword), rather than only being listed
+- Lesson from the first hand run (2026-09-18): WebFetch's free summary of a TU/e page invented "group leader" for a professor; asking it for verbatim quotes gave the truth. Both Atlas task prompts now require quotes, not summaries — keep that rule if the prompts are rewritten

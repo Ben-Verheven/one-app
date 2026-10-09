@@ -73,6 +73,7 @@ the top-right rail names the room that failed to load.
 | `CLAUDE.md` | how the assistant works here |
 | `PROJECT.md` | how the app works, and every rule about changing it |
 | `MAP.md`, `NAMES.md` | generated indexes: where everything is |
+| `notes/` | what the assistant has learnt here, and the choices you made |
 
 Your exports, the builds and the screenshots stay in OneDrive. Anyone can
 read this repository, so nothing made from your data goes into it.
