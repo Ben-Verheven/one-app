@@ -4,7 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<!-- "black", not "black-translucent": with a translucent bar iOS 26 hands a
+     home-screen app a viewport one status bar short, which left a dead band
+     under the tabs that only dragged the page. -->
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="theme-color" content="#191713">
 <meta name="apple-mobile-web-app-title" content="Pocket">
 <link rel="icon" type="image/png" href="icon.png">
@@ -44,8 +47,7 @@
   --sans:'Optima','Palatino Linotype','Book Antiqua',Georgia,serif;
   --body:'Iowan Old Style','Palatino Linotype','Book Antiqua',Georgia,serif;
   --mono:ui-monospace,'SF Mono','Cascadia Mono',Menlo,Consolas,monospace;
-  --sb:env(safe-area-inset-bottom);
-  --tabs:calc(58px + var(--sb));
+  --tabs:calc(58px + env(safe-area-inset-bottom));
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;margin:0}
@@ -87,21 +89,6 @@ a{color:inherit}
   overscroll-behavior-y:contain}
 .view{display:none;padding:2px 0 30px}
 .view.on{display:block}
-
-/* On the home screen iOS 26 can hand Pocket a viewport cut short by the
-   height Safari's own toolbar would take, and everything fixed to its
-   bottom (the tabs, the sheet) then floated over a dead strip of paper.
-   So there the frame is measured from the screen itself (fitScreen). That
-   viewport also reports no inset at the bottom, so the tabs then sat in the
-   screen's rounded corner under the home bar; --home-b puts the inset back. */
-html.fullh{--sb:max(env(safe-area-inset-bottom), var(--home-b, 0px))}
-html.fullh #stage,html.fullh #sheet{bottom:auto;height:var(--app-h)}
-html.fullh #tabs{bottom:auto;top:calc(var(--app-h) - var(--tabs))}
-/* Below that short viewport there is no scrolling list under the finger,
-   only the page itself, so a drag on the tabs pulled the whole page down
-   and it sprang back. The bars are not for dragging; the page holds still. */
-html.fullh,html.fullh body{overscroll-behavior:none}
-html.fullh #tabs,html.fullh #top{touch-action:none}
 
 /* the line under a view's top: what it holds, in the desk's italic */
 .whead{padding:14px 16px 10px;font:italic 14px/1.4 var(--body);color:var(--faint)}
@@ -380,7 +367,7 @@ input[type="search"]:focus{outline:none;border-color:var(--key)}
 /* ── the tab bar ────────────────────────────────────────────────────── */
 
 #tabs{position:fixed;z-index:40;inset:auto 0 0 0;height:var(--tabs);
-  padding-bottom:var(--sb);display:flex;
+  padding-bottom:env(safe-area-inset-bottom);display:flex;
   background:linear-gradient(180deg,#24201A,#191713);border-top:1px solid var(--line)}
 #tabs button{flex:1;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
   color:var(--faint);position:relative;font:600 9px/1 var(--sans);letter-spacing:.14em;text-transform:uppercase}
@@ -523,7 +510,7 @@ input[type="search"]:focus{outline:none;border-color:var(--key)}
 
 /* the sheet's action bar, in the thumb's reach */
 #sheet .bar{position:sticky;bottom:0;z-index:5;display:flex;gap:7px;margin:6px -16px 0;
-  padding:11px 16px calc(13px + var(--sb));
+  padding:11px 16px calc(13px + env(safe-area-inset-bottom));
   background:linear-gradient(180deg,rgba(234,226,210,0),#EAE2D2 24%);border-top:1px solid var(--line)}
 #sheet .bar button{flex:1;padding:14px 4px;text-align:center;border-radius:var(--radius);white-space:nowrap;
   font:600 10px/1 var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--ink);
@@ -552,7 +539,7 @@ input[type="search"]:focus{outline:none;border-color:var(--key)}
 #toast button:active{background:rgba(216,205,184,.12)}
 #toast.bad{border-color:rgba(239,91,76,.5)}
 /* over an open sheet the toast rises clear of the sheet's own bar */
-#sheet.up ~ #toast{bottom:calc(88px + var(--sb))}
+#sheet.up ~ #toast{bottom:calc(88px + env(safe-area-inset-bottom))}
 
 /* ── connecting ─────────────────────────────────────────────────────── */
 
@@ -2916,35 +2903,6 @@ function newLead(){
   });
 }
 
-/* see html.fullh in the style. Only on the home screen, and only while the
-   viewport is shorter than the screen, so Safari and a phone without the
-   fault keep the frame they always had. */
-function fitScreen(){
-  var home = navigator.standalone ||
-    (window.matchMedia && matchMedia('(display-mode: standalone)').matches);
-  if (!home || !window.screen) return;
-  function fit(){
-    var w = screen.width, h = screen.height;
-    var tall = innerWidth > innerHeight ? Math.min(w, h) : Math.max(w, h);
-    var root = document.documentElement;
-    root.style.setProperty('--app-h', tall + 'px');
-    /* a screen this tall has rounded corners and the home bar: 34 points
-       of it upright, 21 lying down; an older iPhone with a button has none */
-    root.style.setProperty('--home-b', (Math.max(w, h) < 812 ? 0 : tall > 500 ? 34 : 21) + 'px');
-    /* a gap wider than a toolbar is the keyboard, which is left alone */
-    root.classList.toggle('fullh', tall > innerHeight && tall - innerHeight <= 120);
-  }
-  fit();
-  ['#tabs', '#top'].forEach(function(q){
-    var n = $(q);
-    if (n) n.addEventListener('touchmove', function(e){
-      if (document.documentElement.classList.contains('fullh')) e.preventDefault();
-    }, { passive:false });
-  });
-  addEventListener('resize', fit);
-  addEventListener('orientationchange', function(){ setTimeout(fit, 300); });
-}
-
 function openArena(a, st){
   st = st || scoreOf(a) || { state:'rotate', score:0, rest:0 };
   sheet(function(b, bar){
@@ -3250,7 +3208,6 @@ $('#s-pass').addEventListener('keydown', function(e){ if (e.key === 'Enter') $('
   var stored = !!cfg;
   if (!cfg) cfg = { url:BUILT_IN.url, key:BUILT_IN.key };
 
-  fitScreen();
   draw();
   if (!auth) askLogin(stored ? 'Log in to read the cloud.' : ''); else pull();
 })();
