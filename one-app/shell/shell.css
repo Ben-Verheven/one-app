@@ -1,0 +1,769 @@
+/* ══════════════════════════════════════════════════════════════════════
+   Shell — the chrome that holds the five rooms.
+   The Ledger's gilt-on-umber is the house identity; everything else is
+   tuned to sit next to it rather than argue with it.
+   ══════════════════════════════════════════════════════════════════ */
+
+/* The house tokens. Every one of these is read below — a token nothing
+   reads is a claim about the design that the design does not make, so the
+   seven that had drifted out of use are gone and the two that were being
+   written out longhand (the gilt, and the ink the ribbon is lettered in)
+   now come from here. */
+:root{
+  --sc-umber:#211b10;           /* the ground all four rooms stand on */
+  --sc-gilt:#c9a84c;            /* the metal */
+  --sc-ink:#f5ecd8;
+  --sc-rule2:rgba(205,176,105,0.42);
+  --sc-serif:'Cinzel',serif;
+  --sc-body:'Crimson Text',serif;
+
+  /* Sepia, not charcoal: the Ledger's umber is the ground the other three
+     already stand on, so the bar stands on it too. */
+  --oa-bar:linear-gradient(180deg,#3A2F1A,#241D10);
+  --oa-bar-rule:rgba(205,176,105,.26);
+  --oa-bar-h:60px;              /* one height, fixed, in every room */
+  --oa-bar-shadow:0 5px 16px rgba(8,6,2,.34);
+  --oa-title:#C6AE79;
+  --oa-title-hi:#F5ECD8;
+  /* The quiet rank in the ribbon. Struck one step brighter than the rooms'
+     own third rank, because the ribbon's ground is lighter at its top edge
+     than any room's page and the old value read at 3.7:1 there. */
+  --oa-ctl:#AE9569;
+
+  /* Semaphore's control family, lifted whole: a slab with a light top
+     edge, a sepia rule, and a one-pixel lift on hover. Every control
+     standing in the bar wears it, whichever room it belongs to. */
+  --oa-slab:linear-gradient(180deg,rgba(255,255,255,.045),rgba(0,0,0,.14));
+  --oa-line:rgba(205,176,105,.24);
+  --oa-line2:rgba(205,176,105,.40);
+  --oa-key:#B99A5A;
+  --oa-key2:#DDC287;
+  --oa-field:rgba(14,10,4,.42);
+}
+
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;padding:0}
+body{
+  overscroll-behavior:none;
+  background:var(--sc-umber);
+  color:var(--sc-ink);
+  font:15px/1.5 var(--sc-body);
+  overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ── the line of rooms ──────────────────────────────────────────────── */
+
+/* Four marks on a line, well apart, each its own target. The room you are
+   in stands at the right-hand end, against the title; choosing another
+   walks it along to that place while the rest close up behind it. */
+
+/* A room with a modal open takes these out of the way — see Hub.veil.
+   Faded rather than hidden, so where you are is still faintly said, and
+   made unpressable: a form waiting to be answered is not the moment to
+   change rooms. The opacity is carried on the two rules' own transition
+   lists, because a second `transition` at equal specificity replaces the
+   first rather than adding to it. */
+html.oa-veiled #oa-ring,
+html.oa-veiled #oa-title{opacity:.14; pointer-events:none}
+#oa-ring{
+  position:fixed; z-index:250;
+  transition:opacity .2s ease;
+  left:var(--oa-ring-x,22px); top:0;
+  /* the multiplier is rooms − 1: the line is that many steps wide plus
+     one glyph. It and the 176px below are the only place the number of
+     rooms is written into the shell, so both move when a room is added */
+  height:var(--oa-bar-h); width:calc(4 * var(--oa-ring-step,29px) + 26px);
+}
+/* The bar carries its controls sideways when they no longer fit across, and
+   the line of rooms does not move with them — so the corner it stands in is
+   given the bar's own ground to stand on, and a control scrolling past
+   goes behind it rather than through it. --oa-clear is the width the shell
+   measured for the name; it is written on :root as the room is named. */
+#oa-ring::before{
+  content:''; position:fixed; left:0; top:0; z-index:-1;
+  /* the reset above is written `*`, which does not reach a pseudo-element:
+     said here, or the rule below lands a pixel under the bar's own */
+  box-sizing:border-box;
+  width:var(--oa-clear,176px); height:var(--oa-bar-h);
+  background:var(--oa-bar);
+  border-bottom:1px solid var(--oa-bar-rule);
+  box-shadow:var(--oa-bar-shadow);
+  pointer-events:none;
+}
+/* ── the name, written once by the shell ──────────────────────────── */
+
+#oa-title{
+  position:fixed; z-index:250;
+  left:176px; top:0; height:var(--oa-bar-h);
+  display:flex; align-items:center;
+  font:400 14px/1.4 var(--sc-serif);
+  letter-spacing:.2em; text-transform:uppercase;
+  color:var(--oa-title);
+  white-space:nowrap; cursor:default;
+  transition:color .16s ease, opacity .2s ease;
+}
+#oa-title.home{cursor:pointer}
+#oa-title.home:hover{color:var(--oa-title-hi)}
+
+/* whatever each app used to call itself, it no longer says it twice */
+.oa-hidden-mark{display:none !important}
+
+/* Two of the marks were not only names — they were holding their bar's
+   layout open. The Ledger's title was the flexible middle that pushed its
+   buttons to the right edge, and the Board's carried the auto margin that
+   held the cluster codes at the far end. With the names gone, the bars
+   have to say it themselves. */
+html #pane-callboard .tabs > *:first-child{margin-left:auto}
+
+/* the short rule that ties the standing mark to the name beside it */
+#oa-ring::after{
+  content:''; position:absolute; right:-11px; top:50%; width:11px; height:1px;
+  background:linear-gradient(90deg,rgba(205,176,105,.42),rgba(205,176,105,0));
+  opacity:0; transition:opacity .34s ease .18s;
+}
+#oa-ring:not(.walking)::after{opacity:1}
+
+.oa-g{
+  position:absolute; left:0; top:50%;
+  width:26px; height:26px; margin-top:-13px;
+  padding:0; border:0; background:none; cursor:pointer; border-radius:7px;
+  display:flex; align-items:center; justify-content:center;
+  -webkit-tap-highlight-color:transparent;
+  transform:translateX(calc(var(--slot,0) * var(--oa-ring-step,29px)));
+  transition:transform .56s cubic-bezier(.62,.03,.2,1),
+             opacity .34s ease, background-color .2s ease;
+  opacity:.40;
+}
+#oa-ring.still .oa-g{transition:none}
+.oa-g:hover{opacity:.9; background:rgba(216,205,184,.09)}
+.oa-g:focus-visible{outline:1px solid var(--oa-key); outline-offset:1px}
+.oa-g.on{opacity:1}
+.oa-g .g{display:block; transition:transform .4s cubic-bezier(.2,.8,.2,1)}
+.oa-g.on .g{transform:scale(1.22)}
+
+/* the five marks, each still its own */
+/* A pocket watch, hanging by its bow: a gold case with a white dial, which
+   is what the room was asked for. What stood here was the fleuron \2767, a
+   printer's leaf that read as ornament rather than as a thing.
+
+   Drawn as an inline SVG data URI and carried as a background, for the two
+   reasons the Notes room's hazelnut is — a case, a dial and two hands are
+   features, and border-radius cannot draw features; and a real <svg> child
+   would not take the scale .oa-g.on puts on the standing mark, while a
+   background does. Inline, so nothing is fetched and rule 2 stands. */
+.g-ledger{
+  width:15px; height:16px;
+  background:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 27'><linearGradient id='k' x1='.15' y1='0' x2='.8' y2='1'><stop offset='0' stop-color='%23F4E3B2'/><stop offset='.55' stop-color='%23C9A84C'/><stop offset='1' stop-color='%23A8792F'/></linearGradient><linearGradient id='d' x1='.2' y1='0' x2='.8' y2='1'><stop offset='0' stop-color='%23FDFAF0'/><stop offset='1' stop-color='%23D9CEAC'/></linearGradient><path d='M12 6.4V4.6' stroke='%23A8792F' stroke-width='1.6'/><circle cx='12' cy='3' r='2' fill='none' stroke='url(%23k)' stroke-width='1.5'/><circle cx='12' cy='16' r='8.4' fill='url(%23k)'/><circle cx='12' cy='16' r='6.6' fill='url(%23d)' stroke='%238A6427' stroke-width='.6'/><path d='M12 16V11.9M12 16l2.9 1.7' stroke='%233B2E16' stroke-width='1.05' stroke-linecap='round' fill='none'/><circle cx='12' cy='16' r='.75' fill='%233B2E16'/></svg>") no-repeat center/contain;
+  filter:drop-shadow(0 0 6px rgba(232,201,106,.34));
+}
+.g-semaphore{
+  width:9px; height:9px; background:#EF5B4C; border-radius:1.5px;
+  transform:rotate(45deg); transform-origin:center;
+  box-shadow:0 0 8px rgba(239,91,76,.45);
+}
+.oa-g.on .g-semaphore{transform:rotate(45deg) scale(1.22)}
+.g-callboard{
+  width:12px; height:11px;
+  background:linear-gradient(#8A8BF0 0 2.5px, transparent 2.5px 4.25px,
+                             #8A8BF0 4.25px 6.75px, transparent 6.75px 8.5px,
+                             #8A8BF0 8.5px 11px);
+  filter:drop-shadow(0 0 6px rgba(138,139,240,.42));
+}
+.g-atlas{
+  width:11px; height:11px; border-radius:50%;
+  border:1.5px solid #6FA98C;
+  box-shadow:0 0 8px rgba(111,169,140,.42);
+}
+/* Two nuts — nootjes. The room calls a note a nootje, and this pair and
+   the single one inside the room are the same drawing at two sizes.
+
+   It is a hazelnut: a rounded shell under a dark toothed cap, with a
+   stem and one crease. The cap is what carries it at this size — it is
+   the only feature that survives the shrink, and it is what stops the
+   thing reading as an egg. The first attempt was two pseudo-elements
+   with a border-radius
+   and a gradient, on the reasoning that every other mark on this line is
+   drawn in CSS — and Mark's verdict was two eggs, correctly: a smooth
+   oval with a highlight has no shell, no seam and no cap, and the eye has
+   nothing to file it under but egg. Features are what make a nut a nut
+   and border-radius cannot draw them, so this is an SVG carried inline as
+   a data URI. Inline, so nothing is fetched — rule 2 stands.
+
+   It is a background rather than a child element on purpose: a real <svg>
+   child would not take .oa-g.on's scale, and a background does. The glow
+   is a drop-shadow rather than a box-shadow for the same reason it has to
+   be — a box-shadow on a transparent element would draw a glowing
+   rectangle around the nut instead of around the nut. */
+.g-notes{
+  width:20px; height:15px;
+  background:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 26'><linearGradient id='w' x1='0' y1='0' x2='.7' y2='1'><stop offset='0' stop-color='%23F4E3B2'/><stop offset='1' stop-color='%23A8792F'/></linearGradient><linearGradient id='v' x1='0' y1='0' x2='.7' y2='1'><stop offset='0' stop-color='%23CDB278'/><stop offset='1' stop-color='%237C5820'/></linearGradient><g transform='translate(15,1) scale(.56) rotate(20 12 12)'><path d='M12 22.8c-5.5 0-9.2-4-9.2-9.2 0-4.7 3.3-8.2 9.2-8.2s9.2 3.5 9.2 8.2c0 5.2-3.7 9.2-9.2 9.2z' fill='url(%23v)'/><path d='M3.3 9.4C4.6 5 7.7 2.9 12 2.9s7.4 2.1 8.7 6.5c-2.7-1.7-5.5-2.5-8.7-2.5S6 7.7 3.3 9.4z' fill='%236B4C1C'/><path d='M12 3.1V.7' stroke='%236B4C1C' stroke-width='1.5' stroke-linecap='round'/><path d='M8.4 11c-.9 2.2-.7 4.6.7 6.4' stroke='rgba(88,60,18,.45)' stroke-width='1.1' fill='none' stroke-linecap='round'/></g><g transform='translate(-1,4) scale(.76) rotate(-13 12 12)'><path d='M12 22.8c-5.5 0-9.2-4-9.2-9.2 0-4.7 3.3-8.2 9.2-8.2s9.2 3.5 9.2 8.2c0 5.2-3.7 9.2-9.2 9.2z' fill='url(%23w)'/><path d='M3.3 9.4C4.6 5 7.7 2.9 12 2.9s7.4 2.1 8.7 6.5c-2.7-1.7-5.5-2.5-8.7-2.5S6 7.7 3.3 9.4z' fill='%238A6427'/><path d='M12 3.1V.7' stroke='%238A6427' stroke-width='1.5' stroke-linecap='round'/><path d='M8.4 11c-.9 2.2-.7 4.6.7 6.4' stroke='rgba(88,60,18,.45)' stroke-width='1.1' fill='none' stroke-linecap='round'/></g></svg>") no-repeat center/contain;
+  filter:drop-shadow(0 0 6px rgba(232,217,168,.32));
+}
+
+/* ── the Atlas's dossier, lent to the other rooms ───────────────────── */
+
+/* Visible, but only the panel: the room's own body stays hidden and the
+   pane passes clicks through, so the dossier reads as a drawer over
+   wherever you were rather than as a trip to another room. */
+#pane-atlas.oa-lending{
+  visibility:visible; opacity:1; pointer-events:none; z-index:120;
+  background:none;
+  transition:none;
+}
+#pane-atlas.oa-lending > #app,
+#pane-atlas.oa-lending > #modal,
+#pane-atlas.oa-lending > #toast{display:none}
+#pane-atlas.oa-lending #dossier{
+  pointer-events:auto;
+  box-shadow:-18px 0 48px rgba(8,6,2,.42);
+}
+
+/* ── the Call Board's reader, lent the same way ─────────────────────── */
+
+/* A project in the Ledger can name a Horizon topic, and reading that
+   topic should not be a trip to another room any more than reading a
+   researcher is. So the Board's reader is borrowed exactly as the
+   dossier is — with one difference: the reader is a modal in its own
+   room and stays one here, so its scrim is lent along with it and takes
+   the clicks that close it. */
+#pane-callboard.oa-lending{
+  visibility:visible; opacity:1; pointer-events:none; z-index:120;
+  background:none;
+  transition:none;
+}
+#pane-callboard.oa-lending > #hdr,
+#pane-callboard.oa-lending > .wrap{display:none}
+#pane-callboard.oa-lending .scrim.open{pointer-events:auto}
+#pane-callboard.oa-lending #reader{
+  pointer-events:auto;
+  box-shadow:-18px 0 48px rgba(8,6,2,.42);
+}
+
+/* ── the Semaphore's arena drawer, lent the same way ─────────────────── */
+
+/* A lead card on the Ledger opens its arena where it stands, so the
+   Semaphore's drawer is borrowed as the reader is: the board is hidden,
+   the scrim comes along to take the click that closes it, and a box the
+   drawer raises — a question, a sheet — still takes its own clicks.
+   `html` in front because the room's own ground is set at that weight
+   further down, and a lent pane must not paint it over the Ledger. */
+html #pane-semaphore.oa-lending{
+  visibility:visible; opacity:1; pointer-events:none; z-index:120;
+  background:none; min-height:0;
+  transition:none;
+}
+#pane-semaphore.oa-lending > #semscroll{display:none}
+#pane-semaphore.oa-lending .scrim.open,
+#pane-semaphore.oa-lending .modal.open{pointer-events:auto}
+#pane-semaphore.oa-lending #card{
+  pointer-events:auto;
+  box-shadow:-18px 0 48px rgba(8,6,2,.42);
+}
+
+/* ── the page change ────────────────────────────────────────────────── */
+
+/* a hairline of lamplight run along the underside of the ribbon, once,
+   as the rooms trade places */
+#oa-sweep{
+  position:fixed; z-index:240; left:0; right:0; top:calc(var(--oa-bar-h) - 1px); height:1px;
+  pointer-events:none; opacity:0;
+  background:linear-gradient(90deg,transparent,
+             rgba(232,201,106,.9) 18%, rgba(255,241,204,1) 50%,
+             rgba(232,201,106,.9) 82%, transparent);
+}
+#oa-sweep.run{animation:oa-sweep .62s cubic-bezier(.4,0,.2,1)}
+@keyframes oa-sweep{
+  0%  {opacity:0; transform:scaleX(0);   transform-origin:left}
+  22% {opacity:1}
+  60% {opacity:1; transform:scaleX(1);   transform-origin:left}
+  61% {transform-origin:right}
+  100%{opacity:0; transform:scaleX(1);   transform-origin:right}
+}
+
+#oa-toasts{position:fixed; left:14px; bottom:14px; z-index:400; display:flex;
+  flex-direction:column; gap:6px; max-width:min(420px,calc(100vw - 28px));
+  pointer-events:none}
+#oa-toasts .toast{
+  font:13px var(--sc-body); color:var(--sc-ink);
+  background:rgba(30,24,14,.94); border:1px solid var(--sc-rule2);
+  border-radius:7px; padding:7px 12px; box-shadow:0 8px 24px rgba(0,0,0,.4);
+  animation:oa-toast-in .22s cubic-bezier(.2,.8,.2,1) both;
+}
+@keyframes oa-toast-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){#oa-toasts .toast{animation:none}}
+
+/* ── stage & panes ──────────────────────────────────────────────────── */
+
+#stage{position:fixed; inset:0; z-index:1}
+
+/* Panes are laid out even when inactive — apps measure themselves at boot,
+   and display:none would hand them a zero-sized viewport. `transform`
+   makes each pane a containing block, so an app's position:fixed modals
+   land inside the room instead of over the chrome. */
+/* A room scrolls down and never sideways. Three of the four park a drawer
+   just off the right edge with `translateX(100%)`, and because the pane is
+   transformed that drawer is laid out inside the pane rather than against
+   the window — so it was extending the pane's scrollable width by its own
+   width. A sideways flick on a trackpad slid the whole Call Board 770px
+   into blank vellum. `overflow-x:clip` keeps the drawer's parking space out
+   of the scroll region without clipping the drawer itself when it slides
+   in, which `hidden` would not have done any better but `clip` says
+   plainly: there is no scroll here to have. */
+.pane{
+  position:absolute; inset:0;
+  overflow-y:auto; overflow-x:clip; overscroll-behavior:none;
+  scrollbar-gutter:stable;
+  visibility:hidden; opacity:0; pointer-events:none;
+  transform:translateZ(0) scale(.9915);
+  transition:opacity .30s ease, transform .42s cubic-bezier(.2,.8,.2,1),
+             visibility 0s linear .30s;
+}
+/* Older engines without `clip` still get the same promise. */
+@supports not (overflow-x:clip){ .pane{overflow-x:hidden} }
+.pane.on{
+  visibility:visible; opacity:1; pointer-events:auto; z-index:2;
+  transform:translateZ(0) scale(1);
+  transition:opacity .30s ease, transform .42s cubic-bezier(.2,.8,.2,1),
+             visibility 0s;
+}
+/* On a tablet the bar has to hold the room's own controls as well, and
+   a 300px name in front of them pushes them off the edge. Below this the
+   glyph line carries the identification on its own. */
+@media (max-width:1100px){
+  #oa-title{display:none}
+}
+
+@media (prefers-reduced-motion:reduce){
+  .pane, .oa-g{transition-duration:.01ms !important}
+  #oa-sweep{display:none}
+}
+
+/* Three of the four are page-scrolling documents and want the pane to be
+   their scroller; the Atlas owns its viewport and scrolls its own panels,
+   which its own `overflow:hidden` on #pane-atlas still says. The three
+   wrote their floors as `100vh`, which is the window and not the room —
+   a pane one ribbon short of the window would have been given a scrollbar
+   for the 60px it does not have. Measured against the pane instead. */
+html #pane-ledger, html #pane-semaphore, html #pane-callboard{
+  min-height:100%;
+}
+
+/* ── the researcher link, wherever a name is written ────────────────── */
+
+.atlas-ref{
+  cursor:pointer;
+  text-decoration:none;
+  border-bottom:1px dotted currentColor;
+  opacity:.95;
+}
+.atlas-ref:hover{
+  border-bottom-style:solid;
+  background:rgba(201,168,76,.14);
+  border-radius:2px;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   Palette harmonisation.
+   `html #pane-x` outranks the app's own scoped :root block wherever it
+   sits in the file, so these ride on top without touching the sources.
+   ══════════════════════════════════════════════════════════════════ */
+
+/* Atlas arrived cool — blue keys on grey paper. Warmed onto the same
+   vellum the Call Board uses, with the accents moved to brass, verdigris
+   and terracotta so it reads as another sheet from the same desk. */
+html #pane-atlas{
+  --paper:#EFE8D7; --panel:#F7F3E9; --wash:#E6DDC9;
+  /* The third rank is struck a step deeper than it arrived. At #8B7F68 it
+     read at 3.2:1 on this vellum — under the 4.5 that ordinary text owes —
+     and it carries the section headings, the venues and the counts, which
+     are the parts you scan rather than the parts you read. Same hue, same
+     place in the order, legible: 4.7:1 at worst, on the deepest of the
+     three vellums it is ever written on. */
+  --ink:#2C2418; --faint:#5C5140; --ghost:#6A5E48;
+  --line:rgba(120,96,58,0.20); --line2:rgba(120,96,58,0.34);
+  --k1:#7A5E24; --k2:#41705C; --k3:#9E5B24; --con:#6B5F7E;
+  --k1w:#EDE3CB; --k2w:#DFEAE2; --k3w:#F2E2D0; --conw:#E7E2EC;
+  --dm:#8A4A7A; --dc:#4C5B77; --dd:#5E6E3E;
+  --danger:#A33A2C;
+  /* The hand's own colour is warmed with the rest of them. It arrived a
+     cool violet, which on vellum read as a sticker from another app — and
+     it has to stay clear of --con, the only other violet here, which is
+     desaturated where this one is not. It is never drawn beside a concept
+     chip in any case: the hand's colour lives on the dossier, --con on the
+     walk rail. */
+  --mine:#6B4E8C; --minew:#E8DFEE; --minei:#573C77;
+  --serif:'Cinzel',serif;
+  --sans:'Crimson Text',serif;
+  --mono:'IBM Plex Mono',ui-monospace,'SF Mono',Consolas,monospace;
+}
+
+/* Semaphore was the one neutral room — a warm charcoal, but grey beside
+   three sepia ones. Its ground, slabs, wells and shadows move onto the
+   Ledger's umber; its chrome moves from bone to a brass a step below the
+   Ledger's gilt, so it is of the family without being the same metal.
+   The five meaning-hues are untouched: they carry information. */
+html #pane-semaphore{
+  --paper:#211B10; --panel:#2C2415;
+  --field:rgba(14,10,4,.42);
+  /* --faint was #9D8458, which sits at 4.3:1 on the panels it is mostly
+     written on. Lifted just far enough to clear 4.5 everywhere it lands
+     without changing its rank against --muted above it. */
+  --ink:#F5ECD8; --muted:#D3BD88; --faint:#A78E5F;
+  --key:#B99A5A; --key2:#DDC287;
+  --grid:rgba(205,176,105,.13); --line:rgba(205,176,105,.24); --line2:rgba(205,176,105,.40);
+  --focus:#DDC287;
+  --slab:linear-gradient(180deg,rgba(255,255,255,.045),rgba(0,0,0,.14));
+  --surface:linear-gradient(150deg,rgba(56,45,25,.90),rgba(44,36,21,.90));
+  --surface2:linear-gradient(160deg,rgba(56,45,25,.99),rgba(38,31,18,.99));
+  --strip:rgba(232,201,106,.06);
+  --sink:rgba(14,10,4,.26);
+  /* a step deeper than --sink: the ground a lead's log is set into, which is
+     the one band on a lead that is a record rather than a fact */
+  --well:rgba(14,10,4,.32);
+  --dot:#332A18;
+  --hi:rgba(240,180,41,.12); --hi2:rgba(240,180,41,.40);
+  --shadow:0 14px 38px rgba(8,6,2,.44),0 2px 8px rgba(8,6,2,.32);
+}
+
+/* The Call Board and the Ledger are already siblings; the Call Board just
+   loses a touch of green from its vellum to match the Ledger's warmth. */
+html #pane-callboard{
+  --page:#E9E0CC; --panel:#F7F2E6; --raised:#F0E8D5;
+  --brass:#9A7B3A; --brass2:#6B5220;
+}
+
+
+/* ══════════════════════════════════════════════════════════════════════
+   The ribbon.
+
+   One bar in every room: the same dark ground, the same 60px, the
+   same inset, the same 14px serif at 0.2em. Two of the rooms below
+   it are vellum and two are umber, and that was what made the top of the
+   screen jump when you moved between them — so the bar stops belonging
+   to the room and starts belonging to the app.
+
+   What stays individual is what each app already had: the Ledger's
+   flourishes, Semaphore's red diamond, the Atlas's bare wordmark, and
+   whatever controls each one keeps on the right.
+   ══════════════════════════════════════════════════════════════════ */
+
+
+
+/* ── one bar: one height, one control face, one place for the title ─── */
+
+.oa-bar{
+  box-sizing:border-box;
+  height:var(--oa-bar-h) !important;
+  min-height:var(--oa-bar-h) !important;
+  /* the sides are the bridge's business, but the top and bottom are not:
+     left non-important so the measured value can override it, the rest
+     forced so no app's own asymmetric header padding survives and shoves
+     its controls off the centre line */
+  padding-top:0 !important;
+  padding-bottom:0 !important;
+  padding-right:22px !important;
+  padding-left:176px;
+  align-items:center !important;
+  flex-wrap:nowrap !important;
+  background:var(--oa-bar) !important;
+  border-bottom:1px solid var(--oa-bar-rule) !important;
+  box-shadow:var(--oa-bar-shadow) !important;
+  /* One height means one height. When the room's controls no longer fit
+     across, the bar carries them sideways — the Board's cluster row has
+     always done this and it is the only answer that keeps the promise
+     above. Without it the Ledger's own header rules, written for a page
+     where the header may be two rows deep, wrapped its buttons inside a
+     60px box and pushed half of them off the top of the screen. */
+  overflow-x:auto; overflow-y:hidden;
+  scrollbar-width:none; -ms-overflow-style:none;
+  overscroll-behavior-x:contain;
+}
+.oa-bar::-webkit-scrollbar{height:0; display:none}
+/* Nothing in the bar wraps, shrinks below its own size, or grows a second
+   row: the three rooms whose headers were written as page furniture say
+   otherwise in their own stylesheets, and this is where the bar wins. A
+   control squeezed narrow enough to break its own label in two is the same
+   failure as a bar two rows deep, so the labels hold their line too. */
+.oa-bar > *, .oa-bar .hdr-right, .oa-bar .hd-controls, .oa-bar .actions{
+  flex-wrap:nowrap !important;
+}
+.oa-bar > *, .oa-bar .hdr-right > *,
+.oa-bar .hd-controls > *, .oa-bar .actions > *{
+  flex-shrink:0;
+}
+.oa-bar button, .oa-bar .hbtn, .oa-bar .btn,
+.oa-bar .tchip, .oa-bar .ftchip, .oa-bar .pchip, .oa-bar .clchip{
+  white-space:nowrap;
+  min-height:31px; height:auto; padding:5px 13px; border-radius:7px;
+  font-size:11px; letter-spacing:.09em; font-weight:400;
+  background:var(--oa-slab); border:1px solid var(--oa-line); color:var(--oa-title);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.045);
+  transition:transform .14s ease, background-color .14s, border-color .14s, color .14s;
+}
+.oa-bar .tchip, .oa-bar .ftchip, .oa-bar .pchip, .oa-bar .clchip{
+  min-height:26px; padding:3px 11px; border-radius:999px;
+  font-size:10.5px; letter-spacing:.06em;
+}
+.oa-bar button:hover, .oa-bar .hbtn:hover, .oa-bar .btn:hover{
+  background:rgba(216,205,184,.08); border-color:var(--oa-line2);
+  color:var(--oa-key2); transform:translateY(-1px);
+}
+.oa-bar button:active{transform:translateY(0) scale(.985)}
+.oa-bar button.on, .oa-bar .btn.on,
+.oa-bar [aria-pressed="true"]{
+  background:rgba(216,205,184,.16); border-color:var(--oa-line2);
+  color:var(--oa-title-hi);
+}
+
+/* ── the ribbon's ink, said louder than each room says its own ──
+   The rule above gives every control in the bar one colour, but two of
+   the rooms letter these same controls in their own stylesheets, with an
+   id in the selector — so their word won and the bar's did not. On dark
+   ground that told: the Atlas's quiet buttons kept the ink they wear on
+   vellum and read at 1.7:1, Semaphore's Filters at 4.2. Their subordinate
+   ranks are kept — a quiet control is still quieter than a lit one — but
+   in the ribbon's own two values, which are struck for this ground. */
+html #pane-semaphore header.oa-bar .btn.ghost{
+  color:var(--oa-ctl);
+}
+html #pane-semaphore header.oa-bar .btn.ghost:hover{
+  color:var(--oa-key2);
+}
+/* The Atlas's own bar controls are vellum objects — a white pill, a pale
+   chip for the live tab — and they were left standing on the dark ribbon
+   in their vellum clothes: an ink meant for paper at 1.7:1 on umber, and a
+   sheet-white pill among slabs. They take the house control face, like
+   every other room's. */
+html #pane-atlas #app > header.oa-bar nav button,
+html #pane-atlas #app > header.oa-bar .hbtn{
+  background:var(--oa-slab); border:1px solid var(--oa-line);
+  color:var(--oa-title); box-shadow:inset 0 1px 0 rgba(255,255,255,.045);
+}
+html #pane-atlas #app > header.oa-bar nav button{
+  background:none; border-color:transparent; box-shadow:none;
+  color:var(--oa-ctl);
+}
+html #pane-atlas #app > header.oa-bar nav button:hover,
+html #pane-atlas #app > header.oa-bar .hbtn:hover{
+  background:rgba(216,205,184,.08); border-color:var(--oa-line2);
+  color:var(--oa-key2);
+}
+html #pane-atlas #app > header.oa-bar nav button.on,
+html #pane-atlas #app > header.oa-bar .hbtn.on{
+  background:rgba(216,205,184,.16); border-color:var(--oa-line2);
+  box-shadow:none; color:var(--oa-title-hi);
+}
+/* the live dot on Edit graph is the one thing that keeps its own colour */
+html #pane-atlas #app > header.oa-bar .hbtn.on .dot{background:#EF5B4C}
+/* A segmented control is one control, not three: it carries the border
+   and the hairlines between its parts, so its buttons stay flat inside
+   it rather than each drawing a box of its own. */
+.oa-bar .viewseg, .oa-bar .seg, .oa-bar .wsort{
+  background:var(--oa-slab); border:1px solid var(--oa-line); border-radius:7px;
+  overflow:hidden; box-shadow:inset 0 1px 0 rgba(255,255,255,.045);
+}
+.oa-bar .viewseg button, .oa-bar .seg button, .oa-bar .wsort button{
+  background:none; border:0; border-radius:0; box-shadow:none;
+  border-right:1px solid var(--oa-line);
+  min-height:31px; padding:5px 15px;
+}
+.oa-bar .viewseg button:last-child,
+.oa-bar .seg button:last-child,
+.oa-bar .wsort button:last-child{border-right:0}
+.oa-bar .viewseg button:hover, .oa-bar .seg button:hover, .oa-bar .wsort button:hover{
+  transform:none; background:rgba(216,205,184,.08);
+}
+.oa-bar .viewseg button.on, .oa-bar .seg button.on, .oa-bar .wsort button.on{
+  background:rgba(216,205,184,.17); color:var(--oa-title-hi);
+}
+
+.oa-bar input[type="search"], .oa-bar input[type="text"]{
+  border:1px solid var(--oa-line); border-radius:7px; background:var(--oa-field);
+  padding:6px 10px; font-size:13.5px; color:var(--oa-title-hi);
+  box-shadow:inset 0 1px 2px rgba(0,0,0,.24);
+}
+.oa-bar input::placeholder{color:var(--oa-ctl)}
+.oa-bar input:focus{
+  outline:none; border-color:var(--oa-key); box-shadow:0 0 0 2px rgba(221,194,135,.12);
+}
+
+/* ── Semaphore: already the shape of the thing ─────────────────────── */
+
+html #pane-semaphore header.top{position:sticky; top:0; z-index:50}
+/* The board's month axis is already sticky in the room's own stylesheet,
+   where top:0 means the top of the scroller and is exactly right. Here the
+   header above it is sticky too, and one bar tall, so top:0 is the strip
+   the bar is standing on: the axis stuck faithfully, out of sight, and
+   scrolling down left the months behind. It stops at the foot of the bar
+   instead. The offset belongs here rather than in the room, because the
+   bar it clears is the shell's doing and not the room's. */
+html #pane-semaphore .axisrow{top:var(--oa-bar-h)}
+html #pane-semaphore .markglyph{display:none}
+
+/* ── the Ledger: lifted out of its board column into the full bar ───── */
+
+/* The bridge makes .hdr a child of the room, so it is full width because
+   it simply is — the app's own board-width and centring have to go. */
+html #pane-ledger .hdr{
+  position:sticky; top:0; z-index:50;
+  width:auto; transform:none; margin:0;
+  /* The title used to be the flexible middle that held the buttons out to
+     the edge; with the shell writing the name, the bar has to say it. Said
+     with an auto margin on .hdr-right rather than with justify-content,
+     because a flex box justified to its end puts its overflow on the
+     *left*, where no amount of scrolling can reach it — which is exactly
+     what happened to + Project and + Todo once the bar had to scroll. */
+  justify-content:flex-start;
+}
+/* the header used to carry margin-bottom:1.3rem from inside #root; lifted
+   out, that gap becomes #root's own or the beam below drifts down */
+html #pane-ledger #root{padding-top:1.3rem}
+html #pane-ledger .hdr-mark-fl{display:none}
+html #pane-ledger .hdr-right{align-items:center}
+
+/* The Ledger's header is written twice over: once as the bar it is here,
+   and once — in its own stylesheet, under 620px — as page furniture that
+   stacks its buttons into a two-column grid and gives the wordmark a line
+   of its own. Both are right about their own subject; only one of them is
+   this element. Inside the ribbon the header is a single row, always. */
+html #pane-ledger .hdr.oa-bar > .hdr-mark{display:none !important}
+html #pane-ledger .hdr.oa-bar .hdr-right{
+  width:auto !important; display:flex !important; flex-wrap:nowrap !important;
+  gap:.55rem !important; margin-left:auto;
+}
+/* Descendant as well as child: the room's own narrow-screen rules reach
+   these buttons that way, so this has to answer them the same way. */
+html #pane-ledger .hdr.oa-bar .hdr-right > *,
+html #pane-ledger .hdr.oa-bar .hdr-right .btn,
+html #pane-ledger .hdr.oa-bar .hdr-right label.btn,
+html #pane-ledger .hdr.oa-bar .hdr-right .btn-collapse{
+  width:auto !important; grid-column:auto !important;
+  justify-self:auto !important; flex:0 0 auto;
+}
+
+
+/* ── the Atlas: a 21px italic wordmark, brought to the common setting ── */
+
+html #pane-atlas #app > header{gap:18px; flex:none; position:relative}
+/* taken out of the flow so it centres on the window rather than on
+   whatever is left over after the wordmark */
+html #pane-atlas #app > header nav{
+  position:absolute; left:50%; transform:translateX(-50%);
+  margin:0; gap:6px;
+}
+/* the wordmark is hidden but still a flex item; take its gap back */
+html #pane-atlas #app > header .spacer{flex:1}
+/* Centring only works while there is a middle to centre on. Once the bar
+   has to be scrolled, a tab row pinned to 50% of it sits under the room's
+   own buttons; below this width the three tabs rejoin the line and take
+   their turn in it. */
+@media (max-width:900px){
+  html #pane-atlas #app > header nav{
+    position:static; transform:none; flex:0 0 auto;
+  }
+  html #pane-atlas #app > header .spacer{flex:0 0 0}
+}
+
+/* ── the Call Board: the cluster row is the bar ─────────────────────── */
+
+/* the codes must reach the floor of the bar so the live one can be
+   underlined there, so this row alone stretches its children */
+html #pane-callboard .tabs{align-items:stretch !important; padding-right:22px !important}
+/* CL1…CL6, MISS, HORIZ and ALL carry it; the full cluster name is on
+   hover. They stay flat with an underline rather than taking the slab
+   face, because the live one has to be marked at the floor of the bar. */
+html #pane-callboard .tab{
+  color:var(--oa-ctl); background:none; border:0; border-bottom:2px solid transparent;
+  border-radius:0; min-height:0; padding:5px 10px 4px; gap:6px;
+  align-self:stretch; align-items:center; box-shadow:none;
+}
+html #pane-callboard .tab .cn{display:none}
+html #pane-callboard .tab .ck{font-size:11px; opacity:1; letter-spacing:.08em}
+/* How many topics stand behind each code. It is a number you read, not a
+   decoration, and at half opacity it sat at 2.2:1 on the ribbon — so it
+   keeps its rank by being smaller and a step quieter in colour, not by
+   being half there. */
+html #pane-callboard .tab .cc{font-size:9.5px; opacity:1; color:var(--oa-ctl)}
+html #pane-callboard .tab[aria-selected="true"] .cc{color:var(--oa-title)}
+html #pane-callboard .tab:hover{
+  color:var(--oa-title-hi); background:rgba(216,205,184,.07); transform:none}
+html #pane-callboard .tab[aria-selected="true"]{
+  color:var(--oa-title-hi); background:rgba(216,205,184,.10);
+  border-bottom-color:var(--sc-gilt)}
+html #pane-callboard .tab[aria-selected="true"] .cn{font-weight:600}
+
+
+/* Once the board is on the cloud, carrying files by hand is a step
+   backwards — the buttons go. They stay put when no cloud is configured,
+   because then they are still the only way anything leaves the machine. */
+/* A room says whether its half of the cloud is up, in one chip: a lit
+   diamond when it is, a dimmed one while it is finding its feet, the
+   colour of a warning when it cannot. The word is the state; the tooltip
+   is the reason; pressing it asks the cloud again.
+
+   All four rooms with a store of their own wear it — Semaphore's board,
+   the Notes room, the Atlas's edit list and, since 2026-09-02, the
+   Ledger's journal, which was the one whose sync had nowhere to fail out
+   loud and the one that failed. Written once for all of them, and
+   measured in place afterwards: on the Ledger's header the word reads at
+   6.3:1 in its loudest state and 6.0:1 in its quietest. The pane ids have
+   to be named because the
+   generic .oa-bar button face above would otherwise dress the chip as a
+   slab; :is() carries an id's weight, so this reads exactly as loudly as
+   the single-room selector it replaced. */
+html :is(#pane-semaphore,#pane-notes,#pane-atlas,#pane-ledger) .oa-cloudchip{
+  display:inline-flex; align-items:center; gap:7px;
+  padding:5px 11px; border-radius:7px; min-height:0;
+  border:1px solid transparent; background:none;
+  /* the ribbon's own body face — this used to reach for an --oa-sans that
+     was never defined anywhere and fall through to Optima every time */
+  font-family:var(--sc-body);
+  font-size:10px; letter-spacing:.14em; text-transform:uppercase;
+  /* "NO CLOUD" is a state, not decoration; at #7D7466 it read at 2.9:1
+     against the ribbon and was the one thing on the bar you could not
+     make out at all. Grey rather than brass, because it is the one
+     control in the bar that belongs to neither the room nor the house. */
+  color:#A19889; cursor:pointer;
+  transition:color .16s, border-color .16s, background-color .16s;
+}
+html :is(#pane-semaphore,#pane-notes,#pane-atlas,#pane-ledger) .oa-cloudchip:hover{
+  color:#D8CDB8; border-color:rgba(200,188,165,.24); background:rgba(216,205,184,.06)}
+html :is(#pane-semaphore,#pane-notes,#pane-atlas,#pane-ledger) .oa-cloudchip i{
+  width:7px; height:7px; flex:0 0 7px; transform:rotate(45deg); border-radius:1px;
+  border:1px solid currentColor; background:transparent;
+  transition:background-color .2s, box-shadow .2s, opacity .2s}
+html :is(#pane-semaphore,#pane-notes,#pane-atlas,#pane-ledger) .oa-cloudchip[data-state="synced"]{color:#8CC47C}
+html :is(#pane-semaphore,#pane-notes,#pane-atlas,#pane-ledger) .oa-cloudchip[data-state="synced"] i{
+  background:#8CC47C; box-shadow:0 0 8px rgba(140,196,124,.4)}
+html :is(#pane-semaphore,#pane-notes,#pane-atlas,#pane-ledger) .oa-cloudchip[data-state="syncing"] i,
+html :is(#pane-semaphore,#pane-notes,#pane-atlas,#pane-ledger) .oa-cloudchip[data-state="connecting"] i{
+  background:currentColor; opacity:.55; animation:oa-cloudpulse 1.4s ease-in-out infinite}
+/* The word, measured against the ground it actually sits on: the ribbon is
+   a gradient and its light end is #3A2F1A, where #EF5B4C — the fill of the
+   diamond, and the right red for a shape — lands at 3.9:1 as 10px text.
+   The ink is lifted and the diamond keeps the red it had. */
+html :is(#pane-semaphore,#pane-notes,#pane-atlas,#pane-ledger) .oa-cloudchip[data-state="error"]{color:#F4776A}
+html :is(#pane-semaphore,#pane-notes,#pane-atlas,#pane-ledger) .oa-cloudchip[data-state="error"] i{background:#EF5B4C}
+/* "NO CLOUD" used to be the whole chip at 45% opacity, which is the one
+   thing the house rule forbids: dimming an already-quiet colour, and there
+   is no headroom under #A19889 on this ribbon — it is 4.6:1 as it stands.
+   So the chrome goes quiet and the ink does not. The diamond is a shape
+   and may fade; the word is a state and has to be read. */
+html :is(#pane-semaphore,#pane-notes,#pane-atlas,#pane-ledger) .oa-cloudchip[data-state="off"] i{opacity:.45}
+/* "LOG IN" is a thing to do rather than a thing gone wrong: since the
+   cloud answers only a logged-in Mark, a device that has never logged in,
+   or whose session was ended, waits here with its work kept on it. Gold
+   rather than the error red, and the diamond hollow because nothing is
+   moving. #E2BE6A is 7.4:1 against the ribbon's light end, #3A2F1A. */
+html :is(#pane-semaphore,#pane-notes,#pane-atlas,#pane-ledger) .oa-cloudchip[data-state="login"]{color:#E2BE6A}
+@keyframes oa-cloudpulse{0%,100%{opacity:.3}50%{opacity:1}}
+@media (prefers-reduced-motion:reduce){
+  html :is(#pane-semaphore,#pane-notes,#pane-atlas,#pane-ledger) .oa-cloudchip i{animation:none}
+}
+
+
+/* The lead card is built once, in Semaphore’s own stylesheet below.
+   The patch that used to bolt a second hover language and a bolted-on
+   updates row onto it has been folded into the card itself. */
+

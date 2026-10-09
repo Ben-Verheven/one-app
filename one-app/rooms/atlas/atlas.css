@@ -1,0 +1,380 @@
+/* ===== Researcher Atlas ===== */
+#pane-atlas{
+  --paper:#F7F7F4; --panel:#FFFFFF; --ink:#20242B; --faint:#69707C; --ghost:#9AA0AB;
+  --line:#E1E3DC; --line2:#D0D3CA; --wash:#EFF0EB;
+  --k1:#2F53C4; --k2:#0E8A66; --k3:#C2721B; --con:#756F91;
+  --k1w:#E9EDFA; --k2w:#E4F3EE; --k3w:#F8EFE1; --conw:#EEECF4;
+  --dm:#A4589B; --dc:#5D6B87; --dd:#6E7F45;
+  --danger:#B4372F;
+  /* The hand's own colour. Every other hue in this room answers "which
+     layer did this come from"; this one answers a different question —
+     "did the database say this, or did you" — so it had to be a hue none
+     of the layers had taken. Violet against blue, green and amber, and
+     saturated where --con is not, since the two are read side by side. */
+  --mine:#6B45B0; --minew:#EFEAFA; --minei:#54338F;
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:"SF Mono","Cascadia Code",Menlo,Consolas,ui-monospace,monospace;
+  --r:7px;
+}
+#pane-atlas, #pane-atlas *{box-sizing:border-box;margin:0;padding:0}
+#pane-atlas,#pane-atlas{height:100%}
+/* `clip` rather than `hidden`, for the same reason the Semaphore uses it: the
+   dossier parks off the right edge, and `hidden` would let a script scroll the
+   room out to meet it. The room's scrolling happens in its own columns. */
+#pane-atlas{background:var(--paper);color:var(--ink);font:14px/1.5 var(--sans);
+  -webkit-font-smoothing:antialiased;overflow:clip}
+@supports not (overflow:clip){ #pane-atlas{overflow:hidden} }
+#pane-atlas button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+#pane-atlas input,#pane-atlas select{font:inherit;color:inherit}
+#pane-atlas ::selection{background:var(--k1w)}
+#pane-atlas a{color:var(--k1);text-decoration:none}
+#pane-atlas a:hover{text-decoration:underline}
+#pane-atlas :focus-visible{outline:2px solid var(--k1);outline-offset:1px;border-radius:3px}
+@media (prefers-reduced-motion:reduce){#pane-atlas, #pane-atlas *,#pane-atlas *::before,#pane-atlas *::after{transition:none!important;animation:none!important}}
+/* ---------- chrome ---------- */
+#pane-atlas #app{display:flex;flex-direction:column;height:100%}
+#pane-atlas header{display:flex;align-items:center;gap:22px;padding:0 20px;height:52px;
+  background:var(--panel);border-bottom:1px solid var(--line);flex:none}
+#pane-atlas .wordmark{font:italic 600 21px var(--serif);letter-spacing:.4px}
+#pane-atlas .wordmark small{font:11px var(--sans);font-style:normal;color:var(--faint);
+  letter-spacing:.6px;margin-left:10px;text-transform:uppercase}
+#pane-atlas nav{display:flex;gap:2px;margin-left:8px}
+#pane-atlas nav button{padding:6px 14px;border-radius:var(--r);color:var(--faint);font-weight:500}
+#pane-atlas nav button:hover{color:var(--ink);background:var(--wash)}
+#pane-atlas nav button.on{color:var(--ink);background:var(--wash);box-shadow:inset 0 0 0 1px var(--line2)}
+#pane-atlas .spacer{flex:1}
+#pane-atlas .hbtn{padding:6px 12px;border-radius:var(--r);border:1px solid var(--line);color:var(--faint);
+  font-size:13px;background:var(--panel)}
+#pane-atlas .hbtn:hover{color:var(--ink);border-color:var(--line2)}
+#pane-atlas .hbtn.on{color:#fff;background:var(--ink);border-color:var(--ink)}
+#pane-atlas .hbtn.on .dot{background:#fff}
+#pane-atlas #body{display:flex;flex:1;min-height:0}
+/* The rail was 302px and spent its scrollbar out of its own contents: once
+   the settings ran taller than the window, the sliders would not give up
+   the width (a range input keeps a minimum of its own), so the values
+   beside max hops, hop decay and the layer weights were shoved under the
+   scrollbar and the divider. The rail is wider now, its scrollbar's lane is
+   kept whether or not it is showing, and the sliders are allowed to be the
+   part that narrows. */
+#pane-atlas #rail{width:340px;flex:none;border-right:1px solid var(--line);background:var(--panel);
+  overflow-y:auto;scrollbar-gutter:stable;padding:18px 18px 40px}
+#pane-atlas #main{flex:1;min-width:0;overflow-y:auto;position:relative}
+#pane-atlas #main.nopad{overflow:hidden}
+
+/* ---------- narrow ----------
+   The Atlas was written for a desk and said nothing about anything
+   smaller: a 302px rail that never gave way left an iPad held upright
+   with a narrow column, in which every word of the standing text wrapped
+   onto a line of its own. It is the same room at every width — the settings simply stop
+   standing beside the search and start standing above it, which is the
+   order you use them in anyway. */
+@media (max-width:820px){
+  #pane-atlas #body{flex-direction:column; overflow-y:auto}
+  #pane-atlas #rail{
+    width:auto; flex:none; border-right:0;
+    border-bottom:1px solid var(--line);
+    overflow:visible; padding:14px 18px 18px;
+  }
+  #pane-atlas #main{overflow:visible; flex:1 0 auto}
+  /* two of everything while there is room for two */
+  #pane-atlas #rail .sect{margin-bottom:16px}
+  #pane-atlas #qbar{padding:16px 18px 10px}
+  #pane-atlas #results{padding:0 18px 48px}
+}
+/* ---------- shared bits ---------- */
+#pane-atlas .sect{margin-bottom:22px}
+#pane-atlas .sect h3{font:600 11px var(--sans);letter-spacing:.8px;text-transform:uppercase;
+  color:var(--ghost);margin-bottom:9px}
+#pane-atlas .hint{color:var(--faint);font-size:12.5px}
+#pane-atlas .small{font-size:12px}
+#pane-atlas .mono{font-family:var(--mono);font-size:11.5px}
+#pane-atlas .dot{display:inline-block;width:8px;height:8px;border-radius:50%;vertical-align:1px}
+#pane-atlas .dot.l1{background:var(--k1)}
+#pane-atlas .dot.l2{background:var(--k2)}
+#pane-atlas .dot.l3{background:var(--k3)}
+#pane-atlas .dot.lc{background:var(--con)}
+#pane-atlas .chip{display:inline-flex;align-items:center;gap:6px;padding:2px 9px;border-radius:99px;
+  font-size:12px;border:1px solid var(--line);background:var(--panel);white-space:nowrap;
+  max-width:100%}
+#pane-atlas .chip .x{color:var(--ghost);margin-left:2px;font-size:14px;line-height:1}
+#pane-atlas .chip .x:hover{color:var(--danger)}
+#pane-atlas .chip.l1{background:var(--k1w);border-color:transparent;color:#233E93}
+#pane-atlas .chip.l2{background:var(--k2w);border-color:transparent;color:#0A6A50}
+#pane-atlas .chip.l3{background:var(--k3w);border-color:transparent;color:#94570F}
+#pane-atlas .chip.lc{background:var(--conw);border-color:transparent;color:#575174}
+/* Written by Mark rather than declared by the database. It overrides the
+   layer's wash, never its shape: a keyword he assigned is a declared
+   keyword and belongs on the same line as the rest. */
+#pane-atlas .chip.mine{background:var(--minew);border-color:transparent;color:var(--minei)}
+#pane-atlas .chip.clickable{cursor:pointer}
+#pane-atlas .chip.clickable:hover{filter:brightness(.96)}
+#pane-atlas .vchip{font-family:var(--mono);font-size:10.5px;padding:1px 7px;border-radius:4px;
+  background:var(--wash);border:1px solid var(--line);color:var(--faint);white-space:nowrap}
+#pane-atlas .badge{font:600 10.5px var(--sans);padding:1px 7px;border-radius:4px;letter-spacing:.3px}
+#pane-atlas .badge.l1{background:var(--k1w);color:#233E93}
+#pane-atlas .badge.l2{background:var(--k2w);color:#0A6A50}
+#pane-atlas .badge.l3{background:var(--k3w);color:#94570F}
+#pane-atlas .badge.mine{background:var(--minew);color:var(--minei);margin-left:7px;
+  text-transform:none;letter-spacing:0}
+#pane-atlas .rowbtns{display:flex;gap:8px;flex-wrap:wrap}
+#pane-atlas .sbtn{padding:4px 11px;border:1px solid var(--line);border-radius:var(--r);font-size:12.5px;
+  color:var(--faint);background:var(--panel)}
+#pane-atlas .sbtn:hover{color:var(--ink);border-color:var(--line2);background:var(--wash)}
+#pane-atlas .sbtn.danger:hover{color:var(--danger);border-color:var(--danger)}
+/* A small button standing for the choice already made — the rank a
+   researcher is on record as holding, in the rank picker. */
+#pane-atlas .sbtn.on{color:var(--ink);border-color:var(--line2);background:var(--wash);font-weight:600}
+#pane-atlas hr.hair{border:none;border-top:1px solid var(--line);margin:16px 0}
+/* ---------- sliders ---------- */
+#pane-atlas .wrow{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+#pane-atlas .wrow label{width:86px;flex:none;font-size:12.5px;color:var(--faint);display:flex;
+  align-items:center;gap:7px}
+#pane-atlas .wrow input[type=range]{flex:1;min-width:0;accent-color:var(--ink);height:18px}
+#pane-atlas .wrow .val{width:30px;flex:none;text-align:right;font-family:var(--mono);font-size:11px;color:var(--faint)}
+#pane-atlas .seg{display:flex;border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+#pane-atlas .seg button{flex:1;padding:5px 4px;font-size:12px;color:var(--faint);background:var(--panel)}
+#pane-atlas .seg button.on{background:var(--wash);color:var(--ink);font-weight:600}
+#pane-atlas .seg button+button{border-left:1px solid var(--line)}
+/* ---------- search ---------- */
+#pane-atlas #qbar{position:sticky;top:0;z-index:5;background:linear-gradient(var(--paper) 82%,transparent);
+  padding:22px 30px 14px}
+#pane-atlas #qbox{display:flex;flex-wrap:wrap;gap:7px;align-items:center;background:var(--panel);
+  border:1px solid var(--line2);border-radius:12px;padding:9px 12px;
+  box-shadow:0 1px 3px rgba(30,35,45,.05)}
+#pane-atlas #qbox:focus-within{border-color:var(--k1)}
+#pane-atlas #qinput{flex:1;min-width:180px;border:none;outline:none;font-size:14.5px;background:none;
+  padding:3px}
+#pane-atlas #results{padding:0 30px 60px;max-width:1020px}
+#pane-atlas .rescount{color:var(--faint);font-size:12.5px;margin:4px 2px 14px}
+#pane-atlas .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;
+  padding:16px 20px 14px;margin-bottom:14px}
+#pane-atlas .card .top{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+#pane-atlas .rname{font:600 17px var(--serif);cursor:pointer}
+#pane-atlas .rname:hover{text-decoration:underline}
+#pane-atlas .raffil{color:var(--faint);font-size:12.5px}
+#pane-atlas .scorewrap{margin-left:auto;display:flex;align-items:center;gap:9px}
+#pane-atlas .sbar{width:120px;height:7px;border-radius:4px;background:var(--wash);overflow:hidden;
+  display:flex}
+#pane-atlas .sbar i{display:block;height:100%}
+#pane-atlas .sbar .s1{background:var(--k1)}
+#pane-atlas .sbar .s2{background:var(--k2)}
+#pane-atlas .sbar .s3{background:var(--k3)}
+#pane-atlas .snum{font-family:var(--mono);font-size:11px;color:var(--faint)}
+#pane-atlas .paths{margin-top:11px;border-top:1px solid var(--line);padding-top:4px}
+#pane-atlas .qgroup{margin:7px 0 3px;font-size:12px;color:var(--ghost)}
+#pane-atlas .qgroup b{color:var(--ink);font-weight:600}
+#pane-atlas .path{display:flex;align-items:center;flex-wrap:wrap;gap:4px 2px;padding:4px 6px;
+  border-radius:6px;font-size:13px}
+#pane-atlas .path:hover{background:var(--wash)}
+#pane-atlas .pnode{padding:1px 6px;border-radius:5px}
+#pane-atlas .pnode.term{background:var(--wash)}
+#pane-atlas .pnode.concept{background:var(--conw);color:#575174}
+#pane-atlas .pnode.landing{font-weight:600}
+#pane-atlas .pnode.landing.l1{background:var(--k1w);color:#233E93}
+#pane-atlas .pnode.landing.l2{background:var(--k2w);color:#0A6A50}
+#pane-atlas .pnode.landing.l3{background:var(--k3w);color:#94570F}
+#pane-atlas .prel{font-family:var(--mono);font-size:10.5px;color:var(--ghost);padding:0 5px;
+  white-space:nowrap}
+#pane-atlas .prel.cut{color:var(--danger);text-decoration:line-through;cursor:pointer}
+#pane-atlas .pmt{font-family:var(--mono);font-size:10px;color:var(--ghost);padding:0 4px}
+#pane-atlas .psrc{margin-left:6px;font-size:11.5px;color:var(--faint);border-bottom:1px dashed var(--line2);
+  cursor:pointer;white-space:nowrap}
+#pane-atlas .psrc:hover{color:var(--ink)}
+#pane-atlas .pedit{margin-left:4px;display:none;gap:2px}
+#pane-atlas.editing .pedit{display:inline-flex}
+#pane-atlas .ebtn{font-size:11px;color:var(--ghost);padding:0 4px;border-radius:4px}
+/* The keyword switch on a dossier. Not .pedit: those appear only once the
+   graph-wide Edit is armed, and assigning a keyword is not that kind of
+   act — this one stands on its own and is always reachable. */
+#pane-atlas .kwtools{margin-left:6px;display:inline-flex;gap:4px;vertical-align:baseline}
+#pane-atlas .ebtn:hover{color:var(--danger);background:var(--wash)}
+#pane-atlas .ebtn.w:hover{color:var(--k1)}
+#pane-atlas .snippet{margin:5px 4px 8px 14px;padding:9px 13px;background:var(--wash);
+  border-left:2px solid var(--line2);border-radius:0 7px 7px 0;font-size:12.8px;
+  color:#3A4048;max-width:760px}
+#pane-atlas .snippet mark{background:none;font-weight:700;color:inherit;box-shadow:inset 0 -2px 0 currentColor}
+#pane-atlas .snippet .from{display:block;margin-top:6px;color:var(--ghost);font-size:11px}
+#pane-atlas .showmore{font-size:12px;color:var(--faint);padding:3px 6px}
+#pane-atlas .showmore:hover{color:var(--ink)}
+#pane-atlas .empty{padding:60px 30px;max-width:640px;color:var(--faint)}
+#pane-atlas .empty h2{font:italic 600 19px var(--serif);color:var(--ink);margin-bottom:8px}
+#pane-atlas .sugg{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
+/* ---------- browse ---------- */
+#pane-atlas #browse{padding:26px 30px 60px;max-width:1100px}
+#pane-atlas .trow{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:7px;
+  cursor:pointer;user-select:none}
+#pane-atlas .trow:hover{background:var(--wash)}
+#pane-atlas .trow .tw{font-family:var(--mono);font-size:10px;color:var(--ghost);width:12px;flex:none}
+#pane-atlas .trow.dom{font:600 15px var(--serif)}
+#pane-atlas .trow.clu{font-weight:600;margin-left:16px}
+#pane-atlas .trow.grp{margin-left:34px;color:#3A4048}
+#pane-atlas .trow .cnt{font-family:var(--mono);font-size:10.5px;color:var(--ghost)}
+#pane-atlas .rrow{display:grid;grid-template-columns:230px 1fr;gap:14px;margin-left:58px;
+  padding:5px 10px;border-radius:7px;cursor:pointer;align-items:baseline}
+#pane-atlas .rrow:hover{background:var(--wash)}
+#pane-atlas .rrow.sel{background:var(--k1w)}
+#pane-atlas .rrow .nm{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#pane-atlas .rrow .nm .lead{font-size:10px;color:var(--ghost);border:1px solid var(--line);
+  border-radius:4px;padding:0 4px;margin-left:6px;vertical-align:1px}
+#pane-atlas .rrow .kw{color:var(--faint);font-size:12.3px;white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis}
+#pane-atlas .treefilter{width:100%;padding:7px 11px;border:1px solid var(--line);border-radius:var(--r);
+  background:var(--panel);outline:none;margin-bottom:6px}
+#pane-atlas .treefilter:focus{border-color:var(--k1)}
+/* ---------- map & walk ---------- */
+#pane-atlas #canvasWrap{position:absolute;inset:0;overflow:hidden;cursor:grab}
+#pane-atlas #canvasWrap.dragging{cursor:grabbing}
+#pane-atlas #canvasWrap svg{display:block;width:100%;height:100%}
+#pane-atlas .mapdot{cursor:pointer}
+#pane-atlas .mapdot circle{transition:r .12s}
+#pane-atlas .mapdot text{font:10.5px var(--sans);fill:var(--faint);pointer-events:none;opacity:0}
+#pane-atlas .mapdot:hover text,#pane-atlas .mapdot.lab text{opacity:1}
+#pane-atlas .mapdot.hl circle.core{stroke:var(--ink);stroke-width:2}
+#pane-atlas .wnode{cursor:pointer}
+#pane-atlas .wnode text{font:11px var(--sans);fill:var(--ink)}
+#pane-atlas .wnode:hover text{font-weight:600}
+#pane-atlas .wnode .halo{fill:none}
+#pane-atlas .wcenter text{font:600 14px var(--serif);fill:var(--ink)}
+#pane-atlas .wedge{fill:none;stroke-width:1;opacity:.5}
+#pane-atlas .ringlab{font:10px var(--mono);fill:var(--ghost);letter-spacing:.5px}
+#pane-atlas .trail{position:absolute;top:14px;left:18px;right:18px;display:flex;gap:6px;flex-wrap:wrap;
+  z-index:4}
+#pane-atlas .trail .chip{background:var(--panel);cursor:pointer;box-shadow:0 1px 2px rgba(30,35,45,.06)}
+#pane-atlas .maplegend{position:absolute;bottom:16px;left:18px;background:var(--panel);
+  border:1px solid var(--line);border-radius:9px;padding:9px 13px;font-size:11.5px;
+  color:var(--faint);display:flex;gap:14px;z-index:4}
+#pane-atlas .maplegend .dm{color:var(--dm)}
+#pane-atlas .maplegend .dc{color:var(--dc)}
+#pane-atlas .maplegend .dd{color:var(--dd)}
+/* ---------- dossier ---------- */
+/* Shut, it is out of sight and out of reach — see the Board's reader for
+   why a transform on its own was not enough. */
+#pane-atlas #dossier{position:fixed;top:0;right:0;bottom:0;width:min(560px,92vw);background:var(--panel);
+  border-left:1px solid var(--line);box-shadow:-8px 0 24px rgba(30,35,45,.08);
+  transform:translateX(102%);visibility:hidden;
+  transition:transform .18s ease, visibility 0s linear .18s;
+  z-index:20;display:flex;flex-direction:column}
+#pane-atlas #dossier.open{transform:none;visibility:visible;
+  transition:transform .18s ease, visibility 0s}
+#pane-atlas #dhead{padding:18px 24px 12px;border-bottom:1px solid var(--line);flex:none}
+#pane-atlas #dbody{overflow-y:auto;padding:18px 24px 60px;flex:1}
+#pane-atlas #dhead .rname{font-size:20px}
+/* The rank, at the front of the affiliation line. It is a button because
+   pressing it is how the rank is changed, but it has to read as part of the
+   line rather than as a control, so it keeps the line's own colour and says
+   it is clickable only under the cursor. Weight rather than a darker grey
+   sets it apart: this line sits on the panel, where one more grey would be
+   a grey too close to the two already there. */
+#pane-atlas #dhead .rrank{font-weight:600;color:var(--faint)}
+#pane-atlas #dhead .rrank:hover{color:var(--ink);text-decoration:underline dotted}
+#pane-atlas .dclose{position:absolute;top:12px;right:14px;font-size:18px;color:var(--ghost);
+  padding:4px 8px;border-radius:6px}
+#pane-atlas .dclose:hover{color:var(--ink);background:var(--wash)}
+#pane-atlas .kwline{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+#pane-atlas .prose{font-size:13.4px;color:#33383F;max-width:66ch;white-space:pre-wrap}
+#pane-atlas .prose .xterm{border-bottom:1px dashed;cursor:pointer}
+#pane-atlas .prose .xterm.l2{border-color:var(--k2);color:#0A6A50}
+#pane-atlas .prose .xterm.l3{border-color:var(--k3);color:#94570F}
+/* His own words inside a description, and only those: the run he typed
+   takes the hand's ink and everything the source still says is left in the
+   ink it was always in. Nothing rules the paragraph down its side — that
+   marked the WHOLE of a paragraph he had changed four words of. The colour
+   sits on a run inside the term spans as well as between them, so a term
+   he wrote himself is both underlined as a term and inked as his. */
+#pane-atlas .prose .mine{color:var(--minei)}
+#pane-atlas .dedit{width:100%;max-width:66ch;padding:10px 12px;border:1px solid var(--line);
+  border-radius:var(--r);font:13.4px/1.55 var(--sans);color:#33383F;background:var(--panel);
+  resize:vertical;outline:none}
+#pane-atlas .dedit:focus{border-color:var(--mine)}
+#pane-atlas .pub{border:1px solid var(--line);border-radius:9px;padding:11px 14px;margin-bottom:9px}
+#pane-atlas .pub .t{font-weight:500;cursor:pointer}
+#pane-atlas .pub .t:hover{color:var(--k1)}
+#pane-atlas .pub .m{color:var(--faint);font-size:12px;margin-top:2px}
+#pane-atlas .pub .abs{display:none;margin-top:9px}
+#pane-atlas .pub.open .abs{display:block}
+#pane-atlas .simrow{display:flex;align-items:center;gap:8px;padding:4px 6px;border-radius:6px;
+  cursor:pointer}
+#pane-atlas .simrow:hover{background:var(--wash)}
+#pane-atlas .simbar{height:5px;border-radius:3px;background:var(--ink);opacity:.75}
+#pane-atlas .simval{font-family:var(--mono);font-size:10.5px;color:var(--ghost);width:34px}
+/* ---------- popover / modal ---------- */
+#pane-atlas #modal{position:fixed;inset:0;background:rgba(30,34,42,.28);display:none;z-index:40;
+  align-items:flex-start;justify-content:center;padding-top:12vh}
+#pane-atlas #modal.open{display:flex}
+#pane-atlas #modalbox{background:var(--panel);border-radius:12px;min-width:380px;max-width:520px;
+  max-height:64vh;display:flex;flex-direction:column;box-shadow:0 12px 40px rgba(30,35,45,.2)}
+#pane-atlas #modalbox .mh{padding:14px 18px 10px;border-bottom:1px solid var(--line);font-weight:600}
+#pane-atlas #modalbox .mb{padding:12px 18px;overflow-y:auto}
+#pane-atlas #modalbox input[type=text]{width:100%;padding:8px 11px;border:1px solid var(--line);
+  border-radius:var(--r);outline:none;margin-bottom:10px}
+#pane-atlas #modalbox input[type=text]:focus{border-color:var(--k1)}
+#pane-atlas .pickrow{padding:6px 9px;border-radius:6px;cursor:pointer;display:flex;gap:8px;
+  align-items:baseline}
+#pane-atlas .pickrow:hover{background:var(--wash)}
+#pane-atlas .pickrow .sub{color:var(--ghost);font-size:11.5px}
+#pane-atlas .mfoot{padding:10px 18px;border-top:1px solid var(--line);display:flex;gap:8px;
+  justify-content:flex-end}
+/* ---------- edits list ---------- */
+#pane-atlas .editrow{display:flex;gap:8px;align-items:baseline;padding:5px 7px;border-radius:6px;
+  font-size:12.3px}
+#pane-atlas .editrow:hover{background:var(--wash)}
+#pane-atlas .editrow .what{flex:1;min-width:0}
+#pane-atlas .editrow .undo{color:var(--ghost);font-size:11px}
+#pane-atlas .editrow .undo:hover{color:var(--danger)}
+#pane-atlas .etype{font-family:var(--mono);font-size:9.5px;letter-spacing:.5px;color:var(--ghost);
+  text-transform:uppercase}
+#pane-atlas #toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(80px);
+  background:var(--ink);color:#fff;padding:9px 18px;border-radius:9px;font-size:13px;
+  transition:transform .2s;z-index:60}
+#pane-atlas #toast.show{transform:translateX(-50%)}
+/* ---------- news ----------
+   What the people-agent found, laid out the way Semaphore's Dispatches are:
+   one band per person, one row per finding, the page's own words under the
+   agent's one-line summary, and where it was read. The kind is a word and not
+   a hue — every hue in this room already answers "which layer" or "yours" —
+   except a departure, which takes --danger because it is the one finding
+   that changes how a name reads everywhere else. */
+#pane-atlas .an-badge{display:inline-block;min-width:17px;padding:0 5px;margin-left:6px;border-radius:9px;
+  background:var(--k1);color:#fff;font:600 10.5px/17px var(--mono);text-align:center}
+#pane-atlas .an-badge[hidden]{display:none}
+#pane-atlas .an-head{display:flex;align-items:baseline;gap:14px;padding:18px 30px 12px;border-bottom:1px solid var(--line)}
+#pane-atlas .an-head .t{flex:1;font-style:italic;font-size:16px;color:var(--ink)}
+#pane-atlas .an-list{padding:14px 30px 60px;max-width:1020px}
+#pane-atlas .an-person{margin-bottom:18px}
+#pane-atlas .an-pband{display:flex;align-items:baseline;gap:10px;padding:6px 10px;background:var(--wash);border-radius:var(--r)}
+#pane-atlas .an-pband .nm{font-weight:600;font-size:15px;color:var(--ink);border-bottom:1px dotted var(--line2)}
+#pane-atlas .an-pband .nm.plain{border-bottom:none}
+#pane-atlas .an-pband .gp{font-size:12.5px;color:var(--faint)}
+#pane-atlas .an-pband .ct{margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--ghost)}
+#pane-atlas .an-find{display:grid;grid-template-columns:96px 1fr auto;gap:4px 14px;padding:12px 10px 4px}
+#pane-atlas .an-kind{font-weight:600;font-size:10.5px;letter-spacing:.8px;text-transform:uppercase;color:var(--faint);padding-top:3px}
+#pane-atlas .an-kind.emp{color:var(--danger)}
+#pane-atlas .an-sum{font-size:14.5px;color:var(--ink)}
+#pane-atlas .an-when{color:var(--faint)}
+#pane-atlas .an-q{grid-column:2;font-style:italic;color:var(--faint);font-size:13.5px;line-height:1.45;
+  border-left:2px solid var(--line2);padding-left:10px;white-space:pre-line}
+#pane-atlas .an-src{grid-column:2;font-family:var(--mono);font-size:10.5px}
+#pane-atlas .an-btns{grid-row:1;grid-column:3;display:flex;gap:6px}
+#pane-atlas .an-btns .sbtn[disabled]{color:var(--ghost);cursor:default}
+#pane-atlas .an-kinds{display:flex;flex-direction:column;gap:2px}
+#pane-atlas .an-kinds button{display:flex;justify-content:space-between;padding:4px 8px;border-radius:var(--r);
+  color:var(--faint);text-align:left}
+#pane-atlas .an-kinds button:hover{background:var(--wash);color:var(--ink)}
+#pane-atlas .an-kinds button.on{background:var(--wash);color:var(--ink);font-weight:600}
+#pane-atlas .an-kinds .cnt{font-family:var(--mono);font-size:10.5px;color:var(--ghost)}
+/* on the dossier and in the tree */
+#pane-atlas .an-since .an-fact{padding:6px 0 6px 12px;border-left:2px solid var(--line2);margin-bottom:8px}
+#pane-atlas .an-since .an-fact .w{font-size:13.5px;color:var(--ink)}
+#pane-atlas .an-since .an-fact .m{font-family:var(--mono);font-size:10.5px;color:var(--ghost);margin-top:2px}
+#pane-atlas .an-since .an-fact .m a{color:var(--k1)}
+#pane-atlas .an-fq{margin-top:6px}
+#pane-atlas .an-left{font-size:10px;font-weight:600;letter-spacing:.4px;text-transform:uppercase;color:var(--danger);
+  border:1px solid var(--danger);border-radius:4px;padding:0 5px;margin-left:6px;white-space:nowrap}
+#pane-atlas .an-new{display:grid;grid-template-columns:230px 1fr;gap:14px;margin-left:58px;padding:5px 10px;align-items:baseline}
+#pane-atlas .an-new .nm{color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#pane-atlas .an-new .tag{font:10px var(--mono);color:var(--ghost);border:1px dashed var(--line2);border-radius:4px;
+  padding:0 5px;margin-left:6px}
+#pane-atlas .an-nwhat{color:var(--faint);font-size:12.3px;font-style:italic}
+#pane-atlas .an-new .undo{color:var(--ghost);font-size:11px;font-style:normal;margin-left:8px}
+#pane-atlas .an-new .undo:hover{color:var(--danger)}

@@ -1,0 +1,1484 @@
+/* ===== Brokerage Semaphore ===== */
+#pane-semaphore{
+  color-scheme:dark;
+  /* GROUND — warm charcoal: dark enough to rest, neutral enough that five
+     meaningful hues can sit on it without arguing with the ground itself. */
+  --paper:#191713; --panel:#231F1A;
+  --field:rgba(10,9,7,.40);
+  /* LETTERING — value, not chroma, carries the structure. */
+  --ink:#EDE7DC; --muted:#B3A897; --faint:#7D7466;
+  /* CHROME — bone: the metal one step down from the ledger's gilt. */
+  --key:#A99C86; --key2:#D8CDB8;
+  --grid:rgba(200,188,165,.13); --line:rgba(200,188,165,.24); --line2:rgba(200,188,165,.38);
+  /* MEANING — the only saturated things on screen. */
+  --brok:#EF5B4C; --brok-deep:#FF9A8C; --brok-soft:rgba(239,91,76,.20);
+  --call:#8A8BF0;
+  --r-ann:#4FBFD6; --r-pub:#8A8BF0; --r-dl:#E469C4;
+  --today:#F0B429;
+  /* the agent's findings speak in the publication's own indigo; a follow-up
+     you set yourself in the todo green. */
+  --notice:#8A8BF0; --notice-ink:#C2C3FF; --notice-line:rgba(138,139,240,.26);
+  --todo:#8CC47C; --todo-ink:#BBE0AF; --todo-bg:rgba(140,196,124,.10); --todo-line:rgba(140,196,124,.26);
+  --focus:#D8CDB8;
+  --slab:linear-gradient(180deg,rgba(255,255,255,.04),rgba(0,0,0,.12));
+  --surface:linear-gradient(150deg,rgba(44,39,33,.9),rgba(35,31,26,.9));
+  --surface2:linear-gradient(160deg,rgba(44,39,33,.99),rgba(31,28,23,.99));
+  --strip:rgba(216,205,184,.06);
+  --sink:rgba(10,9,7,.24);
+  --well:rgba(10,9,7,.30);
+  --dot:#2A251F;
+  --hi:rgba(240,180,41,.12); --hi2:rgba(240,180,41,.4);
+  --shadow:0 14px 38px rgba(0,0,0,.42),0 2px 8px rgba(0,0,0,.3);
+  --radius:7px; --radius-lg:11px;
+  --serif:'Optima','Palatino Linotype','Book Antiqua',Georgia,serif;
+  --sans:'Optima','Palatino Linotype','Book Antiqua',Georgia,serif;
+  --body:'Iowan Old Style','Palatino Linotype','Book Antiqua',Georgia,serif;
+  --mono:ui-monospace,'Cascadia Mono','SF Mono',Consolas,Menlo,monospace;
+}
+#pane-semaphore, #pane-semaphore *{box-sizing:border-box;margin:0;padding:0}
+#pane-semaphore{background:var(--paper);min-height:100%}
+#pane-semaphore{min-height:100vh;font:15px/1.55 var(--body);color:var(--ink);
+  background-color:var(--paper);
+  background-image:
+    radial-gradient(ellipse at 50% -6%,rgba(216,205,184,.09),transparent 30rem),
+    url("data:image/svg+xml,%3Csvg width='104' height='104' viewBox='0 0 104 104' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23c8bca5' stroke-opacity='0.045' stroke-width='0.7'%3E%3Crect x='42' y='42' width='20' height='20' transform='rotate(45 52 52)'/%3E%3Cpath d='M52 30V6M52 98V74M30 52H6M98 52H74'/%3E%3C/g%3E%3C/svg%3E");
+  background-size:auto,104px 104px;
+  background-attachment:fixed;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+#pane-semaphore ::selection{background:rgba(239,91,76,.3);color:#fff}
+#pane-semaphore, #pane-semaphore *{scrollbar-color:rgba(200,188,165,.3) transparent;scrollbar-width:thin}
+#pane-semaphore ::-webkit-scrollbar{width:9px;height:9px}
+#pane-semaphore ::-webkit-scrollbar-track{background:transparent}
+#pane-semaphore ::-webkit-scrollbar-thumb{background:rgba(200,188,165,.24);border:2px solid transparent;
+  background-clip:padding-box;border-radius:999px}
+#pane-semaphore ::placeholder{color:var(--faint);opacity:.8}
+#pane-semaphore select{color-scheme:dark}
+#pane-semaphore button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+#pane-semaphore input,#pane-semaphore select,#pane-semaphore textarea{font:inherit;color:inherit}
+#pane-semaphore :focus-visible{outline:2px solid var(--focus);outline-offset:2px;border-radius:var(--radius);
+  box-shadow:0 0 0 4px rgba(216,205,184,.14)}
+#pane-semaphore input:focus-visible,#pane-semaphore textarea:focus-visible,#pane-semaphore select:focus-visible{outline:none;box-shadow:none}
+#pane-semaphore .hint{color:var(--faint);font-family:var(--body);font-size:13px;font-style:italic}
+/* ---------- header ---------- */
+#pane-semaphore header.top{display:flex;align-items:center;gap:18px;padding:15px 22px 13px;border-bottom:1px solid var(--line)}
+#pane-semaphore .mark h1{display:flex;align-items:center;gap:11px;
+  font:400 14px/1.4 var(--serif);letter-spacing:.2em;text-transform:uppercase;color:var(--muted);
+  text-shadow:0 1px 3px rgba(0,0,0,.5)}
+#pane-semaphore .markglyph{flex:0 0 9px;width:9px;height:9px;background:var(--brok);transform:rotate(45deg);
+  border-radius:1.5px;box-shadow:0 0 12px rgba(239,91,76,.42)}
+#pane-semaphore .top .grow{flex:1}
+#pane-semaphore .top .actions{display:flex;gap:8px;align-items:center}
+#pane-semaphore .btn{display:inline-flex;align-items:center;justify-content:center;min-height:31px;
+  padding:5px 13px;border-radius:var(--radius);
+  font-family:var(--sans);font-size:11px;letter-spacing:.09em;
+  background:var(--slab);border:1px solid var(--line);color:var(--muted);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04);
+  transition:transform .14s ease,background-color .14s,border-color .14s,color .14s}
+#pane-semaphore .btn:hover{background:rgba(216,205,184,.08);border-color:var(--line2);color:var(--key2);transform:translateY(-1px)}
+#pane-semaphore .btn:active{transform:translateY(0) scale(.985)}
+#pane-semaphore .btn.primary{color:#2A2620;border-color:var(--key);background:linear-gradient(180deg,var(--key2),var(--key))}
+#pane-semaphore .btn.primary:hover{background:var(--key2);color:#2A2620}
+#pane-semaphore .btn.ghost{border-color:transparent;background:none;color:var(--faint)}
+#pane-semaphore .btn.ghost:hover{color:var(--key2);border-color:var(--line);background:rgba(216,205,184,.06)}
+#pane-semaphore .btn:disabled{opacity:.4;cursor:not-allowed}
+/* ---------- radar ---------- */
+/* ---------- swatches (grade glyph language) ---------- */
+#pane-semaphore .sw{display:inline-block;flex:0 0 auto}
+#pane-semaphore .sw-fixed{width:9px;height:9px;background:var(--c,var(--brok));transform:rotate(45deg)}
+/* Uncertain is a dashed outline of the fixed diamond, here as on the board and
+   the cards. It was a blurred dot, the board's haze in small; Mark chose the
+   dash for the whole room on 2026-10-07, when the cards had already gone
+   dashed and the two languages stood side by side. */
+#pane-semaphore .sw-uncertain{width:9px;height:9px;transform:rotate(45deg);border:1.5px dashed var(--c,var(--brok));border-radius:1px}
+#pane-semaphore .sw-call{width:15px;height:5px;border-radius:2px;background:linear-gradient(90deg,
+  var(--r-ann) 0 33%,var(--r-pub) 33% 66%,var(--r-dl) 66% 100%)}
+/* ---------- search ---------- */
+#pane-semaphore #search{border:1px solid var(--line);border-radius:var(--radius);background:var(--field);
+  padding:6px 10px;font-family:var(--body);font-size:13.5px;color:var(--ink);width:190px;min-height:31px;
+  box-shadow:inset 0 1px 2px rgba(0,0,0,.2)}
+#pane-semaphore #search:focus{outline:none;border-color:var(--key);box-shadow:0 0 0 2px rgba(216,205,184,.1)}
+#pane-semaphore #search[hidden],#pane-semaphore #searchBtn[hidden]{display:none}
+/* ---------- board ---------- */
+#pane-semaphore #board{padding:0 22px 60px}
+#pane-semaphore .axisrow,#pane-semaphore .row,#pane-semaphore .ghead{display:grid;grid-template-columns:236px 88px 1fr}
+#pane-semaphore .axisrow{position:sticky;top:0;z-index:6;background:var(--paper);border-bottom:1px solid var(--line2)}
+#pane-semaphore .axisrow .corner{display:flex;align-items:flex-end;padding:6px 8px 4px 2px;font:9.5px var(--sans);
+                 letter-spacing:.16em;text-transform:uppercase;color:var(--faint)}
+#pane-semaphore .axis{position:relative;height:30px}
+#pane-semaphore .axis .mcell{position:absolute;bottom:4px;font:9.5px var(--sans);letter-spacing:.1em;text-transform:uppercase;
+  color:var(--faint);padding-left:6px;white-space:nowrap}
+#pane-semaphore .axis .mcell.jan{color:var(--key2)}
+/* The axis used to have a second setting for widths this app no longer
+   meets: twelve months across a phone gave each about twenty-five pixels,
+   three uppercase letters need forty, and the axis read JULAUGSEPOCT — so
+   each month said its initial instead, out of a data-brief attribute the
+   renderer wrote beside the full name. Both are gone. The narrowest thing
+   this runs on is an iPad held upright, which has room for the words.  */
+#pane-semaphore .axis .nowcaret{position:absolute;bottom:-1px;width:0;height:0;transform:translateX(-50%);
+                border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:6px solid var(--today)}
+#pane-semaphore .grp{position:relative;margin-top:14px;padding-left:13px}
+#pane-semaphore .axisrow+.grp{margin-top:8px}
+#pane-semaphore .grp::before{content:"";position:absolute;left:0;top:0;bottom:5px;width:1px;background:var(--line2)}
+#pane-semaphore .grp>.ghead{position:relative;z-index:1}
+#pane-semaphore .grp.collapsed::before{display:none}
+#pane-semaphore .grp>.row,#pane-semaphore .grp>.ghead{grid-template-columns:223px 88px 1fr}
+#pane-semaphore .ghead .gc{grid-column:1 / -1;display:flex;align-items:center;gap:7px;height:20px;
+            margin-left:-13px;padding:0 9px 0 19px;
+            background:rgba(216,205,184,.07);border-radius:0 var(--radius) var(--radius) 0;
+            box-shadow:inset 1px 0 0 var(--line2)}
+/* The only way to fold a group, and a 13×9 mark to aim at. The arrow keeps
+   its size and its place in the line; the target reaches past it into the
+   band's own padding, which is dead space either way. */
+#pane-semaphore .ghead button.caret{position:relative;color:var(--faint);font-size:9px;
+  width:13px;line-height:1}
+#pane-semaphore .ghead button.caret::before{content:'';position:absolute;
+  top:-8px;bottom:-8px;left:-19px;right:-8px}
+#pane-semaphore .ghead .gname{font:600 9.5px var(--sans);letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+#pane-semaphore .ghead .gcount{font:10px var(--mono);color:var(--faint)}
+#pane-semaphore .row{border-bottom:1px solid var(--grid)}
+#pane-semaphore .row:hover{background:rgba(216,205,184,.045)}
+#pane-semaphore .cell.name{display:flex;align-items:center;gap:8px;min-width:0;padding:0 8px 0 4px;height:36px}
+#pane-semaphore .cell.name .nm{background:none;border:none;text-align:left;font-family:var(--body);font-size:14px;
+               white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:2px 0;cursor:pointer}
+#pane-semaphore .cell.name .nm:hover{color:var(--key2);text-decoration:underline;text-underline-offset:4px;text-decoration-color:var(--line2)}
+/* An arena's standing weight is carried by how much ink its name has: work you
+   are in reads denser, work you only watch reads lighter, and the ordinary case
+   is left unmarked. One value scale, no new element and no colour — the same
+   means the wall already uses to quiet its tail. */
+#pane-semaphore .nm.w-central,#pane-semaphore .wname.w-central{font-weight:600}
+#pane-semaphore .nm.w-peripheral,#pane-semaphore .wname.w-peripheral{color:var(--muted)}
+#pane-semaphore .duemk{flex:0 0 8px;width:8px;height:8px;background:var(--todo);border-radius:1px;
+       transform:rotate(45deg);box-shadow:0 0 9px var(--todo-line);padding:0}
+#pane-semaphore .duemk:hover{filter:brightness(1.25)}
+/* "there is more coming, with no date on it yet" — a small dashed chip on
+   a 36px row, so its reach fills the row's height rather than its own. */
+#pane-semaphore .loom{position:relative;display:inline-flex;align-items:center;gap:4px;
+      font-size:11px;color:var(--faint);
+      border:1px dashed rgba(216,205,184,.3);border-radius:99px;padding:1px 7px;flex:0 0 auto}
+#pane-semaphore .loom::before{content:'';position:absolute;inset:-6px -4px}
+#pane-semaphore .loom:hover{border-color:var(--key);color:var(--key2)}
+/* The column beside the names: where each arena stands, in the cards' own
+   pill (.wpw), and nothing else — the bar on the calendar says when. Its
+   heading orders the groups by it. */
+#pane-semaphore .cell.where{display:flex;align-items:center;height:36px;padding:0 6px 0 2px;border-right:1px solid var(--grid)}
+#pane-semaphore .cell.where .wpw{cursor:pointer}
+#pane-semaphore .cell.where .wpw:hover{background:rgba(216,205,184,.07)}
+#pane-semaphore .corner.where{padding-left:0}
+#pane-semaphore .whsort{display:inline-flex;align-items:baseline;gap:5px;font:inherit;letter-spacing:inherit;text-transform:inherit;
+      color:var(--faint);padding:2px 0;border-bottom:1px dashed var(--line);border-radius:0}
+#pane-semaphore .whsort i{font-style:normal;font-size:9px;letter-spacing:0}
+#pane-semaphore .whsort:hover{color:var(--key2);border-bottom-color:var(--line2)}
+#pane-semaphore .whsort.on{color:var(--ink);border-bottom-color:var(--key)}
+#pane-semaphore .lane{position:relative;height:36px;overflow:hidden}
+#pane-semaphore .lane .now{position:absolute;top:0;bottom:0;width:1.5px;background:var(--today);opacity:.7;transform:translateX(-50%);pointer-events:none}
+/* markers */
+#pane-semaphore .mk{position:absolute;cursor:pointer}
+#pane-semaphore .mk:hover{filter:brightness(1.2)}
+/* A marker is drawn at the size the chart can afford — a 12px diamond, a
+   4px call bar, a 12px band — and every one of them is a target as well as a
+   picture. Each carries a transparent reach out to the height of the lane
+   it sits in, so a near miss lands on the marker rather than on the row
+   behind it. The Ledger's board has done this since it was written; this
+   is the same halo, in the same terms. */
+#pane-semaphore .mk::before{content:'';position:absolute;inset:-8px -6px;border-radius:6px}
+#pane-semaphore .rb::before{inset:-6px 0}
+#pane-semaphore .bk{z-index:3}
+/* Brokerage, a size down from what it was (Mark, 2026-10-07: "a bit
+   smaller") now that it shares the row with call bars, and a little above
+   the middle of the row so the bars run underneath it. */
+#pane-semaphore .bk-fixed{top:40%;width:12px;height:12px;background:var(--brok);transform:translate(-50%,-50%) rotate(45deg);border-radius:2px}
+#pane-semaphore .bk-unc{top:40%;width:11px;height:11px;transform:translate(-50%,-50%) rotate(45deg);border-radius:2px;
+         border:1.5px dashed var(--brok);background:var(--paper)}
+#pane-semaphore .bk-band{top:40%;height:12px;transform:translateY(-50%);min-width:9px;border-radius:3px;
+         background:var(--brok-soft);border-left:2px solid var(--brok);border-right:2px solid var(--brok);
+         display:flex;align-items:center;overflow:hidden}
+#pane-semaphore .bk-band .bl{font-family:var(--body);font-size:10.5px;line-height:1;color:var(--bl-ink,#FFDCD3);padding:0 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;position:relative}
+#pane-semaphore .bk-band.unc{background:none;border:1.5px dashed var(--brok)}
+#pane-semaphore .bk-band.unc .bl{color:var(--brok-deep)}
+/* Gone by: grey, so the colour on a row is what is still to come. The grey is
+   the room's line colour rather than --faint, which is a warm khaki and, as a
+   solid bar beside the today line, read as a second gold. */
+#pane-semaphore .bk-fixed.past{background:var(--line2)}
+#pane-semaphore .bk-unc.past{border-color:var(--line2)}
+#pane-semaphore .bk-band.past{background:var(--grid);border-color:var(--line2)}
+#pane-semaphore .bk-band.past .bl{color:var(--muted)}
+/* a call: one bar from publication to deadline (laneHTML) */
+#pane-semaphore .cl{z-index:2}
+#pane-semaphore .rb{height:4px;min-width:3px;border-radius:2px;background:linear-gradient(90deg,var(--r-pub),var(--r-dl))}
+#pane-semaphore .rb.unc{height:5px;background:none;border:1px dashed var(--r-pub);border-right:2px solid var(--r-dl)}
+#pane-semaphore .rb.past{background:var(--line2)}
+#pane-semaphore .rb.unc.past{background:none;border-color:var(--line2)}
+#pane-semaphore .rb i{position:absolute;top:-3px;bottom:-3px;width:2px;margin-left:-1px;border-radius:1px;background:var(--r-dl)}
+#pane-semaphore .rb.past i{background:var(--muted)}
+#pane-semaphore .rb.lead-in{-webkit-mask-image:linear-gradient(90deg,transparent,#000 22px);mask-image:linear-gradient(90deg,transparent,#000 22px)}
+#pane-semaphore .rb.run-on{-webkit-mask-image:linear-gradient(270deg,transparent,#000 22px);mask-image:linear-gradient(270deg,transparent,#000 22px)}
+#pane-semaphore .empty{padding:60px 0;text-align:center;color:var(--muted);font-size:15px}
+#pane-semaphore .empty .btns{margin-top:14px;display:flex;gap:10px;justify-content:center}
+/* ---------- the sheet ----------
+   Anything that lifts off the board is light bone — the material of the
+   primary control. On that ground every meaning has to be restated darker,
+   or it would glare instead of speak. */
+#pane-semaphore #card,#pane-semaphore .mbox,#pane-semaphore #tip{
+  --surface:linear-gradient(150deg,#F4EEE1,#E7DFCE);
+  --surface2:linear-gradient(160deg,#F6F1E6,#EAE2D2);
+  --panel:#F1EBDD;
+  --field:#FCFAF3; --strip:rgba(42,38,32,.05); --sink:rgba(42,38,32,.05);
+  --well:rgba(42,38,32,.075);
+  --dot:#F1EBDD;
+  /* --faint was #8C8474, which cleared nothing: 2.8:1 on the deepest of the
+     four grounds above and 3.6 on the lightest, on a panel where it letters
+     the band labels, the sweep line, the link hosts and the quiet verbs.
+     Struck deep enough to read on all of them. */
+  --ink:#282420; --muted:#5E574B; --faint:#6A6250;
+  --key:#6E6656; --key2:#282420;
+  --grid:rgba(42,38,32,.13); --line:rgba(42,38,32,.22); --line2:rgba(42,38,32,.36);
+  --slab:linear-gradient(180deg,rgba(255,255,255,.7),rgba(42,38,32,.05));
+  --brok:#C2382C; --brok-deep:#8E241B; --brok-soft:rgba(194,56,44,.16);
+  --bl-ink:#7E1F17;
+  --call:#4646B8;
+  --r-ann:#137F9B; --r-pub:#4646B8; --r-dl:#A32E87;
+  --today:#9A6A00;
+  --notice:#4646B8; --notice-ink:#33338F; --notice-line:rgba(70,70,184,.24);
+  --todo:#3F7A31; --todo-ink:#2C5A21; --todo-bg:rgba(63,122,49,.10); --todo-line:rgba(63,122,49,.26);
+  --hi:rgba(154,106,0,.16); --hi2:rgba(154,106,0,.45);
+  --focus:#282420;
+  --shadow:0 16px 40px rgba(0,0,0,.45),0 2px 8px rgba(0,0,0,.3);
+  color:var(--ink)}
+#pane-semaphore #card .btn.primary,#pane-semaphore .mbox .btn.primary{
+  background:linear-gradient(180deg,#3B352C,#282420);border-color:#282420;color:#F4EFE3}
+#pane-semaphore #card .btn.primary:hover,#pane-semaphore .mbox .btn.primary:hover{background:#282420;color:#FFF}
+#pane-semaphore #card .btn:hover,#pane-semaphore .mbox .btn:hover{background:rgba(42,38,32,.07);border-color:var(--line2);color:var(--ink)}
+/* ---------- shared card ---------- */
+#pane-semaphore .card{background:var(--surface);
+       border:1px solid var(--line);border-radius:var(--radius-lg);overflow:hidden;
+       box-shadow:inset 0 1px 0 rgba(255,255,255,.035)}
+#pane-semaphore .card>.chd{display:flex;align-items:center;gap:9px;padding:9px 13px;background:var(--strip);
+           border-bottom:1px solid var(--grid);font:600 9.5px var(--sans);letter-spacing:.17em;
+           text-transform:uppercase;color:var(--muted)}
+#pane-semaphore .card>.chd .ctitle{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#pane-semaphore .card.brok>.chd{background:rgba(239,91,76,.1);border-bottom-color:rgba(239,91,76,.3)}
+#pane-semaphore .card.brok>.chd .ctitle{color:var(--brok-deep)}
+#pane-semaphore .card>.chd .cact{opacity:0}
+#pane-semaphore .card:hover>.chd .cact{opacity:1}
+#pane-semaphore .card>.cbd{padding:12px}
+/* ---------- brokerage wall ---------- */
+#pane-semaphore .viewseg{display:flex;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;
+  background:var(--slab);box-shadow:inset 0 1px 0 rgba(255,255,255,.04)}
+/* The room's own two views. The unlit one is quiet but it is still a control
+   in the ribbon, so it takes the ribbon's quiet rank rather than the room's —
+   the bar's ground is lighter at its top edge than the board's is. */
+#pane-semaphore .viewseg button{padding:6px 15px;font-family:var(--sans);font-size:10.5px;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--oa-ctl);border-right:1px solid var(--line)}
+#pane-semaphore .viewseg button:last-child{border-right:none}
+#pane-semaphore .viewseg button:hover{color:var(--key2)}
+#pane-semaphore .viewseg button.on{background:rgba(216,205,184,.17);color:var(--ink)}
+#pane-semaphore #wall{padding:22px 22px 70px}
+#pane-semaphore .whead{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+#pane-semaphore .wsort{display:flex;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--slab)}
+#pane-semaphore .wsort button{padding:5px 13px;font-family:var(--sans);font-size:10px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--faint);border-right:1px solid var(--line)}
+#pane-semaphore .wsort button:last-child{border-right:none}
+#pane-semaphore .wsort button:hover{color:var(--key2)}
+#pane-semaphore .wsort button.on{background:rgba(216,205,184,.15);color:var(--ink)}
+#pane-semaphore .wsay{font-family:var(--body);font-size:12.5px;font-style:italic;color:var(--faint)}
+#pane-semaphore .wsay b{font-style:normal;font-weight:400;color:var(--notice-ink)}
+/* the one place the mechanics are spelled out, and it stays shut until asked */
+#pane-semaphore .howbtn{margin-left:auto;font-family:var(--sans);font-size:9.5px;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--faint);padding:2px 0;
+  border-bottom:1px dashed var(--line);border-radius:0}
+#pane-semaphore .howbtn:hover,#pane-semaphore .howbtn.on{color:var(--key2);border-bottom-color:var(--line2)}
+#pane-semaphore .how{max-width:780px;margin:-4px 0 22px;padding:15px 18px;background:var(--sink);
+  border:1px dashed var(--line);border-radius:var(--radius-lg)}
+#pane-semaphore .how dl{display:grid;grid-template-columns:auto 1fr;gap:7px 16px;align-items:baseline;margin:0}
+#pane-semaphore .how dt{font:600 9.5px var(--sans);letter-spacing:.16em;text-transform:uppercase;
+  color:var(--muted);white-space:nowrap}
+#pane-semaphore .how dd{margin:0;font-family:var(--body);font-size:13px;line-height:1.6;color:var(--faint)}
+#pane-semaphore .how dd b{font-weight:400;color:var(--ink)}
+#pane-semaphore .how .coda{margin-top:12px;padding-top:11px;border-top:1px solid var(--grid);
+  font-family:var(--body);font-size:12.5px;font-style:italic;line-height:1.55;color:var(--faint)}
+/* Prominence stands in for any "do this now" label: the higher a card stands in
+   the rotation, the more of itself it shows. Three bands, no headings — size
+   alone says which is which. */
+#pane-semaphore .wgrid.g-lead{grid-template-columns:repeat(auto-fill,minmax(302px,1fr));gap:14px}
+#pane-semaphore .wgrid.g-mid{grid-template-columns:repeat(auto-fill,minmax(254px,1fr));gap:10px}
+#pane-semaphore .wgrid.g-rest{grid-template-columns:repeat(auto-fill,minmax(186px,1fr));gap:5px}
+#pane-semaphore .wgrid+.wgrid{margin-top:22px;padding-top:22px;border-top:1px dashed var(--grid)}
+#pane-semaphore .wcard.t-mid .wch{padding:8px 11px}
+#pane-semaphore .wcard.t-rest{background:none;border-color:transparent;box-shadow:none}
+#pane-semaphore .wcard.t-rest:hover{background:var(--surface);border-color:var(--line)}
+#pane-semaphore .wcard.t-rest .wch{background:none;border-bottom:none;padding:5px 9px}
+#pane-semaphore .wcard.t-rest .wname{font-size:13px;color:var(--muted)}
+/* A tail card is a name and nothing else until it is reached for. Its head
+   controls used to wait there invisible but still taking their width, which on
+   a 186px card left the name two letters and an ellipsis; now they take no room
+   until the card is hovered, and the name has the line. One that is set — a
+   pin, today's stamp, a lit ask — stays. */
+#pane-semaphore .wcard.t-rest:not(:hover):not(:focus-within) .wch .pin:not(.on),
+#pane-semaphore .wcard.t-rest:not(:hover):not(:focus-within) .wch .stamp:not(.on),
+#pane-semaphore .wcard.t-rest:not(:hover):not(:focus-within) .wch .wedit{display:none}
+#pane-semaphore .wcard.t-rest.held{background:var(--surface);border-color:var(--grid)}
+#pane-semaphore .wcnt{flex:0 0 auto;font:9.5px var(--mono);color:var(--faint);opacity:0}
+#pane-semaphore .wcard:hover .wcnt{opacity:1}
+/* the sweep stamp — the only always-present control, and it says nothing about
+   itself until you reach for it */
+#pane-semaphore .stamp{flex:0 0 20px;width:20px;height:20px;border:1px solid var(--line);border-radius:50%;
+  color:var(--faint);font-size:10px;line-height:1;display:flex;align-items:center;justify-content:center;
+  opacity:0;transition:opacity .16s,color .16s,background-color .16s,border-color .16s,transform .16s}
+#pane-semaphore .wcard:hover .stamp,#pane-semaphore .wcard:focus-within .stamp{opacity:1}
+#pane-semaphore .stamp:hover{border-color:var(--key);color:var(--ink);transform:scale(1.08)}
+/* a card swept today keeps a quiet mark, so today's work stays legible */
+#pane-semaphore .stamp.on{opacity:.72;background:var(--key);border-color:var(--key);color:#F1EBDD}
+/* Asking the agent (askHTML): a ring in the agents' own indigo, hidden until
+   the card is reached for like the pin, and lit — a filled centre with a glow
+   — for as long as the ask stands, so a wall can be read for what is waiting
+   on tonight's run. */
+#pane-semaphore .wask{flex:0 0 22px;height:22px;display:flex;align-items:center;justify-content:center;border-radius:var(--radius);
+  opacity:0;transition:opacity .14s,background-color .14s}
+#pane-semaphore .wask i{width:9px;height:9px;border-radius:50%;border:1px solid var(--faint);
+  transition:background-color .14s,border-color .14s,box-shadow .14s}
+#pane-semaphore .wcard:hover .wask,#pane-semaphore .wcard:focus-within .wask,#pane-semaphore .wask.on,
+#pane-semaphore #card .wask{opacity:1}
+@media (hover:none){#pane-semaphore .wask{opacity:1}}
+#pane-semaphore .wask:hover{background:rgba(216,205,184,.09)}
+#pane-semaphore #card .wask:hover{background:rgba(42,38,32,.07)}
+#pane-semaphore .wask:hover i{border-color:var(--notice-ink)}
+#pane-semaphore .wask.on i{background:var(--notice);border-color:var(--notice);box-shadow:0 0 0 3px var(--notice-line)}
+#pane-semaphore .nbtn{flex:0 0 auto;font-family:var(--sans);font-size:9px;letter-spacing:.12em;text-transform:uppercase;
+  padding:4px 9px;border-radius:99px;border:1px solid var(--notice-line);color:var(--notice-ink);
+  transition:background-color .14s,border-color .14s,color .14s}
+#pane-semaphore .nbtn:hover{background:var(--notice-line);border-color:var(--notice);color:var(--notice-ink)}
+/* the link composer, opened in place wherever links live */
+#pane-semaphore .lkform{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:7px;margin:3px 0 0 8px;
+  background:var(--field);border:1px solid var(--line);border-radius:var(--radius)}
+#pane-semaphore .lkform input{border:1px solid var(--line);border-radius:var(--radius);background:var(--field);color:var(--ink);
+  padding:5px 8px;font-family:var(--body);font-size:13px;min-width:0}
+#pane-semaphore .lkform .lu{flex:1 1 100%;font:12px var(--mono)}
+#pane-semaphore .lkform .lx{flex:1 1 auto}
+#pane-semaphore .lkform .ib{font-size:12px}
+#pane-semaphore .tabn{margin-left:7px;font:9.5px var(--mono);padding:1px 5px;border-radius:99px;
+  background:rgba(42,38,32,.16);color:var(--ink)}
+/* A disclosure control should not change shape when you use it. The header keeps
+   exactly the same height, padding and place whether the section is open or
+   shut — opening adds room beneath it, so the title stays anchored to its own
+   cards instead of drifting up against the section above. Being open shows in
+   the one place it belongs: the title comes forward to full ink. */
+#pane-semaphore .wgroup{margin-bottom:0}
+#pane-semaphore .wgroup.open{margin-bottom:26px}
+#pane-semaphore .wh{display:flex;align-items:baseline;gap:9px;width:100%;text-align:left;color:inherit;
+    padding:10px 0 9px;margin:0;border-radius:0;border-bottom:1px solid var(--grid)}
+#pane-semaphore .wgroup.open .wh{border-bottom-color:var(--line)}
+#pane-semaphore .wgroup.open .wt{color:var(--ink)}
+#pane-semaphore .wgroup.open .wcaret{color:var(--muted)}
+#pane-semaphore .wgroup.open .wgrid,#pane-semaphore .wgroup.open .wrest{margin-top:16px}
+#pane-semaphore .wh:hover .wt{color:var(--key2)}
+#pane-semaphore .wh:hover .wcaret{color:var(--muted)}
+#pane-semaphore .wcaret{flex:0 0 11px;font-size:9px;line-height:1;color:var(--faint);transition:color .14s}
+#pane-semaphore .wt{font:600 10px var(--sans);letter-spacing:.18em;text-transform:uppercase;color:var(--muted);
+    transition:color .14s}
+#pane-semaphore .wc{font:10px var(--mono);color:var(--faint)}
+#pane-semaphore .wgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(282px,1fr));gap:14px;align-items:start}
+/* ───────── a card has two sides ─────────
+   The front is what the arena is: its state, its notes, its tools. The back is
+   what the sweeping turned up. Both faces stay mounted and a turn is a class
+   toggle, never a swap.
+
+   The card is a 3D object only while it is actually turning. At rest it is flat
+   — no transform, no preserve-3d, no compositing hint — because a flattened
+   subtree parked forever in a composited layer is exactly where thin-bordered
+   things quietly fail to repaint. The turn's end state and the resting state
+   are the same picture, so dropping the 3D on landing is invisible. */
+#pane-semaphore .wcard{position:relative;perspective:1700px}
+#pane-semaphore .wfin{position:relative;width:100%;min-height:44px;
+      transition:height .46s cubic-bezier(.4,.1,.2,1)}
+/* A no-script floor, so a card is never a 44px sliver if the box is never
+   handed its height. It sits below the shortest real front — a head, a phase
+   line, a strip, an empty links band and a foot — because a floor above that
+   is the empty space the fitted fronts got rid of. */
+#pane-semaphore .wcard.t-lead .wfin{min-height:150px}
+#pane-semaphore .wcard.t-mid .wfin{min-height:130px}
+#pane-semaphore .wcard.turning{pointer-events:none}
+#pane-semaphore .wcard.turning .wfin{transform-style:preserve-3d;will-change:transform}
+#pane-semaphore .wcard.flipped.turning .wfin{transform:rotateY(180deg)}
+/* the card's own chrome belongs to each face, so the back is a card too */
+/* Both faces are the same three parts, top to bottom: a head that never moves,
+   a middle that takes whatever room is left and scrolls when there is more than
+   that, and a foot on the floor. Two cards side by side then agree about where
+   their head ends and where their foot begins whatever sits between — which is
+   the whole of the overview a wall is for. */
+#pane-semaphore .wface{position:absolute;top:0;left:0;width:100%;height:100%;
+       display:flex;flex-direction:column;
+       --c:var(--brok);background:linear-gradient(150deg,rgba(44,39,33,.9),rgba(35,31,26,.9));
+       border:1px solid var(--line);border-radius:var(--radius-lg);overflow:hidden;
+       box-shadow:inset 0 1px 0 rgba(255,255,255,.035);
+       transition:border-color .16s,background-color .16s}
+#pane-semaphore .wface>.wch{flex:0 0 auto}
+/* The scroll is allowed to pass on to the page. It was `contain`, which held
+   every wheel turn over a card even when the card had nothing to scroll, so
+   with the pointer resting on a card the board would not move (Mark,
+   2026-10-06). A card that does scroll still takes the wheel first; only at
+   its own end does the page carry on. */
+#pane-semaphore .wscroll{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;
+       overscroll-behavior:auto}
+#pane-semaphore .wsin{display:flow-root}
+/* On the front the middle fills the box and the links band stands on its
+   floor (see midNatural): a card evened up to its row keeps its spare room
+   between the strip and the links, and every band in a row ends on one line. */
+#pane-semaphore .wfront .wscroll{display:flex;flex-direction:column}
+#pane-semaphore .wfront .wsin{flex:1 0 auto;display:flex;flex-direction:column}
+#pane-semaphore .wfront .wlk{margin-top:auto}
+#pane-semaphore .wfoot{flex:0 0 auto;margin-top:auto}
+#pane-semaphore .wfoot>.leadadd{padding:4px 5px 4px 7px;border-top:1px solid var(--grid)}
+/* the chooser is a list, and a long one on an arena with a full calendar; it
+   gets a floor of its own rather than pushing the card off the wall */
+#pane-semaphore .wfoot-pick{max-height:210px;overflow-y:auto}
+/* There is more below: said at the sill, by the card's own ground running out
+   rather than by a control. It rides the scrollport instead of the content —
+   sticky at the floor, and pulled back out of the flow so it costs no height —
+   so it stays put while the list moves under it. */
+#pane-semaphore .wface.scrolls .wscroll::after{
+       content:"";display:block;position:sticky;bottom:0;height:30px;margin-top:-30px;
+       background:linear-gradient(180deg,rgba(20,17,13,0),rgba(20,17,13,.86));
+       pointer-events:none;opacity:1;transition:opacity .18s ease}
+/* and it stops saying it once there is nothing more to say */
+#pane-semaphore .wface.scrolls .wscroll.atend::after{opacity:0}
+/* and the rail it scrolls on is drawn a shade firmer than the room's, because
+   here it is the one thing saying the card has a further part */
+#pane-semaphore .wface.scrolls .wscroll{scrollbar-color:rgba(216,205,184,.34) transparent}
+#pane-semaphore .wface.scrolls .wscroll::-webkit-scrollbar-thumb{background:rgba(216,205,184,.34)}
+#pane-semaphore .wcard:hover .wface{border-color:var(--line2)}
+/* Flattened, not preserve-3d: a face holding a 3D context of its own hands every
+   child its own backface and they turn individually. The hair of depth keeps the
+   two coplanar sheets from z-fighting. */
+#pane-semaphore .wcard.turning .wface{backface-visibility:hidden;-webkit-backface-visibility:hidden;
+                      transform:translateZ(.6px)}
+#pane-semaphore .wcard.turning .wback{transform:rotateY(180deg) translateZ(.6px)}
+#pane-semaphore .wcard:not(.showing-back) .wback{visibility:hidden}
+#pane-semaphore .wcard.showing-back .wfront{visibility:hidden}
+#pane-semaphore .wcard:not(.flipped) .wback{pointer-events:none}
+#pane-semaphore .wcard.flipped .wfront{pointer-events:none}
+#pane-semaphore #wall.manual .wcard{cursor:grab}
+#pane-semaphore .wcard.drag{opacity:.35;cursor:grabbing}
+#pane-semaphore .wcard.over{outline:2px dashed var(--key);outline-offset:3px}
+/* where did it land? a ring that fades, so a stamped card is never lost */
+@keyframes pane-semaphore-settle{from{box-shadow:0 0 0 3px var(--hi2),0 0 22px var(--hi2)}
+                  to{box-shadow:0 0 0 3px rgba(0,0,0,0),0 0 22px rgba(0,0,0,0)}}
+@media (prefers-reduced-motion:no-preference){#pane-semaphore .wcard.settle .wface{animation:pane-semaphore-settle 1.5s ease-out}}
+/* The turn control. It sits in the same slot on both faces and both faces carry
+   the same trailing controls, so it lands under the cursor that opened it —
+   turning a stack of cards back is one stationary click each. */
+#pane-semaphore .turn{flex:0 0 auto;display:flex;align-items:center;justify-content:center;gap:6px;
+      min-width:38px;height:22px;padding:0 8px;border:1px solid var(--line);border-radius:99px;
+      color:var(--faint);background:transparent;transition:color .14s,border-color .14s,background-color .14s}
+#pane-semaphore .turn:hover{color:var(--key2);border-color:var(--line2);background:rgba(216,205,184,.08)}
+#pane-semaphore .turn i{width:7px;height:7px;transform:rotate(45deg);border:1px solid currentColor;border-radius:1px}
+#pane-semaphore .turn .tn{font:10px var(--mono);line-height:1}
+/* Three steps, and only the last one takes a hue: nothing found here yet, a
+   diamond drawn in outline; something waiting on the other side, the same
+   diamond filled in bone and the count brought forward; one of them owed today,
+   the green every promise wears. */
+#pane-semaphore .turn.some{color:var(--ink);border-color:var(--line2);background:rgba(216,205,184,.05)}
+#pane-semaphore .turn.some i{background:var(--key2);border-color:var(--key2)}
+#pane-semaphore .turn.hit{border-color:var(--key);color:var(--key2)}
+#pane-semaphore .turn.back{font-size:12px}
+#pane-semaphore .turn.back .tn{font-family:var(--body);font-size:13px}
+/* the back's own head: the same bar, saying which side you are on */
+#pane-semaphore .wnm{flex:1;min-width:0;display:flex;align-items:baseline;gap:8px}
+#pane-semaphore .wnm .wname{flex:0 1 auto}
+/* The back used to say so only in a small grey word and a dimmer name, and on a
+   wall of turned and unturned cards that was not enough to tell the two sides
+   apart at a glance. So the back's head is lit a step brighter than the front's
+   and the word is a solid bone tag — the side shows in the head, which is the
+   one part every card has on screen however short it stands. */
+#pane-semaphore .wback .wch{background:rgba(216,205,184,.15);border-bottom-color:var(--line2)}
+#pane-semaphore .wsub{flex:0 0 auto;font:600 8.5px var(--sans);letter-spacing:.16em;text-transform:uppercase;
+      color:var(--paper);background:var(--key2);padding:3px 7px 2px;border-radius:99px}
+#pane-semaphore .wbody{padding:6px}
+/* one height for every head on the wall, so the line under them is one line */
+#pane-semaphore .wch{display:flex;align-items:center;gap:8px;padding:9px 11px;min-height:40px;
+     border-bottom:1px solid var(--grid);background:var(--strip)}
+#pane-semaphore .wname{flex:1;min-width:0;text-align:left;font-family:var(--body);font-size:14.5px;color:var(--ink);
+       white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:1px 0}
+#pane-semaphore .wname:hover{color:var(--brok-deep)}
+#pane-semaphore .wedit{opacity:0;color:var(--faint)}
+#pane-semaphore .wcard:hover .wedit,#pane-semaphore .wcard:focus-within .wedit{opacity:1}
+#pane-semaphore .rotbar .season b{font-style:normal;font-weight:400;color:var(--muted)}
+#pane-semaphore .rotbar .season{font-style:italic;color:var(--faint)}
+/* ---- the line on top of a card (cardLineHTML) ----
+   A phase line, then a strip of time. The phase word is a pill in the hue of
+   the date it is counting to: the deadline's pink while a call is open, the
+   publication's indigo while one is about to open, bone between calls. The
+   date after it is ink, italic and marked ≈ when it is uncertain, and the
+   count is in the room's today gold, the colour of the line on the strip it
+   is measured from. */
+#pane-semaphore .wline{padding:10px 12px 8px}
+#pane-semaphore .wph{display:flex;align-items:baseline;gap:8px;width:100%;margin-bottom:8px;text-align:left;
+        font-family:var(--body);font-size:13px;line-height:1.35;color:var(--ink)}
+#pane-semaphore button.wph:hover .wpd{text-decoration:underline;text-underline-offset:3px}
+#pane-semaphore .wpw{flex:0 0 auto;align-self:center;padding:3px 7px 2px;border:1px solid;border-radius:99px;
+        font:600 8.5px var(--sans);letter-spacing:.16em;text-transform:uppercase;white-space:nowrap}
+#pane-semaphore .wpw.open{color:var(--r-dl);border-color:rgba(228,105,196,.45)}
+#pane-semaphore .wpw.soon{color:var(--r-pub);border-color:rgba(138,139,240,.45)}
+#pane-semaphore .wpw.none{color:var(--muted);border-color:var(--line)}
+#pane-semaphore .wpt{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--muted)}
+#pane-semaphore .wpd{color:var(--ink)}
+#pane-semaphore .wpd.unc{font-style:italic}
+#pane-semaphore .wpn{flex:0 0 auto;font:10.5px var(--mono);color:var(--today);white-space:nowrap}
+/* The strip is drawn in percentages of its own width, not in an SVG, so it
+   follows the card's width on every screen and its letters stay letters.
+   Every mark is a button with a hit area a few pixels larger than the mark,
+   because a five-pixel bar is too thin to press on an iPad. */
+#pane-semaphore .wstrip{position:relative;padding-bottom:14px}
+#pane-semaphore .wsl{position:relative;height:12px}
+#pane-semaphore .wsl::before{content:"";position:absolute;left:0;right:0;top:6px;height:1px;background:var(--grid)}
+#pane-semaphore .wsr{position:absolute;top:5px;height:3px;border-radius:2px;background:var(--brok-soft)}
+#pane-semaphore .wsr.past{background:var(--grid)}
+#pane-semaphore .wsd{position:absolute;top:0;width:12px;height:12px;margin-left:-6px;padding:0;z-index:2;
+        display:flex;align-items:center;justify-content:center;border-radius:2px}
+#pane-semaphore .wsd::before{content:"";width:7px;height:7px;transform:rotate(45deg);border-radius:1px;
+        background:var(--brok);border:1px solid var(--brok);transition:box-shadow .14s}
+#pane-semaphore .wsd.unc::before{background:var(--panel);border-style:dashed}
+#pane-semaphore .wsd.past::before{background:var(--line2);border-color:var(--line2)}
+#pane-semaphore .wsd.past.unc::before{background:var(--panel)}
+#pane-semaphore .wsd:hover::before{box-shadow:0 0 0 3px var(--brok-soft)}
+#pane-semaphore .wsbars{padding-top:3px}
+#pane-semaphore .wsrow{position:relative;height:10px}
+#pane-semaphore .wsb{position:absolute;top:2px;height:6px;min-width:3px;padding:0;border-radius:3px;
+        background:linear-gradient(90deg,var(--r-pub),var(--r-dl));transition:box-shadow .14s}
+#pane-semaphore .wsb::after{content:"";position:absolute;left:-2px;right:-2px;top:-3px;bottom:-3px}
+#pane-semaphore .wsb.unc{background:none;border:1px dashed var(--r-pub);border-right:2px solid var(--r-dl)}
+/* no publication recorded: the bar comes in from the left edge rather than
+   starting somewhere it did not; no deadline: it runs out to the right */
+#pane-semaphore .wsb.lead-in{-webkit-mask-image:linear-gradient(90deg,transparent,#000 18px);mask-image:linear-gradient(90deg,transparent,#000 18px)}
+#pane-semaphore .wsb.run-on{-webkit-mask-image:linear-gradient(270deg,transparent,#000 18px);mask-image:linear-gradient(270deg,transparent,#000 18px)}
+#pane-semaphore .wsb i{position:absolute;top:-2px;bottom:-2px;width:2px;margin-left:-1px;border-radius:1px;background:var(--r-dl)}
+#pane-semaphore .wsb:hover{box-shadow:0 0 0 2px rgba(216,205,184,.28)}
+#pane-semaphore .wsb.fresh,#pane-semaphore .wsd.fresh::before{box-shadow:0 0 0 2px var(--notice-line)}
+#pane-semaphore .wsnow{position:absolute;top:0;bottom:14px;width:2px;margin-left:-1px;border-radius:1px;
+        background:var(--today);pointer-events:none;z-index:1}
+#pane-semaphore .wsx{position:absolute;left:0;right:0;bottom:0;height:14px;border-top:1px solid var(--line)}
+#pane-semaphore .wsx i{position:absolute;top:-3px;width:1px;height:3px;background:var(--line2)}
+#pane-semaphore .wsx span{position:absolute;top:1px;margin-left:2px;font:9px/1.2 var(--mono);color:var(--muted)}
+#pane-semaphore .wsx span.y{color:var(--key2)}
+#pane-semaphore .wlmore{padding-top:4px;font:10px var(--mono);color:var(--faint)}
+/* the links, as a part of their own (wallCard) */
+#pane-semaphore .wlk{background:var(--sink);border-top:1px solid var(--line);padding:6px 6px 6px}
+#pane-semaphore .wlkh{display:flex;align-items:baseline;gap:7px;padding:2px 9px 2px;
+        font:600 8.5px var(--sans);letter-spacing:.17em;text-transform:uppercase;color:var(--muted)}
+#pane-semaphore .wlkh b{font:9.5px var(--mono);font-weight:400;letter-spacing:0;color:var(--faint)}
+#pane-semaphore .wlk .wlinks{padding:0}
+#pane-semaphore .wlk .wlink{padding:5px 9px}
+#pane-semaphore .wlk .wlink .wn{font-size:13.5px}
+#pane-semaphore .wlk .lpin,#pane-semaphore .wlk .ldel{height:24px}
+#pane-semaphore .wlk .wpinned{padding:4px 9px 3px}
+#pane-semaphore .wlk .wnone{margin:3px 3px 2px;padding:8px}
+#pane-semaphore .wpinned{padding:8px 13px;font-family:var(--body);font-size:12.5px;font-style:italic;color:var(--faint)}
+#pane-semaphore .wlinks{padding:6px}
+#pane-semaphore .wlrow{display:flex;align-items:stretch}
+#pane-semaphore .wlrow+.wlrow{margin-top:1px}
+#pane-semaphore .wlrow>.wlink{flex:1;min-width:0}
+/* The pin and the cross wait at the end of a row until it is reached for —
+   a card of eight links with sixteen controls standing would be a toolbar —
+   and stand for good where there is no hover to reach with. The cross asks
+   once: pressed, it becomes the word, and only a second press removes. */
+#pane-semaphore .wlc{flex:0 0 auto;display:flex;align-items:center;gap:1px;padding-left:2px}
+#pane-semaphore .wlc>button{opacity:0}
+#pane-semaphore .wlrow:hover .wlc>button,#pane-semaphore .wlrow:focus-within .wlc>button,
+#pane-semaphore .wlc>.armed,#pane-semaphore .wlc>.lpin.on{opacity:1}
+@media (hover:none){#pane-semaphore .wlc>button{opacity:1}}
+#pane-semaphore .lpin,#pane-semaphore .ldel{height:26px;min-width:24px;display:flex;align-items:center;justify-content:center;
+        border-radius:var(--radius);color:var(--faint);font-size:10.5px;
+        transition:opacity .14s,background-color .14s,color .14s}
+#pane-semaphore .lpin i{width:7px;height:7px;transform:rotate(45deg);border:1px solid currentColor;border-radius:1px}
+#pane-semaphore .lpin:hover,#pane-semaphore .ldel:hover{background:rgba(216,205,184,.09);color:var(--key2)}
+#pane-semaphore #card .lpin:hover,#pane-semaphore #card .ldel:hover{background:rgba(42,38,32,.07);color:var(--ink)}
+#pane-semaphore .lpin.on{color:var(--key2)}
+#pane-semaphore .lpin.on i{background:currentColor}
+#pane-semaphore #card .lpin.on{color:var(--ink)}
+#pane-semaphore .ldel.armed{padding:0 8px;font:600 8.5px var(--sans);letter-spacing:.12em;text-transform:uppercase;
+        color:var(--brok-deep);background:var(--brok-soft)}
+#pane-semaphore .wlink{display:flex;align-items:baseline;gap:10px;padding:8px 9px;border-radius:var(--radius);
+       text-decoration:none;color:var(--ink);transition:background .14s,color .14s}
+#pane-semaphore .wlink .wn{flex:0 1 auto;min-width:0;font-family:var(--body);font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#pane-semaphore .wlink .wd{flex:0 0 auto;max-width:44%;margin-left:auto;font:10.5px var(--mono);color:var(--faint);
+           white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#pane-semaphore a.wlink::before{content:"\2197";color:var(--faint);font-size:11px;line-height:1}
+#pane-semaphore a.wlink:hover{background:rgba(216,205,184,.09);color:var(--key2)}
+#pane-semaphore #card a.wlink:hover{background:rgba(42,38,32,.07);color:var(--brok-deep)}
+#pane-semaphore a.wlink:hover::before,#pane-semaphore a.wlink:hover .wd{color:var(--brok)}
+#pane-semaphore .wlink.dead{color:var(--faint)}
+/* What the nightly agent brought and you have not swept since. It speaks in
+   the indigo every finding already speaks in on Dispatches, and it is a dot
+   and a word rather than a badge: it is there to be noticed when you read the
+   card, not to pull the eye across the wall. The ink is the full notice ink,
+   because a quiet colour at nine pixels is unreadable rather than subtle. */
+#pane-semaphore .wfresh{flex:0 0 auto;display:inline-flex;align-items:center;gap:4px;margin-left:7px;
+        font:9.5px/1 var(--mono);font-style:normal;letter-spacing:.04em;color:var(--notice-ink);vertical-align:1px}
+#pane-semaphore .wfresh::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--notice);flex:0 0 5px}
+/* the name gives up its width to the host rather than to a gap, so the word
+   sits right after the name it is about */
+#pane-semaphore .wlink .wfresh{margin-left:-4px;align-self:center}
+#pane-semaphore .wfdot{flex:0 0 6px;width:6px;height:6px;border-radius:50%;background:var(--notice);align-self:center}
+/* A link is picked up and dropped to reorder it (see "putting links in your
+   own order"), so its text cannot be selected by the same press, and the iPad
+   must not offer its own menu for a held link. */
+#pane-semaphore .wlinks[data-lks]{position:relative}
+#pane-semaphore .wlinks[data-lks] .wlrow{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+#pane-semaphore .wlrow.lkup{position:relative;z-index:2}
+#pane-semaphore .wlrow.lkup>.wlink{background:rgba(216,205,184,.13);color:var(--key2);cursor:grabbing;
+        box-shadow:0 6px 18px rgba(0,0,0,.38)}
+#pane-semaphore #card .wlrow.lkup>.wlink{background:#FBF8F1;color:var(--ink);box-shadow:0 6px 16px rgba(42,38,32,.22)}
+#pane-semaphore .wlinks.lkdragging .wlrow:not(.lkup)>.wlink{background:none;color:var(--ink)}
+#pane-semaphore .wlinks.lkdragging .wlrow:not(.lkup)>.wlink::before,
+#pane-semaphore .wlinks.lkdragging .wlrow:not(.lkup) .wd{color:var(--faint)}
+/* The pin is the one mark on this screen the world does not make — you make it.
+   So it stays bone, like every other control, and never borrows a meaning hue.
+   It sits in the card's head, because what it keeps is the whole card: hidden
+   until you reach for the card, and always shown once it is set. */
+#pane-semaphore .pin{flex:0 0 22px;height:22px;display:flex;align-items:center;justify-content:center;border-radius:var(--radius);
+     opacity:0;transition:opacity .14s,background-color .14s}
+#pane-semaphore .pin i{width:7px;height:7px;transform:rotate(45deg);border:1px solid var(--faint);border-radius:1px;
+       transition:background-color .14s,border-color .14s}
+#pane-semaphore .wcard:hover .pin,#pane-semaphore .wcard:focus-within .pin,#pane-semaphore .pin.on{opacity:1}
+/* without a pointer to hover with, a control that waits for hover never comes */
+@media (hover:none){#pane-semaphore .pin{opacity:1}}
+#pane-semaphore .pin:hover{background:rgba(216,205,184,.09)}
+#pane-semaphore #card .pin:hover{background:rgba(42,38,32,.07)}
+#pane-semaphore .pin:hover i{border-color:var(--key2)}
+#pane-semaphore .pin.on i{background:var(--key2);border-color:var(--key2);box-shadow:0 0 8px rgba(216,205,184,.35)}
+#pane-semaphore #card .pin.on i{box-shadow:none}
+#pane-semaphore .wnone{margin:9px;padding:13px;text-align:center;font-family:var(--body);font-size:13px;font-style:italic;
+        color:var(--faint);border:1px dashed var(--line);border-radius:var(--radius);background:var(--sink)}
+/* ---- pinned links (pinRowHTML) ----
+   One row each, in two columns where there is room: the stamp, the link, its
+   arena, the days since the stamp, and the pin to put it back. */
+#pane-semaphore .wpins{margin-bottom:22px;padding-bottom:22px;border-bottom:1px dashed var(--grid)}
+#pane-semaphore .wplist{display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:4px 16px}
+#pane-semaphore .wprow{display:flex;align-items:center;gap:10px;padding:5px 8px 5px 10px;border:1px solid var(--line);
+        border-radius:var(--radius);background:var(--surface)}
+#pane-semaphore .wprow .stamp{opacity:1}
+#pane-semaphore .wplink{flex:1;min-width:0;display:flex;align-items:baseline;gap:10px;padding:4px 2px;text-decoration:none;color:var(--ink)}
+#pane-semaphore .wplink .wn{flex:0 1 auto;min-width:0;font-family:var(--body);font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#pane-semaphore .wplink .wd{flex:0 1 auto;min-width:0;margin-left:auto;font:10.5px var(--mono);color:var(--faint);
+        white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#pane-semaphore .wplink .wfresh{margin-left:-4px;align-self:center}
+#pane-semaphore a.wplink:hover .wn{color:var(--key2);text-decoration:underline;text-underline-offset:3px}
+#pane-semaphore a.wplink:hover .wd{color:var(--brok)}
+#pane-semaphore .wplink.dead{color:var(--faint)}
+#pane-semaphore .wpa{flex:0 1 auto;max-width:30%;min-width:0;font-family:var(--body);font-size:12px;font-style:italic;color:var(--muted);
+        white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#pane-semaphore .wpa:hover{color:var(--brok-deep)}
+#pane-semaphore .wpage{flex:0 0 46px;text-align:right;font:11.5px var(--mono);color:var(--ink)}
+#pane-semaphore .wpage.never{color:var(--faint)}
+#pane-semaphore .wprow.on .wpage{color:var(--muted)}
+#pane-semaphore .wrest{margin-top:12px;font-size:12px;color:var(--faint);line-height:2}
+#pane-semaphore .wghost{font-family:var(--sans);font-size:10px;letter-spacing:.05em;color:var(--faint);
+        border:1px solid var(--line);border-radius:var(--radius);
+        padding:3px 10px;margin-right:6px;background:transparent}
+#pane-semaphore .wghost:hover{border-color:var(--line2);color:var(--ink)}
+#pane-semaphore .wempty{padding:44px 0;text-align:center;font-size:14px;font-style:italic;color:var(--faint)}
+/* ───────── leads ─────────
+   A lead is one object with one door per property, and no property has two:
+   the name opens the editor, the chip sets the day to come back, the three
+   steps set the stage, the foot adds a link, adds a note, or completes it.
+
+   It is drawn as a bounded card rather than a run of rows, and inside that
+   card each band — match, links, log — is a section of its own with air
+   around it. Before, the bands sat two pixels apart in the same grey and ran
+   together into one paragraph; the eye needs to know where one fact stops and
+   the next begins before it can read any of them. The label gutter still holds
+   them all to a single left edge, so the card gains separation without losing
+   its column. */
+/* ───────── the three sections ─────────
+   Each step is a region, not a marker: a sunken ground inside a hairline, its
+   name across the top, and the leads standing inside it. The same section is
+   used on the board and on the back of a single card, where there is only ever
+   room for one column of them.
+
+   The point of doing it this way is what it lets the lead card stop saying — no
+   card carries its own step, because the walls around it already do. */
+#pane-semaphore .lcols{display:flex;flex-direction:column;gap:9px}
+#pane-semaphore .lband{border:1px solid var(--grid);border-radius:12px;background:var(--sink);
+  padding:7px 9px 9px}
+#pane-semaphore .lbh{display:flex;align-items:baseline;gap:7px;margin:0;padding:2px 1px 8px;
+  font:600 8.5px var(--sans);letter-spacing:.2em;text-transform:uppercase;color:var(--faint)}
+#pane-semaphore .lbh b{font:600 9px var(--mono);letter-spacing:0;opacity:.7}
+#pane-semaphore .lband.k-contacted .lbh{color:var(--muted)}
+#pane-semaphore .lband.k-talking .lbh{color:var(--key2)}
+/* One lead under another, always, as a table reads (Mark, 2026-10-06). It was
+   a grid that put leads side by side whenever a card or the drawer had room
+   for two, and a narrow window cut every one of them to a stub. */
+#pane-semaphore .lgrid{display:flex;flex-direction:column;gap:7px}
+#pane-semaphore .llist{display:flex;flex-direction:column;gap:7px}
+/* ───────── the leads view ─────────
+   The Ledger's list of leads, exactly (Mark, 2026-10-06): the three steps one
+   under another, each a run of full-width rows braced down the left by its
+   name and count — the Ledger's flank, 132px, the rule in the leads' clay.
+   It replaced one open column beside two narrow ones; with the steps stacked
+   every lead is a full row and nothing is taken down to a tab. */
+/* As wide as the Ledger's list and no wider: its board is 1144px with the
+   flank, and a lead row there is the 1000 left beside it. */
+#pane-semaphore .lruns{display:flex;flex-direction:column;gap:14px;max-width:1144px}
+#pane-semaphore .lrun{display:flex;align-items:stretch;gap:12px}
+#pane-semaphore .lflank{position:relative;flex:0 0 132px;display:flex;flex-direction:column;gap:3px;
+  padding:6px 12px 6px 11px}
+#pane-semaphore .lflank::before{content:"";position:absolute;right:0;top:2px;bottom:8px;width:3px;
+  border-radius:3px;background:#b98676}
+#pane-semaphore .lfn{font:600 10.5px var(--sans);letter-spacing:.08em;color:#c99a8a}
+#pane-semaphore .lfc{font:9px var(--sans);letter-spacing:.06em;color:var(--muted)}
+#pane-semaphore .lrows{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:7px}
+/* the quiet heading over each of Contacted's two paths: the ruit drawn small
+   with only that path lit, in the brace's own small type */
+#pane-semaphore .lkind{display:flex;align-items:center;gap:7px;padding:0 0 0 8px;margin-top:5px;
+  font:9px var(--sans);letter-spacing:.06em;color:var(--muted);--lead:#b98676;--ltrack:rgba(205,176,105,.34)}
+#pane-semaphore .lkind:first-child{margin-top:2px}
+#pane-semaphore .lkind svg{width:19px;height:12px;overflow:visible}
+#pane-semaphore .lkind line{stroke:var(--ltrack);stroke-width:1.2;stroke-linecap:round}
+#pane-semaphore .lkind line.on{stroke:var(--lead);stroke-width:1.7}
+/* A row on the leads view: ruit, arena, what it is over who could fit it, the
+   day — the Ledger's columns, at the Ledger's widths. */
+#pane-semaphore .lead.wide{padding:9px 14px 9px 12px}
+#pane-semaphore .lead.wide .lhead{gap:14px}
+#pane-semaphore .lead.wide .lruit{margin:0 32px 0 4px}
+#pane-semaphore .lead.wide>.lhead>.lar{flex:0 0 160px;max-width:160px;margin:0;
+  font:600 10.5px var(--sans);letter-spacing:.06em;text-transform:none;color:var(--muted)}
+#pane-semaphore .lead.wide>.lhead>.lar:hover{color:var(--key2)}
+#pane-semaphore .lead.wide .lname{font-size:14.5px}
+#pane-semaphore .lead.wide .lsub{font-size:12.5px}
+#pane-semaphore .lead.wide>.lhead>.lwhen{font-size:13px}
+/* Complete, at the top right of an open lead on a card back or in the drawer */
+#pane-semaphore .lead .ltx>.ldone{float:right;margin:0 -2px 2px 8px}
+/* ── Editing in the card ──
+   The card keeps its look: each fact stays where it was, in its own type, and
+   only gains a faint ground and a dashed edge to say it can be typed into. */
+#pane-semaphore .lead.editing{cursor:default}
+#pane-semaphore .lead .lname-in,#pane-semaphore .lead .lmt-in,#pane-semaphore .lead .ledin,
+#pane-semaphore .lead .ledup{display:block;width:100%;min-width:0;box-sizing:border-box;margin:0;
+  padding:1px 5px;border:1px dashed var(--line);border-radius:4px;background:var(--sink);
+  color:var(--ink);resize:none;overflow:hidden}
+#pane-semaphore .lead .lname-in{margin:0 0 3px -6px;width:calc(100% + 6px);
+  font-family:var(--body);font-size:14px;line-height:1.35}
+#pane-semaphore .lead .lmt-in{margin-left:-6px;flex:1 1 auto;white-space:normal;
+  font:italic 12px/1.35 var(--body);color:var(--lquiet)}
+#pane-semaphore .lead .lname-in:focus,#pane-semaphore .lead .lmt-in:focus,
+#pane-semaphore .lead .ledin:focus,#pane-semaphore .lead .ledup:focus{outline:none;border-style:solid;border-color:var(--line2)}
+#pane-semaphore .lead .ledrow{display:flex;align-items:center;gap:6px;margin:3px 0}
+#pane-semaphore .lead .ledin{flex:1 1 0;font:12.5px var(--body)}
+#pane-semaphore .lead .ledlinks{margin-left:0}
+#pane-semaphore .lead .ledup{flex:1 1 auto;font:12.5px/1.45 var(--body)}
+#pane-semaphore .lead .ledrow .lx{opacity:1}
+#pane-semaphore .lead .ledrow.gone{opacity:.4}
+#pane-semaphore .lead .ledrow.gone input,#pane-semaphore .lead .ledrow.gone textarea{text-decoration:line-through}
+#pane-semaphore .lead .lacts .lfhint{font:italic 11px var(--body);color:var(--lquiet)}
+/* whose lead this is — the one thing a card on the board has to say that a card
+   on its own back never does */
+#pane-semaphore .lar{display:block;max-width:100%;margin:-2px 0 6px;padding:0 0 0 12px;
+  text-align:left;font:600 8.5px var(--sans);letter-spacing:.14em;text-transform:uppercase;
+  color:var(--faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  transition:color .14s}
+#pane-semaphore .lar:hover{color:var(--key2)}
+/* ───────── the lead itself ─────────
+   the card lifts off the section's ground, which is the whole reason the ground
+   is there; in the light panel --strip and --sink are the same value, so it
+   takes the near-white field instead */
+#pane-semaphore .lead{position:relative;padding:8px 10px 0 10px;
+  border:1px solid var(--grid);border-radius:9px;background:var(--strip);
+  transition:background-color .16s ease,border-color .16s ease,box-shadow .16s ease}
+#pane-semaphore #card .lead{background:var(--field)}
+#pane-semaphore .lead:hover,#pane-semaphore .lead:focus-within{border-color:var(--line)}
+/* head: the name takes the room; the chip holds a fixed lane, so nothing moves
+   when it lights. The line box is stated outright — 19px, not 1.4 of something —
+   because the glyph beside it is centred on exactly that. */
+#pane-semaphore .lead .lhead{display:flex;align-items:flex-start;gap:6px;padding-bottom:7px}
+#pane-semaphore .lead .lname{flex:1 1 auto;min-width:0;text-align:left;padding:1px 0;
+  font-family:var(--body);font-size:13.5px;line-height:19px;color:var(--ink);
+  text-decoration:underline dotted transparent;text-underline-offset:3px;
+  transition:color .14s,text-decoration-color .16s}
+#pane-semaphore .lead:hover .lname,#pane-semaphore .lead:focus-within .lname{text-decoration-color:var(--line2)}
+#pane-semaphore .lead .lname:hover{color:var(--key2);text-decoration-color:var(--key)}
+#pane-semaphore #card .lead .lname:hover{color:var(--brok-deep)}
+/* the day to come back is set where it is read, not behind a form */
+#pane-semaphore .lead .lwhen{position:relative;flex:0 0 auto;display:inline-flex;align-items:center;
+  height:20px;margin-top:1px;padding:0 8px;border:1px solid transparent;border-radius:99px;
+  font:10.5px var(--mono);color:var(--faint);white-space:nowrap;cursor:pointer;opacity:.5;
+  transition:opacity .14s,color .14s,border-color .16s,background-color .14s}
+#pane-semaphore .lead .lwhen.set{opacity:1}
+#pane-semaphore .lead:hover .lwhen,#pane-semaphore .lead:focus-within .lwhen{opacity:1;border-color:var(--grid)}
+#pane-semaphore .lead .lwhen:hover{color:var(--key2);border-color:var(--line2);background:var(--sink)}
+#pane-semaphore .lead .lwhen.late{color:var(--todo-ink);border-color:var(--todo-line);opacity:1}
+#pane-semaphore .lead .lwhen.shut{cursor:default;opacity:.7}
+#pane-semaphore .lead .lwhen input{position:absolute;inset:0;width:100%;height:100%;margin:0;padding:0;
+  border:0;background:none;color:transparent;opacity:0;cursor:pointer}
+#pane-semaphore .lead .lwhen input::-webkit-calendar-picker-indicator{opacity:0;cursor:pointer}
+/* One label gutter for every band under the name — match, links, log — cut to
+   the longest word that can ever stand in it, so the column never moves from
+   one lead to the next or from one card to the next.
+
+   Hairlines between the bands would be three more lines to look past in a card
+   this small, and every band still wore the same grey. So the separating is
+   done by what the bands are made of instead:
+
+     match   the sentence — body face, the only prose in the card
+     links   what it points at — a dotted column, each row its own hit area
+     log     what has happened — sunk into its own ground
+
+   which leaves exactly one rule, under the name, between the head and the rest.
+   The log's ground is the piece that was missing: history should look like a
+   different kind of thing from the facts above it, not like a third fact.
+
+   The gutter is 42px now rather than 66. It used to be cut to CONTACTED, the
+   longest word that could ever stand in it; with the step gone from the card
+   the longest is LINKS, and the twenty-four pixels go back to the text — which
+   is what lets two of these stand side by side in a section. */
+#pane-semaphore .lead{--gut:42px}
+#pane-semaphore .lead .lbody{border-top:1px solid var(--grid);padding:2px 0 4px}
+#pane-semaphore .lead .lsec{display:flex;gap:8px;padding:5px 0}
+#pane-semaphore .lead .lsl{flex:0 0 var(--gut);min-width:0;font-style:normal;
+  font:600 8.5px var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--faint);
+  padding-top:4px;transition:color .14s}
+#pane-semaphore .lead .lsb{flex:1 1 auto;min-width:0}
+/* what the lead itself points at — its own band, so a lead with four links no
+   longer reads as a lead with four of something unnamed */
+#pane-semaphore .lead .llinks{display:flex;flex-direction:column;gap:1px;margin-left:-6px}
+#pane-semaphore .llrow{display:flex;align-items:center;gap:2px;border-radius:6px}
+#pane-semaphore .lla{flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:8px;padding:2px 6px;
+  border-radius:6px;font-family:var(--body);font-size:12.5px;color:var(--muted);text-decoration:none;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .14s,background-color .14s}
+#pane-semaphore .lla i{flex:0 0 5px;width:5px;height:5px;border-radius:50%;background:var(--faint);
+  transition:background-color .14s}
+#pane-semaphore .lla:hover{color:var(--key2);background:var(--sink)}
+#pane-semaphore .lla:hover i{background:var(--key2)}
+#pane-semaphore .lla.dead{color:var(--faint)}
+/* a contact's address wears a small envelope where a link wears a dot, so a
+   person to write to is not taken for a page to open */
+#pane-semaphore .lla.mail i{flex:0 0 8px;width:8px;height:6px;border-radius:1px;background:none;
+  border:1px solid var(--faint)}
+#pane-semaphore .lla.mail:hover i{background:none;border-color:var(--key2)}
+#pane-semaphore .lx{flex:0 0 auto;width:19px;height:19px;padding:0;border-radius:5px;color:var(--faint);
+  font:10px/1 var(--sans);opacity:0;transition:opacity .14s,color .14s,background-color .14s}
+#pane-semaphore .llrow:hover .lx,#pane-semaphore .lurow:hover .lx,
+#pane-semaphore .llrow:focus-within .lx,#pane-semaphore .lurow:focus-within .lx{opacity:1}
+#pane-semaphore .lx:hover{color:var(--brok);background:var(--sink)}
+/* the log: what has happened, sunk into a ground of its own. This is the one
+   band that is not a fact about the lead but a record of it, and giving it a
+   different colour is what stops the card reading as one grey block — cheaper
+   than a rule, and it says something a rule cannot. The lines carry no dates:
+   a log read down the card is already in order, and a column of numbers in
+   front of the sentences was doing nothing the order was not. The day is on the
+   line's title, a hover away. */
+#pane-semaphore .lead .lupd{display:flex;flex-direction:column;gap:3px;
+  padding:5px 8px;border-radius:8px;background:var(--well)}
+#pane-semaphore .lead .lurow{display:flex;align-items:baseline;gap:7px;margin:0;
+  font-family:var(--body);font-size:12.5px;line-height:1.45;color:var(--muted)}
+#pane-semaphore .lead .lurow+.lurow{padding-top:3px;border-top:1px solid var(--grid)}
+#pane-semaphore .lead .lurow>span{flex:1 1 auto;min-width:0;white-space:pre-wrap;overflow-wrap:break-word}
+#pane-semaphore .lead.done .lupd{opacity:.8}
+/* The verbs are meant to stand back until you are working in the card, and
+   they used to do it by going half transparent — which put "+ link", "+ note"
+   and the way into the rest of the history at 2:1 against the card, unreadable
+   rather than quiet. They are quiet now by being small and italic and set in
+   the third rank, and they still lift on hover; what they no longer do is
+   disappear from someone who is not pointing at them. */
+#pane-semaphore .lfa{padding:2px 6px;border-radius:6px;font-family:var(--body);font-size:12px;
+  font-style:italic;color:var(--faint);
+  transition:color .14s,background-color .14s}
+#pane-semaphore .lfa:hover{color:var(--key2);background:var(--sink)}
+#pane-semaphore .lead .ldone{flex:0 0 auto;display:inline-flex;align-items:center;gap:5px;
+  padding:3px 9px;border:1px solid transparent;border-radius:99px;
+  font-family:var(--body);font-size:12px;color:var(--faint);white-space:nowrap;opacity:.65;
+  transition:opacity .16s,color .14s,border-color .16s,background-color .14s}
+#pane-semaphore .lead .ldone i{font:11px/1 var(--sans);font-style:normal}
+#pane-semaphore .lead:hover .ldone,#pane-semaphore .lead:focus-within .ldone{opacity:1;border-color:var(--grid)}
+#pane-semaphore .lead .ldone:hover{color:var(--todo-ink);border-color:var(--todo-line);
+  background:var(--todo-bg);opacity:1}
+#pane-semaphore .lead .ldone.back:hover{color:var(--key2);border-color:var(--line2);background:var(--sink)}
+#pane-semaphore .lead.hit{border-color:var(--line2);box-shadow:inset 2px 0 0 var(--key)}
+#pane-semaphore .lead.done{background:none}
+#pane-semaphore .lead.done .lname{color:var(--faint);text-decoration:line-through;text-decoration-thickness:1px}
+#pane-semaphore .lead.done .lmt,#pane-semaphore .lead.done .lla{opacity:.7}
+/* ───────── one lead card, in both rooms ─────────
+   The Ledger's lead card is the standard (Mark, 2026-10-06), so a lead here is
+   shut until pressed: the steps and the day on the first line, the name on the
+   second, and the Ledger's clay down the left edge and in the steps. Open, it
+   has the Ledger's action row — the two things it is for, a rule, Edit, and
+   Complete at the far right — then match, links and the updates, newest first,
+   each with its day. The colours are this room's: the paper of the drawer
+   restates the clay darker so it still reads there (5.6:1). */
+#pane-semaphore .lead{--lead:#b98676;border-left:3px solid var(--lead);
+  padding:7px 10px 8px;cursor:pointer}
+#pane-semaphore #card .lead{--lead:#8d5545}
+#pane-semaphore .lead.open{cursor:default;border-color:var(--line);border-left-color:var(--lead)}
+/* Shut: the ruit, then two lines — the name, and under it the match and the
+   day, smaller, italic and in the quiet colour, which Mark asked to be less
+   prominent than the name (2026-10-06). The quiet colour is its own token
+   because --faint is 4.2:1 on a lead's ground; this is 5.2 there and 5.8 on
+   the drawer's paper. */
+#pane-semaphore .lead{--lquiet:#bca070;--ltrack:rgba(205,176,105,.34);--ldotbg:var(--paper)}
+#pane-semaphore #card .lead{--lquiet:#6A6250;--ltrack:rgba(42,38,32,.26);--ldotbg:var(--field)}
+#pane-semaphore .lead .lhead{align-items:center;gap:9px;padding-bottom:0}
+#pane-semaphore .lead .ltx{flex:1 1 auto;min-width:0}
+#pane-semaphore .lead .lsub{display:flex;align-items:baseline;gap:6px;min-width:0;margin-top:1px;
+  font:italic 12px/1.35 var(--body);color:var(--lquiet)}
+#pane-semaphore .lead .lmt{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#pane-semaphore .lead .lmt.none{font-size:11.5px}
+/* open, the match is read rather than glanced at, so it is given its whole length */
+#pane-semaphore .lead.open .lmt{white-space:normal;overflow-wrap:break-word}
+#pane-semaphore .lead .lar{margin:0;padding:0;flex:0 0 auto;min-width:0;max-width:40%;
+  font-style:normal;color:var(--lquiet)}
+/* The ruit. Four dots on one small diamond: Spotted, the two ways of making
+   contact one above the other, and Talking. A dot is drawn 7px and pressed
+   16px, which is the most the diamond allows before two neighbours' reach
+   overlaps — the middle pair are 16px apart. */
+#pane-semaphore .lruit{position:relative;flex:0 0 46px;width:46px;height:26px}
+#pane-semaphore .lruit svg{position:absolute;left:0;top:0;width:46px;height:26px;overflow:visible}
+#pane-semaphore .lruit line{stroke:var(--ltrack);stroke-width:1.3}
+#pane-semaphore .lruit line.on{stroke:var(--lead)}
+#pane-semaphore .ldot{position:absolute;width:16px;height:16px;margin:-8px 0 0 -8px;padding:0;
+  border:0;background:none;display:flex;align-items:center;justify-content:center;cursor:pointer}
+#pane-semaphore .ldot i{width:7px;height:7px;border-radius:50%;box-sizing:border-box;
+  border:1px solid var(--lquiet);background:var(--ldotbg);transition:transform .14s,background-color .14s}
+#pane-semaphore .ldot.on i{background:var(--lead);border-color:var(--lead)}
+#pane-semaphore .ldot.now i{box-shadow:0 0 0 3px color-mix(in srgb,var(--lead) 30%,transparent)}
+#pane-semaphore .ldot:hover i{transform:scale(1.35);border-color:var(--lead)}
+#pane-semaphore .ldot:focus-visible{outline:1px solid var(--focus);outline-offset:-2px;border-radius:50%}
+#pane-semaphore .lruit.shut{opacity:.55}
+#pane-semaphore .lruit.shut .ldot{cursor:default;pointer-events:none}
+/* the day, at the end of the quiet line */
+#pane-semaphore .lead .lwhen{flex:0 0 auto;height:auto;padding:0 4px;margin:0 -4px 0 0;opacity:1;
+  border:0;border-radius:4px;font:italic 12px var(--body);color:var(--lquiet)}
+#pane-semaphore .lead .lwhen.late{color:var(--todo-ink)}
+#pane-semaphore .lead .lwhen:hover{background:var(--sink)}
+#pane-semaphore .lead .lname{display:block;margin:0;padding:0;cursor:inherit;
+  font-family:var(--body);font-size:14px;line-height:1.35;color:var(--ink);text-decoration:none}
+#pane-semaphore .lead .lname:hover{color:var(--ink)}
+#pane-semaphore .lead:not(.open):hover .lname{color:var(--key2)}
+/* the paper drawer's red name-hover belonged to the old door on the name;
+   the name is the card's own ground now, so it keeps the card's ink */
+#pane-semaphore #card .lead .lname:hover{color:var(--ink)}
+/* the action row, read from the left edge to the right one */
+#pane-semaphore .lacts{display:flex;flex-wrap:wrap;align-items:center;gap:5px;
+  margin-top:8px;padding-top:8px;border-top:1px solid var(--grid)}
+#pane-semaphore .lacts .sp{flex:1 1 auto}
+#pane-semaphore .lact{padding:4px 8px;border:1px solid var(--line);border-radius:6px;
+  font:10px var(--sans);letter-spacing:.06em;color:var(--muted);white-space:nowrap;
+  transition:color .14s,border-color .14s,background-color .14s}
+#pane-semaphore .lact.prim{border-color:var(--key);color:var(--key2);font-weight:600;background:var(--sink)}
+#pane-semaphore .lact.quiet{border-color:transparent}
+#pane-semaphore .lact:hover{border-color:var(--line2);color:var(--ink);background:var(--sink)}
+#pane-semaphore .lgap{width:1px;align-self:stretch;margin:1px 2px;background:var(--grid)}
+#pane-semaphore .lead .ldone{margin-left:auto;opacity:1;border-color:var(--line);border-radius:6px;padding:3px 8px;
+  font:10px var(--sans);letter-spacing:.06em;color:var(--muted)}
+#pane-semaphore .lead .ldone i{display:inline-flex;align-items:center;justify-content:center;
+  width:12px;height:12px;border:1px solid var(--line2);border-radius:2px;font-size:9px;color:transparent}
+#pane-semaphore .lead .ldone:hover i{color:inherit}
+#pane-semaphore .lead .ldone.back i{color:inherit;border:0}
+#pane-semaphore .lead .lbody{margin-top:8px;padding:0}
+/* the updates: plain lines, each with its day, newest first — the Ledger's */
+#pane-semaphore .lead .lupd{padding:5px 0 0;border-radius:0;background:none;
+  border-top:1px solid var(--grid);margin-top:2px}
+#pane-semaphore .lead .lurow+.lurow{border-top:0;padding-top:0}
+/* the body already draws the rule above whatever opens it */
+#pane-semaphore .lead .lbody>.lupd:first-child{border-top:0;margin-top:0}
+#pane-semaphore .lead .lurow{color:var(--ink)}
+#pane-semaphore .lead .lurow>.lud{flex:0 0 40px;font-style:italic;font-size:11px;color:var(--faint)}
+#pane-semaphore .lead .lupd{text-align:left}
+#pane-semaphore .lead .lmore{margin:2px 0 0 34px}
+#pane-semaphore .lead .lnew{padding:4px 0}
+/* composing: the same box whether it is a lead or a line of its history */
+#pane-semaphore .leadadd{padding:5px 0 2px 1px}
+#pane-semaphore .leadadd button{font-family:var(--body);font-size:12.5px;font-style:italic;color:var(--faint);
+  padding:3px 8px;border-radius:6px}
+#pane-semaphore .leadadd button:hover{color:var(--key2);background:rgba(216,205,184,.09)}
+#pane-semaphore #card .leadadd button:hover{background:rgba(42,38,32,.07)}
+#pane-semaphore .leadform,#pane-semaphore .noteform{display:flex;flex-wrap:wrap;gap:6px;margin:3px 0;
+  padding:8px;background:var(--field);border:1px solid var(--line);border-radius:8px}
+/* both composers now open inside the band they belong to, which already holds
+   them to the gutter, so neither carries an indent of its own any more */
+#pane-semaphore .lead .noteform{margin:5px 0 1px}
+#pane-semaphore .leadform textarea,#pane-semaphore .noteform textarea,#pane-semaphore .leadform input{
+  flex:1 1 100%;min-width:0;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);
+  color:var(--ink);padding:6px 8px;font-family:var(--body);font-size:13px}
+#pane-semaphore .leadform textarea.grow,#pane-semaphore .noteform textarea.grow{resize:none;overflow:hidden;
+  line-height:1.45;min-height:32px;transition:height .12s ease-out}
+#pane-semaphore .leadform textarea:focus,#pane-semaphore .noteform textarea:focus,
+#pane-semaphore .leadform input:focus{border-color:var(--line2);outline:none}
+#pane-semaphore .leadform .ln3{font:12px var(--mono)}
+#pane-semaphore .leadform .ln3.lnl{font:13px var(--body)}
+/* a link and its name share a row, so several links stay a short list */
+#pane-semaphore .leadform .lnrow{flex:1 1 100%;min-width:0;display:flex;gap:6px}
+#pane-semaphore .leadform .lnrow .ln3{flex:3 1 0}
+#pane-semaphore .leadform .lnrow .ln3.lnl{flex:2 1 0}
+#pane-semaphore .leadform .lfmore{border:0;background:none;padding:1px 2px;cursor:pointer;
+  font-family:var(--body);font-size:12px;color:var(--muted)}
+#pane-semaphore .leadform .lfmore:hover{color:var(--ink)}
+#pane-semaphore .lfbtn{flex:1 1 100%;display:flex;align-items:center;gap:6px}
+#pane-semaphore .lfbtn .sp{flex:1}
+#pane-semaphore .lfhint{font-family:var(--body);font-size:11px;font-style:italic;color:var(--faint)}
+#pane-semaphore .lfbtn .ib{font-size:12px}
+#pane-semaphore .lfbtn .ib.ok:hover{color:var(--key2)}
+#pane-semaphore .lead .lkform{margin:5px 0 1px}
+/* whatever is not set yet, offered on one line instead of two reserved ones */
+#pane-semaphore .waitpick{border-top:1px solid var(--grid);background:var(--sink);padding:8px 9px}
+#pane-semaphore .wphd{margin:0 0 6px 2px;font-family:var(--body);font-size:11.5px;font-style:italic;color:var(--faint)}
+#pane-semaphore .wpo{display:flex;align-items:baseline;gap:9px;width:100%;text-align:left;padding:6px 8px;
+  border:1px solid transparent;border-radius:var(--radius);
+  font-family:var(--body);font-size:13.5px;color:var(--ink)}
+#pane-semaphore .wpo+.wpo{margin-top:1px}
+#pane-semaphore .wpo:hover{background:rgba(216,205,184,.09);border-color:var(--line)}
+#pane-semaphore #card .wpo:hover{background:rgba(42,38,32,.06)}
+#pane-semaphore .wpo .dot{flex:0 0 7px;width:7px;height:7px;border-radius:50%;background:var(--c);align-self:center}
+#pane-semaphore .wpo .wpn{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#pane-semaphore .wpo .wpn i{font-style:normal;font-family:var(--sans);font-size:8.5px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--faint);margin-left:8px}
+#pane-semaphore .wpo .wpd{flex:0 0 auto;font:10.5px var(--mono);color:var(--faint)}
+#pane-semaphore .wpx{display:block;margin:5px 0 0 auto;font-family:var(--body);font-size:12px;font-style:italic;
+  color:var(--faint);padding:2px 7px;border-radius:6px}
+#pane-semaphore .wpx:hover{color:var(--key2)}
+#pane-semaphore .offer{display:flex;align-items:center;gap:8px;padding:6px 12px;border-top:1px solid var(--grid);
+  opacity:.45;transition:opacity .16s}
+#pane-semaphore .offer .sp{flex:1}
+#pane-semaphore .wcard:hover .offer,#pane-semaphore .wcard:focus-within .offer{opacity:1}
+#pane-semaphore #card .offer{opacity:1}
+#pane-semaphore .offer button{font-family:var(--body);font-size:12.5px;font-style:italic;color:var(--faint);
+  padding:2px 7px;border-radius:6px;white-space:nowrap}
+#pane-semaphore .offer button:hover{color:var(--key2);background:rgba(216,205,184,.1)}
+#pane-semaphore #card .offer button:hover{background:rgba(42,38,32,.07)}
+/* The strips under a card's head all answer the same question — why is this card
+   where it is — so they share one shape. */
+#pane-semaphore .strip{display:flex;align-items:flex-start;gap:9px;padding:7px 12px;border-top:1px solid var(--grid);
+       font-family:var(--body);font-size:12.5px}
+#pane-semaphore .strip .sg{flex:0 0 7px;width:7px;height:7px;margin-top:5.5px;transform:rotate(45deg);
+           border-radius:1px;border:1px solid var(--faint)}
+/* what you wrote is shown in full: these lines are short, and truncating the one
+   thing you will want to read is a poor economy */
+#pane-semaphore .strip{flex-wrap:wrap}
+#pane-semaphore .strip .stx{flex:1 1 140px;min-width:0;text-align:left;line-height:1.45;color:inherit;font:inherit}
+#pane-semaphore .strip .stx:hover{text-decoration:underline;text-underline-offset:3px}
+#pane-semaphore .strip .stx i{font-style:normal;font-family:var(--mono);font-size:10px;opacity:.7}
+#pane-semaphore .strip .swhen{flex:0 0 auto;margin-top:3px;font:10.5px var(--mono);opacity:.85}
+#pane-semaphore .strip .sdone{flex:0 0 auto;font-size:11px;padding:2px 5px;border-radius:5px;color:inherit;opacity:.6}
+#pane-semaphore .strip .sdone:hover{opacity:1;background:rgba(216,205,184,.14)}
+#pane-semaphore #card .strip .sdone:hover{background:rgba(42,38,32,.09)}
+#pane-semaphore .strip.due{background:var(--todo-bg);border-top-color:var(--todo-line);color:var(--todo-ink)}
+#pane-semaphore .strip.due .sg{background:var(--todo);border-color:var(--todo);box-shadow:0 0 8px var(--todo-line)}
+#pane-semaphore .strip.asleep{color:var(--faint)}
+#pane-semaphore .strip.find{color:var(--muted)}
+#pane-semaphore .strip.find .sg{border-color:var(--key);background:var(--key)}
+/* the working side */
+#pane-semaphore .lnone{margin:12px 8px;font-family:var(--body);font-size:12.5px;font-style:italic;
+       color:var(--faint);text-align:center;line-height:1.5}
+/* The record of what has been closed is out of the open view entirely: one
+   line at the floor of the list saying how many, and the leads themselves only
+   if you ask for them. A queue you have finished with should not go on taking
+   up the room the live ones need. */
+#pane-semaphore .lclosed{margin-top:14px;border-top:1px solid var(--grid)}
+#pane-semaphore .lcbar{display:flex;align-items:center;gap:8px;width:100%;padding:9px 2px;
+      font:600 8.5px var(--sans);letter-spacing:.18em;text-transform:uppercase;color:var(--faint);
+      transition:color .14s}
+#pane-semaphore .lcbar:hover{color:var(--key2)}
+#pane-semaphore .lcbar b{font-weight:600;font-family:var(--mono);font-size:9.5px;letter-spacing:0;opacity:.85}
+#pane-semaphore .lcbar .lccar{flex:0 0 auto;font-size:9px;letter-spacing:0;margin-right:-2px}
+#pane-semaphore .lclosed .lcrec{padding:0 0 6px}
+#pane-semaphore .wfoot .offer{border-top:1px solid var(--grid)}
+/* ---------- freezer ----------
+   Out of rotation, not out of the record. The strip exists only once something
+   is in it, and a frozen arena wears the wordmark's diamond with the colour
+   taken out — the shape of a live thing, drained. */
+#pane-semaphore #freezer{margin:0 22px 46px;border-top:1px solid var(--grid)}
+#pane-semaphore .frbar{display:flex;align-items:center;gap:10px;width:100%;padding:12px 2px;border-radius:0;
+       font:600 9.5px var(--sans);letter-spacing:.18em;text-transform:uppercase;color:var(--faint)}
+#pane-semaphore .frbar:hover{color:var(--key2)}
+#pane-semaphore .frbar .frn{font:10px var(--mono);letter-spacing:0}
+#pane-semaphore .frbar .frcaret{font-size:9px;letter-spacing:0;margin-left:-3px}
+#pane-semaphore .frost{flex:0 0 9px;width:9px;height:9px;transform:rotate(45deg);border-radius:1.5px;
+       border:1px solid currentColor;opacity:.8}
+#pane-semaphore .frbody{padding:1px 2px 18px}
+#pane-semaphore .frgrp{display:grid;grid-template-columns:236px 1fr;align-items:baseline;gap:9px;padding:8px 0}
+#pane-semaphore .frgrp+.frgrp{border-top:1px solid var(--grid)}
+#pane-semaphore .frty{font:600 9.5px var(--sans);letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+#pane-semaphore .frty i{margin-left:8px;font:10px var(--mono);font-style:normal;letter-spacing:0;color:var(--faint)}
+#pane-semaphore .frchips{display:flex;flex-wrap:wrap;gap:7px}
+#pane-semaphore .frchip{display:inline-flex;align-items:stretch;border:1px solid var(--line);border-radius:99px;
+        background:var(--slab);overflow:hidden;box-shadow:inset 0 1px 0 rgba(255,255,255,.04)}
+#pane-semaphore .frchip:hover{border-color:var(--line2)}
+#pane-semaphore .frchip .frname{padding:5px 9px 5px 14px;font-family:var(--body);font-size:13.5px;color:var(--muted)}
+#pane-semaphore .frchip .frname:hover{color:var(--ink)}
+/* the way out is dimmed, not hidden: fading opacity keeps the pill from
+   changing width under the cursor */
+#pane-semaphore .frchip .frout{padding:5px 13px 5px 9px;font-family:var(--sans);font-size:9px;letter-spacing:.13em;
+               text-transform:uppercase;color:var(--faint);opacity:.5;transition:opacity .14s,color .14s}
+#pane-semaphore .frchip:hover .frout,#pane-semaphore .frchip .frout:focus-visible{opacity:1}
+#pane-semaphore .frchip .frout:hover{color:var(--key2);background:rgba(216,205,184,.1)}
+/* in the panel: the one banner that outranks everything else on the card */
+#pane-semaphore .frozenbar{display:flex;align-items:center;gap:11px;margin-top:16px;padding:9px 10px 9px 13px;
+           border:1px dashed var(--line2);border-radius:var(--radius-lg);background:var(--sink)}
+#pane-semaphore .frozenbar .frtx{flex:1;font-family:var(--body);font-size:12.5px;line-height:1.45;color:var(--muted)}
+#pane-semaphore .frozenbar .btn{flex:0 0 auto;font-size:11px;padding:4px 11px;min-height:27px}
+/* ---------- arena panel ----------
+   A pane is a transformed box, so anything position:fixed inside it is fixed to
+   the room rather than to the window. That is deliberate — a room's own sheets
+   belong in the room. But while the pane was ALSO the thing that scrolled,
+   "fixed" quietly meant "fixed to the top of the board", and the panel slid in
+   wherever the board happened to be scrolled to. The board now scrolls in a
+   layer of its own and the pane keeps still, so the panel, the scrim and the
+   modals stand where they are put, whatever the board is doing underneath.
+
+   And it starts under the ribbon rather than over it: the line of rooms is the
+   one piece of furniture that outranks everything a room can open.
+
+   `clip`, not `hidden`. Both hide the parked panel, but `hidden` leaves the box
+   scrollable to a script: a stray scrollIntoView, or a Tab that lands on a
+   control inside the parked panel, drags the whole room sideways into blank
+   paper with no scrollbar to drag it back. `clip` refuses the scroll outright,
+   so the reveal is handed up to a layer that can actually honour it. */
+#pane-semaphore{overflow:clip}
+#pane-semaphore>#semscroll{position:absolute;inset:0;overflow:auto;overflow-x:clip;
+      overscroll-behavior:none;scrollbar-gutter:stable}
+@supports not (overflow:clip){
+  #pane-semaphore{overflow:hidden}
+  #pane-semaphore>#semscroll{overflow-x:hidden}
+}
+#pane-semaphore .scrim{position:fixed;top:var(--oa-bar-h);right:0;bottom:0;left:0;
+      background:rgba(0,0,0,.52);z-index:19;
+      visibility:hidden;opacity:0}
+#pane-semaphore .scrim.open{visibility:visible;opacity:1}
+@media (prefers-reduced-motion:no-preference){
+  #pane-semaphore .scrim{transition:opacity .24s ease,visibility 0s linear .24s}
+  #pane-semaphore .scrim.open{transition:opacity .24s ease,visibility 0s}
+}
+/* Shut, and therefore out of reach as well as out of sight — the panel is
+   emptied on close, but the promise should not depend on that. */
+#pane-semaphore #card{position:fixed;top:var(--oa-bar-h);right:0;bottom:0;width:404px;max-width:94vw;z-index:20;
+      background:var(--surface2);
+      border-left:1px solid rgba(0,0,0,.5);box-shadow:var(--shadow);
+      transform:translateX(105%);visibility:hidden;
+      transition:visibility 0s linear .3s;
+      display:flex;flex-direction:column}
+#pane-semaphore #card.open{transform:translateX(0);visibility:visible;transition:visibility 0s}
+@media (prefers-reduced-motion:no-preference){
+  #pane-semaphore #card{transition:transform .3s cubic-bezier(.22,.72,.24,1),visibility 0s linear .3s}
+  #pane-semaphore #card.open{transition:transform .3s cubic-bezier(.22,.72,.24,1),visibility 0s}}
+#pane-semaphore #card:focus{outline:none}
+/* the modals belong to the room too, and to the same rule about the ribbon */
+#pane-semaphore .modal{top:var(--oa-bar-h)}
+#pane-semaphore .cbody{flex:1;overflow-y:auto;padding:26px 26px 20px}
+#pane-semaphore .chead{position:relative;padding-right:26px}
+#pane-semaphore .chead h2{font:400 19px/1.32 var(--serif);letter-spacing:.05em;color:var(--ink);text-shadow:0 1px 3px rgba(0,0,0,.45)}
+#pane-semaphore .chead .meta{margin-top:7px;font-family:var(--sans);font-size:9.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--faint)}
+#pane-semaphore .chead .meta i{font-style:normal;color:var(--faint);padding:0 5px}
+#pane-semaphore .chead .x{position:absolute;top:-4px;right:-8px;color:var(--faint);font-size:15px;line-height:1;padding:5px 7px;border-radius:6px}
+#pane-semaphore .chead .x:hover{color:var(--ink);background:rgba(42,38,32,.08)}
+/* two matched cards: what it is, and how its brokerage works */
+#pane-semaphore .blocks{display:flex;flex-direction:column;gap:10px;margin-top:16px}
+#pane-semaphore .pcard>.cbd{padding:12px 12px 4px}
+#pane-semaphore .pcard .ptext{font-family:var(--body);font-size:13.5px;line-height:1.6;color:var(--muted);white-space:pre-wrap}
+#pane-semaphore .pcard .wlinks{padding:6px}
+#pane-semaphore .pcard.brok{--c:var(--brok)}
+/* the same two strips as on the wall, so an arena reads the same from either side */
+#pane-semaphore .rotbar{border:1px solid var(--line);border-radius:var(--radius-lg);
+        overflow:hidden;background:var(--surface)}
+#pane-semaphore #card .wbody{padding:5px;border-top:1px solid var(--grid)}
+#pane-semaphore #card .rotbar>.wbody:first-child{border-top:none}
+#pane-semaphore .rotbar .swept{display:flex;align-items:center;gap:9px;padding:7px 12px;
+  font-family:var(--body);font-size:12.5px;color:var(--faint)}
+#pane-semaphore .rotbar .swept .sp{flex:1}
+#pane-semaphore #card .stamp{opacity:1}
+#pane-semaphore .rule{height:1px;background:var(--line);margin:20px -26px 6px}
+/* the stream: everything this arena has, in time order */
+#pane-semaphore .stream{position:relative}
+#pane-semaphore .stream::before{content:"";position:absolute;left:113px;top:10px;bottom:10px;width:1px;
+                background:var(--line);pointer-events:none}
+#pane-semaphore .spanline{position:absolute;left:112px;width:3px;border-radius:2px;background:var(--r-pub);opacity:.35}
+#pane-semaphore .ln .t .stage{display:block;margin-top:2px;font-family:var(--sans);font-size:9px;letter-spacing:.13em;
+              text-transform:uppercase;color:var(--c,var(--call))}
+#pane-semaphore .ln{position:relative;display:flex;align-items:baseline;gap:10px;padding:7px 0;border-radius:5px;min-height:32px}
+#pane-semaphore .ln.hi{background:var(--hi);box-shadow:0 0 0 5px var(--hi)}
+#pane-semaphore .ln.past{opacity:.5}
+#pane-semaphore .ln .d{flex:0 0 96px;text-align:right;font:11.5px/1.45 var(--mono);color:var(--brok-deep);padding-top:1px}
+#pane-semaphore .ln .d.unc{font-style:italic;opacity:.75}
+#pane-semaphore .ln .d.none{color:var(--faint)}
+#pane-semaphore .ln .g{flex:0 0 14px;height:14px;display:flex;align-items:center;justify-content:center;align-self:center;
+        position:relative;z-index:1}
+#pane-semaphore .ln .g::before{content:"";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+               width:16px;height:16px;border-radius:50%;background:var(--dot)}
+#pane-semaphore .ln .g>*{position:relative}
+#pane-semaphore .ln .t{flex:1;min-width:0;font-family:var(--body);font-size:14px;line-height:1.45}
+#pane-semaphore .ln .t .nt{display:block;font-family:var(--body);font-size:12.5px;font-style:italic;line-height:1.5;color:var(--faint);margin-top:2px}
+#pane-semaphore .ln.call .t{font-size:13.5px;color:var(--muted)}
+#pane-semaphore .ln.call .d{color:var(--c,var(--call))}
+#pane-semaphore .mark{position:relative;z-index:2;display:flex;align-items:center;gap:10px;margin:9px 0;
+      font-family:var(--sans);font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--faint)}
+#pane-semaphore .mark::after{content:"";flex:1;height:1px;background:var(--grid)}
+#pane-semaphore .mark.today{color:var(--today)}
+#pane-semaphore .mark.today::after{background:var(--hi2)}
+#pane-semaphore .mark .mlab{flex:0 0 96px;text-align:right;background:var(--dot)}
+#pane-semaphore .blank{margin:12px 0 4px;padding:16px;text-align:center;font-family:var(--body);font-size:13.5px;
+       font-style:italic;color:var(--faint);border:1px dashed var(--line);border-radius:var(--radius);
+       background:var(--sink)}
+#pane-semaphore .cfoot{flex:0 0 auto;display:flex;gap:7px;padding:12px 26px;border-top:1px solid var(--grid);background:var(--sink)}
+#pane-semaphore .cfoot .btn{font-size:12px;padding:5px 11px}
+#pane-semaphore .cfoot .sp{flex:1}
+/* edit mode */
+#pane-semaphore .epanel{margin-top:14px}
+#pane-semaphore .epanel:first-of-type{margin-top:16px}
+#pane-semaphore .epanel>.cbd{padding:14px 14px 12px}
+#pane-semaphore .fld{margin-bottom:13px}
+#pane-semaphore .fld:last-child{margin-bottom:0}
+#pane-semaphore .fld>label{display:block;font:600 9.5px var(--sans);letter-spacing:.16em;text-transform:uppercase;
+           color:var(--muted);margin-bottom:6px}
+#pane-semaphore .fld>input,#pane-semaphore .fld>select,#pane-semaphore .fld>textarea{width:100%;border:1px solid var(--line);border-radius:var(--radius);
+      background:var(--field);padding:8px 11px;font-family:var(--body);font-size:14.5px;color:var(--ink);
+      box-shadow:inset 0 1px 2px rgba(0,0,0,.2)}
+#pane-semaphore .fld>textarea{min-height:62px;line-height:1.55;resize:vertical;overflow:hidden}
+#pane-semaphore .fld>input:focus,#pane-semaphore .fld>select:focus,#pane-semaphore .fld>textarea:focus{outline:none;border-color:var(--key);
+  box-shadow:0 0 0 2px rgba(216,205,184,.1)}
+#pane-semaphore .f2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+#pane-semaphore .fhint{margin-top:6px;font-family:var(--body);font-size:12.5px;font-style:italic;line-height:1.5;color:var(--faint)}
+#pane-semaphore .fhint.top{margin:-2px 0 12px}
+#pane-semaphore .enone{padding:11px;text-align:center;font-family:var(--body);font-size:13px;font-style:italic;
+        color:var(--faint);border:1px dashed var(--line);border-radius:var(--radius);
+        background:var(--sink)}
+/* segmented choice */
+#pane-semaphore .seg{display:flex;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--field)}
+#pane-semaphore .seg-b{flex:1;padding:8px 6px;font-family:var(--sans);font-size:10.5px;letter-spacing:.08em;
+       color:var(--faint);border-right:1px solid var(--line)}
+#pane-semaphore .seg-b:last-child{border-right:none}
+#pane-semaphore .seg-b:hover:not(:disabled){background:rgba(42,38,32,.06);color:var(--ink)}
+#pane-semaphore .seg-b.on{background:rgba(42,38,32,.10);color:var(--ink)}
+#pane-semaphore .seg-b.fixed.on{background:var(--brok);color:#FFF3F0;border-color:var(--brok)}
+#pane-semaphore .seg-b.uncertain.on{background:linear-gradient(90deg,var(--brok),var(--brok-soft));color:#FFF3F0}
+#pane-semaphore .seg-b:disabled{opacity:.35;cursor:not-allowed}
+/* vertical option list (call stages) */
+#pane-semaphore .opts{display:flex;flex-direction:column;gap:6px}
+#pane-semaphore .opt{display:flex;align-items:center;gap:9px;border:1px solid var(--line);border-radius:var(--radius);
+     background:var(--field);padding:8px 11px;font-family:var(--body);font-size:13.5px;color:var(--muted);text-align:left}
+#pane-semaphore .opt .dot{width:9px;height:9px;border-radius:50%;background:var(--c);flex:0 0 auto}
+#pane-semaphore .opt:hover{border-color:var(--line2);color:var(--ink)}
+#pane-semaphore .opt.on{color:var(--ink);border-color:var(--c);box-shadow:inset 0 0 0 1px var(--c)}
+/* one row per existing item */
+#pane-semaphore .erow{display:flex;align-items:center;gap:9px;background:var(--field);border:1px solid var(--line);
+      border-radius:var(--radius);padding:8px 10px;margin-bottom:6px}
+#pane-semaphore .erow .ec{flex:0 0 13px;display:flex;justify-content:center;align-items:center}
+#pane-semaphore .erow .ebody{flex:1;min-width:0}
+#pane-semaphore .erow .lbl{display:block;font-family:var(--body);font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#pane-semaphore .erow .esub{display:block;font-family:var(--sans);font-size:9px;letter-spacing:.12em;text-transform:uppercase;
+            color:var(--c,var(--faint));margin-top:2px;
+            white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#pane-semaphore .erow .when{flex:0 0 auto;max-width:112px;font:11px var(--mono);color:var(--muted);text-align:right}
+#pane-semaphore .erow.lk{gap:0}
+#pane-semaphore .erow.lk input{border:none;background:none;padding:3px 0;font-family:var(--body);font-size:13.5px;color:var(--ink);min-width:0}
+#pane-semaphore .erow.lk input:focus{outline:none}
+#pane-semaphore .erow.lk .e1{flex:0 0 106px;padding-right:9px;margin-right:9px;border-right:1px solid var(--grid)}
+#pane-semaphore .erow.lk .e2{flex:1}
+#pane-semaphore .erow a.ib{text-decoration:none}
+#pane-semaphore .erow a.ib.off{opacity:.25;pointer-events:none}
+#pane-semaphore .ib{color:var(--faint);padding:3px 5px;font-size:12px;border-radius:5px;flex:0 0 auto}
+#pane-semaphore .ib:hover{color:var(--ink);background:rgba(42,38,32,.08)}
+#pane-semaphore .addbtn{display:block;width:100%;margin-top:9px;border:1px dashed var(--line);background:none;
+        border-radius:var(--radius);padding:9px;font-family:var(--sans);font-size:10.5px;letter-spacing:.09em;
+        color:var(--faint);min-height:0}
+#pane-semaphore .addbtn:hover{border-color:var(--key);color:var(--key2);background:rgba(42,38,32,.05);transform:none}
+/* the date form, opened in place */
+#pane-semaphore .dform{background:var(--surface);
+       border:1px solid var(--line2);border-radius:var(--radius-lg);padding:15px;margin:5px 0 8px;
+       box-shadow:var(--shadow)}
+#pane-semaphore .kindfields{display:block}
+#pane-semaphore .dform .granIn{display:flex;gap:8px}
+#pane-semaphore .dform .granIn input,#pane-semaphore .dform .granIn select{flex:1;min-width:0;border:1px solid var(--line);border-radius:var(--radius);
+       background:var(--field);color:var(--ink);padding:8px 10px;font-family:var(--body);font-size:14.5px;
+       box-shadow:inset 0 1px 2px rgba(0,0,0,.2)}
+#pane-semaphore .dform .granIn .fhint{margin:0;align-self:center}
+#pane-semaphore .dform .fbtns{display:flex;gap:8px;justify-content:flex-end;margin-top:15px}
+#pane-semaphore .taddrow{display:flex;gap:6px;margin-top:8px}
+#pane-semaphore .taddrow input[type=date]{border:1px solid var(--line);border-radius:var(--radius);background:var(--field);color:var(--ink);padding:7px 9px;font-size:12px}
+#pane-semaphore .taddrow input[type=text]{flex:1;min-width:0;border:1px solid var(--line);border-radius:var(--radius);background:var(--field);color:var(--ink);padding:7px 9px;font-family:var(--body);font-size:14px}
+#pane-semaphore .danger{margin-top:22px;text-align:center}
+#pane-semaphore .danger .btn{color:#E88A80;border-color:rgba(232,138,128,.34);background:transparent}
+#pane-semaphore .danger .btn:hover{background:rgba(239,91,76,.12);color:#FF9C90;border-color:var(--brok)}
+#pane-semaphore .cfoot .wide{min-width:120px}
+/* ---------- dispatches ---------- */
+/* What the agent found, waiting to be judged. The indigo of a call is the
+   room's colour for "this is asking you something", which is exactly what a
+   finding is; the brokerage red stays on the board itself, where the events
+   are. Every quiet line here is set as a colour of its own rather than as an
+   opacity, because these rows sit on the panel and not on the paper. */
+#pane-semaphore #dispatch{padding:0 0 60px}
+#pane-semaphore .dpbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+  padding:11px 22px;border-bottom:1px solid var(--grid)}
+#pane-semaphore .dpsay{font-family:var(--body);font-size:13px;font-style:italic;color:var(--muted)}
+#pane-semaphore .dpsay b{font-style:normal;color:var(--ink);font-weight:400}
+#pane-semaphore .dpbar .spacer{flex:1}
+/* A finding is a sentence, a source and two verbs, and it is read left to
+   right: on a 1400px desk the answer buttons would otherwise sit half a metre
+   from the words they answer. The list keeps a measure of its own and the room
+   keeps its width. */
+#pane-semaphore .dplist{padding:0 22px;max-width:1080px}
+#pane-semaphore .dpbar{max-width:1080px}
+#pane-semaphore .dpgrp{margin-top:18px}
+#pane-semaphore .dph{display:flex;align-items:center;gap:9px;padding:5px 11px;border-radius:var(--radius);
+  background:var(--strip);font-family:var(--sans);font-size:10px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--muted)}
+#pane-semaphore .dph b{font-weight:400;color:var(--faint)}
+#pane-semaphore .dprow{display:flex;align-items:flex-start;gap:10px;padding:10px 11px;
+  border-bottom:1px solid var(--grid)}
+#pane-semaphore .dprow:last-child{border-bottom:none}
+#pane-semaphore .dprow .dpw{flex:0 0 15px;display:flex;justify-content:center;margin-top:5px}
+#pane-semaphore .dptx{flex:1 1 auto;min-width:0;font-family:var(--body);font-size:13.5px;line-height:1.5;
+  color:var(--ink)}
+#pane-semaphore .dptx b{font-weight:inherit;color:var(--key2)}
+#pane-semaphore .dptx .dpwhen{color:var(--brok-deep)}
+#pane-semaphore .dptx .dpcall{color:var(--notice-ink)}
+#pane-semaphore .dptx .dpwas{color:var(--faint)}
+#pane-semaphore .dpev{display:block;margin-top:3px;font-family:var(--body);font-size:12px;font-style:italic;
+  color:var(--muted)}
+/* on its own line: after a date and a quote, a source that continues the
+   sentence reads as part of it */
+#pane-semaphore .dpsrc{display:block;width:fit-content;margin-top:3px;font-family:var(--mono);font-size:10.5px;
+  color:var(--faint);text-decoration:none;border-bottom:1px solid transparent}
+#pane-semaphore .dpsrc:hover{color:var(--key2);border-bottom-color:var(--line)}
+/* The buttons sit at a fixed distance from the text rather than at the far
+   right of a 1400px row: a finding is read and answered in one movement, and
+   the answer should not be a journey. */
+#pane-semaphore .dpa{flex:0 0 auto;display:flex;gap:5px;padding-left:10px;margin-left:auto}
+#pane-semaphore .dprow.gone{opacity:.45}
+#pane-semaphore .dpnote{padding:14px 22px;font-family:var(--body);font-size:13.5px;color:var(--muted)}
+#pane-semaphore .dpnote b{font-weight:400;color:var(--ink)}
+#pane-semaphore .dperr{color:var(--brok-deep)}
+/* ---------- coming up ----------
+   The phone's spine at the desk: the month braced down the left, then the
+   date, the diamond on the line, the event over its arena, and at the right
+   the event's website and the way to remove it. The list keeps a measure
+   of its own, as Dispatches does, so the website stays within reach of the
+   name it belongs to. Calls, when shown, are a step quieter than the
+   brokerage around them. */
+#pane-semaphore #coming{padding:0 0 60px}
+#pane-semaphore #coming .dpbar{max-width:1180px}
+#pane-semaphore .culist{padding:4px 22px 0;max-width:1180px}
+#pane-semaphore .cumon{display:grid;grid-template-columns:130px minmax(0,1fr);gap:0 18px;
+  padding:10px 0;border-top:1px solid var(--grid)}
+#pane-semaphore .cumon:first-child{border-top:none}
+#pane-semaphore .cumn{padding-top:8px;font:400 15px/1.3 var(--serif);letter-spacing:.06em;color:var(--muted)}
+#pane-semaphore .cumn small{display:block;margin-top:2px;font:11px var(--mono);letter-spacing:0;color:var(--faint)}
+#pane-semaphore .cuspine{position:relative}
+#pane-semaphore .cuspine::before{content:"";position:absolute;left:127px;top:12px;bottom:12px;width:1px;
+  background:var(--line);pointer-events:none}
+#pane-semaphore .culn{position:relative;display:flex;align-items:center;gap:10px;padding:7px 0;min-height:44px}
+/* Past is said in colour rather than by fading the row, which would take
+   already quiet italics below what can be read on this ground. */
+#pane-semaphore .culn.past .cud,#pane-semaphore .culn.past .cuname,
+#pane-semaphore .culn.past .cuar,#pane-semaphore .culn.past .custage{color:var(--faint)}
+#pane-semaphore .culn.past .sw{--c:var(--faint)}
+#pane-semaphore .cud{flex:0 0 110px;text-align:right;font:11.5px/1.45 var(--mono);color:var(--brok-deep)}
+#pane-semaphore .cud.unc{font-style:italic;color:var(--muted)}
+#pane-semaphore .culn.call .cud{color:var(--c)}
+#pane-semaphore .cug{flex:0 0 14px;height:14px;display:flex;align-items:center;justify-content:center;position:relative}
+#pane-semaphore .cug::before{content:"";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:19px;height:19px;border-radius:50%;background:var(--paper)}
+#pane-semaphore .cug>*{position:relative}
+#pane-semaphore .cug .sw-uncertain{background:var(--paper)}
+#pane-semaphore .cut{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:2px}
+#pane-semaphore .cuname{max-width:100%;text-align:left;font:15.5px/1.35 var(--body);color:var(--ink);
+  text-decoration:underline;text-decoration-color:transparent;text-underline-offset:3px;
+  transition:text-decoration-color .14s,color .14s}
+#pane-semaphore .cuname:hover{color:var(--key2);text-decoration-color:var(--key)}
+#pane-semaphore .culn.call .cuname{font-size:14px;color:var(--muted)}
+#pane-semaphore .custage{font:600 8.5px/1 var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--c)}
+#pane-semaphore .cuar{font:italic 13px/1.3 var(--body);color:var(--muted)}
+#pane-semaphore .cusoon{font:11.5px var(--mono);font-style:normal;color:var(--today)}
+#pane-semaphore .cuend{flex:0 0 auto;display:flex;align-items:center;gap:6px;margin-left:12px}
+/* The website is shown whole. It was cut at 260px, and since the button is a
+   flex box the browser drew no ellipsis, only a name sliced off mid-word
+   (Mark, 2026-10-09: "only half websites"). A long address takes its room
+   from the event's name, which wraps, rather than from itself. */
+#pane-semaphore .cusite{display:inline-flex;align-items:center;gap:7px;padding:4px 10px;
+  font:11.5px/1.4 var(--mono);color:var(--key2);white-space:nowrap;
+  border:1px solid var(--line);border-radius:var(--radius);background:var(--strip);text-decoration:none;
+  transition:border-color .14s,background-color .14s}
+#pane-semaphore .cusite::before{content:"\2197";font-family:var(--body);color:var(--muted)}
+#pane-semaphore .cusite:hover{border-color:var(--line2);background:rgba(216,205,184,.1)}
+#pane-semaphore .cusite.none{color:var(--muted);border-style:dashed;background:none;font-family:var(--body);
+  font-style:italic;font-size:12.5px}
+#pane-semaphore .cusite.none::before{content:"+"}
+/* The stamp is always in sight here, as on Pinned: walking the list is what
+   it is for. It sits after the website, whose width changes from row to
+   row, so that the stamps and their counts stand in one column; the count
+   keeps a fixed width for the same reason, and is blank rather than a dash
+   until the first stamp, since a dash down every row of a fresh list is
+   noise. */
+#pane-semaphore .culn .stamp{opacity:1}
+/* No growing on hover here: the pointer is still on the stamp after the
+   press, so the filled disc stood larger than the column it belongs to and
+   read as having moved (Mark, 2026-10-09). The ring answers in colour. */
+#pane-semaphore .culn .stamp:hover{transform:none}
+#pane-semaphore .cuage{flex:0 0 46px;text-align:left;font:11.5px var(--mono);color:var(--ink)}
+#pane-semaphore .culn .stamp.on+.cuage{color:var(--muted)}
+#pane-semaphore .culn.past .cuage{color:var(--faint)}
+#pane-semaphore .cudel{width:26px;height:26px;border-radius:var(--radius);font-size:11px;color:var(--faint);
+  transition:color .14s,background-color .14s}
+#pane-semaphore .cudel:hover{color:var(--brok-deep);background:var(--brok-soft)}
+/* Out of the way until the row is pointed at; an iPad has no pointing, so
+   there it stays in sight. */
+@media (hover:hover) and (pointer:fine){
+  #pane-semaphore .culn .cudel{opacity:0}
+  #pane-semaphore .culn:hover .cudel,#pane-semaphore .culn .cudel:focus-visible{opacity:1}}
+#pane-semaphore .cupast{margin:6px 0 2px 148px;padding:3px 0;font:italic 13px var(--body);color:var(--muted);
+  border-bottom:1px dashed var(--line)}
+#pane-semaphore .cupast:hover{color:var(--key2);border-bottom-color:var(--line2)}
+/* the event a diamond on the board or a card was pressed for */
+#pane-semaphore .culn.cuhi{background:var(--hi);box-shadow:0 0 0 6px var(--hi);border-radius:5px}
+/* The new-event form, laid out across the list: arena, event and website,
+   then how well it is known, when, and how certain. */
+#pane-semaphore .cuform{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px 16px;
+  margin:14px 22px 6px;max-width:1136px;padding:16px 18px;border:1px solid var(--line);border-radius:var(--radius-lg)}
+#pane-semaphore .cuform .fld{margin:0;min-width:0}
+#pane-semaphore .cuform .fbtns{grid-column:1/-1;margin-top:2px}
+#pane-semaphore .cutoday{display:flex;align-items:center;gap:10px;margin:4px 0;
+  font:600 9px/1 var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--today)}
+#pane-semaphore .cutoday span{flex:0 0 110px;text-align:right}
+#pane-semaphore .cutoday::after{content:"";flex:1;height:1px;background:var(--hi2)}
+/* an event's website in its arena's panel, under the event */
+#pane-semaphore .ln .t .dsite{display:block;width:fit-content;margin-top:2px;font:11px var(--mono);
+  color:var(--muted);text-decoration:none;border-bottom:1px solid transparent}
+#pane-semaphore .ln .t .dsite::before{content:"\2197\2009";font-family:var(--body)}
+#pane-semaphore .ln .t .dsite:hover{color:var(--ink);border-bottom-color:var(--line)}
+/* the count on the Dispatches button, the same object the Cards tab wears */
+#pane-semaphore #dispatchBtn .tabn.dpn{background:var(--notice);color:#14121A}
+/* Open, the button is lit the way a lit view in the switcher is, so it still
+   says which view is showing now that it stands apart from the switcher. */
+#pane-semaphore #dispatchBtn.on{background:rgba(216,205,184,.17);border-color:var(--line2);color:var(--ink)}
+
+/* ---------- modals ---------- */
+#pane-semaphore .modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:30}
+#pane-semaphore .modal.open{display:flex}
+#pane-semaphore .mbox{background:var(--surface2);border:1px solid var(--line2);border-radius:var(--radius-lg);
+      width:480px;max-width:92vw;max-height:86vh;overflow-y:auto;padding:20px 22px;box-shadow:var(--shadow)}
+#pane-semaphore .mbox h2{font:600 10px var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--muted);
+         padding-bottom:9px;margin-bottom:12px;border-bottom:1px solid var(--line)}
+#pane-semaphore .mbox .sub{font-family:var(--body);font-size:13.5px;line-height:1.5;color:var(--muted);margin-bottom:13px}
+#pane-semaphore .mbox textarea{width:100%;min-height:150px;border:1px solid var(--line);border-radius:var(--radius);
+               background:var(--field);color:var(--ink);padding:10px;font:12.5px/1.6 var(--mono);resize:vertical;
+               box-shadow:inset 0 1px 2px rgba(0,0,0,.18)}
+#pane-semaphore .mbox textarea:focus{outline:none;border-color:var(--key);box-shadow:0 0 0 2px rgba(216,205,184,.1)}
+#pane-semaphore .mbox .mbtns{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
+/* A question, or a piece of bad news, is a short thing and reads better
+   narrow — and it stands above the other two so an import can ask over the
+   panel it was started from. */
+#pane-semaphore .mbox-ask{width:400px}
+#pane-semaphore .mbox-ask .sub{margin-bottom:0;color:var(--ink)}
+#pane-semaphore #askModal{z-index:40}
+#pane-semaphore #askModal.tell #askNo{display:none}
+#pane-semaphore .tyline{display:flex;gap:8px;align-items:center;padding:4px 0}
+#pane-semaphore .tymove{display:flex;flex-direction:column;gap:1px}
+#pane-semaphore .tymove .ib{font-size:7px;line-height:1;padding:2px 4px}
+#pane-semaphore .tymove .ib:disabled{opacity:.25;cursor:default}
+#pane-semaphore .tymove .ib:disabled:hover{background:none;color:var(--faint)}
+#pane-semaphore .tyline input{flex:1;border:1px solid var(--line);border-radius:var(--radius);background:var(--field);
+  color:var(--ink);padding:6px 9px;font-family:var(--body);font-size:14px}
+#pane-semaphore .tyline .cnt{font-size:11px;color:var(--faint);width:64px;text-align:right}
+/* ---------- tooltip ---------- */
+#pane-semaphore #tip{position:fixed;z-index:50;max-width:280px;background:var(--surface2);
+     color:var(--ink);border:1px solid var(--line2);box-shadow:var(--shadow);border-radius:var(--radius);
+     padding:8px 11px;font-family:var(--body);font-size:13px;line-height:1.5;pointer-events:none;display:none;white-space:pre-line}
+@media(max-width:860px){#pane-semaphore .axisrow,#pane-semaphore .row,#pane-semaphore .ghead{grid-template-columns:150px 1fr}
+#pane-semaphore .grp>.row,#pane-semaphore .grp>.ghead{grid-template-columns:137px 1fr}
+#pane-semaphore .frgrp{grid-template-columns:1fr;gap:6px}
+#pane-semaphore header.top{flex-wrap:wrap}}

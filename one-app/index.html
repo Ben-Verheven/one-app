@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Added to an iPad's home screen, the app opens on its own, without
+     Safari's bars around it. `black` gives the clock a strip of its own
+     above the page rather than over it, so no room has to make way for the
+     status bar. A browser tab, and a copy opened from disk, ignore all of
+     this; the icon is folded into a build by bundle.py. -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="One App">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="theme-color" content="#211b10">
+<link rel="icon" type="image/png" href="icon.png">
+<link rel="apple-touch-icon" href="icon.png">
+<title>One App to Rule Them All</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- One request for the three faces, at the union of the weights the five
+     rooms ask for. It used to be two — this link and an @import inside the
+     Ledger's stylesheet — which cost a second round trip that could not
+     even start until the first stylesheet had been read. -->
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<link rel="stylesheet" href="shell/shell.css">
+<link rel="stylesheet" href="rooms/ledger/ledger.css">
+<link rel="stylesheet" href="rooms/semaphore/semaphore.css">
+<link rel="stylesheet" href="rooms/callboard/callboard.css">
+<link rel="stylesheet" href="rooms/atlas/atlas.css">
+<link rel="stylesheet" href="rooms/notes/notes.css">
+</head>
+<body>
+
+<!-- The line of rooms is the first thing on the page as well as the first
+     thing on screen: it is fixed at the top-left, and a keyboard should
+     reach it in one press rather than after the whole room. -->
+<nav id="oa-ring" aria-label="Rooms"></nav>
+<div id="oa-title"></div>
+
+<main id="stage">
+<section class="pane" id="pane-ledger" data-pane="ledger" aria-hidden="true"></section>
+<section class="pane" id="pane-semaphore" data-pane="semaphore" aria-hidden="true"></section>
+<section class="pane" id="pane-callboard" data-pane="callboard" aria-hidden="true"></section>
+<section class="pane" id="pane-atlas" data-pane="atlas" aria-hidden="true"></section>
+<section class="pane" id="pane-notes" data-pane="notes" aria-hidden="true"></section>
+</main>
+
+<div id="oa-sweep"></div>
+
+<!-- A room that will not start says so here, so the message has to be
+     announced rather than merely drawn. -->
+<div id="oa-toasts" role="status" aria-live="polite" aria-atomic="false"></div>
+
+<script src="shell/hub.js"></script>
+
+<script src="data/atlas-graph.js"></script>
+<script src="data/callboard-topics.js"></script>
+<script src="data/callboard-descriptions.js"></script>
+
+<script src="rooms/ledger/ledger.view.js"></script>
+<script src="rooms/ledger/ledger.js"></script>
+<script src="rooms/semaphore/semaphore.view.js"></script>
+<script src="rooms/semaphore/semaphore.js"></script>
+<script src="rooms/callboard/callboard.view.js"></script>
+<script src="rooms/callboard/callboard.js"></script>
+<script src="rooms/atlas/atlas.view.js"></script>
+<script src="rooms/atlas/atlas.js"></script>
+<script src="rooms/notes/notes.view.js"></script>
+<script src="rooms/notes/notes.js"></script>
+
+<script src="shell/bridge.js"></script>
+<script src="shell/boot.js"></script>
+
+</body>
+</html>

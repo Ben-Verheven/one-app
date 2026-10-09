@@ -1,0 +1,351 @@
+/* ===== Call Board ===== */
+/* ═══════════════════════════════════════════════════════════════════
+   THE CALL BOARD — the Ledger's daylight sibling.
+   The Ledger is written at night: dark oak, brass, lamplight. This is
+   the board it is written from — the programme laid out on vellum in
+   daylight, ruled in sepia, tabbed in brass. Same hand, same furniture,
+   opposite hour. Colour belongs to the calls; the paper stays quiet.
+   ═══════════════════════════════════════════════════════════════════ */
+/* ══ 1. TOKENS ══ */
+#pane-callboard{
+  color-scheme:light;
+  --font:'Cinzel',serif;
+  --body:'Crimson Text',serif;
+  --mono:'IBM Plex Mono',ui-monospace,'SF Mono',Consolas,monospace;
+
+  --brass:#9A7B3A;         /* the metal, at a value that works on paper */
+  --brass2:#6B5220;        /* struck deeper for emphasis                */
+  --umber:#33291A;         /* the dark bands: the Ledger's ground, inverted */
+
+  --page:#E9E1D0;          /* vellum   */
+  --panel:#F7F3E9;         /* the sheet*/
+  --raised:#EFE8D7;        /* a card lifted off it */
+
+  --ink:#2C2418;
+  --ink2:#5C5140;
+  /* The third rank, deepened from #8B7F68. It letters the topic ids, the
+     type badges, the counts, the call names on the chart and the source
+     note — everything you scan — and at the old value none of them cleared
+     3.6:1 on any of the three vellums above. Now 4.7:1 at worst. */
+  --ink3:#6A5E48;
+
+  /* legacy aliases so no markup or script needs editing */
+  --paper:var(--page); --bg:var(--panel); --bg2:var(--raised); --bg3:var(--page);
+  --text:var(--ink); --text2:var(--ink2); --text3:var(--ink3); --muted:var(--ink3);
+  --gold:var(--brass); --gold2:var(--brass2);
+
+  --line:rgba(120,96,58,0.20);
+  --line-strong:rgba(120,96,58,0.36);
+
+  --radius:7px;
+  --radius-lg:11px;
+  --shadow:0 12px 30px rgba(74,58,30,0.13),0 2px 6px rgba(74,58,30,0.09);
+  --dim:.28;
+  /* The label column on the chart. 120px cut every call name to five
+     letters and an ellipsis — "Clust…", "Partn…" — which named nothing;
+     the chart has the room, so the names get enough of it to be read. */
+  --gutter:172px;
+}
+/* ══ 2. RESET & PAGE ══ */
+#pane-callboard, #pane-callboard *{box-sizing:border-box;margin:0;padding:0}
+#pane-callboard{scroll-behavior:smooth;background:var(--page);-webkit-text-size-adjust:100%}
+@media (prefers-reduced-motion: reduce){#pane-callboard{scroll-behavior:auto}
+#pane-callboard, #pane-callboard *{transition:none!important}}
+#pane-callboard{
+  min-height:100vh;font-family:var(--body);color:var(--ink);font-size:15px;line-height:1.5;
+  background-color:var(--page);
+  background-image:
+    radial-gradient(circle at 50% -12%,rgba(255,252,242,0.85),transparent 40rem),
+    linear-gradient(180deg,rgba(120,96,58,0.05),transparent 30%),
+    url("data:image/svg+xml,%3Csvg width='120' height='120' viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23786038' stroke-opacity='0.07' stroke-width='0.7'%3E%3Ccircle cx='60' cy='60' r='22'/%3E%3Ccircle cx='60' cy='60' r='9'/%3E%3Cpath d='M60 38V12M60 82v26M38 60H12M82 60h26M44 44 24 24M76 76l20 20M76 44l20-20M44 76 24 96'/%3E%3C/g%3E%3C/svg%3E");
+  background-size:auto,auto,120px 120px;
+  background-attachment:fixed;
+  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
+  text-rendering:optimizeLegibility;font-kerning:normal;
+}
+#pane-callboard ::selection{background:rgba(154,123,58,0.22);color:#1C160C}
+#pane-callboard, #pane-callboard *{scrollbar-color:rgba(120,96,58,0.34) rgba(226,217,196,0.6);scrollbar-width:thin}
+#pane-callboard ::-webkit-scrollbar{width:9px;height:9px}
+#pane-callboard ::-webkit-scrollbar-track{background:rgba(226,217,196,0.6)}
+#pane-callboard ::-webkit-scrollbar-thumb{background:rgba(120,96,58,0.32);border:2px solid transparent;background-clip:padding-box;border-radius:999px}
+#pane-callboard ::-webkit-scrollbar-thumb:hover{background:rgba(120,96,58,0.5);border:2px solid transparent;background-clip:padding-box}
+#pane-callboard ::placeholder{color:var(--ink3);opacity:.8}
+#pane-callboard .tid,#pane-callboard .cdl,#pane-callboard .cmeta,#pane-callboard .count,#pane-callboard .dtag,#pane-callboard .mlabel,#pane-callboard .ylabel,#pane-callboard .band-tag,#pane-callboard .today-tag,#pane-callboard .cchip,#pane-callboard .tbadge,#pane-callboard .clk,#pane-callboard .selcard,#pane-callboard .rd-meta,#pane-callboard .dcount,#pane-callboard .span-readout{font-variant-numeric:tabular-nums}
+#pane-callboard :focus-visible{outline:2px solid var(--brass);outline-offset:2px;border-radius:var(--radius)}
+/* ══ 3. THE BEAM ══
+   The Ledger's beam is a dark bar of lamplit brass. Here it is the same
+   bar in reverse: umber ruled on vellum, the live tab burnt into it. */
+#pane-callboard header{position:sticky;top:0;z-index:50;
+  background:linear-gradient(180deg,#F9F5EC,#EFE8D7);
+  border-bottom:1.5px solid rgba(120,96,58,0.42);
+  box-shadow:0 5px 14px rgba(74,58,30,0.09)}
+#pane-callboard .tabs{display:flex;overflow-x:auto;border-bottom:1px solid var(--line)}
+#pane-callboard .tab{flex:0 0 auto;display:flex;align-items:baseline;gap:8px;padding:10px 15px 9px;
+  border:0;border-bottom:2px solid transparent;background:none;cursor:pointer;
+  font-family:var(--font);font-size:11.5px;letter-spacing:.055em;color:var(--ink3);white-space:nowrap;
+  transition:color .15s,background-color .15s,border-color .15s}
+#pane-callboard .tab .ck{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.06em;opacity:.75}
+#pane-callboard .tab .cn{font-weight:500}
+#pane-callboard .tab .cc{font-family:var(--mono);font-size:9.5px;opacity:.6}
+#pane-callboard .tab:hover{color:var(--brass2);background:rgba(154,123,58,0.08)}
+#pane-callboard .tab[aria-selected="true"]{color:#241C10;border-bottom-color:var(--umber);background:var(--panel)}
+#pane-callboard .tab[aria-selected="true"] .cn{font-weight:600}
+#pane-callboard .hd-controls{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:10px 20px 11px}
+/* ══ 4. CONTROL FAMILY ══
+   One face for everything pressable, as in the Ledger: a slab with a
+   light top edge, a sepia rule, and the umber press for the live state. */
+#pane-callboard .tchip,#pane-callboard .ftchip,#pane-callboard .pchip,#pane-callboard .clchip,#pane-callboard .seg button,#pane-callboard .readbtn,#pane-callboard .portalink,#pane-callboard .pill.clearall,#pane-callboard .rd-close{
+  font-family:var(--font);letter-spacing:.07em;cursor:pointer;color:var(--ink2);
+  background:linear-gradient(180deg,#FDFAF3,#F0EADB);
+  border:1px solid rgba(120,96,58,0.3);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.9),0 1px 2px rgba(74,58,30,0.06);
+  transition:transform .14s ease,background-color .14s ease,border-color .14s ease,color .14s ease,box-shadow .14s ease}
+#pane-callboard .tchip,#pane-callboard .ftchip,#pane-callboard .pchip,#pane-callboard .clchip{font-size:10px;padding:6px 12px;border-radius:999px}
+#pane-callboard .tchip:hover,#pane-callboard .ftchip:hover,#pane-callboard .pchip:hover,#pane-callboard .clchip:hover,#pane-callboard .seg button:hover,#pane-callboard .readbtn:hover,#pane-callboard .portalink:hover,#pane-callboard .pill.clearall:hover{
+  color:var(--brass2);border-color:var(--brass);background:linear-gradient(180deg,#FFFCF5,#F3EDDE);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.95),0 4px 10px rgba(74,58,30,.10)}
+#pane-callboard .tchip[aria-pressed="true"],#pane-callboard .ftchip[aria-pressed="true"],#pane-callboard .pchip[aria-pressed="true"],#pane-callboard .seg button[aria-pressed="true"]{
+  color:#F6F1E4;border-color:var(--umber);background:linear-gradient(180deg,#463823,#2E2415);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.10)}
+#pane-callboard .typechips{display:flex;gap:6px}
+#pane-callboard .search{position:relative}
+#pane-callboard .search input{font-family:var(--body);font-size:14px;padding:7px 26px 7px 11px;width:215px;color:var(--ink);
+  border:1px solid rgba(120,96,58,0.3);border-radius:var(--radius);background:#FDFBF4;
+  box-shadow:inset 0 1px 2px rgba(74,58,30,0.10);transition:border-color .2s,box-shadow .2s}
+#pane-callboard .search input:focus{outline:none;border-color:var(--brass);box-shadow:0 0 0 3px rgba(154,123,58,0.14)}
+#pane-callboard .search .clr{position:absolute;right:6px;top:50%;transform:translateY(-50%);border:0;background:none;
+  color:var(--ink3);cursor:pointer;font-size:13px;display:none;padding:2px}
+#pane-callboard .search .clr:hover{color:var(--brass2)}
+#pane-callboard #pills{display:flex;flex-wrap:wrap;gap:6px}
+#pane-callboard .pill{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:11px;font-weight:600;
+  padding:4px 6px 4px 10px;border-radius:999px;box-shadow:0 1px 3px rgba(74,58,30,.18)}
+#pane-callboard .pill button{border:0;background:rgba(0,0,0,.14);color:inherit;border-radius:999px;width:17px;height:17px;
+  line-height:1;font-size:11px;cursor:pointer}
+#pane-callboard .pill.clearall{padding:4px 11px;font-size:10px}
+#pane-callboard .count{font-family:var(--mono);font-size:11px;color:var(--ink3);margin-left:auto;white-space:nowrap}
+#pane-callboard kbd{font-family:var(--mono);font-size:10px;border:1px solid var(--line-strong);border-bottom-width:2px;
+  border-radius:4px;padding:0 4px;background:#FBF8F0}
+#pane-callboard .ovbar{display:none;flex-wrap:wrap;align-items:center;gap:8px 14px;padding:0 20px 11px}
+#pane-callboard .ovbar.on{display:flex}
+#pane-callboard .seg{display:flex;border-radius:var(--radius);overflow:hidden;border:1px solid rgba(120,96,58,0.3)}
+#pane-callboard .seg button{border:0;border-radius:0;padding:6px 11px;font-size:10px;box-shadow:none}
+#pane-callboard .seg button+button{border-left:1px solid rgba(120,96,58,0.24)}
+#pane-callboard .seglabel{font-family:var(--font);font-size:9.5px;letter-spacing:.13em;color:var(--brass2);text-transform:uppercase}
+#pane-callboard .presets,#pane-callboard .cchips{display:flex;gap:5px;flex-wrap:wrap}
+#pane-callboard .clchip{display:inline-flex;align-items:center;gap:5px}
+#pane-callboard .clchip i{width:9px;height:9px;border-radius:2px;display:block;box-shadow:0 0 0 1px rgba(74,58,30,.2)}
+#pane-callboard .clchip.off{opacity:.4}
+#pane-callboard .span-readout{font-family:var(--mono);font-size:11.5px;color:var(--ink);font-weight:600;white-space:nowrap}
+#pane-callboard .span-readout .sub{font-weight:400;color:var(--ink3)}
+/* ══ 5. LAYOUT ══ */
+/* `1fr` is `minmax(auto,1fr)`, and `auto` on a grid item is its min-content
+   width — which for a sheet of topic rows whose titles do not wrap is the
+   longest title in the work programme. The column therefore refused to go
+   below about 2130px at any window size, and the room scrolled sideways
+   under a one-column layout that was supposed to have solved exactly that.
+   `minmax(0,…)` lets the column be as narrow as it is told to be; the
+   titles then do what they were always dressed to do and ellipsise. */
+#pane-callboard .wrap{display:grid;grid-template-columns:minmax(420px,1fr) minmax(520px,1fr)}
+#pane-callboard .wrap > *{min-width:0}
+@media(max-width:1020px){#pane-callboard .wrap{grid-template-columns:minmax(0,1fr)}
+#pane-callboard .tl-sticky{position:static!important;max-height:none!important}}
+/* Below this the two-column minimums are themselves wider than the window. */
+@media(max-width:1150px) and (min-width:1021px){
+  #pane-callboard .wrap{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+/* ══ 6. THE SHEET (left) ══ */
+#pane-callboard .ledger{border-right:1.5px solid rgba(120,96,58,0.32);background:var(--panel);min-height:60vh;
+  box-shadow:1px 0 0 rgba(255,255,255,.7) inset}
+#pane-callboard .dest{border-bottom:1px solid var(--line)}
+#pane-callboard .dest-h{position:sticky;top:var(--hdr-h,96px);z-index:10;display:flex;align-items:baseline;gap:10px;
+  padding:8px 15px;cursor:pointer;color:#F4EFE2;
+  background:linear-gradient(180deg,#3D3120,#2B2215);
+  border-top:1px solid rgba(255,255,255,.10);box-shadow:0 2px 8px rgba(74,58,30,.20)}
+#pane-callboard .dest-h .dnum{font-family:var(--mono);font-size:10px;opacity:.6}
+#pane-callboard .dest-h .dname{font-family:var(--font);font-size:12px;font-weight:600;letter-spacing:.05em;flex:1}
+#pane-callboard .dest-h .dcount{font-family:var(--mono);font-size:10px;opacity:.72;white-space:nowrap}
+#pane-callboard .dest-h .caret{font-size:9px;opacity:.6;transition:transform .15s}
+#pane-callboard .dest.closed .caret{transform:rotate(-90deg)}
+#pane-callboard .dest.closed .dest-body{display:none}
+#pane-callboard .theme-h{font-family:var(--font);font-size:9.5px;font-weight:600;text-transform:uppercase;letter-spacing:.13em;
+  color:var(--brass2);padding:12px 15px 4px}
+#pane-callboard .topic{display:flex;align-items:center;gap:9px;padding:0 12px 0 0;min-height:29px;height:29px;
+  border-bottom:1px solid var(--line);cursor:pointer;transition:background-color .13s}
+#pane-callboard .topic:hover{background:#F1EADA}
+#pane-callboard .topic .bar{width:4px;flex:0 0 4px;align-self:stretch}
+#pane-callboard .cchip{font-family:var(--mono);font-size:10px;font-weight:600;border-radius:3px;padding:1.5px 6px;
+  white-space:nowrap;flex:0 0 auto;box-shadow:0 1px 2px rgba(74,58,30,.18)}
+#pane-callboard .cchip.w{min-width:62px;text-align:center}
+/* 38px is the width RIA, IA, CSA and PPI want, and the column reads best
+   when they all agree on it — but COFUND is six characters and a fixed
+   basis simply let it out of its own box. A minimum keeps the column and
+   still lets the long one have the room it needs. */
+#pane-callboard .tbadge{font-family:var(--mono);font-size:9.5px;font-weight:600;color:var(--ink3);
+  border:1px solid rgba(120,96,58,0.28);border-radius:3px;padding:0 4px;
+  min-width:38px;text-align:center;flex:0 0 auto;white-space:nowrap}
+#pane-callboard .tid{font-family:var(--mono);font-size:10px;color:var(--ink3);flex:0 0 auto;white-space:nowrap}
+#pane-callboard .ttl{font-family:var(--body);font-size:14.5px;color:var(--ink);white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis;flex:1 1 auto;min-width:0}
+#pane-callboard .topic.dim{opacity:var(--dim)}
+#pane-callboard .topic.sel{background:#F1EADA;box-shadow:inset 0 0 0 1.5px var(--selcol,var(--umber));
+  height:auto;align-items:flex-start;padding-top:6px;padding-bottom:7px}
+#pane-callboard .topic.sel .ttl{white-space:normal;overflow:visible;text-overflow:clip;font-weight:600;line-height:1.4}
+#pane-callboard .topic.sel .cchip,#pane-callboard .topic.sel .tbadge,#pane-callboard .topic.sel .tid{margin-top:2px}
+#pane-callboard .topic.hidden,#pane-callboard .dest.hidden,#pane-callboard .theme-h.hidden{display:none}
+#pane-callboard .tdetail{display:none;background:#EFE7D5;border-bottom:1px solid var(--line);padding:11px 16px 13px 21px;
+  box-shadow:inset 0 1px 3px rgba(74,58,30,.10)}
+#pane-callboard .tdetail.open{display:block}
+#pane-callboard .tdetail table{border-collapse:collapse;font-family:var(--body);font-size:14px;color:var(--ink2)}
+#pane-callboard .tdetail td{padding:2px 18px 2px 0;vertical-align:top}
+#pane-callboard .tdetail td:first-child{font-family:var(--font);font-size:9.5px;text-transform:uppercase;letter-spacing:.09em;
+  color:var(--brass2);padding-top:4px}
+#pane-callboard .tdetail .full{font-family:var(--mono);font-size:11px;color:var(--ink2)}
+#pane-callboard .empty{text-align:center;font-style:italic;color:var(--ink3);font-size:14px;margin:1.3rem 1rem;
+  padding:1.3rem 1rem;border:1px dashed rgba(120,96,58,0.3);border-radius:var(--radius-lg);background:#F1EADA}
+#pane-callboard .callhdr{position:sticky;top:var(--hdr-h,96px);z-index:10;display:flex;align-items:center;gap:9px;
+  padding:7px 15px;cursor:pointer;background:linear-gradient(180deg,#F4EEDF,#EAE2CE);
+  border-top:1px solid rgba(120,96,58,0.34);border-bottom:1px solid var(--line)}
+#pane-callboard .callhdr:hover{background:#F0E8D5}
+#pane-callboard .callhdr .clk{font-family:var(--mono);font-size:10px;font-weight:600;border-radius:3px;padding:1.5px 6px}
+#pane-callboard .callhdr .cname{font-family:var(--font);font-size:11.5px;letter-spacing:.04em;color:var(--ink2);flex:1;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#pane-callboard .callhdr .cdl{font-family:var(--mono);font-size:11px;color:var(--ink);font-weight:600;white-space:nowrap}
+#pane-callboard .callhdr .cmeta{font-family:var(--mono);font-size:10px;color:var(--ink3);white-space:nowrap}
+#pane-callboard .btnrow{display:flex;flex-wrap:wrap;gap:7px;margin-top:11px}
+#pane-callboard .readbtn,#pane-callboard .portalink{min-height:30px;display:inline-flex;align-items:center;gap:6px;padding:5px 12px;
+  border-radius:var(--radius);font-size:10px;text-decoration:none}
+#pane-callboard .readbtn{color:#F6F1E4;border-color:var(--umber);background:linear-gradient(180deg,#463823,#2E2415);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 2px 5px rgba(74,58,30,.18)}
+#pane-callboard .readbtn:hover{color:#FFF8E6;background:linear-gradient(180deg,#54432A,#3A2E1C);border-color:var(--umber)}
+#pane-callboard .portalink .arr{opacity:.6;font-size:10px}
+/* ══ 7. THE BOARD (right) ══ */
+#pane-callboard .tl-sticky{position:sticky;top:var(--hdr-h,96px);max-height:calc(100vh - var(--hdr-h,96px));overflow:auto;
+  padding:16px 20px 26px}
+#pane-callboard .tl-title{font-family:var(--font);font-size:9.5px;font-weight:600;text-transform:uppercase;letter-spacing:.14em;
+  color:var(--brass2);margin-bottom:11px;padding-bottom:6px;border-bottom:1.5px solid rgba(120,96,58,0.34)}
+#pane-callboard .tl-title span{text-transform:none;letter-spacing:.02em;font-weight:400;color:var(--ink3);
+  font-family:var(--body);font-size:12.5px;font-style:italic}
+#pane-callboard .tl{position:relative}
+/* The overview names its calls with the cluster in front of them, so it
+   still wants a little more of the gutter than the single-cluster chart.
+   The plot follows the same custom property rather than repeating the
+   number, which is how the two used to fall out of step. */
+#pane-callboard .tl.ov{--gutter:196px}
+#pane-callboard .plot{position:absolute;left:var(--gutter);right:0;top:0;bottom:0;pointer-events:none;z-index:0}
+#pane-callboard .tl-axis{position:relative;height:32px;border-bottom:1.5px solid rgba(120,96,58,0.4);z-index:1}
+#pane-callboard .gline{position:absolute;top:32px;bottom:0;width:1px;background:rgba(120,96,58,0.13)}
+#pane-callboard .gline.q{background:rgba(120,96,58,0.24)}
+#pane-callboard .gline.year{background:rgba(120,96,58,0.5);width:1.5px}
+#pane-callboard .mlabel{position:absolute;bottom:2px;transform:translateX(-50%);font-family:var(--mono);font-size:9px;color:var(--ink3)}
+#pane-callboard .ylabel{position:absolute;top:2px;font-family:var(--font);font-size:11px;font-weight:600;color:var(--ink);padding-left:5px}
+#pane-callboard .tl-rows{position:relative;z-index:1}
+#pane-callboard .crow{position:relative;display:flex;align-items:stretch;height:37px;cursor:pointer}
+#pane-callboard .crow .lbl{width:var(--gutter);flex:0 0 var(--gutter);display:flex;align-items:center;gap:6px;padding-right:8px}
+#pane-callboard .crow .lbl .nm{font-family:var(--body);font-size:12.5px;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#pane-callboard .crow .track{position:relative;flex:1 1 auto;border-radius:3px}
+#pane-callboard .crow:hover .track,#pane-callboard .crow.on .track{background:rgba(120,96,58,0.09)}
+#pane-callboard .crow.dim{opacity:var(--dim)}
+#pane-callboard .crow.out{opacity:.3}
+#pane-callboard .crow.out .cbar,#pane-callboard .crow.out .cbar2{filter:grayscale(.6)}
+#pane-callboard .crow.on .lbl .nm{color:var(--ink);font-weight:600}
+#pane-callboard .cbar{position:absolute;top:12px;height:12px;border-radius:2px;min-width:5px;box-shadow:0 1px 3px rgba(74,58,30,.22)}
+#pane-callboard .cbar2{position:absolute;top:12px;height:12px;border-radius:0 2px 2px 0;min-width:4px;
+  background-image:repeating-linear-gradient(-55deg,transparent 0 3px,rgba(255,252,244,.72) 3px 6px)}
+#pane-callboard .cap{position:absolute;top:7px;height:22px;width:2px;border-radius:1px}
+#pane-callboard .dot{position:absolute;top:15px;width:7px;height:7px;border-radius:50%;transform:translateX(-3.5px);border:1.5px solid var(--panel)}
+#pane-callboard .dtag{position:absolute;top:-4px;font-family:var(--mono);font-size:9.5px;font-weight:600;white-space:nowrap;
+  opacity:0;transition:opacity .12s;background:rgba(249,245,236,.94);padding:1px 4px;border-radius:3px}
+#pane-callboard .dtag.r{transform:translateX(-100%)}
+#pane-callboard .crow:hover .dtag,#pane-callboard .crow.on .dtag{opacity:1}
+#pane-callboard .today{position:absolute;top:32px;bottom:0;width:0;border-left:1.5px dashed var(--umber);z-index:4}
+#pane-callboard .today-tag{position:absolute;top:3px;transform:translateX(-50%);font-family:var(--font);font-size:9px;font-weight:600;
+  letter-spacing:.08em;color:#F4EFE2;background:var(--umber);padding:1px 5px;border-radius:3px;z-index:5}
+#pane-callboard .swim-h{display:flex;align-items:center;gap:8px;padding:12px 0 4px;font-family:var(--font);font-size:9.5px;
+  font-weight:600;text-transform:uppercase;letter-spacing:.13em;color:var(--brass2)}
+#pane-callboard .swim-h i{width:10px;height:10px;border-radius:2px;display:block;box-shadow:0 0 0 1px rgba(74,58,30,.2)}
+#pane-callboard .band{position:absolute;top:32px;bottom:0;background:rgba(154,123,58,0.10);
+  border-left:1.5px solid rgba(120,96,58,0.45);border-right:1.5px solid var(--umber);z-index:2;pointer-events:none}
+#pane-callboard .band.free{border-left-color:var(--umber)}
+#pane-callboard .band-tag{position:absolute;top:3px;font-family:var(--mono);font-size:9.5px;font-weight:600;color:var(--ink);
+  background:rgba(249,245,236,.94);padding:0 4px;border-radius:3px;z-index:6;white-space:nowrap}
+#pane-callboard .brush{position:absolute;left:var(--gutter);right:0;top:0;height:32px;z-index:7;cursor:col-resize}
+/* The invitation to drag lives in the same 32px strip as the year labels
+   and the two dates of the window itself, and at the right-hand end it was
+   printed straight over both of them. It has nothing left to say once a
+   window has been set — the two dates say it — so it stands down. */
+#pane-callboard .brush::after{content:'drag to set a deadline window';position:absolute;right:2px;bottom:1px;
+  font-family:var(--body);font-style:italic;font-size:10.5px;color:var(--ink3);opacity:.7;pointer-events:none;
+  transition:opacity .16s}
+#pane-callboard .tl.windowed .brush::after{opacity:0}
+#pane-callboard .brush:hover::after{opacity:.7}
+#pane-callboard .handle{position:absolute;top:32px;bottom:0;width:14px;margin-left:-7px;z-index:8;cursor:ew-resize;
+  pointer-events:auto;touch-action:none}
+#pane-callboard .handle::before{content:'';position:absolute;left:6px;top:0;bottom:0;width:2px;background:var(--umber)}
+#pane-callboard .handle::after{content:'';position:absolute;left:2.5px;top:0;width:9px;height:18px;border-radius:3px;
+  background:var(--umber);box-shadow:0 1px 3px rgba(74,58,30,.35),inset 0 1px 0 rgba(255,255,255,.22)}
+#pane-callboard .handle:hover::after,#pane-callboard .handle.drag::after{background:#5A4728}
+#pane-callboard .tl-foot{margin-top:15px;border-top:1px solid var(--line);padding-top:11px}
+#pane-callboard .selcard{display:flex;flex-wrap:wrap;gap:6px 20px;font-family:var(--mono);font-size:11px;color:var(--ink3);
+  margin-bottom:7px;min-height:17px}
+#pane-callboard .selcard .k{color:var(--ink);font-weight:600}
+/* the selected call's id, and a way out to the portal. An eleven-pixel
+   line of mono is thirteen pixels tall; the padding is what makes it
+   something you can put a finger on. */
+#pane-callboard .selcard .k a{display:inline-block;padding:6px 4px;margin:-6px -4px;
+  color:var(--brass2);text-decoration:underline;text-underline-offset:3px}
+#pane-callboard .famkey{display:flex;flex-wrap:wrap;gap:5px 15px;margin:9px 0 3px;font-family:var(--body);font-size:12.5px;color:var(--ink2)}
+#pane-callboard .famkey .fi{display:flex;align-items:center;gap:6px}
+#pane-callboard .famkey .fsw{display:flex;gap:2px}
+#pane-callboard .famkey .fsw i{width:11px;height:11px;border-radius:2px;display:block;box-shadow:0 0 0 1px rgba(74,58,30,.18)}
+#pane-callboard .legend{font-family:var(--body);font-size:12.5px;color:var(--ink3);display:flex;flex-wrap:wrap;gap:5px 16px;margin-top:7px}
+#pane-callboard .legend .li{display:flex;align-items:center;gap:6px}
+#pane-callboard .legend .sw{width:14px;height:8px;border-radius:2px;background:var(--ink3)}
+#pane-callboard .legend .sw.hatch{background-image:repeating-linear-gradient(-55deg,var(--ink3) 0 3px,#F7F3E9 3px 6px)}
+#pane-callboard .legend .sw.tdy{width:0;height:10px;border-left:1.5px dashed var(--umber);border-radius:0}
+#pane-callboard .src{margin-top:11px;font-family:var(--body);font-style:italic;font-size:12.5px;color:var(--ink3);line-height:1.5}
+/* ══ 8. THE SHEET DRAWN OUT (full topic text) ══ */
+#pane-callboard .scrim{position:fixed;inset:0;background:rgba(44,36,24,.42);z-index:90;opacity:0;pointer-events:none;transition:opacity .16s}
+#pane-callboard .scrim.open{opacity:1;pointer-events:auto}
+/* Parked off the right edge when shut. A transform alone hides it from the
+   eye and from nothing else: its close button stayed in the tab order, so
+   a keyboard walking the board arrived at a control it could not see,
+   inside an element already marked aria-hidden. `visibility` is the same
+   answer the panes themselves use — held back until the slide is over on
+   the way out, dropped at once on the way in. */
+#pane-callboard .reader{position:fixed;top:0;right:0;bottom:0;width:min(780px,94vw);z-index:91;display:flex;flex-direction:column;
+  background:#FAF6EC;border-left:2px solid var(--umber);box-shadow:-18px 0 48px rgba(44,36,24,.28);
+  transform:translateX(100%);visibility:hidden;
+  transition:transform .2s ease-out, visibility 0s linear .2s}
+#pane-callboard .reader.open{transform:none;visibility:visible;
+  transition:transform .2s ease-out, visibility 0s}
+#pane-callboard .rd-head{position:relative;padding:16px 24px 15px;background:linear-gradient(180deg,#3D3120,#2B2215);color:#F4EFE2}
+/* The name comes first now, so it is the first thing in the head as well
+   as the largest, and the facts under it are the same labelled list the
+   dropdown under a topic row carries. The inks are struck for this dark
+   ground rather than reused from the sheet: the brass that letters the
+   labels on vellum reads as a stain here, so the label colour is set as a
+   colour of its own and not as the sheet's colour faded. */
+#pane-callboard .rd-head h2{font-family:var(--font);font-size:17.5px;line-height:1.34;font-weight:600;color:#FBF6E9;
+  margin-bottom:11px;padding-right:36px}
+#pane-callboard .rd-meta table{border-collapse:collapse;font-family:var(--body);font-size:14px;color:#EFE9DA}
+#pane-callboard .rd-meta td{padding:2px 18px 2px 0;vertical-align:top}
+#pane-callboard .rd-meta td:first-child{font-family:var(--font);font-size:9.5px;text-transform:uppercase;letter-spacing:.09em;
+  color:#C8AE72;padding-top:4px;white-space:nowrap}
+#pane-callboard .rd-meta .full{font-family:var(--mono);font-size:11px;color:#EFE9DA}
+#pane-callboard .rd-meta .aside{color:#B9AE96}
+#pane-callboard .rd-links{display:flex;gap:7px;margin-top:12px}
+#pane-callboard .rd-links .portalink{background:rgba(255,255,255,.09);border-color:rgba(244,239,226,.34);color:#F0EADB;box-shadow:none}
+#pane-callboard .rd-links .portalink:hover{background:rgba(255,255,255,.16);border-color:#F0EADB;color:#FFF8E6}
+#pane-callboard .rd-close{position:absolute;top:14px;right:18px;width:30px;height:30px;padding:0;border-radius:var(--radius);
+  font-size:14px;display:inline-flex;align-items:center;justify-content:center;
+  background:rgba(255,255,255,.10);border-color:rgba(244,239,226,.3);color:#F0EADB;box-shadow:none}
+#pane-callboard .rd-close:hover{background:rgba(255,255,255,.18);color:#FFF8E6;border-color:#F0EADB}
+#pane-callboard .rd-body{overflow:auto;padding:20px 26px 46px;font-family:var(--body);font-size:16.5px;line-height:1.64;color:var(--ink)}
+#pane-callboard .rd-body h3{font-family:var(--font);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.14em;
+  color:var(--brass2);margin:26px 0 10px;padding-bottom:6px;border-bottom:1.5px solid rgba(120,96,58,0.3)}
+#pane-callboard .rd-body h3:first-child{margin-top:0}
+#pane-callboard .rd-body p{margin:0 0 11px}
+#pane-callboard .rd-body p.bul{padding-left:17px;text-indent:-14px;color:var(--ink2)}
+#pane-callboard .rd-body dl{display:grid;grid-template-columns:minmax(120px,190px) 1fr;gap:7px 18px;font-size:14.5px;color:var(--ink2)}
+#pane-callboard .rd-body dt{font-family:var(--font);font-size:9.5px;text-transform:uppercase;letter-spacing:.09em;color:var(--brass2);padding-top:4px}
+#pane-callboard .rd-body dd{margin:0}
+#pane-callboard .rd-body mark{background:rgba(212,166,58,.34);color:inherit;border-radius:2px;padding:0 2px}

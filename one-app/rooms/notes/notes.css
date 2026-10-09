@@ -1,0 +1,931 @@
+/* ══════════════════════════════════════════════════════════════════════
+   Notes — paint.
+
+   The room borrows the Books page's whole visual language, deliberately:
+   Mark reads that shape every day, so the fifth room stands on the same
+   umber, sets its book name as a chapter head between flourishes, hangs
+   file tabs over one sheet, and lets a note balloon open under its row.
+   The colours are the Ledger's own values where they pass contrast, and
+   struck brighter where they do not: the Ledger's quiet #9d8458 reads
+   under 4:1 on the sheet, so quiet text here is #A78E5F on the page and
+   #B89F6C on the lighter sheet — colour, never opacity, and each rank
+   checked against the ground it actually sits on.
+   ══════════════════════════════════════════════════════════════════ */
+
+#pane-notes{
+  --paper:#211B10; --sheet:#433720; --sheet2:#3A2F1A;
+  --ink:#F5ECD8; --muted:#D3BD88; --faint:#A78E5F; --faint2:#B89F6C;
+  --gold:#C9A84C; --gold2:#E8C96A;
+  --line:rgba(205,176,105,.14); --line2:rgba(205,176,105,.26);
+  --well:rgba(0,0,0,.22); --danger:#E06A55;
+  background:var(--paper);
+  color:var(--ink);
+  font:15px/1.55 var(--sc-body);
+  min-height:100%;
+}
+
+.nt-room{min-height:100%; display:flex; flex-direction:column}
+
+/* ══ THE BAR ═════════════════════════════════════════════════════════
+   The bridge dresses this element as .oa-bar — the ribbon, the measured
+   left padding, the slab faces on its buttons and the segmented control.
+   Said here is only what must be true before the bridge arrives. */
+.nt-bar{
+  position:sticky; top:0; z-index:60;
+  display:flex; align-items:center; gap:10px;
+}
+#nt-search{width:min(300px,30vw)}
+.nt-seg{display:inline-flex; flex:0 0 auto}
+.nt-count{
+  margin-left:auto;
+  font-size:12px; letter-spacing:.08em; white-space:nowrap;
+  color:var(--oa-ctl);
+}
+
+/* ══ THE SHELF ═══════════════════════════════════════════════════════
+   The left column: the computed books, in Mark's order, sticky under
+   the bar and scrolling by itself when it outgrows the window. Only the
+   first ten stand out; the rest fold behind one quiet line, because a
+   shelf of thirty spines is a scroll, not an overview. */
+.nt-main{display:flex; align-items:flex-start; flex:1}
+
+/* ── the nut ──
+   The ribbon's pair, drawn once. The same hazelnut at whatever size the
+   thing wearing it asks for — see .g-notes in shell.css for why it is an
+   inline SVG rather than a shape made of border-radius, and for why the
+   first attempt read as an egg. Sized by whatever wears it; 11px here is
+   only what an unsized one gets.
+
+   It is NOT on every note any more. It was, for a day: a nut before every
+   pill, which is a bullet point wearing a costume. A mark that is on
+   everything says nothing and stops being funny by the second row. The
+   four places it turns up now are all places you meet in passing. */
+.nt-nut{
+  display:inline-block; flex:0 0 auto; width:11px; height:11px;
+  background:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><linearGradient id='w' x1='0' y1='0' x2='.7' y2='1'><stop offset='0' stop-color='%23F4E3B2'/><stop offset='1' stop-color='%23A8792F'/></linearGradient><linearGradient id='v' x1='0' y1='0' x2='.7' y2='1'><stop offset='0' stop-color='%23CDB278'/><stop offset='1' stop-color='%237C5820'/></linearGradient><path d='M12 22.8c-5.5 0-9.2-4-9.2-9.2 0-4.7 3.3-8.2 9.2-8.2s9.2 3.5 9.2 8.2c0 5.2-3.7 9.2-9.2 9.2z' fill='url(%23w)'/><path d='M3.3 9.4C4.6 5 7.7 2.9 12 2.9s7.4 2.1 8.7 6.5c-2.7-1.7-5.5-2.5-8.7-2.5S6 7.7 3.3 9.4z' fill='%238A6427'/><path d='M12 3.1V.7' stroke='%238A6427' stroke-width='1.5' stroke-linecap='round'/><path d='M8.4 11c-.9 2.2-.7 4.6.7 6.4' stroke='rgba(88,60,18,.45)' stroke-width='1.1' fill='none' stroke-linecap='round'/></svg>") no-repeat center/contain;
+}
+.nt-nut-faded{opacity:.5}
+
+/* ── writing one ──
+   The room's one primary act, and it is a nut with no words on it.
+
+   It has been three things in two days. A small slab first in the bar,
+   which read as the fourth of four identical controls; then a full-width
+   gold slab at the head of the shelf, which Mark said was too much in his
+   face — and it was: the loudest thing in the room stood over the books
+   it was meant to serve. Now it is the nut itself, and pressing the room's
+   own mark is what writes a note. It tilts when the pointer is on it, so
+   that a thing with no label at least answers back.
+
+   The label lives in `title` and `aria-label` and nowhere on screen, which
+   is a real cost and Mark's own choice with the cost named. Do not put a
+   word back beside it without asking him. */
+.nt-new{
+  /* width, because a button is text-align:center by default and a block
+     one stretches the flex column — which centred the nut in the middle
+     of the shelf instead of standing it at the column's own gutter */
+  display:block; flex:0 0 auto; width:34px; height:34px;
+  align-self:flex-start; margin:0 0 14px 16px; padding:0;
+  border:0; background:none; cursor:pointer; line-height:0;
+  filter:drop-shadow(0 2px 5px rgba(8,6,2,.55));
+  transition:transform .18s cubic-bezier(.3,.9,.4,1), filter .18s ease;
+}
+.nt-new .nt-nut{width:34px; height:34px}
+.nt-new:hover{transform:translateY(-2px) rotate(-8deg);
+  filter:drop-shadow(0 0 9px rgba(232,217,168,.42))}
+.nt-new:active{transform:translateY(0) scale(.93)}
+.nt-new:focus-visible{outline:1px solid var(--gold2); outline-offset:5px;
+  border-radius:50%}
+@media (prefers-reduced-motion:reduce){.nt-new{transition:none}}
+
+/* The head — the word, and the bar a book is made in — does not scroll
+   with the spines. It is furniture, so it also survives every repaint of
+   the list below it: an input rewritten mid-word loses the caret, and
+   the caret is the whole point of a box you type a book into. */
+.nt-shelf{
+  position:sticky; top:var(--oa-bar-h);
+  flex:0 0 250px; width:250px;
+  height:calc(100vh - var(--oa-bar-h));
+  display:flex; flex-direction:column;
+  padding:20px 0 0;
+  border-right:1px solid var(--line);
+}
+.nt-shelf-h{
+  flex:0 0 auto; padding:0 18px 7px;
+  font:600 10.5px var(--sc-body); letter-spacing:.18em;
+  text-transform:uppercase; color:var(--faint);
+}
+.nt-make{
+  flex:0 0 auto; width:calc(100% - 28px); margin:0 14px 12px;
+  padding:6px 10px;
+  border:1px solid var(--line2); border-radius:7px;
+  background:rgba(0,0,0,.24);
+  font:13px var(--sc-body); color:var(--ink);
+}
+.nt-make::placeholder{color:var(--faint2); font-style:italic}
+.nt-make:focus{outline:none; border-color:var(--gold);
+  box-shadow:0 0 0 2px rgba(201,168,76,.14)}
+.nt-books-wrap{
+  flex:1; min-height:0;
+  overflow-y:auto; overscroll-behavior:contain;
+  padding-bottom:30px;
+}
+.nt-shelf-books{margin:0 0 6px; padding:0; list-style:none}
+
+.nt-b{
+  display:flex; align-items:center; gap:7px;
+  padding:7px 14px 7px 8px;
+  border-left:3px solid transparent;
+  cursor:pointer; user-select:none; -webkit-user-select:none;
+}
+.nt-b:hover{background:rgba(216,205,184,.06)}
+.nt-b.on{background:var(--sheet2); border-left-color:var(--gold)}
+.nt-b.dragging{opacity:.55; background:var(--sheet2)}
+.nt-b-name{
+  font:400 13.5px var(--sc-serif); letter-spacing:.05em;
+  text-transform:uppercase; color:var(--muted);
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.nt-b.on .nt-b-name{color:var(--gold2)}
+.nt-b-n{
+  margin-left:auto; flex:0 0 auto;
+  font-size:11.5px; color:var(--faint); font-variant-numeric:tabular-nums;
+}
+/* The drag handle is always visible, not hover-revealed: an iPad has no
+   hover, and a handle that only appears under a cursor does not exist
+   there at all. touch-action:none, or the first drag scrolls the shelf
+   instead of moving the book. */
+.nt-grip{
+  flex:0 0 auto; color:var(--faint); font-size:11px; line-height:1;
+  padding:4px 3px; cursor:grab; touch-action:none;
+}
+.nt-b.dragging .nt-grip{cursor:grabbing}
+
+/* A book made from a tag, standing on the shelf only while it is open.
+   Dashed, because it is the one spine here that is not really a book. */
+.nt-b-hand{
+  border-left-style:dashed;
+  border-left-color:var(--gold) !important;
+  background:rgba(216,205,184,.05);
+}
+.nt-b-hand .nt-b-name{font-style:italic; color:var(--gold2)}
+.nt-b-put{
+  margin-left:auto; flex:0 0 auto;
+  font-size:10px; letter-spacing:.1em; text-transform:uppercase;
+  color:var(--faint);
+}
+.nt-b-hand:hover .nt-b-put{color:var(--muted)}
+
+/* the fold: one line standing in for everything past the tenth spine */
+.nt-more{
+  display:block; width:100%; text-align:left;
+  padding:7px 14px 7px 32px; border:0; border-left:3px solid transparent;
+  background:none; cursor:pointer;
+  font:italic 12.5px var(--sc-body); color:var(--faint);
+}
+.nt-more:hover{color:var(--muted); background:rgba(216,205,184,.06)}
+
+/* The two standing entries — every note, and the untagged — sit apart
+   from the earned books and are not draggable: their place is fixed, so
+   they carry no grip and a drag can never land among them. */
+.nt-b-special .nt-b-name{font-style:italic; text-transform:none; letter-spacing:.02em}
+.nt-shelf-split{height:1px; margin:8px 14px; background:var(--line)}
+
+/* ── the rail in the tag view ──
+   The same column, doing the other job: what has been picked, and what
+   is left to pick. Two small headings divide the one from the other,
+   quieter than the column's own so that the pair reads as one list in
+   two parts and not as two columns fighting.
+
+   A picked tag is lit the way the open book is lit — it is where you
+   are — and says "drop" where a book says its count, because the count
+   of a tag you have already picked is the count of everything on
+   screen and telling you that twice helps nobody. */
+.nt-rail-h{
+  padding:12px 18px 5px;
+  font:600 10px var(--sc-body); letter-spacing:.16em;
+  text-transform:uppercase; color:var(--faint2);
+}
+.nt-rail-h:first-child{padding-top:0}
+.nt-b-picked .nt-b-name{color:var(--gold2)}
+.nt-b-x{
+  margin-left:auto; flex:0 0 auto;
+  font-size:10px; letter-spacing:.1em; text-transform:uppercase;
+  color:var(--faint2);
+}
+.nt-b-picked:hover .nt-b-x{color:var(--gold2)}
+
+/* The footnote for tags on nearly every note: they earn no book because
+   they divide nothing, but saying so beats leaving Mark to wonder where
+   his biggest tag went. It carries the tag view's own footnote too —
+   the tags standing on everything still in hand. */
+.nt-shelf-note{
+  margin:12px 18px 0; padding-top:10px;
+  border-top:1px solid var(--line);
+  font-size:12px; font-style:italic; color:var(--faint); line-height:1.5;
+}
+
+/* ══ HOW TAGS RELATE ═════════════════════════════════════════════════
+   The one page in this room that is a statement rather than a list of
+   notes, so it is set as sentences: two tags with the verb between them,
+   reading left to right the way it was declared. */
+.nt-tie-new{
+  display:flex; align-items:center; flex-wrap:wrap; gap:8px;
+  padding:12px 4px 14px; border-bottom:1px solid var(--line);
+}
+.nt-tie-in{
+  flex:1 1 150px; min-width:120px; padding:6px 10px;
+  border:1px solid var(--line2); border-radius:7px;
+  background:rgba(0,0,0,.24);
+  font:13.5px var(--sc-body); color:var(--ink);
+}
+.nt-tie-in::placeholder{color:var(--faint2); font-style:italic}
+.nt-tie-in:focus{outline:none; border-color:var(--gold);
+  box-shadow:0 0 0 2px rgba(201,168,76,.14)}
+/* the segmented control is the shell's, worn outside the ribbon: it is
+   the same choice-of-two the bar makes, so it says so the same way */
+.nt-tie-seg{
+  display:inline-flex; flex:0 0 auto; overflow:hidden;
+  border:1px solid var(--line2); border-radius:7px;
+  background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(0,0,0,.14));
+}
+.nt-tie-seg button{
+  border:0; border-right:1px solid var(--line2); background:none;
+  padding:6px 13px; cursor:pointer;
+  font:12px var(--sc-body); letter-spacing:.04em; color:var(--faint2);
+}
+.nt-tie-seg button:last-child{border-right:0}
+.nt-tie-seg button:hover{background:rgba(216,205,184,.08); color:var(--muted)}
+.nt-tie-seg button.on{background:rgba(216,205,184,.17); color:var(--ink)}
+.nt-tie-add{
+  flex:0 0 auto; padding:6px 16px; cursor:pointer;
+  border:1px solid var(--line2); border-radius:7px;
+  background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(0,0,0,.14));
+  font:12.5px var(--sc-body); letter-spacing:.06em; color:var(--gold2);
+}
+.nt-tie-add:hover{border-color:var(--gold); background:rgba(216,205,184,.12)}
+
+.nt-ties{margin:0; padding:0; list-style:none}
+.nt-tie{
+  display:flex; align-items:baseline; flex-wrap:wrap; gap:10px;
+  padding:10px 4px; border-bottom:1px solid var(--line);
+}
+.nt-tie:last-child{border-bottom:0}
+.nt-tie-tag{
+  padding:2px 10px; border-radius:999px; cursor:pointer;
+  background:rgba(216,205,184,.08); border:1px solid var(--line2);
+  font-size:12px; letter-spacing:.06em; text-transform:uppercase;
+  color:var(--muted);
+}
+.nt-tie-tag:hover{color:var(--gold2); border-color:var(--gold)}
+.nt-tie-verb{font:italic 14px var(--sc-body); color:var(--faint2)}
+.nt-tie-del{
+  margin-left:auto; border:0; background:none; cursor:pointer;
+  font:15px/1 var(--sc-body); color:var(--faint2);
+  padding:2px 7px; border-radius:6px;
+}
+.nt-tie-del:hover{color:var(--danger); background:rgba(224,106,85,.10)}
+.nt-tie-empty{
+  padding:16px 4px 8px; max-width:44rem;
+  font-size:13.5px; line-height:1.6; color:var(--faint2);
+}
+.nt-tie-empty b{color:var(--muted); font-weight:600}
+.nt-tie-empty i{color:var(--muted); font-style:italic}
+
+/* ══ THE OPEN BOOK ═══════════════════════════════════════════════════
+   The Books page's frame, remade: the chapter head, the tab strip, and
+   one sheet. */
+.nt-book{flex:1; min-width:0; max-width:1020px; padding:22px 40px 90px}
+
+/* the head rule: a printed book puts one under its chapter head, and this
+   one also gives the tab strip something to sit under */
+.nt-head{
+  display:flex; align-items:center; gap:.85rem;
+  padding:.15rem 2px .7rem; border-bottom:1px solid var(--line);
+}
+.nt-rule{
+  flex:1; height:1px; min-width:1rem;
+  background:linear-gradient(90deg,transparent,rgba(201,168,76,.3) 45%,
+    rgba(201,168,76,.3) 55%,transparent);
+}
+.nt-head-name{
+  display:inline-flex; align-items:center; gap:.7rem; max-width:30rem; min-width:0;
+  padding:3px 10px 4px;
+  font:400 12.5px var(--sc-serif); letter-spacing:.2em;
+  text-transform:uppercase; color:var(--muted);
+  text-shadow:0 1px 3px rgba(0,0,0,.55); white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis;
+}
+.nt-head-name.nt-plain{text-transform:none; letter-spacing:.06em; font-style:italic}
+.nt-fl{flex:0 0 auto; font-size:10px; color:var(--gold); opacity:.6}
+.nt-head-n{flex:0 0 auto; font-size:12px; font-style:italic; color:var(--faint)}
+
+/* ── the page tabs, a strip of file tabs lapping onto the sheet ── */
+.nt-tabsrow{position:relative; z-index:2; display:flex; align-items:flex-end; gap:3px;
+  overflow-x:auto; overflow-y:hidden; padding:8px 1px 0 0;
+  scrollbar-width:none; -ms-overflow-style:none}
+.nt-tabsrow::-webkit-scrollbar{display:none}
+.nt-ptab{
+  position:relative; flex:0 0 auto;
+  display:inline-flex; align-items:center; gap:8px; max-width:14rem; min-width:0;
+  padding:7px 13px; cursor:pointer;
+  background:rgba(0,0,0,.15);
+  border:1px solid var(--line); border-bottom:none;
+  border-radius:9px 9px 0 0;
+  font:400 10.5px var(--sc-serif); letter-spacing:.06em; text-transform:uppercase;
+  color:var(--faint); user-select:none; -webkit-user-select:none;
+  white-space:nowrap;
+}
+.nt-ptab.on{
+  color:var(--ink); background:var(--sheet);
+  border-color:var(--line2);
+  padding-top:9px; padding-bottom:8px; margin-bottom:-1px;
+}
+.nt-ptab-dot{
+  width:7px; height:7px; border-radius:50%; flex:0 0 7px;
+  background:var(--pg-col,var(--gold)); opacity:.8;
+}
+.nt-ptab i{font-style:normal; color:var(--faint); font-size:10px}
+.nt-ptab.on i{color:var(--faint2)}
+.nt-ptab.nt-ptab-rest{font-style:italic; text-transform:none; letter-spacing:.02em}
+
+/* ── the sheet ──
+   Laid paper: the faint horizontal ribbing a sheet of laid stock shows
+   against the light, at an amplitude that reads as texture and never as
+   lines to follow. It is the cheapest of the three things that make this
+   read as a book rather than as a card, and the only one that costs
+   nothing at all — no height, no width, no element. */
+.nt-sheet{
+  position:relative; z-index:1; margin-top:-1px;
+  display:flex; flex-direction:column; min-height:7rem;
+  padding:.5rem 1.35rem .6rem;
+  background:
+    repeating-linear-gradient(180deg,
+      rgba(255,246,220,.016) 0 1px, transparent 1px 4px),
+    var(--sheet);
+  border:1px solid var(--line2);
+  border-radius:11px; border-top-left-radius:0;
+  box-shadow:0 14px 38px rgba(8,6,2,.44),0 2px 8px rgba(8,6,2,.32);
+}
+.nt-sheet.nt-notabs{border-top-left-radius:11px}
+/* the running foot: what is on this page, set where a printed book sets
+   its folio. While the book can be arranged, the way in stands at the
+   other end of the same line. */
+.nt-sheet-foot{
+  display:flex; align-items:center; justify-content:flex-end; gap:12px;
+  padding:8px 2px 2px; margin-top:auto;
+  font-size:12px; font-style:italic; color:var(--faint2);
+}
+.nt-folio{flex:0 0 auto; font-variant-numeric:tabular-nums}
+/* the colophon: one nut closing the tally, where a printed book puts its
+   printer's device. 10px, and the gap is tighter than the foot's own. */
+.nt-sheet-foot .nt-nut{width:10px; height:10px; margin-left:-6px}
+/* a search that came back with nothing */
+.nt-nothing{
+  display:flex; align-items:center; justify-content:center; gap:11px;
+  padding:34px 12px 30px;
+  font:italic 14.5px var(--sc-body); color:var(--faint2);
+}
+.nt-nothing .nt-nut{width:15px; height:15px}
+
+/* ── the leaves under it ──
+   Two more pages showing below the one being read, so that a book is a
+   stack and not a card. They are a sibling drawn after the sheet and
+   pulled back up under it, because the sheet is what carries the shadow
+   and anything inside it would be drawn over its own edge. */
+.nt-leaves{
+  position:relative; z-index:0; height:17px; margin-top:-6px;
+  pointer-events:none;
+}
+.nt-leaves::before,.nt-leaves::after{
+  content:''; position:absolute; top:0; height:12px;
+  background:#3C311C; border:1px solid var(--line);
+  border-top:0; border-radius:0 0 10px 10px;
+}
+.nt-leaves::before{left:10px; right:10px}
+.nt-leaves::after{left:20px; right:20px; top:5px; background:#352B18}
+
+/* ── a row: colour on the leading edge, the name, the note pills ──
+   Three columns, and the middle one takes whatever is left. It was a flex
+   run until 2026-09-03, so every row's notes began wherever that row's
+   own name happened to end — four names of four lengths made four
+   starting points, and a sheet of them read as rubble. A measured column
+   costs about 150px of pill width and buys three straight edges: the
+   names, the notes, and the tallies.
+
+   A row with no name at all — the single undivided row of a small book —
+   drops the column rather than indenting every line past 150px of
+   nothing. */
+.nt-rowline{
+  display:grid;
+  grid-template-columns:150px minmax(0,1fr) auto;
+  column-gap:14px; align-items:start;
+  padding:9px 4px 9px 12px;
+  border-left:3px solid var(--rt-col,var(--gold));
+  border-bottom:1px solid var(--line);
+}
+.nt-rowline.nt-row-bare{grid-template-columns:minmax(0,1fr) auto}
+/* The row a note is written on holds the note and nothing else: the pill
+   is a handle for opening a note that is already open, and the tally is a
+   count of the one thing you are looking at. The coloured rail stays,
+   because the panel is still standing in a row. */
+.nt-rowline.nt-row-solo{padding-top:4px; padding-bottom:4px}
+.nt-row-solo .nt-pills,.nt-row-solo .nt-rowend{display:none}
+.nt-sheet > .nt-rowline:last-of-type{border-bottom:0}
+.nt-row-name{
+  min-width:0; padding-top:3px;
+  font:15.5px var(--sc-body); color:var(--ink);
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+/* the right-hand column: the tally, and while arranging the row's own two
+   controls in front of it */
+.nt-rowend{
+  display:flex; align-items:center; gap:5px; padding-top:2px;
+}
+.nt-rowline.nt-row-rest .nt-row-name{font-style:italic; color:var(--faint2)}
+/* a row named after a tag opens that tag as a book, so it says so the
+   way every other openable name in this app does */
+.nt-row-open{cursor:pointer; border-bottom:1px dotted transparent}
+.nt-row-open:hover{color:var(--gold2); border-bottom-color:var(--line2)}
+.nt-row-open:focus-visible{outline:1px solid var(--gold); outline-offset:2px}
+.nt-pills{min-width:0; display:flex; flex-wrap:wrap; gap:6px; align-items:center}
+.nt-rown{
+  flex:0 0 auto; padding-top:2px;
+  font-size:11.5px; font-style:italic; color:var(--faint2);
+  font-variant-numeric:tabular-nums;
+}
+
+/* the pill is the note's name and its button, as on the Books page:
+   quiet text on a wash of the row's colour, lifted when open */
+.nt-pill{
+  display:inline-flex; align-items:center; max-width:100%;
+  padding:4px 12px; border-radius:999px; cursor:pointer;
+  background:color-mix(in srgb, var(--rt-col,var(--gold)) 14%, transparent);
+  border:1px solid color-mix(in srgb, var(--rt-col,var(--gold)) 38%, transparent);
+  gap:7px;
+  font:13px var(--sc-body); color:var(--muted);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  user-select:none; -webkit-user-select:none;
+  transition:color .14s,background-color .14s,border-color .14s;
+}
+.nt-pill-nm{overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.nt-pill:hover{color:var(--ink);
+  background:color-mix(in srgb, var(--rt-col,var(--gold)) 24%, transparent)}
+.nt-pill.on{
+  color:var(--ink); background:var(--well);
+  border-color:var(--gold); box-shadow:0 0 0 1px rgba(201,168,76,.25);
+}
+.nt-pill i{font-style:italic; color:var(--faint2)}
+
+/* ── arranging a book ──
+   Reading a book and rearranging it are different jobs, and a pin beside
+   every row and every note would be in the way of the first for the sake
+   of the second. So all of it — the pins, and the round swatch a row's
+   colour is chosen from — is behind one press at the foot of the sheet,
+   and the sheet at rest carries none of it. The controls are drawn at the
+   room's quiet brass and go gold when they are holding something. */
+.nt-arrange{
+  display:inline-flex; align-items:center; gap:6px; margin-right:auto;
+  padding:3px 10px; cursor:pointer;
+  border:1px solid transparent; border-radius:7px; background:none;
+  font:12px var(--sc-body); letter-spacing:.06em; color:var(--faint2);
+}
+.nt-arrange:hover{color:var(--ink); border-color:var(--line2);
+  background:rgba(216,205,184,.07)}
+.nt-arrange.on{color:var(--gold2); border-color:var(--gold);
+  background:rgba(201,168,76,.12)}
+.nt-arrange:focus-visible{outline:1px solid var(--gold); outline-offset:1px}
+.nt-arrange i{font-style:italic; color:var(--faint)}
+.nt-arrange-say{
+  padding:9px 12px; margin:2px 0 4px;
+  border-left:2px solid var(--gold); background:rgba(201,168,76,.07);
+  font-size:13px; line-height:1.5; color:var(--faint2);
+}
+.nt-pin{
+  flex:0 0 auto; display:inline-flex; align-items:center; justify-content:center;
+  width:20px; height:20px; padding:0; cursor:pointer;
+  border:1px solid var(--line2); border-radius:6px; background:none;
+  color:var(--faint2);
+}
+.nt-pin:hover{color:var(--ink); border-color:var(--gold);
+  background:rgba(216,205,184,.09)}
+.nt-pin.on{color:var(--gold2); border-color:var(--gold);
+  background:rgba(201,168,76,.16)}
+.nt-pin:focus-visible{outline:1px solid var(--gold); outline-offset:1px}
+/* inside a pill the pin has to be smaller than the pill it sits in, and
+   it keeps the pill's own hit area rather than swallowing it */
+.nt-pill .nt-pin{width:17px; height:17px; margin-right:-4px}
+.nt-ptab .nt-pin{width:17px; height:17px}
+/* the round swatch: the row's colour, worn as a button */
+.nt-sw-btn{
+  flex:0 0 auto; width:14px; height:14px; padding:0; cursor:pointer;
+  border-radius:50%; border:1px solid rgba(0,0,0,.35);
+  background:var(--rt-col,var(--gold));
+  box-shadow:0 0 0 1px var(--line2);
+}
+.nt-sw-btn:hover{box-shadow:0 0 0 2px var(--gold)}
+.nt-sw-btn:focus-visible{outline:1px solid var(--gold2); outline-offset:2px}
+.nt-ptab-sw{width:11px; height:11px; background:var(--pg-col,var(--gold))}
+.nt-swatches{
+  display:flex; flex-wrap:wrap; gap:7px; padding:8px 9px 4px; max-width:210px;
+}
+.nt-sw{
+  width:24px; height:24px; padding:0; cursor:pointer; border-radius:50%;
+  border:1px solid rgba(0,0,0,.4); background:var(--sw);
+  box-shadow:0 0 0 1px var(--line2);
+}
+.nt-sw:hover{box-shadow:0 0 0 2px var(--gold)}
+.nt-sw.on{box-shadow:0 0 0 2px var(--gold2)}
+.nt-sw:focus-visible{outline:1px solid var(--gold2); outline-offset:2px}
+.nt-sw-auto{font-style:italic; color:var(--faint2)}
+
+/* ── the panel: a note ballooning open under its row ── */
+@keyframes nt-balloon{0%{transform:scaleY(.35);opacity:0}
+  55%{transform:scaleY(1.05);opacity:1}100%{transform:scaleY(1);opacity:1}}
+/* The balloon plays on the render that first draws a note and on no
+   other, which is why it hangs off a class the JS puts on once rather
+   than off .nt-panel itself. On .nt-panel it replayed every time the
+   sheet repainted — adding a tag made the whole capsule bounce. */
+.nt-panel{
+  grid-column:1 / -1; position:relative; margin:7px 0 4px;
+  padding:12px 16px 10px;
+  background:var(--well);
+  border:1px solid color-mix(in srgb, var(--rt-col,var(--gold)) 35%, transparent);
+  border-left:3px solid var(--rt-col,var(--gold));
+  border-radius:9px;
+  transform-origin:center top;
+}
+.nt-panel-new{animation:nt-balloon .34s cubic-bezier(.3,.9,.4,1)}
+@media (prefers-reduced-motion:reduce){.nt-panel-new{animation:none}}
+/* ── the head: what the note is, all on one line ──
+   The name, when it was made and last touched, and the way out. The dates
+   were at the very bottom of the panel until 2026-09-03, under the tags
+   and the references, where they read as one more control rather than as
+   part of the note. */
+.nt-phead{
+  display:flex; align-items:baseline; gap:14px;
+  padding:2px 0 6px; margin-bottom:2px;
+  border-bottom:1px solid var(--line);
+}
+.nt-x{
+  flex:0 0 auto; align-self:flex-start;
+  border:0; background:none; cursor:pointer; border-radius:5px;
+  font:16px/1 var(--sc-body); color:var(--faint2); padding:2px 6px;
+}
+.nt-x:hover{background:rgba(216,205,184,.08); color:var(--ink)}
+.nt-x:focus-visible{outline:1px solid var(--gold); outline-offset:1px}
+
+.nt-title{
+  flex:1 1 auto; min-width:0;
+  display:block; margin:0; padding:0;
+  border:0; background:none;
+  font:400 17px var(--sc-serif); letter-spacing:.03em; color:var(--ink);
+}
+.nt-title:focus{outline:none}
+.nt-title::placeholder{color:var(--faint2); font-style:italic}
+
+/* ── the edit button, and copy beside it ──
+   A note opens as a page, not as a box: the title and the body take no
+   caret until this is pressed. It sits at the end of the head row beside
+   the stamp, which is where Mark asked for it and is also the only place
+   in the panel that is already about the note rather than about its
+   contents.
+
+   Lit rather than outlined when it is on. A pressed state drawn as a
+   border alone is invisible in a panel whose every edge is already a
+   hairline of the same brass — and the whole point of it is that you can
+   tell at a glance whether this note can be typed in. */
+/* Copy wears the edit button's own shape, because the two stand side by
+   side in the head and a pair of controls that differ only in what they
+   say is one control read twice. Only edit has a lit state: copy is an
+   act rather than a mode, and there is nothing for it to be on about. */
+.nt-edit,.nt-copy{
+  flex:0 0 auto; display:inline-flex; align-items:center; gap:5px;
+  border:1px solid var(--line2); background:none; border-radius:6px;
+  padding:2px 8px; cursor:pointer;
+  font:11.5px var(--sc-body); letter-spacing:.05em; color:var(--faint2);
+  transition:color .14s, background-color .14s, border-color .14s;
+}
+.nt-edit svg,.nt-copy svg{display:block}
+.nt-edit:hover,.nt-copy:hover{color:var(--ink); border-color:var(--gold)}
+.nt-edit:focus-visible,.nt-copy:focus-visible{
+  outline:1px solid var(--gold); outline-offset:2px}
+.nt-copy:active{background:rgba(216,205,184,.12)}
+.nt-edit.on{color:var(--paper); background:var(--gold); border-color:var(--gold)}
+.nt-edit.on:hover{background:var(--gold2); border-color:var(--gold2)}
+
+/* ── the strip ──
+   The formatting rail, and Delete at its far end, unrolled under the head
+   for as long as the note is being written. It replaced a drawer at the
+   foot of the panel on 2026-09-09: the rail had been one press down there
+   precisely so that nothing came between the title and the first line,
+   and that reasoning stops applying once the rail is only ever on screen
+   while you are writing. What it comes between then is a title you are
+   editing and a body you are editing, which is where a tool rail belongs.
+
+   Everything the drawer had learned still holds and is why this is built
+   the way it is rather than written in on demand. It is always in the
+   DOM and opens by growing: rendering it when it was asked for repainted
+   the whole sheet, which replayed the panel's own balloon and moved the
+   rows under it in the same frame as the rail appeared — three movements
+   at once, which is what "jumpy" was.
+
+   The number below is only the resting height of a strip that was already
+   open when the sheet repainted — generous on purpose, since nothing is
+   moving in that case. The height an actual opening animates to is
+   measured and written inline by NT.edit, which is where the reason
+   lives.
+
+   The inner div carries the fade and the small rise: animating opacity on
+   the clipping box itself would fade the clipped edge as well as the
+   contents, and the edge is the thing that should look solid. */
+.nt-strip{
+  overflow:hidden; max-height:0;
+  transition:max-height .34s cubic-bezier(.32,.72,.3,1);
+}
+.nt-strip.on{max-height:96px}
+.nt-strip-in{
+  opacity:0; transform:translateY(-5px);
+  transition:opacity .2s ease, transform .28s cubic-bezier(.32,.72,.3,1);
+}
+.nt-strip.on .nt-strip-in{
+  opacity:1; transform:none;
+  transition:opacity .24s ease .1s, transform .3s cubic-bezier(.32,.72,.3,1) .06s;
+}
+@media (prefers-reduced-motion:reduce){
+  .nt-strip,.nt-strip-in{transition:none}
+}
+
+/* ── the toolbar ──
+   The whole of the strip: the formatting rail, and Delete at the far end
+   of the same row. Present enough to be found without being read, and
+   struck in the same brass as everything else the panel offers. Six of
+   the eight are drawn rather than written — “• list”, “1. list”, “link”
+   and “unlink” were four words of running text in a row of controls,
+   which made the strip read as a sentence.
+
+   Still no rule under it. It had one for an hour: the body below grows
+   its own hairline box the moment it can be typed in, and a second line
+   eight pixels above that one reads as a mistake rather than as a
+   division. */
+.nt-tools{
+  display:flex; align-items:center; flex-wrap:wrap; gap:2px;
+  padding:6px 0 5px;
+}
+.nt-tool{
+  border:1px solid transparent; background:none; border-radius:6px;
+  padding:3px 9px; cursor:pointer;
+  font:12.5px var(--sc-body); color:var(--faint2);
+  transition:color .14s, background-color .14s, border-color .14s;
+}
+.nt-tool:hover{color:var(--ink); background:rgba(216,205,184,.09);
+  border-color:var(--line2)}
+.nt-tool:active{background:rgba(216,205,184,.16)}
+.nt-tool:focus-visible{outline:1px solid var(--gold); outline-offset:1px}
+.nt-tool b{font-weight:700; color:inherit}
+.nt-tool i{font-style:italic}
+.nt-tool u{text-decoration:underline}
+/* an icon button is square around its drawing rather than padded for
+   words, so the eight of them read as one rail of even targets */
+.nt-tool-ic{display:inline-flex; align-items:center; justify-content:center;
+  width:29px; padding:4px 0}
+.nt-tool-ic svg{display:block}
+.nt-tool-gap{width:1px; height:15px; margin:0 6px; background:var(--line2)}
+
+.nt-body{
+  min-height:88px; padding:10px 2px 12px; outline:none;
+  font:15px/1.6 var(--sc-body); color:var(--ink); overflow-wrap:break-word;
+}
+/* A body that will take the caret says so, quietly: the faintest wash and
+   a hairline around it, so that "can I type here" is answered by the
+   shape of the thing rather than by remembering which button was last
+   pressed. The padding is stolen back from the margin so that the words
+   do not shift sideways as it comes on. */
+.nt-body.on{
+  padding:10px 8px 12px; margin:0 -6px;
+  background:rgba(216,205,184,.045); border-radius:5px;
+  box-shadow:inset 0 0 0 1px var(--line);
+}
+/* An address in a note is a door. It says so in the metal the room uses
+   for everything that leads somewhere, and it is a pointer rather than a
+   caret because a press on it opens the page rather than editing it. */
+.nt-body a{
+  color:var(--gold2); cursor:pointer;
+  text-decoration:underline; text-decoration-thickness:1px;
+  text-underline-offset:3px;
+}
+.nt-body a:hover{background:rgba(201,168,76,.16); border-radius:2px}
+.nt-body:empty::before{content:'Write\2026'; color:var(--faint2); font-style:italic}
+.nt-body ul,.nt-body ol{margin:.35em 0; padding-left:1.35em}
+.nt-body p{margin:.35em 0}
+.nt-body ul ul,.nt-body ol ol,.nt-body ul ol,.nt-body ol ul{margin:.1em 0}
+.nt-body li>p{margin:.15em 0}
+/* What a paste is allowed to bring with it, drawn in this room's own
+   measure rather than the source's: four steps of indent, and a closed
+   gap where the writer closed one. The step is the list's own indent, so
+   a paragraph written under a bullet lines up with the bullet's words
+   instead of merely near them. */
+.nt-body .nt-in1{margin-left:1.35em}
+.nt-body .nt-in2{margin-left:2.7em}
+.nt-body .nt-in3{margin-left:4.05em}
+.nt-body .nt-in4{margin-left:5.4em}
+.nt-body .nt-tight{margin-top:0; margin-bottom:0}
+/* A blank line somebody typed, drawn at the height Word draws one. This
+   body sets its lines at 1.6 and gives a paragraph a gap above and below,
+   which together make an empty paragraph more than twice as tall as the
+   one that was copied — so a mail with one blank line between two tables
+   came through looking as though it had two. */
+.nt-body .nt-blank{margin:0; line-height:.95}
+.nt-body b,.nt-body strong{color:var(--gold2)}
+/* A table pasted in from Word arrives with every measurement stripped
+   off it, so this is the whole of what draws one. Ruled in the panel's
+   own hairline rather than in Word's black, and set a size down: a grid
+   is a thing to check against, and it reads as one when it is quieter
+   than the sentences around it. max-width keeps a six-column partner
+   table inside the panel instead of pushing the sheet sideways — the
+   columns give way instead, which is what a table with no widths on it
+   does naturally. */
+.nt-body table{
+  border-collapse:collapse; max-width:100%;
+  margin:.6em 0; font-size:13.5px;
+}
+.nt-body td,.nt-body th{
+  border:1px solid var(--line2); padding:4px 9px; vertical-align:top;
+}
+/* A table that said where its own rules go keeps them, side by side, and
+   a cell that asked for none draws none — which is how a sheet's heading
+   lines sit above the block they name rather than boxed inside it. The
+   full grid above is for a table that said nothing at all. Drawn in this
+   room's hairline whichever way: where a rule goes is the table's
+   business, what colour it is drawn in is the room's. */
+/* The side rules have to outweigh the `border:0` above them, and a
+   shorthand sets every longhand it covers — so each one carries the
+   table's class as well, which is one class more than the rule it has to
+   beat. Written short, this paints nothing at all. */
+.nt-body table.nt-bs td,.nt-body table.nt-bs th{border:0}
+.nt-body .nt-bs .nt-bt{border-top:1px solid var(--line2)}
+.nt-body .nt-bs .nt-br{border-right:1px solid var(--line2)}
+.nt-body .nt-bs .nt-bb{border-bottom:1px solid var(--line2)}
+.nt-body .nt-bs .nt-bl{border-left:1px solid var(--line2)}
+.nt-body th{font-weight:600; text-align:left; color:var(--gold2)}
+/* Word puts a paragraph inside every cell, and a paragraph's own gap
+   above and below is what turns a two-line table into a tall one. */
+.nt-body td>p,.nt-body th>p{margin:.1em 0}
+/* Where the words sit in a cell, kept from the source because it is what
+   the column was FOR — a centred comments column ranged left is a
+   different table. The sieve marks these; nothing else in the room
+   writes them. */
+.nt-body .nt-mid{text-align:center}
+.nt-body .nt-right{text-align:right}
+.nt-body .nt-vmid{vertical-align:middle}
+
+/* ── the table bar ──
+   Two buttons that stand beside the table the caret is in, and nowhere
+   else and never otherwise. Out of the flow on purpose: a control that
+   took a line of its own would move every table under it the moment a
+   caret landed in one, and this panel has spent a lot of its life
+   learning not to move things while they are being read.
+
+   Quieter than the formatting rail above, which is a permanent fixture of
+   writing; this one is an answer to where the caret happens to be, and a
+   thing that appears by itself has to arrive softly or it reads as an
+   alarm. It brightens on hover like everything else here. */
+.nt-tbar{
+  display:none; position:absolute; z-index:3;
+  gap:2px; padding:1px;
+  background:var(--well); border:1px solid var(--line);
+  border-radius:7px;
+  animation:nt-tbar-in .16s ease;
+}
+.nt-tbar.on{display:flex}
+@keyframes nt-tbar-in{from{opacity:0}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){.nt-tbar{animation:none}}
+.nt-tbar-b{
+  border:0; background:none; border-radius:5px;
+  padding:3px 8px; cursor:pointer; white-space:nowrap;
+  font:11.5px var(--sc-body); letter-spacing:.04em; color:var(--faint2);
+  transition:color .14s, background-color .14s;
+}
+.nt-tbar-b:hover{color:var(--ink); background:rgba(216,205,184,.1)}
+.nt-tbar-b:focus-visible{outline:1px solid var(--gold); outline-offset:1px}
+/* the last row standing cannot be taken out, and the button says so */
+.nt-tbar-b:disabled{color:var(--line2); cursor:default; background:none}
+
+/* Always on, under the writing: a note's tags are what files it, and a
+   note whose filing you cannot see is a note you cannot trust the shelf
+   about. They sat in the drawer for half a day. */
+.nt-tagrow{display:flex; flex-wrap:wrap; align-items:center; gap:6px;
+  padding:9px 0 4px; border-top:1px solid var(--line)}
+.nt-chip{
+  display:inline-flex; align-items:center; gap:5px;
+  padding:2px 4px 2px 9px; border-radius:999px; cursor:pointer;
+  background:rgba(216,205,184,.08); border:1px solid var(--line2);
+  font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted);
+  transition:color .14s,border-color .14s,background-color .14s;
+}
+.nt-chip:hover{color:var(--gold2); border-color:var(--gold);
+  background:rgba(216,205,184,.13)}
+.nt-chip:focus-visible{outline:1px solid var(--gold); outline-offset:1px}
+.nt-chip button{
+  border:0; background:none; cursor:pointer;
+  font:12px/1 var(--sc-body); color:var(--faint2); padding:1px 4px; border-radius:50%;
+}
+.nt-chip button:hover{color:var(--danger)}
+#nt-taginput{
+  flex:1; min-width:130px; padding:3px 0;
+  border:0; background:none; font:13px var(--sc-body); color:var(--ink);
+}
+#nt-taginput:focus{outline:none}
+#nt-taginput::placeholder{color:var(--faint2); font-style:italic}
+
+.nt-when{
+  flex:0 0 auto; font-size:11.5px; color:var(--faint2);
+  font-variant-numeric:tabular-nums; white-space:nowrap;
+}
+/* pushed to the far end of the tool rail by the rail's own auto margin */
+.nt-del{
+  margin-left:auto;
+  border:1px solid transparent; background:none; border-radius:7px;
+  padding:3px 10px; cursor:pointer;
+  font:12px var(--sc-body); letter-spacing:.04em; color:var(--danger);
+}
+.nt-del:hover,.nt-del.armed{border-color:var(--danger); background:rgba(224,106,85,.10)}
+
+/* ── where a nut turns up ──
+   Four places, all of them met in passing: the running foot of every
+   sheet, the empty room, a search that finds nothing, and the Untagged
+   book. A fifth would be one too many — see .nt-nut. */
+.nt-empty{max-width:520px; margin:12vh auto 0; text-align:center; color:var(--faint)}
+.nt-empty .nt-nut{width:46px; height:46px; margin:0 auto 4px; display:block;
+  filter:drop-shadow(0 3px 8px rgba(8,6,2,.5))}
+.nt-empty h2{font:400 20px var(--sc-serif); letter-spacing:.08em;
+  text-transform:uppercase; color:var(--muted); margin:0 0 12px}
+.nt-empty p{margin:0 0 18px; line-height:1.6}
+.nt-empty button{
+  font:13px var(--sc-body); letter-spacing:.06em;
+  padding:8px 18px; border-radius:7px; cursor:pointer;
+  background:var(--sheet2); border:1px solid var(--line2); color:var(--gold2);
+}
+.nt-empty button:hover{background:var(--sheet)}
+
+/* ══ THE POPUP ═══════════════════════════════════════════════════════
+   One box serves the tag autocomplete, the make-a-book suggestions and
+   the row colour swatches. It is
+   placed by measurement — parked at 0,0, read, moved by the difference —
+   because inside a transformed pane no positioning scheme can be trusted
+   to agree with the viewport. See placePop() in notes.js. */
+.nt-pop{
+  position:absolute; z-index:300;
+  min-width:230px; max-width:340px; max-height:280px; overflow:auto;
+  background:var(--sheet2); border:1px solid var(--line2); border-radius:8px;
+  box-shadow:0 14px 40px rgba(8,6,2,.5);
+  padding:4px;
+}
+.nt-pop[hidden]{display:none !important}
+.nt-pop input{
+  width:calc(100% - 8px); margin:4px; padding:6px 9px;
+  border:1px solid var(--line2); border-radius:6px; background:rgba(0,0,0,.28);
+  font:13px var(--sc-body); color:var(--ink);
+}
+.nt-pop input:focus{outline:none; border-color:var(--gold)}
+.nt-pop input::placeholder{color:var(--faint2)}
+.nt-pop-row{
+  display:flex; align-items:baseline; gap:9px;
+  padding:7px 11px; border-radius:5px; cursor:pointer;
+  font-size:13px; color:var(--muted);
+}
+.nt-pop-row:hover,.nt-pop-row.sel{background:rgba(216,205,184,.09); color:var(--ink)}
+.nt-pop-row b{font-weight:600; color:var(--ink)}
+.nt-pop-n{margin-left:auto; font-size:11px; color:var(--faint2); font-variant-numeric:tabular-nums}
+.nt-pop-quiet{padding:8px 11px; font-size:12.5px; font-style:italic; color:var(--faint2)}
+
+/* ══ THE IPAD ════════════════════════════════════════════════════════
+   Nothing below the 768 floor. Coarse pointers get taller targets, and
+   at tablet width the shelf gives back some of the sheet. */
+@media (max-width:1100px){
+  .nt-shelf{flex-basis:206px; width:206px}
+  .nt-book{padding:18px 22px 80px}
+  /* the name column narrows with the sheet; the notes need the width
+     more than a long tag name does */
+  .nt-rowline{grid-template-columns:118px minmax(0,1fr) auto; column-gap:10px}
+  .nt-rowline.nt-row-bare{grid-template-columns:minmax(0,1fr) auto}
+}
+@media (pointer:coarse){
+  .nt-b{padding:11px 14px 11px 8px}
+  .nt-pin{width:26px; height:26px}
+  .nt-pill .nt-pin,.nt-ptab .nt-pin{width:22px; height:22px}
+  .nt-sw-btn{width:18px; height:18px}
+  .nt-sw{width:30px; height:30px}
+  .nt-arrange{padding-top:7px; padding-bottom:7px}
+  /* the tool buttons are taller here, so the strip's ceiling is too */
+  .nt-strip.on{max-height:130px}
+  .nt-edit{padding:6px 11px}
+  .nt-new{padding-top:12px; padding-bottom:12px}
+  .nt-grip{font-size:14px; padding:7px 5px}
+  .nt-pill{padding:7px 14px}
+  .nt-ptab{padding:10px 15px}
+  .nt-ptab.on{padding-bottom:11px}
+  .nt-pop-row{padding:10px 11px}
+  .nt-more{padding-top:11px; padding-bottom:11px}
+  .nt-tool{padding:8px 13px}
+}
