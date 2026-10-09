@@ -401,7 +401,7 @@ dragging a card to a new place on the wall        semaphore.js:4147
 
 ## `rooms/semaphore/semaphore.css`
 
-1490 lines · 109 KB
+1494 lines · 110 KB
 
 ```
 Brokerage Semaphore                       semaphore.css:1
@@ -420,15 +420,15 @@ pinned links (pinRowHTML)                 semaphore.css:651
 leads                                     semaphore.css:679
 the three sections                        semaphore.css:691
 the leads view                            semaphore.css:712
-Editing in the card                       semaphore.css:750
-the lead itself                           semaphore.css:779
-one lead card, in both rooms              semaphore.css:898
-freezer                                   semaphore.css:1088
-arena panel                               semaphore.css:1122
-dispatches                                semaphore.css:1304
-coming up                                 semaphore.css:1352
-modals                                    semaphore.css:1455
-tooltip                                   semaphore.css:1483
+Editing in the card                       semaphore.css:754
+the lead itself                           semaphore.css:783
+one lead card, in both rooms              semaphore.css:902
+freezer                                   semaphore.css:1092
+arena panel                               semaphore.css:1126
+dispatches                                semaphore.css:1308
+coming up                                 semaphore.css:1356
+modals                                    semaphore.css:1459
+tooltip                                   semaphore.css:1487
 ```
 
 ## `rooms/callboard/callboard.view.js`
@@ -631,4 +631,4 @@ Generated data. Never open, never edit, never upload.
 
 ---
 
-**35606 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.
+**35610 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.

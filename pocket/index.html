@@ -247,14 +247,16 @@ a.wlink:active .wd,a.wlink:active::before{color:var(--brok)}
 
 .lrun{margin:0 12px 18px}
 .lflank{display:flex;align-items:baseline;gap:10px;padding:2px 2px 9px}
-.lfn{font:600 11px/1 var(--sans);letter-spacing:.1em;color:#c99a8a}
+/* the leads' frame in the Ledger's warm grey, as the desk's (#a3967f): the
+   leads themselves carry their arenas' colours */
+.lfn{font:600 11px/1 var(--sans);letter-spacing:.1em;color:#a3967f}
 .lfc{font:10px/1 var(--sans);letter-spacing:.06em;color:var(--muted)}
-.lrows{display:flex;flex-direction:column;gap:7px;padding-left:10px;border-left:3px solid var(--lead);
+.lrows{display:flex;flex-direction:column;gap:7px;padding-left:10px;border-left:3px solid #a3967f;
   border-radius:2px}
 .lkind{display:flex;align-items:center;gap:7px;padding:4px 0 0 4px;font:italic 12px var(--body);color:var(--lquiet)}
 .lkind svg{width:19px;height:12px;overflow:visible}
 .lkind line{stroke:var(--ltrack);stroke-width:1.2;stroke-linecap:round}
-.lkind line.on{stroke:var(--lead);stroke-width:1.7}
+.lkind line.on{stroke:#a3967f;stroke-width:1.7}
 .lead{display:flex;align-items:center;gap:10px;width:100%;text-align:left;
   padding:10px 11px 10px 9px;border:1px solid var(--grid);border-left:3px solid var(--lead);
   border-radius:9px;background:var(--strip)}
