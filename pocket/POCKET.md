@@ -13,6 +13,8 @@ Semaphore (the Cards view of 2026-10-06). Four tabs:
 - **Leads** — every open lead in Spotted / Contacted / Talking, as the desk's Leads arrangement;
   Contacted split by its two paths; each lead shows the desk's diamond ("ruit"). In a lead's sheet
   the diamond is pressed to move it (the desk's own `leadPath`), and links/emails are added there.
+  *+ New lead* at the top adds one, asking first which arena it belongs to (frozen arenas left
+  out); an arena's sheet has its own *+ Lead*. Both ask the same questions (`leadForm`).
 
 Every card carries the desk's three small controls: the ring (ask the nightly agent, `askAt`),
 the pin (diamond) and the stamp (✓, which also marks the agent's findings seen). A brokerage link
@@ -64,7 +66,8 @@ re-extract the maths) but a Pocket change never touches it.
   `addLeadLink`, `dropLeadLink`) and arena/link mutations (`stampArena`, `pinArena`, `askAgent`,
   `pinLink`, `stampLink`); every undo puts back a snapshot (`keep`/`putBack`) → board (`liveList`, `scoreOf`, `wall`) → views (`drawRot` + `wallCard` +
   `cardLine`, `drawPins`/`pinnedOf`, `drawLeads`/`leadItems` + `leadRow` + `ruit`,
-  `drawDates`/`comingUp`) → sheets (`openArena` with the round, `openLead`, `openPerson`).
+  `drawDates`/`comingUp`) → sheets (`openArena` with the round, `openLead`, `newLead`, `openPerson`).
+  `fitScreen` sizes the frame from the screen on the home screen (why: its comment).
 - Both scripts share one global scope: a new top-level name must not collide with script 1
   (`shortDate` exists → Pocket uses `briefDate`; `openLeads` exists → `leadItems`).
 

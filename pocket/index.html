@@ -87,6 +87,13 @@ a{color:inherit}
 .view{display:none;padding:2px 0 30px}
 .view.on{display:block}
 
+/* On the home screen iOS 26 can hand Pocket a viewport cut short by the
+   height Safari's own toolbar would take, and everything fixed to its
+   bottom (the tabs, the sheet) then floated over a dead strip of paper.
+   So there the frame is measured from the screen itself (fitScreen). */
+html.fullh #stage,html.fullh #sheet{bottom:auto;height:var(--app-h)}
+html.fullh #tabs{bottom:auto;top:calc(var(--app-h) - var(--tabs))}
+
 /* the line under a view's top: what it holds, in the desk's italic */
 .whead{padding:14px 16px 10px;font:italic 14px/1.4 var(--body);color:var(--faint)}
 .whead b{font-style:normal;font-weight:400;color:var(--notice-ink)}
@@ -286,6 +293,12 @@ a.wlink:active .wd,a.wlink:active::before{color:var(--brok)}
 .scope button{flex:0 0 auto;padding:9px 12px;border:1px solid var(--line);border-radius:var(--radius);color:var(--key2)}
 .scope button:active{background:rgba(216,205,184,.12)}
 
+/* the Leads tab's own way in, for a lead found away from its card */
+.addlead{display:block;width:calc(100% - 24px);margin:12px 12px 0;min-height:44px;padding:0 13px;text-align:center;
+  border:1px dashed var(--line2);border-radius:var(--radius);color:var(--key2);
+  font:600 10px/1 var(--sans);letter-spacing:.16em;text-transform:uppercase}
+.addlead:active{background:rgba(216,205,184,.12)}
+
 /* ── coming up: the brokerage dates down one spine ──────────────────── */
 
 .pills{display:flex;margin:12px 16px 4px;border:1px solid var(--line);border-radius:var(--radius);
@@ -477,6 +490,11 @@ input[type="search"]:focus{outline:none;border-color:var(--key)}
 #sheet textarea{width:100%;min-height:84px;resize:vertical;font:16px/1.45 var(--body);color:var(--ink);
   background:var(--field);border:1px solid var(--line2);border-radius:var(--radius);padding:10px 12px;-webkit-appearance:none}
 #sheet textarea:focus{outline:none;border-color:var(--key)}
+#sheet select{width:100%;font:16px/1.3 var(--body);color:var(--ink);background:var(--field);
+  border:1px solid var(--line2);border-radius:var(--radius);padding:11px 34px 11px 12px;-webkit-appearance:none;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%237a6f5e' stroke-width='1.3'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 13px center}
+#sheet select:focus{outline:none;border-color:var(--key)}
 #sheet .act{display:block;width:100%;margin-top:12px;padding:14px;border-radius:var(--radius);
   font:600 11px/1 var(--sans);letter-spacing:.14em;text-transform:uppercase;color:#F6F1E6;background:#3A342B}
 #sheet .act:active{background:#282420}
@@ -2238,11 +2256,16 @@ function drawLeads(){
     sc.appendChild(clr);
     host.appendChild(sc);
   }
+  if (data.semaphore){
+    var add = el('button', 'addlead', '+ New lead');
+    add.addEventListener('click', newLead);
+    host.appendChild(add);
+  }
   if (!items.length){
     host.appendChild(empty('Nothing being pursued',
       !data.semaphore ? 'Pull down to fetch from the cloud.'
         : scope ? 'Everything on this arena has been closed.'
-        : 'Found a project worth following? Open an arena and add it as a lead.'));
+        : 'Found a project worth following? Add it with New lead above.'));
     return;
   }
   var arenas = {}; items.forEach(function(it){ arenas[it.ref.aid] = 1; });
@@ -2784,6 +2807,104 @@ function openLead(it){
   });
 }
 
+/* the questions a new lead is asked, on an arena's sheet and on the Leads
+   tab alike; arenaOf names the arena it goes to, or nothing yet */
+function leadForm(panel, arenaOf){
+  var boxes = {}, due = { v:'' };
+  function field(key, label, ph){
+    panel.appendChild(el('span', 'field', label));
+    var ta = el('textarea');
+    ta.placeholder = ph || '';
+    ta.style.minHeight = key === 'project' ? '64px' : '52px';
+    panel.appendChild(ta);
+    boxes[key] = ta;
+  }
+  field('project', 'What is the project?', 'A shape for the thing');
+  field('match', 'Who could be a good match?', 'Someone to write to');
+  field('url', 'A link, if there is one', '');
+
+  panel.appendChild(el('span', 'field', 'Come back to it'));
+  var grid = el('div', 'when-grid');
+  [['Tomorrow',1], ['Next week',7], ['In two weeks',14], ['In a month',30]]
+  .forEach(function(o){
+    var iso = plusDays(o[1]);
+    var btn = el('button', '', o[0]);
+    btn.appendChild(el('i', '', briefDate(iso)));
+    btn.addEventListener('click', function(){
+      due.v = iso;
+      grid.querySelectorAll('button').forEach(function(x){ x.classList.remove('on'); });
+      btn.classList.add('on');
+    });
+    grid.appendChild(btn);
+  });
+  panel.appendChild(grid);
+
+  var save = el('button', 'act', 'Add the lead');
+  save.addEventListener('click', function(){
+    var project = boxes.project.value.trim();
+    var match = boxes.match.value.trim();
+    var url = boxes.url.value.trim();
+    if (!project && !match && !url){ boxes.project.focus(); return; }
+    var aid = arenaOf();
+    if (!aid) return;
+    shut();
+    addLead(aid, { project:project, match:match, url:url, due:due.v });
+  });
+  panel.appendChild(save);
+  setTimeout(function(){ boxes.project.focus(); }, 90);
+}
+
+/* a lead found away from its card: the Leads tab asks first which arena
+   it belongs to. Frozen arenas are left out, because their leads are not
+   listed anywhere in Pocket and a lead added there would seem lost. */
+function newLead(){
+  var arenas = ((data.semaphore || {}).arenas || [])
+    .filter(function(a){ return a && !a.frozenAt; })
+    .sort(function(x, y){ return plainOf(x.name).localeCompare(plainOf(y.name)); });
+  sheet(function(b, bar){
+    b.appendChild(el('h2', '', 'New lead'));
+    var panel = el('div', 'composer open');
+    panel.appendChild(el('span', 'field', 'Which arena is it from?'));
+    var pick = el('select');
+    var none = el('option', '', 'Choose an arena');
+    none.value = '';
+    pick.appendChild(none);
+    arenas.forEach(function(a){
+      var o = el('option', '', plainOf(a.name) || 'Untitled');
+      o.value = a.id;
+      if (scope && scope.aid === a.id) o.selected = true;
+      pick.appendChild(o);
+    });
+    panel.appendChild(pick);
+    b.appendChild(panel);
+    leadForm(panel, function(){
+      if (!pick.value){ pick.focus(); return null; }
+      return pick.value;
+    });
+    closeBtn(bar);
+  });
+}
+
+/* see html.fullh in the style. Only on the home screen, and only while the
+   viewport is shorter than the screen, so Safari and a phone without the
+   fault keep the frame they always had. */
+function fitScreen(){
+  var home = navigator.standalone ||
+    (window.matchMedia && matchMedia('(display-mode: standalone)').matches);
+  if (!home || !window.screen) return;
+  function fit(){
+    var w = screen.width, h = screen.height;
+    var tall = innerWidth > innerHeight ? Math.min(w, h) : Math.max(w, h);
+    var root = document.documentElement;
+    root.style.setProperty('--app-h', tall + 'px');
+    /* a gap wider than a toolbar is the keyboard, which is left alone */
+    root.classList.toggle('fullh', tall > innerHeight && tall - innerHeight <= 120);
+  }
+  fit();
+  addEventListener('resize', fit);
+  addEventListener('orientationchange', function(){ setTimeout(fit, 300); });
+}
+
 function openArena(a, st){
   st = st || scoreOf(a) || { state:'rotate', score:0, rest:0 };
   sheet(function(b, bar){
@@ -2913,47 +3034,7 @@ function openArena(a, st){
       panel.classList.toggle('open', addOpen);
       if (!addOpen) return;
       $('#sheet .panel').scrollTop = 0;
-
-      var boxes = {}, due = { v:'' };
-      function field(key, label, ph){
-        panel.appendChild(el('span', 'field', label));
-        var ta = el('textarea');
-        ta.placeholder = ph || '';
-        ta.style.minHeight = key === 'project' ? '64px' : '52px';
-        panel.appendChild(ta);
-        boxes[key] = ta;
-      }
-      field('project', 'What is the project?', 'A shape for the thing');
-      field('match', 'Who could be a good match?', 'Someone to write to');
-      field('url', 'A link, if there is one', '');
-
-      panel.appendChild(el('span', 'field', 'Come back to it'));
-      var grid = el('div', 'when-grid');
-      [['Tomorrow',1], ['Next week',7], ['In two weeks',14], ['In a month',30]]
-      .forEach(function(o){
-        var iso = plusDays(o[1]);
-        var btn = el('button', '', o[0]);
-        btn.appendChild(el('i', '', briefDate(iso)));
-        btn.addEventListener('click', function(){
-          due.v = iso;
-          grid.querySelectorAll('button').forEach(function(x){ x.classList.remove('on'); });
-          btn.classList.add('on');
-        });
-        grid.appendChild(btn);
-      });
-      panel.appendChild(grid);
-
-      var save = el('button', 'act', 'Add the lead');
-      save.addEventListener('click', function(){
-        var project = boxes.project.value.trim();
-        var match = boxes.match.value.trim();
-        var url = boxes.url.value.trim();
-        if (!project && !match && !url){ boxes.project.focus(); return; }
-        shut();
-        addLead(a.id, { project:project, match:match, url:url, due:due.v });
-      });
-      panel.appendChild(save);
-      setTimeout(function(){ boxes.project.focus(); }, 90);
+      leadForm(panel, function(){ return a.id; });
     });
     bar.appendChild(vAdd);
 
@@ -3129,6 +3210,7 @@ $('#s-pass').addEventListener('keydown', function(e){ if (e.key === 'Enter') $('
   var stored = !!cfg;
   if (!cfg) cfg = { url:BUILT_IN.url, key:BUILT_IN.key };
 
+  fitScreen();
   draw();
   if (!auth) askLogin(stored ? 'Log in to read the cloud.' : ''); else pull();
 })();
