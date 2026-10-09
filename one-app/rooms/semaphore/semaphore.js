@@ -2239,6 +2239,16 @@ function longDay(iso){
   const d=new Date(iso+'T12:00:00');
   return LONG_DOW[d.getDay()]+' '+d.getDate()+' '+LONG_MON[d.getMonth()]+' '+d.getFullYear();
 }
+/* Each arena's leads wear the colour the Ledger gives them, chosen there by
+   Mark or handed out from the arena's place in the list; he asked on
+   2026-10-10 for the same colour in this room. The Ledger owns the palette,
+   so the bridge hands over the one function that reads it; with no Ledger
+   the room keeps its own clay. */
+let leadTone=null;
+function leadToneOf(a){
+  if(!leadTone)return '';
+  try{return leadTone({color:a.color||'',slot:S.arenas.indexOf(a)})||'';}catch(e){return '';}
+}
 function leadRowHTML(a,l,hit,say){
   const now=T(todayISO());
   const over=l.due?daysBetween(T(l.due),now):null;
@@ -2339,9 +2349,10 @@ function leadRowHTML(a,l,hit,say){
             : '')+
         '</div>'
       : '');
+  const tone=leadToneOf(a);
   return '<article class="lead k-'+st+(say?' wide':'')+(due?' due':'')+(done?' done':'')+(hit?' hit':'')+
-      (open?' open':'')+(editing?' editing':'')+
-      '" data-lid="'+l.id+'" data-act="leadOpen" '+ids+'>'+
+      (open?' open':'')+(editing?' editing':'')+(tone?' toned':'')+
+      '"'+(tone?' style="--tone:'+esc(tone)+'"':'')+' data-lid="'+l.id+'" data-act="leadOpen" '+ids+'>'+
     /* Shut, a lead is its ruit beside two lines: what it is, and under it,
        smaller and quieter, who could fit it and the day to come back. The ruit
        leads because it is the thing that changes; a column of these sorts
@@ -4212,6 +4223,8 @@ try{
     leadVerb:   function(aid,lid,op,val){ return leadVerb(aid,lid,op,val); },
     arenas:     function(){ return arenasForBoard(); },
     leadAdd:    function(aid,v){ return leadAdd(aid,v); },
+    /* the Ledger's lead colours, handed over by the bridge */
+    setLeadTone: function(fn){ leadTone=fn; if(typeof renderAll==='function')renderAll(); },
     openArena:  function(aid){ if(arena(aid))openDrawer(aid); },
     /* Escape, for when the drawer is lent to another room and this room's
        own key handler is not the one listening: the innermost thing first,

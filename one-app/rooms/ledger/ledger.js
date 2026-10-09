@@ -9303,7 +9303,7 @@ var Leads=(function(){
   function setColor(key,k,evt){stopEvt(evt);Menu.close();change(key,'color',k);}
 
   return {fill:fill,list:list,keyOf:keyOf,find:find,sorted:sorted,
-    html:html,listHTML:listHTML,COLOR:COLOR,
+    html:html,listHTML:listHTML,COLOR:COLOR,hexOf:hexOf,
     canAdd:canAdd,newHTML:newHTML,newOpen:newOpen,newDrop:newDrop,
     newArenaMenu:newArenaMenu,newArena:newArena,newDue:newDue,newSave:newSave,newLink:newLink,
     path:path,due:due,done:done,arena:arenaOf,openBox:openBox,
@@ -14242,6 +14242,9 @@ try{ Hub.expose('ledger',{
      LINE. */
   setLeads: function(o){ Leads.fill(o); Board.render(); },
   leadsChanged: function(){ Board.leadsChanged(); },
+  /* An arena's lead colour as a hex, from {color, slot} — so the Semaphore
+     draws its leads in the colour they wear here (Mark, 2026-10-10). */
+  leadTone: function(l){ return Leads.hexOf(l||{}); },
   /* A restore point of everything as it stands, for the bridge to keep
      before a room's cloud copy replaces what this device holds. */
   snapshot: function(why){ Snapshots.take(why); },

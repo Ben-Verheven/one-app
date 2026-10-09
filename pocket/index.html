@@ -272,6 +272,8 @@ a.wlink:active .wd,a.wlink:active::before{color:var(--brok)}
   padding:10px 11px 10px 9px;border:1px solid var(--grid);border-left:3px solid var(--lead);
   border-radius:9px;background:var(--strip)}
 .lead:active{border-color:var(--line)}
+/* an arena's own colour, the one its leads wear in the Ledger (leadTone) */
+.lead.toned{--lead:var(--tone)}
 .lead .ltx{flex:1;min-width:0}
 .lead .lar{display:block;margin-bottom:3px;font:600 9.5px/1.2 var(--sans);letter-spacing:.08em;color:var(--lquiet);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -433,6 +435,9 @@ input[type="search"]:focus{outline:none;border-color:var(--key)}
 #sheet .stream{margin:0}
 #sheet .leadlist{display:flex;flex-direction:column;gap:7px}
 #sheet .lead{background:var(--field)}
+/* the Ledger's tones are made for a dark ground; on bone they are taken
+   down towards ink, as the clay is, so the edge still stands off the paper */
+#sheet .lead.toned{--lead:color-mix(in srgb,var(--tone) 62%,#2a2620)}
 
 #sheet .chips{display:flex;flex-wrap:wrap;gap:6px}
 #sheet .chips span,#sheet .chips button{font:14px/1 var(--body);color:var(--muted);
@@ -2215,8 +2220,25 @@ function bigRuit(l, act){
   return box;
 }
 
+/* Each arena's leads wear the colour Mark picks for them in the Ledger, or
+   the one handed out from the arena's place in the list. The palette and
+   that rule are the Ledger's (PALETTE and toneOf in
+   one-app/rooms/ledger/ledger.js), copied because Pocket has no Ledger:
+   change them there, then here. */
+var LEAD_TONES = [
+  ['terracotta','#c08a78'], ['rust','#a8714f'], ['ochre','#b59c66'], ['olive','#9ea06e'],
+  ['sage','#86a088'], ['slate','#7f9aa8'], ['dusk','#8f8db0'], ['mauve','#a8879e'],
+  ['rosewood','#ad7680'], ['sand','#b5a690']
+];
+function leadTone(a){
+  for (var i = 0; i < LEAD_TONES.length; i++) if (LEAD_TONES[i][0] === a.color) return LEAD_TONES[i][1];
+  var all = (data.semaphore && data.semaphore.arenas) || [];
+  var n = Math.max(0, all.indexOf(a));
+  return LEAD_TONES[(n * 3) % LEAD_TONES.length][1];
+}
 function leadRow(it, inSheet){
-  var b = el('button', 'lead');
+  var b = el('button', 'lead toned');
+  b.style.setProperty('--tone', leadTone(it.arena));
   b.appendChild(ruit(it.lead));
   var tx = el('span', 'ltx');
   if (!inSheet) tx.appendChild(el('span', 'lar', plainOf(it.where)));

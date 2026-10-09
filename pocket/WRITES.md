@@ -9,7 +9,7 @@ Since 2026-09-15 Pocket is **Semaphore-only**. It no longer reads or writes the 
 ## Rows
 | Pocket name | `app_state.id` | Pocket reads |
 |---|---|---|
-| `data.semaphore` | `semaphore` | `arenas[]` (name, typeId, weight, pin, askAt, frozenAt, sweptAt, seenAt, dates, leads, links, notes, brokerage), `types[]` |
+| `data.semaphore` | `semaphore` | `arenas[]` (name, typeId, weight, pin, askAt, frozenAt, sweptAt, seenAt, dates, leads, links, notes, brokerage, color), `types[]` |
 
 Pocket fetches only `app_state?id=eq.semaphore`. If that row is missing it says
 "no Semaphore row in the cloud" and writes nothing.
