@@ -93,8 +93,12 @@ a{color:inherit}
    bottom (the tabs, the sheet) then floated over a dead strip of paper.
    So there the frame is measured from the screen itself (fitScreen). That
    viewport also reports no inset at the bottom, so the tabs then sat in the
-   screen's rounded corner under the home bar; --home-b puts the inset back. */
-html.fullh{--sb:max(env(safe-area-inset-bottom), var(--home-b, 0px))}
+   screen's rounded corner under the home bar; --home-b puts the inset back,
+   no more of it than clears the home bar, because a full native inset read
+   as a dead band under the tabs. An opaque status bar was tried instead
+   (2026-10-10): the viewport stayed one status bar short, only now under
+   the bar, and the band came back as a tab bar grown upwards. */
+html.fullh{--sb:var(--home-b, 0px)}
 html.fullh #stage,html.fullh #sheet{bottom:auto;height:var(--app-h)}
 html.fullh #tabs{bottom:auto;top:calc(var(--app-h) - var(--tabs))}
 /* Below that short viewport there is no scrolling list under the finger,
@@ -2930,9 +2934,9 @@ function fitScreen(){
     var tall = innerWidth > innerHeight ? Math.min(w, h) : Math.max(w, h);
     var root = document.documentElement;
     root.style.setProperty('--app-h', tall + 'px');
-    /* a screen this tall has rounded corners and the home bar: 34 points
-       of it upright, 21 lying down; an older iPhone with a button has none */
-    root.style.setProperty('--home-b', (Math.max(w, h) < 812 ? 0 : tall > 500 ? 34 : 21) + 'px');
+    /* a screen this tall has rounded corners and the home bar, which ends
+       about 13 points above the edge; an older iPhone with a button has none */
+    root.style.setProperty('--home-b', (Math.max(w, h) < 812 ? 0 : 18) + 'px');
     /* a gap wider than a toolbar is the keyboard, which is left alone */
     root.classList.toggle('fullh', tall > innerHeight && tall - innerHeight <= 120);
   }
