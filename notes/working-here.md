@@ -18,8 +18,11 @@ the way back.
   a fresh clone commits as the container (`Claude <noreply@anthropic.com>`).
   It lets the routine commands run without asking: the tools, read-only
   git, the commit and the push to `main`. And it refuses the Read tool
-  `one-app/data/`, the one read that ends a session; `head -c 300` in a
-  shell still gives the shape. The session refuses to let the assistant
+  `one-app/data/`, which is now a spare guard: here a stray read of those
+  files cannot end the session as it does the OneDrive way, because the
+  tools cut long output off (tried 2026-10-10). A shell command shows its
+  first 2 KB and parks the rest in a file, and Grep leaves out overlong
+  lines; `head -c 300` still gives the shape. The session refuses to let the assistant
   write its contents (as self-modification), so a change to what it says
   is Mark's, made on GitHub's website.
 - **Everything the tools need is already in the container:** node,

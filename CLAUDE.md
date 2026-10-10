@@ -16,7 +16,7 @@ This clone is the only copy worked on. Start with `git checkout main && git pull
 
 Commit as `Ben-Verheven <299968296+Ben-Verheven@users.noreply.github.com>`. The account refuses pushes that carry a private email.
 
-Never read the three files in one-app/data/. 5.8 MB, ~1.6M tokens; reading one ends the session. First 300 characters if you need the shape. The same goes for Pocket's `atlas-index` line: cut it away.
+Don't read the three files in one-app/data/, or Pocket's `atlas-index` line: each is one line of raw data, megabytes long, with nothing in it to learn. First 300 characters if you need the shape; cut the line away when reading Pocket. The OneDrive way, a whole read ends the session. Here the tools cut it off first (notes/working-here.md), so a slip wastes a little room and nothing more.
 
 Before touching a part, read its note: notes/INDEX.md lists them, one line each. They hold the bugs already paid for and the design choices I made, which nothing else records.
 
