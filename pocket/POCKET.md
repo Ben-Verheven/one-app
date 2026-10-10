@@ -19,9 +19,11 @@ Semaphore (the Cards view of 2026-10-06). Four tabs:
   out); an arena's sheet has its own *+ Lead*. Both ask the same questions (`leadForm`).
 
 Every card carries the desk's three small controls: the ring (ask the nightly agent, `askAt`),
-the pin (diamond) and the stamp (✓, which also marks the agent's findings seen). A brokerage link
+the pin (diamond) and the stamp (✓, which also marks the agent's findings seen). An arena's sheet
+spells out the first two and adds the desk's *Wait for…* (`hold`), which lists the arena's coming
+dates to sleep until (since 2026-10-10). A brokerage link
 on a card or in an arena's sheet has its own pin. What stays on the desk: making and editing
-arenas, dates, types, weights, waits, the freezer, and the agent's Dispatches.
+arenas, dates, types, weights, the freezer, and the agent's Dispatches.
 - **Coming up** — every arena's dates on one line, brokerage by default; a brokerage event
   leaves once it is over, a call two weeks after.
   A brokerage event opens its website (↗) when one of its arena's brokerage links fits it
@@ -66,7 +68,7 @@ re-extract the maths) but a Pocket change never touches it.
   since 2026-10-09 the cloud answers only a logged-in Mark, so every request carries the session's
   token, renewed one at a time — Supabase ends a session whose renewal is used twice) → `rest()` → `pull()` (row `semaphore` only) →
   `commit()` → lead mutations (`setDone`, `setDate`, `setPath`, `addUpdate`, `editItem`, `addLead`,
-  `addLeadLink`, `dropLeadLink`, `setScore`) and arena/link mutations (`stampArena`, `pinArena`, `askAgent`, `setLeadColour`,
+  `addLeadLink`, `dropLeadLink`, `setScore`) and arena/link mutations (`stampArena`, `pinArena`, `askAgent`, `holdArena`, `setLeadColour`,
   `pinLink`, `stampLink`); every undo puts back a snapshot (`keep`/`putBack`) → board (`liveList`, `scoreOf`, `wall`) → views (`drawRot` + `wallCard` +
   `cardLine`, `drawPins`/`pinnedOf`, `drawLeads`/`leadItems` + `leadRow` + `ruit`,
   `drawDates`/`comingUp`) → sheets (`openArena` with the round, `openLead`, `newLead`, `openPerson`).

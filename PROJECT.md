@@ -262,7 +262,9 @@ text; the weekly one also brings calls and new arenas. A card can **ask** the ni
 look at its arena on top of the ones it picks itself: the ask is a moment
 (`askAt`) on the arena, the gatekeeper passes it on as `asked`, and the room
 puts it out once `semaphore_agent_log`, which the app may read but not
-write, shows a visit after it. Where each agent is told what to do is its
+write, shows a visit after it. A card waiting for a date asks by itself the
+day before it wakes: the gatekeeper works that out from the wait and the
+log, and writes nothing, so no ring lights for it. Where each agent is told what to do is its
 scheduled task; the SQL and the functions are in `supabase/`.
 
 A second table, **`app_state_history`**, keeps a copy of every upload —

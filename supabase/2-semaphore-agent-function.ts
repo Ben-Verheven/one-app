@@ -3,8 +3,9 @@
 // The agent holds one password (AGENT_TOKEN) and nothing else. With it, it can
 // do three things and only these three:
 //   watchlist  read a trimmed copy of the Semaphore board (no leads), with
-//              each arena's `asked` flag: Mark pressed "ask the agent" on it
-//              and the agent has not looked at it since. Each arena's two
+//              each arena's `asked` flag: Mark pressed "ask the agent" on it,
+//              or its wait wakes tomorrow (see wakeAsk), and the agent has
+//              not looked at it since. Each arena's two
 //              texts, About and Brokerage, are in it since 2026-10-10, so the
 //              nightly agent can offer a short rewrite of either that keeps
 //              what is still true in them
@@ -91,6 +92,32 @@ async function watchlist() {
     return !seen || Date.parse(seen) < Date.parse(at);
   };
 
+  // A card put to sleep until one of its dates (the app's `hold`, which
+  // names the date by id) wakes three weeks before that date. Mark wants
+  // it to come back with what has changed while it slept, so the day
+  // before it wakes counts as an ask made by the wait itself: from the
+  // start of that day, in UTC, until the log shows a visit after it, so
+  // the first nightly run to see it is the night going into the wake day,
+  // Dutch time. Nothing is written for it, which is why the app's ring does
+  // not light for it. A frozen arena is left out, since its wait resumes
+  // only when it is thawed, and a date already over ends the wait, as in
+  // the app.
+  const NEAR = 21, DAY = 86400000;
+  const today = new Date().toISOString().slice(0, 10);
+  const wakeAsk: Record<string, { wakes_on: string; since: string } | null> =
+    Object.fromEntries((s.arenas ?? []).map((a: any) => {
+      const d = a.hold?.dateId && !a.frozenAt
+        ? (a.dates ?? []).find((x: any) => x.id === a.hold.dateId && D(x.start))
+        : null;
+      if (!d || (D(d.end) ?? d.start) < today) return [a.id, null];
+      const wake = Date.parse(d.start + "T00:00:00Z") - NEAR * DAY;
+      const since = new Date(wake - DAY).toISOString();
+      if (Date.now() < Date.parse(since)) return [a.id, null];
+      const seen = last[a.id];
+      if (seen && Date.parse(seen) >= Date.parse(since)) return [a.id, null];
+      return [a.id, { wakes_on: new Date(wake).toISOString().slice(0, 10), since }];
+    }));
+
   return json({
     board_updated_at: row?.updated_at,
     types: Object.values(types),
@@ -98,7 +125,9 @@ async function watchlist() {
       ...a,
       agent_checked_at: last[a.id] ?? null,
       asked_at: askAt[a.id] ?? null,
-      asked: asked(a.id),
+      asked: asked(a.id) || !!wakeAsk[a.id],
+      // set when the ask is the wait's: the day the card comes back
+      wait_wakes_on: wakeAsk[a.id]?.wakes_on ?? null,
     })),
     recent_suggestions: recent ?? [],
   });

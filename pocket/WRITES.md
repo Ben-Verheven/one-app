@@ -9,7 +9,7 @@ Since 2026-09-15 Pocket is **Semaphore-only**. It no longer reads or writes the 
 ## Rows
 | Pocket name | `app_state.id` | Pocket reads |
 |---|---|---|
-| `data.semaphore` | `semaphore` | `arenas[]` (name, typeId, weight, pin, askAt, frozenAt, sweptAt, seenAt, dates, leads, links, notes, brokerage, color), `types[]` |
+| `data.semaphore` | `semaphore` | `arenas[]` (name, typeId, weight, pin, askAt, hold, frozenAt, sweptAt, seenAt, dates, leads, links, notes, brokerage, color), `types[]` |
 
 Pocket fetches only `app_state?id=eq.semaphore`. If that row is missing it says
 "no Semaphore row in the cloud" and writes nothing.
@@ -35,6 +35,7 @@ Every change is undoable from the toast; undo puts back exactly the fields it to
 | arena stamp | `sweptAt`, `sweptPrev`, `seenAt`, `seenPrev` | day; the moment (ISO) for seen; same-day stamp takes itself back | ✓ |
 | arena pin | `pin` | `true`/`false` | ✓ |
 | arena ask | `askAt` | ISO moment / `null` | ✓ |
+| arena wait | `hold` | `{dateId}`, one of the arena's own dates / `null` to stop waiting | ✓ |
 | lead score | `score` | `1`…`5`; the key deleted for no score | ✓ |
 | arena lead colour | `color` | the Ledger's palette name (`terracotta`…`sand`) / `null` for automatic | ✓ |
 | brokerage link pin | `brokerage.links[].pin` | ISO moment when pinned; key deleted when unpinned | ✓ |
@@ -45,7 +46,7 @@ link on Pinned but leaves its pin and stamp to the desk.
 
 ## Never written by Pocket
 The whole `main` row (Ledger, `calls`, `projects`, `notes`, `atlas`), `semaphore.ui`,
-arena `name`/`dates`/`look`/`hold`/`weight`/`frozenAt`/`notes`/`typeId`/`tags`/`links`,
+arena `name`/`dates`/`look`/`weight`/`frozenAt`/`notes`/`typeId`/`tags`/`links`,
 `brokerage.notes`, `types`, and the agent's inbox tables.
 
 ## Stored only on the phone

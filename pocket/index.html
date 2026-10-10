@@ -500,7 +500,11 @@ input[type="search"]:focus{outline:none;border-color:var(--key)}
 #sheet .switches{display:flex;flex-wrap:wrap;gap:7px;margin:-4px 0 14px}
 #sheet .switch{display:inline-flex;align-items:center;gap:2px;height:40px;padding:0 13px 0 2px;
   border:1px solid var(--line2);border-radius:99px;background:var(--field);font:14px/1 var(--body);color:var(--ink)}
-#sheet .switch .pin,#sheet .switch .wask{flex:0 0 30px;width:30px;height:30px}
+#sheet .switch .pin,#sheet .switch .wask,#sheet .switch .wz{flex:0 0 30px;width:30px;height:30px}
+/* the wait's own mark is the desk's: the diamond its "Waiting for" strip wears */
+#sheet .wz{display:flex;align-items:center;justify-content:center}
+#sheet .wz i{width:8px;height:8px;transform:rotate(45deg);border-radius:1px;border:1px solid var(--faint)}
+#sheet .switch.on .wz i{background:var(--todo);border-color:var(--todo)}
 #sheet .switch.on{border-color:var(--key)}
 #sheet .switch:active{background:rgba(42,38,32,.08)}
 
@@ -532,6 +536,18 @@ input[type="search"]:focus{outline:none;border-color:var(--key)}
 
 #sheet .composer{display:none;margin:4px 0 14px}
 #sheet .composer.open{display:block}
+/* the dates a card can sleep until, as the desk's waitpick lists them */
+#sheet .wpo{display:flex;align-items:center;gap:10px;width:100%;min-height:44px;padding:8px 12px;text-align:left;
+  border:1px solid var(--line);border-radius:var(--radius);background:var(--field);color:var(--ink)}
+#sheet .wpo+.wpo{margin-top:6px}
+#sheet .wpo:active{background:rgba(42,38,32,.08)}
+#sheet .wpo.on{border-color:var(--todo)}
+#sheet .wpo .dot{flex:0 0 8px;width:8px;height:8px;border-radius:50%;background:var(--c)}
+/* .wpn is also the card's amber "in N d", so the name says its own colour */
+#sheet .wpo .wpn{flex:1;min-width:0;font:15px/1.3 var(--body);color:var(--ink);white-space:normal}
+#sheet .wpo .wpn i{display:block;font:italic 13px/1.3 var(--body);color:var(--muted)}
+#sheet .wpo .wpd{flex:0 0 auto;font:12px var(--mono);color:var(--muted)}
+#sheet .wpo.stop{justify-content:center;color:var(--muted);font:14px/1 var(--body)}
 #sheet .field{display:block;margin:12px 0 5px;font:600 9px/1 var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--faint)}
 #sheet .field:first-child{margin-top:0}
 #sheet textarea{width:100%;min-height:84px;resize:vertical;font:16px/1.45 var(--body);color:var(--ink);
@@ -1686,6 +1702,25 @@ function askAgent(a){
   commit('semaphore', onArena(a.id, function(x){ x.askAt = x.askAt ? null : now; }),
     on ? 'Asked — the nightly agent looks here on its next run' : 'Request taken back',
     onArena(a.id, function(x){ putBack(x, was); }));
+}
+
+/* The wait, as the desk keeps it: the card put away until one of its own
+   dates, held by reference ({dateId}) so that moving the date on the desk
+   moves the wait with it; null puts it back into the rotation. Three weeks
+   before the date the card wakes, and the night before that the agent's
+   gatekeeper asks the nightly agent to look the arena over, so it comes
+   back with what is new. */
+function holdArena(a, d){
+  var was = keep(a, ['hold']);
+  commit('semaphore', onArena(a.id, function(x){ x.hold = d ? { dateId:d.id } : null; }),
+    d ? 'Waiting for ' + dateName(d) + ' — back three weeks before' : 'Back in the rotation',
+    onArena(a.id, function(x){ putBack(x, was); }));
+}
+/* what a card can wait for: every dated thing it has still to come, soonest
+   first — the desk's futureDates, which script 1 does not carry */
+function waitDates(a){
+  return (a.dates || []).filter(function(d){ return d && d.start && daysTo(d.end || d.start) >= 0; })
+    .sort(function(x, y){ return x.start < y.start ? -1 : x.start > y.start ? 1 : 0; });
 }
 
 /* A brokerage link pinned is the moment it was pinned, which is the order
@@ -3113,6 +3148,50 @@ function openArena(a, st){
     sAsk.appendChild(document.createTextNode(a.askAt ? 'Agent asked' : 'Ask the nightly agent'));
     sAsk.addEventListener('click', function(){ shut(); askAgent(a); });
     sw.appendChild(sAsk);
+    /* The third is the desk's "Wait for…", offered where the desk offers it:
+       on a card with a date still to come, or one already waiting. The
+       dates open in the panel below rather than as a guess at the next
+       one: with a deadline a fortnight out, the wait wanted is usually
+       for the call after it. */
+    var ahead = waitDates(a), held = st.hold || null;
+    if (ahead.length || held){
+      var sWait = el('button', 'switch' + (held ? ' on' : ''));
+      sWait.appendChild(el('span', 'wz').appendChild(el('i')).parentNode);
+      sWait.appendChild(document.createTextNode(held
+        ? 'Waiting for ' + plainOf(held.label || 'a date') : 'Wait for…'));
+      sWait.addEventListener('click', function(){
+        var open = panel.classList.contains('open') && panel.dataset.k === 'wait';
+        addOpen = false;
+        panel.textContent = '';
+        panel.dataset.k = '';
+        panel.classList.toggle('open', !open);
+        if (open) return;
+        panel.dataset.k = 'wait';
+        panel.appendChild(el('span', 'field', 'Sleep until — and come back three weeks before'));
+        ahead.forEach(function(d){
+          var on = !!(held && held.dt && held.dt.id === d.id), n = daysTo(d.start);
+          var o = el('button', 'wpo' + (on ? ' on' : ''));
+          o.style.setProperty('--c', dateHue(d));
+          o.appendChild(el('span', 'dot'));
+          var nm = el('span', 'wpn', dateName(d));
+          var sub = d.kind === 'call'
+            ? ((typeof ROLES !== 'undefined' && ROLES[d.role]) ? ROLES[d.role].short : '')
+            : plainOf(d.note || '');
+          if (sub) nm.appendChild(el('i', '', sub));
+          o.appendChild(nm);
+          o.appendChild(el('span', 'wpd', shortDate(d) + (n > 0 ? ' · ' + n + 'd' : '')));
+          o.addEventListener('click', function(){ shut(); if (!on) holdArena(a, d); });
+          panel.appendChild(o);
+        });
+        if (held){
+          var stop = el('button', 'wpo stop', 'Stop waiting — back into the rotation');
+          stop.addEventListener('click', function(){ shut(); holdArena(a, null); });
+          panel.appendChild(stop);
+        }
+        $('#sheet .panel').scrollTop = 0;
+      });
+      sw.appendChild(sWait);
+    }
     b.appendChild(sw);
 
     var panel = el('div', 'composer');
@@ -3214,6 +3293,7 @@ function openArena(a, st){
     vAdd.addEventListener('click', function(){
       addOpen = !addOpen;
       panel.textContent = '';
+      panel.dataset.k = '';
       panel.classList.toggle('open', addOpen);
       if (!addOpen) return;
       $('#sheet .panel').scrollTop = 0;

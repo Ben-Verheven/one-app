@@ -3009,7 +3009,8 @@ function howHTML(){
       'lead from every arena, the three steps one under another, as the Ledger lists them.')+
     line('Wait for a date','Not a lead but the opposite: the card putting itself away rather than pursuing '+
       'anything. It sleeps until <b>three weeks</b> before its '+
-      'next dated thing, then wakes and climbs as the day comes. Move that date and the wait moves with '+
+      'next dated thing, then wakes and climbs as the day comes; the night before it wakes, the nightly '+
+      'agent is asked to look it over, so it comes back up to date. Move that date and the wait moves with '+
       'it; delete it, or let it pass, and the card is simply back in the rotation.')+
     line('Pinned','A separate arrangement, and the only one you author. Click the diamond in a card\u2019s '+
       'head and the whole card is held under <b>Pinned</b>, its dates and leads with it; click the diamond '+
