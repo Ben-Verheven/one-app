@@ -108,4 +108,7 @@ Last done 2026-10-07 from the 2026-10-06 desk (591 lines).
    all four tabs and the People view render, Stamp & next moves on, one write per touched mutation
    produces the WRITES.md shape (diff the blob before/after each POST); test the empty case (no
    rows) and the no-settings case.
-5. Commit and push as CLAUDE.md says. The phone has it a minute later; Pocket reloads on open.
+5. Commit and push as CLAUDE.md says. Pages has it a minute later, but the home-screen app can keep
+   its old copy for up to ten minutes (2026-10-10); then closing and reopening Pocket fetches it.
+   The status-bar meta is read only when the icon is added, so a change to it means deleting the
+   icon and adding it again from Safari.
