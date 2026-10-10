@@ -89,7 +89,7 @@ _No section banners._
 
 ## `rooms/ledger/ledger.js`
 
-14278 lines · 648 KB
+14282 lines · 648 KB
 
 ```
 Proposal Ledger                                            ledger.js:1
@@ -360,7 +360,7 @@ _No section banners._
 
 ## `rooms/semaphore/semaphore.js`
 
-4289 lines · 223 KB
+4331 lines · 226 KB
 
 ```
 Brokerage Semaphore                               semaphore.js:1
@@ -386,24 +386,25 @@ leads                                             semaphore.js:2069
 the ruit                                          semaphore.js:2152
 the score                                         semaphore.js:2206
 one lead card, in both rooms                      semaphore.js:2248
-turning                                           semaphore.js:2705
-one rhythm for the wall                           semaphore.js:2715
-pinned: the links and the cards you keep to hand  semaphore.js:3016
-leads: one board, three sections                  semaphore.js:3047
-leads, lent to the Ledger's board                 semaphore.js:3378
-modals                                            semaphore.js:3476
-asking, and saying                                semaphore.js:3479
-tooltip                                           semaphore.js:3534
-events                                            semaphore.js:3566
-typing, and the forms it goes into                semaphore.js:3853
-escape, and closing by clicking away              semaphore.js:4015
-putting links in your own order                   semaphore.js:4054
-dragging a card to a new place on the wall        semaphore.js:4185
+the colour dot                                    semaphore.js:2285
+turning                                           semaphore.js:2736
+one rhythm for the wall                           semaphore.js:2746
+pinned: the links and the cards you keep to hand  semaphore.js:3047
+leads: one board, three sections                  semaphore.js:3078
+leads, lent to the Ledger's board                 semaphore.js:3409
+modals                                            semaphore.js:3507
+asking, and saying                                semaphore.js:3510
+tooltip                                           semaphore.js:3565
+events                                            semaphore.js:3597
+typing, and the forms it goes into                semaphore.js:3893
+escape, and closing by clicking away              semaphore.js:4055
+putting links in your own order                   semaphore.js:4095
+dragging a card to a new place on the wall        semaphore.js:4226
 ```
 
 ## `rooms/semaphore/semaphore.css`
 
-1520 lines · 112 KB
+1546 lines · 114 KB
 
 ```
 Brokerage Semaphore                       semaphore.css:1
@@ -422,15 +423,15 @@ pinned links (pinRowHTML)                 semaphore.css:651
 leads                                     semaphore.css:679
 the three sections                        semaphore.css:691
 the leads view                            semaphore.css:712
-Editing in the card                       semaphore.css:754
-the lead itself                           semaphore.css:783
-one lead card, in both rooms              semaphore.css:902
-freezer                                   semaphore.css:1118
-arena panel                               semaphore.css:1152
-dispatches                                semaphore.css:1334
-coming up                                 semaphore.css:1382
-modals                                    semaphore.css:1485
-tooltip                                   semaphore.css:1513
+Editing in the card                       semaphore.css:780
+the lead itself                           semaphore.css:809
+one lead card, in both rooms              semaphore.css:928
+freezer                                   semaphore.css:1144
+arena panel                               semaphore.css:1178
+dispatches                                semaphore.css:1360
+coming up                                 semaphore.css:1408
+modals                                    semaphore.css:1511
+tooltip                                   semaphore.css:1539
 ```
 
 ## `rooms/callboard/callboard.view.js`
@@ -633,4 +634,4 @@ Generated data. Never open, never edit, never upload.
 
 ---
 
-**35771 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.
+**35843 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.

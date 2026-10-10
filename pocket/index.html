@@ -287,6 +287,21 @@ a.wlink:active .wd,a.wlink:active::before{color:var(--brok)}
   text-align:right;max-width:30%}
 .lead .lwhen.set{color:var(--todo-ink)}
 .lead .lwhen.late{color:var(--brok-deep)}
+/* The score — how much Mark thinks a lead is worth, 1 to 5 — as the desk
+   draws it: one 20px dot with the number in near-black, the fill running red
+   to green, and an empty dashed ring when there is none yet. It closes the
+   row, after the day, so the dots of a list stand under each other; on the
+   phone it is read here and set in the lead's sheet. The fills are the
+   desk's (semaphore.css), light enough that the number reads on all five. */
+.lead,#sheet .scores{--sc1:#d9826f;--sc2:#dda063;--sc3:#d6c06a;--sc4:#a9c27a;--sc5:#7fb889}
+.lscore{flex:0 0 20px;width:20px;height:20px;align-self:flex-start;box-sizing:border-box;border-radius:50%;
+  border:1px dashed var(--lquiet);display:inline-flex;align-items:center;justify-content:center;
+  font:600 11px/1 var(--sans);color:#1c160e}
+.lscore.s1{background:var(--sc1);border:1px solid color-mix(in srgb,var(--sc1) 70%,#000)}
+.lscore.s2{background:var(--sc2);border:1px solid color-mix(in srgb,var(--sc2) 70%,#000)}
+.lscore.s3{background:var(--sc3);border:1px solid color-mix(in srgb,var(--sc3) 70%,#000)}
+.lscore.s4{background:var(--sc4);border:1px solid color-mix(in srgb,var(--sc4) 70%,#000)}
+.lscore.s5{background:var(--sc5);border:1px solid color-mix(in srgb,var(--sc5) 70%,#000)}
 
 /* the ruit: where a lead has got to — Spotted, the two ways of making
    contact one above the other, Talking. Read here; changed in the sheet. */
@@ -449,6 +464,13 @@ input[type="search"]:focus{outline:none;border-color:var(--key)}
 #sheet .tone.sel i{box-shadow:0 0 0 2px var(--field),0 0 0 4px var(--ink)}
 #sheet .tones+.chips{margin-top:10px}
 #sheet .chips button.sel{border-color:var(--ink)}
+/* the score in a lead's sheet: the five dots, each a thumb's width, larger
+   than on the row so the number reads at arm's length */
+#sheet .scores{display:flex;justify-content:space-between}
+#sheet .scores button{width:44px;height:44px;display:grid;place-items:center;border-radius:50%}
+#sheet .scores .lscore{flex:none;width:32px;height:32px;align-self:auto;font-size:14px}
+#sheet .scores button.sel .lscore{box-shadow:0 0 0 2px var(--field),0 0 0 4px var(--ink)}
+#sheet .scores+.chips{margin-top:10px}
 
 #sheet .chips{display:flex;flex-wrap:wrap;gap:6px}
 #sheet .chips span,#sheet .chips button{font:14px/1 var(--body);color:var(--muted);
@@ -1635,6 +1657,16 @@ function pinArena(a){
     onArena(a.id, function(x){ putBack(x, was); }));
 }
 
+/* The score, as the desk keeps it on the lead: 1 to 5, and no key at all
+   for none. The Semaphore and the Ledger read the same field, so a score set
+   here is theirs at their next look at the cloud, and theirs is Pocket's. */
+function setScore(ref, n, lead){
+  var was = keep(lead, ['score']);
+  commit('semaphore', edit(ref, function(x){ if (n >= 1 && n <= 5) x.score = n; else delete x.score; }),
+    n ? 'Worth ' + n + ' of 5' : 'Score taken off',
+    edit(ref, function(x){ putBack(x, was); }));
+}
+
 /* An arena's lead colour, as the Ledger keeps it: the palette's name, or
    null for the automatic one. It lives on the arena in the Semaphore row,
    so the Ledger and the Semaphore wear it at their next look at the cloud. */
@@ -2264,6 +2296,14 @@ function toneOf(a){
 }
 function leadTone(a){ return toneOf(a)[1]; }
 function toneName(k){ return k.charAt(0).toUpperCase() + k.slice(1); }
+/* the desk's score, read defensively: anything but 1 to 5 is none yet */
+function scoreOfLead(l){ var n = Math.round(+(l && l.score)); return n >= 1 && n <= 5 ? n : 0; }
+function scoreDot(l){
+  var n = scoreOfLead(l);
+  var d = el('span', 'lscore s' + n, n ? String(n) : '');
+  d.setAttribute('aria-label', n ? 'Worth ' + n + ' of 5' : 'Not scored yet');
+  return d;
+}
 function leadRow(it, inSheet){
   var b = el('button', 'lead toned');
   b.style.setProperty('--tone', leadTone(it.arena));
@@ -2277,6 +2317,7 @@ function leadRow(it, inSheet){
   var w = el('span', 'lwhen' + (it.when ? ' set' : '') + (n !== null && n <= 0 ? ' late' : ''),
     it.when ? (n === 0 ? 'Today' : dowDate(it.when)) : 'No date');
   b.appendChild(w);
+  b.appendChild(scoreDot(it.lead));
   b.addEventListener('click', function(){ openLead(it); });
   return b;
 }
@@ -2759,6 +2800,24 @@ function openLead(it){
       });
       section(b, ups.length + (ups.length === 1 ? ' update' : ' updates'), ul);
     }
+
+    /* how much it is worth: the desk's five coloured dots, and none */
+    var sc = scoreOfLead(it.lead);
+    var sw = el('div'), sg = el('div', 'scores');
+    [1,2,3,4,5].forEach(function(k){
+      var sb = el('button', k === sc ? 'sel' : '');
+      sb.appendChild(scoreDot({ score:k }));
+      sb.setAttribute('aria-label', k + ' of 5' + (k === 1 ? ', least' : k === 5 ? ', most' : ''));
+      sb.addEventListener('click', function(){ shut(); if (k !== sc) setScore(it.ref, k, it.lead); });
+      sg.appendChild(sb);
+    });
+    sw.appendChild(sg);
+    var nc = el('div', 'chips');
+    var none = el('button', sc ? '' : 'sel', 'No score');
+    none.addEventListener('click', function(){ shut(); if (sc) setScore(it.ref, 0, it.lead); });
+    nc.appendChild(none);
+    sw.appendChild(nc);
+    section(b, 'How valuable — ' + (sc ? sc + ' of 5' : 'not scored yet'), sw);
 
     var arw = el('div', 'chips');
     var arb = el('button', '', (plainOf(it.where) || 'Arena') + '  ›');

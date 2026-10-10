@@ -2275,11 +2275,41 @@ function longDay(iso){
    Mark or handed out from the arena's place in the list; he asked on
    2026-10-10 for the same colour in this room. The Ledger owns the palette,
    so the bridge hands over the one function that reads it; with no Ledger
-   the room keeps its own clay. */
-let leadTone=null;
+   the room keeps its own clay. The palette comes with it, so the leads view
+   can offer the Ledger's swatches on the same dot (see "the colour dot"). */
+let leadTone=null,leadPalette=[];
 function leadToneOf(a){
   if(!leadTone)return '';
   try{return leadTone({color:a.color||'',slot:S.arenas.indexOf(a)})||'';}catch(e){return '';}
+}
+/* ───────── the colour dot ─────────
+   On the leads view each row carries the Ledger's dot before the arena's
+   name, in the arena's colour; a press opens the Ledger's ten swatches, five
+   to a row, and the way back to automatic (Mark asked for it here as on the
+   Ledger, 2026-10-10). The colour is the arena's, so every lead of that arena
+   follows, and it goes through leadVerb as the Ledger's own press does. Only
+   one menu is open at a time; a press anywhere else or Escape shuts it. */
+let colOpen=null;
+function leadColHTML(a,l,ids){
+  if(!leadPalette.length)return '';
+  const hex=leadToneOf(a);
+  const cur=leadPalette.find(t=>t.k===a.color)||leadPalette.find(t=>t.color===hex);
+  const open=colOpen===l.id;
+  const tip='Colour of '+a.name+(cur?' \u2014 '+cur.label:'')+(a.color?'':' (automatic)')+' \u2014 click to change';
+  return '<span class="lcolwrap">'+
+    '<button class="lcol'+(open?' open':'')+'" data-act="leadColMenu" '+ids+' style="--c:'+esc(hex)+'" '+
+      'aria-haspopup="listbox" aria-expanded="'+(open?'true':'false')+'" '+
+      'title="'+esc(tip)+'" aria-label="'+esc(tip)+'"><i aria-hidden="true"></i></button>'+
+    (open
+      ? '<span class="lcolpop" data-act="leadColPop" role="listbox" aria-label="Colour of '+esc(a.name)+'’s leads">'+
+          leadPalette.map(t=>'<button class="lsw'+(t.k===a.color?' sel':'')+'" data-act="leadColor" '+ids+' '+
+            'data-v="'+esc(t.k)+'" role="option" aria-selected="'+(t.k===a.color?'true':'false')+'" '+
+            'style="--c:'+esc(t.color)+'" title="'+esc(t.label)+'" aria-label="'+esc(t.label)+'"></button>').join('')+
+          '<button class="lswauto'+(a.color?'':' sel')+'" data-act="leadColor" '+ids+' data-v="" role="option" '+
+            'aria-selected="'+(a.color?'false':'true')+'">Automatic</button>'+
+        '</span>'
+      : '')+
+  '</span>';
 }
 function leadRowHTML(a,l,hit,say){
   const now=T(todayISO());
@@ -2397,6 +2427,7 @@ function leadRowHTML(a,l,hit,say){
        drawer the arena goes without saying and the day rides on the quiet
        line. */
     '<header class="lhead">'+leadRuitHTML(a,l,st,done||editing)+
+      (say?leadColHTML(a,l,ids):'')+
       (say?'<button class="lar" data-act="openArena" data-id="'+a.id+'" '+
         'title="Open '+esc(a.name)+'">'+esc(a.name)+'</button>':'')+
       '<div class="ltx">'+
@@ -3565,10 +3596,19 @@ document.addEventListener('mousemove',e=>{
 
 /* ============ events ============ */
 document.addEventListener('click',e=>{
+  /* an open colour menu takes the press that shuts it, as the Ledger's does,
+     unless the press is on a dot, which opens that one instead */
+  if(colOpen&&!e.target.closest('.lcolpop,[data-act=leadColMenu]')){colOpen=null;repaint();return;}
   const b=e.target.closest('[data-act]');
   if(!b)return;
   const act=b.dataset.act,id=b.dataset.id,a=arena(b.dataset.a||id);
   switch(act){
+    case 'leadColMenu':{const k=b.dataset.l;colOpen=colOpen===k?null:k;repaint();
+      const sw=colOpen&&document.querySelector('.lcolpop .lsw.sel,.lcolpop .lswauto.sel');
+      if(sw)sw.focus({preventScroll:true});break;}
+    case 'leadColPop':break;
+    case 'leadColor':colOpen=null;
+      if(!leadVerb(id,b.dataset.l,'color',b.dataset.v||''))repaint();break;
     case 'addArena':addArena();break;
     case 'openArena':openDrawer(id);break;
     case 'openDate':openDrawer(b.dataset.a,b.dataset.d);break;
@@ -4025,6 +4065,7 @@ document.addEventListener('keydown',e=>{
     }
     return;
   }
+  if(colOpen){colOpen=null;repaint();return;}                 /* a colour menu */
   if(Ask.isOpen()){Ask.shut();return;}                       /* the question */
   if(document.querySelector('.modal.open')){closeModals();return;}   /* a sheet */
   if(lkEdit.a||leadEdit.a||noteEdit.a||waitPick){            /* a composer */
@@ -4262,7 +4303,8 @@ try{
     arenas:     function(){ return arenasForBoard(); },
     leadAdd:    function(aid,v){ return leadAdd(aid,v); },
     /* the Ledger's lead colours, handed over by the bridge */
-    setLeadTone: function(fn){ leadTone=fn; if(typeof renderAll==='function')renderAll(); },
+    setLeadTone: function(fn,pal){ leadTone=fn; leadPalette=Array.isArray(pal)?pal:[];
+      if(typeof renderAll==='function')renderAll(); },
     openArena:  function(aid){ if(arena(aid))openDrawer(aid); },
     /* Escape, for when the drawer is lent to another room and this room's
        own key handler is not the one listening: the innermost thing first,

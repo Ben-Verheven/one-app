@@ -749,6 +749,32 @@
 #pane-semaphore .lead.wide .lname{font-size:14.5px}
 #pane-semaphore .lead.wide .lsub{font-size:12.5px}
 #pane-semaphore .lead.wide>.lhead>.lwhen{font-size:13px}
+/* The colour dot (see "the colour dot" in semaphore.js): the Ledger's, a 9px
+   disc in a 22px button, standing between the ruit and the arena as it does
+   there. It takes back most of the ruit's margin, so the columns after it
+   move by only a few pixels. Its menu hangs under it on the drawer's dark
+   panel: the ten swatches five to a row, so the order reads round the wheel
+   as in the Ledger, then Automatic across the foot. */
+#pane-semaphore .lead.wide .lcolwrap{position:relative;flex:0 0 22px;margin:0 -6px 0 -22px;display:flex}
+#pane-semaphore .lcol{width:22px;height:22px;padding:0;border:1px solid transparent;border-radius:50%;
+  background:none;display:flex;align-items:center;justify-content:center;cursor:pointer;
+  transition:border-color .14s,background-color .14s}
+#pane-semaphore .lcol i{width:9px;height:9px;border-radius:50%;background:var(--c,var(--lead))}
+#pane-semaphore .lcol.open,#pane-semaphore .lcol:focus-visible{outline:none;border-color:var(--key2);background:var(--sink)}
+@media (hover:hover) and (pointer:fine){#pane-semaphore .lcol:hover{border-color:var(--line2);background:var(--sink)}}
+#pane-semaphore .lcolpop{position:absolute;z-index:30;top:calc(100% + 6px);left:-10px;
+  display:grid;grid-template-columns:repeat(5,30px);gap:8px;padding:10px;cursor:default;
+  background:var(--panel);border:1px solid var(--line2);border-radius:9px;box-shadow:0 10px 28px rgba(0,0,0,.45)}
+#pane-semaphore .lcolpop .lsw{width:28px;height:28px;justify-self:center;padding:0;border:0;border-radius:50%;
+  cursor:pointer;background:var(--c);box-shadow:0 0 0 1px rgba(0,0,0,.25)}
+#pane-semaphore .lcolpop .lsw.sel{box-shadow:0 0 0 2px var(--panel),0 0 0 4px var(--key2)}
+#pane-semaphore .lcolpop .lsw:focus-visible{outline:1px solid var(--focus);outline-offset:3px}
+#pane-semaphore .lcolpop .lswauto{grid-column:1/-1;margin-top:2px;padding:7px 8px;border:0;
+  border-top:1px solid var(--line);border-radius:0 0 4px 4px;background:none;text-align:left;cursor:pointer;
+  font:13px var(--body);color:var(--muted)}
+#pane-semaphore .lcolpop .lswauto.sel{color:var(--ink)}
+#pane-semaphore .lcolpop .lswauto.sel::before{content:'\2713  '}
+#pane-semaphore .lcolpop .lswauto:hover,#pane-semaphore .lcolpop .lswauto:focus-visible{outline:none;background:var(--sink);color:var(--ink)}
 /* Complete, at the top right of an open lead on a card back or in the drawer */
 #pane-semaphore .lead .ltx>.ldone{float:right;margin:0 -2px 2px 8px}
 /* ── Editing in the card ──

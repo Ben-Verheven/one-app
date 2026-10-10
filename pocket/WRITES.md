@@ -35,6 +35,7 @@ Every change is undoable from the toast; undo puts back exactly the fields it to
 | arena stamp | `sweptAt`, `sweptPrev`, `seenAt`, `seenPrev` | day; the moment (ISO) for seen; same-day stamp takes itself back | ✓ |
 | arena pin | `pin` | `true`/`false` | ✓ |
 | arena ask | `askAt` | ISO moment / `null` | ✓ |
+| lead score | `score` | `1`…`5`; the key deleted for no score | ✓ |
 | arena lead colour | `color` | the Ledger's palette name (`terracotta`…`sand`) / `null` for automatic | ✓ |
 | brokerage link pin | `brokerage.links[].pin` | ISO moment when pinned; key deleted when unpinned | ✓ |
 | brokerage link stamp | `stampedAt`, `stampPrev` | day; same-day stamp → `stampPrev`, which is then deleted | ✓ |
