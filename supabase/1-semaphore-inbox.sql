@@ -31,9 +31,9 @@ create table if not exists semaphore_inbox (
   decided_at       timestamptz
 );
 
--- An "info" finding (2026-10-10) is a few sentences for an arena's About
--- text (date_kind 'call') or its Brokerage text (date_kind 'brokerage'),
--- carried in note. A table made before then still holds the three-kind
+-- An "info" finding (2026-10-10) is a short new text to replace an arena's
+-- About text (date_kind 'call') or its Brokerage text (date_kind
+-- 'brokerage'), carried in note. A table made before then still holds the three-kind
 -- check, so it is swapped here; these two lines alone are what an existing
 -- database needs.
 alter table semaphore_inbox drop constraint if exists semaphore_inbox_kind_check;

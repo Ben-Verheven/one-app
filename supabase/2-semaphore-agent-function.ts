@@ -6,8 +6,8 @@
 //              each arena's `asked` flag: Mark pressed "ask the agent" on it
 //              and the agent has not looked at it since. Each arena's two
 //              texts, About and Brokerage, are in it since 2026-10-10, so the
-//              nightly agent can offer a few sentences for them without
-//              repeating what they already say
+//              nightly agent can offer a short rewrite of either that keeps
+//              what is still true in them
 //   suggest    add rows to semaphore_inbox
 //   checked    record which arenas it has looked at
 // It never sees the app's key, so it cannot change the board even by mistake.
@@ -55,7 +55,7 @@ async function watchlist() {
     frozen: !!a.frozenAt,
     links: (a.links ?? []).map(link),
     brokerage_links: (a.brokerage?.links ?? []).map(link),
-    call_info: a.notes ?? "",
+    arena_info: a.notes ?? "",
     brokerage_info: a.brokerage?.notes ?? "",
     dates: (a.dates ?? []).map((d: any) => ({
       id: d.id, kind: d.kind, label: d.label ?? "", call: d.call ?? "",
@@ -146,12 +146,22 @@ async function suggest(items: any[], run: string) {
       rejected.push({ item: it, why: "a link needs url" });
       continue;
     }
-    // An info finding is a few sentences for one of the arena's two texts:
-    // date_kind "call" is its About text, "brokerage" its Brokerage text. The
-    // sentences ride in note.
-    if (kind === "info" && (!r.date_kind || !r.note)) {
-      rejected.push({ item: it, why: "an info finding needs date_kind (call or brokerage) and note (the text)" });
-      continue;
+    // An info finding is a whole new text for one of the arena's two texts,
+    // which Accept puts in place of the old one: date_kind "call" is its
+    // About text, "brokerage" its Brokerage text. The text rides in note. It
+    // is refused rather than cut when it is too long, because a rewrite cut
+    // off mid-sentence would replace a whole text with half of one.
+    if (kind === "info") {
+      const text = S(it.note, 5000);
+      if (!r.date_kind || !text) {
+        rejected.push({ item: it, why: "an info finding needs date_kind (call or brokerage) and note (the new text)" });
+        continue;
+      }
+      if (text.length > 800) {
+        rejected.push({ item: it, why: "keep it short: an info text may be at most 800 characters" });
+        continue;
+      }
+      r.note = text;
     }
     const parts = [
       r.kind, r.arena_id ?? r.arena_name.toLowerCase(), r.date_kind, r.label, r.call,

@@ -1390,6 +1390,10 @@
 #pane-semaphore .dptx .dpwhen{color:var(--brok-deep)}
 #pane-semaphore .dptx .dpcall{color:var(--notice-ink)}
 #pane-semaphore .dptx .dpwas{color:var(--faint)}
+/* the text a rewrite would replace, on a line of its own beneath it: it is
+   read in full before Accept throws it away, so it takes the quote's quiet
+   colour rather than the faint one, which is for a few words at most */
+#pane-semaphore .dptx .dpold{display:block;margin-top:3px;font-size:12px;color:var(--muted);white-space:pre-wrap}
 #pane-semaphore .dpev{display:block;margin-top:3px;font-family:var(--body);font-size:12px;font-style:italic;
   color:var(--muted)}
 /* on its own line: after a date and a quote, a source that continues the

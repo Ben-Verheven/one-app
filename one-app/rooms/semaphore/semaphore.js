@@ -738,8 +738,13 @@ function findText(r){
   }
   if(r.kind==='arena')
     return 'New arena — <b>'+esc(r.arena_name)+'</b>'+(r.note?' — '+esc(r.note):'');
-  if(r.kind==='info')
-    return 'For the <b>'+infoName(r)+'</b> text — '+esc(r.note||'');
+  /* a rewrite shows the text it would replace, read from the board now, since
+     that is what Accept throws away */
+  if(r.kind==='info'){
+    const old=a?String((r.date_kind==='brokerage'?(a.brokerage||{}).notes:a.notes)||'').trim():'';
+    return 'New <b>'+infoName(r)+'</b> text — '+esc(r.note||'')+
+      '<span class="dpwas dpold">'+(old?'was: '+esc(old):'was empty')+'</span>';
+  }
   const dt=findDate(r);
   const when='<span class="dpwhen">'+esc(dispDate(dt))+'</span>';
   /* a correction says what it replaces, because the old date is the thing you
@@ -827,8 +832,9 @@ function renderDispatch(){
         '>Check again</button>');
   if(!finds.rows.length){
     el.innerHTML=head+'<p class="dpnote">Each night the agent looks through about three arenas, and any '+
-      'you have asked it to, for links to brokerage events and partner-search tools, and for a few '+
-      'sentences of key facts for their About and Brokerage texts. Once a week it looks '+
+      'you have asked it to, for links to brokerage events and partner-search tools, and offers a short '+
+      'rewrite of their About and Brokerage texts where those are wrong, out of date or missing something '+
+      'important. Once a week it looks '+
       'for calls and programmes you are not watching yet. Whatever it finds waits here.</p>';
     return;
   }
@@ -884,20 +890,17 @@ function takeFind(r){
   }
   const a=findArena(r);
   if(!a)return 'That arena is no longer on this board.';
-  /* A few sentences the nightly agent read on the arena's own pages (Mark,
-     2026-10-10). They are added under what the text already says, never in
-     place of it: the text is his, and the agent sees only part of the story. */
+  /* A short rewrite of one of the arena's two texts, from the pages the
+     nightly agent read (Mark, 2026-10-10). It replaces the whole text, so that
+     what is wrong or out of date goes rather than piling up under a newer
+     line; Dispatches shows the text it replaces before Accept is pressed. */
   if(r.kind==='info'){
     const t=String(r.note||'').trim();
-    const brok=r.date_kind==='brokerage';
-    if(brok)a.brokerage=a.brokerage||{notes:'',links:[]};
-    const was=String((brok?a.brokerage.notes:a.notes)||'').trim();
-    if(t&&!was.includes(t)){
-      const v=was?was+'\n\n'+t:t;
-      if(brok)a.brokerage.notes=v;else a.notes=v;
-      save();renderAll();
-    }
-    return 'Added to the '+infoName(r)+' text of '+a.name+'.';
+    if(!t)return 'That text was empty, so nothing changed.';
+    if(r.date_kind==='brokerage'){a.brokerage=a.brokerage||{notes:'',links:[]};a.brokerage.notes=t;}
+    else a.notes=t;
+    save();renderAll();
+    return 'New '+infoName(r)+' text on '+a.name+'.';
   }
   if(r.kind==='link'){
     const ev=siteFor(r);
@@ -3014,9 +3017,9 @@ function howHTML(){
       'and the days since you last pressed it.')+
     line('Ask the agent','The ring in a card\u2019s head asks the nightly agent to look at that arena on its '+
       'next run, on top of the ones it picks itself. It goes out once the agent has been. What the agent '+
-      'brings is links \u2014 events and tools \u2014 and a few sentences for the card\u2019s About and '+
+      'brings is links \u2014 events and tools \u2014 and short rewrites of the card\u2019s About and '+
       'Brokerage texts, and they wait in <b>Dispatches</b>; once accepted, the links are marked <b>new</b> '+
-      'until you next sweep the arena, and the sentences are added under what the text already says.')+
+      'until you next sweep the arena, and a rewrite takes the old text\u2019s place.')+
     '</dl><p class="coda">None of this is a setting, and none of the arithmetic is on screen. '+
     'Position is the whole readout: the higher a card stands, the more of itself it shows. Order runs '+
     'in rungs \u2014 what you promised, then what is asking to be looked at, then what is merely due a '+
@@ -3809,7 +3812,7 @@ document.addEventListener('click',e=>{
       const n=finds.rows.length;
       Ask.ask('Accept all '+n+'?',
         'Every finding in the list goes on the board: new dates, corrected dates, '+
-        'links, new arenas and sentences for the About and Brokerage texts. Nothing is dismissed. A single one can be taken off '+
+        'links, new arenas, and new About and Brokerage texts in place of the old. Nothing is dismissed. A single one can be taken off '+
         'the board again afterwards, but not all at once.',
         'Accept all '+n,acceptAllFinds);
       break;
