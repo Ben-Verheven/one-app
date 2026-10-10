@@ -67,7 +67,7 @@ re-extract the maths) but a Pocket change never touches it.
   `pinLink`, `stampLink`); every undo puts back a snapshot (`keep`/`putBack`) → board (`liveList`, `scoreOf`, `wall`) → views (`drawRot` + `wallCard` +
   `cardLine`, `drawPins`/`pinnedOf`, `drawLeads`/`leadItems` + `leadRow` + `ruit`,
   `drawDates`/`comingUp`) → sheets (`openArena` with the round, `openLead`, `newLead`, `openPerson`).
-  `fitScreen` sizes the frame on the home screen (why: its comment); ⚙ shows what it measured.
+  `fitScreen` gives the home screen the room the insets no longer say (why: the viewport meta); ⚙ shows what it measured.
 - Both scripts share one global scope: a new top-level name must not collide with script 1
   (`shortDate` exists → Pocket uses `briefDate`; `openLeads` exists → `leadItems`).
 

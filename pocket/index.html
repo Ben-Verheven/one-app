@@ -2,12 +2,15 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<!-- No viewport-fit=cover. On the home screen iOS 26 draws nothing in the
+     bottom status-bar's height of a page that covers the screen (WebKit bug
+     301108): Mark's phone reported a screen of 874 and a page of 812, and
+     the tab bar sat over a dead band no CSS could paint, whatever the frame
+     was sized to (tried 2026-10-10: screen.height, 100lvh, an opaque bar).
+     Without cover the short edge moves to the top, behind the clock, and the
+     page runs to the foot of the screen. Read at every load, not at install. -->
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<!-- Translucent, so the page starts at the very top of the screen and
-     fitScreen knows where it stands. iOS reads this only when the icon is
-     added, so an icon added with an opaque bar keeps one: fitScreen copes
-     with both. -->
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#191713">
 <meta name="apple-mobile-web-app-title" content="Pocket">
@@ -48,7 +51,11 @@
   --sans:'Optima','Palatino Linotype','Book Antiqua',Georgia,serif;
   --body:'Iowan Old Style','Palatino Linotype','Book Antiqua',Georgia,serif;
   --mono:ui-monospace,'SF Mono','Cascadia Mono',Menlo,Consolas,monospace;
-  --sb:env(safe-area-inset-bottom);
+  /* Without cover the safe-area insets read 0, so fitScreen says what the
+     home bar and the clock need (--home-b, --top-fix) and these take the
+     larger of the two. */
+  --sb:max(env(safe-area-inset-bottom), var(--home-b, 0px));
+  --top:max(env(safe-area-inset-top), var(--top-fix, 0px));
   --tabs:calc(58px + var(--sb));
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -69,7 +76,7 @@ a{color:inherit}
 /* ── the bar on top ─────────────────────────────────────────────────── */
 
 #top{position:fixed;z-index:40;inset:0 0 auto 0;
-  padding:calc(env(safe-area-inset-top) + 9px) 10px 9px 16px;
+  padding:calc(var(--top) + 9px) 10px 9px 16px;
   display:flex;align-items:center;gap:6px;
   background:linear-gradient(180deg,#2A251E,#1E1B16);border-bottom:1px solid var(--line)}
 #top h1{margin:0;flex:1;min-width:0;display:flex;align-items:center;gap:10px}
@@ -86,27 +93,15 @@ a{color:inherit}
 .icon.spin{animation:turn .9s linear infinite}
 @keyframes turn{to{transform:rotate(360deg)}}
 
-#stage{position:fixed;inset:0;padding-top:calc(env(safe-area-inset-top) + 62px);
+#stage{position:fixed;inset:0;padding-top:calc(var(--top) + 62px);
   padding-bottom:var(--tabs);overflow-y:auto;-webkit-overflow-scrolling:touch;
   overscroll-behavior-y:contain}
 .view{display:none;padding:2px 0 30px}
 .view.on{display:block}
 
-/* On the home screen iOS 26 hands Pocket a viewport one status bar short,
-   so everything fixed to its bottom floated over a dead band, and a drag on
-   the band pulled the whole page. fitScreen measures the frame the screen
-   really has and these rules hang the stage, the sheet and the tabs from
-   it. In that frame the inset under the tabs is only what clears the home
-   bar (--home-b): the full native 34 read as a dead band of its own. Tried
-   and dropped on 2026-10-10: an opaque status bar alone (the viewport stays
-   short, only lower), and sizing in 100lvh (no better on Mark's phone). */
-html.fullh{--sb:var(--home-b, 0px)}
-html.fullh #stage,html.fullh #sheet{bottom:auto;height:var(--app-h)}
-html.fullh #tabs{bottom:auto;top:calc(var(--app-h) - var(--tabs))}
-/* below the short viewport there is no list under the finger, only the
-   page, so the bars are not for dragging and the page holds still */
-html.fullh,html.fullh body{overscroll-behavior:none}
-html.fullh #tabs,html.fullh #top{touch-action:none}
+/* on the home screen there is no list under a finger at the very foot, only
+   the page, which a drag pulled and let spring back */
+@media (display-mode: standalone){ html,body{overscroll-behavior:none} }
 
 /* the line under a view's top: what it holds, in the desk's italic */
 .whead{padding:14px 16px 10px;font:italic 14px/1.4 var(--body);color:var(--faint)}
@@ -564,7 +559,7 @@ input[type="search"]:focus{outline:none;border-color:var(--key)}
 /* ── connecting ─────────────────────────────────────────────────────── */
 
 #setup{position:fixed;inset:0;z-index:70;display:none;background:var(--paper);
-  padding:calc(env(safe-area-inset-top) + 40px) 22px 24px;overflow-y:auto}
+  padding:calc(var(--top) + 40px) 22px 24px;overflow-y:auto}
 #setup.up{display:block}
 #setup h2{margin:0 0 8px;font:400 15px/1.2 var(--sans);letter-spacing:.26em;text-transform:uppercase;color:var(--key2)}
 #setup p{margin:0 0 22px;color:var(--muted);font:italic 15px/1.5 var(--body)}
@@ -2927,14 +2922,12 @@ function newLead(){
   });
 }
 
-/* The frame the home screen really gives, and whether the page needs it
-   (see html.fullh in the style). Where the viewport starts tells how much
-   it lacks. With the translucent bar the page starts at the top of the
-   screen, the safe area above it says so, and it lacks the whole gap down
-   to the screen's foot. With an opaque bar it starts under the bar and is
-   one bar short as well, so the gap is two bars and it lacks one; a gap of
-   one bar there is a phone without the fault, and is left alone. A gap
-   wider than any bar is the keyboard, also left alone. */
+/* What the home screen needs that the insets no longer say (see the viewport
+   meta): room for the home bar under the tabs, no more than clears it, as
+   the full native 34 read as a dead band; and, should a page ever be given
+   the whole screen from the very top again, room for the clock above the
+   bar. The settings sheet prints what the phone reported, so a screenshot
+   of it says what happened instead of leaving it to be guessed. */
 var fitSaid = 'not on the home screen';
 function topInset(){
   var p = $('#fit-probe');
@@ -2947,32 +2940,25 @@ function topInset(){
   }
   return parseFloat(getComputedStyle(p).paddingTop) || 0;
 }
+/* the clock's height on the iPhones with a notch or an island, by screen */
+var CLOCK = { 812:47, 844:47, 926:47, 852:59, 932:59, 874:62, 956:62 };
 function fitScreen(){
   var home = navigator.standalone ||
     (window.matchMedia && matchMedia('(display-mode: standalone)').matches);
   if (!home || !window.screen) return;
   function fit(){
     var w = screen.width, h = screen.height;
-    var tall = innerWidth > innerHeight ? Math.min(w, h) : Math.max(w, h);
-    var gap = tall - innerHeight, under = topInset();
-    var lack = gap <= 0 ? 0 : under > 0 ? gap : gap >= 88 ? gap / 2 : 0;
-    if (lack > 140) lack = 0;
+    var upright = innerWidth < innerHeight;
+    var tall = upright ? Math.max(w, h) : Math.min(w, h);
+    var notch = Math.max(w, h) >= 812;
     var root = document.documentElement;
-    root.style.setProperty('--app-h', (innerHeight + lack) + 'px');
-    /* the home bar ends about 13 points above the edge; an older iPhone
-       with a button has none */
-    root.style.setProperty('--home-b', (Math.max(w, h) < 812 ? 0 : 18) + 'px');
-    root.classList.toggle('fullh', lack > 0);
-    fitSaid = 'screen ' + tall + ' · view ' + innerHeight + ' · top ' + under +
-      ' · added ' + (lack > 0 ? innerHeight + lack : 'none') + ' · fit 7';
+    root.style.setProperty('--home-b', (notch ? 18 : 0) + 'px');
+    var whole = notch && upright && innerHeight >= tall - 1;
+    root.style.setProperty('--top-fix', (whole ? CLOCK[tall] || 54 : 0) + 'px');
+    fitSaid = 'screen ' + tall + ' · view ' + innerHeight + ' · top ' + topInset() +
+      (whole ? ' · clock ' + (CLOCK[tall] || 54) : '') + ' · fit 8';
   }
   fit();
-  ['#tabs', '#top'].forEach(function(q){
-    var n = $(q);
-    if (n) n.addEventListener('touchmove', function(e){
-      if (document.documentElement.classList.contains('fullh')) e.preventDefault();
-    }, { passive:false });
-  });
   addEventListener('resize', fit);
   addEventListener('orientationchange', function(){ setTimeout(fit, 300); });
 }
