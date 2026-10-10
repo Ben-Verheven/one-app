@@ -12,10 +12,16 @@ the way back.
   loads next turn. The session's git
   proxy allows two git operations at a time; a parallel second clone 429s
   both.
-- **A fresh clone commits as the container** (`Claude
-  <noreply@anthropic.com>`), not with the identity CLAUDE.md names, so
-  that identity is set in the clone's own git config before the first
-  commit.
+- **`.claude/settings.json` is the session's own setup, which Mark added
+  on 2026-10-10; JSON cannot say why, so it is said here.** At start it
+  writes the identity CLAUDE.md names into the clone's git config, because
+  a fresh clone commits as the container (`Claude <noreply@anthropic.com>`).
+  It lets the routine commands run without asking: the tools, read-only
+  git, the commit and the push to `main`. And it refuses the Read tool
+  `one-app/data/`, the one read that ends a session; `head -c 300` in a
+  shell still gives the shape. The session refuses to let the assistant
+  write its contents (as self-modification), so a change to what it says
+  is Mark's, made on GitHub's website.
 - **Everything the tools need is already in the container:** node,
   Playwright and its Chromium. `finish.py` and `tools/pocket.js` run as
   they stand, about ten seconds each; installing anything is wasted time.

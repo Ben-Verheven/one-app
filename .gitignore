@@ -6,6 +6,7 @@ builds/
 exports/
 Claude outputs/
 *.json
+!.claude/settings.json
 pocket/pocket-contract.md
 __pycache__/
 node_modules/
