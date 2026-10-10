@@ -1296,8 +1296,10 @@ function leadPath(l,v){
   }
   return false;
 }
-/* Which of Contacted's two paths a lead is on, for the leads view's split. */
-const KIND_RANK={researchers:0,both:1,lead:2};
+/* Which of Contacted's two paths a lead is on, for the leads view's split.
+   Both ways first: those are the most promising, and Mark asked for them on
+   top of the stack (2026-10-08). The Ledger's list keeps the same order. */
+const KIND_RANK={both:0,researchers:1,lead:2};
 const KIND_NAME={researchers:'researchers contacted',both:'both contacted',lead:'lead contacted'};
 function leadKind(l){return l.toResearchers&&l.toLead?'both':(l.toResearchers?'researchers':'lead');}
 </script>
@@ -2200,11 +2202,15 @@ function leadItems(){
   });
   return out;
 }
+/* Leads on the same day fall back on the desk's own name for them, not the
+   row's label: a lead known only by a mail address sorted as "Untitled lead"
+   here and by the address on the desk, so the two lists parted. */
 function byDay(x, y){
   if (!!x.when !== !!y.when) return x.when ? -1 : 1;
   if (x.when && y.when && x.when !== y.when) return x.when < y.when ? -1 : 1;
-  return String(x.what).localeCompare(String(y.what));
+  return deskName(x.lead).localeCompare(deskName(y.lead));
 }
+function deskName(l){ return leadName(l.links ? l : { project:l.project, links:[] }); }
 
 var scope = null;      /* {aid, name} — the leads list narrowed to one arena */
 var curTab = 'rot', lastTab = 'rot';
