@@ -2378,7 +2378,19 @@ function comingUp(){
       if (!d || !d.start || d.gran === 'none') return;
       if (!datesAll && d.kind === 'call') return;
       var s = daysTo(d.start), e = daysTo(d.end || d.start);
-      if (e < from || s > to) return;
+      /* A brokerage event that is over is no longer something to go to, and
+         Mark found the greyed ones crowding the top of the list (2026-10-10):
+         it leaves the day after it ends. One pencilled into a month, quarter,
+         half or year ends with that stretch, or "≈ Oct" would be gone on the
+         2nd. A call keeps its two weeks, since a deadline just passed still
+         says where the round stands. */
+      if (d.kind !== 'call' && /^(month|quarter|half|year)$/.test(d.gran)){
+        var p = String(d.start).split('-'), m = +p[1];
+        var last = { month:m, quarter:Math.ceil(m / 3) * 3, half:m < 7 ? 6 : 12, year:12 }[d.gran];
+        var lastDay = new Date(+p[0], last, 0);
+        e = daysTo(p[0] + '-' + pad2(last) + '-' + pad2(lastDay.getDate()));
+      }
+      if (e < (d.kind === 'call' ? from : 0) || s > to) return;
       out.push({ d:d, a:a, s:s, e:e });
     });
   });

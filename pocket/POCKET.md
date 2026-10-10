@@ -20,7 +20,8 @@ Every card carries the desk's three small controls: the ring (ask the nightly ag
 the pin (diamond) and the stamp (✓, which also marks the agent's findings seen). A brokerage link
 on a card or in an arena's sheet has its own pin. What stays on the desk: making and editing
 arenas, dates, types, weights, waits, the freezer, and the agent's Dispatches.
-- **Coming up** — every arena's dates on one line, brokerage by default.
+- **Coming up** — every arena's dates on one line, brokerage by default; a brokerage event
+  leaves once it is over, a call two weeks after.
   A brokerage event opens its website (↗) when one of its arena's brokerage links fits it
   (`eventLink`: shared title words + year; a lone link counts); › opens the arena. The tab
   carries no number (removed 2026-10-08 at Mark's request).
