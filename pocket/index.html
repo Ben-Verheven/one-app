@@ -3168,6 +3168,22 @@ document.getElementById('tabs').addEventListener('click', function(e){
 });
 
 $('#sheet').addEventListener('click', function(e){ if (e.target === $('#sheet')) shut(); });
+
+/* A web link on the phone opens in DuckDuckGo, Mark's own browser, not in
+   the Safari panel a home-screen app is given. iOS lets a page name no
+   "default browser", so the link is handed over in DuckDuckGo's own form,
+   ddgQuickLink://https://…, which the app reads back as the address (its
+   AppDeepLinkSchemes.query). Only on an iPhone or iPad, where the app is;
+   mail links and everything on a desk stay as they were. */
+var ON_IOS = /iP(hone|ad|od)/.test(navigator.userAgent) ||
+  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+document.addEventListener('click', function(e){
+  if (!ON_IOS || e.defaultPrevented) return;
+  var a = e.target.closest && e.target.closest('a[href]');
+  if (!a || !/^https?:\/\//i.test(a.href)) return;
+  e.preventDefault();
+  location.href = 'ddgQuickLink://' + a.href;
+});
 $('#refresh').addEventListener('click', function(){ if (cfg) pull(); });
 function fillSetup(){
   if (cfg){ $('#s-url').value = cfg.url; $('#s-key').value = cfg.key; }
