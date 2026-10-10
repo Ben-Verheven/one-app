@@ -2,7 +2,7 @@
   "hooks": {
     "SessionStart": [
       { "hooks": [ { "type": "command",
-        "command": "cd \"$CLAUDE_PROJECT_DIR\" && git config user.name Ben-Verheven && git config user.email 299968296+Ben-Verheven@users.noreply.github.com" } ] }
+        "command": "cd \"$CLAUDE_PROJECT_DIR\" && git config user.name Ben-Verheven && git config user.email 299968296+Ben-Verheven@users.noreply.github.com && git checkout -q main && git pull -q" } ] }
     ]
   },
   "permissions": {
