@@ -1,9 +1,4 @@
----
-name: one-app-animation
-description: Every way the app's movements — the day's cards, the hover label's dots, and the panels that slide in — have gone wrong, and the rules that came out of it.
----
-
-Split out of [one-app-notes](pitfalls.md) on 2026-08-28, because it had grown past
+Split out of [pitfalls](pitfalls.md) on 2026-08-28, because it had grown past
 being one bullet in it. Two things move in the Ledger and nothing else
 does: **the day's cards**, when a project is gathered out of a day, and
 **the hover label's dots**, which fly out of the board marks they stand
@@ -169,12 +164,12 @@ is not. Guard the deferred call against having been closed inside those
 two frames, or an Escape pressed at once re-opens the thing. And
 `focus()` on a control inside a panel still parked off the right edge
 wants `preventScroll:true`, because of the pane transform in
-[one-app-notes](pitfalls.md): a fixed panel inside a transformed pane can be scrolled
+[pitfalls](pitfalls.md): a fixed panel inside a transformed pane can be scrolled
 to rather than left where it is.
 
 **How to check any of this without an afternoon.** Two passes, and both
 are needed — one tells you the numbers, the other tells you what it looks
-like. Drive a throwaway browser (see [testing-this-app](testing.md)) and seed it,
+like. Drive a throwaway browser (see [testing](testing.md)) and seed it,
 then: (1) sample the moving element's computed `transform` and the room's
 `scrollTop` in the same row, every frame through the flight, printing
 every fourth — a working flight is a decaying matrix with the scroll
@@ -194,5 +189,5 @@ now pins the old height, restores the scroll at `auto`, and stands the
 entrances down (`hz-drawn`, `hz-same`) after the first draw / for the same
 slice. Anything new that redraws the board must go through it, not around it.
 
-See also [one-app-notes](pitfalls.md), [one-app-project-card](project-card.md) and
-[testing-this-app](testing.md).
+See also [pitfalls](pitfalls.md), [project-card](project-card.md) and
+[testing](testing.md).

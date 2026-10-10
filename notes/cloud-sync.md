@@ -1,8 +1,3 @@
----
-name: one-app-cloud-sync
-description: How the app's Supabase sync (the Ledger's and the three rooms' in bridge.js) went wrong and what it does instead — read before touching sync, restore points or the history table.
----
-
 PROJECT.md owns the keys and the rule. This is the post-mortem.
 
 **The bug that started it, 2026-09-02.** Mark's second PC held a
@@ -88,7 +83,7 @@ path. Note that a synthetic
 `visibilitychange` proves nothing unless `document.visibilityState` is
 also overridden to `'hidden'` — the handler reads it.
 
-See also [one-app-notes](pitfalls.md) and [testing-this-app](testing.md).
+See also [pitfalls](pitfalls.md) and [testing](testing.md).
 
 **The login (2026-10-09) — traps found while building it.** PROJECT.md owns
 the design; these are the parts only testing showed.

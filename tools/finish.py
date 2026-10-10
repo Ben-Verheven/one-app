@@ -48,12 +48,13 @@ anyway     = '--anyway' in sys.argv
 against    = (pathlib.Path(sys.argv[sys.argv.index('--against') + 1])
               if '--against' in sys.argv else None)
 
-def run(what, cmd, fatal=True):
-    """Run one step, print what it said, and stop the line if it failed."""
+def run(what, cmd, fatal=True, show=True):
+    """Run one step, print what it said, and stop the line if it failed.
+    show=False keeps a step's own report back for the caller to judge."""
     print('\n\033[1m· %s\033[0m' % what)
     r = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True)
     out = (r.stdout + r.stderr).strip()
-    if out:
+    if out and show:
         print('\n'.join('    ' + l for l in out.split('\n')))
     if r.returncode and fatal:
         print('\n%s failed. Nothing further was done.' % what)
@@ -84,7 +85,11 @@ dated  = max((p for p in OUTD.glob('one-app-2*.html')),
 if skip_smoke:
     print('\n\033[1m· smoke\033[0m\n    skipped.')
 else:
-    r = run('smoke', ['node', str(HERE / 'smoke.js'), str(latest)], fatal=False)
+    # The smoke's report is forty lines of JSON that say "started" five
+    # times; every session that closed a change read all of it. It is
+    # printed whole only when a room did not start, which is the one time
+    # its detail is wanted.
+    r = run('smoke', ['node', str(HERE / 'smoke.js'), str(latest)], fatal=False, show=False)
     try:
         report = json.loads(r.stdout)
         cold = [k for k, v in report['rooms'].items() if not v.get('started')]
@@ -93,8 +98,9 @@ else:
                  and 'ERR_NAME_NOT_RESOLVED' not in e
                  and 'net::ERR' not in e]
         if cold:
-            print('\n%s did not start. The build is on disk but do not send '
-                  'it.' % ', '.join(cold))
+            print('\n'.join('    ' + l for l in r.stdout.strip().split('\n')))
+            print('\n%s did not start. %s' % (', '.join(cold),
+                  'Do not push.' if web else 'The build is on disk but do not send it.'))
             sys.exit(1)
         print('\n    all %d rooms started.' % len(report['rooms']))
         if noise:
@@ -102,6 +108,7 @@ else:
             for e in noise:
                 print('      %s' % e)
     except (ValueError, KeyError):
+        print('\n'.join('    ' + l for l in (r.stdout + r.stderr).strip().split('\n')))
         print('\n    smoke said nothing readable — check node and playwright.')
         if r.returncode:
             sys.exit(1)

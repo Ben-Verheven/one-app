@@ -1,8 +1,3 @@
----
-name: notes-room
-description: the decisions behind the Notes shelf, its note panel, its pasted tables and its nuts that Mark made himself, so a later session does not quietly undo them
----
-
 How the room works is written where every other room's is. Only the
 decisions are here.
 
@@ -256,6 +251,6 @@ the chapter head, the tally set as a running foot, and `.nt-leaves` — two
 page edges showing below. He was offered a sewn spine as well and turned
 it down; it would have fought the coloured row edges for the left margin.
 
-See also [marks-notes-register](marks-notes.md) for the tag vocabulary the shelf is
-computed from, and [one-app-notes](pitfalls.md) for the class-name clash this room
+See also [marks-notes](marks-notes.md) for the tag vocabulary the shelf is
+computed from, and [pitfalls](pitfalls.md) for the class-name clash this room
 paid for.

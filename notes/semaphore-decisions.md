@@ -1,8 +1,3 @@
----
-name: brokerage-timeline-one-app
-description: Mark's decisions for the Semaphore room — the nightly agents and their Dispatches inbox, leads, cards, the Board and Coming up
----
-
 - Went with a Supabase inbox for the Semaphore update agent: suggestions only, which he accepts or dismisses in the Semaphore room
 - Chose the combined schedule: a daily run of ~3 arenas (cut from ~10 to ~5 on 2026-09-18, to ~3 on 2026-09-30, to save usage) plus a weekly run looking for new calls and brokerage events (~35 min, at most 2 new arenas since 2026-09-30)
 - The daily watch looks only for real brokerage/matchmaking opportunities (and partner-search tools); no plain info days or call webinars unless they have a matchmaking part, and no call dates (2026-09-30); since 2026-10-06 it brings only links to those events and tools, no dates or info

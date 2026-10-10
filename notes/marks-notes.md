@@ -1,8 +1,3 @@
----
-name: marks-notes-register
-description: what Mark's notes actually are — general memory in short names — and the tag vocabulary they are filed under
----
-
 Mark's notes are his general memory of everything relevant, not a record
 of specifics from projects or consortia. Names are three words at most
 ("Portal quirks", "Lump sum maths", "Reviewer folklore"). Subjects are

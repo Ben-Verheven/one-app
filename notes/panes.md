@@ -1,8 +1,3 @@
----
-name: one-app-panes
-description: The `pf-` pane shell every box in the Ledger that opens over the room wears, the veil the shell needs, why a pane must fit on a laptop, and the decisions inside the two project panes.
----
-
 `ledger.css` → "The pane shell" and `ledger.js` → THE FORMS carry the
 mechanics. This holds the decisions and the traps.
 
@@ -90,7 +85,7 @@ the old description field was who is on the project, so it became a
 Researchers line, and since 2026-09-03 a list of researchers, one row
 each, in the pane's first section; `desc` is rewritten from that list and
 is still what the search palette reads. The three sections are in
-[one-app-project-card](project-card.md).
+[project-card](project-card.md).
 
 **The editor asks only what it can change:** the name and the three
 sections, with the Call Board topic — for a programme project and nowhere
@@ -132,4 +127,4 @@ before `QuickTodo` in the keydown ladder, and `Dossier.onOutside` exempts
 `.pf-host` — the edit pane is opened FROM a card and a press inside it is
 not a press outside that card.
 
-See also [one-app-project-card](project-card.md) and [one-app-notes](pitfalls.md).
+See also [project-card](project-card.md) and [pitfalls](pitfalls.md).

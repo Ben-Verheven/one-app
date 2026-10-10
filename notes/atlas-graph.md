@@ -1,8 +1,3 @@
----
-name: atlas-graph
-description: What was measured about the Atlas's generated graph — how words reach concepts, what the rules cannot recover, what a hand-written description may and may not touch, how his own words are marked, and the boot race a room with an async store can lose.
----
-
 The measurement behind PROJECT.md's rule on where a hand-assigned keyword
 gets filed, and what the 2.1 MB data file does not say about itself. Never
 read that file whole; decode it with a script and print only counts.
@@ -108,4 +103,4 @@ How to apply: any future room joining `roomCloud()` whose store is read
 asynchronously needs the same flag. Semaphore and Notes read theirs
 synchronously and do not.
 
-See also [one-app-notes](pitfalls.md) and [one-app-tools](tools.md).
+See also [pitfalls](pitfalls.md) and [tools](tools.md).

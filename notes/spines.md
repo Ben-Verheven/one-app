@@ -1,8 +1,3 @@
----
-name: one-app-backbones
-description: Call deadlines drawn on the board's own rows, the programme's per-project dates beside them, the tie that binds a todo to a key date, and the call backbone that lays out a new call — including the project-level design that was scrapped, and the from-a-call design that replaced it in turn.
----
-
 The walls and the tie shipped 2026-08-27; the backbone itself was rebuilt
 2026-08-28 into the shape described below. The code comments carry the
 mechanics; this holds the decisions and the direction, which they cannot.
@@ -42,7 +37,7 @@ those are days or weeks apart by their nature.
   as a bare CSS word, so a wall that trusted it drew transparent and
   looked like a broken layer.
 - Walls go neutral under the category cut, per the palette rule in
-  [one-app-notes](pitfalls.md).
+  [pitfalls](pitfalls.md).
 - The board only draws two to six weeks, so the beam's next-deadline block
   carries the same open-hours figure.
 
@@ -135,7 +130,7 @@ next amendment on.
 - The hook that must stay hooked is `CallCard.saveEdit`, the one place a
   call's existing markers are rewritten. The new-project form used to be a
   second one; it no longer writes a joined call's markers at all (see
-  [one-app-panes](panes.md)). Anything that ever writes `c.markers` again needs
+  [panes](panes.md)). Anything that ever writes `c.markers` again needs
   the hook.
 
 **The tie has no control of its own any more, and is not to get one back
@@ -225,5 +220,5 @@ How to apply: when one assertion in a multi-edit script fails, re-check
 **every** edit in that script, not only the one that threw. Better still,
 assert the result with a grep afterwards rather than trusting the run.
 
-See also [one-app-notes](pitfalls.md), [one-app-todo-card](todo-card.md), [one-app-project-card](project-card.md),
-[one-app-build-routine](working-here.md) and [testing-this-app](testing.md).
+See also [pitfalls](pitfalls.md), [todo-card](todo-card.md), [project-card](project-card.md),
+[working-here](working-here.md) and [testing](testing.md).

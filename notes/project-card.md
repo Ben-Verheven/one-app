@@ -1,8 +1,3 @@
----
-name: one-app-project-card
-description: Decisions behind the project card — the head band and its three links, the project's own groups and their PIs, the position tree, the dates box, where the person-months live, the three-section edit pane, how a jump says which card it landed on, and the rewrite Mark reverted.
----
-
 Mechanics are commented in `ledger.js` → THE PROJECT CARD and painted in
 `ledger.css` → 15. This holds the decisions and the traps.
 
@@ -82,7 +77,7 @@ last and the other cannot shout**:
   ground, so one more edge on one of them reads as a state rather than as
   a choice between them. Opacity is the right lever here and not a
   contradiction of the palette rule — see the corollary in
-  [one-app-notes](pitfalls.md): the ban is on quieting an already-quiet colour, not
+  [pitfalls](pitfalls.md): the ban is on quieting an already-quiet colour, not
   on taking a whole slab back at once.
 
 **The resting edge is cleared by navigation and by nothing else** —
@@ -345,9 +340,9 @@ opened. Of a stage 1 and a stage 2, only the nearer is being worked
 towards. **Every date is coloured by how near it is** — amber inside six
 weeks, red inside a fortnight, red and bolder once passed — using the call
 card's own `.cp-next` bands. The neutral end is `#bca070`, not `--text3`:
-see the contrast note in [one-app-notes](pitfalls.md). The BOARD draws openings, and
+see the contrast note in [pitfalls](pitfalls.md). The BOARD draws openings, and
 that is not an inconsistency — see the programme-dates note in
-[one-app-backbones](spines.md).
+[spines](spines.md).
 
 **The card names a topic by its FULL id.** The short form drops the
 programme and the cluster, which reads as half an answer on a card. It
@@ -357,5 +352,5 @@ stays only in the topic picker, which is a search box and accepts either.
 lead with the id and Mark had it put back. That panel is shared: the
 Ledger borrows it, so a change to it is a change to the Board too.
 
-See also [one-app-todo-card](todo-card.md), [one-app-animation](animation.md), [one-app-backbones](spines.md)
-and [one-app-notes](pitfalls.md).
+See also [todo-card](todo-card.md), [animation](animation.md), [spines](spines.md)
+and [pitfalls](pitfalls.md).

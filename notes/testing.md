@@ -1,8 +1,3 @@
----
-name: testing-this-app
-description: test the empty and nearly-empty case, and how to drive a throwaway browser here without wasting an afternoon
----
-
 Test a feature from empty and from three items, not only from a full
 dataset. The Notes room was verified on 220 seeded notes and looked
 finished; from three notes it showed nothing at all, because a rule about

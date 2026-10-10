@@ -1,8 +1,3 @@
----
-name: atlas-agent
-description: The Atlas people-watch agents — Mark's decisions on rhythm, scope and where findings land; sister of the Semaphore agent in [semaphore-decisions](semaphore-decisions.md)
----
-
 - Wants a scheduled agent that watches the Atlas's researchers for news, especially employment at TU/e (people leaving and arriving), from TU/e pages, their own websites and other public info
 - Two rounds: a people check on a one-year cycle (1 person Mon/Wed/Fri, ~156 a year for 152 people) and a newcomer sweep of the groups twice a year (~2 groups a week, 51 groups) — set 2026-09-30 to save usage
 - Scope (settled 2026-09-23): three things and nothing else — whether someone still works at TU/e; where they sit and at what rank (group, department, full/associate/assistant professor, group leader); and research content not yet in the Atlas (interests, topics, methods, application areas), especially in their own words. No other formal accomplishments: no prizes, grants, honours, board seats, publication lists or link-collecting

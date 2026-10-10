@@ -483,6 +483,7 @@ python3 tools/bundle.py  one-app/ one-app.html # a single file to send
 python3 tools/build.py                        # the same fold, filed in builds/
 node     tools/smoke.js  one-app/index.html   # does every room boot?
 node     tools/seed.js   one-app/index.html   # something to look at
+node     tools/pocket.js                      # Pocket's check — see pocket/POCKET.md
 ```
 
 Each tool's own docstring says how it works; what follows is only what

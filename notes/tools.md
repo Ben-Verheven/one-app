@@ -1,8 +1,3 @@
----
-name: one-app-tools
-description: What the One App indexers can and cannot be trusted to say, and the standing practice around them — the part their own docstrings and generated prose do not carry.
----
-
 Every tool explains itself in its docstring, PROJECT.md says what each is
 for, and NAMES.md's own text now explains its two orphan lists. Only these
 live here.
@@ -38,7 +33,10 @@ splitting. No tool prints this number; it is read off the map.
 2026-08-21 all six checks were confirmed against a throwaway copy with
 each rule deliberately violated. If a check is added, add the
 corresponding break-it test — a lint nobody has seen fail is a lint that
-passes everything.
+passes everything. `tools/pocket.js` was seen to fail the same way when it
+was written (2026-10-10): a throw put into Pocket's `drawLeads` failed it
+on the page error and on the two tabs left empty, and a throw put at the
+top of `notes.js` failed `finish.py`'s smoke with the report printed whole.
 
 **`seed.js` refuses to run in a browser that holds anything, so a record
 the app makes for ITSELF stops the seed dead.** The Horizon programme call
@@ -71,4 +69,4 @@ member checked against its callers** in `bridge.js`, `ledger.js`'s
 `ROOM_STORES` loop and `tools/` — nine were offered and never asked for —
 and **every `--custom-property` and `@keyframes` checked for a use**.
 
-See also [one-app-build-routine](working-here.md) and [one-app-notes](pitfalls.md).
+See also [working-here](working-here.md) and [pitfalls](pitfalls.md).

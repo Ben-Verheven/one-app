@@ -1,8 +1,3 @@
----
-name: one-app-notes
-description: Bugs already paid for in the One App tree — post-mortems and constraints found the hard way, which no file in the folder records.
----
-
 **Every pane carries a transform, so `position:fixed` inside a room is not
 fixed.** `shell.css` → "stage & panes" gives `.pane` a `translateZ(0)
 scale()` deliberately, so a room's fixed modals stay inside the room. The
@@ -87,7 +82,7 @@ whole panel. Half the rule applied and half did not, which is the failure
 mode to expect: not a wrong element, a *mixed* one.
 How to apply: **grep NAMES.md for a class name before writing it**, always
 — that is the question the index exists to answer. And read its two orphan
-lists at the end of every change; see [one-app-tools](tools.md).
+lists at the end of every change; see [tools](tools.md).
 
 **Contrast, measured.** The rule itself is in CLAUDE.md;
 these are the numbers that bought it. `--text3` at 9px is 3.5:1, and a
@@ -199,7 +194,7 @@ so a new one may be as long as it needs to be.
 on one Friday drew as one wall of identical cards; rebuilt over
 2026-08-26/27 into runs of cards, each braced on the LEFT by whatever they
 have in common, with an effort beam leading every row. How the braces
-group and order is [one-app-todo-card](todo-card.md)'s; the decisions about the day
+group and order is [todo-card](todo-card.md)'s; the decisions about the day
 itself are here:
 
 - **Nothing stands over a day's work except one control row.** It carried
@@ -231,7 +226,7 @@ itself are here:
   narrowed to one, both on the reasoning that the chip above already said
   which project — true, and beside the point, because the gather is a
   movement Mark follows with his eye. Both were put back on 2026-08-28.
-  See [one-app-animation](animation.md) for why a card must not change shape in the
+  See [animation](animation.md) for why a card must not change shape in the
   frame it sets off in, and for how the rest of the day leaves.
 - **The lens is gone too** (2026-08-28), on Mark's word. Pressing a
   category to dim the others was a third way of asking what the board's
@@ -274,7 +269,7 @@ category's word**, which was the whole point: off a glance you want to
 know what KIND of thing is in the way — a budget question, a consortium
 answer — not which todo it is. Cleared, it stays and goes grey, because
 "you can go now" is the one thing a stack of todos never tells you. How it
-is labelled and where it sits is [one-app-todo-card](todo-card.md)'s.
+is labelled and where it sits is [todo-card](todo-card.md)'s.
 
 **The wait carries the date, one way only** (`moveWaiters`, 2026-08-28).
 Move a todo and everything waiting on it moves to the same day, and so on
@@ -343,5 +338,5 @@ Notes room needed it. Grep; do not trust the comment.
 Three rooms park a drawer at `translateX(100%)` and `overflow-x:clip`
 refuses the scroll. Judge overflow by looking, not by that number.
 
-See also [one-app-animation](animation.md), [one-app-todo-card](todo-card.md), [one-app-tools](tools.md),
-[one-app-build-routine](working-here.md), [notes-room](notes-room.md) and [testing-this-app](testing.md).
+See also [animation](animation.md), [todo-card](todo-card.md), [tools](tools.md),
+[working-here](working-here.md), [notes-room](notes-room.md) and [testing](testing.md).

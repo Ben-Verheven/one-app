@@ -1,11 +1,6 @@
----
-name: one-app-todo-card
-description: The design of the todo card — what sits on its always-visible row, what the action row says and in what order, and every rearrangement Mark has already rejected. Read before moving anything on it.
----
-
 One renderer, `TodoCard.html`, drawn inside a braced run in every slice
 the board opens and expanded in place. The code comments carry the
-mechanics; this holds the decisions. Split out of [one-app-notes](pitfalls.md) on
+mechanics; this holds the decisions. Split out of [pitfalls](pitfalls.md) on
 2026-08-28.
 
 ## Where a fact about a todo lives
@@ -82,7 +77,7 @@ then what ends it.
   `todo-btn-quiet`), which is what makes six controls sortable at a glance
   where nine identical pills were not. `todo-btn-quiet` drops the border,
   ground and shadow and touches no colour — the chrome-not-ink rule in
-  [one-app-notes](pitfalls.md); it also lets `todo-btn-danger` keep its red straight
+  [pitfalls](pitfalls.md); it also lets `todo-btn-danger` keep its red straight
   through the class.
 - **Edit is quiet and stays quiet.** Mark uses it as often as either of the
   two leading buttons; it is subordinate because it changes what is there
@@ -113,7 +108,7 @@ Unset it says **Make conditional**; set, **Conditional on \<blocker\>**.
 occasionally, so unset it is a ghost; the moment something is set it becomes
 a bordered chip carrying the blocker's colour, because a todo that cannot be
 started yet is the most important thing its card has to say. The chip's own
-rules are in [one-app-notes](pitfalls.md) and were not touched.
+rules are in [pitfalls](pitfalls.md) and were not touched.
 
 **Hovering either control that names the blocker lights it where it
 stands** (`litBlocker` / `unlitBlocker`, 2026-08-28, asked for by Mark).
@@ -153,4 +148,4 @@ was wrong on any one line and the whole would not settle.
   line, standing the bar five rows deep. 126px each; the whole bar is one
   line at 820px.
 
-See also [one-app-notes](pitfalls.md), [one-app-animation](animation.md) and [one-app-backbones](spines.md).
+See also [pitfalls](pitfalls.md), [animation](animation.md) and [spines](spines.md).

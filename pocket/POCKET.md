@@ -95,19 +95,20 @@ Last done 2026-10-07 from the 2026-10-06 desk (591 lines).
    targets; safe-area insets.
 
 ## Update routine
-1. `git pull`. Everything Pocket needs is in `pocket/`, except the contract and the export.
+1. `git pull`. Everything Pocket needs is in `pocket/`, except the contract and the export, and its check,
+   `tools/pocket.js`.
 2. Only if the data model may have changed: stage the newest export and the last
    `pocket-contract.md` from `Pocket-app-source-cowork` on Mark's PC (or ask him to attach the
    export), run `python3 pocket/pocket_contract.py <export> --out <scratchpad>/pocket-contract.md`
    and compare the hash with the one in WRITES.md. Changed → diff the old and new contract, update
    reads/writes and WRITES.md first, and write the new contract back to that folder, never here.
 3. Make the edit with a script that asserts its anchor exists once.
-4. Verify: `node --check` on both script blocks; load the page headless (Playwright, 390×844) with a
-   stubbed `fetch` returning the export's `semaphore` blob as row `semaphore`, and stubbed
-   `/auth/v1/token` (password and refresh) with the tables refusing any request without a token — no console errors,
-   all four tabs and the People view render, Stamp & next moves on, one write per touched mutation
-   produces the WRITES.md shape (diff the blob before/after each POST); test the empty case (no
-   rows) and the no-settings case.
+4. Verify: `node tools/pocket.js [folder]` logs in against a fake cloud holding the desk's own
+   example board, and fails unless all four tabs and People draw with no console error, the empty
+   cloud says so, and a phone that never logged in is asked to; with a folder it leaves a
+   screenshot of each tab there. A change to a write needs one more step it does not take: one
+   write per touched mutation produces the WRITES.md shape (diff the blob before/after each POST),
+   and Stamp & next moves on. A change to the data model is checked against the export (step 2).
 5. Commit and push as CLAUDE.md says. Pages has it a minute later, but the home-screen app can keep
    its old copy for up to ten minutes (2026-10-10); then closing and reopening Pocket fetches it.
    The status-bar meta is read only when the icon is added, so a change to it means deleting the

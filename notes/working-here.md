@@ -1,8 +1,3 @@
----
-name: one-app-build-routine
-description: How work reaches Mark's app since the move to GitHub (2026-10-10) — attaching the repo, pushing, what the proxy refuses — and the hard-won rules of the old OneDrive way, kept for going back.
----
-
 CLAUDE.md owns the steps; PROJECT.md owns why there is no build. This is
 what happens on this side of the wire.
 
@@ -17,16 +12,27 @@ the way back.
   loads next turn. The session's git
   proxy allows two git operations at a time; a parallel second clone 429s
   both.
+- **A fresh clone commits as the container** (`Claude
+  <noreply@anthropic.com>`), not with the identity CLAUDE.md names, so
+  that identity is set in the clone's own git config before the first
+  commit.
+- **Everything the tools need is already in the container:** node,
+  Playwright and its Chromium. `finish.py` and `tools/pocket.js` run as
+  they stand, about ten seconds each; installing anything is wasted time.
+  The proxy refuses the jsdelivr CDN and Google Fonts, which is why the
+  smoke reports a `net::ERR` it then ignores: the app comes up without
+  either.
 - **A push may print `fatal: expected 'acknowledgments', received
   'packfile'` / "push negotiation failed; proceeding anyway" and still land**
-  (first push, 2026-10-10). Check with `gh api
-  repos/Ben-Verheven/one-app/commits/main` before believing either way.
-- **`gh api` answers repo-scoped endpoints only, and not all of those:**
-  `users/…` is refused, and so is `repos/…/pages` — Pages settings cannot be
-  read or changed from here. Mark does those, or his Chrome does.
+  (first push, 2026-10-10). Check with `git ls-remote origin main` against
+  `git rev-parse HEAD` before believing either way; it goes through the
+  same proxy as the push, where `gh` is not in every session.
+- **GitHub's API answers repo-scoped requests only, and not all of those:**
+  users are refused, and so are the Pages settings — they cannot be read
+  or changed from here. Mark does those, or his Chrome does.
 - **Test as the site, not only from disk:** `python3 -m http.server` at the
   repo root plus Playwright, the jsdelivr URL routed to an npm-packed
-  supabase-js UMD and the project's host to a fake (see [one-app-cloud-sync](cloud-sync.md)
+  supabase-js UMD and the project's host to a fake (see [cloud-sync](cloud-sync.md)
   for the fake). That is what catches a missing icon or a wrong relative path,
   which `file://` never does.
 - **A fresh device takes a full cloud silently** (`projectCount` 0 here, >0
@@ -35,9 +41,8 @@ the way back.
   device instead — that is the test's empty cloud, not a bug.
 
 **The way back — the OneDrive routine, as it ran until 2026-10-09.** Only
-for when Mark asks to go back; his old project instructions are in
-`one-app-source-cowork/supabase/project-instructions-onedrive.txt`.
-No shell on his PC: files cross by `device_stage_files` /
+for when Mark asks to go back; CLAUDE.md says where his old project
+instructions are. No shell on his PC: files cross by `device_stage_files` /
 `device_commit_files` only, and commit takes files from
 `/mnt/user-data/outputs/` only.
 
@@ -57,4 +62,4 @@ No shell on his PC: files cross by `device_stage_files` /
 - Trust the workspace clock (UTC) for the build date, not the mtime of
   Mark's last-saved file (2026-08-26: three misdated builds).
 
-See also [one-app-tools](tools.md), [one-app-notes](pitfalls.md) and [one-app-cloud-sync](cloud-sync.md).
+See also [tools](tools.md), [pitfalls](pitfalls.md) and [cloud-sync](cloud-sync.md).

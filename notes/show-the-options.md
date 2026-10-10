@@ -1,8 +1,3 @@
----
-name: showing-a-redesign-first
-description: draw the alternatives before building — and show them for a plain list of changes too, not only when Mark asks for a mock-up
----
-
 When Mark asks for a redesign and says "can you visually present it before
 implementing", the deliverable is a comparison sheet, not a description.
 It worked on 2026-09-02 for the project card: four versions — the card as
@@ -34,7 +29,7 @@ build the small half and draw the shape half.
 How to apply, in order:
 
 1. Photograph the real thing first, seeded ([check-the-app-first](check-the-app-first.md),
-   [testing-this-app](testing.md)). Enrich the seeded journal in `localStorage` and
+   [testing](testing.md)). Enrich the seeded journal in `localStorage` and
    reload to reach a rich case the canned seed does not build — positions
    with M&CS groups, partners, a programme project with a topic.
 2. Measure the real element with `getBoundingClientRect` and draw the
