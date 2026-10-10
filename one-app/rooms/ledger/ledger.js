@@ -8868,6 +8868,20 @@ var Leads=(function(){
       }).join('')
       +'</span>';
   }
+  /* The score — how much the lead is worth to Mark, one to five: the same five
+     dots the Semaphore draws (see "the score" there for what a press does; the
+     deciding is done there and this only asks for it). */
+  function scoreHTML(l,key){
+    var n=+l.score||0;
+    return '<span class="lead-score" role="group" aria-label="'+(n?'Worth '+n+' of 5':'Not scored yet')+'">'
+      +[1,2,3,4,5].map(function(k){
+        var tip=k===n?'Worth '+k+' of 5 — press to take the score off':'Worth '+k+' of 5';
+        return '<button type="button" class="lead-sc'+(k<=n?' on':'')+'" title="'+tip+'" '
+          +'aria-label="'+k+' of 5" aria-pressed="'+(k===n?'true':'false')+'" '
+          +'onclick="PL.leadScore(\''+jsq(key)+'\','+k+',event)"><i></i></button>';
+      }).join('')
+      +'</span>';
+  }
   /* the day as a todo card writes it: weekday, then the full date */
   function dueLabelHTML(iso){
     if(!iso)return 'No date';
@@ -8991,6 +9005,7 @@ var Leads=(function(){
         +'<span class="lead-sub'+(l.match?'':' none')+'">'+esc(l.match||'No match yet')+'</span>'
         +'<textarea class="lead-in lead-sub-in" id="lem-'+lid+'" rows="1" placeholder="Who could be a good match?" '
           +'aria-label="Who could be a good match?">'+esc(l.match)+'</textarea></span>'
+      +scoreHTML(l,key)
       +dateLabel
       +'</div>'
       +'<div class="todo-expand">'+actions+edit+links+addLink+addNote+ups+'</div>'
@@ -9180,6 +9195,7 @@ var Leads=(function(){
 
   /* ── What the presses do ── */
   function path(key,v,evt){stopEvt(evt);change(key,'path',v);}
+  function score(key,v,evt){stopEvt(evt);change(key,'score',v);}
   /* While the card is being edited the day is one more of its fields: it is
      shown and kept for Save rather than saved at once, because a save redraws
      the card and would throw away everything else typed into it. */
@@ -9306,7 +9322,7 @@ var Leads=(function(){
     html:html,listHTML:listHTML,COLOR:COLOR,hexOf:hexOf,
     canAdd:canAdd,newHTML:newHTML,newOpen:newOpen,newDrop:newDrop,
     newArenaMenu:newArenaMenu,newArena:newArena,newDue:newDue,newSave:newSave,newLink:newLink,
-    path:path,due:due,done:done,arena:arenaOf,openBox:openBox,
+    path:path,score:score,due:due,done:done,arena:arenaOf,openBox:openBox,
     beginEdit:beginEdit,cancelEdit:cancelEdit,saveEdit:saveEdit,editDrop:editDrop,
     addNote:addNote,noteKey:noteKey,noteDel:noteDel,
     addLink:addLink,linkKey:linkKey,linkDel:linkDel,
@@ -14099,7 +14115,7 @@ window.PL={
   leadMarkClick:Board.leadMarkClick,leadsNewClick:Board.leadsNewClick,
   leadNewArenaMenu:Leads.newArenaMenu,leadNewArena:Leads.newArena,
   leadNewDue:Leads.newDue,leadNewSave:Leads.newSave,leadNewLink:Leads.newLink,
-  leadPath:Leads.path,leadDue:Leads.due,leadDone:Leads.done,leadArena:Leads.arena,
+  leadPath:Leads.path,leadScore:Leads.score,leadDue:Leads.due,leadDone:Leads.done,leadArena:Leads.arena,
   leadColorMenu:Leads.colorMenu,leadColor:Leads.setColor,
   leadOpenBox:Leads.openBox,leadBeginEdit:Leads.beginEdit,leadCancelEdit:Leads.cancelEdit,
   leadSaveEdit:Leads.saveEdit,leadEditDrop:Leads.editDrop,leadAddNote:Leads.addNote,leadNoteKey:Leads.noteKey,

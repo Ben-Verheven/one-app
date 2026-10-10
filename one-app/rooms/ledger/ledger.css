@@ -1265,6 +1265,27 @@
 #pane-ledger .lead-sub.none{font-size:12px}
 #pane-ledger .todo-card-later.open .lead-sub{white-space:normal;overflow-wrap:break-word}
 #pane-ledger .lead-card .todo-later-due{font-size:12.5px}
+/* The score: five dots before the day, the Semaphore's own (see "the score"
+   in semaphore.js). Drawn 6px, pressed over 12 by 18 each so a finger on the
+   iPad can pick one from the next; an empty dot is a ring in the match's
+   #bca070, a filled one the arena's colour. Hovering fills the run up to the
+   dot under the pointer, to show what a press would set. */
+/* pointer-events back on, as the ruit's slot has it: a shut card's row passes
+   presses through to the card, which would open it instead of scoring */
+#pane-ledger .lead-score{flex-shrink:0;display:inline-flex;align-items:center;margin:0 10px 0 6px;
+  pointer-events:auto}
+#pane-ledger .lead-sc{width:12px;height:18px;padding:0;border:0;background:none;
+  display:flex;align-items:center;justify-content:center;cursor:pointer}
+#pane-ledger .lead-sc i{width:6px;height:6px;border-radius:50%;box-sizing:border-box;
+  border:1px solid #bca070;background:transparent;transition:background 0.12s,border-color 0.12s}
+#pane-ledger .lead-sc.on i{background:var(--lead);border-color:var(--lead)}
+@media (hover:hover){
+  #pane-ledger .lead-score:hover .lead-sc i{background:var(--lead);border-color:var(--lead)}
+  #pane-ledger .lead-score .lead-sc:hover~.lead-sc i{background:transparent;border-color:#bca070}
+}
+#pane-ledger .lead-sc:focus-visible{outline:1px solid var(--gold);outline-offset:-2px;border-radius:3px}
+/* it waits while the card is edited, as the ruit does, for the same reason */
+#pane-ledger .lead-card.lead-editing .lead-score{opacity:0.55;pointer-events:none}
 /* The links are a band on the open card, labelled in the gutter. #bca070 for the label: nine pixels of --text3 on this ground is
    3.5:1, and these are read. */
 #pane-ledger .lead-band{display:flex;gap:12px;align-items:baseline;

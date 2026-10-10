@@ -175,6 +175,9 @@ function migrate(s){
       l.links.forEach(k=>{if(!k.id)k.id=uid();});
       if(typeof l.due!=='string'||!l.due)l.due=null;
       if(typeof l.doneAt!=='string'||!l.doneAt)l.doneAt=null;
+      /* how much Mark thinks the lead is worth, 1 to 5 (see "the score");
+         anything else is no score yet */
+      if(!(l.score>=1&&l.score<=5))delete l.score;else l.score=Math.round(l.score);
       /* what has happened to it, oldest first; the old bolt-on wrote a
          formatted stamp, the card now writes the day itself */
       if(!Array.isArray(l.updates))l.updates=[];
@@ -2200,6 +2203,32 @@ function leadPath(l,v){
   }
   return false;
 }
+/* ───────── the score ─────────
+   How much a lead is worth to Mark, one to five, set by himself (he asked for
+   it on 2026-10-10). Five small dots on the shut card, filled up to the score;
+   a press on a dot sets the score there, and a press on the dot it already
+   stands at takes the score off again, so a lead is never stuck with one. It
+   is his judgement, not a step, so it orders nothing and moves nothing.
+
+   The Ledger draws the same five dots for the same lead and asks this room to
+   set them (the `score` verb), so the two always agree. */
+function leadScoreHTML(a,l,shut){
+  const n=l.score||0;
+  return '<span class="lscore'+(shut?' shut':'')+'" role="group" '+
+      'aria-label="'+(n?'Worth '+n+' of 5':'Not scored yet')+'">'+
+    [1,2,3,4,5].map(k=>'<button class="lsc'+(k<=n?' on':'')+'" data-act="leadScore" '+
+      'data-id="'+a.id+'" data-l="'+l.id+'" data-v="'+k+'" '+
+      'title="'+(k===n?'Worth '+k+' of 5 — press to take the score off':'Worth '+k+' of 5')+'" '+
+      'aria-label="'+k+' of 5" aria-pressed="'+(k===n?'true':'false')+'"'+
+      (shut?' disabled':'')+'><i></i></button>').join('')+
+  '</span>';
+}
+/* a press on the dot the score already stands at clears it */
+function leadScore(l,v){
+  const k=Math.round(+v);if(!(k>=1&&k<=5))return false;
+  if(l.score===k)delete l.score;else l.score=k;
+  return true;
+}
 /* Which of Contacted's two paths a lead is on, for the leads view's split.
    Both ways first: those are the most promising, and Mark asked for them on
    top of the stack (2026-10-08). The Ledger's list keeps the same order. */
@@ -2377,10 +2406,10 @@ function leadRowHTML(a,l,hit,say){
           : '<p class="lname" title="'+(open?'Shut this lead':'Open this lead')+'">'+esc(leadName(l))+'</p>'+
             '<div class="lsub">'+
               '<span class="lmt'+(l.match?'':' none')+'">'+esc(l.match||'No match yet')+'</span>'+
-              (say?'':when)+
+              (say?'':leadScoreHTML(a,l,done)+when)+
             '</div>')+
       '</div>'+
-      (say?when:'')+
+      (say?leadScoreHTML(a,l,done||editing)+when:'')+
     '</header>'+
     /* while editing, Cancel and Save come after everything being edited */
     (open?(editing?'':acts)+(body?'<div class="lbody">'+body+'</div>':'')+(editing?acts:''):'')+
@@ -3366,7 +3395,7 @@ function leadsForBoard(){
     aid:a.id,arena:a.name,color:a.color||'',slot:S.arenas.indexOf(a),
     id:l.id,name:leadName(l),project:l.project||'',
     match:l.match||'',stage:stageOf(l),due:l.due||null,
-    toResearchers:!!l.toResearchers,toLead:!!l.toLead,
+    toResearchers:!!l.toResearchers,toLead:!!l.toLead,score:l.score||0,
     links:(l.links||[]).map(k=>({id:k.id,url:k.url||'',label:k.label||'',name:linkName(k)})),
     updates:(l.updates||[]).map((u,i)=>({i,when:updWhen(u),at:u.at||'',text:u.text||''}))
   })));
@@ -3410,6 +3439,7 @@ function leadVerb(aid,lid,op,val){
   switch(op){
     case 'due':l.due=val||null;break;
     case 'path':if(!leadPath(l,val))return false;break;
+    case 'score':if(!leadScore(l,val))return false;break;
     case 'done':l.doneAt=l.doneAt?null:todayISO();break;
     case 'edit':if(!val||!leadEditAll(l,val))return false;break;
     case 'note':{
@@ -3593,6 +3623,9 @@ document.addEventListener('click',e=>{
     case 'leadPath':{const ar=arena(id);if(!ar)break;
       const l=(ar.leads||[]).find(x=>x.id===b.dataset.l);if(!l||l.doneAt)break;
       if(leadPath(l,b.dataset.v)){save();repaint();renderDrawer();}break;}
+    case 'leadScore':{const ar=arena(id);if(!ar)break;
+      const l=(ar.leads||[]).find(x=>x.id===b.dataset.l);if(!l||l.doneAt)break;
+      if(leadScore(l,b.dataset.v)){save();repaint();renderDrawer();}break;}
     case 'leadDone':{const ar=arena(id);if(!ar)break;
       const l=(ar.leads||[]).find(x=>x.id===b.dataset.l);if(!l)break;
       l.doneAt=l.doneAt?null:todayISO();      /* ticking is reversible: nothing is thrown away */

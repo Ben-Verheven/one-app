@@ -957,6 +957,24 @@
   border:0;border-radius:4px;font:italic 12px var(--body);color:var(--lquiet)}
 #pane-semaphore .lead .lwhen.late{color:var(--todo-ink)}
 #pane-semaphore .lead .lwhen:hover{background:var(--sink)}
+/* The score (see "the score" in semaphore.js): five dots before the day, drawn
+   6px and pressed over a 12 by 18 patch each, which a finger on the iPad can
+   still pick out one from the next. An empty dot is a ring in the quiet
+   colour, a filled one is the lead's own. Hovering fills the run up to the dot
+   under the pointer, so it shows what a press would set. */
+#pane-semaphore .lscore{flex:0 0 auto;display:inline-flex;align-self:center;margin:0 2px}
+#pane-semaphore .lsc{width:12px;height:18px;padding:0;border:0;background:none;
+  display:flex;align-items:center;justify-content:center;cursor:pointer}
+#pane-semaphore .lsc i{width:6px;height:6px;border-radius:50%;box-sizing:border-box;
+  border:1px solid var(--lquiet);background:transparent;transition:background-color .12s,border-color .12s}
+#pane-semaphore .lsc.on i{background:var(--lead);border-color:var(--lead)}
+@media (hover:hover){
+  #pane-semaphore .lscore:not(.shut):hover .lsc i{background:var(--lead);border-color:var(--lead)}
+  #pane-semaphore .lscore:not(.shut) .lsc:hover~.lsc i{background:transparent;border-color:var(--lquiet)}
+}
+#pane-semaphore .lsc:focus-visible{outline:1px solid var(--focus);outline-offset:-2px;border-radius:3px}
+#pane-semaphore .lscore.shut{opacity:.55}
+#pane-semaphore .lscore.shut .lsc{cursor:default}
 #pane-semaphore .lead .lname{display:block;margin:0;padding:0;cursor:inherit;
   font-family:var(--body);font-size:14px;line-height:1.35;color:var(--ink);text-decoration:none}
 #pane-semaphore .lead .lname:hover{color:var(--ink)}
