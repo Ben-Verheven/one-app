@@ -256,8 +256,10 @@ cloud first, then makes it an ordinary edit, so two machines cannot accept
 the same finding twice. In the Semaphore, whatever an accepted finding puts
 on the board carries `foundAt` and is marked new — on the wall card and in
 the drawer alike — until that arena is next swept. The nightly round brings
-only links, to brokerage events and partner-search tools; the weekly one
-also brings calls and new arenas. A card can **ask** the nightly round to
+links, to brokerage events and partner-search tools, and a few sentences of
+key facts for an arena's About or Brokerage text, which Accept adds under
+what the text already says; the weekly one also brings calls and new
+arenas. A card can **ask** the nightly round to
 look at its arena on top of the ones it picks itself: the ask is a moment
 (`askAt`) on the arena, the gatekeeper passes it on as `asked`, and the room
 puts it out once `semaphore_agent_log`, which the app may read but not

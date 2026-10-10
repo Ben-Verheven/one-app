@@ -2,9 +2,12 @@
 //
 // The agent holds one password (AGENT_TOKEN) and nothing else. With it, it can
 // do three things and only these three:
-//   watchlist  read a trimmed copy of the Semaphore board (no leads, no notes),
-//              with each arena's `asked` flag: Mark pressed "ask the agent" on
-//              it and the agent has not looked at it since
+//   watchlist  read a trimmed copy of the Semaphore board (no leads), with
+//              each arena's `asked` flag: Mark pressed "ask the agent" on it
+//              and the agent has not looked at it since. Each arena's two
+//              texts, About and Brokerage, are in it since 2026-10-10, so the
+//              nightly agent can offer a few sentences for them without
+//              repeating what they already say
 //   suggest    add rows to semaphore_inbox
 //   checked    record which arenas it has looked at
 // It never sees the app's key, so it cannot change the board even by mistake.
@@ -52,6 +55,8 @@ async function watchlist() {
     frozen: !!a.frozenAt,
     links: (a.links ?? []).map(link),
     brokerage_links: (a.brokerage?.links ?? []).map(link),
+    call_info: a.notes ?? "",
+    brokerage_info: a.brokerage?.notes ?? "",
     dates: (a.dates ?? []).map((d: any) => ({
       id: d.id, kind: d.kind, label: d.label ?? "", call: d.call ?? "",
       role: d.role ?? "", gran: d.gran, start: d.start, end: d.end,
@@ -70,7 +75,7 @@ async function watchlist() {
 
   const { data: recent } = await db
     .from("semaphore_inbox")
-    .select("created_at,kind,arena_id,arena_name,date_kind,label,call,role,gran,start_date,end_date,grade,replaces_date_id,url,status")
+    .select("created_at,kind,arena_id,arena_name,date_kind,label,call,role,gran,start_date,end_date,grade,replaces_date_id,url,note,status")
     .order("created_at", { ascending: false }).limit(300);
 
   // An ask is a moment on the arena (askAt, written by the app). It stands
@@ -105,7 +110,7 @@ async function suggest(items: any[], run: string) {
   const rows: any[] = [];
   const rejected: any[] = [];
   for (const it of items) {
-    const kind = oneOf(it.kind, ["date", "link", "arena"]);
+    const kind = oneOf(it.kind, ["date", "link", "arena", "info"]);
     const source_url = http(it.source_url);
     const arena_name = S(it.arena_name, 200);
     const arena_id = kind === "arena" ? null : S(it.arena_id, 100);
@@ -141,10 +146,23 @@ async function suggest(items: any[], run: string) {
       rejected.push({ item: it, why: "a link needs url" });
       continue;
     }
-    r.fingerprint = [
+    // An info finding is a few sentences for one of the arena's two texts:
+    // date_kind "call" is its About text, "brokerage" its Brokerage text. The
+    // sentences ride in note.
+    if (kind === "info" && (!r.date_kind || !r.note)) {
+      rejected.push({ item: it, why: "an info finding needs date_kind (call or brokerage) and note (the text)" });
+      continue;
+    }
+    const parts = [
       r.kind, r.arena_id ?? r.arena_name.toLowerCase(), r.date_kind, r.label, r.call,
       r.role, r.gran, r.start_date, r.end_date, r.grade, r.url,
-    ].map((x) => (x ?? "").toString().trim().toLowerCase()).join("|");
+    ];
+    // Only an info finding adds its text to the fingerprint: two of them for
+    // the same arena differ in nothing else, and adding a field to every kind
+    // would change the old rows' fingerprints and let them be offered again.
+    if (kind === "info") parts.push(r.note);
+    r.fingerprint = parts
+      .map((x) => (x ?? "").toString().trim().toLowerCase()).join("|");
     rows.push(r);
   }
   let added = 0;

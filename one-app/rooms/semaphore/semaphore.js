@@ -738,6 +738,8 @@ function findText(r){
   }
   if(r.kind==='arena')
     return 'New arena — <b>'+esc(r.arena_name)+'</b>'+(r.note?' — '+esc(r.note):'');
+  if(r.kind==='info')
+    return 'For the <b>'+infoName(r)+'</b> text — '+esc(r.note||'');
   const dt=findDate(r);
   const when='<span class="dpwhen">'+esc(dispDate(dt))+'</span>';
   /* a correction says what it replaces, because the old date is the thing you
@@ -753,7 +755,7 @@ function findText(r){
   return 'Brokerage — <b>'+esc(dt.label||'Event')+'</b> '+when+was;
 }
 function findSwatch(r){
-  if(r.kind==='arena'||r.kind==='link')return '<i class="sw sw-uncertain"></i>';
+  if(r.kind==='arena'||r.kind==='link'||r.kind==='info')return '<i class="sw sw-uncertain"></i>';
   const dt=findDate(r);
   if(dt.kind==='call')return '<i class="sw sw-call"></i>';
   return '<i class="sw sw-'+dt.grade+'"></i>';
@@ -824,8 +826,9 @@ function renderDispatch(){
       '<button class="btn ghost" data-act="findRefresh"'+(finds.all?' disabled':'')+
         '>Check again</button>');
   if(!finds.rows.length){
-    el.innerHTML=head+'<p class="dpnote">Each weeknight the agent looks through about three arenas, and any '+
-      'you have asked it to, for links to brokerage events and partner-search tools. Once a week it looks '+
+    el.innerHTML=head+'<p class="dpnote">Each night the agent looks through about three arenas, and any '+
+      'you have asked it to, for links to brokerage events and partner-search tools, and for a few '+
+      'sentences of key facts for their About and Brokerage texts. Once a week it looks '+
       'for calls and programmes you are not watching yet. Whatever it finds waits here.</p>';
     return;
   }
@@ -881,6 +884,21 @@ function takeFind(r){
   }
   const a=findArena(r);
   if(!a)return 'That arena is no longer on this board.';
+  /* A few sentences the nightly agent read on the arena's own pages (Mark,
+     2026-10-10). They are added under what the text already says, never in
+     place of it: the text is his, and the agent sees only part of the story. */
+  if(r.kind==='info'){
+    const t=String(r.note||'').trim();
+    const brok=r.date_kind==='brokerage';
+    if(brok)a.brokerage=a.brokerage||{notes:'',links:[]};
+    const was=String((brok?a.brokerage.notes:a.notes)||'').trim();
+    if(t&&!was.includes(t)){
+      const v=was?was+'\n\n'+t:t;
+      if(brok)a.brokerage.notes=v;else a.notes=v;
+      save();renderAll();
+    }
+    return 'Added to the '+infoName(r)+' text of '+a.name+'.';
+  }
   if(r.kind==='link'){
     const ev=siteFor(r);
     if(ev){
@@ -920,6 +938,9 @@ function takeFind(r){
   save();renderAll();
   return (i>=0?'Date corrected on ':'Date added to ')+a.name+(linked?', with its page.':'.');
 }
+/* An info finding's date_kind says which of the arena's two texts it is for,
+   named as the arena's panel names them. */
+function infoName(r){return r.date_kind==='brokerage'?'Brokerage':'About';}
 /* A link finding that names one of the arena's brokerage events (its
    `replaces_date_id`) is that event's website, found by the catch-up task or
    the nightly agent: it goes on the event, not among the arena's links. One
@@ -2993,8 +3014,9 @@ function howHTML(){
       'and the days since you last pressed it.')+
     line('Ask the agent','The ring in a card\u2019s head asks the nightly agent to look at that arena on its '+
       'next run, on top of the ones it picks itself. It goes out once the agent has been. What the agent '+
-      'brings is links \u2014 events and tools \u2014 and they wait in <b>Dispatches</b>; once accepted they '+
-      'are marked <b>new</b> until you next sweep the arena.')+
+      'brings is links \u2014 events and tools \u2014 and a few sentences for the card\u2019s About and '+
+      'Brokerage texts, and they wait in <b>Dispatches</b>; once accepted, the links are marked <b>new</b> '+
+      'until you next sweep the arena, and the sentences are added under what the text already says.')+
     '</dl><p class="coda">None of this is a setting, and none of the arithmetic is on screen. '+
     'Position is the whole readout: the higher a card stands, the more of itself it shows. Order runs '+
     'in rungs \u2014 what you promised, then what is asking to be looked at, then what is merely due a '+
@@ -3787,7 +3809,7 @@ document.addEventListener('click',e=>{
       const n=finds.rows.length;
       Ask.ask('Accept all '+n+'?',
         'Every finding in the list goes on the board: new dates, corrected dates, '+
-        'links and new arenas. Nothing is dismissed. A single one can be taken off '+
+        'links, new arenas and sentences for the About and Brokerage texts. Nothing is dismissed. A single one can be taken off '+
         'the board again afterwards, but not all at once.',
         'Accept all '+n,acceptAllFinds);
       break;
