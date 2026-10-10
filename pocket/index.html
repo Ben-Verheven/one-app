@@ -440,6 +440,15 @@ input[type="search"]:focus{outline:none;border-color:var(--key)}
 /* the Ledger's tones are made for a dark ground; on bone they are taken
    down towards ink, as the clay is, so the edge still stands off the paper */
 #sheet .lead.toned{--lead:color-mix(in srgb,var(--tone) 62%,#2a2620)}
+/* the arena's colour, chosen here as in the Ledger: its ten swatches five to
+   a row, so the order reads round the wheel as it does there, each a thumb's
+   width; the swatch shows the tone itself, as the Ledger's menu does */
+#sheet .tones{display:grid;grid-template-columns:repeat(5,44px);justify-content:space-between;row-gap:4px}
+#sheet .tone{width:44px;height:44px;border-radius:50%;display:grid;place-items:center}
+#sheet .tone i{width:30px;height:30px;border-radius:50%;background:var(--c);box-shadow:0 0 0 1px rgba(0,0,0,.25)}
+#sheet .tone.sel i{box-shadow:0 0 0 2px var(--field),0 0 0 4px var(--ink)}
+#sheet .tones+.chips{margin-top:10px}
+#sheet .chips button.sel{border-color:var(--ink)}
 
 #sheet .chips{display:flex;flex-wrap:wrap;gap:6px}
 #sheet .chips span,#sheet .chips button{font:14px/1 var(--body);color:var(--muted);
@@ -1626,6 +1635,17 @@ function pinArena(a){
     onArena(a.id, function(x){ putBack(x, was); }));
 }
 
+/* An arena's lead colour, as the Ledger keeps it: the palette's name, or
+   null for the automatic one. It lives on the arena in the Semaphore row,
+   so the Ledger and the Semaphore wear it at their next look at the cloud. */
+function setLeadColour(a, k){
+  var was = keep(a, ['color']);
+  commit('semaphore', onArena(a.id, function(x){ x.color = k || null; }),
+    k ? (a.name || 'Arena') + '’s leads in ' + toneName(k)
+      : (a.name || 'Arena') + '’s leads back to their own colour',
+    onArena(a.id, function(x){ putBack(x, was); }));
+}
+
 /* the ring: ask the nightly agent to look at this arena on its next run */
 function askAgent(a){
   var was = keep(a, ['askAt']), on = !a.askAt, now = new Date().toISOString();
@@ -2226,22 +2246,24 @@ function bigRuit(l, act){
   return box;
 }
 
-/* Each arena's leads wear the colour Mark picks for them in the Ledger, or
-   the one handed out from the arena's place in the list. The palette and
-   that rule are the Ledger's (PALETTE and toneOf in
-   one-app/rooms/ledger/ledger.js), copied because Pocket has no Ledger:
+/* Each arena's leads wear the colour Mark picks for them in the Ledger or
+   in a lead's sheet here, or the one handed out from the arena's place in
+   the list. The palette and that rule are the Ledger's (PALETTE and toneOf
+   in one-app/rooms/ledger/ledger.js), copied because Pocket has no Ledger:
    change them there, then here. */
 var LEAD_TONES = [
   ['terracotta','#c08a78'], ['rust','#a8714f'], ['ochre','#b59c66'], ['olive','#9ea06e'],
   ['sage','#86a088'], ['slate','#7f9aa8'], ['dusk','#8f8db0'], ['mauve','#a8879e'],
   ['rosewood','#ad7680'], ['sand','#b5a690']
 ];
-function leadTone(a){
-  for (var i = 0; i < LEAD_TONES.length; i++) if (LEAD_TONES[i][0] === a.color) return LEAD_TONES[i][1];
+function toneOf(a){
+  for (var i = 0; i < LEAD_TONES.length; i++) if (LEAD_TONES[i][0] === a.color) return LEAD_TONES[i];
   var all = (data.semaphore && data.semaphore.arenas) || [];
   var n = Math.max(0, all.indexOf(a));
-  return LEAD_TONES[(n * 3) % LEAD_TONES.length][1];
+  return LEAD_TONES[(n * 3) % LEAD_TONES.length];
 }
+function leadTone(a){ return toneOf(a)[1]; }
+function toneName(k){ return k.charAt(0).toUpperCase() + k.slice(1); }
 function leadRow(it, inSheet){
   var b = el('button', 'lead toned');
   b.style.setProperty('--tone', leadTone(it.arena));
@@ -2743,6 +2765,27 @@ function openLead(it){
     arb.addEventListener('click', function(){ openArenaById(it.ref.aid); });
     arw.appendChild(arb);
     section(b, 'Arena', arw);
+
+    /* the arena's colour, which all its leads wear, here and in the Ledger */
+    var cur = it.arena.color || '', tone = toneOf(it.arena);
+    var cw = el('div'), tg = el('div', 'tones');
+    LEAD_TONES.forEach(function(t){
+      var sw = el('button', 'tone' + (t[0] === cur ? ' sel' : ''));
+      sw.appendChild(el('i'));
+      sw.style.setProperty('--c', t[1]);
+      sw.setAttribute('aria-label', toneName(t[0]));
+      sw.addEventListener('click', function(){
+        shut(); if (t[0] !== cur) setLeadColour(it.arena, t[0]);
+      });
+      tg.appendChild(sw);
+    });
+    cw.appendChild(tg);
+    var ac = el('div', 'chips');
+    var auto = el('button', cur ? '' : 'sel', 'Automatic');
+    auto.addEventListener('click', function(){ shut(); if (cur) setLeadColour(it.arena, ''); });
+    ac.appendChild(auto);
+    cw.appendChild(ac);
+    section(b, 'Colour of its leads — ' + toneName(tone[0]) + (cur ? '' : ', automatic'), cw);
 
     /* ── the verbs, in the thumb's reach ────────────────────────────── */
 

@@ -12,7 +12,8 @@ Semaphore (the Cards view of 2026-10-06). Four tabs:
   and its pin to put it back; then pinned cards.
 - **Leads** — every open lead in Spotted / Contacted / Talking, as the desk's Leads arrangement;
   Contacted split by its two paths; each lead shows the desk's diamond ("ruit"). In a lead's sheet
-  the diamond is pressed to move it (the desk's own `leadPath`), and links/emails are added there.
+  the diamond is pressed to move it (the desk's own `leadPath`), and links/emails are added there,
+  as is the colour its arena's leads wear (the Ledger's palette, so both show the same).
   *+ New lead* at the top adds one, asking first which arena it belongs to (frozen arenas left
   out); an arena's sheet has its own *+ Lead*. Both ask the same questions (`leadForm`).
 
@@ -64,7 +65,7 @@ re-extract the maths) but a Pocket change never touches it.
   since 2026-10-09 the cloud answers only a logged-in Mark, so every request carries the session's
   token, renewed one at a time — Supabase ends a session whose renewal is used twice) → `rest()` → `pull()` (row `semaphore` only) →
   `commit()` → lead mutations (`setDone`, `setDate`, `setPath`, `addUpdate`, `editItem`, `addLead`,
-  `addLeadLink`, `dropLeadLink`) and arena/link mutations (`stampArena`, `pinArena`, `askAgent`,
+  `addLeadLink`, `dropLeadLink`) and arena/link mutations (`stampArena`, `pinArena`, `askAgent`, `setLeadColour`,
   `pinLink`, `stampLink`); every undo puts back a snapshot (`keep`/`putBack`) → board (`liveList`, `scoreOf`, `wall`) → views (`drawRot` + `wallCard` +
   `cardLine`, `drawPins`/`pinnedOf`, `drawLeads`/`leadItems` + `leadRow` + `ruit`,
   `drawDates`/`comingUp`) → sheets (`openArena` with the round, `openLead`, `newLead`, `openPerson`).
