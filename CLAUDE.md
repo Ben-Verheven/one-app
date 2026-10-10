@@ -12,7 +12,7 @@ Do the work yourself. Never hand me a task that needs a programmer. Explain what
 
 ## Working in the repository
 
-This clone is the only copy worked on. Start with `git pull`. My computer is not needed, and the OneDrive folders are not touched.
+This clone is the only copy worked on. Start with `git checkout main && git pull`: a session may open on a `claude/…` branch of its own, and Pages serves only main, so work pushed anywhere else never reaches me. My computer is not needed, and the OneDrive folders are not touched.
 
 Commit as `Ben-Verheven <299968296+Ben-Verheven@users.noreply.github.com>`. The account refuses pushes that carry a private email.
 
