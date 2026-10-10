@@ -13,7 +13,8 @@
       "Bash(git status:*)", "Bash(git diff:*)", "Bash(git log:*)", "Bash(git show:*)",
       "Bash(git ls-remote:*)", "Bash(git rev-parse:*)", "Bash(git fetch:*)", "Bash(git pull:*)",
       "Bash(git checkout main)", "Bash(git add:*)", "Bash(git commit:*)",
-      "Bash(git push origin main)", "Bash(git revert:*)"
+      "Bash(git push origin main)", "Bash(git revert:*)",
+      "Bash(cat:*)", "Bash(ls:*)", "Bash(head:*)", "Bash(tail:*)", "Bash(grep:*)", "Bash(wc:*)"
     ],
     "deny": [ "Read(./one-app/data/**)" ]
   }
