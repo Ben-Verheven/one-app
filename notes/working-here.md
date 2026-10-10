@@ -17,7 +17,11 @@ the way back.
   writes the identity CLAUDE.md names into the clone's git config, because
   a fresh clone commits as the container (`Claude <noreply@anthropic.com>`).
   It lets the routine commands run without asking: the tools, read-only
-  git, the commit and the push to `main`. And it refuses the Read tool
+  git, the commit and the push to `main`, and the shell's looking commands
+  (`cat`, `ls`, `head`, `tail`, `grep`, `wc`). A chained command asks unless
+  every link is on that list, which is why the opening `git checkout main
+  && git pull … ; cat notes/INDEX.md` asked each session until those were
+  added. And it refuses the Read tool
   `one-app/data/`, which is now a spare guard: here a stray read of those
   files cannot end the session as it does the OneDrive way, because the
   tools cut long output off (tried 2026-10-10). A shell command shows its
