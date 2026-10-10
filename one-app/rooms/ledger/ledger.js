@@ -8868,19 +8868,20 @@ var Leads=(function(){
       }).join('')
       +'</span>';
   }
-  /* The score — how much the lead is worth to Mark, one to five: the same five
-     dots the Semaphore draws (see "the score" there for what a press does; the
-     deciding is done there and this only asks for it). */
+  /* The score — how much the lead is worth to Mark, one to five: the same
+     numbered, coloured dot the Semaphore draws, with the same invisible menu
+     over it (see "the score" there; the deciding is done there and this only
+     asks for it). */
   function scoreHTML(l,key){
     var n=+l.score||0;
-    return '<span class="lead-score" role="group" aria-label="'+(n?'Worth '+n+' of 5':'Not scored yet')+'">'
-      +[1,2,3,4,5].map(function(k){
-        var tip=k===n?'Worth '+k+' of 5 — press to take the score off':'Worth '+k+' of 5';
-        return '<button type="button" class="lead-sc'+(k<=n?' on':'')+'" title="'+tip+'" '
-          +'aria-label="'+k+' of 5" aria-pressed="'+(k===n?'true':'false')+'" '
-          +'onclick="PL.leadScore(\''+jsq(key)+'\','+k+',event)"><i></i></button>';
-      }).join('')
-      +'</span>';
+    var tip=n?'Worth '+n+' of 5 — click to change':'Not scored yet — click to score how valuable this lead is';
+    var opts='<option value="0"'+(n?'':' selected')+'>No score</option>';
+    for(var k=1;k<=5;k++)opts+='<option value="'+k+'"'+(k===n?' selected':'')+'>'+k
+      +(k===1?' — least':k===5?' — most':'')+'</option>';
+    return '<label class="lead-score s'+n+'" title="'+tip+'" onclick="event.stopPropagation()">'
+      +'<span aria-hidden="true">'+(n||'')+'</span>'
+      +'<select aria-label="How valuable this lead is, 1 to 5" '
+        +'onchange="PL.leadScore(\''+jsq(key)+'\',this.value,event)">'+opts+'</select></label>';
   }
   /* the day as a todo card writes it: weekday, then the full date */
   function dueLabelHTML(iso){

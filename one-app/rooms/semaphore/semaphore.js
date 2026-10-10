@@ -2205,28 +2205,31 @@ function leadPath(l,v){
 }
 /* ───────── the score ─────────
    How much a lead is worth to Mark, one to five, set by himself (he asked for
-   it on 2026-10-10). Five small dots on the shut card, filled up to the score;
-   a press on a dot sets the score there, and a press on the dot it already
-   stands at takes the score off again, so a lead is never stuck with one. It
-   is his judgement, not a step, so it orders nothing and moves nothing.
+   it on 2026-10-10). One dot with the number in it, coloured from red for a 1
+   to green for a 5, so a column of leads can be read for its best ones at a
+   glance; a lead with no score yet shows an empty ring. The dot is a menu: an
+   invisible select lies over it, as the invisible date field lies over the
+   day, so the desk and the iPad each open their own picker and nothing new
+   has to be drawn for it. It is his judgement, not a step, so it orders
+   nothing and moves nothing.
 
-   The Ledger draws the same five dots for the same lead and asks this room to
-   set them (the `score` verb), so the two always agree. */
+   The Ledger draws the same dot for the same lead and asks this room to set
+   it (the `score` verb), so the two always agree. */
 function leadScoreHTML(a,l,shut){
   const n=l.score||0;
-  return '<span class="lscore'+(shut?' shut':'')+'" role="group" '+
-      'aria-label="'+(n?'Worth '+n+' of 5':'Not scored yet')+'">'+
-    [1,2,3,4,5].map(k=>'<button class="lsc'+(k<=n?' on':'')+'" data-act="leadScore" '+
-      'data-id="'+a.id+'" data-l="'+l.id+'" data-v="'+k+'" '+
-      'title="'+(k===n?'Worth '+k+' of 5 — press to take the score off':'Worth '+k+' of 5')+'" '+
-      'aria-label="'+k+' of 5" aria-pressed="'+(k===n?'true':'false')+'"'+
-      (shut?' disabled':'')+'><i></i></button>').join('')+
-  '</span>';
+  const tip=n?'Worth '+n+' of 5 — click to change':'Not scored yet — click to score how valuable this lead is';
+  return '<label class="lscore s'+n+(shut?' shut':'')+'" title="'+tip+'">'+
+    '<span aria-hidden="true">'+(n||'')+'</span>'+
+    '<select data-lsa="'+a.id+'" data-lsl="'+l.id+'" aria-label="How valuable this lead is, 1 to 5"'+
+      (shut?' disabled':'')+'>'+
+      '<option value="0"'+(n?'':' selected')+'>No score</option>'+
+      [1,2,3,4,5].map(k=>'<option value="'+k+'"'+(k===n?' selected':'')+'>'+k+(k===1?' — least':k===5?' — most':'')+'</option>').join('')+
+    '</select></label>';
 }
-/* a press on the dot the score already stands at clears it */
+/* 1 to 5 sets the score, anything else takes it off */
 function leadScore(l,v){
-  const k=Math.round(+v);if(!(k>=1&&k<=5))return false;
-  if(l.score===k)delete l.score;else l.score=k;
+  const k=Math.round(+v);
+  if(k>=1&&k<=5)l.score=k;else delete l.score;
   return true;
 }
 /* Which of Contacted's two paths a lead is on, for the leads view's split.
@@ -3623,9 +3626,6 @@ document.addEventListener('click',e=>{
     case 'leadPath':{const ar=arena(id);if(!ar)break;
       const l=(ar.leads||[]).find(x=>x.id===b.dataset.l);if(!l||l.doneAt)break;
       if(leadPath(l,b.dataset.v)){save();repaint();renderDrawer();}break;}
-    case 'leadScore':{const ar=arena(id);if(!ar)break;
-      const l=(ar.leads||[]).find(x=>x.id===b.dataset.l);if(!l||l.doneAt)break;
-      if(leadScore(l,b.dataset.v)){save();repaint();renderDrawer();}break;}
     case 'leadDone':{const ar=arena(id);if(!ar)break;
       const l=(ar.leads||[]).find(x=>x.id===b.dataset.l);if(!l)break;
       l.doneAt=l.doneAt?null:todayISO();      /* ticking is reversible: nothing is thrown away */
@@ -3946,6 +3946,11 @@ document.addEventListener('change',e=>{
     const sp=el.parentNode.querySelector('span');
     if(sp)sp.textContent=el.value?(el.dataset.say?longDay(el.value):shortDow(el.value)):'No date';
     return;
+  }
+  if(el.dataset&&el.dataset.lsa&&el.dataset.lsl){
+    const a=arena(el.dataset.lsa);if(!a)return;
+    const l=(a.leads||[]).find(x=>x.id===el.dataset.lsl);if(!l||l.doneAt)return;
+    leadScore(l,el.value);save();repaint();renderDrawer();return;
   }
   if(el.dataset&&el.dataset.lda&&el.dataset.ldl){
     const a=arena(el.dataset.lda);if(!a)return;

@@ -957,24 +957,32 @@
   border:0;border-radius:4px;font:italic 12px var(--body);color:var(--lquiet)}
 #pane-semaphore .lead .lwhen.late{color:var(--todo-ink)}
 #pane-semaphore .lead .lwhen:hover{background:var(--sink)}
-/* The score (see "the score" in semaphore.js): five dots before the day, drawn
-   6px and pressed over a 12 by 18 patch each, which a finger on the iPad can
-   still pick out one from the next. An empty dot is a ring in the quiet
-   colour, a filled one is the lead's own. Hovering fills the run up to the dot
-   under the pointer, so it shows what a press would set. */
-#pane-semaphore .lscore{flex:0 0 auto;display:inline-flex;align-self:center;margin:0 2px}
-#pane-semaphore .lsc{width:12px;height:18px;padding:0;border:0;background:none;
-  display:flex;align-items:center;justify-content:center;cursor:pointer}
-#pane-semaphore .lsc i{width:6px;height:6px;border-radius:50%;box-sizing:border-box;
-  border:1px solid var(--lquiet);background:transparent;transition:background-color .12s,border-color .12s}
-#pane-semaphore .lsc.on i{background:var(--lead);border-color:var(--lead)}
-@media (hover:hover){
-  #pane-semaphore .lscore:not(.shut):hover .lsc i{background:var(--lead);border-color:var(--lead)}
-  #pane-semaphore .lscore:not(.shut) .lsc:hover~.lsc i{background:transparent;border-color:var(--lquiet)}
-}
-#pane-semaphore .lsc:focus-visible{outline:1px solid var(--focus);outline-offset:-2px;border-radius:3px}
-#pane-semaphore .lscore.shut{opacity:.55}
-#pane-semaphore .lscore.shut .lsc{cursor:default}
+/* The score (see "the score" in semaphore.js): one 20px dot before the day,
+   the number in it in near-black, the fill running red, orange, ochre, olive,
+   green from 1 to 5. The fills are light enough that the dark number reads on
+   every one of them (5:1 at the worst, the red), and each carries an edge a
+   shade darker so it still stands off the drawer's paper. Unscored is a ring
+   in the quiet colour with nothing in it. It holds a fixed seat, and the day
+   after it a fixed width, so the dots of a column of leads stand under each
+   other whatever each day says. */
+#pane-semaphore .lead{--sc1:#d9826f;--sc2:#dda063;--sc3:#d6c06a;--sc4:#a9c27a;--sc5:#7fb889}
+#pane-semaphore .lscore{position:relative;flex:0 0 20px;width:20px;height:20px;align-self:center;
+  margin:0 6px;box-sizing:border-box;border-radius:50%;border:1px dashed var(--lquiet);
+  display:inline-flex;align-items:center;justify-content:center;cursor:pointer;
+  font:600 11px/1 var(--sans);font-style:normal;color:#1c160e}
+#pane-semaphore .lscore.s1{background:var(--sc1);border:1px solid color-mix(in srgb,var(--sc1) 70%,#000)}
+#pane-semaphore .lscore.s2{background:var(--sc2);border:1px solid color-mix(in srgb,var(--sc2) 70%,#000)}
+#pane-semaphore .lscore.s3{background:var(--sc3);border:1px solid color-mix(in srgb,var(--sc3) 70%,#000)}
+#pane-semaphore .lscore.s4{background:var(--sc4);border:1px solid color-mix(in srgb,var(--sc4) 70%,#000)}
+#pane-semaphore .lscore.s5{background:var(--sc5);border:1px solid color-mix(in srgb,var(--sc5) 70%,#000)}
+#pane-semaphore .lscore select{position:absolute;inset:0;width:100%;height:100%;margin:0;padding:0;
+  opacity:0;cursor:pointer;font-size:16px}
+#pane-semaphore .lscore:hover{box-shadow:0 0 0 3px var(--sink)}
+#pane-semaphore .lscore:focus-within{outline:1px solid var(--focus);outline-offset:2px}
+#pane-semaphore .lscore.shut{opacity:.55;cursor:default}
+#pane-semaphore .lscore.shut select{cursor:default}
+#pane-semaphore .lead .lsub>.lwhen{min-width:66px}
+#pane-semaphore .lead.wide>.lhead>.lwhen{min-width:184px;box-sizing:border-box;justify-content:flex-end}
 #pane-semaphore .lead .lname{display:block;margin:0;padding:0;cursor:inherit;
   font-family:var(--body);font-size:14px;line-height:1.35;color:var(--ink);text-decoration:none}
 #pane-semaphore .lead .lname:hover{color:var(--ink)}
