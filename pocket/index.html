@@ -2905,11 +2905,16 @@ function leadForm(panel, arenaOf){
 
 /* a lead found away from its card: the Leads tab asks first which arena
    it belongs to. Frozen arenas are left out, because their leads are not
-   listed anywhere in Pocket and a lead added there would seem lost. */
+   listed anywhere in Pocket and a lead added there would seem lost. The
+   arenas come in the rotation wall's order, top card first and the ghosts
+   after, as the desk's Ledger lists them (Mark asked for the same here on
+   2026-10-10): the arena a lead is spotted in is the one being swept, and
+   that one is near the top. An arena the maths cannot score still comes,
+   at the very end, so a lead is never kept from its arena. */
 function newLead(){
-  var arenas = ((data.semaphore || {}).arenas || [])
-    .filter(function(a){ return a && !a.frozenAt; })
-    .sort(function(x, y){ return plainOf(x.name).localeCompare(plainOf(y.name)); });
+  var w = wall();
+  var arenas = w.list.map(function(x){ return x.a; }).concat(w.empty);
+  liveList().forEach(function(a){ if (arenas.indexOf(a) < 0) arenas.push(a); });
   sheet(function(b, bar){
     b.appendChild(el('h2', '', 'New lead'));
     var panel = el('div', 'composer open');
