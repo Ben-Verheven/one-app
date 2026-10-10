@@ -1260,3 +1260,59 @@
   moveTo(start, true);
 })();
 
+
+/* ── on the iPad, links open in DuckDuckGo ────────────────────────────
+   Mark's browser on the iPad is DuckDuckGo, and he asked on 2026-10-10 for
+   the app's links to open there. A home-screen web app does not follow the
+   iPad's default-browser setting: a link it opens lands in Safari's sheet
+   whatever is chosen. DuckDuckGo answers an address of its own,
+   `ddgQuickLink://` followed by what to open, so every web link is handed
+   over in that form instead. The link goes without its `https://`: the
+   browser reads the first word after the `//` as the address's host and
+   drops the colon behind it, so `https://site` arrived as `https//site`,
+   which DuckDuckGo would search for rather than open; a bare `site/page`
+   it opens, over https.
+
+   It sits apart from the bridge above because that one stops at once when
+   the Atlas is missing, and links must open whichever rooms came up. It
+   listens on the window, in the capture phase, because half the app's links
+   stop their click from rising (a link on a card must not also open the
+   card), and a listener further down would never hear those. It only
+   prevents the browser's own opening and lets the click go on, so whatever
+   a room does on a link's press — stamping a pinned link, for one — still
+   happens. Two rooms open links themselves with window.open (the Ledger's
+   and the Notes room's rich text), so that is routed the same way, once:
+   the press already handed over is not handed over twice.
+
+   Links being edited inside a text are left alone, as the browser leaves
+   them; mail addresses are not web links and keep going to Mail. The desk
+   is untouched: a Mac reports no touch points, an iPad reports five while
+   calling itself a Mac. */
+(function () {
+  'use strict';
+  var ua = navigator.userAgent || '';
+  var iPad = /iPad/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+  if (!iPad) return;
+
+  var handed = '', handedAt = 0;
+  function web(href) { return /^https?:\/\//i.test(String(href || '')); }
+  function hand(url) {
+    var now = Date.now();
+    if (url === handed && now - handedAt < 1000) return;
+    handed = url; handedAt = now;
+    location.href = 'ddgQuickLink://' + url.replace(/^https?:\/\//i, '');
+  }
+
+  window.addEventListener('click', function (e) {
+    var a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
+    if (!a || a.isContentEditable || !web(a.href)) return;
+    e.preventDefault();
+    hand(a.href);
+  }, true);
+
+  var open = window.open;
+  window.open = function (url) {
+    if (web(url)) { hand(String(url)); return null; }
+    return open.apply(window, arguments);
+  };
+})();

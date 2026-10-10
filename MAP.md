@@ -26,7 +26,7 @@ rooms                                                hub.js:296
 
 ## `shell/bridge.js`
 
-1262 lines · 55 KB
+1318 lines · 58 KB
 
 ```
 Bridge — what the five rooms say to each other.             bridge.js:1
@@ -45,6 +45,7 @@ which copy wins                                             bridge.js:719
 what the room says about itself                             bridge.js:774
 the agents' inboxes: what the scheduled agents found        bridge.js:1138
 open where we left off                                      bridge.js:1253
+on the iPad, links open in DuckDuckGo                       bridge.js:1264
 ```
 
 ## `shell/boot.js`
@@ -632,4 +633,4 @@ Generated data. Never open, never edit, never upload.
 
 ---
 
-**35715 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.
+**35771 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.
