@@ -608,18 +608,23 @@
 #pane-semaphore .wnone{margin:9px;padding:13px;text-align:center;font-family:var(--body);font-size:13px;font-style:italic;
         color:var(--faint);border:1px dashed var(--line);border-radius:var(--radius);background:var(--sink)}
 /* ---- pinned links (pinRowHTML) ----
-   One box each, in two columns where there is room, laid out as Pocket's:
-   the name has the whole first line, and the stamp, the arena, the pencil
-   and the pin stand under it. */
-#pane-semaphore .wplist{display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:6px 16px;align-items:start}
+   One list, one box under the other (Mark, 2026-10-11, over two columns),
+   laid out as Pocket's: the name has the whole first line, and the stamp,
+   the arena, the pencil and the pin stand under it. */
+#pane-semaphore .wplist{display:flex;flex-direction:column;gap:6px}
 #pane-semaphore .wprow{padding:4px 8px 4px 10px;border:1px solid var(--line);
         border-radius:var(--radius);background:var(--surface)}
+/* A link of a typed arena wears its type the way the rotation's bands do
+   (Mark, 2026-10-11, who found the coloured name alone too quiet): the tone
+   struck into the ground, a rule of it down the left, the name in full ink
+   on it (8:1 and more). The quiet greys are lifted on that ground, as on
+   Pocket's card heads: the room's muted is 4.2:1 on the darkest band, the
+   key2 put in its place 6.2:1, the lifted faint 5.1:1. */
+#pane-semaphore .wprow.toned{--muted:var(--key2);--faint:#C4B9A6;
+        background:color-mix(in srgb,var(--tone) 30%,var(--paper));
+        border-color:transparent;border-left:4px solid var(--tone);border-radius:0 var(--radius) var(--radius) 0}
 #pane-semaphore .wplink{display:flex;align-items:baseline;gap:8px;padding:3px 0 2px;text-decoration:none;color:var(--ink)}
 #pane-semaphore .wplink .wn{flex:1 1 0;min-width:0;font-family:var(--body);font-size:14.5px;line-height:1.35;overflow-wrap:anywhere}
-/* the name in its arena type's colour, a fifth of the way to the ink, as
-   Pocket's: the darkest tones, Rosewood and Plum, are 4.0:1 on the row,
-   the mix 5.2:1 */
-#pane-semaphore .wprow.toned .wplink .wn{color:color-mix(in srgb,var(--tone) 80%,var(--ink))}
 #pane-semaphore .wplink .wfresh{align-self:center}
 #pane-semaphore a.wplink:hover .wn{text-decoration:underline;text-underline-offset:3px}
 #pane-semaphore .wplink.dead .wn{color:var(--faint)}

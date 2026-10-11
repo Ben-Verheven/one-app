@@ -3055,8 +3055,8 @@ function howHTML(){
     'a rung, by how much. A card you stamp today waits at the far right of its row until tomorrow.</p></div>';
 }
 /* One pinned link, as Pocket draws it (Mark, 2026-10-11): the name on a line
-   of its own, wrapping rather than cut, in its arena type's colour, and its
-   host not shown, since a pinned link is read by its name; under it the
+   of its own, wrapping rather than cut, on a box in its arena type's colour,
+   and its host not shown, since a pinned link is read by its name; under it the
    stamp carrying the days since it was last pressed, the arena it came from,
    the pencil that changes its name and address, and the pin to put it back.
    While the pencil is open the name gives way to the form (`pinEdit`). */

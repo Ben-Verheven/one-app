@@ -409,7 +409,7 @@ putting links in your own order       semaphore.js:4396
 
 ## `rooms/semaphore/semaphore.css`
 
-1562 lines · 115 KB
+1567 lines · 116 KB
 
 ```
 Brokerage Semaphore                               semaphore.css:1
@@ -426,19 +426,19 @@ the rotation: a strip for every type (paintWall)  semaphore.css:381
 a card                                            semaphore.css:406
 the line on top of a card (cardLineHTML)          semaphore.css:482
 pinned links (pinRowHTML)                         semaphore.css:610
-leads                                             semaphore.css:640
-the three sections                                semaphore.css:652
-the leads view                                    semaphore.css:673
-Editing in the card                               semaphore.css:738
-the lead itself                                   semaphore.css:767
-one lead card, in both rooms                      semaphore.css:886
-freezer                                           semaphore.css:1118
-arena panel                                       semaphore.css:1152
-dispatches                                        semaphore.css:1334
-coming up                                         semaphore.css:1386
-modals                                            semaphore.css:1489
-the types, managed (renderTypes                   semaphore.css:1512
-tooltip                                           semaphore.css:1555
+leads                                             semaphore.css:645
+the three sections                                semaphore.css:657
+the leads view                                    semaphore.css:678
+Editing in the card                               semaphore.css:743
+the lead itself                                   semaphore.css:772
+one lead card, in both rooms                      semaphore.css:891
+freezer                                           semaphore.css:1123
+arena panel                                       semaphore.css:1157
+dispatches                                        semaphore.css:1339
+coming up                                         semaphore.css:1391
+modals                                            semaphore.css:1494
+the types, managed (renderTypes                   semaphore.css:1517
+tooltip                                           semaphore.css:1560
 ```
 
 ## `rooms/callboard/callboard.view.js`
@@ -641,4 +641,4 @@ Generated data. Never open, never edit, never upload.
 
 ---
 
-**36268 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.
+**36273 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.
