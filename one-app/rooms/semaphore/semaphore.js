@@ -2661,8 +2661,12 @@ function headHTML(a,st,t,hits,back){
       'aria-pressed="'+(a.pin?'true':'false')+'" '+
       'title="'+(a.pin?'Pinned \u2014 click to unpin':'Pin this card')+'" '+
       'aria-label="'+(a.pin?'Unpin ':'Pin ')+esc(a.name)+'"><i></i></button>'+
-    '<button class="stamp'+(a.sweptAt===todayISO()?' on':'')+'" data-act="sweep" data-id="'+a.id+'" '+
-      'title="'+esc(sweptTitle(a))+'" aria-label="'+esc(sweptTitle(a))+'">\u2713</button>'+
+    /* The stamp carries the days since it was last pressed, 0 on the day
+       itself (Mark, 2026-10-11), so a row can be read for how long each card
+       has gone untouched without hovering. A card never stamped has none. */
+    '<button class="stamp'+(a.sweptAt===todayISO()?' on':'')+(a.sweptAt?' dated':'')+'" data-act="sweep" data-id="'+a.id+'" '+
+      'title="'+esc(sweptTitle(a))+'" aria-label="'+esc(sweptTitle(a))+'">\u2713'+
+      (a.sweptAt?'<span class="sdays">'+Math.max(0,daysBetween(T(a.sweptAt),T(todayISO())))+'</span>':'')+'</button>'+
     '<button class="ib wedit" data-act="editBrokerage" data-id="'+a.id+'" title="Edit brokerage">\u270E</button>'+
   '</header>';
 }

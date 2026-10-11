@@ -335,6 +335,9 @@
 #pane-semaphore .stamp:hover{border-color:var(--key);color:var(--ink);transform:scale(1.08)}
 /* a card swept today keeps a quiet mark, so today's work stays legible */
 #pane-semaphore .stamp.on{opacity:.72;background:var(--key);border-color:var(--key);color:#F1EBDD}
+/* with its day count it widens into a pill, the tick and the days side by side */
+#pane-semaphore .stamp.dated{flex:0 0 auto;width:auto;min-width:20px;padding:0 6px 0 5px;gap:3px;border-radius:99px}
+#pane-semaphore .stamp .sdays{font:10px/1 var(--mono)}
 /* Asking the agent (askHTML): a ring in the agents' own indigo, hidden until
    the card is reached for like the pin, and lit — a filled centre with a glow
    — for as long as the ask stands, so a wall can be read for what is waiting

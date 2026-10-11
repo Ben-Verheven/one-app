@@ -360,7 +360,7 @@ _No section banners._
 
 ## `rooms/semaphore/semaphore.js`
 
-4563 lines · 240 KB
+4567 lines · 241 KB
 
 ```
 Brokerage Semaphore                               semaphore.js:1
@@ -389,26 +389,26 @@ the score                                         semaphore.js:2269
 one lead card, in both rooms                      semaphore.js:2311
 the colour dot                                    semaphore.js:2339
 a type's colour dot                               semaphore.js:2350
-turning                                           semaphore.js:2804
-one rhythm for the wall                           semaphore.js:2814
-pinned: the links and the cards you keep to hand  semaphore.js:3124
-leads: one board, three sections                  semaphore.js:3155
-the rotation: a strip for every type              semaphore.js:3221
-leads, lent to the Ledger's board                 semaphore.js:3485
-modals                                            semaphore.js:3580
-asking, and saying                                semaphore.js:3583
-the types, managed                                semaphore.js:3627
-dragging in the list of types                     semaphore.js:3684
-tooltip                                           semaphore.js:3845
-events                                            semaphore.js:3877
-typing, and the forms it goes into                semaphore.js:4179
-escape, and closing by clicking away              semaphore.js:4341
-putting links in your own order                   semaphore.js:4383
+turning                                           semaphore.js:2808
+one rhythm for the wall                           semaphore.js:2818
+pinned: the links and the cards you keep to hand  semaphore.js:3128
+leads: one board, three sections                  semaphore.js:3159
+the rotation: a strip for every type              semaphore.js:3225
+leads, lent to the Ledger's board                 semaphore.js:3489
+modals                                            semaphore.js:3584
+asking, and saying                                semaphore.js:3587
+the types, managed                                semaphore.js:3631
+dragging in the list of types                     semaphore.js:3688
+tooltip                                           semaphore.js:3849
+events                                            semaphore.js:3881
+typing, and the forms it goes into                semaphore.js:4183
+escape, and closing by clicking away              semaphore.js:4345
+putting links in your own order                   semaphore.js:4387
 ```
 
 ## `rooms/semaphore/semaphore.css`
 
-1591 lines · 118 KB
+1594 lines · 118 KB
 
 ```
 Brokerage Semaphore                               semaphore.css:1
@@ -421,23 +421,23 @@ the sheet                                         semaphore.css:229
 faint was #8C8474, which cleared nothing          semaphore.css:240
 shared card                                       semaphore.css:263
 brokerage wall                                    semaphore.css:276
-the rotation: a strip for every type (paintWall)  semaphore.css:367
-a card has two sides                              semaphore.css:390
-the line on top of a card (cardLineHTML)          semaphore.css:513
-pinned links (pinRowHTML)                         semaphore.css:657
-leads                                             semaphore.css:685
-the three sections                                semaphore.css:697
-the leads view                                    semaphore.css:718
-Editing in the card                               semaphore.css:783
-the lead itself                                   semaphore.css:812
-one lead card, in both rooms                      semaphore.css:931
-freezer                                           semaphore.css:1147
-arena panel                                       semaphore.css:1181
-dispatches                                        semaphore.css:1363
-coming up                                         semaphore.css:1415
-modals                                            semaphore.css:1518
-the types, managed (renderTypes                   semaphore.css:1541
-tooltip                                           semaphore.css:1584
+the rotation: a strip for every type (paintWall)  semaphore.css:370
+a card has two sides                              semaphore.css:393
+the line on top of a card (cardLineHTML)          semaphore.css:516
+pinned links (pinRowHTML)                         semaphore.css:660
+leads                                             semaphore.css:688
+the three sections                                semaphore.css:700
+the leads view                                    semaphore.css:721
+Editing in the card                               semaphore.css:786
+the lead itself                                   semaphore.css:815
+one lead card, in both rooms                      semaphore.css:934
+freezer                                           semaphore.css:1150
+arena panel                                       semaphore.css:1184
+dispatches                                        semaphore.css:1366
+coming up                                         semaphore.css:1418
+modals                                            semaphore.css:1521
+the types, managed (renderTypes                   semaphore.css:1544
+tooltip                                           semaphore.css:1587
 ```
 
 ## `rooms/callboard/callboard.view.js`
@@ -640,4 +640,4 @@ Generated data. Never open, never edit, never upload.
 
 ---
 
-**36062 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.
+**36069 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.

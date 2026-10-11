@@ -28,7 +28,7 @@ the two lists at the foot of this file is where those names gather.
 #card            shell.css:259                      semaphore.js:1406 x45   ledger.js:3699 x5   ledger.view.js:5 x4
 #dossier         shell.css:217                      atlas.js:946 x13   ledger.js:10954 x3   bridge.js:214
 #hdr             shell.css:235                      bridge.js:456 x2   ledger.view.js:5   ledger.js:4512
-#modal           shell.css:214                      semaphore.js:3581 x4   atlas.js:664 x4   semaphore.view.js:5 x3
+#modal           shell.css:214                      semaphore.js:3585 x4   atlas.js:664 x4   semaphore.view.js:5 x3
 #oa-ring         shell.css:67 x6                    bridge.js:484
 #oa-sweep        shell.css:268 x3                   bridge.js:485
 #oa-title        shell.css:67 x5                    bridge.js:557
@@ -40,7 +40,7 @@ the two lists at the foot of this file is where those names gather.
 #pane-semaphore  shell.css:251 x22                  bridge.js:365 x2
 #reader          shell.css:238                      callboard.js:453 x4   callboard.view.js:5 x2   bridge.js:288
 #root            shell.css:621                      ledger.view.js:5 x2   ledger.js:4767
-#semscroll       shell.css:256                      semaphore.view.js:5 x2   semaphore.js:3300
+#semscroll       shell.css:256                      semaphore.view.js:5 x2   semaphore.js:3304
 #stage           shell.css:298                      callboard.js:177 x10   ledger.view.js:5 x2   callboard.view.js:5 x2
 #toast           shell.css:214                      hub.js:336   atlas.view.js:5   atlas.js:580
 .actions         shell.css:488 x2                   ledger.view.js:5 x2   ledger.js:2170 x2   semaphore.view.js:5
@@ -69,7 +69,7 @@ the two lists at the foot of this file is where those names gather.
 .hdr-right       shell.css:488 x5                   ledger.view.js:5
 .home            shell.css:106 x2                   bridge.js:572   ledger.view.js:5
 .markglyph       shell.css:602                      semaphore.view.js:5
-.modal           shell.css:257                      semaphore.js:3581 x4   atlas.js:664 x4   semaphore.view.js:5 x3
+.modal           shell.css:257                      semaphore.js:3585 x4   atlas.js:664 x4   semaphore.view.js:5 x3
 .oa-bar          shell.css:455 x27                  ledger.js:6096 x2   bridge.js:481
 .oa-cloudchip    shell.css:715 x11                  ledger.view.js:5   semaphore.view.js:5   atlas.view.js:5
 .oa-g            shell.css:127 x9                   bridge.js:491
@@ -90,7 +90,7 @@ the two lists at the foot of this file is where those names gather.
 .tchip           shell.css:495 x2                   callboard.js:131 x6
 .toast           shell.css:287 x2                   hub.js:336   atlas.view.js:5   atlas.js:580
 .top             shell.css:593                      ledger.js:441 x5   semaphore.js:1575 x3   atlas.js:1156 x3
-.viewseg         shell.css:562 x5                   semaphore.view.js:5 x2   semaphore.js:3274 x2
+.viewseg         shell.css:562 x5                   semaphore.view.js:5 x2   semaphore.js:3278 x2
 .walking         shell.css:125                      bridge.js:543 x2
 .wrap            shell.css:235                      ledger.view.js:5   callboard.view.js:5
 .wsort           shell.css:562 x5                   semaphore.js:1257 x2
@@ -273,7 +273,7 @@ the two lists at the foot of this file is where those names gather.
 .ct-turn-tracker          ledger.css:578                     ledger.view.js:5
 .del                      ledger.css:3581                    ledger.js:3150 x3   notes.js:1651
 .del-text                 ledger.css:3710 x2                 ledger.js:12408
-.dl                       ledger.css:1020                    ledger.js:5415 x15   semaphore.js:3038 x2   callboard.js:430 x2
+.dl                       ledger.css:1020                    ledger.js:5415 x15   semaphore.js:3042 x2   callboard.js:430 x2
 .dl-urgent                ledger.css:972                     ledger.js:5413
 .dow                      ledger.css:712 x4                  ledger.js:5247
 .dp-arrow                 ledger.css:2187                    ledger.js:3341
@@ -538,7 +538,7 @@ the two lists at the foot of this file is where those names gather.
 .opt-sw                   ledger.css:317 x3                  ledger.js:8339 x2
 .opt-switch               ledger.css:315                     ledger.js:8338
 .opt-trigger              ledger.css:333 x6                  ledger.js:5197 x3
-.over                     ledger.css:1784                    ledger.js:7169 x5   semaphore.js:3040 x3   ledger.view.js:5 x2
+.over                     ledger.css:1784                    ledger.js:7169 x5   semaphore.js:3044 x3   ledger.view.js:5 x2
 .overdue-mark             ledger.css:953                     ledger.js:5400 x2
 .overview                 ledger.css:2195                    callboard.js:114 x9   ledger.js:9912 x2
 .overview-anchored        ledger.css:623                     ledger.js:9912
@@ -898,374 +898,376 @@ the two lists at the foot of this file is where those names gather.
 
 ## Semaphore — `rooms/semaphore/semaphore.css`
 
-365 names.
+367 names.
 
 ```
-#askModal      semaphore.css:1536 x2              semaphore.js:3591 x2   semaphore.view.js:5
-#askNo         semaphore.css:1537                 semaphore.view.js:5   semaphore.js:3623
+#askModal      semaphore.css:1539 x2              semaphore.js:3595 x2   semaphore.view.js:5
+#askNo         semaphore.css:1540                 semaphore.view.js:5   semaphore.js:3627
 #board         semaphore.css:102                  semaphore.js:135 x29   ledger.js:2728 x21   semaphore.view.js:5 x10
-#coming        semaphore.css:1422 x2              semaphore.js:294 x18   semaphore.view.js:5 x2   ledger.js:7170
-#dispatch      semaphore.css:1369                 semaphore.js:294 x9   semaphore.view.js:5 x2
-#dispatchBtn   semaphore.css:1513 x2              semaphore.js:3274 x2   semaphore.view.js:5
-#freezer       semaphore.css:1151                 semaphore.js:439 x7   semaphore.view.js:5
+#coming        semaphore.css:1425 x2              semaphore.js:294 x18   semaphore.view.js:5 x2   ledger.js:7170
+#dispatch      semaphore.css:1372                 semaphore.js:294 x9   semaphore.view.js:5 x2
+#dispatchBtn   semaphore.css:1516 x2              semaphore.js:3278 x2   semaphore.view.js:5
+#freezer       semaphore.css:1154                 semaphore.js:439 x7   semaphore.view.js:5
 #search        semaphore.css:96 x3                semaphore.js:441 x12   atlas.js:604 x6   callboard.view.js:5 x4
 #searchBtn     semaphore.css:100                  semaphore.js:472 x2   semaphore.view.js:5
-#tip           semaphore.css:233 x2               semaphore.view.js:5   semaphore.js:3846
-#typesModal    semaphore.css:1548                 semaphore.js:3733 x3   semaphore.view.js:5
+#tip           semaphore.css:233 x2               semaphore.view.js:5   semaphore.js:3850
+#typesModal    semaphore.css:1551                 semaphore.js:3737 x3   semaphore.view.js:5
 #wall          semaphore.css:287                  semaphore.js:1495 x17   semaphore.view.js:5
-.addbtn        semaphore.css:1341 x2              semaphore.js:1551 x3
-.asleep        semaphore.css:1128                 semaphore.js:2596
-.atend         semaphore.css:453                  semaphore.js:4380
+.addbtn        semaphore.css:1344 x2              semaphore.js:1551 x3
+.asleep        semaphore.css:1131                 semaphore.js:2596
+.atend         semaphore.css:456                  semaphore.js:4384
 .axis          semaphore.css:107 x4               semaphore.js:691   callboard.js:508
-.back          semaphore.css:489 x4               semaphore.js:440 x21   ledger.js:2210 x15   ledger.view.js:5 x3
+.back          semaphore.css:492 x4               semaphore.js:440 x21   ledger.js:2210 x15   ledger.view.js:5 x3
 .bk            semaphore.css:197                  semaphore.js:561 x2
 .bk-band       semaphore.css:204 x6               semaphore.js:564
 .bk-fixed      semaphore.css:201 x2               semaphore.js:561
 .bk-unc        semaphore.css:202 x2               semaphore.js:561
 .bl            semaphore.css:207 x3               semaphore.js:563
-.blank         semaphore.css:1279                 semaphore.js:1444 x2
-.blocks        semaphore.css:1236                 semaphore.js:1505
+.blank         semaphore.css:1282                 semaphore.js:1444 x2
+.blocks        semaphore.css:1239                 semaphore.js:1505
 .brok          semaphore.css:271 x3               semaphore.js:1406 x2
 .btns          semaphore.css:228                  semaphore.js:666   atlas.js:1572
 .cact          semaphore.css:273 x2               semaphore.js:1408
-.call          semaphore.css:1271 x4              semaphore.js:65 x50   ledger.js:1520 x48   callboard.js:126 x7
+.call          semaphore.css:1274 x4              semaphore.js:65 x50   ledger.js:1520 x48   callboard.js:126 x7
 .cbd           semaphore.css:275 x3               semaphore.js:1409 x2
-.cbody         semaphore.css:1228                 semaphore.js:1498 x4
+.cbody         semaphore.css:1231                 semaphore.js:1498 x4
 .cell          semaphore.css:144 x3               semaphore.js:647
-.cfoot         semaphore.css:1282 x4              semaphore.js:1509 x2
+.cfoot         semaphore.css:1285 x4              semaphore.js:1509 x2
 .chd           semaphore.css:267 x6               semaphore.js:1407 x2
-.chead         semaphore.css:1229 x6              semaphore.js:1499 x2
+.chead         semaphore.css:1232 x6              semaphore.js:1499 x2
 .cl            semaphore.css:218                  semaphore.js:593
-.coda          semaphore.css:310                  semaphore.js:3077
+.coda          semaphore.css:310                  semaphore.js:3081
 .collapsed     semaphore.css:123                  semaphore.js:696
 .corner        semaphore.css:105 x4               semaphore.js:684
 .ctitle        semaphore.css:270 x2               semaphore.js:1407 x2
-.cuage         semaphore.css:1481 x3              semaphore.js:1208
-.cuar          semaphore.css:1436 x2              semaphore.js:1217
-.cud           semaphore.css:1436 x4              semaphore.js:1210
-.cudel         semaphore.css:1484 x4              semaphore.js:1220
-.cuend         semaphore.css:1456                 semaphore.js:1219
-.cuform        semaphore.css:1499 x3              semaphore.js:1235 x3
-.cug           semaphore.css:1442 x4              semaphore.js:1212
-.cuhi          semaphore.css:1496                 semaphore.js:1209
-.culist        semaphore.css:1424                 semaphore.js:1293
-.culn          semaphore.css:1433 x12             semaphore.js:1117 x3
-.cumn          semaphore.css:1428 x2              semaphore.js:1288
-.cumon         semaphore.css:1425 x2              semaphore.js:1288
-.cuname        semaphore.css:1436 x4              semaphore.js:1214
-.cupast        semaphore.css:1492 x2              semaphore.js:1291
-.cusite        semaphore.css:1461 x5              semaphore.js:1201 x2
-.cusoon        semaphore.css:1455                 semaphore.js:1217
-.cuspine       semaphore.css:1430 x2              semaphore.js:1289
-.custage       semaphore.css:1436 x2              semaphore.js:1216
-.cutoday       semaphore.css:1503 x3              semaphore.js:1285 x2
-.d             semaphore.css:1261 x4              ledger.js:350 x17   notes.js:908 x12   atlas.js:946 x8
-.dead          semaphore.css:614 x3               semaphore.js:1938 x3
-.dform         semaphore.css:1346 x5              semaphore.js:1235 x12
-.done          semaphore.css:907 x5               ledger.js:9195 x7   semaphore.js:2474 x2   atlas.js:1758
-.dpa           semaphore.css:1410                 semaphore.js:837
-.dpbar         semaphore.css:1370 x4              semaphore.js:848 x2
-.dpcall        semaphore.css:1394                 semaphore.js:813
-.dperr         semaphore.css:1414                 semaphore.js:862
-.dpev          semaphore.css:1400                 semaphore.js:828
-.dpgrp         semaphore.css:1381                 semaphore.js:899
-.dph           semaphore.css:1382 x2              semaphore.js:899
-.dplist        semaphore.css:1379                 semaphore.js:903
-.dpn           semaphore.css:1513                 semaphore.js:3289
-.dpnote        semaphore.css:1412 x2              semaphore.js:853 x2
-.dpold         semaphore.css:1399                 semaphore.js:801
-.dprow         semaphore.css:1386 x4              semaphore.js:825
-.dpsay         semaphore.css:1372 x2              semaphore.js:850 x6
-.dpsrc         semaphore.css:1404 x2              semaphore.js:829 x2
-.dptx          semaphore.css:1390 x6              semaphore.js:827
-.dpw           semaphore.css:1389                 semaphore.js:826
-.dpwas         semaphore.css:1395                 semaphore.js:791 x3
-.dpwhen        semaphore.css:1393                 semaphore.js:790 x2
-.drop-above    semaphore.css:1569                 semaphore.js:3780 x2
-.drop-after    semaphore.css:1579 x3              ledger.js:11117 x3   semaphore.js:3779
-.drop-before   semaphore.css:1578 x3              ledger.js:11117 x3   semaphore.js:3779
-.drop-below    semaphore.css:1570                 semaphore.js:3780 x2
-.drop-into     semaphore.css:1580                 semaphore.js:3779
-.drop-merge    semaphore.css:1580                 semaphore.js:3779
-.dsite         semaphore.css:1508 x3              semaphore.js:1425
-.due           semaphore.css:1126 x2              ledger.js:5402 x11   semaphore.js:2403 x7
+.cuage         semaphore.css:1484 x3              semaphore.js:1208
+.cuar          semaphore.css:1439 x2              semaphore.js:1217
+.cud           semaphore.css:1439 x4              semaphore.js:1210
+.cudel         semaphore.css:1487 x4              semaphore.js:1220
+.cuend         semaphore.css:1459                 semaphore.js:1219
+.cuform        semaphore.css:1502 x3              semaphore.js:1235 x3
+.cug           semaphore.css:1445 x4              semaphore.js:1212
+.cuhi          semaphore.css:1499                 semaphore.js:1209
+.culist        semaphore.css:1427                 semaphore.js:1293
+.culn          semaphore.css:1436 x12             semaphore.js:1117 x3
+.cumn          semaphore.css:1431 x2              semaphore.js:1288
+.cumon         semaphore.css:1428 x2              semaphore.js:1288
+.cuname        semaphore.css:1439 x4              semaphore.js:1214
+.cupast        semaphore.css:1495 x2              semaphore.js:1291
+.cusite        semaphore.css:1464 x5              semaphore.js:1201 x2
+.cusoon        semaphore.css:1458                 semaphore.js:1217
+.cuspine       semaphore.css:1433 x2              semaphore.js:1289
+.custage       semaphore.css:1439 x2              semaphore.js:1216
+.cutoday       semaphore.css:1506 x3              semaphore.js:1285 x2
+.d             semaphore.css:1264 x4              ledger.js:350 x17   notes.js:908 x12   atlas.js:946 x8
+.dated         semaphore.css:339                  semaphore.js:1267 x5   ledger.js:11507
+.dead          semaphore.css:617 x3               semaphore.js:1938 x3
+.dform         semaphore.css:1349 x5              semaphore.js:1235 x12
+.done          semaphore.css:910 x5               ledger.js:9195 x7   semaphore.js:2474 x2   atlas.js:1758
+.dpa           semaphore.css:1413                 semaphore.js:837
+.dpbar         semaphore.css:1373 x4              semaphore.js:848 x2
+.dpcall        semaphore.css:1397                 semaphore.js:813
+.dperr         semaphore.css:1417                 semaphore.js:862
+.dpev          semaphore.css:1403                 semaphore.js:828
+.dpgrp         semaphore.css:1384                 semaphore.js:899
+.dph           semaphore.css:1385 x2              semaphore.js:899
+.dplist        semaphore.css:1382                 semaphore.js:903
+.dpn           semaphore.css:1516                 semaphore.js:3293
+.dpnote        semaphore.css:1415 x2              semaphore.js:853 x2
+.dpold         semaphore.css:1402                 semaphore.js:801
+.dprow         semaphore.css:1389 x4              semaphore.js:825
+.dpsay         semaphore.css:1375 x2              semaphore.js:850 x6
+.dpsrc         semaphore.css:1407 x2              semaphore.js:829 x2
+.dptx          semaphore.css:1393 x6              semaphore.js:827
+.dpw           semaphore.css:1392                 semaphore.js:826
+.dpwas         semaphore.css:1398                 semaphore.js:791 x3
+.dpwhen        semaphore.css:1396                 semaphore.js:790 x2
+.drop-above    semaphore.css:1572                 semaphore.js:3784 x2
+.drop-after    semaphore.css:1582 x3              ledger.js:11117 x3   semaphore.js:3783
+.drop-before   semaphore.css:1581 x3              ledger.js:11117 x3   semaphore.js:3783
+.drop-below    semaphore.css:1573                 semaphore.js:3784 x2
+.drop-into     semaphore.css:1583                 semaphore.js:3783
+.drop-merge    semaphore.css:1583                 semaphore.js:3783
+.dsite         semaphore.css:1511 x3              semaphore.js:1425
+.due           semaphore.css:1129 x2              ledger.js:5402 x11   semaphore.js:2403 x7
 .duemk         semaphore.css:154 x2               semaphore.js:643
-.e1            semaphore.css:1335                 semaphore.js:1544
-.e2            semaphore.css:1336                 ledger.js:155   semaphore.js:1545
-.ebody         semaphore.css:1326                 semaphore.js:1523
-.ec            semaphore.css:1325                 semaphore.js:1522   callboard.js:473
-.enone         semaphore.css:1302                 semaphore.js:1541
-.epanel        semaphore.css:1286 x3              semaphore.js:1532
-.erow          semaphore.css:1323 x13             semaphore.js:1521 x5
-.esub          semaphore.css:1328                 semaphore.js:1524
-.f2            semaphore.css:1299                 semaphore.js:1568
-.fbtns         semaphore.css:1355 x2              semaphore.js:1245 x2
-.fhint         semaphore.css:1300 x3              semaphore.js:1333 x5
-.find          semaphore.css:1129 x2              ledger.js:8049   semaphore.js:2607   notes.view.js:15
-.fixed         semaphore.css:1312                 semaphore.js:262 x25   ledger.js:441 x2   atlas.js:2319
-.fld           semaphore.css:1289 x7              semaphore.js:1237 x23
-.flipped       semaphore.css:411 x6               semaphore.js:2800 x4   ledger.js:5739 x2
-.frbar         semaphore.css:1152 x4              semaphore.js:737
-.frbody        semaphore.css:1159                 semaphore.js:740
-.frcaret       semaphore.css:1156                 semaphore.js:739
-.frchip        semaphore.css:1165 x7              semaphore.js:724
-.frchips       semaphore.css:1164                 semaphore.js:733
-.fresh         semaphore.css:562                  semaphore.js:2079 x2
-.frgrp         semaphore.css:1160 x3              semaphore.js:732
-.frn           semaphore.css:1155                 semaphore.js:738
-.frname        semaphore.css:1168 x2              semaphore.js:725
-.frost         semaphore.css:1157                 semaphore.js:738 x2
-.frout         semaphore.css:1172 x3              semaphore.js:727
-.frozenbar     semaphore.css:1177 x3              semaphore.js:1493
-.frtx          semaphore.css:1179                 semaphore.js:1494
-.frty          semaphore.css:1162 x2              semaphore.js:732
-.g-lead        semaphore.css:312                  semaphore.js:3146
+.e1            semaphore.css:1338                 semaphore.js:1544
+.e2            semaphore.css:1339                 ledger.js:155   semaphore.js:1545
+.ebody         semaphore.css:1329                 semaphore.js:1523
+.ec            semaphore.css:1328                 semaphore.js:1522   callboard.js:473
+.enone         semaphore.css:1305                 semaphore.js:1541
+.epanel        semaphore.css:1289 x3              semaphore.js:1532
+.erow          semaphore.css:1326 x13             semaphore.js:1521 x5
+.esub          semaphore.css:1331                 semaphore.js:1524
+.f2            semaphore.css:1302                 semaphore.js:1568
+.fbtns         semaphore.css:1358 x2              semaphore.js:1245 x2
+.fhint         semaphore.css:1303 x3              semaphore.js:1333 x5
+.find          semaphore.css:1132 x2              ledger.js:8049   semaphore.js:2607   notes.view.js:15
+.fixed         semaphore.css:1315                 semaphore.js:262 x25   ledger.js:441 x2   atlas.js:2319
+.fld           semaphore.css:1292 x7              semaphore.js:1237 x23
+.flipped       semaphore.css:414 x6               semaphore.js:2804 x4   ledger.js:5739 x2
+.frbar         semaphore.css:1155 x4              semaphore.js:737
+.frbody        semaphore.css:1162                 semaphore.js:740
+.frcaret       semaphore.css:1159                 semaphore.js:739
+.frchip        semaphore.css:1168 x7              semaphore.js:724
+.frchips       semaphore.css:1167                 semaphore.js:733
+.fresh         semaphore.css:565                  semaphore.js:2079 x2
+.frgrp         semaphore.css:1163 x3              semaphore.js:732
+.frn           semaphore.css:1158                 semaphore.js:738
+.frname        semaphore.css:1171 x2              semaphore.js:725
+.frost         semaphore.css:1160                 semaphore.js:738 x2
+.frout         semaphore.css:1175 x3              semaphore.js:727
+.frozenbar     semaphore.css:1180 x3              semaphore.js:1493
+.frtx          semaphore.css:1182                 semaphore.js:1494
+.frty          semaphore.css:1165 x2              semaphore.js:732
+.g-lead        semaphore.css:312                  semaphore.js:3150
 .gc            semaphore.css:129                  semaphore.js:697 x2
 .gcount        semaphore.css:141                  semaphore.js:699 x2
 .ghead         semaphore.css:103 x10              semaphore.js:697 x2
 .gname         semaphore.css:140                  semaphore.js:699 x2
-.gone          semaphore.css:802 x5               ledger.js:8639 x4   semaphore.js:825 x4   atlas.js:1564
-.granIn        semaphore.css:1350 x3              semaphore.js:1243 x3
+.gone          semaphore.css:805 x5               ledger.js:8639 x4   semaphore.js:825 x4   atlas.js:1564
+.granIn        semaphore.css:1353 x3              semaphore.js:1243 x3
 .grow          semaphore.css:69 x2                semaphore.js:2150 x6   semaphore.view.js:5 x2   ledger.view.js:5
 .held          semaphore.css:326                  semaphore.js:1872 x5   bridge.js:1012 x2   ledger.js:2500 x2
-.hi            semaphore.css:1259                 semaphore.js:1430 x2   atlas.js:1255
-.hit           semaphore.css:488 x2               semaphore.js:2474 x2
+.hi            semaphore.css:1262                 semaphore.js:1430 x2   atlas.js:1255
+.hit           semaphore.css:491 x2               semaphore.js:2474 x2
 .how           semaphore.css:303 x6               semaphore.js:665 x6   ledger.js:8852   atlas.js:1557
-.howbtn        semaphore.css:298 x3               semaphore.js:3121 x2
-.ib            semaphore.css:364 x9               semaphore.js:1408 x15
+.howbtn        semaphore.css:298 x3               semaphore.js:3125 x2
+.ib            semaphore.css:367 x9               semaphore.js:1408 x15
 .jan           semaphore.css:110                  semaphore.js:509
-.k-contacted   semaphore.css:711                  —
-.k-talking     semaphore.css:712                  —
-.kindfields    semaphore.css:1349                 semaphore.js:1384 x2
-.lact          semaphore.css:1026 x4              semaphore.js:2423 x5
-.lacts         semaphore.css:804 x3               semaphore.js:2422 x2
+.k-contacted   semaphore.css:714                  —
+.k-talking     semaphore.css:715                  —
+.kindfields    semaphore.css:1352                 semaphore.js:1384 x2
+.lact          semaphore.css:1029 x4              semaphore.js:2423 x5
+.lacts         semaphore.css:807 x3               semaphore.js:2422 x2
 .lane          semaphore.css:184 x2               ledger.js:7433   semaphore.js:650
-.lar           semaphore.css:752 x5               semaphore.js:2490
-.late          semaphore.css:840 x2               semaphore.js:2405
-.lband         semaphore.css:706 x3               semaphore.js:2697
-.lbh           semaphore.css:708 x4               semaphore.js:2698
-.lbody         semaphore.css:866 x3               semaphore.js:2508
-.lcbar         semaphore.css:1139 x4              semaphore.js:2714
-.lccar         semaphore.css:1144                 semaphore.js:2717
-.lclosed       semaphore.css:1138 x2              semaphore.js:2713
-.lcol          semaphore.css:767 x5               semaphore.js:2347 x2
-.lcolpop       semaphore.css:774 x4               semaphore.js:2365 x3
-.lcols         semaphore.css:705                  semaphore.js:2693
-.lcolwrap      semaphore.css:765 x2               semaphore.js:2347 x2
-.lcrec         semaphore.css:1145                 semaphore.js:2719
-.ldel          semaphore.css:577 x5               semaphore.js:1945
-.ldone         semaphore.css:782 x10              semaphore.js:2414
-.ldot          semaphore.css:974 x7               semaphore.js:2239
+.lar           semaphore.css:755 x5               semaphore.js:2490
+.late          semaphore.css:843 x2               semaphore.js:2405
+.lband         semaphore.css:709 x3               semaphore.js:2701
+.lbh           semaphore.css:711 x4               semaphore.js:2702
+.lbody         semaphore.css:869 x3               semaphore.js:2508
+.lcbar         semaphore.css:1142 x4              semaphore.js:2718
+.lccar         semaphore.css:1147                 semaphore.js:2721
+.lclosed       semaphore.css:1141 x2              semaphore.js:2717
+.lcol          semaphore.css:770 x5               semaphore.js:2347 x2
+.lcolpop       semaphore.css:777 x4               semaphore.js:2365 x3
+.lcols         semaphore.css:708                  semaphore.js:2697
+.lcolwrap      semaphore.css:768 x2               semaphore.js:2347 x2
+.lcrec         semaphore.css:1148                 semaphore.js:2723
+.ldel          semaphore.css:580 x5               semaphore.js:1945
+.ldone         semaphore.css:785 x10              semaphore.js:2414
+.ldot          semaphore.css:977 x7               semaphore.js:2239
 .lead-in       semaphore.css:225 x8               ledger.js:8900 x5   semaphore.js:592 x2
-.leadadd       semaphore.css:440 x5               semaphore.js:2706 x2
-.leadform      semaphore.css:1057 x11             semaphore.js:2152 x3
-.ledin         semaphore.css:787 x3               semaphore.js:2444 x4
-.ledlinks      semaphore.css:799                  semaphore.js:2442 x2
-.ledrow        semaphore.css:797 x4               semaphore.js:2443 x6
-.ledup         semaphore.css:787 x3               semaphore.js:2453
-.lfa           semaphore.css:914 x2               semaphore.js:2468
-.lfbtn         semaphore.css:1078 x4              semaphore.js:2161 x2
-.lfc           semaphore.css:737                  semaphore.js:3201
-.lfhint        semaphore.css:804 x2               semaphore.js:2162 x3
-.lflank        semaphore.css:732 x2               semaphore.js:3200
-.lfmore        semaphore.css:1075 x2              semaphore.js:2160
-.lfn           semaphore.css:736                  semaphore.js:3200
-.lgap          semaphore.css:1032                 semaphore.js:2430
-.lgrid         semaphore.css:716                  semaphore.js:2699
-.lhead         semaphore.css:750 x7               semaphore.js:2488
-.lk            semaphore.css:1332 x5              semaphore.js:1543
-.lkdragging    semaphore.css:636 x2               semaphore.js:4426 x3
-.lkform        semaphore.css:358 x6               semaphore.js:2123 x3
-.lkind         semaphore.css:741 x5               semaphore.js:2307
-.lkup          semaphore.css:632 x5               semaphore.js:4427 x3
-.lla           semaphore.css:876 x8               semaphore.js:2199 x2
-.llinks        semaphore.css:874                  semaphore.js:2442 x2
-.llist         semaphore.css:717                  semaphore.js:2719
-.llrow         semaphore.css:875 x2               semaphore.js:2204
-.lmore         semaphore.css:1049                 semaphore.js:2468
-.lmt           semaphore.css:930 x4               semaphore.js:2498 x2
-.lmt-in        semaphore.css:787 x3               semaphore.js:2498
-.ln            semaphore.css:1256 x17             semaphore.js:1430 x4
-.ln3           semaphore.css:1069 x4              semaphore.js:2171 x2
-.lname         semaphore.css:755 x10              semaphore.js:2497 x2
-.lname-in      semaphore.css:787 x3               semaphore.js:2497
-.lnew          semaphore.css:1050                 semaphore.js:2461
-.lnl           semaphore.css:1070 x2              semaphore.js:2172
-.lnone         semaphore.css:1132                 semaphore.js:2680
-.lnrow         semaphore.css:1072 x3              semaphore.js:2170 x2
+.leadadd       semaphore.css:443 x5               semaphore.js:2710 x2
+.leadform      semaphore.css:1060 x11             semaphore.js:2152 x3
+.ledin         semaphore.css:790 x3               semaphore.js:2444 x4
+.ledlinks      semaphore.css:802                  semaphore.js:2442 x2
+.ledrow        semaphore.css:800 x4               semaphore.js:2443 x6
+.ledup         semaphore.css:790 x3               semaphore.js:2453
+.lfa           semaphore.css:917 x2               semaphore.js:2468
+.lfbtn         semaphore.css:1081 x4              semaphore.js:2161 x2
+.lfc           semaphore.css:740                  semaphore.js:3205
+.lfhint        semaphore.css:807 x2               semaphore.js:2162 x3
+.lflank        semaphore.css:735 x2               semaphore.js:3204
+.lfmore        semaphore.css:1078 x2              semaphore.js:2160
+.lfn           semaphore.css:739                  semaphore.js:3204
+.lgap          semaphore.css:1035                 semaphore.js:2430
+.lgrid         semaphore.css:719                  semaphore.js:2703
+.lhead         semaphore.css:753 x7               semaphore.js:2488
+.lk            semaphore.css:1335 x5              semaphore.js:1543
+.lkdragging    semaphore.css:639 x2               semaphore.js:4430 x3
+.lkform        semaphore.css:361 x6               semaphore.js:2123 x3
+.lkind         semaphore.css:744 x5               semaphore.js:2307
+.lkup          semaphore.css:635 x5               semaphore.js:4431 x3
+.lla           semaphore.css:879 x8               semaphore.js:2199 x2
+.llinks        semaphore.css:877                  semaphore.js:2442 x2
+.llist         semaphore.css:720                  semaphore.js:2723
+.llrow         semaphore.css:878 x2               semaphore.js:2204
+.lmore         semaphore.css:1052                 semaphore.js:2468
+.lmt           semaphore.css:933 x4               semaphore.js:2498 x2
+.lmt-in        semaphore.css:790 x3               semaphore.js:2498
+.ln            semaphore.css:1259 x17             semaphore.js:1430 x4
+.ln3           semaphore.css:1072 x4              semaphore.js:2171 x2
+.lname         semaphore.css:758 x10              semaphore.js:2497 x2
+.lname-in      semaphore.css:790 x3               semaphore.js:2497
+.lnew          semaphore.css:1053                 semaphore.js:2461
+.lnl           semaphore.css:1073 x2              semaphore.js:2172
+.lnone         semaphore.css:1135                 semaphore.js:2684
+.lnrow         semaphore.css:1075 x3              semaphore.js:2170 x2
 .loom          semaphore.css:159 x3               semaphore.js:639
-.lpin          semaphore.css:577 x9               semaphore.js:1942 x2
-.lrows         semaphore.css:738                  semaphore.js:3202
-.lruit         semaphore.css:751 x7               semaphore.js:2235
-.lrun          semaphore.css:731                  semaphore.js:3199
-.lruns         semaphore.css:730                  semaphore.js:3190
-.lsb           semaphore.css:871                  semaphore.js:2213
-.lscore        semaphore.css:998 x11              semaphore.js:2284
-.lsec          semaphore.css:867                  semaphore.js:2212
-.lsl           semaphore.css:868                  semaphore.js:2213
-.lsub          semaphore.css:756 x3               semaphore.js:2498 x2
-.lsw           semaphore.css:777 x3               semaphore.js:2366 x2
-.ltx           semaphore.css:782 x2               semaphore.js:2492 x3
-.lu            semaphore.css:362                  semaphore.js:2124
-.lud           semaphore.css:1047                 semaphore.js:2452 x2
-.lupd          semaphore.css:901 x5               semaphore.js:2451 x2
-.lurow         semaphore.css:891 x7               semaphore.js:2452 x2
-.lwhen         semaphore.css:757 x14              semaphore.js:2399 x4
-.lx            semaphore.css:363 x5               semaphore.js:2126 x5
-.mail          semaphore.css:886 x2               semaphore.js:2199
+.lpin          semaphore.css:580 x9               semaphore.js:1942 x2
+.lrows         semaphore.css:741                  semaphore.js:3206
+.lruit         semaphore.css:754 x7               semaphore.js:2235
+.lrun          semaphore.css:734                  semaphore.js:3203
+.lruns         semaphore.css:733                  semaphore.js:3194
+.lsb           semaphore.css:874                  semaphore.js:2213
+.lscore        semaphore.css:1001 x11             semaphore.js:2284
+.lsec          semaphore.css:870                  semaphore.js:2212
+.lsl           semaphore.css:871                  semaphore.js:2213
+.lsub          semaphore.css:759 x3               semaphore.js:2498 x2
+.lsw           semaphore.css:780 x3               semaphore.js:2366 x2
+.ltx           semaphore.css:785 x2               semaphore.js:2492 x3
+.lu            semaphore.css:365                  semaphore.js:2124
+.lud           semaphore.css:1050                 semaphore.js:2452 x2
+.lupd          semaphore.css:904 x5               semaphore.js:2451 x2
+.lurow         semaphore.css:894 x7               semaphore.js:2452 x2
+.lwhen         semaphore.css:760 x14              semaphore.js:2399 x4
+.lx            semaphore.css:366 x5               semaphore.js:2126 x5
+.mail          semaphore.css:889 x2               semaphore.js:2199
 .mark          semaphore.css:64 x6                semaphore.js:1448 x3   bridge.js:457 x2   semaphore.view.js:5 x2
-.mbox          semaphore.css:233 x11              semaphore.view.js:5 x3   semaphore.js:3733 x2
-.mbox-ask      semaphore.css:1534 x2              semaphore.view.js:5
-.mbtns         semaphore.css:1530                 semaphore.view.js:5 x3
+.mbox          semaphore.css:233 x11              semaphore.view.js:5 x3   semaphore.js:3737 x2
+.mbox-ask      semaphore.css:1537 x2              semaphore.view.js:5
+.mbtns         semaphore.css:1533                 semaphore.view.js:5 x3
 .mcell         semaphore.css:108 x2               semaphore.js:509
-.meta          semaphore.css:1231 x2              semaphore.js:1502 x2   atlas.js:2319 x2   callboard.js:101
+.meta          semaphore.css:1234 x2              semaphore.js:1502 x2   atlas.js:2319 x2   callboard.js:101
 .mk            semaphore.css:187 x3               semaphore.js:561 x4   ledger.js:59
-.mlab          semaphore.css:1278                 semaphore.js:1448 x3
+.mlab          semaphore.css:1281                 semaphore.js:1448 x3
 .name          semaphore.css:144 x3               semaphore.js:647 x63   ledger.js:3432 x36   atlas.js:732 x26
-.nbtn          semaphore.css:353 x2               semaphore.js:838 x2
-.never         semaphore.css:677                  ledger.view.js:5 x2   ledger.js:2634 x2   semaphore.js:1208 x2
-.none          semaphore.css:528 x6               ledger.js:278 x46   semaphore.js:251 x27   ledger.view.js:5 x13
-.noteform      semaphore.css:1057 x5              semaphore.js:2177 x3
+.nbtn          semaphore.css:356 x2               semaphore.js:838 x2
+.never         semaphore.css:680                  ledger.view.js:5 x2   ledger.js:2634 x2   semaphore.js:1208 x2
+.none          semaphore.css:531 x6               ledger.js:278 x46   semaphore.js:251 x27   ledger.view.js:5 x13
+.noteform      semaphore.css:1060 x5              semaphore.js:2177 x3
 .now           semaphore.css:185 x3               ledger.js:345 x6   semaphore.js:598 x6   ledger.view.js:5 x2
 .nowcaret      semaphore.css:117                  semaphore.js:512
-.nt            semaphore.css:1270                 semaphore.js:1424
-.offer         semaphore.css:1101 x8              semaphore.js:841 x3
-.ok            semaphore.css:1082                 semaphore.js:2165 x2
-.opt           semaphore.css:1317 x4              semaphore.js:1345
-.opts          semaphore.css:1316                 atlas.js:1110 x4   semaphore.js:1344
+.nt            semaphore.css:1273                 semaphore.js:1424
+.offer         semaphore.css:1104 x8              semaphore.js:841 x3
+.ok            semaphore.css:1085                 semaphore.js:2165 x2
+.opt           semaphore.css:1320 x4              semaphore.js:1345
+.opts          semaphore.css:1319                 atlas.js:1110 x4   semaphore.js:1344
 .past          semaphore.css:213 x19              semaphore.js:561 x10   ledger.js:5242 x5
-.pcard         semaphore.css:1237 x4              semaphore.js:1406
+.pcard         semaphore.css:1240 x4              semaphore.js:1406
 .pin           semaphore.css:323 x10              notes.js:914 x3   semaphore.js:2660
-.prim          semaphore.css:1029                 semaphore.js:2424 x2
+.prim          semaphore.css:1032                 semaphore.js:2424 x2
 .primary       semaphore.css:79 x4                semaphore.view.js:5 x4   semaphore.js:666 x4   ledger.view.js:5
-.ptext         semaphore.css:1238                 semaphore.js:1409
-.quiet         semaphore.css:1030                 semaphore.js:2423 x2   semaphore.view.js:5
+.ptext         semaphore.css:1241                 semaphore.js:1409
+.quiet         semaphore.css:1033                 semaphore.js:2423 x2   semaphore.view.js:5
 .rb            semaphore.css:196 x9               semaphore.js:593
-.rotbar        semaphore.css:511 x6               semaphore.js:1468
+.rotbar        semaphore.css:514 x6               semaphore.js:1468
 .row           semaphore.css:103 x40              ledger.js:1398 x22   notes.js:974 x11   semaphore.js:647 x7
-.rule          semaphore.css:1250                 semaphore.js:1506   notes.js:1041
+.rule          semaphore.css:1253                 semaphore.js:1506   notes.js:1041
 .run-on        semaphore.css:226 x2               semaphore.js:592 x2
-.s4            semaphore.css:1005 x2              —
-.s5            semaphore.css:1006 x2              —
-.scrolls       semaphore.css:448 x4               semaphore.js:2936
-.sdone         semaphore.css:1123 x3              semaphore.js:2600
-.season        semaphore.css:511 x2               semaphore.js:1473
-.seg-b         semaphore.css:1307 x7              semaphore.js:1364 x4
-.set           semaphore.css:837 x3               semaphore.js:631 x11   ledger.js:8157 x6   ledger.view.js:5 x3
-.settle        semaphore.css:472                  semaphore.js:3030 x2
-.sg            semaphore.css:1114 x3              semaphore.js:2596 x2
-.showing-back  semaphore.css:465 x6               ledger.js:5739 x4   semaphore.js:2800 x3
-.shut          semaphore.css:841 x5               semaphore.js:2235 x4   ledger.view.js:5
-.some          semaphore.css:486 x2               ledger.js:8696   semaphore.js:2622   notes.js:1473
-.soon          semaphore.css:527 x3               semaphore.js:2015 x5   ledger.js:7368 x2
+.s4            semaphore.css:1008 x2              —
+.s5            semaphore.css:1009 x2              —
+.scrolls       semaphore.css:451 x4               semaphore.js:2940
+.sdays         semaphore.css:340                  semaphore.js:2669
+.sdone         semaphore.css:1126 x3              semaphore.js:2600
+.season        semaphore.css:514 x2               semaphore.js:1473
+.seg-b         semaphore.css:1310 x7              semaphore.js:1364 x4
+.set           semaphore.css:840 x3               semaphore.js:631 x11   ledger.js:8157 x6   ledger.view.js:5 x3
+.settle        semaphore.css:475                  semaphore.js:3034 x2
+.sg            semaphore.css:1117 x3              semaphore.js:2596 x2
+.showing-back  semaphore.css:468 x6               ledger.js:5739 x4   semaphore.js:2804 x3
+.shut          semaphore.css:844 x5               semaphore.js:2235 x4   ledger.view.js:5
+.some          semaphore.css:489 x2               ledger.js:8696   semaphore.js:2622   notes.js:1473
+.soon          semaphore.css:530 x3               semaphore.js:2015 x5   ledger.js:7368 x2
 .sorter        semaphore.css:166 x3               semaphore.js:684
-.sp            semaphore.css:1025 x6              semaphore.js:1472 x11   atlas.js:1623 x4   ledger.js:8836 x2
-.spanline      semaphore.css:1255                 semaphore.js:1603 x2
-.stage         semaphore.css:1256                 callboard.js:177 x10   ledger.view.js:5 x2   callboard.view.js:5 x2
-.stamp         semaphore.css:323 x9               semaphore.js:1206 x9
-.stream        semaphore.css:1252 x2              semaphore.js:1507 x2
-.strip         semaphore.css:1112 x15             semaphore.js:2596 x2   ledger.js:12336
-.stx           semaphore.css:1119 x3              semaphore.js:2597 x2
+.sp            semaphore.css:1028 x6              semaphore.js:1472 x11   atlas.js:1623 x4   ledger.js:8836 x2
+.spanline      semaphore.css:1258                 semaphore.js:1603 x2
+.stage         semaphore.css:1259                 callboard.js:177 x10   ledger.view.js:5 x2   callboard.view.js:5 x2
+.stamp         semaphore.css:323 x11              semaphore.js:1206 x9
+.stream        semaphore.css:1255 x2              semaphore.js:1507 x2
+.strip         semaphore.css:1115 x15             semaphore.js:2596 x2   ledger.js:12336
+.stx           semaphore.css:1122 x3              semaphore.js:2597 x2
 .sw-call       semaphore.css:93                   semaphore.js:820
 .sw-fixed      semaphore.css:87                   —
 .sw-uncertain  semaphore.css:92 x2                semaphore.js:639 x2
-.swept         semaphore.css:1246 x2              semaphore.js:1469 x4
-.swhen         semaphore.css:1122                 semaphore.js:2599 x2
-.t-lead        semaphore.css:407                  —
-.t-mid         semaphore.css:313 x2               semaphore.js:2864
-.t-rest        semaphore.css:314 x6               semaphore.js:2865 x2
-.tabn          semaphore.css:365 x2               semaphore.js:3279 x4
-.taddrow       semaphore.css:1356 x3              semaphore.view.js:5
-.tell          semaphore.css:1537                 semaphore.js:3595 x2
-.tn            semaphore.css:481 x2               semaphore.js:2621 x2
-.toned         semaphore.css:947 x2               semaphore.js:2475
-.turn          semaphore.css:476 x9               semaphore.js:2619 x6
-.turning       semaphore.css:409 x11              ledger.js:7803 x8   semaphore.js:2979 x3
-.tyarenas      semaphore.css:1561                 semaphore.js:3642 x2
-.tyblock       semaphore.css:1549 x7              semaphore.js:3650 x6
-.tycol         semaphore.css:766                  semaphore.js:2360
-.tyghost       semaphore.css:1573 x2              semaphore.js:3728
-.tygrip        semaphore.css:1552 x3              semaphore.js:3644 x3
-.tyline        semaphore.css:1538 x9              semaphore.js:3651 x3
-.tylost        semaphore.css:1560                 semaphore.js:3666
-.tyn           semaphore.css:1555 x3              semaphore.js:3656
-.tyrn          semaphore.css:1567                 semaphore.js:3645
-.tyrow         semaphore.css:1562 x7              semaphore.js:3643 x7
-.tysrc         semaphore.css:1572                 semaphore.js:3734 x3
+.swept         semaphore.css:1249 x2              semaphore.js:1469 x4
+.swhen         semaphore.css:1125                 semaphore.js:2599 x2
+.t-lead        semaphore.css:410                  —
+.t-mid         semaphore.css:313 x2               semaphore.js:2868
+.t-rest        semaphore.css:314 x6               semaphore.js:2869 x2
+.tabn          semaphore.css:368 x2               semaphore.js:3283 x4
+.taddrow       semaphore.css:1359 x3              semaphore.view.js:5
+.tell          semaphore.css:1540                 semaphore.js:3599 x2
+.tn            semaphore.css:484 x2               semaphore.js:2621 x2
+.toned         semaphore.css:950 x2               semaphore.js:2475
+.turn          semaphore.css:479 x9               semaphore.js:2619 x6
+.turning       semaphore.css:412 x11              ledger.js:7803 x8   semaphore.js:2983 x3
+.tyarenas      semaphore.css:1564                 semaphore.js:3646 x2
+.tyblock       semaphore.css:1552 x7              semaphore.js:3654 x6
+.tycol         semaphore.css:769                  semaphore.js:2360
+.tyghost       semaphore.css:1576 x2              semaphore.js:3732
+.tygrip        semaphore.css:1555 x3              semaphore.js:3648 x3
+.tyline        semaphore.css:1541 x9              semaphore.js:3655 x3
+.tylost        semaphore.css:1563                 semaphore.js:3670
+.tyn           semaphore.css:1558 x3              semaphore.js:3660
+.tyrn          semaphore.css:1570                 semaphore.js:3649
+.tyrow         semaphore.css:1565 x7              semaphore.js:3647 x7
+.tysrc         semaphore.css:1575                 semaphore.js:3738 x3
 .unc           semaphore.css:208 x10              semaphore.js:564 x7
-.uncertain     semaphore.css:1313                 semaphore.js:262 x18
+.uncertain     semaphore.css:1316                 semaphore.js:262 x18
 .w-central     semaphore.css:152                  —
 .w-peripheral  semaphore.css:153                  —
-.waitpick      semaphore.css:1085                 semaphore.js:2565
-.wask          semaphore.css:342 x8               semaphore.js:2637
-.wback         semaphore.css:464 x4               semaphore.js:2793 x2
-.wbody         semaphore.css:502 x3               semaphore.js:1475 x2
-.wcard         semaphore.css:313 x27              semaphore.js:2799 x8
+.waitpick      semaphore.css:1088                 semaphore.js:2565
+.wask          semaphore.css:345 x8               semaphore.js:2637
+.wback         semaphore.css:467 x4               semaphore.js:2797 x2
+.wbody         semaphore.css:505 x3               semaphore.js:1475 x2
+.wcard         semaphore.css:313 x27              semaphore.js:2803 x8
 .wch           semaphore.css:313 x6               semaphore.js:2648 x2
 .wcnt          semaphore.css:327 x2               semaphore.js:2652
-.wd            semaphore.css:608 x5               semaphore.js:1937 x2
-.wedit         semaphore.css:323 x3               semaphore.js:2666
-.wempty        semaphore.css:684                  semaphore.js:3265
-.wface         semaphore.css:418 x9               semaphore.js:2768 x4
-.wfdot         semaphore.css:626                  semaphore.js:2655
-.wfin          semaphore.css:401 x5               semaphore.js:2801 x3
-.wfoot         semaphore.css:439 x3               semaphore.js:2736 x5
-.wfoot-pick    semaphore.css:443                  semaphore.js:2736
-.wfresh        semaphore.css:620 x4               semaphore.js:1463 x2
-.wfront        semaphore.css:436 x5               semaphore.js:2768 x3
-.wghost        semaphore.css:680 x2               semaphore.js:3262
-.wgrid         semaphore.css:312 x2               semaphore.js:3146
-.whead         semaphore.css:288                  semaphore.js:3143 x3
-.when          semaphore.css:1331                 semaphore.js:1490 x9   ledger.js:2572 x4   atlas.js:916 x3
+.wd            semaphore.css:611 x5               semaphore.js:1937 x2
+.wedit         semaphore.css:323 x3               semaphore.js:2670
+.wempty        semaphore.css:687                  semaphore.js:3269
+.wface         semaphore.css:421 x9               semaphore.js:2772 x4
+.wfdot         semaphore.css:629                  semaphore.js:2655
+.wfin          semaphore.css:404 x5               semaphore.js:2805 x3
+.wfoot         semaphore.css:442 x3               semaphore.js:2740 x5
+.wfoot-pick    semaphore.css:446                  semaphore.js:2740
+.wfresh        semaphore.css:623 x4               semaphore.js:1463 x2
+.wfront        semaphore.css:439 x5               semaphore.js:2772 x3
+.wghost        semaphore.css:683 x2               semaphore.js:3266
+.wgrid         semaphore.css:312 x2               semaphore.js:3150
+.whead         semaphore.css:288                  semaphore.js:3147 x3
+.when          semaphore.css:1334                 semaphore.js:1490 x9   ledger.js:2572 x4   atlas.js:916 x3
 .whmenu        semaphore.css:175 x7               semaphore.js:687 x2
 .whsort        semaphore.css:167 x6               semaphore.js:684
-.wide          semaphore.css:749 x11              semaphore.js:1599 x2
-.wlc           semaphore.css:589 x4               semaphore.js:1941 x2
-.wline         semaphore.css:520                  semaphore.js:2109
-.wlink         semaphore.css:575 x16              semaphore.js:1936 x2
-.wlinks        semaphore.css:574 x7               semaphore.js:1960 x2
-.wlk           semaphore.css:438 x10              semaphore.js:2784
-.wlmore        semaphore.css:569 x3               semaphore.js:2116 x2
-.wlrow         semaphore.css:582 x10              semaphore.js:1940 x3
-.wn            semaphore.css:576 x4               semaphore.js:1937 x4
+.wide          semaphore.css:752 x11              semaphore.js:1599 x2
+.wlc           semaphore.css:592 x4               semaphore.js:1941 x2
+.wline         semaphore.css:523                  semaphore.js:2109
+.wlink         semaphore.css:578 x16              semaphore.js:1936 x2
+.wlinks        semaphore.css:577 x7               semaphore.js:1960 x2
+.wlk           semaphore.css:441 x10              semaphore.js:2788
+.wlmore        semaphore.css:572 x3               semaphore.js:2116 x2
+.wlrow         semaphore.css:585 x10              semaphore.js:1940 x3
+.wn            semaphore.css:579 x4               semaphore.js:1937 x4
 .wname         semaphore.css:152 x6               semaphore.js:2650
-.wnm           semaphore.css:492 x2               semaphore.js:2649
-.wnone         semaphore.css:579 x2               semaphore.js:2788
-.wpa           semaphore.css:673 x2               semaphore.js:3098
-.wpage         semaphore.css:676 x3               semaphore.js:3099
-.wpd           semaphore.css:523 x4               semaphore.js:2059 x2
-.wph           semaphore.css:521 x2               semaphore.js:2063 x2
-.wphd          semaphore.css:1086                 semaphore.js:2565
-.wpinned       semaphore.css:578 x2               semaphore.js:2787
-.wpins         semaphore.css:660                  semaphore.js:3145
-.wplink        semaphore.css:665 x7               semaphore.js:3095 x2
-.wplist        semaphore.css:661                  semaphore.js:3145
-.wpn           semaphore.css:532 x3               semaphore.js:2061 x2
-.wpo           semaphore.css:1087 x8              semaphore.js:2569
-.wprow         semaphore.css:662 x3               semaphore.js:3092
-.wpt           semaphore.css:529                  semaphore.js:2059
-.wpw           semaphore.css:524 x4               semaphore.js:2058
-.wpx           semaphore.css:1098 x2              semaphore.js:2574
-.wrest         semaphore.css:388 x2               semaphore.js:3261
-.wsay          semaphore.css:295 x2               semaphore.js:3144 x3
-.wsb           semaphore.css:552 x8               semaphore.js:2091
-.wsbars        semaphore.css:550                  semaphore.js:2112
-.wscroll       semaphore.css:430 x6               semaphore.js:2770 x3
-.wsd           semaphore.css:542 x7               semaphore.js:2081
-.wsin          semaphore.css:432 x2               semaphore.js:2770 x4
-.wsl           semaphore.css:538 x2               semaphore.js:2111
-.wsnow         semaphore.css:563                  semaphore.js:2113
-.wsr           semaphore.css:540 x2               semaphore.js:2080
-.wsrow         semaphore.css:551                  semaphore.js:2091
-.wstrip        semaphore.css:537                  semaphore.js:2110
-.wsub          semaphore.css:500                  semaphore.js:2651
-.wsx           semaphore.css:565 x4               semaphore.js:2114
-.wtc           semaphore.css:383 x2               semaphore.js:3257
-.wthead        semaphore.css:379                  semaphore.js:3255
-.wtn           semaphore.css:382                  semaphore.js:3256
-.wtrack        semaphore.css:385 x2               semaphore.js:3018 x3
-.wtrow         semaphore.css:378 x2               semaphore.js:3254
-.y             semaphore.css:568                  atlas.js:20 x12   notes.js:1601 x7   ledger.view.js:5 x4
+.wnm           semaphore.css:495 x2               semaphore.js:2649
+.wnone         semaphore.css:582 x2               semaphore.js:2792
+.wpa           semaphore.css:676 x2               semaphore.js:3102
+.wpage         semaphore.css:679 x3               semaphore.js:3103
+.wpd           semaphore.css:526 x4               semaphore.js:2059 x2
+.wph           semaphore.css:524 x2               semaphore.js:2063 x2
+.wphd          semaphore.css:1089                 semaphore.js:2565
+.wpinned       semaphore.css:581 x2               semaphore.js:2791
+.wpins         semaphore.css:663                  semaphore.js:3149
+.wplink        semaphore.css:668 x7               semaphore.js:3099 x2
+.wplist        semaphore.css:664                  semaphore.js:3149
+.wpn           semaphore.css:535 x3               semaphore.js:2061 x2
+.wpo           semaphore.css:1090 x8              semaphore.js:2569
+.wprow         semaphore.css:665 x3               semaphore.js:3096
+.wpt           semaphore.css:532                  semaphore.js:2059
+.wpw           semaphore.css:527 x4               semaphore.js:2058
+.wpx           semaphore.css:1101 x2              semaphore.js:2574
+.wrest         semaphore.css:391 x2               semaphore.js:3265
+.wsay          semaphore.css:295 x2               semaphore.js:3148 x3
+.wsb           semaphore.css:555 x8               semaphore.js:2091
+.wsbars        semaphore.css:553                  semaphore.js:2112
+.wscroll       semaphore.css:433 x6               semaphore.js:2774 x3
+.wsd           semaphore.css:545 x7               semaphore.js:2081
+.wsin          semaphore.css:435 x2               semaphore.js:2774 x4
+.wsl           semaphore.css:541 x2               semaphore.js:2111
+.wsnow         semaphore.css:566                  semaphore.js:2113
+.wsr           semaphore.css:543 x2               semaphore.js:2080
+.wsrow         semaphore.css:554                  semaphore.js:2091
+.wstrip        semaphore.css:540                  semaphore.js:2110
+.wsub          semaphore.css:503                  semaphore.js:2651
+.wsx           semaphore.css:568 x4               semaphore.js:2114
+.wtc           semaphore.css:386 x2               semaphore.js:3261
+.wthead        semaphore.css:382                  semaphore.js:3259
+.wtn           semaphore.css:385                  semaphore.js:3260
+.wtrack        semaphore.css:388 x2               semaphore.js:3022 x3
+.wtrow         semaphore.css:381 x2               semaphore.js:3258
+.y             semaphore.css:571                  atlas.js:20 x12   notes.js:1601 x7   ledger.view.js:5 x4
 ```
 
 ## Callboard — `rooms/callboard/callboard.css`
@@ -1418,7 +1420,7 @@ the two lists at the foot of this file is where those names gather.
 .danger      atlas.css:124 x4                   atlas.js:792 x2   semaphore.js:1587
 .dc          atlas.css:248                      callboard.js:282 x2   atlas.js:1986
 .dclose      atlas.css:271 x2                   atlas.view.js:5 x2   atlas.js:2348
-.dd          atlas.css:249                      semaphore.js:3037 x2   callboard.js:431 x2   atlas.js:1986
+.dd          atlas.css:249                      semaphore.js:3041 x2   callboard.js:431 x2   atlas.js:1986
 .dedit       atlas.css:286 x2                   atlas.js:1792
 .dm          atlas.css:247                      callboard.js:239 x11   atlas.js:1986
 .dom         atlas.css:209 x7                   ledger.js:5248   atlas.js:1344
@@ -1519,7 +1521,7 @@ the two lists at the foot of this file is where those names gather.
 ```
 #nt-search       notes.css:37                       notes.js:1412 x5   notes.view.js:15
 #nt-taginput     notes.css:834 x3                   notes.js:3068 x6
-.armed           notes.css:852 x3                   semaphore.js:4028 x3   notes.js:3036 x3
+.armed           notes.css:852 x3                   semaphore.js:4032 x3   notes.js:3036 x3
 .dragging        notes.css:143 x16                  ledger.js:673 x10   atlas.js:2184 x2   notes.js:851 x2
 .nt-arrange      notes.css:487 x6                   notes.js:1212
 .nt-arrange-say  notes.css:499                      notes.js:1226
@@ -1687,8 +1689,8 @@ strength of this list is how a working room loses its paint.
 .ci-row-main       ledger.css:2331     … + '-row-main'      ledger.js:4381
 .ci-row-name       ledger.css:102      … + '-row-name'      ledger.js:4386
 .ci-row-tabs       ledger.css:2346     … + '-row-tabs'      ledger.js:4391
-.k-contacted       semaphore.css:711   'k-' + …             semaphore.js:2474
-.k-talking         semaphore.css:712   'k-' + …             semaphore.js:2474
+.k-contacted       semaphore.css:714   'k-' + …             semaphore.js:2474
+.k-talking         semaphore.css:715   'k-' + …             semaphore.js:2474
 .pi-row-colordot   ledger.css:3220     … + '-row-colordot'  ledger.js:4383
 .pi-row-del        ledger.css:3231     … + '-row-del'       ledger.js:4395
 .pi-row-drag       ledger.css:3217     … + '-row-drag'      ledger.js:4382
@@ -1696,16 +1698,16 @@ strength of this list is how a working room loses its paint.
 .s1                atlas.css:160       's' + …              ledger.js:8856
 .s2                atlas.css:161       's' + …              ledger.js:8856
 .s3                atlas.css:162       's' + …              ledger.js:8856
-.s4                semaphore.css:1005  's' + …              ledger.js:8856
-.s5                semaphore.css:1006  's' + …              ledger.js:8856
+.s4                semaphore.css:1008  's' + …              ledger.js:8856
+.s5                semaphore.css:1009  's' + …              ledger.js:8856
 .sw-fixed          semaphore.css:87    'sw-' + …            semaphore.js:821
-.t-lead            semaphore.css:407   't-' + …             semaphore.js:2799
+.t-lead            semaphore.css:410   't-' + …             semaphore.js:2803
 .w-central         semaphore.css:152   'w-' + …             semaphore.js:56
 .w-peripheral      semaphore.css:153   'w-' + …             semaphore.js:56
 ```
 
 ---
 
-**1574 names** across 6 stylesheets. 1547 are written somewhere the scan can see;
+**1576 names** across 6 stylesheets. 1549 are written somewhere the scan can see;
 9 are written but never painted, 27 painted but never written — 22 of
 those assembled at runtime from a fragment, and 5 with no explanation at all.

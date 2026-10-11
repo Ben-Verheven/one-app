@@ -177,6 +177,9 @@ a{color:inherit}
   transition:background-color .15s,border-color .15s,color .15s,transform .15s}
 .stamp:active b{transform:scale(.9)}
 .stamp.on b{background:var(--key);border-color:var(--key);color:#F1EBDD}
+.stamp{flex-basis:auto;min-width:44px;width:auto}
+.stamp b.dated{width:auto;padding:0 8px 0 7px;gap:4px;border-radius:12px}
+.stamp .sdays{font:11px/1 var(--mono)}
 
 /* the phase line and the strip of time (the desk's cardLineHTML) */
 .wline{padding:10px 13px 8px}
@@ -1964,9 +1967,12 @@ function pinBtn(on, label, act){
   b.addEventListener('click', function(e){ e.stopPropagation(); e.preventDefault(); act(); });
   return b;
 }
-function tickBtn(on, label, act){
+/* `days`, where given, is how long since the stamp was last pressed, shown
+   beside the tick as on the desk's card (2026-10-11) */
+function tickBtn(on, label, act, days){
   var b = el('button', 'stamp' + (on ? ' on' : ''));
-  b.appendChild(el('b', '', '✓'));
+  var t = b.appendChild(el('b', days == null ? '' : 'dated', '✓'));
+  if (days != null) t.appendChild(el('span', 'sdays', String(days)));
   b.setAttribute('aria-label', label);
   b.addEventListener('click', function(e){ e.stopPropagation(); act(); });
   return b;
@@ -2028,7 +2034,8 @@ function wallCard(a, st, tier){
       function(){ pinArena(a); }));
   var on = stampedToday(a);
   head.appendChild(tickBtn(on, on ? 'Take the stamp off' : 'Stamp it — gone through',
-    function(){ stampArena(a); }));
+    function(){ stampArena(a); },
+    a.sweptAt ? Math.max(0, daysBetween(T(a.sweptAt), T(todayISO()))) : null));
   c.appendChild(head);
   if (tier === 'rest') return c;
 
