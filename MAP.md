@@ -360,7 +360,7 @@ _No section banners._
 
 ## `rooms/semaphore/semaphore.js`
 
-4558 lines · 240 KB
+4563 lines · 240 KB
 
 ```
 Brokerage Semaphore                               semaphore.js:1
@@ -394,16 +394,16 @@ one rhythm for the wall                           semaphore.js:2814
 pinned: the links and the cards you keep to hand  semaphore.js:3124
 leads: one board, three sections                  semaphore.js:3155
 the rotation: a strip for every type              semaphore.js:3221
-leads, lent to the Ledger's board                 semaphore.js:3480
-modals                                            semaphore.js:3575
-asking, and saying                                semaphore.js:3578
-the types, managed                                semaphore.js:3622
-dragging in the list of types                     semaphore.js:3679
-tooltip                                           semaphore.js:3840
-events                                            semaphore.js:3872
-typing, and the forms it goes into                semaphore.js:4174
-escape, and closing by clicking away              semaphore.js:4336
-putting links in your own order                   semaphore.js:4378
+leads, lent to the Ledger's board                 semaphore.js:3485
+modals                                            semaphore.js:3580
+asking, and saying                                semaphore.js:3583
+the types, managed                                semaphore.js:3627
+dragging in the list of types                     semaphore.js:3684
+tooltip                                           semaphore.js:3845
+events                                            semaphore.js:3877
+typing, and the forms it goes into                semaphore.js:4179
+escape, and closing by clicking away              semaphore.js:4341
+putting links in your own order                   semaphore.js:4383
 ```
 
 ## `rooms/semaphore/semaphore.css`
@@ -640,4 +640,4 @@ Generated data. Never open, never edit, never upload.
 
 ---
 
-**36057 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.
+**36062 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.

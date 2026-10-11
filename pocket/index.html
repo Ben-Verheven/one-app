@@ -1851,10 +1851,12 @@ function asking(st){ return !!st && st.score >= RUNG.asking[0]; }
 
 function saying(st){
   if (!st) return '';
-  if (st.state === 'held' && st.hold) return 'Waiting until ' + plainOf(st.hold.label || 'its date');
+  /* a wait, short, as the desk's card foot says it: what, and when */
+  if (st.state === 'held' && st.hold)
+    return 'Waiting for ' + plainOf(st.hold.label || 'its date') + ' · ' + shortDay(st.hold.dt.start);
   if (st.state === 'wake' && st.hold)
-    return 'The date it was waiting for is in reach — ' + plainOf(st.hold.label || '') +
-           ' in ' + st.hold.near + (st.hold.near === 1 ? ' day' : ' days');
+    return 'Waiting for ' + plainOf(st.hold.label || 'its date') + ' · ' +
+           (st.hold.near <= 0 ? 'today' : 'in ' + st.hold.near + ' d');
   if (st.note && st.note.text) return plainOf(st.note.text);
   if (st.state === 'sweep') return 'A call window is open';
   return (st.rest != null && st.rest < 1)
@@ -2081,10 +2083,12 @@ function openArenaById(id){
 
 /* The desk's rotation since 2026-10-11: a row for every type, in Mark's own
    order of types, and in each row the cards in standing order — the desk's
-   split, asked of one type at a time — with a card stamped today at the far
-   end of its row. An arena whose type is gone stands in a last row of its
-   own, as on the desk. */
+   split, asked of one type at a time — with a card stamped today towards the
+   far end of its row and, past those, the cards asleep until a date of their
+   own (2026-10-11), as on the desk. An arena whose type is gone stands in a
+   last row of its own. */
 function typeRows(){
+  function asleep(x){ return !!x.s && x.s.state === 'held'; }
   var live = liveList().filter(function(a){ return !!scoreOf(a); });
   var types = (data.semaphore && data.semaphore.types) || [];
   var rows = [];
@@ -2094,8 +2098,9 @@ function typeRows(){
     var w;
     try { w = rotationSplit(of); } catch(e){ console.error(e); w = { list:[], empty:[] }; }
     rows.push({ t:t, n:of.length,
-      todo: w.list.filter(function(x){ return !stampedToday(x.a); }),
-      stamped: w.list.filter(function(x){ return stampedToday(x.a); }),
+      todo: w.list.filter(function(x){ return !asleep(x) && !stampedToday(x.a); }),
+      stamped: w.list.filter(function(x){ return !asleep(x) && stampedToday(x.a); }),
+      waiting: w.list.filter(asleep),
       empty: w.empty });
   });
   return rows;
@@ -2118,15 +2123,16 @@ function drawRot(){
   }
   /* Look around takes the types in turn: the first card of every type,
      then the second of every type, and so on, so a short walk has already
-     been through each type once. The stamped ones close the walk. */
-  var todo = [], stamped = [];
+     been through each type once. The stamped ones close the walk, and after
+     them the ones asleep until their date. */
+  var todo = [], stamped = [], waiting = [];
   for (var i = 0; ; i++){
     var more = false;
     rows.forEach(function(r){ if (r.todo[i]){ todo.push(r.todo[i]); more = true; } });
     if (!more) break;
   }
-  rows.forEach(function(r){ stamped = stamped.concat(r.stamped); });
-  rotList = todo.concat(stamped);
+  rows.forEach(function(r){ stamped = stamped.concat(r.stamped); waiting = waiting.concat(r.waiting); });
+  rotList = todo.concat(stamped, waiting);
   var n = todo.filter(function(x){ return asking(x.s); }).length;
   badge('rot', n);
 
@@ -2162,7 +2168,7 @@ function drawRot(){
     if (k){ c.appendChild(document.createTextNode(' · ')); c.appendChild(el('b', '', k + ' asking')); }
     h.appendChild(c);
     sec.appendChild(h);
-    var cards = r.todo.concat(r.stamped);
+    var cards = r.todo.concat(r.stamped, r.waiting);
     if (cards.length){
       var tr = el('div', 'wtrack');
       tr.dataset.ty = r.t ? r.t.id : '';
@@ -3069,7 +3075,7 @@ function leadForm(panel, arenaOf){
 function newLead(){
   var arenas = [];
   typeRows().forEach(function(r){
-    arenas = arenas.concat(r.todo.concat(r.stamped).map(function(x){ return x.a; }), r.empty);
+    arenas = arenas.concat(r.todo.concat(r.stamped, r.waiting).map(function(x){ return x.a; }), r.empty);
   });
   liveList().forEach(function(a){ if (arenas.indexOf(a) < 0) arenas.push(a); });
   sheet(function(b, bar){

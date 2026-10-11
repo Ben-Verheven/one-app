@@ -6,7 +6,8 @@ Semaphore (the Cards view of 2026-10-06). Four tabs:
 
 - **Rotation** — the desk's rotation since 2026-10-11 (`typeRows`): a row for every arena type, in
   the desk's order of types, each headed by a band in the type's colour; in each row the cards, all one size, in
-  standing order, swiped sideways, with a card stamped today at the far end. Walked one card at a
+  standing order, swiped sideways, with a card stamped today towards the far end and, past those, a
+  card asleep until a date of its own, whose foot says so in short ("Waiting for … · 1 Jan"). Walked one card at a
   time with *Look around* → Next / Stamp & next, which takes the types in turn: every type's first
   card, then every type's second. Arenas with no brokerage material are ghosts under their row.
 - **Pinned** — pinned links first (oldest pin first), each with its own stamp ✓, the days since,

@@ -3228,8 +3228,11 @@ function paintWall(){
      only compared within the type — so every type has a first card of its
      own. The rows have no big and small cards any more: every card is one
      size, the row trails off to the right and scrolls, and a card stamped
-     today goes to the far right of its row, past the parked ones, so the
-     stamp visibly puts it away. */
+     today goes towards the far right of its row, so the stamp visibly puts
+     it away. Past the stamped ones, at the very end, stand the cards asleep
+     until a date of their own (Mark, 2026-10-11: those waiting always on the
+     far right); one whose date has come within reach is awake and asking
+     again, and takes its place in the rotation like any other. */
   const ask=RUNG.asking[0];
   const today=todayISO();
   const rows=S.types.map(t=>[t,vis.filter(a=>a.typeId===t.id)])
@@ -3243,7 +3246,9 @@ function paintWall(){
   let any=false;
   for(const[t,arenas]of rows){
     const{list,empty}=rotationSplit(arenas);
-    const cards=list.filter(x=>x.a.sweptAt!==today).concat(list.filter(x=>x.a.sweptAt===today));
+    const asleep=x=>x.s.state==='held';
+    const cards=list.filter(x=>!asleep(x)&&x.a.sweptAt!==today)
+      .concat(list.filter(x=>!asleep(x)&&x.a.sweptAt===today),list.filter(asleep));
     const k=list.filter(x=>x.s.score>=ask).length;
     if(cards.length)any=true;
     h+='<section class="wtrow"'+(t?' style="--tone:'+esc(toneHex(t.color))+'"':'')+'>'+
