@@ -42,7 +42,7 @@ does to brokerage events), types (their order and colour too), the freezer, and 
   event's own website (`url`), or *+ add website* (`addSite`, offering the arena's links, the likeliest
   first by `eventLink`); and ✕, which removes the event from the whole app after asking (`askDrop`).
   A brokerage event that is over goes to **Limbo**, one folded line at the top, and stays there until
-  Mark removes it, where ✕ does not ask (Pocket only; the desk shows the last fortnight instead). A
+  Mark removes it, where ✕ does not ask, as on the desk. A
   call is read only and leaves two weeks after. The tab carries no number (removed 2026-10-08 at
   Mark's request).
 

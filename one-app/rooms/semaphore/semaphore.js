@@ -1104,12 +1104,15 @@ function acceptAllFinds(){
 
    Brokerage first, as everywhere in this room: calls come in only when
    "Everything" is chosen, quieter, in their own stage colour. The window is
-   the phone's — a fortnight back, so an event just past can still be
-   opened, and a year forward — but the fortnight waits behind one line at
-   the top: on the real board it was a whole screen of September before the
+   the phone's: a year forward, and for a call a fortnight back, so a
+   deadline just passed still says where the round stands. A brokerage event
+   that is over goes to Limbo, folded into one line at the top, and stays
+   there until Mark takes it off by hand (2026-10-11, the same in Pocket):
+   the fortnight before it, a line of its own too, let an event leave the
+   board unseen, and unfolded it was a whole screen of September before the
    first thing still to come. The filters above apply, the freezer is out,
    as on the board. A month with nothing in it is left out. */
-let cuPast=false;              /* the fortnight just gone, shown on request */
+let cuLimbo=false;             /* Limbo, unfolded on request */
 let cuHi=null;                 /* the event a press on the board or a card came for */
 let cuNew=false;               /* the new-event form is open */
 /* A brokerage diamond, on the board or on a card, is pressed to see that
@@ -1121,9 +1124,9 @@ function jumpDate(aid,did){
   const a=arena(aid),d=a&&(a.dates||[]).find(x=>x.id===did);
   if(!d)return;
   const now=T(todayISO()),e=T(d.end||d.start);
-  if(d.kind==='call'||!d.start||e<now-14*DAY||T(d.start)>now+366*DAY||!visibleArenas().includes(a)){
+  if(d.kind==='call'||!d.start||T(d.start)>now+366*DAY||!visibleArenas().includes(a)){
     openDrawer(aid,did);return;}
-  if(e<now)cuPast=true;
+  if(e<now)cuLimbo=true;
   cuHi=did;S.ui.view='coming';save();renderAll();
   const row=document.querySelector('#coming .culn[data-cud="'+did+'"]');
   if(row)row.scrollIntoView({block:'center'});
@@ -1132,10 +1135,11 @@ function comingUp(){
   const now=T(todayISO()),from=now-14*DAY,to=now+366*DAY,out=[];
   for(const a of visibleArenas())for(const d of a.dates||[]){
     if(!d.start||d.gran==='none')continue;
-    if(!S.ui.cuAll&&d.kind==='call')continue;
+    const call=d.kind==='call';
+    if(!S.ui.cuAll&&call)continue;
     const s=T(d.start),e=T(d.end||d.start);
-    if(e<from||s>to)continue;
-    out.push({a,d,s,e});
+    if((call&&e<from)||s>to)continue;
+    out.push({a,d,s,e,limbo:!call&&e<now});
   }
   /* What is over goes above the today line and everything else below it,
      so an event that began in September and runs into November is read
@@ -1205,10 +1209,10 @@ function stampSay(st){
 const LONG_MONTHS=['January','February','March','April','May','June','July','August',
   'September','October','November','December'];
 function comingRow(it){
-  const{a,d}=it,now=T(todayISO()),call=d.kind==='call',past=it.e<now;
+  const{a,d}=it,now=T(todayISO()),call=d.kind==='call',past=it.e<now&&!it.limbo;
   const sIn=daysBetween(now,it.s);
-  const when=call||past?'':it.s<=now?'on now':sIn===1?'tomorrow':sIn<=30?'in '+sIn+' d':'';
-  const site=call||(past&&!d.url)?'':d.url
+  const when=call||it.e<now?'':it.s<=now?'on now':sIn===1?'tomorrow':sIn<=30?'in '+sIn+' d':'';
+  const site=call?'':d.url
     ?'<a class="cusite" href="'+esc(d.url)+'" target="_blank" rel="noopener" title="'+esc(d.url)+'">'+
       esc(linkName({url:d.url}))+'</a>'
     :'<button class="cusite none" data-act="cuSite" data-a="'+a.id+'" data-d="'+d.id+'" '+
@@ -1217,7 +1221,7 @@ function comingRow(it){
   const stamp=st?'<button class="stamp'+(st.on?' on':'')+'" data-act="cuStamp" data-a="'+a.id+'" data-d="'+d.id+'" '+
       'title="'+st.stTip+'" aria-label="'+st.stTip+'">\u2713</button>'+
     '<span class="cuage'+(st.d===null?' never':'')+'" title="'+st.ageTip+'">'+(st.d===null?'':st.age)+'</span>':'';
-  return '<div class="culn'+(call?' call':'')+(past?' past':'')+(cuHi===d.id?' cuhi':'')+'" data-cud="'+d.id+'" style="--c:'+dtColor(d)+'">'+
+  return '<div class="culn'+(call?' call':'')+(past?' past':'')+(it.limbo?' limbo':'')+(cuHi===d.id?' cuhi':'')+'" data-cud="'+d.id+'" style="--c:'+dtColor(d)+'">'+
     '<span class="cud'+(d.grade==='fixed'?'':' unc')+'" title="'+esc(dispDate(d))+'">'+
       (d.grade==='fixed'?'':'\u2248\u2009')+esc(cuDate(d))+'</span>'+
     '<span class="cug"><i class="sw sw-'+d.grade+'"></i></span>'+
@@ -1228,7 +1232,7 @@ function comingRow(it){
       '<span class="cuar">'+esc(a.name)+(when?' \u00B7 <span class="cusoon">'+when+'</span>':'')+'</span>'+
     '</span>'+
     '<span class="cuend">'+site+stamp+
-      (call?'':'<button class="cudel" data-act="cuDel" data-a="'+a.id+'" data-d="'+d.id+'" '+
+      (call?'':'<button class="cudel" data-act="cuDel" data-a="'+a.id+'" data-d="'+d.id+'"'+(it.limbo?' data-limbo="1"':'')+' '+
         'title="Remove this event from the app" aria-label="Remove '+esc(dtLabel(d))+'">\u2715</button>')+
     '</span>'+
   '</div>';
@@ -1261,8 +1265,7 @@ function renderComing(){
   const el=$('#coming');
   if(!el)return;
   const all=comingUp(),now=T(todayISO());
-  const gone=all.filter(x=>x.e<now).length;
-  const list=cuPast?all:all.filter(x=>x.e>=now);
+  const limbo=all.filter(x=>x.limbo),list=all.filter(x=>!x.limbo);
   const brk=list.filter(x=>x.d.kind!=='call'&&x.e>=now);
   const bare=brk.filter(x=>!x.d.url).length;
   const pills='<div class="wsort">'+[['0','Brokerage'],['1','Everything']].map(([v,n])=>
@@ -1273,11 +1276,16 @@ function renderComing(){
       ?'<b>'+brk.length+'</b> brokerage event'+(brk.length===1?'':'s')+' in the coming year'+
         (bare?', <b>'+bare+'</b> still without a website':'')+'.'
       :'')+'</span><span class="spacer"></span>'+addBtn+'</div>'+(cuNew?cuFormHTML():'');
+  const lim=limbo.length?'<div class="culimbo"><button class="culb" data-act="cuLimbo" aria-expanded="'+cuLimbo+'">'+
+      '<span class="culc">Limbo</span><b>'+limbo.length+'</b> '+(limbo.length===1?'event is over':'events are over')+
+      '<span class="culw">'+(cuLimbo?'Hide':'Show')+'</span></button>'+
+    (cuLimbo?'<p class="culh">Each waits here until you take it off with \u2715.</p>'+
+      '<div class="cuspine">'+limbo.map(comingRow).join('')+'</div>':'')+'</div>':'';
   if(!list.length){
     const why=liveArenas().length&&!visibleArenas().length?emptyReason(false):
       [S.ui.cuAll?'Nothing dated in the coming year.':'No brokerage event in the coming year.',
        S.ui.cuAll?'Give an arena a date and it appears here.':'Choose Everything to see the calls as well.'];
-    el.innerHTML=head+'<div class="empty"><p>'+why[0]+'</p><p class="hint" style="margin-top:6px">'+why[1]+'</p></div>';
+    el.innerHTML=head+(lim?'<div class="culist">'+lim+'</div>':'')+'<div class="empty"><p>'+why[0]+'</p><p class="hint" style="margin-top:6px">'+why[1]+'</p></div>';
     return;
   }
   /* An event still running is filed under this month rather than the month
@@ -1299,9 +1307,7 @@ function renderComing(){
     return '<section class="cumon"><div class="cumn">'+LONG_MONTHS[+m.slice(5,7)-1]+
       '<small>'+m.slice(0,4)+'</small></div><div class="cuspine">'+rows+'</div></section>';
   }).join('');
-  const pastBtn=gone?'<button class="cupast" data-act="cuPast">'+
-    (cuPast?'Hide the last fortnight':'Show the last fortnight \u00B7 '+gone+' past')+'</button>':'';
-  el.innerHTML=head+'<div class="culist">'+pastBtn+body+(placed?'':'<div class="cutoday"><span>today</span></div>')+'</div>';
+  el.innerHTML=head+'<div class="culist">'+lim+body+(placed?'':'<div class="cutoday"><span>today</span></div>')+'</div>';
 }
 
 /* ============ drawer ============ */
@@ -4048,7 +4054,7 @@ document.addEventListener('click',e=>{
       break;}
     case 'findRefresh':loadFinds();break;
     case 'cuAll':S.ui.cuAll=b.dataset.v==='1';save();renderComing();break;
-    case 'cuPast':cuPast=!cuPast;renderComing();break;
+    case 'cuLimbo':cuLimbo=!cuLimbo;renderComing();break;
     case 'cuStamp':{if(!a)break;const dt=a.dates.find(d=>d.id===b.dataset.d);if(!dt)break;
       toggleStamp(dt);save();renderComing();break;}
     case 'jumpDate':jumpDate(b.dataset.a,b.dataset.d);break;
@@ -4066,6 +4072,10 @@ document.addEventListener('click',e=>{
        2026-10-08: "remove them from everywhere in the app"). */
     case 'cuDel':{if(!a)break;const dt=a.dates.find(d=>d.id===b.dataset.d);if(!dt)break;
       const aid=a.id,did=dt.id;
+      /* In Limbo every event is there to be taken off, and asking each time
+         would make clearing it a dialog per row; the ask stays for an event
+         still to come, which a stray click must not lose. */
+      if(b.dataset.limbo){a.dates=a.dates.filter(d=>d.id!==did);reconcile(a);save();renderAll();break;}
       Ask.ask('Remove this event?',
         '\u201C'+dtLabel(dt)+'\u201D \u2014 '+dispDate(dt)+', on '+a.name+
         '. It goes from the whole app: this list, the board, the cards and the arena\u2019s panel.',
