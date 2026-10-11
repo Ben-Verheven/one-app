@@ -223,8 +223,7 @@ a{color:inherit}
 
 /* the links band, and a link row wherever one is drawn */
 .wlk{background:var(--sink);border-top:1px solid var(--line);padding:6px 4px 6px}
-.wlk .cap,.lklab{display:block;padding:4px 9px 3px;color:var(--faint);font-size:8.5px}
-.wlk .cap b{font-weight:400;color:var(--muted);margin-left:5px}
+.lklab{display:block;padding:4px 9px 3px;color:var(--faint);font-size:8.5px}
 .wlink{display:flex;align-items:baseline;gap:10px;min-height:40px;padding:9px 9px;border-radius:var(--radius);
   text-decoration:none;color:var(--ink)}
 .wlink::before{content:"\2197";flex:0 0 auto;color:var(--faint);font-size:11px;line-height:1}
@@ -2041,10 +2040,8 @@ function wallCard(a, st, tier){
   }
 
   if (shown.length){
+    /* the desk's band, without its "Links" heading since 2026-10-11 */
     var band = el('div', 'wlk');
-    var lab = el('span', 'cap', 'Links');
-    lab.appendChild(el('b', '', String(shown.length)));
-    band.appendChild(lab);
     var cap = tier === 'mid' ? 2 : 3;
     shown.slice(0, cap).forEach(function(lk){ band.appendChild(pinnableRow(lk, a)); });
     if (shown.length > cap){

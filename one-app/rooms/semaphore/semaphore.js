@@ -598,19 +598,6 @@ function laneHTML(a){
   if(now>=T0&&now<=T1)h+='<div class="now" style="left:'+X(now)+'%"></div>';
   return h;
 }
-/* Where an arena stands in its calls, in the cards' words, for the column
-   beside the names: a call open now, one still to open, or neither. An arena
-   with no call on it at all says nothing. No day count — Mark asked for the
-   word alone; the bar beside it says when. */
-function boardPhase(a){
-  const{live,last}=callRuns(a);
-  const o=live.find(r=>r.state==='open'&&r.next)||live.find(r=>r.state==='open');
-  if(o)return{k:'open',w:'Open',d:o.next||o.open,t:o.next?T(o.next.start):T(o.open.start)};
-  const so=live.find(r=>r.state==='soon');
-  if(so)return{k:'soon',w:'Opens',d:so.open,t:T(so.open.start)};
-  if(last){const d=last.close||last.open;return{k:'none',w:'Between',d,t:-T(d.start)};}
-  return{k:'',w:'',d:null,t:0};
-}
 /* ───────── the board's two orders ─────────
    Mark chooses between two, from the heading over the column beside the
    names (2026-10-11), and each group of the board follows it:
@@ -655,13 +642,11 @@ function boardRow(a,bg){
   const due=owed?
     '<button class="duemk" data-act="openArena" data-id="'+a.id+'" '+
     'title="'+esc(owed)+'" aria-label="'+esc(owed)+'"></button>':'';
-  const ph=boardPhase(a);
-  const where=ph.k
-    ?'<button class="wpw '+ph.k+'" data-act="openDate" data-a="'+a.id+'" data-d="'+ph.d.id+'" '+
-       'title="'+esc(dtLabel(ph.d)+' \u2014 '+dispDate(ph.d))+'">'+ph.w+'</button>':'';
+  /* The column beside the names that said Open / Opens / Between went on
+     2026-10-11 (Mark): the calendar beside the name says it already. */
   return '<div class="row"><div class="cell name">'+
     '<button class="nm'+weightClass(a)+'" data-act="openArena" data-id="'+a.id+'">'+esc(a.name)+'</button>'+due+loomBtn+
-    '</div><div class="cell where">'+where+'</div>'+
+    '</div>'+
     '<div class="lane" style="background-image:'+bg+'" data-aid="'+a.id+'">'+laneHTML(a)+'</div></div>';
 }
 function renderBoard(){keepPlace(()=>{
@@ -691,12 +676,12 @@ function renderBoard(){keepPlace(()=>{
       '<p class="hint" style="margin-top:6px">'+hint+'</p></div>';
     return;
   }
-  /* The heading over the status column names the order the groups are in,
-     and opens the choice of the two (Mark, 2026-10-11: it said "Where",
-     which named neither the column nor what pressing it did). */
+  /* The heading over the names names the order the groups are in, and opens
+     the choice of the two (Mark, 2026-10-11). It stood over a status column,
+     saying "Where", which named neither the column nor what pressing it
+     did; the column went the same day, and the choice came over here. */
   const so=BOARD_SORTS[S.ui.boardSort];
-  let h='<div class="axisrow"><div class="corner">Arena</div>'+
-    '<div class="corner where"><button class="whsort'+(sortOpen?' on':'')+'" data-act="boardSort" '+
+  let h='<div class="axisrow"><div class="corner sorter">Arena<button class="whsort'+(sortOpen?' on':'')+'" data-act="boardSort" '+
       'aria-haspopup="listbox" aria-expanded="'+sortOpen+'" title="Order of the arenas in each type: '+esc(so.long)+'">'+so.name+
       '<i aria-hidden="true">\u25BE</i></button>'+
       (sortOpen?'<span class="whmenu" role="listbox" aria-label="Order of the arenas">'+
@@ -2602,18 +2587,22 @@ function offerHTML(a,st){
    Both are strips under the head, the same shape, because they answer the
    same question: why is this card where it is. A lead whose day has come used
    to be a third; its day is on the Ledger's board now. */
-function frontStrips(a,st,hits){
+/* What a card is waiting for, with the day and the way out of the wait. On
+   a card it stands in the foot, where "Wait for…" offers one (Mark,
+   2026-10-11: the wait answers that offer, so it goes where the offer was);
+   in the panel it stays with the other strips. */
+function holdStripHTML(a,hold){
+  const when=hold.asleep?shortDay(hold.dt.start):(hold.near<=0?'today':'in '+hold.near+'d');
+  return '<div class="strip'+(hold.asleep?' asleep':' due')+'"><span class="sg"></span>'+
+    '<button class="stx" data-act="waitPick" data-id="'+a.id+'" '+
+      'title="Wait for a different date instead">Waiting for '+esc(hold.label)+'</button>'+
+    '<span class="swhen">'+esc(when)+'</span>'+
+    '<button class="sdone" data-act="holdClear" data-id="'+a.id+'" '+
+      'title="Stop waiting \u2014 back into the rotation" aria-label="Stop waiting">\u2713</button></div>';
+}
+function frontStrips(a,st,hits,onCard){
   let h='';
-  if(st.hold){
-    const hold=st.hold;
-    const when=hold.asleep?shortDay(hold.dt.start):(hold.near<=0?'today':'in '+hold.near+'d');
-    h+='<div class="strip'+(hold.asleep?' asleep':' due')+'"><span class="sg"></span>'+
-      '<button class="stx" data-act="waitPick" data-id="'+a.id+'" '+
-        'title="Wait for a different date instead">Waiting for '+esc(hold.label)+'</button>'+
-      '<span class="swhen">'+esc(when)+'</span>'+
-      '<button class="sdone" data-act="holdClear" data-id="'+a.id+'" '+
-        'title="Stop waiting \u2014 back into the rotation" aria-label="Stop waiting">\u2713</button></div>';
-  }
+  if(st.hold&&!onCard)h+=holdStripHTML(a,st.hold);
   if(hits.length){
     h+='<div class="strip find"><span class="sg"></span>'+
       '<button class="stx" data-act="flip" data-id="'+a.id+'">'+esc(leadName(hits[0]))+
@@ -2745,8 +2734,8 @@ function leadListHTML(a,hits,offer){
 function waitFootHTML(a,st,t){
   if(waitPick===a.id)
     return '<div class="wfoot wfoot-pick">'+waitPickHTML(a)+'</div>';
-  if(st.hold)return '';                       /* already set — the strip says so */
   if(t==='rest')return '';
+  if(st.hold)return '<div class="wfoot">'+holdStripHTML(a,st.hold)+'</div>';
   const nx=nextDate(a);
   if(!nx)return '';
   return '<div class="wfoot"><div class="offer"><span class="sp"></span>'+
@@ -2759,9 +2748,13 @@ function wallCard(a,st,tier){
   const s=st||standing(a);
   const t=tier||'lead';
   const hits=leadHits(a,S.ui.q.trim().toLowerCase());
-  const rows=t==='rest'?'':wallLinkRows(a,bk.links,'brokerage',true);
-  const nPinned=(bk.links||[]).filter(l=>l.pin).length;
-  const nShown=(bk.links||[]).length-nPinned;
+  /* At most three links on a card, so a card with many does not grow tall
+     for them (Mark, 2026-10-11); the rest are a press away in the panel. */
+  const LK_ON_CARD=3;
+  const loose=(bk.links||[]).filter(l=>!l.pin);
+  const rows=t==='rest'?'':wallLinkRows(a,loose.slice(0,LK_ON_CARD),'brokerage',true);
+  const nPinned=(bk.links||[]).length-loose.length;
+  const nMore=loose.length-LK_ON_CARD;
   /* Every arrangement but one shows the front, and remembers the cards you have
      turned. The leads arrangement shows the backs — that is what it is for — so
      there the flag means "turned away from the default", and it is not kept:
@@ -2779,16 +2772,18 @@ function wallCard(a,st,tier){
          where the arena stands in time, and where to go. The brokerage note
          and the season sentence came off — the note is in the panel, and the
          line says what the season sentence said, better. */
-      frontStrips(a,s,hits)+
+      frontStrips(a,s,hits,true)+
       (t==='rest'?'':cardLineHTML(a,t))+
       /* The links are a different kind of thing from the line above them —
          where to go, not where the arena stands — so they stand in a band
-         of their own on a darker ground under a firm rule, with a heading
-         (Mark, 2026-10-07: "make visibly plain that this is something
-         else"). They used to follow the dates straight on in the same
-         type, and read as more dates. */
-      (t==='rest'?'':'<div class="wlk"><p class="wlkh">Links'+(nShown?'<b>'+nShown+'</b>':'')+'</p>'+
-        (rows?wallLinks(a,'brokerage',rows)
+         of their own on a darker ground under a firm rule (Mark, 2026-10-07:
+         "make visibly plain that this is something else"). They used to
+         follow the dates straight on in the same type, and read as more
+         dates. The band's "Links" heading went on 2026-10-11, at his asking:
+         the ground and the rule say it alone. */
+      (t==='rest'?'':'<div class="wlk">'+
+        (rows?wallLinks(a,'brokerage',rows)+
+            (nMore>0?'<button class="wlmore" data-act="openArena" data-id="'+a.id+'">+ '+nMore+' more in the arena</button>':'')
           :nPinned?'<p class="wpinned">'+(nPinned===1?'Its one link is':'Its '+nPinned+' links are')+' on Pinned</p>'
           :'<p class="wnone">No links yet</p>')+'</div>')+
     '</div></div>'+
@@ -3242,7 +3237,9 @@ function paintWall(){
   const n=vis.filter(a=>standing(a).score>=ask).length;
   let h='<div class="whead">'+sortBtns+
     (n?'<span class="wsay"><b>'+n+'</b> '+(n===1?'card is':'cards are')+
-      ' asking for something.</span>':'')+howBtn+'</div>'+howHTML();
+      ' asking for something.</span>':'')+howBtn+
+    '<button class="howbtn" data-act="resetStamps" title="Take the stamp off every card in the rotation">Reset all stamps</button>'+
+    '</div>'+howHTML();
   let any=false;
   for(const[t,arenas]of rows){
     const{list,empty}=rotationSplit(arenas);
@@ -3886,6 +3883,18 @@ document.addEventListener('click',e=>{
       const sw=colOpen&&document.querySelector('.lcolpop .lsw.sel');
       if(sw)sw.focus({preventScroll:true});break;}
     case 'typeColPop':break;
+    /* Every card's stamp at once, so the whole rotation starts round again
+       (Mark, 2026-10-11). Asked first: there is no taking it back, the
+       stamps' days are gone. A frozen arena is out of the rotation, and a
+       pinned link's own stamp is not a card's, so both keep theirs. */
+    case 'resetStamps':{
+      const on=S.arenas.filter(x=>!x.frozenAt&&x.sweptAt);
+      if(!on.length){Ask.tell('Nothing to reset','No card in the rotation has a stamp.');break;}
+      Ask.ask('Reset all stamps?',
+        'The stamp comes off all '+on.length+' stamped card'+(on.length===1?'':'s')+' in the rotation, as if '+
+        'none had ever been swept, so every card comes round again. The days they were stamped are not kept.',
+        'Reset',()=>{on.forEach(x=>{x.sweptAt=null;x.sweptPrev=null;});save();renderAll();});
+      break;}
     case 'tyArenas':if(tyOpen.has(id))tyOpen.delete(id);else tyOpen.add(id);renderTypes();break;
     case 'typeColor':{colOpen=null;const t=S.types.find(t=>t.id===id);
       if(t&&toneHex(b.dataset.v))t.color=b.dataset.v;

@@ -346,11 +346,11 @@ a researcher's name written anywhere is `.atlas-ref`.
 | the room's scroller — the page itself does not scroll | `#semscroll` |
 | the header, the filter panel | `header.top`, `#filterwrap` › `#filters` |
 | the Cards view (the wall), the Board view, the freezer | `#wall`, `#board`, `#freezer` |
-| the month axis over the board, sticky, and the heading that names and chooses the order (My order / By date) | `.axisrow` = `.corner` + `.corner.where` (`.whsort`, its menu `.whmenu`) + `.axis`; a month is `.mcell` |
+| the month axis over the board, sticky, and the heading that names and chooses the order (My order / By date) | `.axisrow` = `.corner.sorter` (`.whsort`, its menu `.whmenu`) + `.axis`; a month is `.mcell` |
 | one arena type's group on the board, its heading | `.grp`, its heading `.ghead` |
 | one arena type's row on the wall, its head, the strip of cards that scrolls sideways | `.wtrow`, `.wthead`, `.wtrack` |
 | the types, managed — opened by Types beside + Arena: a type's line and its grip, its arenas one per row, its colour dot, the copy that follows a drag | `#typesModal` › `#tylist` › `.tyblock` (`.tyline` › `.tygrip`, `.tyarenas` › `.tyrow`); `.lcolwrap.tycol`; `.tyghost` |
-| one arena's row, and where it stands (Open / Opens / Between) | `.row` = `.cell.name` + `.cell.where` (`.wpw`) + `.lane` |
+| one arena's row | `.row` = `.cell.name` + `.lane` |
 | a date on a lane | `.mk` — `.bk` brokerage (`.bk-fixed`, `.bk-unc`, `.bk-band`), `.cl.rb` a call's bar, `.now` today |
 | a card on the wall, its phase line and strip of time, its links band | `.wcard`; `.wline` (`.wph`, `.wstrip`: `.wsd` an event, `.wsb` a call, `.wsnow` today); `.wlk` › `.wlinks` › `.wlrow` |
 | the ring that asks the nightly agent, a link's pin and cross | `.wask`; `.lpin`, `.ldel` |
