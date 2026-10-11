@@ -428,7 +428,6 @@
       open: showArena
     });
     Hub.on('semaphore:saved', function () { L.leadsChanged(); });
-    if (L.leadTone && S.setLeadTone) S.setLeadTone(L.leadTone, L.leadPalette ? L.leadPalette() : null);
     Hub.onRoom(function (now) { if (now === 'ledger') L.leadsChanged(); });
   })();
 

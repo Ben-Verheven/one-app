@@ -106,9 +106,21 @@ a{color:inherit}
 /* the line under a view's top: what it holds, in the desk's italic */
 .whead{padding:14px 16px 10px;font:italic 14px/1.4 var(--body);color:var(--faint)}
 .whead b{font-style:normal;font-weight:400;color:var(--notice-ink)}
-.band{display:flex;align-items:center;gap:10px;margin:18px 16px 10px;color:var(--faint)}
-.band::after{content:'';flex:1;height:1px;background:var(--grid)}
-.band b{font-weight:600;color:var(--key)}
+/* ── the rotation: a row for every type ──
+   A head in the type's colour, then the type's cards side by side, all one
+   size, swiped sideways; the next card shows at the edge to say there is
+   more, and a card stamped today waits at the far end. */
+.wtrow{margin-top:16px}
+.wthead{display:flex;align-items:center;gap:9px;margin:0 16px 9px}
+.wtdot{flex:0 0 10px;height:10px;border-radius:50%;background:var(--tone,var(--key))}
+.wtn{font:600 11px/1.2 var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--tone,var(--key))}
+.wtc{font:italic 13px/1.2 var(--body);color:var(--muted)}
+.wtc b{font-style:normal;font-weight:400;color:var(--notice-ink)}
+.wtrack{display:flex;align-items:flex-start;gap:10px;overflow-x:auto;padding:0 12px 4px;
+  scroll-snap-type:x mandatory;scroll-padding:0 12px;scrollbar-width:none}
+.wtrack::-webkit-scrollbar{display:none}
+.wtrack>.wcard{flex:0 0 86%;margin:0;scroll-snap-align:start}
+.wtrow .wrest{margin-top:8px}
 
 /* ── the round: walk the cards one at a time ────────────────────────── */
 
@@ -274,7 +286,7 @@ a.wlink:active .wd,a.wlink:active::before{color:var(--brok)}
   padding:10px 11px 10px 9px;border:1px solid var(--grid);border-left:3px solid var(--lead);
   border-radius:9px;background:var(--strip)}
 .lead:active{border-color:var(--line)}
-/* an arena's own colour, the one its leads wear in the Ledger (leadTone) */
+/* the colour of the arena's type, which its leads wear everywhere (leadTone) */
 .lead.toned{--lead:var(--tone)}
 .lead .ltx{flex:1;min-width:0}
 .lead .lar{display:block;margin-bottom:3px;font:600 9.5px/1.2 var(--sans);letter-spacing:.08em;color:var(--lquiet);
@@ -455,14 +467,6 @@ input[type="search"]:focus{outline:none;border-color:var(--key)}
 /* the Ledger's tones are made for a dark ground; on bone they are taken
    down towards ink, as the clay is, so the edge still stands off the paper */
 #sheet .lead.toned{--lead:color-mix(in srgb,var(--tone) 62%,#2a2620)}
-/* the arena's colour, chosen here as in the Ledger: its ten swatches five to
-   a row, so the order reads round the wheel as it does there, each a thumb's
-   width; the swatch shows the tone itself, as the Ledger's menu does */
-#sheet .tones{display:grid;grid-template-columns:repeat(5,44px);justify-content:space-between;row-gap:4px}
-#sheet .tone{width:44px;height:44px;border-radius:50%;display:grid;place-items:center}
-#sheet .tone i{width:30px;height:30px;border-radius:50%;background:var(--c);box-shadow:0 0 0 1px rgba(0,0,0,.25)}
-#sheet .tone.sel i{box-shadow:0 0 0 2px var(--field),0 0 0 4px var(--ink)}
-#sheet .tones+.chips{margin-top:10px}
 #sheet .chips button.sel{border-color:var(--ink)}
 /* the score in a lead's sheet: the five dots, each a thumb's width, larger
    than on the row so the number reads at arm's length */
@@ -694,10 +698,10 @@ input[type="search"]:focus{outline:none;border-color:var(--key)}
 <script>
 /* ══════════════════════════════════════════════════════════════════════
    Semaphore's rotation, lifted out of the desk's own semaphore.js rather
-   than written again here. standing(), the desk's split and three bands,
-   its lead steps and everything they lean on are copied verbatim — picked
+   than written again here. standing(), the desk's split, the types'
+   colours, its lead steps and everything they lean on are copied verbatim — picked
    by name, with whatever they depend on, out of the room's source (last
-   re-extracted 2026-10-07, from the 2026-10-06 desk). When the arithmetic
+   re-extracted 2026-10-11, from that day's desk). When the arithmetic
    changes on the desk, re-extract; never edit here. A second
    implementation that looks right and ranks wrong would be worse than
    having no rotation at all.
@@ -705,7 +709,6 @@ input[type="search"]:focus{outline:none;border-color:var(--key)}
 /* The extraction brings Semaphore's own `let S` with it — its state
    binding — which starts empty here and is pointed at the fetched board
    before the rotation is scored. */
-/* ============ state ============ */
 /* ============ state ============ */
 const LS='semaphore.v1';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -716,8 +719,6 @@ const pad=n=>String(n).padStart(2,'0');
 const T=iso=>new Date(iso+'T12:00:00').getTime();
 const todayISO=()=>{const d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());};
 const fmtDay=iso=>{const[y,m,d]=iso.split('-');return +d+' '+MONTHS[+m-1]+' '+y;};
-const ymAdd=(ym,n)=>{const[y,m]=ym.split('-').map(Number);const i=y*12+(m-1)+n;return Math.floor(i/12)+'-'+pad(i%12+1);};
-const thisYM=()=>todayISO().slice(0,7);
 /* ───────── how much an arena is worth ─────────
    The rotation on its own treats every arena alike: a programme you watch out of
    diligence comes round as often as the partnership your work lives in, which is
@@ -757,17 +758,70 @@ const ROLES={
 function dtLabel(dt){
   return dt.kind==='call'?(dt.call||'Untitled call'):(dt.label||'(untitled)');
 }
+/* ───────── a type's colour ─────────
+   Every arena type wears a colour, and every lead wears its arena's type
+   colour — on the wall, on the Ledger's board and in Pocket (Mark,
+   2026-10-11). Before, each arena had a colour of its own, chosen on one of
+   its leads, and the leads of two Joint Undertakings looked unrelated.
+
+   The tones are the soft earth tints the arenas wore: every one greyed down,
+   so a lead never reads as one of the Ledger's clean category tints. Mark
+   wanted more of them, so there are two shades of nine hues, light over deep,
+   where there were ten single tones; the old keys are all still here, so a
+   colour he chose for an arena can be carried over to its type. A type stores
+   the key, not the hex, so adjusting a tone here moves every type wearing it. */
+const TONES=[
+  {k:'blush',     label:'Blush',     color:'#ca9c9b'}, {k:'terracotta',label:'Terracotta',color:'#c7a08a'},
+  {k:'sand',      label:'Sand',      color:'#bea582'}, {k:'straw',     label:'Straw',     color:'#b4a981'},
+  {k:'olive',     label:'Olive',     color:'#a1b08a'}, {k:'sage',      label:'Sage',      color:'#90b3a2'},
+  {k:'mist',      label:'Mist',      color:'#8ab1bb'}, {k:'dusk',      label:'Dusk',      color:'#9ca9c6'},
+  {k:'mauve',     label:'Mauve',     color:'#b99ec0'},
+  {k:'rosewood',  label:'Rosewood',  color:'#a97777'}, {k:'rust',      label:'Rust',      color:'#a57c65'},
+  {k:'umber',     label:'Umber',     color:'#9c815c'}, {k:'ochre',     label:'Ochre',     color:'#92865b'},
+  {k:'moss',      label:'Moss',      color:'#7d8d64'}, {k:'fern',      label:'Fern',      color:'#6a907f'},
+  {k:'slate',     label:'Slate',     color:'#638e99'}, {k:'twilight',  label:'Twilight',  color:'#7886a5'},
+  {k:'plum',      label:'Plum',      color:'#977a9e'}
+];
+/* The order a type is handed a tone when it has none: hues far apart first,
+   because neighbours on the wheel are close by design, and two types made one
+   after the other must not come out Terracotta and Rust. A type keeps the tone
+   it was given, so moving types up and down never recolours them. */
+const TONE_SPREAD=['terracotta','sage','dusk','sand','mauve','slate','olive','rosewood','ochre',
+  'mist','plum','straw','fern','blush','twilight','umber','moss','rust'];
+const toneHex=k=>{const t=TONES.find(t=>t.k===k);return t?t.color:'';};
+function freeTone(types){
+  const used=new Set((types||[]).map(t=>t.color));
+  return TONE_SPREAD.find(k=>!used.has(k))||TONE_SPREAD[(types||[]).length%TONE_SPREAD.length];
+}
+/* Every type comes out of here with a tone. One without is given the colour
+   most of its arenas wore when colours were the arenas' own, so what Mark
+   chose then carries over, and otherwise the next free tone. Pocket reads the
+   same board, so it settles the same types the same way until the desk has
+   saved them. */
+function settleTones(s){
+  const taken=new Set();
+  s.types.forEach(t=>{if(toneHex(t.color))taken.add(t.color);else t.color=null;});
+  s.types.forEach(t=>{
+    if(t.color)return;
+    const n={};
+    s.arenas.forEach(a=>{if(a.typeId===t.id&&toneHex(a.color))n[a.color]=(n[a.color]||0)+1;});
+    const best=Object.keys(n).filter(k=>!taken.has(k))
+      .sort((x,y)=>n[y]-n[x]||TONE_SPREAD.indexOf(x)-TONE_SPREAD.indexOf(y))[0];
+    t.color=best||freeTone(s.types.filter(u=>u.color));
+    taken.add(t.color);
+  });
+}
+function typeOf(a){return (a&&S.types.find(t=>t.id===a.typeId))||null;}
+function arenaTone(a){const t=typeOf(a);return t?toneHex(t.color):'';}
 function defaultTypes(){
-  return ['Partnership','Mission','Cluster','Joint Undertaking','Programme'].map(n=>({id:uid(),name:n}));
+  return ['Partnership','Mission','Cluster','Joint Undertaking','Programme']
+    .map((n,i)=>({id:uid(),name:n,color:TONE_SPREAD[i]}));
 }
 function blank(){
   return {v:1,types:defaultTypes(),arenas:[],
-    ui:{typeSel:[],tagSel:[],q:'',
-        grades:{fixed:true,uncertain:true},
-        layers:{brokerage:true,call:true},
-        win:{start:ymAdd(thisYM(),-1),span:12},collapsed:{},filtersOpen:false,view:'board',
-        wallSort:'rotation',boardSort:'next',
-        howOpen:false,freezerOpen:false,wopen:{},flipped:{}}};
+    ui:{q:'',collapsed:{},view:'board',
+        wallSort:'rotation',boardSort:'next',cuAll:false,
+        howOpen:false,freezerOpen:false,flipped:{}}};
 }
 /* An arena remembers which of its own dates it is waiting for. That goes stale
    the moment the dates change, so this puts it straight — a wait ends when the
@@ -790,7 +844,8 @@ function migrate(s){
   if(!Array.isArray(s.arenas))s.arenas=[];
   if(!Array.isArray(s.types)||!s.types.length)s.types=defaultTypes();
   s.types=s.types.filter(t=>t&&typeof t==='object')
-    .map(t=>({id:t.id||uid(),name:String(t.name||'').trim()||'Untitled type'}));
+    .map(t=>({id:t.id||uid(),name:String(t.name||'').trim()||'Untitled type',
+              color:typeof t.color==='string'?t.color:null}));
   s.arenas=s.arenas.filter(a=>a&&typeof a==='object');
   s.arenas.forEach(a=>{
     if(!a.id)a.id=uid();
@@ -859,6 +914,9 @@ function migrate(s){
       l.links.forEach(k=>{if(!k.id)k.id=uid();});
       if(typeof l.due!=='string'||!l.due)l.due=null;
       if(typeof l.doneAt!=='string'||!l.doneAt)l.doneAt=null;
+      /* how much Mark thinks the lead is worth, 1 to 5 (see "the score");
+         anything else is no score yet */
+      if(!(l.score>=1&&l.score<=5))delete l.score;else l.score=Math.round(l.score);
       /* what has happened to it, oldest first; the old bolt-on wrote a
          formatted stamp, the card now writes the day itself */
       if(!Array.isArray(l.updates))l.updates=[];
@@ -895,6 +953,10 @@ function migrate(s){
       }
     });
   });
+  /* An arena's own colour is its type's now (see "a type's colour"): read
+     once to give the types theirs, then gone. */
+  settleTones(s);
+  s.arenas.forEach(a=>{delete a.color;});
   /* ── the ui, whole ──
      Every field below was guarded one at a time, and each guard asked only
      whether `s.ui` existed at all. A board arriving with *some* of a ui —
@@ -911,33 +973,18 @@ function migrate(s){
      no way through this that leaves a hole. */
   {
     const d=blank().ui, u=(s.ui&&typeof s.ui==='object'&&!Array.isArray(s.ui))?s.ui:{};
-    const strs=v=>Array.isArray(v)?v.filter(x=>typeof x==='string'):null;
     const map=v=>(v&&typeof v==='object'&&!Array.isArray(v))?v:null;
     const ui=Object.assign({},d);
-    ui.typeSel  = strs(u.typeSel) || d.typeSel;
-    ui.tagSel   =(strs(u.tagSel) || d.tagSel).map(t=>String(t).trim().toLowerCase());
     ui.q        = typeof u.q==='string' ? u.q : d.q;
-    /* uncertain is never filtered out: a date you are unsure of is the one
-       you most need to see */
-    ui.grades   = {fixed:!(map(u.grades)&&u.grades.fixed===false), uncertain:true};
-    ui.layers   = {brokerage:!(map(u.layers)&&u.layers.brokerage===false),
-                   call:     !(map(u.layers)&&u.layers.call===false)};
     ui.collapsed= map(u.collapsed) || {};
-    /* which type sections stand open on the wall — absent means shut, so a
-       type you have never opened, including one made later, starts closed */
-    ui.wopen    = map(u.wopen)   || {};
     ui.flipped  = map(u.flipped) || {};
-    ui.view     = (u.view==='brokerage'||u.view==='dispatch') ? u.view : 'board';
-    ui.wallSort = ['rotation','type','pinned','leads'].includes(u.wallSort) ? u.wallSort : 'rotation';
+    ui.view     = ['brokerage','dispatch','coming'].includes(u.view) ? u.view : 'board';
+    ui.cuAll    = u.cuAll===true;
+    /* By type was merged into the rotation (2026-10-11), so it lands there */
+    ui.wallSort = ['pinned','leads'].includes(u.wallSort) ? u.wallSort : 'rotation';
     ui.boardSort = u.boardSort==='phase' ? 'phase' : 'next';
-    ui.filtersOpen = u.filtersOpen===true;
     ui.howOpen     = u.howOpen===true;
     ui.freezerOpen = u.freezerOpen===true;
-    const w=map(u.win)||{};
-    ui.win = {
-      start: /^\d{4}-\d{2}$/.test(String(w.start||'')) ? w.start : d.win.start,
-      span:  [6,9,12,18,24].includes(+w.span) ? +w.span : d.win.span
-    };
     s.ui=ui;
   }
   const first=new Map();
@@ -998,12 +1045,15 @@ function linkName(lk){
   if(/^mailto:/i.test(lk.url))return lk.url.slice(7);
   try{return new URL(lk.url).hostname.replace(/^www\./,'');}catch(e){return lk.url;}
 }
+/* ============ actions ============ */
 function bkPos(a){return typeof a.bkPos==='number'?a.bkPos:1e9;}
 /* The rotation wall's order. An arena with nothing recorded still earns a
    card while it is asking for something — a wait whose day is in reach —
    because a ghost at the foot of the wall cannot say so. It drops back to a
-   ghost once the day has passed. The new-lead menu on the Ledger lists the
-   arenas in this same order. */
+   ghost once the day has passed. The wall asks it of one type at a time;
+   the new-lead menu on the Ledger lists the arenas the same way, type by
+   type in Mark's order of types, each type's cards first and its ghosts
+   after. */
 function hasBrokerage(a){const b=a.brokerage||{};return !!(b.notes||(b.links||[]).length||(a.leads||[]).length);}
 function rotationSplit(arenas){
   const ask=RUNG.asking[0];
@@ -1193,24 +1243,6 @@ function standing(a){
   }
   return st;
 }
-/* ───────── the three bands ─────────
-   Standing decides the order; it is a poor judge of size. On a quiet week every
-   score is low and nothing would stand at full height; on a busy one they all
-   clear the bar and the wall is a wall of equals. Either way the readout is
-   lost. So the cut is relative: a short head, a wider middle, and the longest
-   band at the bottom, in roughly 1 : 2 : 4. The scores still decide who goes
-   where — only the size of the bands is fixed, so the top of the stack means
-   the same thing whatever the day looks like. */
-function tierQuota(n){
-  if(n<=0)return[0,0,0];
-  if(n===1)return[1,0,0];
-  if(n===2)return[1,1,0];
-  const lead=Math.max(1,Math.round(n/7));
-  let mid=Math.max(lead,Math.ceil(2*n/7)),rest=n-lead-mid;
-  while(rest<mid&&mid>lead){mid--;rest++;}   /* the tail stays the widest band */
-  return[lead,mid,rest];
-}
-function bandOf(i,quota){return i<quota[0]?'lead':i<quota[0]+quota[1]?'mid':'rest';}
 /* What the nightly agents brought, and whether you have looked since. A date
    or a link that comes in through Dispatches carries `foundAt`, the moment it
    was accepted, and reads as new until the arena is next swept — a sweep is
@@ -1685,17 +1717,6 @@ function setScore(ref, n, lead){
     edit(ref, function(x){ putBack(x, was); }));
 }
 
-/* An arena's lead colour, as the Ledger keeps it: the palette's name, or
-   null for the automatic one. It lives on the arena in the Semaphore row,
-   so the Ledger and the Semaphore wear it at their next look at the cloud. */
-function setLeadColour(a, k){
-  var was = keep(a, ['color']);
-  commit('semaphore', onArena(a.id, function(x){ x.color = k || null; }),
-    k ? (a.name || 'Arena') + '’s leads in ' + toneName(k)
-      : (a.name || 'Arena') + '’s leads back to their own colour',
-    onArena(a.id, function(x){ putBack(x, was); }));
-}
-
 /* the ring: ask the nightly agent to look at this arena on its next run */
 function askAgent(a){
   var was = keep(a, ['askAt']), on = !a.askAt, now = new Date().toISOString();
@@ -1810,19 +1831,14 @@ function liveList(){
   var Sm = data.semaphore;
   if (!Sm || !Sm.arenas) return [];
   S = Sm;                                   /* the extracted maths reads S */
+  /* every type gets its tone the way the desk gives it, until the desk has
+     saved them; only this copy is touched, never the cloud's */
+  if (Array.isArray(Sm.types)) try { settleTones(Sm); } catch(e){ console.error(e); }
   return Sm.arenas.filter(function(a){ return a && !a.frozenAt; });
 }
 function scoreOf(a){
   try { if (typeof reconcile === 'function') reconcile(a); } catch(e){}
   try { return standing(a); } catch(e){ console.error(e); return null; }
-}
-/* The desk's own split: cards with brokerage material (or asking for
-   something) in standing order, and the ghosts with nothing recorded. */
-function wall(){
-  var live = liveList().filter(function(a){ return !!scoreOf(a); });
-  if (!live.length) return { list:[], empty:[] };
-  try { return rotationSplit(live); }
-  catch(e){ console.error(e); return { list:[], empty:[] }; }
 }
 function typeName(a){
   var t = ((data.semaphore && data.semaphore.types) || []).filter(function(x){ return x.id === a.typeId; })[0];
@@ -2063,24 +2079,53 @@ function openArenaById(id){
   if (a) openArena(a, scoreOf(a)); else shut();
 }
 
+/* The desk's rotation since 2026-10-11: a row for every type, in Mark's own
+   order of types, and in each row the cards in standing order — the desk's
+   split, asked of one type at a time — with a card stamped today at the far
+   end of its row. An arena whose type is gone stands in a last row of its
+   own, as on the desk. */
+function typeRows(){
+  var live = liveList().filter(function(a){ return !!scoreOf(a); });
+  var types = (data.semaphore && data.semaphore.types) || [];
+  var rows = [];
+  types.concat([null]).forEach(function(t){
+    var of = live.filter(function(a){ return t ? a.typeId === t.id : !typeOf(a); });
+    if (!of.length) return;
+    var w;
+    try { w = rotationSplit(of); } catch(e){ console.error(e); w = { list:[], empty:[] }; }
+    rows.push({ t:t, n:of.length,
+      todo: w.list.filter(function(x){ return !stampedToday(x.a); }),
+      stamped: w.list.filter(function(x){ return stampedToday(x.a); }),
+      empty: w.empty });
+  });
+  return rows;
+}
+
 function drawRot(){
   var host = $('#v-rot');
+  /* each row scrolls on its own, and a stamp redraws the tab: keep each
+     row where it was, so a card stamped far along a row does not send the
+     row back to its start */
+  var at = {};
+  host.querySelectorAll('.wtrack').forEach(function(r){ at[r.dataset.ty] = r.scrollLeft; });
   host.textContent = '';
-  var w = wall(), all = w.list;
-  if (!all.length && !w.empty.length){ rotList = [];
+  var rows = typeRows();
+  if (!rows.length){ rotList = [];
     host.appendChild(empty('Nothing in rotation',
       data.semaphore ? 'Every arena is frozen, or none has been added yet.'
                      : 'Pull down to fetch from the cloud.'));
     badge('rot', 0); return;
   }
-  /* The desk's three bands — a short head, a wider middle, the long tail —
-     cut over the whole rotation, so a card is the size it is on the desk.
-     A card stamped today leaves the walk: the ones still to look at keep
-     their order, the stamped ones sit together at the foot. */
-  var quota = tierQuota(all.length);
-  all.forEach(function(x, i){ x.t = bandOf(i, quota); });
-  var todo = all.filter(function(x){ return !stampedToday(x.a); });
-  var stamped = all.filter(function(x){ return stampedToday(x.a); });
+  /* Look around takes the types in turn: the first card of every type,
+     then the second of every type, and so on, so a short walk has already
+     been through each type once. The stamped ones close the walk. */
+  var todo = [], stamped = [];
+  for (var i = 0; ; i++){
+    var more = false;
+    rows.forEach(function(r){ if (r.todo[i]){ todo.push(r.todo[i]); more = true; } });
+    if (!more) break;
+  }
+  rows.forEach(function(r){ stamped = stamped.concat(r.stamped); });
   rotList = todo.concat(stamped);
   var n = todo.filter(function(x){ return asking(x.s); }).length;
   badge('rot', n);
@@ -2089,7 +2134,7 @@ function drawRot(){
   if (n){
     hd.appendChild(el('b', '', String(n)));
     hd.appendChild(document.createTextNode(n === 1 ? ' card is asking for something.' : ' cards are asking for something.'));
-  } else hd.textContent = 'Highest is whatever wants attention today.';
+  } else hd.textContent = 'Each type in its own row, whatever wants attention first.';
   host.appendChild(hd);
 
   if (todo.length){
@@ -2102,38 +2147,41 @@ function drawRot(){
     go.appendChild(tx);
     go.addEventListener('click', function(){ openArena(todo[0].a, todo[0].s); });
     host.appendChild(go);
-  } else if (all.length) {
+  } else if (stamped.length) {
     host.appendChild(empty('All looked at today', 'Every card has been stamped. Come back tomorrow.'));
   }
 
-  var tier = null;
-  todo.forEach(function(x){
-    if (x.t !== tier){
-      if (tier !== null && x.t === 'rest') bandHead(host, 'The rest', todo.filter(function(z){ return z.t === 'rest'; }).length);
-      tier = x.t;
+  rows.forEach(function(r){
+    var tone = r.t ? toneHex(r.t.color) : '';
+    var sec = el('section', 'wtrow');
+    if (tone) sec.style.setProperty('--tone', tone);
+    var h = el('div', 'wthead');
+    h.appendChild(el('i', 'wtdot'));
+    h.appendChild(el('span', 'wtn', r.t ? (plainOf(r.t.name) || 'Untitled type') : 'Untyped'));
+    var k = r.todo.filter(function(x){ return asking(x.s); }).length;
+    var c = el('span', 'wtc', r.n + (r.n === 1 ? ' arena' : ' arenas'));
+    if (k){ c.appendChild(document.createTextNode(' · ')); c.appendChild(el('b', '', k + ' asking')); }
+    h.appendChild(c);
+    sec.appendChild(h);
+    var cards = r.todo.concat(r.stamped);
+    if (cards.length){
+      var tr = el('div', 'wtrack');
+      tr.dataset.ty = r.t ? r.t.id : '';
+      cards.forEach(function(x){ tr.appendChild(wallCard(x.a, x.s, 'lead')); });
+      sec.appendChild(tr);
     }
-    host.appendChild(wallCard(x.a, x.s, x.t));
+    if (r.empty.length){
+      var p = el('p', 'wrest', 'No brokerage material yet — ');
+      r.empty.forEach(function(a){
+        var g = el('button', 'wghost', plainOf(a.name) || 'Untitled');
+        g.addEventListener('click', function(){ openArena(a, scoreOf(a)); });
+        p.appendChild(g);
+      });
+      sec.appendChild(p);
+    }
+    host.appendChild(sec);
   });
-
-  if (stamped.length){
-    bandHead(host, 'Stamped today', stamped.length);
-    stamped.forEach(function(x){ host.appendChild(wallCard(x.a, x.s, 'rest')); });
-  }
-
-  if (w.empty.length){
-    var p = el('p', 'wrest', 'No brokerage material yet — ');
-    w.empty.forEach(function(a){
-      var g = el('button', 'wghost', plainOf(a.name) || 'Untitled');
-      g.addEventListener('click', function(){ openArena(a, scoreOf(a)); });
-      p.appendChild(g);
-    });
-    host.appendChild(p);
-  }
-}
-function bandHead(host, name, n){
-  var h = el('div', 'band cap', name + ' ');
-  h.appendChild(el('b', '', '· ' + n));
-  host.appendChild(h);
+  host.querySelectorAll('.wtrack').forEach(function(r){ if (at[r.dataset.ty]) r.scrollLeft = at[r.dataset.ty]; });
 }
 
 /* ── pinned: the links and the cards you keep to hand ───────────────────
@@ -2319,24 +2367,10 @@ function bigRuit(l, act){
   return box;
 }
 
-/* Each arena's leads wear the colour Mark picks for them in the Ledger or
-   in a lead's sheet here, or the one handed out from the arena's place in
-   the list. The palette and that rule are the Ledger's (PALETTE and toneOf
-   in one-app/rooms/ledger/ledger.js), copied because Pocket has no Ledger:
-   change them there, then here. */
-var LEAD_TONES = [
-  ['terracotta','#c08a78'], ['rust','#a8714f'], ['ochre','#b59c66'], ['olive','#9ea06e'],
-  ['sage','#86a088'], ['slate','#7f9aa8'], ['dusk','#8f8db0'], ['mauve','#a8879e'],
-  ['rosewood','#ad7680'], ['sand','#b5a690']
-];
-function toneOf(a){
-  for (var i = 0; i < LEAD_TONES.length; i++) if (LEAD_TONES[i][0] === a.color) return LEAD_TONES[i];
-  var all = (data.semaphore && data.semaphore.arenas) || [];
-  var n = Math.max(0, all.indexOf(a));
-  return LEAD_TONES[(n * 3) % LEAD_TONES.length];
-}
-function leadTone(a){ return toneOf(a)[1]; }
-function toneName(k){ return k.charAt(0).toUpperCase() + k.slice(1); }
+/* A lead wears its arena type's colour, as on the desk and the Ledger
+   (2026-10-11); the tones and the type's choice of one are the desk's, in
+   script 1. Types are made and coloured on the desk only. */
+function leadTone(a){ return arenaTone(a) || '#b5a690'; }
 /* the desk's score, read defensively: anything but 1 to 5 is none yet */
 function scoreOfLead(l){ var n = Math.round(+(l && l.score)); return n >= 1 && n <= 5 ? n : 0; }
 function scoreDot(l){
@@ -2866,27 +2900,6 @@ function openLead(it){
     arw.appendChild(arb);
     section(b, 'Arena', arw);
 
-    /* the arena's colour, which all its leads wear, here and in the Ledger */
-    var cur = it.arena.color || '', tone = toneOf(it.arena);
-    var cw = el('div'), tg = el('div', 'tones');
-    LEAD_TONES.forEach(function(t){
-      var sw = el('button', 'tone' + (t[0] === cur ? ' sel' : ''));
-      sw.appendChild(el('i'));
-      sw.style.setProperty('--c', t[1]);
-      sw.setAttribute('aria-label', toneName(t[0]));
-      sw.addEventListener('click', function(){
-        shut(); if (t[0] !== cur) setLeadColour(it.arena, t[0]);
-      });
-      tg.appendChild(sw);
-    });
-    cw.appendChild(tg);
-    var ac = el('div', 'chips');
-    var auto = el('button', cur ? '' : 'sel', 'Automatic');
-    auto.addEventListener('click', function(){ shut(); if (cur) setLeadColour(it.arena, ''); });
-    ac.appendChild(auto);
-    cw.appendChild(ac);
-    section(b, 'Colour of its leads — ' + toneName(tone[0]) + (cur ? '' : ', automatic'), cw);
-
     /* ── the verbs, in the thumb's reach ────────────────────────────── */
 
     var openPanel = null;
@@ -3049,14 +3062,16 @@ function leadForm(panel, arenaOf){
 /* a lead found away from its card: the Leads tab asks first which arena
    it belongs to. Frozen arenas are left out, because their leads are not
    listed anywhere in Pocket and a lead added there would seem lost. The
-   arenas come in the rotation wall's order, top card first and the ghosts
-   after, as the desk's Ledger lists them (Mark asked for the same here on
-   2026-10-10): the arena a lead is spotted in is the one being swept, and
-   that one is near the top. An arena the maths cannot score still comes,
+   arenas come in the rotation's order, type by type, each type's cards
+   first and its ghosts after, as the desk's Ledger lists them (Mark asked
+   for the same here on 2026-10-10): the arena a lead is spotted in is the
+   one being swept, and that one is near the top of its type. An arena the maths cannot score still comes,
    at the very end, so a lead is never kept from its arena. */
 function newLead(){
-  var w = wall();
-  var arenas = w.list.map(function(x){ return x.a; }).concat(w.empty);
+  var arenas = [];
+  typeRows().forEach(function(r){
+    arenas = arenas.concat(r.todo.concat(r.stamped).map(function(x){ return x.a; }), r.empty);
+  });
   liveList().forEach(function(a){ if (arenas.indexOf(a) < 0) arenas.push(a); });
   sheet(function(b, bar){
     b.appendChild(el('h2', '', 'New lead'));

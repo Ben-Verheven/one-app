@@ -287,6 +287,7 @@
   text-transform:uppercase;color:var(--faint);padding:2px 0;
   border-bottom:1px dashed var(--line);border-radius:0}
 #pane-semaphore .howbtn:hover,#pane-semaphore .howbtn.on{color:var(--key2);border-bottom-color:var(--line2)}
+#pane-semaphore .howbtn+.howbtn{margin-left:0}
 #pane-semaphore .how{max-width:780px;margin:-4px 0 22px;padding:15px 18px;background:var(--sink);
   border:1px dashed var(--line);border-radius:var(--radius-lg)}
 #pane-semaphore .how dl{display:grid;grid-template-columns:auto 1fr;gap:7px 16px;align-items:baseline;margin:0}
@@ -296,13 +297,7 @@
 #pane-semaphore .how dd b{font-weight:400;color:var(--ink)}
 #pane-semaphore .how .coda{margin-top:12px;padding-top:11px;border-top:1px solid var(--grid);
   font-family:var(--body);font-size:12.5px;font-style:italic;line-height:1.55;color:var(--faint)}
-/* Prominence stands in for any "do this now" label: the higher a card stands in
-   the rotation, the more of itself it shows. Three bands, no headings — size
-   alone says which is which. */
 #pane-semaphore .wgrid.g-lead{grid-template-columns:repeat(auto-fill,minmax(302px,1fr));gap:14px}
-#pane-semaphore .wgrid.g-mid{grid-template-columns:repeat(auto-fill,minmax(254px,1fr));gap:10px}
-#pane-semaphore .wgrid.g-rest{grid-template-columns:repeat(auto-fill,minmax(186px,1fr));gap:5px}
-#pane-semaphore .wgrid+.wgrid{margin-top:22px;padding-top:22px;border-top:1px dashed var(--grid)}
 #pane-semaphore .wcard.t-mid .wch{padding:8px 11px}
 #pane-semaphore .wcard.t-rest{background:none;border-color:transparent;box-shadow:none}
 #pane-semaphore .wcard.t-rest:hover{background:var(--surface);border-color:var(--line)}
@@ -357,25 +352,33 @@
 #pane-semaphore .lkform .ib{font-size:12px}
 #pane-semaphore .tabn{margin-left:7px;font:9.5px var(--mono);padding:1px 5px;border-radius:99px;
   background:rgba(42,38,32,.16);color:var(--ink)}
-/* A disclosure control should not change shape when you use it. The header keeps
-   exactly the same height, padding and place whether the section is open or
-   shut — opening adds room beneath it, so the title stays anchored to its own
-   cards instead of drifting up against the section above. Being open shows in
-   the one place it belongs: the title comes forward to full ink. */
-#pane-semaphore .wgroup{margin-bottom:0}
-#pane-semaphore .wgroup.open{margin-bottom:26px}
-#pane-semaphore .wh{display:flex;align-items:baseline;gap:9px;width:100%;text-align:left;color:inherit;
-    padding:10px 0 9px;margin:0;border-radius:0;border-bottom:1px solid var(--grid)}
-#pane-semaphore .wgroup.open .wh{border-bottom-color:var(--line)}
-#pane-semaphore .wgroup.open .wt{color:var(--ink)}
-#pane-semaphore .wgroup.open .wcaret{color:var(--muted)}
-#pane-semaphore .wgroup.open .wgrid,#pane-semaphore .wgroup.open .wrest{margin-top:16px}
-#pane-semaphore .wh:hover .wt{color:var(--key2)}
-#pane-semaphore .wh:hover .wcaret{color:var(--muted)}
-#pane-semaphore .wcaret{flex:0 0 11px;font-size:9px;line-height:1;color:var(--faint);transition:color .14s}
-#pane-semaphore .wt{font:600 10px var(--sans);letter-spacing:.18em;text-transform:uppercase;color:var(--muted);
-    transition:color .14s}
-#pane-semaphore .wc{font:10px var(--mono);color:var(--faint)}
+/* ── the rotation: a strip for every type (paintWall) ──
+   A row's head carries the type's colour dot, its name in that colour, how
+   many arenas it holds and how many are asking, and the arrows that move the
+   type. The row trails off to the right and scrolls on its own, under a rule
+   in the type's colour; its cards are all one size, the width a full card had
+   on the old wall, and a little of the next card shows at the edge to say
+   there is more. */
+#pane-semaphore .wtrow{padding:14px 0 16px;border-top:1px solid var(--grid)}
+#pane-semaphore .wthead{display:flex;align-items:center;gap:9px;margin-bottom:10px}
+#pane-semaphore .wtn{font:600 10px var(--sans);letter-spacing:.18em;text-transform:uppercase;color:var(--tone,var(--muted))}
+#pane-semaphore .wtc{font-size:12.5px;font-style:italic;color:var(--muted)}
+#pane-semaphore .wtc b{font-style:normal;font-weight:400;color:var(--notice-ink)}
+#pane-semaphore .wtrack{display:flex;gap:14px;align-items:flex-start;overflow-x:auto;
+  padding:2px 2px 12px 12px;border-left:3px solid var(--tone,var(--line2));scroll-snap-type:x proximity}
+#pane-semaphore .wtrack>.wcard{flex:0 0 302px;scroll-snap-align:start}
+#pane-semaphore .wtrow .wrest{margin-top:4px}
+/* The arrows that move a type up or down, at the head of its row here and of
+   its group on the board. With a mouse they wait until the head is hovered;
+   on a touch screen there is no hover, so they stay. The end a type cannot
+   move past has no arrow. */
+#pane-semaphore .tymv{display:inline-flex;gap:2px;margin-left:2px}
+#pane-semaphore .tymv button{width:20px;height:20px;font-size:8px;line-height:1;color:var(--key);border-radius:4px}
+#pane-semaphore .tymv button:hover,#pane-semaphore .tymv button:focus-visible{color:var(--ink);background:var(--sink)}
+#pane-semaphore .tymv button:disabled{visibility:hidden}
+@media (hover:hover) and (pointer:fine){
+  #pane-semaphore .wthead:not(:hover):not(:focus-within) .tymv,
+  #pane-semaphore .ghead:not(:hover):not(:focus-within) .tymv{visibility:hidden}}
 #pane-semaphore .wgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(282px,1fr));gap:14px;align-items:start}
 /* ───────── a card has two sides ─────────
    The front is what the arena is: its state, its notes, its tools. The back is
@@ -456,9 +459,6 @@
 #pane-semaphore .wcard.showing-back .wfront{visibility:hidden}
 #pane-semaphore .wcard:not(.flipped) .wback{pointer-events:none}
 #pane-semaphore .wcard.flipped .wfront{pointer-events:none}
-#pane-semaphore #wall.manual .wcard{cursor:grab}
-#pane-semaphore .wcard.drag{opacity:.35;cursor:grabbing}
-#pane-semaphore .wcard.over{outline:2px dashed var(--key);outline-offset:3px}
 /* where did it land? a ring that fades, so a stamped card is never lost */
 @keyframes pane-semaphore-settle{from{box-shadow:0 0 0 3px var(--hi2),0 0 22px var(--hi2)}
                   to{box-shadow:0 0 0 3px rgba(0,0,0,0),0 0 22px rgba(0,0,0,0)}}
@@ -749,32 +749,29 @@
 #pane-semaphore .lead.wide .lname{font-size:14.5px}
 #pane-semaphore .lead.wide .lsub{font-size:12.5px}
 #pane-semaphore .lead.wide>.lhead>.lwhen{font-size:13px}
-/* The colour dot (see "the colour dot" in semaphore.js): the Ledger's, a 9px
-   disc in a 22px button, standing between the ruit and the arena as it does
-   there. It takes back most of the ruit's margin, so the columns after it
-   move by only a few pixels. Its menu hangs under it on the drawer's dark
-   panel: the ten swatches five to a row, so the order reads round the wheel
-   as in the Ledger, then Automatic across the foot. */
+/* The colour dot (see "the colour dot" and "a type's head" in semaphore.js):
+   the Ledger's, a 9px disc in a 22px ring. On a lead it only shows the type's
+   colour, standing between the ruit and the arena as it does there; it takes
+   back most of the ruit's margin, so the columns after it move by only a few
+   pixels. At the head of a type it is a button, and its menu hangs under it
+   on the dark panel: the eighteen swatches nine to a row, the light shades
+   over the deep ones, so each hue stands over its own darker self. */
 #pane-semaphore .lead.wide .lcolwrap{position:relative;flex:0 0 22px;margin:0 -6px 0 -22px;display:flex}
+#pane-semaphore .lcolwrap.tycol{position:relative;flex:0 0 22px;display:inline-flex}
 #pane-semaphore .lcol{width:22px;height:22px;padding:0;border:1px solid transparent;border-radius:50%;
   background:none;display:flex;align-items:center;justify-content:center;cursor:pointer;
   transition:border-color .14s,background-color .14s}
 #pane-semaphore .lcol i{width:9px;height:9px;border-radius:50%;background:var(--c,var(--lead))}
 #pane-semaphore .lcol.open,#pane-semaphore .lcol:focus-visible{outline:none;border-color:var(--key2);background:var(--sink)}
-@media (hover:hover) and (pointer:fine){#pane-semaphore .lcol:hover{border-color:var(--line2);background:var(--sink)}}
+#pane-semaphore span.lcol{cursor:inherit}
+@media (hover:hover) and (pointer:fine){#pane-semaphore button.lcol:hover{border-color:var(--line2);background:var(--sink)}}
 #pane-semaphore .lcolpop{position:absolute;z-index:30;top:calc(100% + 6px);left:-10px;
-  display:grid;grid-template-columns:repeat(5,30px);gap:8px;padding:10px;cursor:default;
+  display:grid;grid-template-columns:repeat(9,30px);gap:8px;padding:10px;cursor:default;
   background:var(--panel);border:1px solid var(--line2);border-radius:9px;box-shadow:0 10px 28px rgba(0,0,0,.45)}
 #pane-semaphore .lcolpop .lsw{width:28px;height:28px;justify-self:center;padding:0;border:0;border-radius:50%;
   cursor:pointer;background:var(--c);box-shadow:0 0 0 1px rgba(0,0,0,.25)}
 #pane-semaphore .lcolpop .lsw.sel{box-shadow:0 0 0 2px var(--panel),0 0 0 4px var(--key2)}
 #pane-semaphore .lcolpop .lsw:focus-visible{outline:1px solid var(--focus);outline-offset:3px}
-#pane-semaphore .lcolpop .lswauto{grid-column:1/-1;margin-top:2px;padding:7px 8px;border:0;
-  border-top:1px solid var(--line);border-radius:0 0 4px 4px;background:none;text-align:left;cursor:pointer;
-  font:13px var(--body);color:var(--muted)}
-#pane-semaphore .lcolpop .lswauto.sel{color:var(--ink)}
-#pane-semaphore .lcolpop .lswauto.sel::before{content:'\2713  '}
-#pane-semaphore .lcolpop .lswauto:hover,#pane-semaphore .lcolpop .lswauto:focus-visible{outline:none;background:var(--sink);color:var(--ink)}
 /* Complete, at the top right of an open lead on a card back or in the drawer */
 #pane-semaphore .lead .ltx>.ldone{float:right;margin:0 -2px 2px 8px}
 /* ── Editing in the card ──
@@ -937,7 +934,7 @@
   padding:7px 10px 8px;cursor:pointer}
 #pane-semaphore #card .lead{--lead:#8d5545}
 #pane-semaphore .lead.open{cursor:default;border-color:var(--line);border-left-color:var(--lead)}
-/* An arena's own colour, from the Ledger (leadToneOf). The Ledger's tones are
+/* The colour of the arena's type (leadToneOf). The tones are
    mid earth tints made for a dark ground; on the drawer's light paper the
    same tone is taken down towards ink, as the clay is, so the edge and the
    ruit's dots still stand off the paper. */

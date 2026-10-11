@@ -4,17 +4,18 @@
 idle minute instead of the news. Since 2026-10-07 it is dressed and laid out like the desk's
 Semaphore (the Cards view of 2026-10-06). Four tabs:
 
-- **Rotation** — the desk's rotation, in the desk's three bands: top cards with up to four calls on
-  their strip, middle cards with two, the long tail as one-line rows. Walked one card at a time with
-  *Look around* → Next / Stamp & next; a card stamped today drops to a "Stamped today" group at the
-  foot. Arenas with no brokerage material are listed as ghosts at the bottom.
+- **Rotation** — the desk's rotation since 2026-10-11 (`typeRows`): a row for every arena type, in
+  the desk's order of types, headed in the type's colour; in each row the cards, all one size, in
+  standing order, swiped sideways, with a card stamped today at the far end. Walked one card at a
+  time with *Look around* → Next / Stamp & next, which takes the types in turn: every type's first
+  card, then every type's second. Arenas with no brokerage material are ghosts under their row.
 - **Pinned** — pinned links first (oldest pin first), each with its own stamp ✓, the days since,
   and its pin to put it back; then pinned cards.
 - **Leads** — every open lead in Spotted / Contacted / Talking, as the desk's Leads arrangement;
   Contacted split by its two paths; each lead shows the desk's diamond ("ruit"). In a lead's sheet
   the diamond is pressed to move it (the desk's own `leadPath`), and links/emails are added there,
-  as is the colour its arena's leads wear (the Ledger's palette, so both show the same) and the
-  desk's score, 1 to 5, which each row shows as the desk's numbered dot after its day.
+  as is the desk's score, 1 to 5, which each row shows as the desk's numbered dot after its day.
+  A lead wears its arena type's colour (`leadTone`, from the desk's `arenaTone`).
   *+ New lead* at the top adds one, asking first which arena it belongs to (frozen arenas left
   out); an arena's sheet has its own *+ Lead*. Both ask the same questions (`leadForm`).
 
@@ -23,7 +24,7 @@ the pin (diamond) and the stamp (✓, which also marks the agent's findings seen
 spells out the first two and adds the desk's *Wait for…* (`hold`), which lists the arena's coming
 dates to sleep until (since 2026-10-10). A brokerage link
 on a card or in an arena's sheet has its own pin. What stays on the desk: making and editing
-arenas, dates, types, weights, the freezer, and the agent's Dispatches.
+arenas, dates, types (their order and colour too), weights, the freezer, and the agent's Dispatches.
 - **Coming up** — every arena's dates on one line, brokerage by default; a brokerage event
   leaves once it is over, a call two weeks after.
   A brokerage event opens its website (↗) when one of its arena's brokerage links fits it
@@ -60,16 +61,16 @@ re-extract the maths) but a Pocket change never touches it.
   `.wstrip .wsb .wsd .wsnow .wsx`, `.wlk .wlink`, `.wprow`, `.lrun .lflank .lead .lruit`.
 - `<script id="atlas-index">` — People data (one huge JSON line, ~320 KB). Never print it; `grep -v` / `cut` it away.
 - Script 1 — **desk code, copied verbatim** out of `one-app/rooms/semaphore/semaphore.js`
-  (`standing()`, `rotationSplit`, `tierQuota`/`bandOf`, `callRuns`, `isFresh`, `STAGES`, `leadKind`,
-  `migrate`, `let S`…). Do not edit; re-extract (see below).
+  (`standing()`, `rotationSplit`, `callRuns`, `isFresh`, `STAGES`, `leadKind`, the types' tones
+  `TONES`/`settleTones`/`arenaTone`, `migrate`, `let S`…). Do not edit; re-extract (see below).
 - Script 2 — Pocket itself (`var`, ES5 style): `BUILT_IN`, the project's url and anon key, taken
   when the phone holds no `pocket.cfg` (since 2026-10-10, so a new phone asks only for the email
   and password; the url and key fields under `#s-conn` show only for another project) → the login (`logIn`, `token`, `renew`, `askLogin`;
   since 2026-10-09 the cloud answers only a logged-in Mark, so every request carries the session's
   token, renewed one at a time — Supabase ends a session whose renewal is used twice) → `rest()` → `pull()` (row `semaphore` only) →
   `commit()` → lead mutations (`setDone`, `setDate`, `setPath`, `addUpdate`, `editItem`, `addLead`,
-  `addLeadLink`, `dropLeadLink`, `setScore`) and arena/link mutations (`stampArena`, `pinArena`, `askAgent`, `holdArena`, `setLeadColour`,
-  `pinLink`, `stampLink`); every undo puts back a snapshot (`keep`/`putBack`) → board (`liveList`, `scoreOf`, `wall`) → views (`drawRot` + `wallCard` +
+  `addLeadLink`, `dropLeadLink`, `setScore`) and arena/link mutations (`stampArena`, `pinArena`, `askAgent`, `holdArena`,
+  `pinLink`, `stampLink`); every undo puts back a snapshot (`keep`/`putBack`) → board (`liveList`, which settles the types' tones as the desk does, `scoreOf`, `typeRows`) → views (`drawRot` + `wallCard` +
   `cardLine`, `drawPins`/`pinnedOf`, `drawLeads`/`leadItems` + `leadRow` + `ruit`,
   `drawDates`/`comingUp`) → sheets (`openArena` with the round, `openLead`, `newLead`, `openPerson`).
   `fitScreen` gives the home screen the room the insets no longer say (why: the viewport meta); ⚙ shows what it measured.
@@ -83,11 +84,11 @@ declaration named below **plus every top-level declaration it refers to**, in so
 
 `uid todayISO STAGES STAGE_NAME stageOf WEIGHTS weightOf ROLES reconcile S dispDate arena linkName
 SWEEP_CYCLE SWEEP_SHORT eventNote openLeads standing linkHost callRuns isFresh shortDate shortDay
-daysBetween leadKind KIND_NAME KIND_RANK RUNG tierQuota bandOf leadName dtLabel esc rotationSplit
-hasBrokerage bkPos leadPath`
+daysBetween leadKind KIND_NAME KIND_RANK RUNG leadName dtLabel esc rotationSplit
+hasBrokerage bkPos leadPath TONES toneHex settleTones typeOf arenaTone`
 
 Then check: no `document`/`$(`/`Hub.` in the result, no name clashes with script 2, `node --check`.
-Last done 2026-10-07 from the 2026-10-06 desk (591 lines).
+Last done 2026-10-11 from that day's desk (641 lines).
 
 ## Rules
 1. Display-layer changes by default. Data structures, script 1, scoring and the write path change only when asked.

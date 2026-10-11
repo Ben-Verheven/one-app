@@ -5524,8 +5524,8 @@ var Board=(function(){
      The dots are `hz-mark`s and are dragged to another day the way a todo's
      are; the drop moves the lead's day in the Semaphore (see dragEnd). The
      hover label passes over the line — it reads todos — so each dot carries
-     its own title. Each dot is its arena's colour (Mark, 2026-10-09), so a
-     week of leads can be read by arena without hovering; the lane's own
+     its own title. Each dot is its arena type's colour (Mark, 2026-10-11), so a
+     week of leads can be read by type without hovering; the lane's own
      edge stays the section's stone. */
   function leadsLaneHTML(startIso,days,compact,laneIdx){
     var all=Leads.list();
@@ -8751,9 +8751,9 @@ var TodoCard=(function(){
    idea of what a card is; but where a todo has its effort, a lead has the
    three steps Semaphore moves it through, and where a todo has Done and
    Delete, a lead has Complete, which is all Semaphore lets you do to end
-   one. Its colour is its arena's, from a family of greyed earth tones kept
-   apart from the categories' clean tints, because it is not a category and
-   must not borrow one (see "An arena's colour" below).
+   one. Its colour is its arena type's, from a family of greyed earth tones
+   kept apart from the categories' clean tints, because it is not a category
+   and must not borrow one (see "A lead's colour" below).
 
    A lead can be started here as well (Mark, 2026-10-06): the line's name
    opens a new-lead card in the list, which files the lead under the arena
@@ -8763,39 +8763,14 @@ var Leads=(function(){
   /* The section's frame — `--lead` in the stylesheet, where the reason is
      written. */
   var COLOR='var(--lead)';
-  /* ── An arena's colour ──
-     Mark asked on 2026-10-09 for each arena's leads to have a colour of
-     their own, chosen by him, and still to read as leads rather than todos.
-     So every one is a greyed earth tone, spread round the wheel in the
-     picker's order, where the ten categories are clean light tints: the
-     softness is the family. The arena stores the key, not the hex, so a
-     tone adjusted here moves every arena that wears it.
-
-     An arena with none chosen takes a tone from its place in the
-     Semaphore's list of arenas, stepping three round the wheel each time:
-     neighbours in the palette are close by design, and handed out in order
-     two arenas made one after the other came out Terracotta and Rust, which
-     cannot be told apart on a 9px dot. Three steps of ten visits all ten
-     before any repeats. The place only changes when an arena before it is
-     deleted, so the automatic colours hold still. */
-  var PALETTE=[
-    {k:'terracotta',label:'Terracotta',color:'#c08a78'},
-    {k:'rust',      label:'Rust',      color:'#a8714f'},
-    {k:'ochre',     label:'Ochre',     color:'#b59c66'},
-    {k:'olive',     label:'Olive',     color:'#9ea06e'},
-    {k:'sage',      label:'Sage',      color:'#86a088'},
-    {k:'slate',     label:'Slate',     color:'#7f9aa8'},
-    {k:'dusk',      label:'Dusk',      color:'#8f8db0'},
-    {k:'mauve',     label:'Mauve',     color:'#a8879e'},
-    {k:'rosewood',  label:'Rosewood',  color:'#ad7680'},
-    {k:'sand',      label:'Sand',      color:'#b5a690'}
-  ];
-  function toneOf(l){
-    for(var i=0;i<PALETTE.length;i++)if(PALETTE[i].k===l.color)return PALETTE[i];
-    var n=+l.slot>=0?+l.slot:0;
-    return PALETTE[(n*3)%PALETTE.length];
-  }
-  function hexOf(l){return toneOf(l).color;}
+  /* ── A lead's colour ──
+     A lead wears the colour of its arena's type, which Mark chooses in the
+     Semaphore where the types are made (2026-10-11), and it arrives here
+     ready as `tone`. It was a colour per arena, chosen on the lead from a
+     palette kept here, until he asked for the leads of one kind of arena to
+     look alike; the palette went to the Semaphore with the choice. A lead
+     that came without one falls back on the old palette's sand. */
+  function hexOf(l){return (l&&l.tone)||'#b5a690';}
   var STAGES=[['spotted','Spotted'],['contacted','Contacted'],['talking','Talking']];
   /* A card the press was made on, kept open across the redraw that press
      causes. Only the one: a list redraws shut except for the card you are
@@ -8979,19 +8954,17 @@ var Leads=(function(){
             'PL.leadNoteDel(\''+k+'\','+(+u.i)+',event)');
         }).join('')+'</div>':'';
 
-    var tone=toneOf(l),hex=tone.color;
-    var colTip='Colour of '+l.arena+' \u2014 '+tone.label+(l.color?'':' (automatic)')+' \u2014 click to change';
+    var hex=hexOf(l);
+    var colTip=(l.type?l.type+' \u2014 ':'')+'the colour of '+l.arena+'\u2019s type, chosen in the Semaphore';
     return '<div class="todo-card-later lead-card'+(keep===key?' open':'')+'" id="lead-'+lid+'" '
       +'style="--edge:'+hex+';--lead:'+hex+'" data-lead="'+esc(key)+'" '
       +'onclick="PL.toggleTodoExpand(this,event)">'
       +'<div class="todo-later-row">'
       +'<span class="lead-ruit-slot">'+ruitHTML(l,key)+'</span>'
-      /* the arena's colour, set where the category is set on a todo */
-      +'<button type="button" class="todo-cat lead-col" style="--c:'+hex+'" '
-        +'aria-haspopup="listbox" aria-expanded="false" '
-        +'title="'+esc(colTip)+'" aria-label="'+esc(colTip)+'" '
-        +'onclick="PL.leadColorMenu(this,\''+k+'\',event)">'
-        +'<span class="todo-cat-dot" aria-hidden="true"></span></button>'
+      /* the type's colour, standing where the category stands on a todo;
+         it is chosen in the Semaphore, so here it is only shown */
+      +'<span class="todo-cat lead-col" style="--c:'+hex+'" title="'+esc(colTip)+'">'
+        +'<span class="todo-cat-dot" aria-hidden="true"></span></span>'
       /* The arena is in the project's seat and is the way across, the way a
          project's name is: it opens that arena in the Semaphore. */
       +'<button type="button" class="todo-later-proj todo-proj-btn" '
@@ -9300,34 +9273,16 @@ var Leads=(function(){
     if(evt.key==='Enter'){evt.preventDefault();addLink(key,evt);}
   }
   function linkDel(key,kid,evt){stopEvt(evt);change(key,'linkDel',kid);}
-  function colorMenu(el,key,evt){
-    stopEvt(evt);
-    var l=find(key);if(!l)return;
-    var cur=l.color||'',kq=jsq(key);
-    Menu.open(el,PALETTE.map(function(t){
-        var on=t.k===cur;
-        return '<button type="button" role="option" class="lead-sw'+(on?' sel':'')+'" '
-          +'style="--c:'+t.color+'" title="'+t.label+'" aria-label="'+t.label+'" '
-          +'aria-selected="'+(on?'true':'false')+'" '
-          +'onclick="PL.leadColor(\''+kq+'\',\''+t.k+'\',event)"></button>';
-      }).join('')
-      +'<div class="opt-sep"></div>'
-      +'<button type="button" role="option" class="opt-item'+(cur?'':' sel')+'" '
-        +'aria-selected="'+(cur?'false':'true')+'" '
-        +'onclick="PL.leadColor(\''+kq+'\',\'\',event)">Automatic</button>',
-      {id:'lead-col-menu',cls:'opt-menu lead-col-menu',align:'center',role:'listbox'});
-  }
-  function setColor(key,k,evt){stopEvt(evt);Menu.close();change(key,'color',k);}
 
   return {fill:fill,list:list,keyOf:keyOf,find:find,sorted:sorted,
-    html:html,listHTML:listHTML,COLOR:COLOR,hexOf:hexOf,PALETTE:PALETTE,
+    html:html,listHTML:listHTML,COLOR:COLOR,hexOf:hexOf,
     canAdd:canAdd,newHTML:newHTML,newOpen:newOpen,newDrop:newDrop,
     newArenaMenu:newArenaMenu,newArena:newArena,newDue:newDue,newSave:newSave,newLink:newLink,
     path:path,score:score,due:due,done:done,arena:arenaOf,openBox:openBox,
     beginEdit:beginEdit,cancelEdit:cancelEdit,saveEdit:saveEdit,editDrop:editDrop,
     addNote:addNote,noteKey:noteKey,noteDel:noteDel,
     addLink:addLink,linkKey:linkKey,linkDel:linkDel,
-    hexOf:hexOf,colorMenu:colorMenu,setColor:setColor};
+    hexOf:hexOf};
 })();
 
 /* ══ THE CHECKLIST ═══════════════════════════════════════════════════
@@ -14117,7 +14072,6 @@ window.PL={
   leadNewArenaMenu:Leads.newArenaMenu,leadNewArena:Leads.newArena,
   leadNewDue:Leads.newDue,leadNewSave:Leads.newSave,leadNewLink:Leads.newLink,
   leadPath:Leads.path,leadScore:Leads.score,leadDue:Leads.due,leadDone:Leads.done,leadArena:Leads.arena,
-  leadColorMenu:Leads.colorMenu,leadColor:Leads.setColor,
   leadOpenBox:Leads.openBox,leadBeginEdit:Leads.beginEdit,leadCancelEdit:Leads.cancelEdit,
   leadSaveEdit:Leads.saveEdit,leadEditDrop:Leads.editDrop,leadAddNote:Leads.addNote,leadNoteKey:Leads.noteKey,
   leadNoteDel:Leads.noteDel,leadAddLink:Leads.addLink,leadLinkKey:Leads.linkKey,
@@ -14259,13 +14213,6 @@ try{ Hub.expose('ledger',{
      LINE. */
   setLeads: function(o){ Leads.fill(o); Board.render(); },
   leadsChanged: function(){ Board.leadsChanged(); },
-  /* An arena's lead colour as a hex, from {color, slot} — so the Semaphore
-     draws its leads in the colour they wear here (Mark, 2026-10-10). */
-  leadTone: function(l){ return Leads.hexOf(l||{}); },
-  /* The palette itself, as copies, so the Semaphore's leads view can offer
-     the same swatches as the dot on a lead card here (Mark, 2026-10-10). */
-  leadPalette: function(){ return Leads.PALETTE.map(function(t){
-    return {k:t.k,label:t.label,color:t.color}; }); },
   /* A restore point of everything as it stands, for the bridge to keep
      before a room's cloud copy replaces what this device holds. */
   snapshot: function(why){ Snapshots.take(why); },

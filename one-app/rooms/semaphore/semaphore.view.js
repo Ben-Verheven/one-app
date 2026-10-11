@@ -75,7 +75,7 @@ ITEA 4 ; Programme ; software"></textarea>
 <div class="modal" id="typesModal">
   <div class="mbox">
     <h2>Arena types</h2>
-    <p class="sub">Rename in place — every arena of that type follows. Reorder with the arrows; the board and the brokerage view use this order. A type can be removed once no arena uses it.</p>
+    <p class="sub">Rename in place — every arena of that type follows. The dot is the type's colour, which its arenas' leads wear everywhere; click it to choose another. Reorder with the arrows; the cards, the board and Pocket all use this order. A type can be removed once no arena uses it.</p>
     <div id="tylist"></div>
     <div class="taddrow" style="margin-top:10px">
       <input type="text" id="tyNew" placeholder="New type name">

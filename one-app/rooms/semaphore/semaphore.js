@@ -71,14 +71,70 @@ function dtSub(dt){
   return dt.kind==='call'?(ROLES[dt.role]||ROLES.publication).short:(dt.note||'');
 }
 
+/* ───────── a type's colour ─────────
+   Every arena type wears a colour, and every lead wears its arena's type
+   colour — on the wall, on the Ledger's board and in Pocket (Mark,
+   2026-10-11). Before, each arena had a colour of its own, chosen on one of
+   its leads, and the leads of two Joint Undertakings looked unrelated.
+
+   The tones are the soft earth tints the arenas wore: every one greyed down,
+   so a lead never reads as one of the Ledger's clean category tints. Mark
+   wanted more of them, so there are two shades of nine hues, light over deep,
+   where there were ten single tones; the old keys are all still here, so a
+   colour he chose for an arena can be carried over to its type. A type stores
+   the key, not the hex, so adjusting a tone here moves every type wearing it. */
+const TONES=[
+  {k:'blush',     label:'Blush',     color:'#ca9c9b'}, {k:'terracotta',label:'Terracotta',color:'#c7a08a'},
+  {k:'sand',      label:'Sand',      color:'#bea582'}, {k:'straw',     label:'Straw',     color:'#b4a981'},
+  {k:'olive',     label:'Olive',     color:'#a1b08a'}, {k:'sage',      label:'Sage',      color:'#90b3a2'},
+  {k:'mist',      label:'Mist',      color:'#8ab1bb'}, {k:'dusk',      label:'Dusk',      color:'#9ca9c6'},
+  {k:'mauve',     label:'Mauve',     color:'#b99ec0'},
+  {k:'rosewood',  label:'Rosewood',  color:'#a97777'}, {k:'rust',      label:'Rust',      color:'#a57c65'},
+  {k:'umber',     label:'Umber',     color:'#9c815c'}, {k:'ochre',     label:'Ochre',     color:'#92865b'},
+  {k:'moss',      label:'Moss',      color:'#7d8d64'}, {k:'fern',      label:'Fern',      color:'#6a907f'},
+  {k:'slate',     label:'Slate',     color:'#638e99'}, {k:'twilight',  label:'Twilight',  color:'#7886a5'},
+  {k:'plum',      label:'Plum',      color:'#977a9e'}
+];
+/* The order a type is handed a tone when it has none: hues far apart first,
+   because neighbours on the wheel are close by design, and two types made one
+   after the other must not come out Terracotta and Rust. A type keeps the tone
+   it was given, so moving types up and down never recolours them. */
+const TONE_SPREAD=['terracotta','sage','dusk','sand','mauve','slate','olive','rosewood','ochre',
+  'mist','plum','straw','fern','blush','twilight','umber','moss','rust'];
+const toneHex=k=>{const t=TONES.find(t=>t.k===k);return t?t.color:'';};
+function freeTone(types){
+  const used=new Set((types||[]).map(t=>t.color));
+  return TONE_SPREAD.find(k=>!used.has(k))||TONE_SPREAD[(types||[]).length%TONE_SPREAD.length];
+}
+/* Every type comes out of here with a tone. One without is given the colour
+   most of its arenas wore when colours were the arenas' own, so what Mark
+   chose then carries over, and otherwise the next free tone. Pocket reads the
+   same board, so it settles the same types the same way until the desk has
+   saved them. */
+function settleTones(s){
+  const taken=new Set();
+  s.types.forEach(t=>{if(toneHex(t.color))taken.add(t.color);else t.color=null;});
+  s.types.forEach(t=>{
+    if(t.color)return;
+    const n={};
+    s.arenas.forEach(a=>{if(a.typeId===t.id&&toneHex(a.color))n[a.color]=(n[a.color]||0)+1;});
+    const best=Object.keys(n).filter(k=>!taken.has(k))
+      .sort((x,y)=>n[y]-n[x]||TONE_SPREAD.indexOf(x)-TONE_SPREAD.indexOf(y))[0];
+    t.color=best||freeTone(s.types.filter(u=>u.color));
+    taken.add(t.color);
+  });
+}
+function typeOf(a){return (a&&S.types.find(t=>t.id===a.typeId))||null;}
+function arenaTone(a){const t=typeOf(a);return t?toneHex(t.color):'';}
 function defaultTypes(){
-  return ['Partnership','Mission','Cluster','Joint Undertaking','Programme'].map(n=>({id:uid(),name:n}));
+  return ['Partnership','Mission','Cluster','Joint Undertaking','Programme']
+    .map((n,i)=>({id:uid(),name:n,color:TONE_SPREAD[i]}));
 }
 function blank(){
   return {v:1,types:defaultTypes(),arenas:[],
     ui:{q:'',collapsed:{},view:'board',
         wallSort:'rotation',boardSort:'next',cuAll:false,
-        howOpen:false,freezerOpen:false,wopen:{},flipped:{}}};
+        howOpen:false,freezerOpen:false,flipped:{}}};
 }
 /* An arena remembers which of its own dates it is waiting for. That goes stale
    the moment the dates change, so this puts it straight — a wait ends when the
@@ -101,7 +157,8 @@ function migrate(s){
   if(!Array.isArray(s.arenas))s.arenas=[];
   if(!Array.isArray(s.types)||!s.types.length)s.types=defaultTypes();
   s.types=s.types.filter(t=>t&&typeof t==='object')
-    .map(t=>({id:t.id||uid(),name:String(t.name||'').trim()||'Untitled type'}));
+    .map(t=>({id:t.id||uid(),name:String(t.name||'').trim()||'Untitled type',
+              color:typeof t.color==='string'?t.color:null}));
   s.arenas=s.arenas.filter(a=>a&&typeof a==='object');
   s.arenas.forEach(a=>{
     if(!a.id)a.id=uid();
@@ -128,11 +185,6 @@ function migrate(s){
     if(typeof a.frozenAt!=='string')a.frozenAt=null;
     /* how much this arena is worth of the rotation; unset means ordinary */
     if(!WEIGHTS[a.weight])a.weight='ordinary';
-    /* The colour its leads wear on the Ledger's board, as one of the Ledger's
-       own palette keys; null leaves the choice to the Ledger. Kept here, on
-       the arena, so it syncs with the board and every lead of one arena
-       changes together (Mark, 2026-10-09). This room does not draw it. */
-    if(typeof a.color!=='string'||!a.color)a.color=null;
     /* one sweep clock and one follow-up. The old pair of stamps collapses
        into the sweep. */
     if(!('sweptAt' in a))a.sweptAt=a.lastCheckedAt||null;
@@ -214,6 +266,10 @@ function migrate(s){
       }
     });
   });
+  /* An arena's own colour is its type's now (see "a type's colour"): read
+     once to give the types theirs, then gone. */
+  settleTones(s);
+  s.arenas.forEach(a=>{delete a.color;});
   /* ── the ui, whole ──
      Every field below was guarded one at a time, and each guard asked only
      whether `s.ui` existed at all. A board arriving with *some* of a ui —
@@ -234,13 +290,11 @@ function migrate(s){
     const ui=Object.assign({},d);
     ui.q        = typeof u.q==='string' ? u.q : d.q;
     ui.collapsed= map(u.collapsed) || {};
-    /* which type sections stand open on the wall — absent means shut, so a
-       type you have never opened, including one made later, starts closed */
-    ui.wopen    = map(u.wopen)   || {};
     ui.flipped  = map(u.flipped) || {};
     ui.view     = ['brokerage','dispatch','coming'].includes(u.view) ? u.view : 'board';
     ui.cuAll    = u.cuAll===true;
-    ui.wallSort = ['rotation','type','pinned','leads'].includes(u.wallSort) ? u.wallSort : 'rotation';
+    /* By type was merged into the rotation (2026-10-11), so it lands there */
+    ui.wallSort = ['pinned','leads'].includes(u.wallSort) ? u.wallSort : 'rotation';
     ui.boardSort = u.boardSort==='phase' ? 'phase' : 'next';
     ui.howOpen     = u.howOpen===true;
     ui.freezerOpen = u.freezerOpen===true;
@@ -641,7 +695,8 @@ function renderBoard(){keepPlace(()=>{
     h+='<div class="grp'+(col?' collapsed':'')+'">'+
        '<div class="ghead"><div class="gc">'+
        '<button class="caret" data-act="toggleGroup" data-id="'+ty.id+'" aria-label="Collapse group">'+(col?'\u25B8':'\u25BE')+'</button>'+
-       '<span class="gname">'+esc(ty.name)+'</span><span class="gcount">'+group.length+'</span></div></div>';
+       typeDotHTML(ty,'board')+
+       '<span class="gname">'+esc(ty.name)+'</span><span class="gcount">'+group.length+'</span>'+typeMoveHTML(ty)+'</div></div>';
     if(col){h+='</div>';continue;}
     for(const a of group)h+=boardRow(a,bg);
     h+='</div>';
@@ -1590,16 +1645,14 @@ function closeDrawer(){drawer.id=null;drawer.edit=null;drawer.hi=null;drawer.edi
 
 /* ============ actions ============ */
 function bkPos(a){return typeof a.bkPos==='number'?a.bkPos:1e9;}
-function wallOrder(x,y){
-  const d=bkPos(x)-bkPos(y);
-  return d||x.name.localeCompare(y.name);
-}
 
 /* The rotation wall's order. An arena with nothing recorded still earns a
    card while it is asking for something — a wait whose day is in reach —
    because a ghost at the foot of the wall cannot say so. It drops back to a
-   ghost once the day has passed. The new-lead menu on the Ledger lists the
-   arenas in this same order. */
+   ghost once the day has passed. The wall asks it of one type at a time;
+   the new-lead menu on the Ledger lists the arenas the same way, type by
+   type in Mark's order of types, each type's cards first and its ghosts
+   after. */
 function hasBrokerage(a){const b=a.brokerage||{};return !!(b.notes||(b.links||[]).length||(a.leads||[]).length);}
 function rotationSplit(arenas){
   const ask=RUNG.asking[0];
@@ -1611,8 +1664,12 @@ function rotationSplit(arenas){
   return{list,empty};
 }
 function rotationOrder(arenas){
-  const{list,empty}=rotationSplit(arenas);
-  return list.map(x=>x.a).concat(empty);
+  const out=[];
+  S.types.map(t=>t.id).concat([null]).forEach(id=>{
+    const{list,empty}=rotationSplit(arenas.filter(a=>id?a.typeId===id:!typeOf(a)));
+    out.push(...list.map(x=>x.a),...empty);
+  });
+  return out;
 }
 /* ───────── standing ─────────
    A card's height on the wall is one number, and three things move it. None of
@@ -1827,24 +1884,6 @@ function standing(a){
   }
   return st;
 }
-/* ───────── the three bands ─────────
-   Standing decides the order; it is a poor judge of size. On a quiet week every
-   score is low and nothing would stand at full height; on a busy one they all
-   clear the bar and the wall is a wall of equals. Either way the readout is
-   lost. So the cut is relative: a short head, a wider middle, and the longest
-   band at the bottom, in roughly 1 : 2 : 4. The scores still decide who goes
-   where — only the size of the bands is fixed, so the top of the stack means
-   the same thing whatever the day looks like. */
-function tierQuota(n){
-  if(n<=0)return[0,0,0];
-  if(n===1)return[1,0,0];
-  if(n===2)return[1,1,0];
-  const lead=Math.max(1,Math.round(n/7));
-  let mid=Math.max(lead,Math.ceil(2*n/7)),rest=n-lead-mid;
-  while(rest<mid&&mid>lead){mid--;rest++;}   /* the tail stays the widest band */
-  return[lead,mid,rest];
-}
-function bandOf(i,quota){return i<quota[0]?'lead':i<quota[0]+quota[1]?'mid':'rest';}
 function promptCount(){
   /* whatever stands on the asking rung or above is asking you something */
   return visibleArenas().filter(a=>standing(a).score>=RUNG.asking[0]).length;
@@ -2295,44 +2334,50 @@ function longDay(iso){
   const d=new Date(iso+'T12:00:00');
   return LONG_DOW[d.getDay()]+' '+d.getDate()+' '+LONG_MON[d.getMonth()]+' '+d.getFullYear();
 }
-/* Each arena's leads wear the colour the Ledger gives them, chosen there by
-   Mark or handed out from the arena's place in the list; he asked on
-   2026-10-10 for the same colour in this room. The Ledger owns the palette,
-   so the bridge hands over the one function that reads it; with no Ledger
-   the room keeps its own clay. The palette comes with it, so the leads view
-   can offer the Ledger's swatches on the same dot (see "the colour dot"). */
-let leadTone=null,leadPalette=[];
-function leadToneOf(a){
-  if(!leadTone)return '';
-  try{return leadTone({color:a.color||'',slot:S.arenas.indexOf(a)})||'';}catch(e){return '';}
-}
+/* Each lead wears its arena type's colour (see "a type's colour"). */
+function leadToneOf(a){return arenaTone(a);}
 /* ───────── the colour dot ─────────
    On the leads view each row carries the Ledger's dot before the arena's
-   name, in the arena's colour; a press opens the Ledger's ten swatches, five
-   to a row, and the way back to automatic (Mark asked for it here as on the
-   Ledger, 2026-10-10). The colour is the arena's, so every lead of that arena
-   follows, and it goes through leadVerb as the Ledger's own press does. Only
-   one menu is open at a time; a press anywhere else or Escape shuts it. */
+   name, in its type's colour. It was a button opening the swatches, when the
+   colour was the arena's; the colour is chosen on the type now, at the head
+   of its row on the wall or the board, so here the dot only shows it. */
+function leadColHTML(a){
+  const hex=arenaTone(a),t=typeOf(a);
+  if(!hex)return '';
+  return '<span class="lcolwrap"><span class="lcol" style="--c:'+esc(hex)+'" '+
+    'title="'+esc((t?t.name+' \u2014 ':'')+'the colour of '+a.name+'\u2019s type')+'"><i aria-hidden="true"></i></span></span>';
+}
+/* ───────── a type's head ─────────
+   The head of a type's row, on the wall and on the board alike, carries the
+   type's colour as a dot that opens the swatches, and the two arrows that
+   move the type up or down. Mark sorts his types himself (2026-10-11), and
+   the one order serves the wall, the board and Pocket. Only one menu is open
+   at a time; a press anywhere else or Escape shuts it. The same type's dot
+   stands in several places at once — its row, and the list of types over it —
+   so the menu remembers which dot it was opened from (`at`), or it opened
+   under both. */
 let colOpen=null;
-function leadColHTML(a,l,ids){
-  if(!leadPalette.length)return '';
-  const hex=leadToneOf(a);
-  const cur=leadPalette.find(t=>t.k===a.color)||leadPalette.find(t=>t.color===hex);
-  const open=colOpen===l.id;
-  const tip='Colour of '+a.name+(cur?' \u2014 '+cur.label:'')+(a.color?'':' (automatic)')+' \u2014 click to change';
-  return '<span class="lcolwrap">'+
-    '<button class="lcol'+(open?' open':'')+'" data-act="leadColMenu" '+ids+' style="--c:'+esc(hex)+'" '+
+function typeDotHTML(t,at){
+  const open=colOpen===at+':'+t.id,cur=TONES.find(x=>x.k===t.color);
+  const tip='Colour of '+t.name+(cur?' \u2014 '+cur.label:'')+' \u2014 click to change';
+  return '<span class="lcolwrap tycol">'+
+    '<button class="lcol'+(open?' open':'')+'" data-act="typeColMenu" data-id="'+t.id+'" data-at="'+at+'" style="--c:'+esc(toneHex(t.color))+'" '+
       'aria-haspopup="listbox" aria-expanded="'+(open?'true':'false')+'" '+
       'title="'+esc(tip)+'" aria-label="'+esc(tip)+'"><i aria-hidden="true"></i></button>'+
     (open
-      ? '<span class="lcolpop" data-act="leadColPop" role="listbox" aria-label="Colour of '+esc(a.name)+'’s leads">'+
-          leadPalette.map(t=>'<button class="lsw'+(t.k===a.color?' sel':'')+'" data-act="leadColor" '+ids+' '+
-            'data-v="'+esc(t.k)+'" role="option" aria-selected="'+(t.k===a.color?'true':'false')+'" '+
-            'style="--c:'+esc(t.color)+'" title="'+esc(t.label)+'" aria-label="'+esc(t.label)+'"></button>').join('')+
-          '<button class="lswauto'+(a.color?'':' sel')+'" data-act="leadColor" '+ids+' data-v="" role="option" '+
-            'aria-selected="'+(a.color?'false':'true')+'">Automatic</button>'+
+      ? '<span class="lcolpop" data-act="typeColPop" role="listbox" aria-label="Colour of '+esc(t.name)+'">'+
+          TONES.map(x=>'<button class="lsw'+(x.k===t.color?' sel':'')+'" data-act="typeColor" data-id="'+t.id+'" '+
+            'data-v="'+x.k+'" role="option" aria-selected="'+(x.k===t.color?'true':'false')+'" '+
+            'style="--c:'+x.color+'" title="'+x.label+'" aria-label="'+x.label+'"></button>').join('')+
         '</span>'
       : '')+
+  '</span>';
+}
+function typeMoveHTML(t){
+  const i=S.types.indexOf(t);
+  return '<span class="tymv">'+
+    '<button data-act="tyUp" data-id="'+t.id+'" title="Move '+esc(t.name)+' up" aria-label="Move '+esc(t.name)+' up"'+(i===0?' disabled':'')+'>\u25B2</button>'+
+    '<button data-act="tyDown" data-id="'+t.id+'" title="Move '+esc(t.name)+' down" aria-label="Move '+esc(t.name)+' down"'+(i===S.types.length-1?' disabled':'')+'>\u25BC</button>'+
   '</span>';
 }
 function leadRowHTML(a,l,hit,say){
@@ -2451,7 +2496,7 @@ function leadRowHTML(a,l,hit,say){
        drawer the arena goes without saying and the day rides on the quiet
        line. */
     '<header class="lhead">'+leadRuitHTML(a,l,st,done||editing)+
-      (say?leadColHTML(a,l,ids):'')+
+      (say?leadColHTML(a):'')+
       (say?'<button class="lar" data-act="openArena" data-id="'+a.id+'" '+
         'title="Open '+esc(a.name)+'">'+esc(a.name)+'</button>':'')+
       '<div class="ltx">'+
@@ -2752,8 +2797,7 @@ function wallCard(a,st,tier){
       '<button data-act="leadAdd" data-id="'+a.id+'">+ Lead</button></div></div>')+
   '</div>';
   return '<article class="wcard t-'+t+' s-'+s.state+(s.state==='held'?' held':'')+
-      (flipped?' flipped showing-back':'')+'"'+
-      (S.ui.wallSort==='type'&&!leadEdit.a&&!lkEdit.a&&!noteEdit.a?' draggable="true"':'')+' data-id="'+a.id+'">'+
+      (flipped?' flipped showing-back':'')+'" data-id="'+a.id+'">'+
     '<div class="wfin">'+front+back+'</div></article>';
 }
 
@@ -2966,11 +3010,20 @@ function wallGlide(pre){
       {duration:420,easing:'cubic-bezier(.22,.72,.24,1)'});
   });
 }
+/* A row scrolls on its own, and painting the wall again would send every row
+   back to its first card — so a stamp made far along a row would lose the
+   place it was made in. Each row's place is held across the paint, by type. */
+function trackPlaces(){
+  const m=new Map();
+  document.querySelectorAll('#wall .wtrack').forEach(el=>m.set(el.dataset.ty,el.scrollLeft));
+  return m;
+}
 function renderWall(){keepPlace(()=>{
-  const pre=wallRects();
+  const pre=wallRects(),at=trackPlaces();
   paintWall();
   growAll($('#wall'));
   fitWall(true);                 /* the faces are absolute: hand each box its height */
+  document.querySelectorAll('#wall .wtrack').forEach(el=>{const x=at.get(el.dataset.ty);if(x)el.scrollLeft=x;});
   wallGlide(pre);
   if(settleId){
     const el=document.querySelector('#wall .wcard[data-id="'+settleId+'"]');
@@ -2983,8 +3036,8 @@ function howHTML(){
   if(!S.ui.howOpen)return '';
   const line=(t,d)=>'<dt>'+t+'</dt><dd>'+d+'</dd>';
   return '<div class="how"><dl>'+
-    line('Sweep','Stamp a card <b>\u2713</b> once you have been through its platform and it sinks to the '+
-      'bottom, floating back over about four weeks. In the weeks just after one of its calls opens that '+
+    line('Sweep','Stamp a card <b>\u2713</b> once you have been through its platform and it goes to the '+
+      'far right of its row, working its way back to the left over about four weeks. In the weeks just after one of its calls opens that '+
       'cadence tightens to roughly <b>a week</b>, because partner search is front-loaded \u2014 and by '+
       'the last six weeks before a deadline, when the consortia have closed and the writing has started, '+
       'it loosens back to an ordinary turn. A brokerage event of the arena\u2019s own does the same more '+
@@ -3022,11 +3075,11 @@ function howHTML(){
       'Brokerage texts, and they wait in <b>Dispatches</b>; once accepted, events and links are marked '+
       '<b>new</b> until you next sweep the arena, and a rewrite takes the old text\u2019s place.')+
     '</dl><p class="coda">None of this is a setting, and none of the arithmetic is on screen. '+
-    'Position is the whole readout: the higher a card stands, the more of itself it shows. Order runs '+
-    'in rungs \u2014 what you promised, then what is asking to be looked at, then what is merely due a '+
-    'turn, then what is parked \u2014 and within a rung, by how much. The three bands are cut by rank '+
-    'rather than by any fixed mark, a short head, a wider middle and the long tail beneath, so the top '+
-    'of the stack means the same thing on a quiet week as on a busy one.</p></div>';
+    'Every type has a row of its own, in the order you give the types, and a card is only ever '+
+    'weighed against the others of its type. Within a row, position is the whole readout: the '+
+    'further left a card stands, the more it wants attention today. Order runs in rungs \u2014 what '+
+    'is asking to be looked at, then what is merely due a turn, then what is parked \u2014 and within '+
+    'a rung, by how much. A card you stamp today waits at the far right of its row until tomorrow.</p></div>';
 }
 /* One pinned link: its stamp, the link, the arena it came from, and the days
    since the stamp was last pressed. The count is the point of the row, so it
@@ -3050,7 +3103,6 @@ function pinRowHTML(p){
 function paintWall(){
   const w=$('#wall');
   const vis=visibleArenas();
-  w.classList.toggle('manual',S.ui.wallSort==='type');
   if(!vis.length){
     const[head,hint]=emptyReason();
     w.innerHTML='<div class="empty"><p>'+head+'</p>'+
@@ -3059,8 +3111,7 @@ function paintWall(){
   }
   const has=hasBrokerage;
   const sortBtns='<div class="wsort">'+
-    [['rotation','Rotation','Highest is whatever wants attention today'],
-     ['type','By type','Your own order, grouped by type'],
+    [['rotation','Rotation','A row for every type, in your order of types; in each row, first is whatever wants attention today'],
      ['pinned','Pinned','Only the cards you have pinned'],
      ['leads','Leads','One board \u2014 every lead you are pursuing, in the step it has reached']].map(([v,n,t])=>
       '<button class="'+(S.ui.wallSort===v?'on':'')+'" data-act="setWallSort" data-v="'+v+'" title="'+t+'">'+n+'</button>').join('')+
@@ -3069,6 +3120,11 @@ function paintWall(){
   const howBtn=S.ui.wallSort==='rotation'
     ?'<button class="howbtn'+(S.ui.howOpen?' on':'')+'" data-act="toggleHow" '+
       'aria-expanded="'+(S.ui.howOpen?'true':'false')+'">How the order works</button>':'';
+  /* The list of types — make, rename, remove, colour, order — had no way in
+     once the header lost its Types button (2026-10-09); the rotation's rows
+     are the types, so it is offered beside them. */
+  const typesBtn=S.ui.wallSort==='rotation'
+    ?'<button class="howbtn" data-act="openTypes">Types</button>':'';
 
   /* ---- pinned: the links and the cards you keep to hand ----
      Two kinds of thing are pinned, and both are kept here. A whole card, drawn
@@ -3167,53 +3223,46 @@ function paintWall(){
     return;
   }
 
-  if(S.ui.wallSort==='rotation'){
-    const ask=RUNG.asking[0];
-    const{list,empty}=rotationSplit(vis);
-    const n=list.filter(x=>x.s.score>=ask).length;
-    let h='<div class="whead">'+sortBtns+
-      (n?'<span class="wsay"><b>'+n+'</b> '+(n===1?'card is':'cards are')+
-        ' asking for something.</span>':'')+howBtn+'</div>'+howHTML();
-    if(!list.length)h+='<p class="wempty">Nothing recorded yet \u2014 add brokerage links to an arena first.</p>';
-    else{
-      const quota=tierQuota(list.length);
-      let tier=null;
-      list.forEach((it,i)=>{
-        const t=bandOf(i,quota);
-        if(t!==tier){h+=(tier?'</div>':'')+'<div class="wgrid g-'+t+'">';tier=t;}
-        h+=wallCard(it.a,it.s,t);
-      });
-      if(tier)h+='</div>';
-    }
-    if(empty.length)h+='<p class="wrest">No brokerage material yet \u2014 '+
-      empty.map(a=>'<button class="wghost" data-act="editBrokerage" data-id="'+a.id+'">'+esc(a.name)+'</button>').join('')+'</p>';
-    w.innerHTML=h;
-    return;
+  /* ---- the rotation: a strip for every type ----
+     Rotation and By type were two arrangements, and Mark merged them
+     (2026-10-11): the rotation used to rank every arena against every other,
+     so one busy type could fill the whole head of the wall while a quiet one
+     never stood high, and By type kept a hand-made order that did no
+     rotating at all. Now each type is a row in his own order of types, and
+     inside a row the cards stand in rotation order — standing() unchanged,
+     only compared within the type — so every type has a first card of its
+     own. The rows have no big and small cards any more: every card is one
+     size, the row trails off to the right and scrolls, and a card stamped
+     today goes to the far right of its row, past the parked ones, so the
+     stamp visibly puts it away. */
+  const ask=RUNG.asking[0];
+  const today=todayISO();
+  const rows=S.types.map(t=>[t,vis.filter(a=>a.typeId===t.id)])
+    .concat([[null,vis.filter(a=>!typeOf(a))]]).filter(r=>r[1].length);
+  const n=vis.filter(a=>standing(a).score>=ask).length;
+  let h='<div class="whead">'+sortBtns+
+    (n?'<span class="wsay"><b>'+n+'</b> '+(n===1?'card is':'cards are')+
+      ' asking for something.</span>':'')+typesBtn+howBtn+'</div>'+howHTML();
+  let any=false;
+  for(const[t,arenas]of rows){
+    const{list,empty}=rotationSplit(arenas);
+    const cards=list.filter(x=>x.a.sweptAt!==today).concat(list.filter(x=>x.a.sweptAt===today));
+    const k=list.filter(x=>x.s.score>=ask).length;
+    if(cards.length)any=true;
+    h+='<section class="wtrow"'+(t?' style="--tone:'+esc(toneHex(t.color))+'"':'')+'>'+
+      '<div class="wthead">'+(t?typeDotHTML(t,'wall'):'')+
+        '<span class="wtn">'+esc(t?t.name:'Untyped')+'</span>'+
+        '<span class="wtc">'+arenas.length+' arena'+(arenas.length===1?'':'s')+
+          (k?' \u00B7 <b>'+k+' asking</b>':'')+'</span>'+
+        (t?typeMoveHTML(t):'')+'</div>'+
+      (cards.length?'<div class="wtrack" data-ty="'+(t?t.id:'')+'">'+
+        cards.map(x=>wallCard(x.a,x.s,'lead')).join('')+'</div>':'')+
+      (empty.length?'<p class="wrest">No brokerage material yet \u2014 '+
+        empty.map(a=>'<button class="wghost" data-act="editBrokerage" data-id="'+a.id+'">'+esc(a.name)+'</button>').join('')+'</p>':'')+
+    '</section>';
   }
-
-  const groups=S.types.map(t=>[t,vis.filter(a=>a.typeId===t.id)])
-    .concat([[{id:'__none',name:'Untyped'},vis.filter(a=>!S.types.some(t=>t.id===a.typeId))]]);
-  let h='<div class="whead">'+sortBtns+howBtn+'</div>'+howHTML();
-  for(const[t,list]of groups){
-    if(!list.length)continue;
-    const filled=list.filter(has).sort(wallOrder);
-    const empty=list.filter(a=>!has(a)).sort((x,y)=>x.name.localeCompare(y.name));
-    if(!filled.length&&!empty.length)continue;
-    const open=!!S.ui.wopen[t.id];
-    h+='<section class="wgroup'+(open?' open':'')+'">'+
-       '<button class="wh" data-act="toggleWallGroup" data-id="'+t.id+'" '+
-         'aria-expanded="'+(open?'true':'false')+'">'+
-         '<span class="wcaret">'+(open?'\u25BE':'\u25B8')+'</span>'+
-         '<span class="wt">'+esc(t.name)+'</span><span class="wc">'+filled.length+'</span></button>'+
-       (open
-         ?(filled.length?'<div class="wgrid g-lead">'+filled.map(a=>wallCard(a,null,'lead')).join('')+'</div>':'')+
-          (empty.length?'<p class="wrest">Nothing recorded yet \u2014 '+
-             empty.map(a=>'<button class="wghost" data-act="editBrokerage" data-id="'+a.id+'">'+esc(a.name)+'</button>').join('')+
-             '</p>':'')
-         :'')+
-       '</section>';
-  }
-  w.innerHTML=h||'<p class="wempty">No brokerage material recorded yet.</p>';
+  if(!any)h+='<p class="wempty">Nothing recorded yet \u2014 add brokerage links to an arena first.</p>';
+  w.innerHTML=h;
 }
 function applyView(){
   const v=S.ui.view;
@@ -3331,7 +3380,7 @@ function quickCreate(){
     let tyId=S.types[0].id;
     if(p[1]){
       let t=S.types.find(t=>t.name.toLowerCase()===p[1].toLowerCase());
-      if(!t){t={id:uid(),name:p[1]};S.types.push(t);}
+      if(!t){t={id:uid(),name:p[1],color:freeTone(S.types)};S.types.push(t);}
       tyId=t.id;
     }
     const tags=p[2]?cleanTags(p[2].split(',')):[];
@@ -3381,7 +3430,7 @@ function seed(){
   const ty=n=>{
     const t=S.types.find(t=>t.name===n);
     if(t)return t.id;
-    const made={id:uid(),name:n};S.types.push(made);return made.id;
+    const made={id:uid(),name:n,color:freeTone(S.types)};S.types.push(made);return made.id;
   };
   const B=(label,gran,grade,v,note)=>{const[start,end]=resolve(gran,v||{});
     return{id:uid(),kind:'brokerage',label,call:'',role:'',gran,grade,start,end,note:note||''};};
@@ -3452,7 +3501,7 @@ function seed(){
 function leadsForBoard(){
   const out=[];
   liveArenas().forEach(a=>openLeads(a).forEach(l=>out.push({
-    aid:a.id,arena:a.name,color:a.color||'',slot:S.arenas.indexOf(a),
+    aid:a.id,arena:a.name,tone:arenaTone(a),type:(typeOf(a)||{}).name||'',
     id:l.id,name:leadName(l),project:l.project||'',
     match:l.match||'',stage:stageOf(l),due:l.due||null,
     toResearchers:!!l.toResearchers,toLead:!!l.toLead,score:l.score||0,
@@ -3521,9 +3570,6 @@ function leadVerb(aid,lid,op,val){
       if(!Array.isArray(l.links))l.links=[];
       l.links.push({id:uid(),label,url});break;}
     case 'linkDel':l.links=(l.links||[]).filter(k=>k.id!==val);break;
-    /* the arena's colour, set from one of its leads because a lead card is
-       where the Ledger shows it; it is the arena's, so all its leads follow */
-    case 'color':a.color=val?String(val):null;break;
     default:return false;
   }
   restack(a.id);
@@ -3574,6 +3620,9 @@ const Ask=(function(){
 })();
 $('#askYes').addEventListener('click',Ask.yes);
 $('#askNo').addEventListener('click',Ask.shut);
+/* A type's colour or place shows on the wall, the board, the leads and the
+   list of types at once, so a change to either redraws all four. */
+function typesShown(){renderTypes();renderAll();}
 function renderTypes(){
   $('#tylist').innerHTML=S.types.map((t,i)=>{
     const n=S.arenas.filter(a=>a.typeId===t.id).length;
@@ -3582,6 +3631,7 @@ function renderTypes(){
         '<button class="ib" data-act="tyUp" data-id="'+t.id+'" title="Move up"'+(i===0?' disabled':'')+'>\u25B2</button>'+
         '<button class="ib" data-act="tyDown" data-id="'+t.id+'" title="Move down"'+(i===S.types.length-1?' disabled':'')+'>\u25BC</button>'+
       '</span>'+
+      typeDotHTML(t,'list')+
       '<input value="'+esc(t.name)+'" data-tyname="'+t.id+'">'+
       '<span class="cnt">'+n+' arena'+(n===1?'':'s')+'</span>'+
       '<button class="ib" data-act="delType" data-id="'+t.id+'" title="Remove">\u2715</button></div>';
@@ -3624,17 +3674,18 @@ document.addEventListener('mousemove',e=>{
 document.addEventListener('click',e=>{
   /* an open colour menu takes the press that shuts it, as the Ledger's does,
      unless the press is on a dot, which opens that one instead */
-  if(colOpen&&!e.target.closest('.lcolpop,[data-act=leadColMenu]')){colOpen=null;repaint();return;}
+  if(colOpen&&!e.target.closest('.lcolpop,[data-act=typeColMenu]')){colOpen=null;typesShown();return;}
   const b=e.target.closest('[data-act]');
   if(!b)return;
   const act=b.dataset.act,id=b.dataset.id,a=arena(b.dataset.a||id);
   switch(act){
-    case 'leadColMenu':{const k=b.dataset.l;colOpen=colOpen===k?null:k;repaint();
-      const sw=colOpen&&document.querySelector('.lcolpop .lsw.sel,.lcolpop .lswauto.sel');
+    case 'typeColMenu':{const k=b.dataset.at+':'+id;colOpen=colOpen===k?null:k;typesShown();
+      const sw=colOpen&&document.querySelector('.lcolpop .lsw.sel');
       if(sw)sw.focus({preventScroll:true});break;}
-    case 'leadColPop':break;
-    case 'leadColor':colOpen=null;
-      if(!leadVerb(id,b.dataset.l,'color',b.dataset.v||''))repaint();break;
+    case 'typeColPop':break;
+    case 'typeColor':{colOpen=null;const t=S.types.find(t=>t.id===id);
+      if(t&&toneHex(b.dataset.v))t.color=b.dataset.v;
+      save();typesShown();break;}
     case 'addArena':addArena();break;
     case 'openArena':openDrawer(id);break;
     case 'openDate':openDrawer(b.dataset.a,b.dataset.d);break;
@@ -3730,7 +3781,6 @@ document.addEventListener('click',e=>{
       ar.weight=b.dataset.v;save();renderDrawer();
       if(S.ui.view==='brokerage')renderWall();else renderBoard();
       applyView();break;}
-    case 'toggleWallGroup':{S.ui.wopen[id]=!S.ui.wopen[id];save();renderWall();break;}
     case 'toggleHow':S.ui.howOpen=!S.ui.howOpen;save();renderWall();break;
     case 'freeze':{const ar=arena(id);if(!ar)break;
       ar.frozenAt=todayISO();
@@ -3769,7 +3819,7 @@ document.addEventListener('click',e=>{
       ar.askAt=ar.askAt?null:new Date().toISOString();
       relinked();break;}
     case 'setWallSort':{const v=b.dataset.v;
-      S.ui.wallSort=['type','pinned','leads'].includes(v)?v:'rotation';
+      S.ui.wallSort=['pinned','leads'].includes(v)?v:'rotation';
       leadsFaceFront.clear();          /* the arrangement decides the face, not last time */
       save();renderWall();break;}
     case 'setView':{const v=b.dataset.v;
@@ -3836,13 +3886,12 @@ document.addEventListener('click',e=>{
       const j=act==='tyUp'?i-1:i+1;
       if(i<0||j<0||j>=S.types.length)break;
       const[m]=S.types.splice(i,1);S.types.splice(j,0,m);
-      save();renderTypes();
-      if(S.ui.view==='brokerage')renderWall();else renderBoard();
+      save();typesShown();
       break;}
     case 'addType':{const n=$('#tyNew').value.trim();if(!n)break;
       if(S.types.some(t=>t.name.toLowerCase()===n.toLowerCase())){
         Ask.tell('That type already exists','There is already a type called \u201C'+n+'\u201D.');break;}
-      S.types.push({id:uid(),name:n});$('#tyNew').value='';save();renderTypes();break;}
+      S.types.push({id:uid(),name:n,color:freeTone(S.types)});$('#tyNew').value='';save();renderTypes();renderAll();break;}
     case 'delType':{const n=S.arenas.filter(x=>x.typeId===id).length;
       if(n){Ask.tell('Still in use',
         n+' arena'+(n===1?' still uses':'s still use')+' this type. Give '+
@@ -4091,7 +4140,7 @@ document.addEventListener('keydown',e=>{
     }
     return;
   }
-  if(colOpen){colOpen=null;repaint();return;}                 /* a colour menu */
+  if(colOpen){colOpen=null;typesShown();return;}             /* a colour menu */
   if(Ask.isOpen()){Ask.shut();return;}                       /* the question */
   if(document.querySelector('.modal.open')){closeModals();return;}   /* a sheet */
   if(lkEdit.a||leadEdit.a||noteEdit.a||waitPick){            /* a composer */
@@ -4128,11 +4177,8 @@ $('#wall').addEventListener('scroll',e=>{
 
    Pointer capture, once the row is up, rather than the document's own move and up, because those
    are gated on this room being the one showing (hub.js) and the panel is
-   also lent over the Ledger, where it is not. Native drag and drop is not
-   used either: a card on the By type wall is itself draggable, and the two
-   would fight over the same press — `lkPress` tells the card's dragstart to
-   stand aside. */
-let lkDrag=null,lkPress=false,lkSwallow=false;
+   also lent over the Ledger, where it is not. */
+let lkDrag=null,lkSwallow=false;
 const LK_HOLD=380,LK_SLOP=5;
 /* every movement in the app stands down under reduced motion; the rows then
    simply change places */
@@ -4144,7 +4190,6 @@ document.addEventListener('pointerdown',e=>{
   const row=e.target.closest&&e.target.closest('.wlrow[data-lk]');
   const list=row&&row.parentElement;
   if(!list||!list.matches('.wlinks[data-lks]')||list.children.length<2)return;
-  lkPress=true;
   const L=lkDrag={row,list,pid:e.pointerId,x:e.clientX,y:e.clientY,on:false,
     touch:e.pointerType!=='mouse',timer:0,grab:0,ty:0};
   row.addEventListener('pointermove',lkMove);
@@ -4209,7 +4254,7 @@ function lkEnd(){
   L.row.removeEventListener('pointercancel',lkCancel);
   L.row.removeEventListener('touchmove',lkTouch,{passive:false});
   try{L.row.releasePointerCapture(L.pid);}catch(err){}
-  lkDrag=null;lkPress=false;
+  lkDrag=null;
   return L;
 }
 function lkCancel(){
@@ -4249,55 +4294,6 @@ document.addEventListener('click',e=>{
   lkSwallow=false;
 },true);
 
-/* ───────── dragging a card to a new place on the wall ───────── */
-/* drag to rearrange the brokerage wall (within a type) — only in the manual
-   order, since in rotation the position is the app's answer, not yours */
-let dragId=null,overEl=null;
-document.addEventListener('dragstart',e=>{
-  /* a press on a link is the link being reordered, not the card being moved */
-  if(lkPress){e.preventDefault();return;}
-  if(S.ui.wallSort!=='type')return;
-  const box=e.target.closest&&e.target.closest('.wcard');
-  if(!box){return;}
-  dragId=box.dataset.id;
-  box.classList.add('drag');
-  e.dataTransfer.effectAllowed='move';
-  try{e.dataTransfer.setData('text/plain',dragId);}catch(err){}
-});
-function clearOver(){if(overEl){overEl.classList.remove('over');overEl=null;}}
-document.addEventListener('dragend',()=>{
-  dragId=null;clearOver();
-  document.querySelectorAll('.wcard.drag').forEach(el=>el.classList.remove('drag'));
-});
-document.addEventListener('dragover',e=>{
-  if(S.ui.wallSort!=='type')return;
-  const box=e.target.closest&&e.target.closest('.wcard');
-  if(!box||!dragId||box.dataset.id===dragId)return;
-  const src=arena(dragId),dst=arena(box.dataset.id);
-  if(!src||!dst||src.typeId!==dst.typeId)return;
-  e.preventDefault();
-  e.dataTransfer.dropEffect='move';
-  /* dragover fires with every mouse movement, so the card being hovered is
-     remembered rather than searched for across the whole wall each time */
-  if(overEl!==box){clearOver();overEl=box;box.classList.add('over');}
-});
-document.addEventListener('drop',e=>{
-  if(S.ui.wallSort!=='type')return;
-  const box=e.target.closest&&e.target.closest('.wcard');
-  if(!box||!dragId)return;
-  const src=arena(dragId),dst=arena(box.dataset.id);
-  if(!src||!dst||src.id===dst.id||src.typeId!==dst.typeId)return;
-  e.preventDefault();
-  const group=S.arenas.filter(a=>a.typeId===src.typeId).sort(wallOrder);
-  const from=group.indexOf(src);group.splice(from,1);
-  const to=group.indexOf(dst);
-  const rect=box.getBoundingClientRect();
-  const after=(e.clientY-rect.top)>rect.height/2;
-  group.splice(to+(after?1:0),0,src);
-  group.forEach((a,i)=>{a.bkPos=i;});
-  dragId=null;clearOver();save();renderWall();
-});
-
 renderAll();
 /* The bridge, which holds the one connection this app has, is loaded after
    every room and the Supabase library after that. So a board that opens on
@@ -4328,9 +4324,6 @@ try{
     leadVerb:   function(aid,lid,op,val){ return leadVerb(aid,lid,op,val); },
     arenas:     function(){ return arenasForBoard(); },
     leadAdd:    function(aid,v){ return leadAdd(aid,v); },
-    /* the Ledger's lead colours, handed over by the bridge */
-    setLeadTone: function(fn,pal){ leadTone=fn; leadPalette=Array.isArray(pal)?pal:[];
-      if(typeof renderAll==='function')renderAll(); },
     openArena:  function(aid){ if(arena(aid))openDrawer(aid); },
     /* Escape, for when the drawer is lent to another room and this room's
        own key handler is not the one listening: the innermost thing first,

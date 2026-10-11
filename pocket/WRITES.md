@@ -37,7 +37,6 @@ Every change is undoable from the toast; undo puts back exactly the fields it to
 | arena ask | `askAt` | ISO moment / `null` | ✓ |
 | arena wait | `hold` | `{dateId}`, one of the arena's own dates / `null` to stop waiting | ✓ |
 | lead score | `score` | `1`…`5`; the key deleted for no score | ✓ |
-| arena lead colour | `color` | the Ledger's palette name (`terracotta`…`sand`) / `null` for automatic | ✓ |
 | brokerage link pin | `brokerage.links[].pin` | ISO moment when pinned; key deleted when unpinned | ✓ |
 | brokerage link stamp | `stampedAt`, `stampPrev` | day; same-day stamp → `stampPrev`, which is then deleted | ✓ |
 
@@ -47,7 +46,8 @@ link on Pinned but leaves its pin and stamp to the desk.
 ## Never written by Pocket
 The whole `main` row (Ledger, `calls`, `projects`, `notes`, `atlas`), `semaphore.ui`,
 arena `name`/`dates`/`look`/`weight`/`frozenAt`/`notes`/`typeId`/`tags`/`links`,
-`brokerage.notes`, `types`, and the agent's inbox tables.
+`brokerage.notes`, `types` (their order and their `color`, since 2026-10-11 the colour leads wear;
+the arena's own `color` before it is no longer written either), and the agent's inbox tables.
 
 ## Stored only on the phone
 `pocket.cfg` (URL + key + the email last used, written at the first login; until then
