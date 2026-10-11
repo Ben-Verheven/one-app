@@ -360,7 +360,7 @@ a researcher's name written anywhere is `.atlas-ref`.
 | on screen | in the code |
 |---|---|
 | the room's scroller — the page itself does not scroll | `#semscroll` |
-| the header, the filter panel | `header.top`, `#filterwrap` › `#filters` |
+| the header: the view switcher, Search, Dispatches and the cloud chip | `header.top`; `#viewseg`, `#searchBtn` and its box `#search`, `#dispatchBtn`, `#semcloud` |
 | the Cards view (the wall), the Board view, the freezer | `#wall`, `#board`, `#freezer` |
 | the month axis over the board, sticky, and the heading that names and chooses the order (My order / By date) | `.axisrow` = `.corner.sorter` (`.whsort`, its menu `.whmenu`) + `.axis`; a month is `.mcell` |
 | one arena type's group on the board, its heading | `.grp`, its heading `.ghead` |
