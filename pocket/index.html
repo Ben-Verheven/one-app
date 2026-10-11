@@ -582,6 +582,19 @@ input[type="search"]:focus{outline:none;border-color:var(--key)}
 #sheet .when-grid button i{display:block;margin-top:4px;font:10.5px/1 var(--mono);font-style:normal;color:var(--faint)}
 #sheet .when-grid button.on{border-color:var(--lead);box-shadow:0 0 0 1px var(--lead)}
 #sheet .when-grid button:active{background:rgba(42,38,32,.07)}
+/* a link being edited: its name over its address, its cross beside both */
+#sheet input.line{width:100%;font:16px/1.3 var(--body);color:var(--ink);background:var(--field);
+  border:1px solid var(--line2);border-radius:var(--radius);padding:11px 12px;-webkit-appearance:none}
+#sheet input.line:focus{outline:none;border-color:var(--key)}
+#sheet .elk{display:flex;align-items:flex-start;gap:4px}
+#sheet .elk+.elk{margin-top:9px}
+#sheet .elk .elf{flex:1;min-width:0}
+#sheet .elk .elf input+input{margin-top:-1px;border-top-left-radius:0;border-top-right-radius:0}
+#sheet .elk .elf input:first-child:not(:last-child){border-bottom-left-radius:0;border-bottom-right-radius:0}
+#sheet .elk .ldel{height:44px}
+#sheet .eadd{display:block;width:100%;margin-top:9px;min-height:44px;padding:0 12px;text-align:left;
+  border:1px dashed var(--line2);border-radius:var(--radius);font:14px/1 var(--body);color:var(--muted)}
+#sheet .eadd:active{background:rgba(42,38,32,.07)}
 #sheet input[type="date"]{width:100%;margin-top:9px;font:16px/1.3 var(--body);color:var(--ink);
   background:var(--field);border:1px solid var(--line2);border-radius:var(--radius);padding:11px 12px;-webkit-appearance:none}
 
@@ -1753,6 +1766,55 @@ function holdArena(a, d){
     d ? 'Waiting for ' + dateName(d) + ' — back three weeks before' : 'Back in the rotation',
     onArena(a.id, function(x){ putBack(x, was); }));
 }
+/* An arena's own words and links, edited as the desk's edit view edits
+   them (asked for on 2026-10-11): the name trimmed, and "Unnamed arena" for
+   none; the two notes trimmed; a link {id, label, url} with its address read
+   the desk's way. `ch` holds only what was changed. Links are changed one by
+   one by their id on whatever the cloud holds, never by putting the list
+   back whole, so a pin set on the desk a moment earlier, or a link the
+   nightly agent found with its foundAt, is kept. Undo puts back the fields
+   it touched, as they were. */
+function linkOps(list, ops){
+  list = (list || []).filter(function(k){ return k && ops.drop.indexOf(k.id) < 0; });
+  list.forEach(function(k){
+    var e = ops.edit[k.id];
+    if (e){ k.label = e.label; k.url = e.url; }
+  });
+  ops.add.forEach(function(n){
+    if (!list.some(function(k){ return k.id === n.id; })) list.push({ id:n.id, label:n.label, url:n.url });
+  });
+  return list;
+}
+function editArena(a, ch){
+  var was = JSON.parse(JSON.stringify(keep(a, ['name', 'notes', 'links']))),
+      wasBk = a.brokerage ? JSON.parse(JSON.stringify(keep(a.brokerage, ['notes', 'links']))) : null;
+  commit('semaphore', onArena(a.id, function(x){
+    if ('name' in ch) x.name = ch.name;
+    if ('notes' in ch) x.notes = ch.notes;
+    if (ch.links) x.links = linkOps(x.links, ch.links);
+    if ('bknotes' in ch || ch.bklinks){
+      x.brokerage = x.brokerage || { notes:'', links:[] };
+      if ('bknotes' in ch) x.brokerage.notes = ch.bknotes;
+      if (ch.bklinks) x.brokerage.links = linkOps(x.brokerage.links, ch.bklinks);
+    }
+  }), (ch.name || plainOf(a.name) || 'Arena') + ' saved',
+  onArena(a.id, function(x){
+    var back = {};
+    if ('name' in ch) back.name = was.name;
+    if ('notes' in ch) back.notes = was.notes;
+    if (ch.links) back.links = was.links;
+    putBack(x, back);
+    if ('bknotes' in ch || ch.bklinks){
+      if (!wasBk){ delete x.brokerage; return; }
+      var bb = {};
+      if ('bknotes' in ch) bb.notes = wasBk.notes;
+      if (ch.bklinks) bb.links = wasBk.links;
+      x.brokerage = x.brokerage || {};
+      putBack(x.brokerage, bb);
+    }
+  }));
+}
+
 /* what a card can wait for: every dated thing it has still to come, soonest
    first — the desk's futureDates, which script 1 does not carry */
 function waitDates(a){
@@ -3184,7 +3246,12 @@ function fitScreen(){
 function openArena(a, st){
   st = st || scoreOf(a) || { state:'rotate', score:0, rest:0 };
   sheet(function(b, bar){
-    b.appendChild(el('h2', '', plainOf(a.name) || 'Untitled'));
+    var trow = el('div', 'titlerow');
+    trow.appendChild(el('h2', '', plainOf(a.name) || 'Untitled'));
+    var pencil = el('button', 'pencil', '✎');
+    pencil.setAttribute('aria-label', 'Edit the arena');
+    trow.appendChild(pencil);
+    b.appendChild(trow);
     var left = 0;
     rotList.forEach(function(x){ if (!stampedToday(x.a)) left++; });
     var wk = weightOf(a);
@@ -3254,6 +3321,101 @@ function openArena(a, st){
 
     var panel = el('div', 'composer');
     b.appendChild(panel);
+
+    /* The pencil opens the arena's words and both lists of links in the
+       panel under the title, and saves them together, once, with one undo.
+       What else the desk's edit view holds — type, weight, tags, dates, the
+       freezer, deleting — stays on the desk: Mark chose this much for the
+       phone (2026-10-11). Nothing is written until Save. */
+    pencil.addEventListener('click', function(){
+      var open = panel.classList.contains('open') && panel.dataset.k === 'edit';
+      addOpen = false;
+      panel.textContent = '';
+      panel.dataset.k = '';
+      panel.classList.toggle('open', !open);
+      if (open) return;
+      panel.dataset.k = 'edit';
+      function box(label, value, h){
+        panel.appendChild(el('span', 'field', label));
+        var ta = el('textarea');
+        ta.value = value || '';
+        ta.style.minHeight = h + 'px';
+        panel.appendChild(ta);
+        return ta;
+      }
+      var bk0 = a.brokerage || { notes:'', links:[] };
+      var nameBox = box('Name', a.name === 'Unnamed arena' ? '' : a.name, 48);
+      var notesBox = box('About', a.notes, 84);
+      var bkBox = box('Brokerage', bk0.notes, 84);
+      /* a list of links as boxes: each kept link by its id, a new one with
+         an id of its own made now, so a second Save cannot add it twice */
+      function links(label, list, more){
+        panel.appendChild(el('span', 'field', label));
+        var host = el('div'), rows = [];
+        panel.appendChild(host);
+        function row(k, fresh){
+          var r = el('div', 'elk'), f = el('div', 'elf');
+          var n = el('input', 'line'), u = el('input', 'line');
+          n.type = 'text'; u.type = 'text';
+          n.placeholder = 'Name it — optional'; u.placeholder = 'https://…';
+          n.value = k.label || ''; u.value = k.url || '';
+          u.setAttribute('autocapitalize', 'off'); u.setAttribute('autocorrect', 'off');
+          u.setAttribute('inputmode', 'url'); u.spellcheck = false;
+          n.setAttribute('aria-label', 'Link name'); u.setAttribute('aria-label', 'Link address');
+          f.appendChild(n); f.appendChild(u);
+          r.appendChild(f);
+          var x = el('button', 'ldel', '✕');
+          x.setAttribute('aria-label', 'Remove ' + (linkLabel(k) || 'this link'));
+          var it = { k:k, fresh:fresh, n:n, u:u, gone:false };
+          x.addEventListener('click', function(){ it.gone = true; r.remove(); });
+          r.appendChild(x);
+          host.appendChild(r);
+          rows.push(it);
+          return it;
+        }
+        (list || []).forEach(function(k){ if (k) row(k, false); });
+        var add = el('button', 'eadd', more);
+        add.addEventListener('click', function(){ row({ id:uid(), label:'', url:'' }, true).u.focus(); });
+        panel.appendChild(add);
+        /* what changed, as linkOps takes it; null when nothing did. A kept
+           link whose name and address are both emptied goes, as one never
+           filled in is never added. */
+        return function(){
+          var ops = { edit:{}, drop:[], add:[] }, any = false;
+          rows.forEach(function(it){
+            var label = it.n.value.trim(), url = deskUrl(it.u.value);
+            var empty = !label && !url;
+            if (it.fresh){
+              if (!it.gone && !empty){ ops.add.push({ id:it.k.id, label:label, url:url }); any = true; }
+            } else if (it.gone || empty){ ops.drop.push(it.k.id); any = true; }
+            else if (label !== String(it.k.label || '').trim() || url !== deskUrl(it.k.url)){
+              ops.edit[it.k.id] = { label:label, url:url }; any = true;
+            }
+          });
+          return any ? ops : null;
+        };
+      }
+      var arenaLinks = links('Links', a.links, '+ Link');
+      var bkLinks = links('Brokerage links', bk0.links, '+ Brokerage link');
+      var save = el('button', 'act', 'Save changes');
+      save.addEventListener('click', function(){
+        var ch = {};
+        var nm = nameBox.value.replace(/\s+/g, ' ').trim() || 'Unnamed arena';
+        if (nm !== (a.name || '')) ch.name = nm;
+        var nt = notesBox.value.trim();
+        if (nt !== String(a.notes || '').trim()) ch.notes = nt;
+        var bn = bkBox.value.trim();
+        if (bn !== String(bk0.notes || '').trim()) ch.bknotes = bn;
+        var lo = arenaLinks(), bo = bkLinks();
+        if (lo) ch.links = lo;
+        if (bo) ch.bklinks = bo;
+        shut();
+        if (Object.keys(ch).length) editArena(a, ch);
+      });
+      panel.appendChild(save);
+      $('#sheet .panel').scrollTop = 0;
+      setTimeout(function(){ nameBox.focus(); }, 90);
+    });
 
     /* Why this card is where it is: the one thing standing() works out
        that nothing else can see. */

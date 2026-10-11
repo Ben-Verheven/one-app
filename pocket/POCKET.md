@@ -26,8 +26,10 @@ Every card carries the desk's three small controls: the ring (ask the nightly ag
 the pin (diamond) and the stamp (✓, which also marks the agent's findings seen). An arena's sheet
 spells out the first two and adds the desk's *Wait for…* (`hold`), which lists the arena's coming
 dates to sleep until (since 2026-10-10). A brokerage link
-on a card or in an arena's sheet has its own pin. What stays on the desk: making and editing
-arenas, dates, types (their order and colour too), weights, the freezer, and the agent's Dispatches.
+on a card or in an arena's sheet has its own pin. The sheet's pencil ✎ edits the arena's name, its
+About and Brokerage notes and both lists of links, saved together (since 2026-10-11). What stays on
+the desk: making and deleting arenas, an arena's type, tags and weight, dates, types (their order and
+colour too), the freezer, and the agent's Dispatches.
 - **Coming up** — every arena's dates on one line, brokerage by default; a brokerage event
   leaves once it is over, a call two weeks after.
   A brokerage event opens its website (↗) when one of its arena's brokerage links fits it
@@ -73,7 +75,7 @@ re-extract the maths) but a Pocket change never touches it.
   token, renewed one at a time — Supabase ends a session whose renewal is used twice) → `rest()` → `pull()` (row `semaphore` only) →
   `commit()` → lead mutations (`setDone`, `setDate`, `setPath`, `addUpdate`, `editItem`, `addLead`,
   `addLeadLink`, `dropLeadLink`, `setScore`) and arena/link mutations (`stampArena`, `pinArena`, `askAgent`, `holdArena`,
-  `pinLink`, `stampLink`); every undo puts back a snapshot (`keep`/`putBack`) → board (`liveList`, which settles the types' tones as the desk does, `scoreOf`, `typeRows`) → views (`drawRot` + `wallCard` +
+  `editArena` + `linkOps`, `pinLink`, `stampLink`); every undo puts back a snapshot (`keep`/`putBack`) → board (`liveList`, which settles the types' tones as the desk does, `scoreOf`, `typeRows`) → views (`drawRot` + `wallCard` +
   `cardLine`, `drawPins`/`pinnedOf`, `drawLeads`/`leadItems` + `leadRow` + `ruit`,
   `drawDates`/`comingUp`) → sheets (`openArena` with the round, `openLead`, `newLead`, `openPerson`).
   `fitScreen` gives the home screen the room the insets no longer say (why: the viewport meta); ⚙ shows what it measured.

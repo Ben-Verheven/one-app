@@ -36,6 +36,8 @@ Every change is undoable from the toast; undo puts back exactly the fields it to
 | arena pin | `pin` | `true`/`false` | ✓ |
 | arena ask | `askAt` | ISO moment / `null` | ✓ |
 | arena wait | `hold`, `holdPrev` | `{dateId}`, one of the arena's own dates / `null` to stop waiting; a stamp on a card back from waiting moves `hold` to `holdPrev` for the day (the desk's own sweep), and the same-day undo moves it back | ✓ |
+| arena edit | `name`, `notes`, `brokerage.notes` | the name trimmed, `'Unnamed arena'` for none; notes trimmed | ✓ only the fields changed; `brokerage` made `{notes:'',links:[]}` when absent |
+| arena links | `links[]`, `brokerage.links[]` | `{id, label, url}`; a changed address without a scheme gets `https://` | ✓ add, change label/url, remove — each by id on the cloud's copy, so a link's `pin`, `stampedAt` and `foundAt` stay; an address with @ → `mailto:` (the desk's brokerage form) |
 | lead score | `score` | `1`…`5`; the key deleted for no score | ✓ |
 | brokerage link pin | `brokerage.links[].pin` | ISO moment when pinned; key deleted when unpinned | ✓ |
 | brokerage link stamp | `stampedAt`, `stampPrev` | day; same-day stamp → `stampPrev`, which is then deleted | ✓ |
@@ -45,8 +47,7 @@ link on Pinned but leaves its pin and stamp to the desk.
 
 ## Never written by Pocket
 The whole `main` row (Ledger, `calls`, `projects`, `notes`, `atlas`), `semaphore.ui`,
-arena `name`/`dates`/`look`/`weight`/`frozenAt`/`notes`/`typeId`/`tags`/`links`,
-`brokerage.notes`, `types` (their order and their `color`, since 2026-10-11 the colour leads wear;
+arena `dates`/`look`/`weight`/`frozenAt`/`typeId`/`tags`, `types` (their order and their `color`, since 2026-10-11 the colour leads wear;
 the arena's own `color` before it is no longer written either), and the agent's inbox tables.
 
 ## Stored only on the phone
