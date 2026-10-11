@@ -2293,7 +2293,7 @@ function drawRot(){
 /* ── pinned: the links and the cards you keep to hand ───────────────────
    A whole card (`pin` on the arena), or a single link (`pin` on the link,
    the moment it was pinned), as the desk's Pinned arrangement: the links
-   first, oldest pin first, each with its own stamp and the days since, so
+   first, in the order chosen above them, each with its own stamp and the days since, so
    the round can be walked the way the rotation is; then the cards. A pinned
    link stands only here; the cards leave it out. */
 
@@ -2309,9 +2309,21 @@ function pinnedOf(){
       p[1].forEach(function(lk){ if (lk && lk.pin) links.push({ a:a, lk:lk, scope:p[0] }); });
     });
   });
-  links.sort(function(x,y){ return String(x.lk.pin).localeCompare(String(y.lk.pin)); });
+  /* Two orders, chosen above the list (Mark, 2026-10-11): A–Z by the name
+     shown, or by days — the link longest without a stamp first, one never
+     stamped before all of them, as the round is walked — and A–Z among
+     links stamped the same day. They replace the order of pinning. */
+  function nm(x){ return plainOf((typeof linkName === 'function') ? linkName(x.lk) : linkLabel(x.lk)); }
+  function az(x, y){ return nm(x).localeCompare(nm(y), undefined, { sensitivity:'base' }); }
+  function since(x){ return x.lk.stampedAt ? -daysTo(x.lk.stampedAt) : Infinity; }
+  links.sort(pinsBy === 'days' ? function(x, y){
+    var dx = since(x), dy = since(y);
+    return dx === dy ? az(x, y) : dy > dx ? 1 : -1;
+  } : az);
   return { cards:cards, links:links };
 }
+var pinsBy = 'az';
+try { if (localStorage.getItem('pocket.pinsBy') === 'days') pinsBy = 'days'; } catch(e){}
 
 function drawPins(){
   var host = $('#v-pins');
@@ -2339,6 +2351,19 @@ function drawPins(){
   hd.appendChild(document.createTextNode(' kept to hand.'));
   host.appendChild(hd);
 
+  if (p.links.length > 1){
+    var pills = el('div', 'pills');
+    [['A–Z', 'az'], ['By days', 'days']].forEach(function(o){
+      var b = el('button', 'cap' + (pinsBy === o[1] ? ' on' : ''), o[0]);
+      b.addEventListener('click', function(){
+        pinsBy = o[1];
+        try { localStorage.setItem('pocket.pinsBy', o[1]); } catch(e){}
+        drawPins();
+      });
+      pills.appendChild(b);
+    });
+    host.appendChild(pills);
+  }
   if (p.links.length){
     var box = el('section', 'wpins');
     p.links.forEach(function(x){

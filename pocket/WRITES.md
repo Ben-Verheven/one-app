@@ -53,5 +53,5 @@ the arena's own `color` before it is no longer written either), and the agent's 
 ## Stored only on the phone
 `pocket.cfg` (URL + key + the email last used, written at the first login; until then
 Pocket uses `BUILT_IN`), `pocket.auth` (the login session, since
-2026-10-09), `pocket.cache` (last Semaphore copy), `pocket.datesAll` (Coming up filter).
+2026-10-09), `pocket.cache` (last Semaphore copy), `pocket.datesAll` (Coming up filter), `pocket.pinsBy` (Pinned's order).
 Nothing of these goes to the cloud. Log out removes `pocket.auth` and `pocket.cache`.
