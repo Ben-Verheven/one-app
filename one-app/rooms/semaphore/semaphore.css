@@ -400,17 +400,11 @@
 /* the row of cards back from waiting, over all the others, in the green a
    wait that has come due already wears on its strip */
 #pane-semaphore .wtrow.wwoke{--tone:var(--todo)}
-/* ───────── a card has two sides ─────────
-   The front is what the arena is: its state, its notes, its tools. The back is
-   what the sweeping turned up. Both faces stay mounted and a turn is a class
-   toggle, never a swap.
-
-   The card is a 3D object only while it is actually turning. At rest it is flat
-   — no transform, no preserve-3d, no compositing hint — because a flattened
-   subtree parked forever in a composited layer is exactly where thin-bordered
-   things quietly fail to repaint. The turn's end state and the resting state
-   are the same picture, so dropping the 3D on landing is invisible. */
-#pane-semaphore .wcard{position:relative;perspective:1700px}
+/* ───────── a card ─────────
+   One face, saying what the arena is: its state and its tools. It had a back
+   of leads, turned to with a 3D flip, until Mark took the leads off the
+   rotation cards (2026-10-11); they are in the arena's panel and on Leads. */
+#pane-semaphore .wcard{position:relative}
 #pane-semaphore .wfin{position:relative;width:100%;min-height:44px;
       transition:height .46s cubic-bezier(.4,.1,.2,1)}
 /* A no-script floor, so a card is never a 44px sliver if the box is never
@@ -419,11 +413,7 @@
    is the empty space the fitted fronts got rid of. */
 #pane-semaphore .wcard.t-lead .wfin{min-height:150px}
 #pane-semaphore .wcard.t-mid .wfin{min-height:130px}
-#pane-semaphore .wcard.turning{pointer-events:none}
-#pane-semaphore .wcard.turning .wfin{transform-style:preserve-3d;will-change:transform}
-#pane-semaphore .wcard.flipped.turning .wfin{transform:rotateY(180deg)}
-/* the card's own chrome belongs to each face, so the back is a card too */
-/* Both faces are the same three parts, top to bottom: a head that never moves,
+/* The face is three parts, top to bottom: a head that never moves,
    a middle that takes whatever room is left and scrolls when there is more than
    that, and a foot on the floor. Two cards side by side then agree about where
    their head ends and where their foot begins whatever sits between — which is
@@ -450,7 +440,6 @@
 #pane-semaphore .wfront .wsin{flex:1 0 auto;display:flex;flex-direction:column}
 #pane-semaphore .wfront .wlk{margin-top:auto}
 #pane-semaphore .wfoot{flex:0 0 auto;margin-top:auto}
-#pane-semaphore .wfoot>.leadadd{padding:4px 5px 4px 7px;border-top:1px solid var(--grid)}
 /* the chooser is a list, and a long one on an arena with a full calendar; it
    gets a floor of its own rather than pushing the card off the wall */
 #pane-semaphore .wfoot-pick{max-height:210px;overflow-y:auto}
@@ -469,49 +458,13 @@
 #pane-semaphore .wface.scrolls .wscroll{scrollbar-color:rgba(216,205,184,.34) transparent}
 #pane-semaphore .wface.scrolls .wscroll::-webkit-scrollbar-thumb{background:rgba(216,205,184,.34)}
 #pane-semaphore .wcard:hover .wface{border-color:var(--line2)}
-/* Flattened, not preserve-3d: a face holding a 3D context of its own hands every
-   child its own backface and they turn individually. The hair of depth keeps the
-   two coplanar sheets from z-fighting. */
-#pane-semaphore .wcard.turning .wface{backface-visibility:hidden;-webkit-backface-visibility:hidden;
-                      transform:translateZ(.6px)}
-#pane-semaphore .wcard.turning .wback{transform:rotateY(180deg) translateZ(.6px)}
-#pane-semaphore .wcard:not(.showing-back) .wback{visibility:hidden}
-#pane-semaphore .wcard.showing-back .wfront{visibility:hidden}
-#pane-semaphore .wcard:not(.flipped) .wback{pointer-events:none}
-#pane-semaphore .wcard.flipped .wfront{pointer-events:none}
 /* where did it land? a ring that fades, so a stamped card is never lost */
 @keyframes pane-semaphore-settle{from{box-shadow:0 0 0 3px var(--hi2),0 0 22px var(--hi2)}
                   to{box-shadow:0 0 0 3px rgba(0,0,0,0),0 0 22px rgba(0,0,0,0)}}
 @media (prefers-reduced-motion:no-preference){#pane-semaphore .wcard.settle .wface{animation:pane-semaphore-settle 1.5s ease-out}}
-/* The turn control. It sits in the same slot on both faces and both faces carry
-   the same trailing controls, so it lands under the cursor that opened it —
-   turning a stack of cards back is one stationary click each. */
-#pane-semaphore .turn{flex:0 0 auto;display:flex;align-items:center;justify-content:center;gap:6px;
-      min-width:38px;height:22px;padding:0 8px;border:1px solid var(--line);border-radius:99px;
-      color:var(--faint);background:transparent;transition:color .14s,border-color .14s,background-color .14s}
-#pane-semaphore .turn:hover{color:var(--key2);border-color:var(--line2);background:rgba(216,205,184,.08)}
-#pane-semaphore .turn i{width:7px;height:7px;transform:rotate(45deg);border:1px solid currentColor;border-radius:1px}
-#pane-semaphore .turn .tn{font:10px var(--mono);line-height:1}
-/* Three steps, and only the last one takes a hue: nothing found here yet, a
-   diamond drawn in outline; something waiting on the other side, the same
-   diamond filled in bone and the count brought forward; one of them owed today,
-   the green every promise wears. */
-#pane-semaphore .turn.some{color:var(--ink);border-color:var(--line2);background:rgba(216,205,184,.05)}
-#pane-semaphore .turn.some i{background:var(--key2);border-color:var(--key2)}
-#pane-semaphore .turn.hit{border-color:var(--key);color:var(--key2)}
-#pane-semaphore .turn.back{font-size:12px}
-#pane-semaphore .turn.back .tn{font-family:var(--body);font-size:13px}
-/* the back's own head: the same bar, saying which side you are on */
+/* the name's own cell in the head, which leaves the controls their room */
 #pane-semaphore .wnm{flex:1;min-width:0;display:flex;align-items:baseline;gap:8px}
 #pane-semaphore .wnm .wname{flex:0 1 auto}
-/* The back used to say so only in a small grey word and a dimmer name, and on a
-   wall of turned and unturned cards that was not enough to tell the two sides
-   apart at a glance. So the back's head is lit a step brighter than the front's
-   and the word is a solid bone tag — the side shows in the head, which is the
-   one part every card has on screen however short it stands. */
-#pane-semaphore .wback .wch{background:rgba(216,205,184,.15);border-bottom-color:var(--line2)}
-#pane-semaphore .wsub{flex:0 0 auto;font:600 8.5px var(--sans);letter-spacing:.16em;text-transform:uppercase;
-      color:var(--paper);background:var(--key2);padding:3px 7px 2px;border-radius:99px}
 #pane-semaphore .wbody{padding:6px}
 /* one height for every head on the wall, so the line under them is one line */
 #pane-semaphore .wch{display:flex;align-items:center;gap:8px;padding:9px 11px;min-height:40px;

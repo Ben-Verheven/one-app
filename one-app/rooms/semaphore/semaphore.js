@@ -134,7 +134,7 @@ function blank(){
   return {v:1,types:defaultTypes(),arenas:[],
     ui:{q:'',collapsed:{},view:'board',
         wallSort:'rotation',boardSort:'date',cuAll:false,
-        howOpen:false,freezerOpen:false,flipped:{}}};
+        howOpen:false,freezerOpen:false}};
 }
 /* An arena remembers which of its own dates it is waiting for. That goes stale
    the moment the dates change, so this puts it straight — a wait ends when the
@@ -290,7 +290,6 @@ function migrate(s){
     const ui=Object.assign({},d);
     ui.q        = typeof u.q==='string' ? u.q : d.q;
     ui.collapsed= map(u.collapsed) || {};
-    ui.flipped  = map(u.flipped) || {};
     ui.view     = ['brokerage','dispatch','coming'].includes(u.view) ? u.view : 'board';
     ui.cuAll    = u.cuAll===true;
     /* By type was merged into the rotation (2026-10-11), so it lands there */
@@ -1298,8 +1297,6 @@ const drawer={id:null,edit:null,hi:null,editing:false,scope:null};
 /* which card has its follow-up composer open, which has its link composer open,
    and which one just moved */
 let lkEdit={a:null,l:null},leadEdit={a:null,l:null},waitPick=null,settleId=null;
-/* cards turned front-up inside the leads arrangement, which is not remembered */
-const leadsFaceFront=new Set();
 /* the update being written, and the leads showing their whole history —
    both are about the moment, so neither is remembered */
 let noteEdit={a:null,l:null};
@@ -1472,7 +1469,7 @@ function rotBarHTML(a){
       '<span>'+esc(sweptLine(a))+'</span>'+freshSaid(a)+'<span class="sp"></span>'+askHTML(a)+
       (s.note?'<span class="season">'+s.note.text+'</span>':'')+
     '</div>'+
-    '<div class="wbody">'+leadListHTML(a,leadHits(a,S.ui.q.trim().toLowerCase()),true)+'</div>'+
+    '<div class="wbody">'+leadListHTML(a,leadHits(a,S.ui.q.trim().toLowerCase()))+'</div>'+
     frontStrips(a,s,[])+
     (waitPick===a.id?waitPickHTML(a):offerHTML(a,s))+
   '</div>';
@@ -2136,8 +2133,9 @@ function lkFormHTML(a,leadId){
    links and its own day to come back. Keeping the two apart is the whole point:
    one is the tool, the other is the catch.
 
-   Leads stay shut. A card shows on its turn how many there are, and none of
-   them raises the card — their days are on the Ledger's board. */
+   Leads stay shut, and none of them raises its arena's card — their days are
+   on the Ledger's board. They are worked in the arena's panel and on Leads,
+   not on the cards: Mark took them off the rotation cards on 2026-10-11. */
 /* The form a NEW lead is written in. An existing lead is edited in its own
    card now (see "one lead card, in both rooms"), so this has one job. */
 function leadFormHTML(a){
@@ -2407,8 +2405,8 @@ function leadRowHTML(a,l,hit,say){
         '<span>'+esc(l.due?(say?longDay(l.due):shortDow(l.due)):'No date')+'</span>'+
         '<input type="date" value="'+esc(l.due||'')+'" data-lda="'+a.id+'" data-ldl="'+l.id+'" '+
           'aria-label="Come back on"></label>';
-  /* How a lead ends. On the back of an arena card it stands at the top right
-     of the open card, where the eye leaves it, and only once the card is open
+  /* How a lead ends. In the arena's panel it stands at the top right of the
+     open card, where the eye leaves it, and only once the card is open
      (Mark, 2026-10-06); on the wide rows of the leads view it ends the action
      row, as Done ends a todo's. */
   const doneBtn='<button class="ldone'+(done?' back':'')+'" data-act="leadDone" '+ids+' '+
@@ -2482,9 +2480,8 @@ function leadRowHTML(a,l,hit,say){
     /* On the leads board (`say`) the row is the Ledger's, column for column:
        ruit, the arena — a lead there stands among every other arena's, so it
        says whose it is, and that name opens it — then what it is over who
-       could fit it, then the day written in full. On a card back or in the
-       drawer the arena goes without saying and the day rides on the quiet
-       line. */
+       could fit it, then the day written in full. In the arena's panel the
+       arena goes without saying and the day rides on the quiet line. */
     '<header class="lhead">'+leadRuitHTML(a,l,st,done||editing)+
       (say?leadColHTML(a):'')+
       (say?'<button class="lar" data-act="openArena" data-id="'+a.id+'" '+
@@ -2573,7 +2570,7 @@ function waitPickHTML(a){
     }).join('')+
     '<button class="wpx" data-act="lkCancel">Cancel</button></div>';
 }
-/* The only thing left to offer once leads have a side of their own. */
+/* What the panel offers under the leads: a wait. */
 function offerHTML(a,st){
   const nx=st.hold?null:nextDate(a);
   if(!nx)return '';
@@ -2583,10 +2580,11 @@ function offerHTML(a,st){
     'Wait for\u2026</button></div>';
 }
 
-/* A wait and a search hit — the two things the front says about the back.
-   Both are strips under the head, the same shape, because they answer the
-   same question: why is this card where it is. A lead whose day has come used
-   to be a third; its day is on the Ledger's board now. */
+/* A wait and a search hit. Both are strips under the head, the same shape,
+   because they answer the same question: why is this card where it is. A lead
+   whose day has come used to be a third; its day is on the Ledger's board now.
+   A hit names the lead the search found, and a press opens the arena's panel,
+   where its leads are: a card has had no side of leads since 2026-10-11. */
 /* What a card is waiting for, with the day and the way out of the wait. On
    a card it stands in the foot, where "Wait for…" offers one (Mark,
    2026-10-11: the wait answers that offer, so it goes where the offer was);
@@ -2605,24 +2603,11 @@ function frontStrips(a,st,hits,onCard){
   if(st.hold&&!onCard)h+=holdStripHTML(a,st.hold);
   if(hits.length){
     h+='<div class="strip find"><span class="sg"></span>'+
-      '<button class="stx" data-act="flip" data-id="'+a.id+'">'+esc(leadName(hits[0]))+
+      '<button class="stx" data-act="openArena" data-id="'+a.id+'">'+esc(leadName(hits[0]))+
       (hits.length>1?' <i>+'+(hits.length-1)+'</i>':'')+'</button>'+
       '<span class="swhen">found</span></div>';
   }
   return h;
-}
-/* the control that turns the card, and the one thing the front says about the
-   back at a glance: how many leads are open */
-function turnHTML(a,st,hits,back){
-  const n=openLeads(a).length;
-  if(back)
-    return '<button class="turn back" data-act="flip" data-id="'+a.id+'" '+
-      'title="Back to the arena" aria-label="Back to the front">'+
-      '<span class="tn">\u21A9</span></button>';
-  return '<button class="turn'+(n?' some':'')+(hits.length?' hit':'')+'" '+
-    'data-act="flip" data-id="'+a.id+'" aria-label="Turn to the leads" '+
-    'title="'+(n?n+' lead'+(n===1?'':'s')+' \u2014 turn the card':'No leads yet \u2014 turn the card to add one')+'">'+
-    '<i></i><span class="tn">'+(n||'+')+'</span></button>';
 }
 /* Asking the nightly agent to look at this arena on its next run, on top of
    the three it would have picked anyway. The ask is a moment (`askAt`) on the
@@ -2637,24 +2622,21 @@ function askHTML(a){
   return '<button class="wask'+(on?' on':'')+'" data-act="askAgent" data-id="'+a.id+'" '+
     'aria-pressed="'+(on?'true':'false')+'" title="'+tip+'" aria-label="'+esc(tip)+'"><i></i></button>';
 }
-function headHTML(a,st,t,hits,back){
+function headHTML(a,st,t){
   const bk=a.brokerage||{links:[]};
   /* pinned links live on Pinned, not on the card, so they are not counted here */
   const n=(bk.links||[]).filter(l=>!l.pin).length;
   const nNew=t==='rest'?freshItems(a).length:0;
-  /* the title and any subtitle share one flexible cell, so whatever is written
-     here can never move the controls on the right — which is what lets the turn
-     land under the same cursor on both faces */
+  /* the title and its count share one flexible cell, so whatever is written
+     there can never move the controls on the right */
   return '<header class="wch">'+
     '<span class="wnm">'+
       '<button class="wname'+weightClass(a)+'" data-act="openArena" data-id="'+a.id+'" title="Open arena">'+esc(a.name)+'</button>'+
-      (back?'<span class="wsub">leads</span>':'')+
-      (!back&&t==='rest'&&n?'<span class="wcnt" title="'+n+' tool'+(n===1?'':'s')+'">'+n+'</span>':'')+
+      (t==='rest'&&n?'<span class="wcnt" title="'+n+' tool'+(n===1?'':'s')+'">'+n+'</span>':'')+
       /* a tail card shows neither its dates nor its links, so what the agent
          brought it is one dot beside the name */
-      (!back&&t==='rest'&&nNew?'<i class="wfdot" title="'+nNew+' new from the nightly agent — open the arena"></i>':'')+
+      (t==='rest'&&nNew?'<i class="wfdot" title="'+nNew+' new from the nightly agent — open the arena"></i>':'')+
     '</span>'+
-    turnHTML(a,st,hits,back)+
     /* a tail card is one line of name, so it carries the ring only while it is lit */
     (t!=='rest'||a.askAt?askHTML(a):'')+
     /* The stamp carries the days since it was last pressed, 0 on the day
@@ -2666,11 +2648,10 @@ function headHTML(a,st,t,hits,back){
     '<button class="ib wedit" data-act="editBrokerage" data-id="'+a.id+'" title="Edit brokerage">\u270E</button>'+
   '</header>';
 }
-/* The list itself, used by the back of a card and by the arena panel alike.
-   `offer` says whether the way to add one belongs inside the list; the card
-   keeps it in a foot of its own instead, so it stays reachable when the list
-   is long enough to scroll. */
-function leadListHTML(a,hits,offer){
+/* The list itself, in the arena's panel. It was on the back of every card on
+   the wall as well, until Mark took the leads off the rotation cards
+   (2026-10-11): they are worked here, on Leads, on the Ledger and in Pocket. */
+function leadListHTML(a,hits){
   const hit=new Set(hits.map(l=>l.id));
   const row=l=>leadRowHTML(a,l,hit.has(l.id));
   const open=sortedOpen(a),done=sortedDone(a);
@@ -2682,10 +2663,10 @@ function leadListHTML(a,hits,offer){
      one a bounded region with the leads standing inside it. Nothing on a lead
      says which step it is on: the section it is standing in says it.
 
-     Stacked and not side by side, because everywhere this list is used is
-     narrow: a card face on the wall, or the arena panel at 404px. Where there
-     is width for three abreast — the Leads arrangement, which is one board
-     rather than a wall of cards — the board below lays them out itself.
+     Stacked and not side by side, because the arena panel it stands in is
+     narrow, 404px. Where there is width for three abreast — the Leads
+     arrangement, which is one board rather than a wall of cards — the board
+     below lays them out itself.
 
      An empty section is dropped rather than drawn: a box around nothing is
      only worth the room when it is holding a place open for something, and
@@ -2703,7 +2684,7 @@ function leadListHTML(a,hits,offer){
   /* the way to add one sits directly under the ones you have, not past the
      record of the ones you have closed */
   if(adding)h+=leadFormHTML(a);
-  else if(offer)h+='<div class="leadadd"><button data-act="leadAdd" data-id="'+a.id+'">+ Lead</button></div>';
+  else h+='<div class="leadadd"><button data-act="leadAdd" data-id="'+a.id+'">+ Lead</button></div>';
   /* Closed leads are out of the open view entirely: one line saying how many,
      and the record itself only if you ask. A search that lands inside a closed
      lead opens the record on its own, because a hit you cannot see is worse
@@ -2755,18 +2736,13 @@ function wallCard(a,st,tier){
   const rows=t==='rest'?'':wallLinkRows(a,loose.slice(0,LK_ON_CARD),'brokerage',true);
   const nPinned=(bk.links||[]).length-loose.length;
   const nMore=loose.length-LK_ON_CARD;
-  /* Every arrangement but one shows the front, and remembers the cards you have
-     turned. The leads arrangement shows the backs — that is what it is for — so
-     there the flag means "turned away from the default", and it is not kept:
-     leaving the arrangement leaves the cards as it found them. */
-  const flipped=S.ui.wallSort==='leads'?!leadsFaceFront.has(a.id):!!S.ui.flipped[a.id];
-  /* Both faces are built the same way: a head that never moves, a middle that
+  /* The face is built in three parts: a head that never moves, a middle that
      takes whatever room the card has and scrolls when there is more than that,
      and a foot pinned to the floor. It is what lets a row of cards line up —
      every head on one line, every foot on another — however unequal what
      lies between them happens to be. */
   const front='<div class="wface wfront">'+
-    headHTML(a,s,t,hits,false)+
+    headHTML(a,s,t)+
     '<div class="wscroll"><div class="wsin">'+
       /* The front is the line and the links, nothing else (Mark, 2026-10-06):
          where the arena stands in time, and where to go. The brokerage note
@@ -2789,78 +2765,38 @@ function wallCard(a,st,tier){
     '</div></div>'+
     waitFootHTML(a,s,t)+
   '</div>';
-  const addingNew=leadEdit.a===a.id&&leadEdit.l==='new';
-  const back='<div class="wface wback">'+
-    headHTML(a,s,t,hits,true)+
-    '<div class="wscroll"><div class="wsin wbody">'+leadListHTML(a,hits,false)+'</div></div>'+
-    (addingNew?'':'<div class="wfoot"><div class="leadadd">'+
-      '<button data-act="leadAdd" data-id="'+a.id+'">+ Lead</button></div></div>')+
-  '</div>';
-  return '<article class="wcard t-'+t+' s-'+s.state+(s.state==='held'?' held':'')+
-      (flipped?' flipped showing-back':'')+'" data-id="'+a.id+'">'+
-    '<div class="wfin">'+front+back+'</div></article>';
+  return '<article class="wcard t-'+t+' s-'+s.state+(s.state==='held'?' held':'')+'" data-id="'+a.id+'">'+
+    '<div class="wfin">'+front+'</div></article>';
 }
 
-/* ───────── turning ─────────
-   The height is handed to the box, which settles into it on its own transition
-   while the rotation is played, so the wall carries the turn instead of jumping
-   through it. The faces swap at the halfway point — the one instant nothing is
-   visible either way. */
-const TURN_MS=620;
+/* ───────── one face ─────────
+   A card is one face. It had a second, of leads, turned to with a 3D flip,
+   until Mark took the leads off the rotation cards (2026-10-11). The face
+   stands in a box (`.wfin`) that is handed its height, so a row of cards can
+   be evened up (below). */
 let faceObs=null;
-function faceOf(card){
-  return card.querySelector(card.classList.contains('flipped')?'.wback':'.wfront');
-}
+function faceOf(card){return card.querySelector('.wfront');}
 /* ───────── one rhythm for the wall ─────────
    The FRONT of a card is as tall as what it holds, and every front in the same
    row of the wall stands as tall as the tallest of them (`evenRows`), so a row
    still reads as a grid, with every head on one line and every foot on
    another. Fronts used to be put on the nearest rung above what they held,
-   like the leads side below, and a rung is 88 or 104 pixels: a card holding
+   and a rung is 88 or 104 pixels: a card holding
    330 was drawn at 416, and the wall was full of empty floors (Mark,
    2026-10-07: "some cards are large for no particular reason"). The front's
    ladder now only says where it stops growing.
 
-   The leads side keeps its rungs. A card is not measured to the pixel there:
-   it is put on the nearest rung above what it holds, so every card carrying
-   one lead stands exactly as tall as every other card carrying one lead, two
-   leads is one rung taller. The bottom rung is set at what an ordinary card
-   actually holds — one lead, a line of match, a link and an update — because
-   the common case should be the standard size and not the exception that has
-   to grow.
-
-   Past the top rung the card stops growing and its middle scrolls. A card is a
-   card: an arena with eleven leads is not worth eleven times the wall, and the
-   ones that matter are at the top of the list anyway, which is what the funnel
-   order is for.
-
-   Two ladders, because the two faces are not the same kind of thing. The front
-   says what an arena is, and most arenas are a line or two of that, so it climbs
-   in short steps from something close to what it used to be. The leads side is
-   worked in rather than read, so it starts at what an ordinary lead actually
-   takes — its section heading, a name, a line of match, a link, an update and
-   the floor its verbs stand on — and climbs in whole leads. That is the
-   promise: one lead is one size, wherever the card stands and whatever band it
-   is in. A tail card turned over gets the same room as any other, because
-   turning a card over is asking to work in it.
-
-   The leads rungs were cut again when the steps left the body of the card for
-   its floor and the sections arrived around it, and they were cut against
-   measurements this time rather than by eye. A lead in a section costs about
-   350px plain and about 450 with links and a history under it, and a second
-   one costs the same again — so the three rungs are one ordinary lead, one
-   full one, and two of anything. Past that the middle scrolls, which is what
-   the sill at its foot has always been for: a card on a wall that grew to
-   fifteen hundred pixels would stop being a card. Working through leads at
-   length is what the Leads arrangement below is for, and it has no ladder at
-   all — it is not a wall of cards there but one board, and a board is as tall
-   as what stands on it. */
-const RUNGS={leads:{base:372,step:200,rungs:3},
-             lead: {base:208,step:104,rungs:4,fit:true},
+   Past the top rung the card stops growing and its middle scrolls, which is
+   what the sill at its foot is for: a card on a wall that grew to fifteen
+   hundred pixels would stop being a card. The side of leads a card had until
+   2026-10-11 climbed a ladder of its own, in whole leads, and went with them.
+   Working through leads at length is what the Leads arrangement is for, and
+   it has no ladder at all — it is not a wall of cards but one board, and a
+   board is as tall as what stands on it. */
+const RUNGS={lead: {base:208,step:104,rungs:4,fit:true},
              mid:  {base:152,step:88, rungs:3,fit:true},
              rest: {base:44, step:44, rungs:4}};
 function ladderOf(card){
-  if(card.classList.contains('flipped'))return RUNGS.leads;
   if(card.classList.contains('t-mid'))return RUNGS.mid;
   if(card.classList.contains('t-rest'))return RUNGS.rest;
   return RUNGS.lead;
@@ -2906,17 +2842,15 @@ function measureCard(card){
     h=L.fit?Math.min(nat,L.base+(L.rungs-1)*L.step)
            :L.base+Math.min(Math.ceil(over/L.step),L.rungs-1)*L.step;
   }
-  /* both faces answer to the one box, so both are told whether they overflow
-     it — once the row has had its say about how tall the box is */
+  /* the face is told whether it overflows the box — once the row has had its
+     say about how tall the box is */
   const faces=[];
   card.querySelectorAll('.wface').forEach(fc=>faces.push([fc,faceNatural(fc)]));
   return {fin:fin,h:h,faces:faces,even:!!(L&&L.fit),
           par:card.parentElement,top:card.offsetTop,cap:L?L.base+(L.rungs-1)*L.step:h};
 }
-/* Every front in one row of one grid takes the tallest front's height. A card
-   turned to its leads keeps its own: the leads side is worked in, and a turned
-   card stretching its neighbours to its height would be the empty floors back
-   again. Cards share a row when they share a grid and a top edge. */
+/* Every card in one row of the wall takes the tallest card's height. Cards
+   share a row when they share a parent and a top edge. */
 function evenRows(plan){
   const rows=new Map();
   for(const m of plan){
@@ -2971,23 +2905,6 @@ function fitWall(instant){
   }));
   document.querySelectorAll('#wall .wsin').forEach(f=>faceObs.observe(f));
 }
-function turnCard(card,flipped){
-  if(!card)return;
-  card.classList.toggle('flipped',flipped);
-  const fin=card.querySelector('.wfin');
-  const still=matchMedia('(prefers-reduced-motion: reduce)').matches||!fin||!fin.animate;
-  if(still){card.classList.remove('turning');card.classList.toggle('showing-back',flipped);fitCard(card,true);return;}
-  card.classList.add('turning');
-  fitCard(card);                               /* the box starts settling to the new face */
-  const from=flipped?0:180,to=flipped?180:0;
-  const at=(d,z)=>'rotateY('+d+'deg)'+(z?' translateZ('+z+'px)':'');
-  fin.animate([{transform:at(from,0),easing:'cubic-bezier(.42,0,1,1)'},
-               {transform:at(90,38),offset:.5,easing:'cubic-bezier(0,0,.58,1)'},
-               {transform:at(to,0)}],{duration:TURN_MS,easing:'linear',fill:'none'});
-  setTimeout(()=>{if(card.isConnected)card.classList.toggle('showing-back',flipped);},TURN_MS/2);
-  setTimeout(()=>{if(card.isConnected)card.classList.remove('turning');},TURN_MS);
-}
-
 /* Stamping reorders the wall, so the wall moves rather than cuts: every card
    that keeps its identity glides from where it was to where it now belongs. */
 function wallRects(){
@@ -3048,9 +2965,10 @@ function howHTML(){
       'or <b>peripheral</b> \u2014 set once in its own panel. It buys frequency rather than height: central '+
       'comes round about twice as often, peripheral about a third as often, and the freezer is the step '+
       'past peripheral. On the board and the wall it shows only in the weight of the name.')+
-    line('Leads','The links above a card\u2019s lead line are the arena\u2019s own tools \u2014 the platform, '+
+    line('Leads','The links on a card are the arena\u2019s own tools \u2014 the platform, '+
       'the programme page, the things you sweep. A <b>lead</b> is what the sweeping turned up: a partner, '+
-      'a project page, a thread. A lead is the same card here and on the Ledger: shut, it is its '+
+      'a project page, a thread. Leads are not on the cards: they are in the arena\u2019s panel, opened '+
+      'from its name, and under <b>Leads</b>. A lead is the same card there and on the Ledger: shut, it is its '+
       '<b>ruit</b> \u2014 spotted, then researchers or the lead itself contacted, then talking \u2014 '+
       'beside its name, with the match and the day under it; pressed, it opens to add an update or a '+
       'link, to edit everything on it in place, and to complete it. Leads stand inside three sections '+
@@ -3205,7 +3123,7 @@ function paintWall(){
       h+='<div class="empty"><p>Nothing being pursued.</p>'+
         '<p class="hint" style="margin-top:6px">'+
         (shut?'The '+shut+' closed lead'+(shut===1?' is':'s are')+' still on their own cards.<br>':'')+
-        'Turn any card over to start one.</p></div>';
+        'Open an arena and press + Lead to start one.</p></div>';
     }
     w.innerHTML=h;
     return;
@@ -3929,20 +3847,6 @@ document.addEventListener('click',e=>{
            const h=holdOf(ar);
            if(h&&!h.asleep){ar.holdPrev=ar.hold;ar.hold=null;}else delete ar.holdPrev;}
       restack(ar.id);break;}
-    case 'flip':{
-      let want;
-      if(S.ui.wallSort==='leads'){
-        want=leadsFaceFront.has(id);
-        if(want)leadsFaceFront.delete(id);else leadsFaceFront.add(id);
-      }else{
-        want=!S.ui.flipped[id];
-        if(want)S.ui.flipped[id]=true;else delete S.ui.flipped[id];
-      }
-      closeComposers();save();
-      /* both faces are already mounted, so a turn needs no re-render at all */
-      const card=document.querySelector('#wall .wcard[data-id="'+CSS.escape(id)+'"]');
-      if(card)turnCard(card,want);else repaint();
-      break;}
     /* A press on a lead's own ground opens or shuts it. Its links, its date
        and the fields of a composer inside it are presses of their own. */
     case 'leadOpen':{
@@ -3951,8 +3855,7 @@ document.addEventListener('click',e=>{
       if(leadOpen.has(k))leadOpen.delete(k);else leadOpen.add(k);
       repaint();renderDrawer();break;}
     case 'leadAdd':{closeComposers();leadEdit={a:id,l:'new'};
-      if(S.ui.view==='brokerage')S.ui.flipped[id]=true;
-      save();repaint();renderDrawer();focusLead();break;}
+      repaint();renderDrawer();focusLead();break;}
     case 'leadEdit':{closeComposers();leadEdit={a:id,l:b.dataset.l};leadOpen.add(b.dataset.l);
       repaint();renderDrawer();focusLead();break;}
     case 'leadCancel':{closeComposers();repaint();renderDrawer();break;}
@@ -3982,8 +3885,7 @@ document.addEventListener('click',e=>{
       l.links=(l.links||[]).filter(k=>k.id!==b.dataset.k);
       save();repaint();renderDrawer();break;}
     case 'noteAdd':{closeComposers();noteEdit={a:id,l:b.dataset.l};leadOpen.add(b.dataset.l);
-      if(S.ui.view==='brokerage')S.ui.flipped[id]=true;
-      save();repaint();renderDrawer();focusNote();break;}
+      repaint();renderDrawer();focusNote();break;}
     case 'noteCancel':{closeComposers();repaint();renderDrawer();break;}
     case 'updMore':{const k=b.dataset.l;
       if(updOpen.has(k))updOpen.delete(k);else updOpen.add(k);
@@ -4046,7 +3948,6 @@ document.addEventListener('click',e=>{
       relinked();break;}
     case 'setWallSort':{const v=b.dataset.v;
       S.ui.wallSort=['pinned','leads'].includes(v)?v:'rotation';
-      leadsFaceFront.clear();          /* the arrangement decides the face, not last time */
       save();renderWall();break;}
     case 'setView':{const v=b.dataset.v;
       S.ui.view=['brokerage','dispatch','coming'].includes(v)?v:'board';

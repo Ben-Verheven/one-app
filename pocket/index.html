@@ -159,18 +159,13 @@ a{color:inherit}
 /* The card's head filled with its type's colour, as the type's own band
    above the row is (Mark, 2026-10-11), so a card says its type wherever it
    stands — Back from waiting, Pinned — and not only under its band. On that
-   fill the quiet grey of the ring, pin, stamp and count fell to 2.6:1 on the
+   fill the quiet grey of the ring, stamp and count fell to 2.6:1 on the
    darkest tones, and a peripheral name to 4.2:1, so both are lifted a step:
    the grey to 5.1:1 and the name to the bone of the chrome, 6.2:1, still
    below the ink of an ordinary name. */
 .wcard.toned .wch{--faint:#C4B9A6;background:color-mix(in srgb,var(--tone) 30%,var(--paper))}
 .wcard.toned .wname.w-peripheral{color:var(--key2)}
 .wname:active{color:var(--brok-deep)}
-.lchip{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;
-  border:1px solid var(--line);border-radius:99px;font:11px/1 var(--mono);color:var(--key2)}
-.lchip i{width:7px;height:7px;transform:rotate(45deg);border:1px solid currentColor;border-radius:1px;
-  background:currentColor}
-.lchip:active{background:rgba(216,205,184,.12)}
 /* the pin (a diamond) and the ring (ask the nightly agent): small marks,
    thumb-sized targets */
 .pin,.wask{flex:0 0 36px;width:36px;height:44px;display:flex;align-items:center;justify-content:center;border-radius:var(--radius)}
@@ -350,13 +345,6 @@ a.wlink:active .wd,a.wlink:active::before{color:var(--brok)}
   border:1px solid var(--lquiet);background:var(--ldotbg)}
 .lruit i.on{background:var(--lead);border-color:var(--lead)}
 .lruit i.now{box-shadow:0 0 0 3px rgba(185,134,118,.3)}
-
-.scope{display:flex;align-items:center;gap:10px;margin:12px 12px 4px;padding:8px 8px 8px 13px;
-  border:1px solid var(--line2);border-radius:var(--radius);background:var(--strip)}
-.scope b{flex:1;min-width:0;font:400 15px/1.3 var(--body);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.scope b i{color:var(--faint)}
-.scope button{flex:0 0 auto;padding:9px 12px;border:1px solid var(--line);border-radius:var(--radius);color:var(--key2)}
-.scope button:active{background:rgba(216,205,184,.12)}
 
 /* the Leads tab's own way in, for a lead found away from its card */
 .addlead{display:block;width:calc(100% - 24px);margin:12px 12px 0;min-height:44px;padding:0 13px;text-align:center;
@@ -859,7 +847,7 @@ function blank(){
   return {v:1,types:defaultTypes(),arenas:[],
     ui:{q:'',collapsed:{},view:'board',
         wallSort:'rotation',boardSort:'date',cuAll:false,
-        howOpen:false,freezerOpen:false,flipped:{}}};
+        howOpen:false,freezerOpen:false}};
 }
 /* An arena remembers which of its own dates it is waiting for. That goes stale
    the moment the dates change, so this puts it straight — a wait ends when the
@@ -1015,7 +1003,6 @@ function migrate(s){
     const ui=Object.assign({},d);
     ui.q        = typeof u.q==='string' ? u.q : d.q;
     ui.collapsed= map(u.collapsed) || {};
-    ui.flipped  = map(u.flipped) || {};
     ui.view     = ['brokerage','dispatch','coming'].includes(u.view) ? u.view : 'board';
     ui.cuAll    = u.cuAll===true;
     /* By type was merged into the rotation (2026-10-11), so it lands there */
@@ -2099,15 +2086,6 @@ function wallCard(a, st, tier){
   var shown = (bk.links || []).filter(function(l){ return l && !l.pin; });
   if (tier === 'rest' && shown.length) head.appendChild(el('span', 'wcnt', String(shown.length)));
 
-  var nl = (a.leads || []).filter(function(l){ return l && !l.doneAt; }).length;
-  if (nl){
-    var chip = el('button', 'lchip');
-    chip.appendChild(el('i'));
-    chip.appendChild(document.createTextNode(String(nl)));
-    chip.setAttribute('aria-label', 'Show the ' + nl + ' open leads on ' + (a.name || 'this arena'));
-    chip.addEventListener('click', function(e){ e.stopPropagation(); showArenaLeads(a); });
-    head.appendChild(chip);
-  }
   /* a tail card is one line of name, so it carries the ring only while it
      is lit — as on the desk */
   if (tier !== 'rest' || a.askAt) head.appendChild(ringBtn(a));
@@ -2422,7 +2400,6 @@ function byDay(x, y){
 }
 function deskName(l){ return leadName(l.links ? l : { project:l.project, links:[] }); }
 
-var scope = null;      /* {aid, name} — the leads list narrowed to one arena */
 var curTab = 'rot', lastTab = 'rot';
 
 function goTab(name){
@@ -2435,13 +2412,6 @@ function goTab(name){
     v.classList.toggle('on', v.id === 'v-' + name);
   });
   $('#stage').scrollTop = 0;
-}
-
-function showArenaLeads(a){
-  scope = { aid:a.id, name:plainOf(a.name) || 'Arena' };
-  drawLeads();
-  shut();
-  goTab('leads');
 }
 
 /* the ruit, read only: Spotted on the left, the researchers asked above,
@@ -2547,17 +2517,6 @@ function drawLeads(){
   badge('leads', owedAll);
   var items = all;
 
-  if (scope){
-    items = all.filter(function(it){ return it.ref.aid === scope.aid; });
-    var sc = el('div', 'scope');
-    var lab = el('b', '', scope.name);
-    lab.appendChild(el('i', '', '  ·  its leads'));
-    sc.appendChild(lab);
-    var clr = el('button', 'cap', 'All leads');
-    clr.addEventListener('click', function(){ scope = null; drawLeads(); });
-    sc.appendChild(clr);
-    host.appendChild(sc);
-  }
   if (data.semaphore){
     var add = el('button', 'addlead', '+ New lead');
     add.addEventListener('click', newLead);
@@ -2566,7 +2525,6 @@ function drawLeads(){
   if (!items.length){
     host.appendChild(empty('Nothing being pursued',
       !data.semaphore ? 'Pull down to fetch from the cloud.'
-        : scope ? 'Everything on this arena has been closed.'
         : 'Found a project worth following? Add it with New lead above.'));
     return;
   }
@@ -2576,11 +2534,9 @@ function drawLeads(){
   var hd = el('div', 'whead');
   hd.appendChild(el('b', '', String(items.length)));
   hd.appendChild(document.createTextNode(items.length === 1 ? ' lead' : ' leads'));
-  if (!scope){
-    hd.appendChild(document.createTextNode(' across '));
-    hd.appendChild(el('b', '', String(na)));
-    hd.appendChild(document.createTextNode(na === 1 ? ' arena' : ' arenas'));
-  }
+  hd.appendChild(document.createTextNode(' across '));
+  hd.appendChild(el('b', '', String(na)));
+  hd.appendChild(document.createTextNode(na === 1 ? ' arena' : ' arenas'));
   if (owed){
     hd.appendChild(document.createTextNode(', '));
     hd.appendChild(el('b', '', String(owed)));
@@ -3211,7 +3167,6 @@ function newLead(){
     arenas.forEach(function(a){
       var o = el('option', '', plainOf(a.name) || 'Untitled');
       o.value = a.id;
-      if (scope && scope.aid === a.id) o.selected = true;
       pick.appendChild(o);
     });
     panel.appendChild(pick);
@@ -3616,8 +3571,6 @@ function goPeople(q){
 document.getElementById('tabs').addEventListener('click', function(e){
   var b = e.target.closest('button[data-tab]');
   if (!b) return;
-  /* tapping Leads itself is the way back to everything */
-  if (b.dataset.tab === 'leads' && scope){ scope = null; drawLeads(); }
   goTab(b.dataset.tab);
 });
 

@@ -94,7 +94,7 @@ daysBetween leadKind KIND_NAME KIND_RANK RUNG leadName dtLabel esc rotationSplit
 hasBrokerage leadPath TONES toneHex settleTones typeOf arenaTone`
 
 Then check: no `document`/`$(`/`Hub.` in the result, no name clashes with script 2, `node --check`.
-Last done 2026-10-11 from that day's desk (642 lines).
+Last done 2026-10-11 from that day's desk (641 lines).
 
 ## Rules
 1. Display-layer changes by default. Data structures, script 1, scoring and the write path change only when asked.
