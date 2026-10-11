@@ -133,7 +133,7 @@ function defaultTypes(){
 function blank(){
   return {v:1,types:defaultTypes(),arenas:[],
     ui:{q:'',collapsed:{},view:'board',
-        wallSort:'rotation',boardSort:'next',cuAll:false,
+        wallSort:'rotation',boardSort:'date',cuAll:false,
         howOpen:false,freezerOpen:false,flipped:{}}};
 }
 /* An arena remembers which of its own dates it is waiting for. That goes stale
@@ -295,7 +295,10 @@ function migrate(s){
     ui.cuAll    = u.cuAll===true;
     /* By type was merged into the rotation (2026-10-11), so it lands there */
     ui.wallSort = ['pinned','leads'].includes(u.wallSort) ? u.wallSort : 'rotation';
-    ui.boardSort = u.boardSort==='phase' ? 'phase' : 'next';
+    /* the board's two orders since 2026-10-11 (see "the board's two orders");
+       the two it had before — next publication, and by status — both read as
+       the date order, which took their place */
+    ui.boardSort = u.boardSort==='mine' ? 'mine' : 'date';
     ui.howOpen     = u.howOpen===true;
     ui.freezerOpen = u.freezerOpen===true;
     s.ui=ui;
@@ -599,7 +602,6 @@ function laneHTML(a){
    beside the names: a call open now, one still to open, or neither. An arena
    with no call on it at all says nothing. No day count — Mark asked for the
    word alone; the bar beside it says when. */
-const PHASE_RANK={soon:0,open:1,none:2,'':3};
 function boardPhase(a){
   const{live,last}=callRuns(a);
   const o=live.find(r=>r.state==='open'&&r.next)||live.find(r=>r.state==='open');
@@ -609,32 +611,39 @@ function boardPhase(a){
   if(last){const d=last.close||last.open;return{k:'none',w:'Between',d,t:-T(d.start)};}
   return{k:'',w:'',d:null,t:0};
 }
-/* rows sort by the next call publication date — soonest at the top */
-function nextPubT(a){
+/* ───────── the board's two orders ─────────
+   Mark chooses between two, from the heading over the column beside the
+   names (2026-10-11), and each group of the board follows it:
+   MINE   his own order of the arenas within a type, set by dragging in the
+          list of types — the same `bkPos` the Pinned arrangement reads.
+   DATE   whatever comes first: the soonest deadline, call opening or
+          brokerage event still to come, so the arena with the nearest
+          thing to act on stands at the top. A brokerage entry spanning more
+          than about six weeks is a season pencilled in, not an event, and
+          does not count, as in eventNear. An arena with nothing coming goes
+          to the foot, by name.
+   It replaced two orders that each said half of this: the next publication
+   only, and Opens / Open / Between. */
+function nextKeyT(a){
   const now=T(todayISO());
   let best=Infinity;
-  for(const dt of a.dates){
-    if(dt.kind!=='call'||dt.role!=='publication'||!dt.start)continue;
-    if(T(dt.end)<now)continue;
-    best=Math.min(best,T(dt.start));
+  for(const dt of a.dates||[]){
+    if(!dt.start||T(dt.end||dt.start)<now)continue;
+    if(dt.kind==='call'?!(dt.role==='deadline'||dt.role==='publication')
+                       :T(dt.end||dt.start)-T(dt.start)>45*DAY)continue;
+    best=Math.min(best,Math.max(now,T(dt.start)));
   }
   return best;
 }
-function arenaOrder(x,y){
-  const a=nextPubT(x),b=nextPubT(y);
-  if(a!==b)return a-b;
-  return x.name.localeCompare(y.name);
+function mineOrder(x,y){return bkPos(x)-bkPos(y)||x.name.localeCompare(y.name);}
+function dateOrder(x,y){
+  const a=nextKeyT(x),b=nextKeyT(y);
+  return (a===b?0:a-b)||x.name.localeCompare(y.name);
 }
-/* Pressing the column's heading orders each group by where its arenas stand
-   instead: Opens, then Open, then Between, in the order Mark named them, and
-   within each the soonest first — the publication to come, the deadline to
-   meet, the call most recently closed. Pressed again, back to the order
-   above. */
-function phaseOrder(x,y){
-  const a=boardPhase(x),b=boardPhase(y);
-  return PHASE_RANK[a.k]-PHASE_RANK[b.k]||a.t-b.t||arenaOrder(x,y);
-}
-const boardOrder=()=>S.ui.boardSort==='phase'?phaseOrder:arenaOrder;
+const boardOrder=()=>S.ui.boardSort==='mine'?mineOrder:dateOrder;
+const BOARD_SORTS={mine:{name:'My order',long:'Your own order, as set in Types'},
+                   date:{name:'By date',long:'Soonest first: the nearest deadline, call opening or brokerage event'}};
+let sortOpen=false;
 /* The board stays a picture of the calendar. The one thing that gets a mark
    here is a wait whose date is coming up, in the green todos always wear. */
 function boardRow(a,bg){
@@ -682,11 +691,18 @@ function renderBoard(){keepPlace(()=>{
       '<p class="hint" style="margin-top:6px">'+hint+'</p></div>';
     return;
   }
-  const bySt=S.ui.boardSort==='phase';
+  /* The heading over the status column names the order the groups are in,
+     and opens the choice of the two (Mark, 2026-10-11: it said "Where",
+     which named neither the column nor what pressing it did). */
+  const so=BOARD_SORTS[S.ui.boardSort];
   let h='<div class="axisrow"><div class="corner">Arena</div>'+
-    '<div class="corner where"><button class="whsort'+(bySt?' on':'')+'" data-act="boardSort" aria-pressed="'+bySt+'" '+
-      'title="'+(bySt?'Back to the usual order':'Order each group: Opens, then Open, then Between')+'">Where'+
-      '<i aria-hidden="true">'+(bySt?'\u25BE':'\u2195')+'</i></button></div>'+
+    '<div class="corner where"><button class="whsort'+(sortOpen?' on':'')+'" data-act="boardSort" '+
+      'aria-haspopup="listbox" aria-expanded="'+sortOpen+'" title="Order of the arenas in each type: '+esc(so.long)+'">'+so.name+
+      '<i aria-hidden="true">\u25BE</i></button>'+
+      (sortOpen?'<span class="whmenu" role="listbox" aria-label="Order of the arenas">'+
+        Object.keys(BOARD_SORTS).map(k=>'<button class="'+(k===S.ui.boardSort?'sel':'')+'" data-act="boardSortSet" data-v="'+k+'" '+
+          'role="option" aria-selected="'+(k===S.ui.boardSort)+'"><b>'+BOARD_SORTS[k].name+'</b><span>'+BOARD_SORTS[k].long+'</span></button>').join('')+
+      '</span>':'')+'</div>'+
     '<div class="axis" style="background:'+bg+'">'+axisHTML()+'</div></div>';
   for(const ty of S.types){
     const group=vis.filter(a=>a.typeId===ty.id).sort(boardOrder());
@@ -3613,16 +3629,19 @@ function typesShown(){renderTypes();renderAll();}
    and moving an arena from one type to another. All of it by dragging, as
    he asked the same day, over a first version of arrows and drop-down
    menus: a type is dragged by its grip up or down to order it, or onto
-   another type to merge into it; a type opens to show its arenas as chips,
-   and a chip is dragged onto any other type, open or shut, to move there
-   (see "dragging in the list of types"). Which types stand open is not
-   saved. */
+   another type to merge into it; a type opens to show its arenas one under
+   another in Mark's own order (the board's "My order"), and an arena is
+   dragged up or down to reorder it, between the arenas of another open type
+   to move it there at that place, or onto a shut type to move it to that
+   type's end (see "dragging in the list of types"). Which types stand open
+   is not saved. */
 const tyOpen=new Set();
 function renderTypes(){
-  const chips=ars=>'<div class="tyarenas">'+ars.map(a=>
-    '<span class="tychip" data-tydrag="arena" data-id="'+a.id+'" title="Drag onto another type to move it there">'+
-      esc(a.name)+(a.frozenAt?' <i>frozen</i>':'')+'</span>').join('')+'</div>';
-  const byName=(x,y)=>x.name.localeCompare(y.name);
+  const arenaRows=ars=>'<div class="tyarenas">'+ars.map(a=>
+    '<div class="tyrow" data-tydrag="arena" data-id="'+a.id+'" title="Drag to reorder, or onto another type to move it there">'+
+      '<span class="tygrip" data-tydrag="arena" data-id="'+a.id+'" aria-hidden="true">\u283F</span>'+
+      '<span class="tyrn">'+esc(a.name)+'</span>'+(a.frozenAt?'<i>frozen</i>':'')+'</div>').join('')+'</div>';
+  const byName=mineOrder;
   let h=S.types.map(t=>{
     const ars=S.arenas.filter(a=>a.typeId===t.id).sort(byName);
     const n=ars.length,open=n&&tyOpen.has(t.id);
@@ -3637,12 +3656,12 @@ function renderTypes(){
         '<button class="ib" data-act="delType" data-id="'+t.id+'"'+
           ' title="'+(n?'Merge it or move its arenas first':'Remove '+esc(t.name))+'"'+(n?' disabled':'')+'>✕</button>'+
       '</div>'+
-      (open?chips(ars):'')+
+      (open?arenaRows(ars):'')+
     '</section>';
   }).join('');
   /* an arena whose type was taken from under it is offered a home here */
   const lost=S.arenas.filter(a=>!typeOf(a)).sort(byName);
-  if(lost.length)h+='<section class="tyblock open"><div class="tyline"><span class="tylost">Untyped</span></div>'+chips(lost)+'</section>';
+  if(lost.length)h+='<section class="tyblock open"><div class="tyline"><span class="tylost">Untyped</span></div>'+arenaRows(lost)+'</section>';
   $('#tylist').innerHTML=h;
 }
 /* One type into another: every arena of it goes over, and it is removed.
@@ -3663,11 +3682,12 @@ function mergeTypes(from,to){
 /* ───────── dragging in the list of types ─────────
    The same hand as the links' own reordering (see "putting links in your own
    order"): with a mouse a thing lifts once it has travelled a few pixels; on
-   the iPad a type's grip lifts at once, since it is nothing but a grip, and an
-   arena's chip once it has been held still for a moment, so a finger can
-   still scroll the list. A copy follows the pointer and the place it would
-   land is marked: a line above or below a type to put a type there, the type
-   itself outlined to merge into it or to take an arena. Near the edge of the
+   the iPad a grip lifts at once, since it is nothing but a grip, and the rest
+   of an arena's row once it has been held still for a moment, so a finger
+   can still scroll the list. A copy follows the pointer and the place it
+   would land is marked: a line above or below a type to put a type there, a
+   line between two arenas to put an arena there, the type itself outlined to
+   merge into it or to take an arena at its end. Near the edge of the
    box the list scrolls. Escape puts everything back. */
 let tdDrag=null;
 document.addEventListener('pointerdown',e=>{
@@ -3676,7 +3696,7 @@ document.addEventListener('pointerdown',e=>{
   if(!src)return;
   const kind=src.dataset.tydrag;
   const D=tdDrag={src,kind,id:src.dataset.id,pid:e.pointerId,x:e.clientX,y:e.clientY,lx:e.clientX,ly:e.clientY,
-    on:false,hold:e.pointerType!=='mouse'&&kind==='arena',timer:0,ghost:null,ox:0,oy:0,drop:null,raf:0};
+    on:false,hold:e.pointerType!=='mouse'&&!src.classList.contains('tygrip'),timer:0,ghost:null,ox:0,oy:0,drop:null,raf:0};
   src.addEventListener('pointermove',tdMove);
   src.addEventListener('pointerup',tdUp);
   src.addEventListener('pointercancel',tdCancel);
@@ -3688,7 +3708,7 @@ function tdLift(){
   const D=tdDrag;if(!D)return;
   D.on=true;
   try{D.src.setPointerCapture(D.pid);}catch(err){}
-  const face=D.kind==='type'?D.src.closest('.tyline'):D.src;
+  const face=D.kind==='type'?D.src.closest('.tyline'):D.src.closest('.tyrow');
   const r=face.getBoundingClientRect();
   D.ox=D.x-r.left;D.oy=D.y-r.top;
   D.ghost=face.cloneNode(true);
@@ -3698,7 +3718,7 @@ function tdLift(){
   const tone=D.src.closest('.tyblock');
   if(tone&&tone.style.getPropertyValue('--tone'))D.ghost.style.setProperty('--tone',tone.style.getPropertyValue('--tone'));
   $('#typesModal .mbox').appendChild(D.ghost);
-  (D.kind==='type'?D.src.closest('.tyblock'):D.src).classList.add('tysrc');
+  (D.kind==='type'?D.src.closest('.tyblock'):D.src.closest('.tyrow')).classList.add('tysrc');
   tdPlace();
   const box=$('#typesModal .mbox');
   const step=()=>{
@@ -3724,9 +3744,18 @@ function tdTarget(y){
     if(y>blocks[blocks.length-1].getBoundingClientRect().bottom)return {b:blocks[blocks.length-1],how:'after'};
   }
   if(!b)return null;
+  /* An arena dropped among the arenas of an open type lands between the two
+     it is dropped between; dropped anywhere else on a type, at its end. */
   if(D.kind==='arena'){
+    const rows=[...b.querySelectorAll('.tyrow')];
+    const box=rows.length&&b.querySelector('.tyarenas').getBoundingClientRect();
+    if(box&&y>=box.top-4){
+      const at=rows.findIndex(r=>{const q=r.getBoundingClientRect();return y<q.top+q.height/2;});
+      return at<0?{b,how:'into',row:rows[rows.length-1],side:'below',i:rows.length}
+                 :{b,how:'into',row:rows[at],side:'above',i:at};
+    }
     const ar=arena(D.id);
-    return ar&&ar.typeId!==b.dataset.ty?{b,how:'into'}:null;
+    return ar&&ar.typeId!==b.dataset.ty?{b,how:'into',i:-1}:null;
   }
   if(b.dataset.ty===D.id)return null;
   const r=b.getBoundingClientRect(),edge=Math.min(12,r.height*.25);
@@ -3735,7 +3764,12 @@ function tdTarget(y){
 function tdMark(t){
   document.querySelectorAll('#tylist .tyblock[data-say]').forEach(x=>{
     x.classList.remove('drop-before','drop-after','drop-merge','drop-into');x.removeAttribute('data-say');});
+  document.querySelectorAll('#tylist .tyrow.drop-above,#tylist .tyrow.drop-below').forEach(x=>
+    x.classList.remove('drop-above','drop-below'));
   if(!t)return;
+  /* a place among the arenas is a line between two of them; anywhere else,
+     the type itself is outlined and says what the drop does */
+  if(t.row){t.row.classList.add('drop-'+t.side);t.b.dataset.say='';return;}
   t.b.classList.add('drop-'+t.how);
   t.b.dataset.say=t.how==='merge'?'Merge into this type':t.how==='into'?'Move here':'';
 }
@@ -3772,9 +3806,19 @@ function tdUp(){
   const D=tdEnd();if(!D||!D.on||!D.drop)return;
   const{b,how}=D.drop,to=S.types.find(t=>t.id===b.dataset.ty);
   if(!to)return;
+  /* the arena joins its type's order at the place it was dropped, and that
+     type's order is written down again from the top */
   if(D.kind==='arena'){
     const ar=arena(D.id);if(!ar)return;
-    ar.typeId=to.id;tyOpen.add(to.id);save();typesShown();
+    const shown=[...b.querySelectorAll('.tyrow')].map(r=>arena(r.dataset.id)).filter(Boolean);
+    const list=(shown.length?shown:S.arenas.filter(a=>a.typeId===to.id).sort(mineOrder)).filter(a=>a!==ar);
+    let i=D.drop.i;
+    if(i<0)i=list.length;
+    else if(shown.indexOf(ar)>=0&&shown.indexOf(ar)<i)i--;  /* its own old place no longer counts */
+    list.splice(Math.min(i,list.length),0,ar);
+    ar.typeId=to.id;
+    list.forEach((a,k)=>{a.bkPos=k;});
+    tyOpen.add(to.id);save();typesShown();
     return;
   }
   const from=S.types.find(t=>t.id===D.id);if(!from)return;
@@ -3822,6 +3866,7 @@ document.addEventListener('click',e=>{
   /* an open colour menu takes the press that shuts it, as the Ledger's does,
      unless the press is on a dot, which opens that one instead */
   if(colOpen&&!e.target.closest('.lcolpop,[data-act=typeColMenu]')){colOpen=null;typesShown();return;}
+  if(sortOpen&&!e.target.closest('.whmenu,[data-act=boardSort]')){sortOpen=false;renderBoard();return;}
   const b=e.target.closest('[data-act]');
   if(!b)return;
   const act=b.dataset.act,id=b.dataset.id,a=arena(b.dataset.a||id);
@@ -4022,7 +4067,8 @@ document.addEventListener('click',e=>{
       const ta=$('#card textarea[data-field=bknotes]');if(ta)ta.focus();break;}
     case 'openSearch':applySearchBox(true);$('#search').focus();break;
     case 'toggleGroup':S.ui.collapsed[id]=!S.ui.collapsed[id];save();renderBoard();break;
-    case 'boardSort':S.ui.boardSort=S.ui.boardSort==='phase'?'next':'phase';save();renderBoard();break;
+    case 'boardSort':sortOpen=!sortOpen;renderBoard();break;
+    case 'boardSortSet':sortOpen=false;S.ui.boardSort=b.dataset.v==='mine'?'mine':'date';save();renderBoard();break;
     case 'openQuick':$('#quickModal').classList.add('open');$('#quickText').focus();break;
     case 'openTypes':renderTypes();$('#typesModal').classList.add('open');break;
     case 'closeModals':closeModals();break;
@@ -4282,6 +4328,7 @@ document.addEventListener('keydown',e=>{
   }
   if(tdDrag){tdCancel();return;}                             /* a type or arena being dragged */
   if(colOpen){colOpen=null;typesShown();return;}             /* a colour menu */
+  if(sortOpen){sortOpen=false;renderBoard();return;}         /* the board's order */
   if(Ask.isOpen()){Ask.shut();return;}                       /* the question */
   if(document.querySelector('.modal.open')){closeModals();return;}   /* a sheet */
   if(lkEdit.a||leadEdit.a||noteEdit.a||waitPick){            /* a composer */
