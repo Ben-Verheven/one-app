@@ -46,6 +46,16 @@ const STAGES=['spotted','contacted','talking'];
 const STAGE_NAME={spotted:'Spotted',contacted:'Contacted',talking:'Talking'};
 const stageOf=l=>{const s=l&&l.stage;
   return STAGE_NAME[s]?s:(s==='agreed'?'talking':'spotted');};
+/* How a closed lead ended, asked when it is completed (Mark, 2026-10-11): it
+   became a project, it went nowhere, or the other side declined. Kept on the
+   lead as `outcome`, beside `doneAt`. An open lead has none, and nor does one
+   closed before the question was asked; that one reads as plainly closed.
+   `said` is the quiet line of a closed lead. The Ledger's lead card asks the
+   same question in the same words, written there too, as the ruit is. */
+const OUTCOMES={project:{name:'Became a project',said:'became a project'},
+                nowhere:{name:'Went nowhere',said:'went nowhere'},
+                declined:{name:'They declined',said:'declined'}};
+const isOutcome=k=>Object.prototype.hasOwnProperty.call(OUTCOMES,k);
 
 const WEIGHTS={
   central:   {name:'Central',   turn:.6,lift:1, long:'Work you are actually in. Comes round about twice as often.'},
@@ -227,6 +237,8 @@ function migrate(s){
       l.links.forEach(k=>{if(!k.id)k.id=uid();});
       if(typeof l.due!=='string'||!l.due)l.due=null;
       if(typeof l.doneAt!=='string'||!l.doneAt)l.doneAt=null;
+      /* how it ended: only a closed lead has an answer (see OUTCOMES) */
+      if(!l.doneAt||!isOutcome(l.outcome))delete l.outcome;
       /* how much Mark thinks the lead is worth, 1 to 5 (see "the score");
          anything else is no score yet */
       if(!(l.score>=1&&l.score<=5))delete l.score;else l.score=Math.round(l.score);
@@ -1297,6 +1309,8 @@ const drawer={id:null,edit:null,hi:null,editing:false,scope:null};
 /* which card has its follow-up composer open, which has its link composer open,
    and which one just moved */
 let lkEdit={a:null,l:null},leadEdit={a:null,l:null},waitPick=null,settleId=null;
+/* the lead whose Complete is asking how it ended, which is about the moment */
+let endAsk={a:null,l:null};
 /* the update being written, and the leads showing their whole history —
    both are about the moment, so neither is remembered */
 let noteEdit={a:null,l:null};
@@ -2293,6 +2307,24 @@ function leadScore(l,v){
   if(k>=1&&k<=5)l.score=k;else delete l.score;
   return true;
 }
+/* Closing a lead with how it ended — this room's Complete and the Ledger's
+   both come here. */
+function endLead(l,v){
+  if(!isOutcome(v))return false;
+  l.doneAt=todayISO();l.outcome=v;
+  return true;
+}
+/* A lead that became a project is said out loud for the Ledger, where
+   projects are kept: the bridge opens the Ledger's new project with the
+   lead's name and links filled in (Mark, 2026-10-11). This room only says so,
+   and knows nothing of where it goes. */
+function leadToProject(a,l){
+  try{
+    if(typeof Hub!=='undefined'&&Hub.emit)Hub.emit('semaphore:project',{
+      name:l.project||'',arena:a.name,
+      links:(l.links||[]).filter(k=>k.url).map(k=>({name:linkName(k),url:k.url}))});
+  }catch(e){console.error(e);}
+}
 /* Which of Contacted's two paths a lead is on, for the leads view's split.
    Both ways first: those are the most promising, and Mark asked for them on
    top of the stack (2026-10-08). The Ledger's list keeps the same order. */
@@ -2384,7 +2416,9 @@ function leadRowHTML(a,l,hit,say){
      the match, each link's address and name, each update. It used to be swapped
      for a form holding only the first two. */
   const editing=!done&&leadEdit.a===a.id&&leadEdit.l===l.id;
-  const open=leadOpen.has(l.id)||writing||adding||editing;
+  /* Complete asks how the lead ended before it closes it (see OUTCOMES) */
+  const ending=!done&&endAsk.a===a.id&&endAsk.l===l.id;
+  const open=leadOpen.has(l.id)||writing||adding||editing||ending;
   const ids='data-id="'+a.id+'" data-l="'+l.id+'"';
   /* the day, set where it is read; the invisible field over the label opens
      the calendar. Short on the quiet line of a card a few hundred pixels
@@ -2394,7 +2428,8 @@ function leadRowHTML(a,l,hit,say){
      because a save redraws the card and would throw away everything else
      typed into it. The ruit waits for the same reason. */
   const when=done
-    ? '<span class="lwhen shut" title="Closed">closed '+esc(shortDay(l.doneAt))+'</span>'
+    ? '<span class="lwhen shut" title="Closed">'+(isOutcome(l.outcome)?OUTCOMES[l.outcome].said+' \u00B7 ':'closed ')+
+        esc(shortDay(l.doneAt))+'</span>'
     : editing
     ? '<label class="lwhen set" title="The day to come back to this \u2014 click to change it">'+
         '<span>'+esc(l.due?(say?longDay(l.due):shortDow(l.due)):'No date')+'</span>'+
@@ -2408,15 +2443,21 @@ function leadRowHTML(a,l,hit,say){
   /* How a lead ends. In the arena's panel it stands at the top right of the
      open card, where the eye leaves it, and only once the card is open
      (Mark, 2026-10-06); on the wide rows of the leads view it ends the action
-     row, as Done ends a todo's. */
+     row, as Done ends a todo's. Pressed, it asks how the lead ended. */
   const doneBtn='<button class="ldone'+(done?' back':'')+'" data-act="leadDone" '+ids+' '+
-      'title="'+(done?'Put this lead back into the funnel':'Done with this one — it stays in the record')+'" '+
+      'title="'+(done?'Put this lead back into the funnel':'Done with this one — say how it ended; it stays in the record')+'" '+
       'aria-label="'+(done?'Reopen this lead':'Complete this lead')+'">'+
       '<i aria-hidden="true">'+(done?'↺':'✓')+'</i>'+(done?'Reopen':'Complete')+'</button>';
   /* Left to right as on the Ledger: what the lead is for, what changes it,
      what ends it. A closed lead is a record — the one thing left to do with it
-     is put it back. While editing the row is the way out of the edit. */
-  const acts=editing
+     is put it back. While editing the row is the way out of the edit, and
+     while Complete is asking how the lead ended it is the three answers. */
+  const acts=ending
+    ? '<div class="lacts"><span class="lendq">How did it end?</span>'+
+        Object.keys(OUTCOMES).map(k=>'<button class="lact" data-act="leadEnd" '+ids+' data-v="'+k+'">'+
+          OUTCOMES[k].name+'</button>').join('')+
+        '<span class="sp"></span><button class="lact quiet" data-act="leadEndCancel">Cancel</button></div>'
+    : editing
     ? '<div class="lacts"><span class="lfhint">⌘↩ to save</span><span class="sp"></span>'+
         '<button class="lact quiet" data-act="leadCancel">Cancel</button>'+
         '<button class="lact prim" data-act="leadSave" '+ids+'>Save</button></div>'
@@ -2489,7 +2530,7 @@ function leadRowHTML(a,l,hit,say){
       '<div class="ltx">'+
         /* floated, so it takes the top right corner and the name runs beside
            it while the quiet line below keeps the card's whole width */
-        (!say&&open&&!editing?doneBtn:'')+
+        (!say&&open&&!editing&&!ending?doneBtn:'')+
         (editing
           ? box('project',l.project,'What is the project?','lname lname-in')+
             '<div class="lsub">'+box('match',l.match,'Who could be a good match?','lmt lmt-in')+(say?'':when)+'</div>'
@@ -2688,15 +2729,25 @@ function leadListHTML(a,hits){
   /* Closed leads are out of the open view entirely: one line saying how many,
      and the record itself only if you ask. A search that lands inside a closed
      lead opens the record on its own, because a hit you cannot see is worse
-     than a record you did not open. */
+     than a record you did not open.
+
+     Under that line, what the arena has given (Mark, 2026-10-11): how many
+     leads it has had, open and closed, how many reached Talking and how many
+     became projects — the count that says whether it earns its place in the
+     rotation. It waits for a first closed lead, since before one the leads
+     above already say all of it. */
   if(done.length){
     const shown=closedOpen.has(a.id)||done.some(l=>hit.has(l.id));
+    const all=a.leads||[],talked=all.filter(l=>stageOf(l)==='talking').length,
+          made=all.filter(l=>l.outcome==='project').length;
     h+='<div class="lclosed'+(shown?' open':'')+'">'+
       '<button class="lcbar" data-act="closedMore" data-id="'+a.id+'" '+
         'aria-expanded="'+(shown?'true':'false')+'" '+
         'title="'+(shown?'Put the record away again':'Leads you have closed \u2014 a record, not a queue')+'">'+
         '<span class="lccar" aria-hidden="true">'+(shown?'\u25BE':'\u25B8')+'</span>'+
         'Closed<b>'+done.length+'</b></button>'+
+      '<p class="lctally"><b>'+all.length+'</b> lead'+(all.length===1?'':'s')+' so far \u00B7 <b>'+talked+
+        '</b> reached talking \u00B7 '+(made?'<b>'+made+'</b> became '+(made===1?'a project':'projects'):'no project yet')+'</p>'+
       (shown?'<div class="llist lcrec">'+done.map(row).join('')+'</div>':'')+
     '</div>';
   }
@@ -2975,8 +3026,11 @@ function howHTML(){
       '\u2014 <b>spotted</b>, <b>contacted</b>, <b>talking</b> \u2014 and no further: the moment '+
       'something is agreed it is a project for the ledger rather than a lead. A lead\u2019s day does not '+
       'move its card on the wall; every lead stands on its day on the Ledger\u2019s board. Completing one '+
-      'closes it without throwing it away, and the closed ones fold into a single line at the foot of '+
-      'the list. <b>Leads</b>, beside the arrangements above, drops the wall altogether and lists every '+
+      'asks how it ended \u2014 it <b>became a project</b>, it <b>went nowhere</b>, or <b>they declined</b> '+
+      '\u2014 and closes it without throwing it away; a project opens the Ledger\u2019s new project with '+
+      'the lead\u2019s name and links filled in. The closed ones fold into a single line at the foot of the '+
+      'arena\u2019s list, with what the arena has given under it: its leads so far, how many reached '+
+      'talking and how many became projects. <b>Leads</b>, beside the arrangements above, drops the wall altogether and lists every '+
       'lead from every arena, the three steps one under another, as the Ledger lists them.')+
     line('Wait for a date','Not a lead but the opposite: the card putting itself away rather than pursuing '+
       'anything. It sleeps until <b>three weeks</b> before its '+
@@ -3275,7 +3329,7 @@ function focusNote(){
   if(el)el.focus({preventScroll:true});
 }
 function closeComposers(){lkEdit={a:null,l:null};leadEdit={a:null,l:null};
-  noteEdit={a:null,l:null};waitPick=null;}
+  noteEdit={a:null,l:null};endAsk={a:null,l:null};waitPick=null;}
 function renderAll(){
   if(S.ui.view==='brokerage')renderWall();else renderBoard();
   if(S.ui.view==='dispatch')renderDispatch();
@@ -3473,7 +3527,12 @@ function leadVerb(aid,lid,op,val){
     case 'due':l.due=val||null;break;
     case 'path':if(!leadPath(l,val))return false;break;
     case 'score':if(!leadScore(l,val))return false;break;
-    case 'done':l.doneAt=l.doneAt?null:todayISO();break;
+    /* Complete with its answer, or — pressed again with none, as the
+       Ledger's Undo does — reopened, answer and all */
+    case 'done':
+      if(l.doneAt){l.doneAt=null;delete l.outcome;}
+      else if(!endLead(l,val))return false;
+      break;
     case 'edit':if(!val||!leadEditAll(l,val))return false;break;
     case 'note':{
       const text=String(val||'').trim();if(!text)return false;
@@ -3497,6 +3556,7 @@ function leadVerb(aid,lid,op,val){
     default:return false;
   }
   restack(a.id);
+  if(op==='done'&&l.doneAt&&l.outcome==='project')leadToProject(a,l);
   return true;
 }
 
@@ -3876,10 +3936,21 @@ document.addEventListener('click',e=>{
     case 'leadPath':{const ar=arena(id);if(!ar)break;
       const l=(ar.leads||[]).find(x=>x.id===b.dataset.l);if(!l||l.doneAt)break;
       if(leadPath(l,b.dataset.v)){save();repaint();renderDrawer();}break;}
+    /* Complete asks how the lead ended before it closes it (see OUTCOMES);
+       Reopen puts it back at once, answer and all, since nothing was thrown
+       away. */
     case 'leadDone':{const ar=arena(id);if(!ar)break;
       const l=(ar.leads||[]).find(x=>x.id===b.dataset.l);if(!l)break;
-      l.doneAt=l.doneAt?null:todayISO();      /* ticking is reversible: nothing is thrown away */
-      restack(ar.id);break;}
+      if(l.doneAt){l.doneAt=null;delete l.outcome;restack(ar.id);break;}
+      closeComposers();endAsk={a:ar.id,l:l.id};leadOpen.add(l.id);
+      repaint();renderDrawer();break;}
+    case 'leadEnd':{const ar=arena(id);if(!ar)break;
+      const l=(ar.leads||[]).find(x=>x.id===b.dataset.l);if(!l||l.doneAt)break;
+      if(!endLead(l,b.dataset.v))break;
+      restack(ar.id);
+      if(l.outcome==='project')leadToProject(ar,l);
+      break;}
+    case 'leadEndCancel':{closeComposers();repaint();renderDrawer();break;}
     case 'leadLinkDel':{const ar=arena(id);if(!ar)break;
       const l=(ar.leads||[]).find(x=>x.id===b.dataset.l);if(!l)break;
       l.links=(l.links||[]).filter(k=>k.id!==b.dataset.k);

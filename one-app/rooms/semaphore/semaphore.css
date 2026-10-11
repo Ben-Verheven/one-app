@@ -910,6 +910,13 @@
 #pane-semaphore .lead .lmt.none{font-size:11.5px}
 /* open, the match is read rather than glanced at, so it is given its whole length */
 #pane-semaphore .lead.open .lmt{white-space:normal;overflow-wrap:break-word}
+/* A closed lead says how it ended where its day stood, which is longer than a
+   day ("became a project · 11 Oct"); opened, its match was read down a column
+   a word wide beside that, so the line wraps there and the score and the
+   answer stand under the match, at the right. */
+#pane-semaphore .lead.done.open .lsub{flex-wrap:wrap}
+#pane-semaphore .lead.done.open .lmt{flex:1 1 100%}
+#pane-semaphore .lead.done.open .lsub>.lscore{margin-left:auto}
 #pane-semaphore .lead .lar{margin:0;padding:0;flex:0 0 auto;min-width:0;max-width:40%;
   font-style:normal;color:var(--lquiet)}
 /* The ruit. Four dots on one small diamond: Spotted, the two ways of making
@@ -971,6 +978,9 @@
 /* the action row, read from the left edge to the right one */
 #pane-semaphore .lacts{display:flex;flex-wrap:wrap;align-items:center;gap:5px;
   margin-top:8px;padding-top:8px;border-top:1px solid var(--grid)}
+/* Complete asking how the lead ended, in place of the action row: the
+   question 5.8:1 on the panel's lead and 4.8:1 on the Leads board */
+#pane-semaphore .lendq{margin-right:4px;font-family:var(--body);font-size:12.5px;font-style:italic;color:var(--faint)}
 #pane-semaphore .lacts .sp{flex:1 1 auto}
 #pane-semaphore .lact{padding:4px 8px;border:1px solid var(--line);border-radius:6px;
   font:10px var(--sans);letter-spacing:.06em;color:var(--muted);white-space:nowrap;
@@ -1092,6 +1102,12 @@
 #pane-semaphore .lcbar b{font-weight:600;font-family:var(--mono);font-size:9.5px;letter-spacing:0;opacity:.85}
 #pane-semaphore .lcbar .lccar{flex:0 0 auto;font-size:9px;letter-spacing:0;margin-right:-2px}
 #pane-semaphore .lclosed .lcrec{padding:0 0 6px}
+/* What the arena has given, under the line: a sentence, in the hand the empty
+   list speaks in, with its three numbers in the ink. Measured on the panel's
+   own paper: 4.9:1. */
+#pane-semaphore .lctally{margin:-3px 2px 9px;font-family:var(--body);font-size:12.5px;font-style:italic;
+       line-height:1.45;color:var(--faint)}
+#pane-semaphore .lctally b{font-style:normal;font-weight:400;color:var(--ink)}
 #pane-semaphore .wfoot .offer{border-top:1px solid var(--grid)}
 /* ---------- freezer ----------
    Out of rotation, not out of the record. The strip exists only once something

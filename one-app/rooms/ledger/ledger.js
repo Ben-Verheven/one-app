@@ -8751,9 +8751,10 @@ var TodoCard=(function(){
    idea of what a card is; but where a todo has its effort, a lead has the
    three steps Semaphore moves it through, and where a todo has Done and
    Delete, a lead has Complete, which is all Semaphore lets you do to end
-   one. Its colour is its arena type's, from a family of greyed earth tones
-   kept apart from the categories' clean tints, because it is not a category
-   and must not borrow one (see "A lead's colour" below).
+   one — and which asks how it ended. Its colour is its arena type's, from a
+   family of greyed earth tones kept apart from the categories' clean tints,
+   because it is not a category and must not borrow one (see "A lead's
+   colour" below).
 
    A lead can be started here as well (Mark, 2026-10-06): the line's name
    opens a new-lead card in the list, which files the lead under the arena
@@ -8886,9 +8887,19 @@ var Leads=(function(){
       +gap
       +'<button class="todo-btn todo-btn-quiet" onclick="PL.leadBeginEdit(\''+k+'\',event)">✎ Edit</button>'
       +'<button class="todo-btn todo-btn-done todo-actions-end" '
-        +'title="Done with this one — it stays in the Semaphore’s record" '
+        +'title="Done with this one — say how it ended; it stays in the Semaphore’s record" '
         +'onclick="PL.leadDone(\''+k+'\',event)">'
         +'<span class="todo-done-box" aria-hidden="true">✓</span>Complete</button>'
+      +'</div>';
+    /* Complete asks how the lead ended before it closes it (Mark, 2026-10-11):
+       while `lead-ending` is on, the action row gives way to the three answers
+       and Cancel, as Edit gives it to Cancel and Save. */
+    var ending='<div class="todo-actions lead-end"><span class="lead-end-q">How did it end?</span>'
+      +END_NAME.map(function(o){
+        return '<button class="todo-btn" onclick="PL.leadEnd(\''+k+'\',\''+o[0]+'\',event)">'+o[1]+'</button>';
+      }).join('')
+      +gap
+      +'<button class="todo-btn todo-btn-quiet" onclick="PL.leadEndCancel(\''+k+'\',event)">Cancel</button>'
       +'</div>';
     /* Edit changes the card in place (Mark, 2026-10-06): it keeps its look,
        and every fact on it — the name, the match, each link's address and
@@ -8982,7 +8993,7 @@ var Leads=(function(){
       +scoreHTML(l,key)
       +dateLabel
       +'</div>'
-      +'<div class="todo-expand">'+actions+edit+links+addLink+addNote+ups+'</div>'
+      +'<div class="todo-expand">'+actions+ending+edit+links+addLink+addNote+ups+'</div>'
       +'</div>';
   }
   /* Contacted is two paths, and Mark asked on 2026-10-06 for the step to be
@@ -8994,6 +9005,9 @@ var Leads=(function(){
      drawn, rather than by a second brace, because it is still the one step. */
   var KIND_RANK={both:0,researchers:1,lead:2};
   var KIND_NAME={researchers:'researchers contacted',both:'both contacted',lead:'lead contacted'};
+  /* How a lead ended, asked by Complete: the Semaphore's own answers in its
+     own words (see OUTCOMES there), written here as the ruit is. */
+  var END_NAME=[['project','Became a project'],['nowhere','Went nowhere'],['declined','They declined']];
   function kindOf(l){
     return l.toResearchers&&l.toLead?'both':(l.toResearchers?'researchers':'lead');
   }
@@ -9189,10 +9203,23 @@ var Leads=(function(){
     }
     change(key,'due',v||null);
   }
+  /* Complete opens the question on the card; an answer closes the lead in
+     the Semaphore, and Undo reopens it there, answer and all. A lead that
+     became a project is the Semaphore's to announce: the bridge opens the new
+     project here with its name and links. */
   function done(key,evt){
     stopEvt(evt);
+    var c=cardOf(key);if(!c)return;
+    c.classList.add('open','lead-ending');
+  }
+  function endCancel(key,evt){
+    stopEvt(evt);
+    var c=cardOf(key);if(c)c.classList.remove('lead-ending');
+  }
+  function end(key,v,evt){
+    stopEvt(evt);
     var l=find(key);if(!l)return;
-    if(change(key,'done'))
+    if(change(key,'done',v))
       toast('Lead completed — “'+trunc(l.name,40)+'”',{action:'Undo',onAction:function(){
         change(key,'done');}});
   }
@@ -9278,7 +9305,7 @@ var Leads=(function(){
     html:html,listHTML:listHTML,COLOR:COLOR,hexOf:hexOf,
     canAdd:canAdd,newHTML:newHTML,newOpen:newOpen,newDrop:newDrop,
     newArenaMenu:newArenaMenu,newArena:newArena,newDue:newDue,newSave:newSave,newLink:newLink,
-    path:path,score:score,due:due,done:done,arena:arenaOf,openBox:openBox,
+    path:path,score:score,due:due,done:done,end:end,endCancel:endCancel,arena:arenaOf,openBox:openBox,
     beginEdit:beginEdit,cancelEdit:cancelEdit,saveEdit:saveEdit,editDrop:editDrop,
     addNote:addNote,noteKey:noteKey,noteDel:noteDel,
     addLink:addLink,linkKey:linkKey,linkDel:linkDel,
@@ -13508,14 +13535,18 @@ var ProjectForm=(function(){
     if(back&&back.focus){try{back.focus();}catch(e){}}
   }
 
-  function openNew(){
+  /* `from` is a lead that became a project, handed over by the bridge
+     (Mark, 2026-10-11): its name and links, so the project starts from what
+     the lead already knew. Pressed from the bar it is nothing. */
+  function openNew(from){
     var host=byId('np');if(!host)return;
     if(editing)closeEdit();
     if(newShown)return;
+    var lead=(from&&typeof from==='object'&&Array.isArray(from.links))?from:null;
     prevFocus=document.activeElement;
     newShown=true;
     byId('np-body').innerHTML=
-      nameHTML(NEW,'','Name it \u2014 the acronym you will call it by')
+      nameHTML(NEW,lead?String(lead.name||'').slice(0,120):'','Name it \u2014 the acronym you will call it by')
       +peopleHTML(NEW)+whereHTML()+detailHTML(NEW);
     host.removeAttribute('hidden');
     Editors.piInit('new',[]);
@@ -13524,7 +13555,7 @@ var ProjectForm=(function(){
     Editors.partnerInit('new',[]);
     Editors.coordInit('new',[]);
     Editors.linkInit('npc',[]);
-    Editors.linkInit('npp',[]);
+    Editors.linkInit('npp',lead?lead.links:[]);
     Editors.markerInit('np',[]);
     /* The topic field is built from the one builder both panes use rather
        than written out here, so they cannot ask for it differently. */
@@ -14071,7 +14102,8 @@ window.PL={
   leadMarkClick:Board.leadMarkClick,leadsNewClick:Board.leadsNewClick,
   leadNewArenaMenu:Leads.newArenaMenu,leadNewArena:Leads.newArena,
   leadNewDue:Leads.newDue,leadNewSave:Leads.newSave,leadNewLink:Leads.newLink,
-  leadPath:Leads.path,leadScore:Leads.score,leadDue:Leads.due,leadDone:Leads.done,leadArena:Leads.arena,
+  leadPath:Leads.path,leadScore:Leads.score,leadDue:Leads.due,leadDone:Leads.done,
+  leadEnd:Leads.end,leadEndCancel:Leads.endCancel,leadArena:Leads.arena,
   leadOpenBox:Leads.openBox,leadBeginEdit:Leads.beginEdit,leadCancelEdit:Leads.cancelEdit,
   leadSaveEdit:Leads.saveEdit,leadEditDrop:Leads.editDrop,leadAddNote:Leads.addNote,leadNoteKey:Leads.noteKey,
   leadNoteDel:Leads.noteDel,leadAddLink:Leads.addLink,leadLinkKey:Leads.linkKey,

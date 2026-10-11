@@ -429,6 +429,18 @@
     });
     Hub.on('semaphore:saved', function () { L.leadsChanged(); });
     Hub.onRoom(function (now) { if (now === 'ledger') L.leadsChanged(); });
+
+    /* A lead completed as having become a project, on either side (Mark,
+       2026-10-11): projects are the Ledger's, so the Ledger opens its new
+       project with the lead's name and links filled in. A drawer lent over
+       the Ledger is put away first, or the form would open under it. */
+    Hub.on('semaphore:project', function (p) {
+      if (!L.PL || typeof L.PL.showNewForm !== 'function' || !p) return;
+      if (lendingArena && S.escape) S.escape();
+      if (Hub.active() !== 'ledger') Hub.go('ledger');
+      try { L.PL.showNewForm({ name: p.name || '', links: p.links || [] }); }
+      catch (e) { console.error(e); }
+    });
   })();
 
   /* ── the ring ─────────────────────────────────────────────────────── */

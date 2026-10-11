@@ -769,6 +769,16 @@ const STAGES=['spotted','contacted','talking'];
 const STAGE_NAME={spotted:'Spotted',contacted:'Contacted',talking:'Talking'};
 const stageOf=l=>{const s=l&&l.stage;
   return STAGE_NAME[s]?s:(s==='agreed'?'talking':'spotted');};
+/* How a closed lead ended, asked when it is completed (Mark, 2026-10-11): it
+   became a project, it went nowhere, or the other side declined. Kept on the
+   lead as `outcome`, beside `doneAt`. An open lead has none, and nor does one
+   closed before the question was asked; that one reads as plainly closed.
+   `said` is the quiet line of a closed lead. The Ledger's lead card asks the
+   same question in the same words, written there too, as the ruit is. */
+const OUTCOMES={project:{name:'Became a project',said:'became a project'},
+                nowhere:{name:'Went nowhere',said:'went nowhere'},
+                declined:{name:'They declined',said:'declined'}};
+const isOutcome=k=>Object.prototype.hasOwnProperty.call(OUTCOMES,k);
 const WEIGHTS={
   central:   {name:'Central',   turn:.6,lift:1, long:'Work you are actually in. Comes round about twice as often.'},
   ordinary:  {name:'Ordinary',  turn:1, lift:.5,long:'The ordinary rotation \u2014 about four weeks.'},
@@ -940,6 +950,8 @@ function migrate(s){
       l.links.forEach(k=>{if(!k.id)k.id=uid();});
       if(typeof l.due!=='string'||!l.due)l.due=null;
       if(typeof l.doneAt!=='string'||!l.doneAt)l.doneAt=null;
+      /* how it ended: only a closed lead has an answer (see OUTCOMES) */
+      if(!l.doneAt||!isOutcome(l.outcome))delete l.outcome;
       /* how much Mark thinks the lead is worth, 1 to 5 (see "the score");
          anything else is no score yet */
       if(!(l.score>=1&&l.score<=5))delete l.score;else l.score=Math.round(l.score);
@@ -1599,12 +1611,16 @@ function eachLead(d, ref, fn){
 }
 function edit(ref, fn){ return function(d){ eachLead(d, ref, fn); }; }
 
-/* the desk keeps a lead's doneAt as a plain day */
-function setDone(ref, on){
-  var day = isoToday();
-  commit('semaphore', edit(ref, function(x){ x.doneAt = on ? day : null; }),
-    on ? 'Completed' : 'Reopened',
-    edit(ref, function(x){ x.doneAt = on ? null : day; }));
+/* The desk keeps a lead's doneAt as a plain day, and since 2026-10-11 how it
+   ended beside it, as `outcome` (the desk's OUTCOMES, copied into script 1).
+   Undo puts both back as they were, which reopens the lead. A project is
+   made in the Ledger, which Pocket does not hold, so the toast says where. */
+function setDone(ref, outcome, lead){
+  var day = isoToday(), was = keep(lead, ['doneAt', 'outcome']);
+  commit('semaphore', edit(ref, function(x){ x.doneAt = day; x.outcome = outcome; }),
+    outcome === 'project' ? 'Became a project — add it in the Ledger at the desk'
+      : 'Completed — ' + OUTCOMES[outcome].said,
+    edit(ref, function(x){ putBack(x, was); }));
 }
 
 function setDate(ref, iso, was){
@@ -3089,8 +3105,19 @@ function openLead(it){
     var vLink = el('button', '', '+ Link');
     vLink.addEventListener('click', function(){ swap('link', linkPanel); });
     bar.appendChild(vLink);
+    /* Complete asks how the lead ended, as on the desk (2026-10-11) */
+    function donePanel(host){
+      host.appendChild(el('span', 'field', 'How did it end?'));
+      var grid = el('div', 'when-grid');
+      Object.keys(OUTCOMES).forEach(function(k){
+        var btn = el('button', '', OUTCOMES[k].name);
+        btn.addEventListener('click', function(){ shut(); setDone(it.ref, k, it.lead); });
+        grid.appendChild(btn);
+      });
+      host.appendChild(grid);
+    }
     var vDone = el('button', 'done', '✓ Complete');
-    vDone.addEventListener('click', function(){ shut(); setDone(it.ref, true); });
+    vDone.addEventListener('click', function(){ swap('done', donePanel); });
     bar.appendChild(vDone);
   });
 }

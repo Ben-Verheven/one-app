@@ -25,7 +25,7 @@ Every change is undoable from the toast; undo puts back exactly the fields it to
 
 | Action | Field | Desk writes | Pocket writes |
 |---|---|---|---|
-| lead done | `doneAt` | `YYYY-MM-DD` / `null` | ✓ |
+| lead done | `doneAt`, `outcome` | `doneAt` `YYYY-MM-DD` / `null`; since 2026-10-11 `outcome` beside it, how the lead ended: `project`, `nowhere` or `declined` (the desk's `OUTCOMES`), the key deleted when it is reopened. A contract made from an export before then has no sample of `outcome` | ✓ asked when Complete is pressed; undo puts both back |
 | lead edit | `project`, `match` | string | ✓ |
 | lead date | `due` | `YYYY-MM-DD` / `null` | ✓ (clearing writes `null`) |
 | lead path | `stage`, `toResearchers`, `toLead` | `leadPath(l, 'spotted│researchers│lead│talking')`; stage `spotted│contacted│talking` | ✓ the desk's own `leadPath`, copied into script 1 |

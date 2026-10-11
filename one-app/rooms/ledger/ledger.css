@@ -1333,6 +1333,15 @@
 #pane-ledger .lead-ed-row .lead-in{flex:1 1 0;font-family:var(--body);font-size:13px}
 #pane-ledger .lead-ed-ups .lead-ed-up{flex:1 1 auto;font-size:13px;line-height:1.45}
 #pane-ledger .lead-ed-row.gone{opacity:0.4}
+/* Complete asks how the lead ended (Mark, 2026-10-11): while `lead-ending` is
+   on, the action row gives way to the three answers and Cancel, the way
+   `lead-editing` gives it to Cancel and Save. The question is in the match's
+   #bca070, 4.9:1 here. The answers' row is a .todo-actions as well, so the
+   rule that shows it comes after the one that hides the row. */
+#pane-ledger .lead-card .lead-end{display:none}
+#pane-ledger .lead-card.lead-ending .todo-actions{display:none}
+#pane-ledger .lead-card.lead-ending .lead-end{display:flex}
+#pane-ledger .lead-end-q{margin-right:4px;font-family:var(--body);font-size:12.5px;font-style:italic;color:#bca070}
 #pane-ledger .lead-ed-row.gone .lead-in{text-decoration:line-through}
 /* ── Starting a lead from the line ──
    The line's name is the way in. It reads as the name until the pointer is

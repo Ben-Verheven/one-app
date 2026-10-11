@@ -136,7 +136,9 @@ scanner can see, because the name is spelled in the room that offers it.
 One event, per room that holds a store of its own: **`semaphore:saved`**,
 **`notes:saved`** and **`atlas:saved`**, emitted after every save so the
 bridge can push that room to the cloud. And one from the Ledger,
-**`cloud:session`** (`true` or `false`), when a login starts or ends.
+**`cloud:session`** (`true` or `false`), when a login starts or ends. And
+**`semaphore:project`**, with a name and links, when a lead is completed as
+having become a project, in the Semaphore or on the Ledger's lead card.
 
 What the bridge actually does: turns any researcher's name, written
 anywhere in any room, into a link that opens the Atlas dossier over the
@@ -145,8 +147,10 @@ a project written for a Horizon topic reads that topic without leaving the
 Ledger, and fills the socket the Ledger picks a topic from; fills a second
 socket with Semaphore's open leads, so the Ledger's board draws them as a
 line of their own, every change made on a lead card there is made on
-Semaphore's own record, a lead can be started there, and a lead's arena
-opens in Semaphore's drawer lent over the Ledger as the dossier is; draws
+Semaphore's own record, a lead can be started there, a lead's arena
+opens in Semaphore's drawer lent over the Ledger as the dossier is, and a
+lead that became a project opens the Ledger's new project with its name and
+links filled in; draws
 the ring of rooms and the title; runs the page-change animation; and syncs
 Semaphore's board, the Notes room and the Atlas's edits through the
 Supabase credentials the Ledger already holds.
