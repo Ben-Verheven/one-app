@@ -45,6 +45,12 @@ the way back.
   (first push, 2026-10-10). Check with `git ls-remote origin main` against
   `git rev-parse HEAD` before believing either way; it goes through the
   same proxy as the push, where `gh` is not in every session.
+- **The cloud environment reaches Supabase since 2026-10-11:** Mark added the
+  project's host to its Allowed domains, so a session can call the agents'
+  gatekeepers to see what they see (`watchlist`, `roster`) — the token is in
+  the scheduled tasks' prompts and never goes in the repository. A test
+  `suggest` lands in his inbox for real, so it needs a label saying to
+  dismiss it; the data itself stays behind his login.
 - **GitHub's API answers repo-scoped requests only, and not all of those:**
   users are refused, and so are the Pages settings — they cannot be read
   or changed from here. Mark does those, or his Chrome does.
