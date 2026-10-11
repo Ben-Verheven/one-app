@@ -287,6 +287,8 @@ a.wlink:active .wd,a.wlink:active::before{color:var(--brok)}
 .wpage{flex:0 0 auto;font:11px/1 var(--mono);color:var(--ink)}
 .wpage.never{color:var(--faint)}
 .wprow .pin{flex:0 0 40px;width:40px}
+.wped{flex:0 0 40px;width:40px;min-height:44px;font-size:16px;color:var(--muted)}
+.wped:active{color:var(--ink)}
 
 /* ── leads, as the desk's Leads arrangement draws them ──────────────── */
 
@@ -2376,13 +2378,55 @@ function drawPins(){
       if (x.scope !== 'brokerage')
         foot.appendChild(el('span', 'wpage' + (d === null ? ' never' : ''),
           d === null ? 'never' : d === 0 ? 'today' : d + ' d'));
-      else
+      var ed = el('button', 'wped', '✎');
+      ed.setAttribute('aria-label', 'Change its name or address');
+      ed.addEventListener('click', function(){ editPin(x); });
+      foot.appendChild(ed);
+      if (x.scope === 'brokerage')
         foot.appendChild(pinBtn(true, 'Unpin — put it back on its card', function(){ pinLink(x.a, x.lk); }));
       row.appendChild(foot);
       box.appendChild(row);
     });
     host.appendChild(box);
   }
+}
+
+/* A pinned link's name and address, changed from Pinned as on the desk
+   (Mark, 2026-10-11), through the arena's own editArena, so the change is
+   one link by its id on whatever the cloud holds, with its undo. Emptied of
+   both it stays as it was: taking a link away is the arena sheet's cross. */
+function editPin(x){
+  sheet(function(b, bar){
+    closeBtn(bar);
+    b.appendChild(el('h2', '', plainOf((typeof linkName === 'function') ? linkName(x.lk) : linkLabel(x.lk))));
+    b.appendChild(el('p', 'sub', plainOf(x.a.name) || 'Arena'));
+    var panel = el('div', 'composer open');
+    b.appendChild(panel);
+    panel.appendChild(el('span', 'field', 'Name'));
+    var n = el('input', 'line');
+    n.type = 'text'; n.placeholder = 'Name it — optional'; n.value = x.lk.label || '';
+    n.setAttribute('aria-label', 'Link name');
+    panel.appendChild(n);
+    panel.appendChild(el('span', 'field', 'Address'));
+    var u = el('input', 'line');
+    u.type = 'text'; u.placeholder = 'https://…'; u.value = x.lk.url || '';
+    u.setAttribute('autocapitalize', 'off'); u.setAttribute('autocorrect', 'off');
+    u.setAttribute('inputmode', 'url'); u.spellcheck = false;
+    u.setAttribute('aria-label', 'Link address');
+    panel.appendChild(u);
+    var save = el('button', 'act', 'Save changes');
+    save.addEventListener('click', function(){
+      var label = n.value.trim(), url = deskUrl(u.value);
+      shut();
+      if (!label && !url) return;
+      if (label === String(x.lk.label || '').trim() && url === deskUrl(x.lk.url)) return;
+      var ops = { edit:{}, drop:[], add:[] }, ch = {};
+      ops.edit[x.lk.id] = { label:label, url:url };
+      ch[x.scope === 'brokerage' ? 'bklinks' : 'links'] = ops;
+      editArena(x.a, ch);
+    });
+    panel.appendChild(save);
+  });
 }
 
 /* ── the leads ──────────────────────────────────────────────────────── */

@@ -371,7 +371,10 @@
 #pane-semaphore .lkform input{border:1px solid var(--line);border-radius:var(--radius);background:var(--field);color:var(--ink);
   padding:5px 8px;font-family:var(--body);font-size:13px;min-width:0}
 #pane-semaphore .lkform .lu{flex:1 1 100%;font:12px var(--mono)}
-#pane-semaphore .lkform .lx{flex:1 1 auto}
+/* the name box shares its class with a lead's cross (.lx, further down),
+   which is hidden until its row is hovered and 19px tall: the box took both,
+   and the name could be typed into but never seen (found 2026-10-11) */
+#pane-semaphore .lkform .lx{flex:1 1 auto;height:auto;opacity:1}
 #pane-semaphore .lkform .ib{font-size:12px}
 #pane-semaphore .tabn{margin-left:7px;font:9.5px var(--mono);padding:1px 5px;border-radius:99px;
   background:rgba(42,38,32,.16);color:var(--ink)}
@@ -605,26 +608,29 @@
 #pane-semaphore .wnone{margin:9px;padding:13px;text-align:center;font-family:var(--body);font-size:13px;font-style:italic;
         color:var(--faint);border:1px dashed var(--line);border-radius:var(--radius);background:var(--sink)}
 /* ---- pinned links (pinRowHTML) ----
-   One row each, in two columns where there is room: the stamp, the link, its
-   arena, the days since the stamp, and the pin to put it back. */
-#pane-semaphore .wplist{display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:4px 16px}
-#pane-semaphore .wprow{display:flex;align-items:center;gap:10px;padding:5px 8px 5px 10px;border:1px solid var(--line);
+   One box each, in two columns where there is room, laid out as Pocket's:
+   the name has the whole first line, and the stamp, the arena, the pencil
+   and the pin stand under it. */
+#pane-semaphore .wplist{display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:6px 16px;align-items:start}
+#pane-semaphore .wprow{padding:4px 8px 4px 10px;border:1px solid var(--line);
         border-radius:var(--radius);background:var(--surface)}
+#pane-semaphore .wplink{display:flex;align-items:baseline;gap:8px;padding:3px 0 2px;text-decoration:none;color:var(--ink)}
+#pane-semaphore .wplink .wn{flex:1 1 0;min-width:0;font-family:var(--body);font-size:14.5px;line-height:1.35;overflow-wrap:anywhere}
+/* the name in its arena type's colour, a fifth of the way to the ink, as
+   Pocket's: the darkest tones, Rosewood and Plum, are 4.0:1 on the row,
+   the mix 5.2:1 */
+#pane-semaphore .wprow.toned .wplink .wn{color:color-mix(in srgb,var(--tone) 80%,var(--ink))}
+#pane-semaphore .wplink .wfresh{align-self:center}
+#pane-semaphore a.wplink:hover .wn{text-decoration:underline;text-underline-offset:3px}
+#pane-semaphore .wplink.dead .wn{color:var(--faint)}
+#pane-semaphore .wpfoot{display:flex;align-items:center;gap:8px;min-height:26px}
 #pane-semaphore .wprow .stamp{opacity:1}
-#pane-semaphore .wplink{flex:1;min-width:0;display:flex;align-items:baseline;gap:10px;padding:4px 2px;text-decoration:none;color:var(--ink)}
-#pane-semaphore .wplink .wn{flex:0 1 auto;min-width:0;font-family:var(--body);font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#pane-semaphore .wplink .wd{flex:0 1 auto;min-width:0;margin-left:auto;font:10.5px var(--mono);color:var(--faint);
-        white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#pane-semaphore .wplink .wfresh{margin-left:-4px;align-self:center}
-#pane-semaphore a.wplink:hover .wn{color:var(--key2);text-decoration:underline;text-underline-offset:3px}
-#pane-semaphore a.wplink:hover .wd{color:var(--brok)}
-#pane-semaphore .wplink.dead{color:var(--faint)}
-#pane-semaphore .wpa{flex:0 1 auto;max-width:30%;min-width:0;font-family:var(--body);font-size:12px;font-style:italic;color:var(--muted);
+#pane-semaphore .wpa{flex:1 1 auto;min-width:0;text-align:left;font-family:var(--body);font-size:12px;font-style:italic;color:var(--muted);
         white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #pane-semaphore .wpa:hover{color:var(--brok-deep)}
-#pane-semaphore .wpage{flex:0 0 46px;text-align:right;font:11.5px var(--mono);color:var(--ink)}
-#pane-semaphore .wpage.never{color:var(--faint)}
-#pane-semaphore .wprow.on .wpage{color:var(--muted)}
+#pane-semaphore .wped{flex:0 0 auto;font-size:13px;line-height:1;padding:3px 4px;color:var(--muted)}
+#pane-semaphore .wped:hover{color:var(--ink)}
+#pane-semaphore .pkform{margin:3px 0 4px}
 #pane-semaphore .wrest{margin-top:12px;font-size:12px;color:var(--faint);line-height:2}
 #pane-semaphore .wghost{font-family:var(--sans);font-size:10px;letter-spacing:.05em;color:var(--faint);
         border:1px solid var(--line);border-radius:var(--radius);

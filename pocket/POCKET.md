@@ -14,7 +14,8 @@ Semaphore (the Cards view of 2026-10-06). Four tabs:
   card, then every type's second. Arenas with no brokerage material are ghosts under their row.
 - **Pinned** — the pinned links, A–Z or by days since the stamp (longest first), switched above them and remembered on the phone: the link's name on a line of its own, in its arena type's colour, tapped
   to go there (its host not shown), and under it the stamp ✓ carrying the days since, the arena and
-  the pin to put it back (since 2026-10-11). Whole cards are not pinned since 2026-10-11, here or on the desk.
+  the pin to put it back (since 2026-10-11); its pencil ✎ changes the link's name and address (`editPin`,
+  through `editArena`), as the desk's Pinned does. Whole cards are not pinned since 2026-10-11, here or on the desk.
 - **Leads** — every open lead in Spotted / Contacted / Talking, as the desk's Leads arrangement;
   Contacted split by its two paths; each lead shows the desk's diamond ("ruit"). In a lead's sheet
   the diamond is pressed to move it (the desk's own `leadPath`), and links/emails are added there,

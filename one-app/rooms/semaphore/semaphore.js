@@ -1308,7 +1308,7 @@ function renderComing(){
 const drawer={id:null,edit:null,hi:null,editing:false,scope:null};
 /* which card has its follow-up composer open, which has its link composer open,
    and which one just moved */
-let lkEdit={a:null,l:null},leadEdit={a:null,l:null},waitPick=null,settleId=null;
+let lkEdit={a:null,l:null},leadEdit={a:null,l:null},waitPick=null,settleId=null,pinEdit=null;
 /* the lead whose Complete is asking how it ended, which is about the moment */
 let endAsk={a:null,l:null};
 /* the update being written, and the leads showing their whole history —
@@ -3054,23 +3054,38 @@ function howHTML(){
     'is asking to be looked at, then what is merely due a turn, then what is parked \u2014 and within '+
     'a rung, by how much. A card you stamp today waits at the far right of its row until tomorrow.</p></div>';
 }
-/* One pinned link: its stamp, the link, the arena it came from, and the days
-   since the stamp was last pressed. The count is the point of the row, so it
-   is the one figure on it in the ink rather than the quiet colour. */
+/* One pinned link, as Pocket draws it (Mark, 2026-10-11): the name on a line
+   of its own, wrapping rather than cut, in its arena type's colour, and its
+   host not shown, since a pinned link is read by its name; under it the
+   stamp carrying the days since it was last pressed, the arena it came from,
+   the pencil that changes its name and address, and the pin to put it back.
+   While the pencil is open the name gives way to the form (`pinEdit`). */
 function pinRowHTML(p){
   const{a,lk,scope}=p;
   const ref=' data-a="'+a.id+'" data-lks="'+scope+'" data-l="'+esc(lk.id||'')+'"';
-  const{on,d,age,ageTip,stTip}=stampSay(stampOf(lk));
+  const{on,d,ageTip,stTip}=stampSay(stampOf(lk));
   const nm=esc(linkName(lk));
-  return '<div class="wprow'+(on?' on':'')+'">'+
-    '<button class="stamp'+(on?' on':'')+'" data-act="lkStamp"'+ref+' title="'+stTip+'" aria-label="'+stTip+'">\u2713</button>'+
-    (lk.url
+  const tone=arenaTone(a);
+  const top=pinEdit===lk.id
+    ?'<form class="lkform pkform" data-pka="'+a.id+'" data-pks="'+scope+'" data-pkl="'+esc(lk.id||'')+'">'+
+       '<input class="lu" name="url" value="'+esc(lk.url||'')+'" placeholder="https://…" aria-label="Link address" autocomplete="off">'+
+       '<input class="lx" name="label" value="'+esc(lk.label||'')+'" placeholder="Name it — optional" aria-label="Link name" autocomplete="off">'+
+       '<button type="submit" class="ib" title="Save" aria-label="Save">✓</button>'+
+       '<button type="button" class="ib" data-act="lkCancel" title="Cancel" aria-label="Cancel">✕</button>'+
+     '</form>'
+    :lk.url
       ?'<a class="wplink" href="'+esc(lk.url)+'" target="_blank" rel="noopener" title="'+esc(lk.url)+'">'+
-         '<span class="wn">'+nm+'</span>'+freshTag(a,lk)+'<span class="wd">'+esc(linkHost(lk))+'</span></a>'
-      :'<span class="wplink dead"><span class="wn">'+nm+'</span></span>')+
-    '<button class="wpa" data-act="openArena" data-id="'+a.id+'" title="Open '+esc(a.name)+'">'+esc(a.name)+'</button>'+
-    '<span class="wpage'+(d===null?' never':'')+'" title="'+ageTip+'">'+age+'</span>'+
-    '<button class="lpin on" data-act="lkPin"'+ref+' title="Pinned \u2014 click to put it back on its card" aria-label="Unpin '+nm+'"><i></i></button>'+
+         '<span class="wn">'+nm+'</span>'+freshTag(a,lk)+'</a>'
+      :'<span class="wplink dead"><span class="wn">'+nm+'</span></span>';
+  const tip=on?stTip:ageTip+' — stamp it once you have been through it';
+  return '<div class="wprow'+(on?' on':'')+(tone?' toned':'')+'"'+(tone?' style="--tone:'+esc(tone)+'"':'')+'>'+top+
+    '<div class="wpfoot">'+
+      '<button class="stamp'+(on?' on':'')+(d===null?'':' dated')+'" data-act="lkStamp"'+ref+' title="'+tip+'" aria-label="'+tip+'">✓'+
+        (d===null?'':'<span class="sdays">'+Math.max(0,d)+'</span>')+'</button>'+
+      '<button class="wpa" data-act="openArena" data-id="'+a.id+'" title="Open '+esc(a.name)+'">'+esc(a.name)+'</button>'+
+      '<button class="wped" data-act="pinEdit"'+ref+' title="Change its name or address" aria-label="Edit '+nm+'">✎</button>'+
+      '<button class="lpin on" data-act="lkPin"'+ref+' title="Pinned — click to put it back on its card" aria-label="Unpin '+nm+'"><i></i></button>'+
+    '</div>'+
   '</div>';
 }
 function paintWall(){
@@ -3329,7 +3344,7 @@ function focusNote(){
   if(el)el.focus({preventScroll:true});
 }
 function closeComposers(){lkEdit={a:null,l:null};leadEdit={a:null,l:null};
-  noteEdit={a:null,l:null};endAsk={a:null,l:null};waitPick=null;}
+  noteEdit={a:null,l:null};endAsk={a:null,l:null};waitPick=null;pinEdit=null;}
 function renderAll(){
   if(S.ui.view==='brokerage')renderWall();else renderBoard();
   if(S.ui.view==='dispatch')renderDispatch();
@@ -3973,6 +3988,8 @@ document.addEventListener('click',e=>{
     case 'lkAdd':{closeComposers();lkEdit={a:id,l:b.dataset.l||null};if(b.dataset.l)leadOpen.add(b.dataset.l);
       repaint();renderDrawer();focusLk();break;}
     case 'lkCancel':{closeComposers();repaint();renderDrawer();break;}
+    case 'pinEdit':{const open=pinEdit===b.dataset.l;closeComposers();if(!open)pinEdit=b.dataset.l;
+      repaint();renderDrawer();focusLk();break;}
 
     case 'waitPick':{closeComposers();waitPick=id;repaint();renderDrawer();break;}
     case 'holdSet':{const ar=arena(id);if(!ar)break;
@@ -4170,18 +4187,34 @@ document.addEventListener('keydown',e=>{
     else{const sv=t.closest('.lead.editing')&&t.closest('.lead.editing').querySelector('[data-act=leadSave]');if(sv)sv.click();}
   }
 });
+/* A bare address with an @ in it is a person to write to, not a site: it
+   used to be given https:// like any other and opened as a broken page. */
+function typedAddr(url){
+  url=String(url||'').trim();
+  if(url&&/^[^\s@\/]+@[^\s@\/]+\.[^\s@\/]+$/.test(url))return 'mailto:'+url;
+  if(url&&!/^(https?:|mailto:|file:)/i.test(url))return 'https://'+url;
+  return url;
+}
 document.addEventListener('submit',e=>{
+  /* a pinned link's new name and address; emptied of both, it stays as it
+     was, since taking a link away is the cross on its card */
+  const pf=e.target.closest('.pkform');
+  if(pf){
+    e.preventDefault();
+    const lk=linkOf(arena(pf.dataset.pka),pf.dataset.pks,pf.dataset.pkl);
+    const url=typedAddr(pf.elements.url.value),label=pf.elements.label.value.trim();
+    closeComposers();
+    if(lk&&(url||label)){lk.url=url;lk.label=label;}
+    relinked();
+    return;
+  }
   const lf=e.target.closest('.lkform');
   if(lf){
     e.preventDefault();
     const a=arena(lf.dataset.lka);if(!a)return;
-    let url=lf.elements.url.value.trim();
+    const url=typedAddr(lf.elements.url.value);
     const label=lf.elements.label.value.trim();
     if(!url&&!label){closeComposers();repaint();renderDrawer();return;}
-    /* A bare address with an @ in it is a person to write to, not a site: it
-       used to be given https:// like any other and opened as a broken page. */
-    if(url&&/^[^\s@\/]+@[^\s@\/]+\.[^\s@\/]+$/.test(url))url='mailto:'+url;
-    else if(url&&!/^(https?:|mailto:|file:)/i.test(url))url='https://'+url;
     const lead=lf.dataset.lkl?(a.leads||[]).find(x=>x.id===lf.dataset.lkl):null;
     if(lf.dataset.lkl&&!lead)return;
     if(lead)lead.links.push({id:uid(),label,url});
@@ -4336,7 +4369,7 @@ document.addEventListener('keydown',e=>{
   if(sortOpen){sortOpen=false;renderBoard();return;}         /* the board's order */
   if(Ask.isOpen()){Ask.shut();return;}                       /* the question */
   if(document.querySelector('.modal.open')){closeModals();return;}   /* a sheet */
-  if(lkEdit.a||leadEdit.a||noteEdit.a||waitPick){            /* a composer */
+  if(lkEdit.a||leadEdit.a||noteEdit.a||waitPick||pinEdit){  /* a composer */
     closeComposers();repaint();renderDrawer();return;
   }
   if(drawer.edit){drawer.edit=null;renderDrawer();return;}   /* a date form */
