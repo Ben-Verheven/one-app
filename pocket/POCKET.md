@@ -12,9 +12,9 @@ Semaphore (the Cards view of 2026-10-06). Four tabs:
   (`wokeRow`), which opens the walk; stamping it ends the wait and sends it back to its row. Walked one card at a
   time with *Look around* → Next / Stamp & next, which takes the types in turn: every type's first
   card, then every type's second. Arenas with no brokerage material are ghosts under their row.
-- **Pinned** — pinned links first, A–Z or by days since the stamp (longest first), switched above them and remembered on the phone: the link's name on a line of its own, in its arena type's colour, tapped
+- **Pinned** — the pinned links, A–Z or by days since the stamp (longest first), switched above them and remembered on the phone: the link's name on a line of its own, in its arena type's colour, tapped
   to go there (its host not shown), and under it the stamp ✓ carrying the days since, the arena and
-  the pin to put it back (since 2026-10-11); then pinned cards.
+  the pin to put it back (since 2026-10-11). Whole cards are not pinned since 2026-10-11, here or on the desk.
 - **Leads** — every open lead in Spotted / Contacted / Talking, as the desk's Leads arrangement;
   Contacted split by its two paths; each lead shows the desk's diamond ("ruit"). In a lead's sheet
   the diamond is pressed to move it (the desk's own `leadPath`), and links/emails are added there,
@@ -23,9 +23,9 @@ Semaphore (the Cards view of 2026-10-06). Four tabs:
   *+ New lead* at the top adds one, asking first which arena it belongs to (frozen arenas left
   out); an arena's sheet has its own *+ Lead*. Both ask the same questions (`leadForm`).
 
-Every card carries the desk's three small controls: the ring (ask the nightly agent, `askAt`),
-the pin (diamond) and the stamp (✓, which also marks the agent's findings seen). An arena's sheet
-spells out the first two and adds the desk's *Wait for…* (`hold`), which lists the arena's coming
+Every card carries the desk's two small controls: the ring (ask the nightly agent, `askAt`)
+and the stamp (✓, which also marks the agent's findings seen). An arena's sheet
+spells out the ring and adds the desk's *Wait for…* (`hold`), which lists the arena's coming
 dates to sleep until (since 2026-10-10). A brokerage link
 on a card or in an arena's sheet has its own pin. The sheet's pencil ✎ edits the arena's name, its
 About and Brokerage notes and both lists of links, saved together (since 2026-10-11). What stays on
@@ -75,7 +75,7 @@ re-extract the maths) but a Pocket change never touches it.
   since 2026-10-09 the cloud answers only a logged-in Mark, so every request carries the session's
   token, renewed one at a time — Supabase ends a session whose renewal is used twice) → `rest()` → `pull()` (row `semaphore` only) →
   `commit()` → lead mutations (`setDone`, `setDate`, `setPath`, `addUpdate`, `editItem`, `addLead`,
-  `addLeadLink`, `dropLeadLink`, `setScore`) and arena/link mutations (`stampArena`, `pinArena`, `askAgent`, `holdArena`,
+  `addLeadLink`, `dropLeadLink`, `setScore`) and arena/link mutations (`stampArena`, `askAgent`, `holdArena`,
   `editArena` + `linkOps`, `pinLink`, `stampLink`); every undo puts back a snapshot (`keep`/`putBack`) → board (`liveList`, which settles the types' tones as the desk does, `scoreOf`, `typeRows`) → views (`drawRot` + `wallCard` +
   `cardLine`, `drawPins`/`pinnedOf`, `drawLeads`/`leadItems` + `leadRow` + `ruit`,
   `drawDates`/`comingUp`) → sheets (`openArena` with the round, `openLead`, `newLead`, `openPerson`).
@@ -91,10 +91,10 @@ declaration named below **plus every top-level declaration it refers to**, in so
 `uid todayISO STAGES STAGE_NAME stageOf WEIGHTS weightOf ROLES reconcile S dispDate arena linkName
 SWEEP_CYCLE SWEEP_SHORT eventNote openLeads standing linkHost callRuns isFresh shortDate shortDay
 daysBetween leadKind KIND_NAME KIND_RANK RUNG leadName dtLabel esc rotationSplit
-hasBrokerage bkPos leadPath TONES toneHex settleTones typeOf arenaTone`
+hasBrokerage leadPath TONES toneHex settleTones typeOf arenaTone`
 
 Then check: no `document`/`$(`/`Hub.` in the result, no name clashes with script 2, `node --check`.
-Last done 2026-10-11 from that day's desk (641 lines).
+Last done 2026-10-11 from that day's desk (642 lines).
 
 ## Rules
 1. Display-layer changes by default. Data structures, script 1, scoring and the write path change only when asked.

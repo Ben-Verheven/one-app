@@ -309,7 +309,6 @@
 #pane-semaphore .how dd b{font-weight:400;color:var(--ink)}
 #pane-semaphore .how .coda{margin-top:12px;padding-top:11px;border-top:1px solid var(--grid);
   font-family:var(--body);font-size:12.5px;font-style:italic;line-height:1.55;color:var(--faint)}
-#pane-semaphore .wgrid.g-lead{grid-template-columns:repeat(auto-fill,minmax(302px,1fr));gap:14px}
 #pane-semaphore .wcard.t-mid .wch{padding:8px 11px}
 #pane-semaphore .wcard.t-rest{background:none;border-color:transparent;box-shadow:none}
 #pane-semaphore .wcard.t-rest:hover{background:var(--surface);border-color:var(--line)}
@@ -318,9 +317,8 @@
 /* A tail card is a name and nothing else until it is reached for. Its head
    controls used to wait there invisible but still taking their width, which on
    a 186px card left the name two letters and an ellipsis; now they take no room
-   until the card is hovered, and the name has the line. One that is set — a
-   pin, today's stamp, a lit ask — stays. */
-#pane-semaphore .wcard.t-rest:not(:hover):not(:focus-within) .wch .pin:not(.on),
+   until the card is hovered, and the name has the line. One that is set —
+   today's stamp, a lit ask — stays. */
 #pane-semaphore .wcard.t-rest:not(:hover):not(:focus-within) .wch .stamp:not(.on),
 #pane-semaphore .wcard.t-rest:not(:hover):not(:focus-within) .wch .wedit{display:none}
 #pane-semaphore .wcard.t-rest.held{background:var(--surface);border-color:var(--grid)}
@@ -349,7 +347,7 @@
 #pane-semaphore .stamp.dated{flex:0 0 auto;width:auto;min-width:20px;padding:0 6px 0 5px;gap:3px;border-radius:99px}
 #pane-semaphore .stamp .sdays{font:10px/1 var(--mono)}
 /* Asking the agent (askHTML): a ring in the agents' own indigo, hidden until
-   the card is reached for like the pin, and lit — a filled centre with a glow
+   the card is reached for, and lit — a filled centre with a glow
    — for as long as the ask stands, so a wall can be read for what is waiting
    on tonight's run. */
 #pane-semaphore .wask{flex:0 0 22px;height:22px;display:flex;align-items:center;justify-content:center;border-radius:var(--radius);
@@ -402,7 +400,6 @@
 /* the row of cards back from waiting, over all the others, in the green a
    wait that has come due already wears on its strip */
 #pane-semaphore .wtrow.wwoke{--tone:var(--todo)}
-#pane-semaphore .wgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(282px,1fr));gap:14px;align-items:start}
 /* ───────── a card has two sides ─────────
    The front is what the arena is: its state, its notes, its tools. The back is
    what the sweeping turned up. Both faces stay mounted and a turn is a class
@@ -652,28 +649,11 @@
 #pane-semaphore .wlinks.lkdragging .wlrow:not(.lkup)>.wlink{background:none;color:var(--ink)}
 #pane-semaphore .wlinks.lkdragging .wlrow:not(.lkup)>.wlink::before,
 #pane-semaphore .wlinks.lkdragging .wlrow:not(.lkup) .wd{color:var(--faint)}
-/* The pin is the one mark on this screen the world does not make — you make it.
-   So it stays bone, like every other control, and never borrows a meaning hue.
-   It sits in the card's head, because what it keeps is the whole card: hidden
-   until you reach for the card, and always shown once it is set. */
-#pane-semaphore .pin{flex:0 0 22px;height:22px;display:flex;align-items:center;justify-content:center;border-radius:var(--radius);
-     opacity:0;transition:opacity .14s,background-color .14s}
-#pane-semaphore .pin i{width:7px;height:7px;transform:rotate(45deg);border:1px solid var(--faint);border-radius:1px;
-       transition:background-color .14s,border-color .14s}
-#pane-semaphore .wcard:hover .pin,#pane-semaphore .wcard:focus-within .pin,#pane-semaphore .pin.on{opacity:1}
-/* without a pointer to hover with, a control that waits for hover never comes */
-@media (hover:none){#pane-semaphore .pin{opacity:1}}
-#pane-semaphore .pin:hover{background:rgba(216,205,184,.09)}
-#pane-semaphore #card .pin:hover{background:rgba(42,38,32,.07)}
-#pane-semaphore .pin:hover i{border-color:var(--key2)}
-#pane-semaphore .pin.on i{background:var(--key2);border-color:var(--key2);box-shadow:0 0 8px rgba(216,205,184,.35)}
-#pane-semaphore #card .pin.on i{box-shadow:none}
 #pane-semaphore .wnone{margin:9px;padding:13px;text-align:center;font-family:var(--body);font-size:13px;font-style:italic;
         color:var(--faint);border:1px dashed var(--line);border-radius:var(--radius);background:var(--sink)}
 /* ---- pinned links (pinRowHTML) ----
    One row each, in two columns where there is room: the stamp, the link, its
    arena, the days since the stamp, and the pin to put it back. */
-#pane-semaphore .wpins{margin-bottom:22px;padding-bottom:22px;border-bottom:1px dashed var(--grid)}
 #pane-semaphore .wplist{display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:4px 16px}
 #pane-semaphore .wprow{display:flex;align-items:center;gap:10px;padding:5px 8px 5px 10px;border:1px solid var(--line);
         border-radius:var(--radius);background:var(--surface)}

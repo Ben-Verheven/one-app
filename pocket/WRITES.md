@@ -9,7 +9,7 @@ Since 2026-09-15 Pocket is **Semaphore-only**. It no longer reads or writes the 
 ## Rows
 | Pocket name | `app_state.id` | Pocket reads |
 |---|---|---|
-| `data.semaphore` | `semaphore` | `arenas[]` (name, typeId, weight, pin, askAt, hold, frozenAt, sweptAt, seenAt, dates, leads, links, notes, brokerage, color), `types[]` |
+| `data.semaphore` | `semaphore` | `arenas[]` (name, typeId, weight, askAt, hold, frozenAt, sweptAt, seenAt, dates, leads, links, notes, brokerage, color), `types[]` |
 
 Pocket fetches only `app_state?id=eq.semaphore`. If that row is missing it says
 "no Semaphore row in the cloud" and writes nothing.
@@ -33,7 +33,6 @@ Every change is undoable from the toast; undo puts back exactly the fields it to
 | lead link | `links[]` | `{id, label, url}`; an address with @ → `mailto:`, no scheme → `https://` | ✓ add; remove by id |
 | lead new | `{id,project,match,links[],stage,toResearchers,toLead,due,doneAt,updates}` | uuid id, `stage:'spotted'`, paths `false`, `updates:[]` | ✓ (Pocket's default `due` is today) |
 | arena stamp | `sweptAt`, `sweptPrev`, `seenAt`, `seenPrev` | day; the moment (ISO) for seen; same-day stamp takes itself back | ✓ |
-| arena pin | `pin` | `true`/`false` | ✓ |
 | arena ask | `askAt` | ISO moment / `null` | ✓ |
 | arena wait | `hold`, `holdPrev` | `{dateId}`, one of the arena's own dates / `null` to stop waiting; a stamp on a card back from waiting moves `hold` to `holdPrev` for the day (the desk's own sweep), and the same-day undo moves it back | ✓ |
 | arena edit | `name`, `notes`, `brokerage.notes` | the name trimmed, `'Unnamed arena'` for none; notes trimmed | ✓ only the fields changed; `brokerage` made `{notes:'',links:[]}` when absent |

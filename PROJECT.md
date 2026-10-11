@@ -354,7 +354,7 @@ a researcher's name written anywhere is `.atlas-ref`.
 | a date on a lane | `.mk` — `.bk` brokerage (`.bk-fixed`, `.bk-unc`, `.bk-band`), `.cl.rb` a call's bar, `.now` today |
 | a card on the wall, its phase line and strip of time, its links band | `.wcard`; `.wline` (`.wph`, `.wstrip`: `.wsd` an event, `.wsb` a call, `.wsnow` today); `.wlk` › `.wlinks` › `.wlrow` |
 | the ring that asks the nightly agent, a link's pin and cross | `.wask`; `.lpin`, `.ldel` |
-| the pinned links on Pinned, each with its stamp and days since | `.wpins` › `.wprow`, `.wpage` |
+| the pinned links on Pinned, each with its stamp and days since | `.wplist` › `.wprow`, `.wpage` |
 | the arena drawer | `#card` and its `.scrim` |
 
 **The Call Board** — the cluster row is the bar, `#hdr` › `.tabs`; the

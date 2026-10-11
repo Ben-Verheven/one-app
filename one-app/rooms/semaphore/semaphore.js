@@ -174,12 +174,12 @@ function migrate(s){
     if(!a.brokerage||typeof a.brokerage!=='object')a.brokerage={notes:'',links:[]};
     if(!Array.isArray(a.brokerage.links))a.brokerage.links=[];
     if(typeof a.brokerage.notes!=='string')a.brokerage.notes='';
-    /* Pinning once belonged to a single brokerage link, then only to the whole
-       card; a board from the first days comes over with its pinned-link arenas
-       pinned whole. Since 2026-10-06 a link can be pinned again in its own
-       right, beside the cards, so a link's `pin` — the moment it was pinned —
-       is kept rather than cleared as it used to be. */
-    if(typeof a.pin!=='boolean')a.pin=a.brokerage.links.some(l=>l.pin);
+    /* Pinning once belonged to a single brokerage link, then to the whole card
+       as well. Mark took the whole card's pin away on 2026-10-11 — Pinned is
+       the round of links he keeps to hand and nothing else — so an arena's own
+       `pin` is dropped here, and a link's `pin`, the moment it was pinned, is
+       kept. */
+    delete a.pin;
     a.brokerage.links.forEach(l=>{if(!l.id)l.id=uid();});
     /* the freezer holds the date it went in, so the panel can say since when */
     if(typeof a.frozenAt!=='string')a.frozenAt=null;
@@ -602,7 +602,7 @@ function laneHTML(a){
    Mark chooses between two, from the heading over the column beside the
    names (2026-10-11), and each group of the board follows it:
    MINE   his own order of the arenas within a type, set by dragging in the
-          list of types — the same `bkPos` the Pinned arrangement reads.
+          list of types, kept on each arena as `bkPos`.
    DATE   whatever comes first: the soonest deadline, call opening or
           brokerage event still to come, so the arena with the nearest
           thing to act on stands at the top. A brokerage entry spanning more
@@ -2657,10 +2657,6 @@ function headHTML(a,st,t,hits,back){
     turnHTML(a,st,hits,back)+
     /* a tail card is one line of name, so it carries the ring only while it is lit */
     (t!=='rest'||a.askAt?askHTML(a):'')+
-    '<button class="pin'+(a.pin?' on':'')+'" data-act="togglePin" data-id="'+a.id+'" '+
-      'aria-pressed="'+(a.pin?'true':'false')+'" '+
-      'title="'+(a.pin?'Pinned \u2014 click to unpin':'Pin this card')+'" '+
-      'aria-label="'+(a.pin?'Unpin ':'Pin ')+esc(a.name)+'"><i></i></button>'+
     /* The stamp carries the days since it was last pressed, 0 on the day
        itself (Mark, 2026-10-11), so a row can be read for how long each card
        has gone untouched without hovering. A card never stamped has none. */
@@ -3071,9 +3067,8 @@ function howHTML(){
       'it over, so it comes back up to date. Stamp it there and the wait is over and the card back in its '+
       'own row. Move that date and the wait moves with it; delete it, or let it pass, and the card is '+
       'simply back in the rotation.')+
-    line('Pinned','A separate arrangement, and the only one you author. Click the diamond in a card\u2019s '+
-      'head and the whole card is held under <b>Pinned</b>, its dates and leads with it; click the diamond '+
-      'beside one of its links and just that link moves there, off every card, with a stamp of its own '+
+    line('Pinned','A separate arrangement, and the only one you author. Click the diamond beside one of a '+
+      'card\u2019s links and that link moves to <b>Pinned</b>, off every card, with a stamp of its own '+
       'and the days since you last pressed it.')+
     line('Ask the agent','The ring in a card\u2019s head asks the nightly agent to look at that arena on its '+
       'next run, on top of the ones it picks itself. It goes out once the agent has been. What the agent '+
@@ -3118,7 +3113,7 @@ function paintWall(){
   const has=hasBrokerage;
   const sortBtns='<div class="wsort">'+
     [['rotation','Rotation','A row for every type, in your order of types; in each row, first is whatever wants attention today'],
-     ['pinned','Pinned','Only the cards you have pinned'],
+     ['pinned','Pinned','The links you have pinned, each with its own stamp'],
      ['leads','Leads','One board \u2014 every lead you are pursuing, in the step it has reached']].map(([v,n,t])=>
       '<button class="'+(S.ui.wallSort===v?'on':'')+'" data-act="setWallSort" data-v="'+v+'" title="'+t+'">'+n+'</button>').join('')+
     '</div>';
@@ -3127,33 +3122,25 @@ function paintWall(){
     ?'<button class="howbtn'+(S.ui.howOpen?' on':'')+'" data-act="toggleHow" '+
       'aria-expanded="'+(S.ui.howOpen?'true':'false')+'">How the order works</button>':'';
 
-  /* ---- pinned: the links and the cards you keep to hand ----
-     Two kinds of thing are pinned, and both are kept here. A whole card, drawn
-     as it is anywhere else on the wall — its dates and leads with it. And,
-     since 2026-10-06 again, single links: the platforms gone through so often
-     that they are a round of their own rather than part of one arena's. Each
-     carries its own stamp, and how many days ago it was last pressed, so the
-     round can be walked the way the rotation is. A pinned link stands only
-     here; no card shows it as well. */
+  /* ---- pinned: the links you keep to hand ----
+     Single links: the platforms gone through so often that they are a round
+     of their own rather than part of one arena's. Each carries its own stamp,
+     and how many days ago it was last pressed, so the round can be walked the
+     way the rotation is. A pinned link stands only here; no card shows it as
+     well. Whole cards could be pinned here too until Mark took that away on
+     2026-10-11: a card belongs in its type's row, and the links were what he
+     kept to hand. */
   if(S.ui.wallSort==='pinned'){
-    const rank=new Map(S.types.map((t,i)=>[t.id,i]));
-    const ord=a=>rank.has(a.typeId)?rank.get(a.typeId):S.types.length;
-    const list=vis.filter(a=>a.pin)
-      .sort((x,y)=>ord(x)-ord(y)||bkPos(x)-bkPos(y)||x.name.localeCompare(y.name));
     const pins=[];
     for(const a of vis)for(const scope of ['brokerage','arena'])
       for(const lk of linkList(a,scope))if(lk.pin)pins.push({a,lk,scope});
     pins.sort((x,y)=>String(x.lk.pin).localeCompare(String(y.lk.pin)));
-    const said=[list.length?'<b>'+list.length+'</b> card'+(list.length===1?'':'s'):'',
-                pins.length?'<b>'+pins.length+'</b> link'+(pins.length===1?'':'s'):''].filter(Boolean).join(' and ');
     let h='<div class="whead">'+sortBtns+
-      (said?'<span class="wsay">'+said+' kept to hand.</span>':'')+'</div>';
-    if(pins.length)h+='<section class="wpins"><div class="wplist">'+pins.map(pinRowHTML).join('')+'</div></section>';
-    if(list.length)h+='<div class="wgrid g-lead">'+list.map(a=>wallCard(a,null,'lead')).join('')+'</div>';
-    if(!pins.length&&!list.length)
+      (pins.length?'<span class="wsay"><b>'+pins.length+'</b> link'+(pins.length===1?'':'s')+' kept to hand.</span>':'')+'</div>';
+    if(pins.length)h+='<div class="wplist">'+pins.map(pinRowHTML).join('')+'</div>';
+    else
       h+='<div class="empty"><p>Nothing pinned yet.</p>'+
-        '<p class="hint" style="margin-top:6px">Hover a card and click the diamond in its head to keep<br>'+
-        'the whole card here, or the diamond beside one of its links to keep just that link.</p></div>';
+        '<p class="hint" style="margin-top:6px">Click the diamond beside one of a card\u2019s links to keep it here.</p></div>';
     w.innerHTML=h;
     return;
   }
@@ -4032,10 +4019,6 @@ document.addEventListener('click',e=>{
     case 'thaw':{const ar=arena(id);if(!ar)break;
       ar.frozenAt=null;save();renderAll();break;}
     case 'toggleFreezer':S.ui.freezerOpen=!S.ui.freezerOpen;save();renderFreezer();break;
-    case 'togglePin':{const ar=arena(id);if(!ar)break;
-      ar.pin=!ar.pin;save();
-      if(S.ui.view==='brokerage')renderWall();
-      renderDrawer();break;}
     /* A link pinned is the moment it was pinned, which is the order Pinned
        lists them in; unpinned, it is back on its card where it was. */
     case 'lkPin':{const lk=linkOf(a,b.dataset.lks,b.dataset.l);if(!lk)break;

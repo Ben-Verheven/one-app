@@ -179,7 +179,7 @@ a{color:inherit}
 .wask i{width:11px;height:11px;border-radius:50%;border:1px solid var(--faint)}
 .wask.on i{background:var(--notice);border-color:var(--notice);box-shadow:0 0 0 3px var(--notice-line)}
 .pin:active,.wask:active{background:rgba(216,205,184,.12)}
-#sheet .pin.on i,#sheet span.pin.on i{box-shadow:none}
+#sheet .pin.on i{box-shadow:none}
 /* a link with its pin, or its cross, beside it */
 .wlrow{display:flex;align-items:center}
 .wlrow>.wlink{flex:1;min-width:0}
@@ -272,7 +272,7 @@ a.wlink:active .wd,a.wlink:active::before{color:var(--brok)}
 
 /* ── pinned links ───────────────────────────────────────────────────── */
 
-.wpins{margin:0 12px 6px;padding-bottom:16px;border-bottom:1px dashed var(--grid)}
+.wpins{margin:0 12px 6px}
 .wprow{margin-bottom:6px;padding:2px 4px 2px 4px;
   border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
 /* the title has the whole first line and wraps rather than being cut, and
@@ -525,11 +525,11 @@ input[type="search"]:focus{outline:none;border-color:var(--key)}
 #sheet .turn{position:relative;height:4px;border-radius:2px;margin-top:6px;background:rgba(42,38,32,.12);overflow:hidden}
 #sheet .turn i{position:absolute;left:0;top:0;bottom:0;border-radius:2px;background:var(--key);display:block}
 
-/* the card's two switches in its sheet */
+/* the card's switches in its sheet */
 #sheet .switches{display:flex;flex-wrap:wrap;gap:7px;margin:-4px 0 14px}
 #sheet .switch{display:inline-flex;align-items:center;gap:2px;height:40px;padding:0 13px 0 2px;
   border:1px solid var(--line2);border-radius:99px;background:var(--field);font:14px/1 var(--body);color:var(--ink)}
-#sheet .switch .pin,#sheet .switch .wask,#sheet .switch .wz{flex:0 0 30px;width:30px;height:30px}
+#sheet .switch .wask,#sheet .switch .wz{flex:0 0 30px;width:30px;height:30px}
 /* the wait's own mark is the desk's: the diamond its "Waiting for" strip wears */
 #sheet .wz{display:flex;align-items:center;justify-content:center}
 #sheet .wz i{width:8px;height:8px;transform:rotate(45deg);border-radius:1px;border:1px solid var(--faint)}
@@ -858,7 +858,7 @@ function defaultTypes(){
 function blank(){
   return {v:1,types:defaultTypes(),arenas:[],
     ui:{q:'',collapsed:{},view:'board',
-        wallSort:'rotation',boardSort:'next',cuAll:false,
+        wallSort:'rotation',boardSort:'date',cuAll:false,
         howOpen:false,freezerOpen:false,flipped:{}}};
 }
 /* An arena remembers which of its own dates it is waiting for. That goes stale
@@ -899,12 +899,12 @@ function migrate(s){
     if(!a.brokerage||typeof a.brokerage!=='object')a.brokerage={notes:'',links:[]};
     if(!Array.isArray(a.brokerage.links))a.brokerage.links=[];
     if(typeof a.brokerage.notes!=='string')a.brokerage.notes='';
-    /* Pinning once belonged to a single brokerage link, then only to the whole
-       card; a board from the first days comes over with its pinned-link arenas
-       pinned whole. Since 2026-10-06 a link can be pinned again in its own
-       right, beside the cards, so a link's `pin` — the moment it was pinned —
-       is kept rather than cleared as it used to be. */
-    if(typeof a.pin!=='boolean')a.pin=a.brokerage.links.some(l=>l.pin);
+    /* Pinning once belonged to a single brokerage link, then to the whole card
+       as well. Mark took the whole card's pin away on 2026-10-11 — Pinned is
+       the round of links he keeps to hand and nothing else — so an arena's own
+       `pin` is dropped here, and a link's `pin`, the moment it was pinned, is
+       kept. */
+    delete a.pin;
     a.brokerage.links.forEach(l=>{if(!l.id)l.id=uid();});
     /* the freezer holds the date it went in, so the panel can say since when */
     if(typeof a.frozenAt!=='string')a.frozenAt=null;
@@ -1020,7 +1020,10 @@ function migrate(s){
     ui.cuAll    = u.cuAll===true;
     /* By type was merged into the rotation (2026-10-11), so it lands there */
     ui.wallSort = ['pinned','leads'].includes(u.wallSort) ? u.wallSort : 'rotation';
-    ui.boardSort = u.boardSort==='phase' ? 'phase' : 'next';
+    /* the board's two orders since 2026-10-11 (see "the board's two orders");
+       the two it had before — next publication, and by status — both read as
+       the date order, which took their place */
+    ui.boardSort = u.boardSort==='mine' ? 'mine' : 'date';
     ui.howOpen     = u.howOpen===true;
     ui.freezerOpen = u.freezerOpen===true;
     s.ui=ui;
@@ -1083,8 +1086,6 @@ function linkName(lk){
   if(/^mailto:/i.test(lk.url))return lk.url.slice(7);
   try{return new URL(lk.url).hostname.replace(/^www\./,'');}catch(e){return lk.url;}
 }
-/* ============ actions ============ */
-function bkPos(a){return typeof a.bkPos==='number'?a.bkPos:1e9;}
 /* The rotation wall's order. An arena with nothing recorded still earns a
    card while it is asking for something — a wait whose day is in reach —
    because a ghost at the foot of the wall cannot say so. It drops back to a
@@ -1742,14 +1743,6 @@ function stampArena(a){
     onArena(a.id, function(x){ putBack(x, was); }));
 }
 
-/* a whole card kept on Pinned */
-function pinArena(a){
-  var was = keep(a, ['pin']), on = !a.pin;
-  commit('semaphore', onArena(a.id, function(x){ x.pin = !x.pin; }),
-    on ? 'Card pinned' : 'Card unpinned',
-    onArena(a.id, function(x){ putBack(x, was); }));
-}
-
 /* The score, as the desk keeps it on the lead: 1 to 5, and no key at all
    for none. The Semaphore and the Ledger read the same field, so a score set
    here is theirs at their next look at the cloud, and theirs is Pocket's. */
@@ -2115,12 +2108,9 @@ function wallCard(a, st, tier){
     chip.addEventListener('click', function(e){ e.stopPropagation(); showArenaLeads(a); });
     head.appendChild(chip);
   }
-  /* a tail card is one line of name, so it carries the ring and the pin only
-     while they are lit — as on the desk */
+  /* a tail card is one line of name, so it carries the ring only while it
+     is lit — as on the desk */
   if (tier !== 'rest' || a.askAt) head.appendChild(ringBtn(a));
-  if (tier !== 'rest' || a.pin)
-    head.appendChild(pinBtn(!!a.pin, a.pin ? 'Unpin this card' : 'Pin this card',
-      function(){ pinArena(a); }));
   var on = stampedToday(a);
   head.appendChild(tickBtn(on, on ? 'Take the stamp off' : 'Stamp it — gone through',
     function(){ stampArena(a); },
@@ -2305,19 +2295,15 @@ function drawRot(){
   host.querySelectorAll('.wtrack').forEach(function(r){ if (at[r.dataset.ty]) r.scrollLeft = at[r.dataset.ty]; });
 }
 
-/* ── pinned: the links and the cards you keep to hand ───────────────────
-   A whole card (`pin` on the arena), or a single link (`pin` on the link,
-   the moment it was pinned), as the desk's Pinned arrangement: the links
-   first, in the order chosen above them, each with its own stamp and the days since, so
-   the round can be walked the way the rotation is; then the cards. A pinned
-   link stands only here; the cards leave it out. */
+/* ── pinned: the links you keep to hand ─────────────────────────────────
+   A single link (`pin` on the link, the moment it was pinned), as the desk's
+   Pinned arrangement: in the order chosen above them, each with its own stamp
+   and the days since, so the round can be walked the way the rotation is. A
+   pinned link stands only here; the cards leave it out. A whole card was
+   pinned here too until Mark took that away on 2026-10-11. */
 
 function pinnedOf(){
-  var arenas = liveList(), types = (data.semaphore && data.semaphore.types) || [];
-  var rank = {}; types.forEach(function(t, i){ rank[t.id] = i; });
-  function ord(a){ return a.typeId in rank ? rank[a.typeId] : types.length; }
-  var cards = arenas.filter(function(a){ return !!a.pin; }).sort(function(x,y){
-    return ord(x) - ord(y) || bkPos(x) - bkPos(y) || String(x.name).localeCompare(String(y.name)); });
+  var arenas = liveList();
   var links = [];
   arenas.forEach(function(a){
     [['brokerage', (a.brokerage || {}).links || []], ['arena', a.links || []]].forEach(function(p){
@@ -2335,7 +2321,7 @@ function pinnedOf(){
     var dx = since(x), dy = since(y);
     return dx === dy ? az(x, y) : dy > dx ? 1 : -1;
   } : az);
-  return { cards:cards, links:links };
+  return { links:links };
 }
 var pinsBy = 'az';
 try { if (localStorage.getItem('pocket.pinsBy') === 'days') pinsBy = 'days'; } catch(e){}
@@ -2348,22 +2334,14 @@ function drawPins(){
     return;
   }
   var p = pinnedOf();
-  if (!p.cards.length && !p.links.length){
+  if (!p.links.length){
     host.appendChild(empty('Nothing pinned yet',
-      'Tap the diamond in a card’s head to keep the whole card here, ' +
-      'or the diamond beside one of its links to keep just that link.'));
+      'Tap the diamond beside one of a card’s links to keep it here.'));
     return;
   }
   var hd = el('div', 'whead');
-  var bits = [];
-  if (p.cards.length) bits.push([p.cards.length, p.cards.length === 1 ? ' card' : ' cards']);
-  if (p.links.length) bits.push([p.links.length, p.links.length === 1 ? ' link' : ' links']);
-  bits.forEach(function(b, i){
-    if (i) hd.appendChild(document.createTextNode(' and '));
-    hd.appendChild(el('b', '', String(b[0])));
-    hd.appendChild(document.createTextNode(b[1]));
-  });
-  hd.appendChild(document.createTextNode(' kept to hand.'));
+  hd.appendChild(el('b', '', String(p.links.length)));
+  hd.appendChild(document.createTextNode((p.links.length === 1 ? ' link' : ' links') + ' kept to hand.'));
   host.appendChild(hd);
 
   if (p.links.length > 1){
@@ -2411,7 +2389,6 @@ function drawPins(){
     });
     host.appendChild(box);
   }
-  p.cards.forEach(function(a){ host.appendChild(wallCard(a, scoreOf(a), 'lead')); });
 }
 
 /* ── the leads ──────────────────────────────────────────────────────── */
@@ -3306,19 +3283,14 @@ function openArena(a, st){
       .filter(Boolean).join('  ·  ');
     b.appendChild(el('p', 'sub', sub || ' '));
 
-    /* the card's two switches, spelled out here where there is room */
+    /* the card's ring, spelled out here where there is room */
     var sw = el('div', 'switches');
-    var sPin = el('button', 'switch' + (a.pin ? ' on' : ''));
-    sPin.appendChild(el('span', 'pin' + (a.pin ? ' on' : '')).appendChild(el('i')).parentNode);
-    sPin.appendChild(document.createTextNode(a.pin ? 'Pinned' : 'Pin card'));
-    sPin.addEventListener('click', function(){ shut(); pinArena(a); });
-    sw.appendChild(sPin);
     var sAsk = el('button', 'switch' + (a.askAt ? ' on' : ''));
     sAsk.appendChild(el('span', 'wask' + (a.askAt ? ' on' : '')).appendChild(el('i')).parentNode);
     sAsk.appendChild(document.createTextNode(a.askAt ? 'Agent asked' : 'Ask the nightly agent'));
     sAsk.addEventListener('click', function(){ shut(); askAgent(a); });
     sw.appendChild(sAsk);
-    /* The third is the desk's "Wait for…", offered where the desk offers it:
+    /* Beside it, the desk's "Wait for…", offered where the desk offers it:
        on a card with a date still to come, or one already waiting. The
        dates open in the panel below rather than as a guess at the next
        one: with a deadline a fortnight out, the wait wanted is usually
