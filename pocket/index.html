@@ -124,6 +124,8 @@ a{color:inherit}
 .wtrack::-webkit-scrollbar{display:none}
 .wtrack>.wcard{flex:0 0 86%;margin:0;scroll-snap-align:start}
 .wtrow .wrest{margin-top:8px}
+/* back from waiting: a row of its own over the types, in the todo green */
+.wtrow.wwoke{--tone:var(--todo)}
 
 /* ── the round: walk the cards one at a time ────────────────────────── */
 
@@ -1695,14 +1697,19 @@ function onLink(aid, lid, fn){
 /* Stamping an arena, as the desk's sweep: the day, with a same-day stamp
    taking itself back; and the moment, which is what marks the nightly
    agent's findings seen. */
-var SWEEP_KEYS = ['sweptAt', 'sweptPrev', 'seenAt', 'seenPrev'];
+var SWEEP_KEYS = ['sweptAt', 'sweptPrev', 'seenAt', 'seenPrev', 'hold', 'holdPrev'];
 function stampArena(a){
   var t = isoToday(), was = keep(a, SWEEP_KEYS), off = (a.sweptAt === t);
   var now = new Date().toISOString();
   commit('semaphore', onArena(a.id, function(x){
-      if (x.sweptAt === t){ x.sweptAt = x.sweptPrev || null; x.seenAt = x.seenPrev || null; }
+      /* as on the desk (2026-10-11): stamping a card back from waiting ends
+         its wait, kept aside for the day so taking the stamp off gives it back */
+      if (x.sweptAt === t){ x.sweptAt = x.sweptPrev || null; x.seenAt = x.seenPrev || null;
+             if (x.holdPrev){ x.hold = x.holdPrev; reconcile(x); } delete x.holdPrev; }
       else { x.sweptPrev = x.sweptAt || null; x.sweptAt = t;
-             x.seenPrev = x.seenAt || null; x.seenAt = now; }
+             x.seenPrev = x.seenAt || null; x.seenAt = now;
+             var h = holdOf(x);
+             if (h && !h.asleep){ x.holdPrev = x.hold; x.hold = null; } else delete x.holdPrev; }
     }),
     off ? 'Stamp taken off ' + (a.name || 'arena') : (a.name || 'Arena') + ' stamped',
     onArena(a.id, function(x){ putBack(x, was); }));
@@ -1862,7 +1869,7 @@ function saying(st){
   if (st.state === 'held' && st.hold)
     return 'Waiting for ' + plainOf(st.hold.label || 'its date') + ' · ' + shortDay(st.hold.dt.start);
   if (st.state === 'wake' && st.hold)
-    return 'Waiting for ' + plainOf(st.hold.label || 'its date') + ' · ' +
+    return 'Back for ' + plainOf(st.hold.label || 'its date') + ' · ' +
            (st.hold.near <= 0 ? 'today' : 'in ' + st.hold.near + ' d');
   if (st.note && st.note.text) return plainOf(st.note.text);
   if (st.state === 'sweep') return 'A call window is open';
@@ -2097,10 +2104,16 @@ function openArenaById(id){
    split, asked of one type at a time — with a card stamped today towards the
    far end of its row and, past those, the cards asleep until a date of their
    own (2026-10-11), as on the desk. An arena whose type is gone stands in a
-   last row of its own. */
+   last row of its own. A card back from waiting is in none of these: it
+   stands in a row of its own over them all (wokeRow). */
+function wokeRow(){
+  return liveList().map(function(a){ return { a:a, s:scoreOf(a) }; })
+    .filter(function(x){ return x.s && x.s.state === 'wake'; })
+    .sort(function(x,y){ return y.s.score - x.s.score || String(x.a.name).localeCompare(String(y.a.name)); });
+}
 function typeRows(){
   function asleep(x){ return !!x.s && x.s.state === 'held'; }
-  var live = liveList().filter(function(a){ return !!scoreOf(a); });
+  var live = liveList().filter(function(a){ var s = scoreOf(a); return !!s && s.state !== 'wake'; });
   var types = (data.semaphore && data.semaphore.types) || [];
   var rows = [];
   types.concat([null]).forEach(function(t){
@@ -2125,8 +2138,8 @@ function drawRot(){
   var at = {};
   host.querySelectorAll('.wtrack').forEach(function(r){ at[r.dataset.ty] = r.scrollLeft; });
   host.textContent = '';
-  var rows = typeRows();
-  if (!rows.length){ rotList = [];
+  var rows = typeRows(), woke = wokeRow();
+  if (!rows.length && !woke.length){ rotList = [];
     host.appendChild(empty('Nothing in rotation',
       data.semaphore ? 'Every arena is frozen, or none has been added yet.'
                      : 'Pull down to fetch from the cloud.'));
@@ -2143,6 +2156,8 @@ function drawRot(){
     if (!more) break;
   }
   rows.forEach(function(r){ stamped = stamped.concat(r.stamped); waiting = waiting.concat(r.waiting); });
+  /* the cards back from waiting open the walk, as their row opens the tab */
+  todo = woke.concat(todo);
   rotList = todo.concat(stamped, waiting);
   var n = todo.filter(function(x){ return asking(x.s); }).length;
   badge('rot', n);
@@ -2168,6 +2183,18 @@ function drawRot(){
     host.appendChild(empty('All looked at today', 'Every card has been stamped. Come back tomorrow.'));
   }
 
+  if (woke.length){
+    var ws = el('section', 'wtrow wwoke');
+    var wh = el('div', 'wthead');
+    wh.appendChild(el('span', 'wtn', 'Back from waiting'));
+    wh.appendChild(el('span', 'wtc', woke.length + (woke.length === 1 ? ' card' : ' cards') + ' · stamp to send back'));
+    ws.appendChild(wh);
+    var wt = el('div', 'wtrack');
+    wt.dataset.ty = '__woke';
+    woke.forEach(function(x){ wt.appendChild(wallCard(x.a, x.s, 'lead')); });
+    ws.appendChild(wt);
+    host.appendChild(ws);
+  }
   rows.forEach(function(r){
     var tone = r.t ? toneHex(r.t.color) : '';
     var sec = el('section', 'wtrow');
@@ -3084,7 +3111,7 @@ function leadForm(panel, arenaOf){
    one being swept, and that one is near the top of its type. An arena the maths cannot score still comes,
    at the very end, so a lead is never kept from its arena. */
 function newLead(){
-  var arenas = [];
+  var arenas = wokeRow().map(function(x){ return x.a; });
   typeRows().forEach(function(r){
     arenas = arenas.concat(r.todo.concat(r.stamped, r.waiting).map(function(x){ return x.a; }), r.empty);
   });

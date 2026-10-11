@@ -399,6 +399,9 @@
   padding:2px 2px 12px 12px;border-left:4px solid var(--tone,var(--line2));scroll-snap-type:x proximity}
 #pane-semaphore .wtrack>.wcard{flex:0 0 302px;scroll-snap-align:start}
 #pane-semaphore .wtrow .wrest{margin-top:4px}
+/* the row of cards back from waiting, over all the others, in the green a
+   wait that has come due already wears on its strip */
+#pane-semaphore .wtrow.wwoke{--tone:var(--todo)}
 #pane-semaphore .wgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(282px,1fr));gap:14px;align-items:start}
 /* ───────── a card has two sides ─────────
    The front is what the arena is: its state, its notes, its tools. The back is

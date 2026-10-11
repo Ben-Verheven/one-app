@@ -2595,7 +2595,7 @@ function holdStripHTML(a,hold){
   const when=hold.asleep?shortDay(hold.dt.start):(hold.near<=0?'today':'in '+hold.near+'d');
   return '<div class="strip'+(hold.asleep?' asleep':' due')+'"><span class="sg"></span>'+
     '<button class="stx" data-act="waitPick" data-id="'+a.id+'" '+
-      'title="Wait for a different date instead">Waiting for '+esc(hold.label)+'</button>'+
+      'title="Wait for a different date instead">'+(hold.asleep?'Waiting for ':'Back for ')+esc(hold.label)+'</button>'+
     '<span class="swhen">'+esc(when)+'</span>'+
     '<button class="sdone" data-act="holdClear" data-id="'+a.id+'" '+
       'title="Stop waiting \u2014 back into the rotation" aria-label="Stop waiting">\u2713</button></div>';
@@ -3066,9 +3066,11 @@ function howHTML(){
       'lead from every arena, the three steps one under another, as the Ledger lists them.')+
     line('Wait for a date','Not a lead but the opposite: the card putting itself away rather than pursuing '+
       'anything. It sleeps until <b>three weeks</b> before its '+
-      'next dated thing, then wakes and climbs as the day comes; the night before it wakes, the nightly '+
-      'agent is asked to look it over, so it comes back up to date. Move that date and the wait moves with '+
-      'it; delete it, or let it pass, and the card is simply back in the rotation.')+
+      'next dated thing, faded at the far right of its row, then wakes and comes back in a row of its own '+
+      'at the top, <b>Back from waiting</b>; the night before it wakes, the nightly agent is asked to look '+
+      'it over, so it comes back up to date. Stamp it there and the wait is over and the card back in its '+
+      'own row. Move that date and the wait moves with it; delete it, or let it pass, and the card is '+
+      'simply back in the rotation.')+
     line('Pinned','A separate arrangement, and the only one you author. Click the diamond in a card\u2019s '+
       'head and the whole card is held under <b>Pinned</b>, its dates and leads with it; click the diamond '+
       'beside one of its links and just that link moves there, off every card, with a stamp of its own '+
@@ -3235,19 +3237,31 @@ function paintWall(){
      today goes towards the far right of its row, so the stamp visibly puts
      it away. Past the stamped ones, at the very end, stand the cards asleep
      until a date of their own (Mark, 2026-10-11: those waiting always on the
-     far right); one whose date has come within reach is awake and asking
-     again, and takes its place in the rotation like any other. */
+     far right). One whose date has come within reach is awake and leaves its
+     row for a row of its own over all the others, "Back from waiting", which
+     is there only while it holds a card (Mark, 2026-10-11); stamping a card
+     there ends its wait (see the sweep) and sends it back to its own row. */
   const ask=RUNG.asking[0];
   const today=todayISO();
-  const rows=S.types.map(t=>[t,vis.filter(a=>a.typeId===t.id)])
-    .concat([[null,vis.filter(a=>!typeOf(a))]]).filter(r=>r[1].length);
+  const woke=vis.filter(a=>standing(a).state==='wake');
+  const rest=vis.filter(a=>!woke.includes(a));
+  const rows=S.types.map(t=>[t,rest.filter(a=>a.typeId===t.id)])
+    .concat([[null,rest.filter(a=>!typeOf(a))]]).filter(r=>r[1].length);
   const n=vis.filter(a=>standing(a).score>=ask).length;
   let h='<div class="whead">'+sortBtns+
     (n?'<span class="wsay"><b>'+n+'</b> '+(n===1?'card is':'cards are')+
       ' asking for something.</span>':'')+howBtn+
     '<button class="howbtn" data-act="resetStamps" title="Take the stamp off every card in the rotation">Reset all stamps</button>'+
     '</div>'+howHTML();
-  let any=false;
+  let any=!!woke.length;
+  if(woke.length){
+    const back=woke.map(a=>({a,s:standing(a)})).sort((x,y)=>y.s.score-x.s.score||x.a.name.localeCompare(y.a.name));
+    h+='<section class="wtrow wwoke">'+
+      '<div class="wthead"><span class="wtn">Back from waiting</span>'+
+        '<span class="wtc">'+back.length+' card'+(back.length===1?'':'s')+' \u00B7 stamp one to send it back to its row</span></div>'+
+      '<div class="wtrack" data-ty="__woke">'+back.map(x=>wallCard(x.a,x.s,'lead')).join('')+'</div>'+
+    '</section>';
+  }
   for(const[t,arenas]of rows){
     const{list,empty}=rotationSplit(arenas);
     const asleep=x=>x.s.state==='held';
@@ -3917,9 +3931,16 @@ document.addEventListener('click',e=>{
       /* the sweep is also what marks the agent's findings seen (see isFresh),
          to the moment rather than the day, so a finding accepted after this
          morning's sweep is still new; the same-day undo gives the marks back */
-      if(ar.sweptAt===t){ar.sweptAt=ar.sweptPrev||null;ar.seenAt=ar.seenPrev||null;}   /* same-day undo */
+      /* Stamping a card that is back from waiting is the end of that wait:
+         its date has come within reach and the card has now been looked at,
+         so it goes back to its own row (Mark, 2026-10-11). The wait is kept
+         aside for the day, so taking the stamp off puts it back as well. */
+      if(ar.sweptAt===t){ar.sweptAt=ar.sweptPrev||null;ar.seenAt=ar.seenPrev||null;   /* same-day undo */
+           if(ar.holdPrev){ar.hold=ar.holdPrev;reconcile(ar);}delete ar.holdPrev;}
       else{ar.sweptPrev=ar.sweptAt||null;ar.sweptAt=t;
-           ar.seenPrev=ar.seenAt||null;ar.seenAt=new Date().toISOString();}
+           ar.seenPrev=ar.seenAt||null;ar.seenAt=new Date().toISOString();
+           const h=holdOf(ar);
+           if(h&&!h.asleep){ar.holdPrev=ar.hold;ar.hold=null;}else delete ar.holdPrev;}
       restack(ar.id);break;}
     case 'flip':{
       let want;

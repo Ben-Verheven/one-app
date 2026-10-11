@@ -35,7 +35,7 @@ Every change is undoable from the toast; undo puts back exactly the fields it to
 | arena stamp | `sweptAt`, `sweptPrev`, `seenAt`, `seenPrev` | day; the moment (ISO) for seen; same-day stamp takes itself back | ✓ |
 | arena pin | `pin` | `true`/`false` | ✓ |
 | arena ask | `askAt` | ISO moment / `null` | ✓ |
-| arena wait | `hold` | `{dateId}`, one of the arena's own dates / `null` to stop waiting | ✓ |
+| arena wait | `hold`, `holdPrev` | `{dateId}`, one of the arena's own dates / `null` to stop waiting; a stamp on a card back from waiting moves `hold` to `holdPrev` for the day (the desk's own sweep), and the same-day undo moves it back | ✓ |
 | lead score | `score` | `1`…`5`; the key deleted for no score | ✓ |
 | brokerage link pin | `brokerage.links[].pin` | ISO moment when pinned; key deleted when unpinned | ✓ |
 | brokerage link stamp | `stampedAt`, `stampPrev` | day; same-day stamp → `stampPrev`, which is then deleted | ✓ |
