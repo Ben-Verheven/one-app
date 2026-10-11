@@ -3689,9 +3689,20 @@ function mergeTypes(from,to){
    line between two arenas to put an arena there, the type itself outlined to
    merge into it or to take an arena at its end. Near the edge of the
    box the list scrolls. Escape puts everything back. */
-let tdDrag=null;
+let tdDrag=null,tdSwallow=false;
+/* A drag let go of outside the box ends in a click on the dimmed ground
+   around it, which shuts the box — found 2026-10-11 testing Escape mid-drag.
+   The click a drag makes is not wanted anywhere, so it is taken here, as the
+   links' own reordering takes theirs (lkSwallow). It is waited for however
+   long the button is held after Escape has dropped the drag, and the next
+   press clears the wait if no click came. */
+document.addEventListener('click',e=>{
+  if(!tdSwallow)return;
+  tdSwallow=false;e.preventDefault();e.stopPropagation();
+},true);
 document.addEventListener('pointerdown',e=>{
   if(e.button!==0||tdDrag)return;
+  tdSwallow=false;
   const src=e.target.closest&&e.target.closest('#tylist [data-tydrag]');
   if(!src)return;
   const kind=src.dataset.tydrag;
@@ -3706,7 +3717,7 @@ document.addEventListener('pointerdown',e=>{
 function tdTouch(e){if(tdDrag&&(tdDrag.on||!tdDrag.hold))e.preventDefault();}
 function tdLift(){
   const D=tdDrag;if(!D)return;
-  D.on=true;
+  D.on=true;tdSwallow=true;
   try{D.src.setPointerCapture(D.pid);}catch(err){}
   const face=D.kind==='type'?D.src.closest('.tyline'):D.src.closest('.tyrow');
   const r=face.getBoundingClientRect();

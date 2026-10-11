@@ -910,12 +910,12 @@ the two lists at the foot of this file is where those names gather.
 #freezer       semaphore.css:1156                 semaphore.js:439 x7   semaphore.view.js:5
 #search        semaphore.css:96 x3                semaphore.js:441 x12   atlas.js:604 x6   callboard.view.js:5 x4
 #searchBtn     semaphore.css:100                  semaphore.js:472 x2   semaphore.view.js:5
-#tip           semaphore.css:237 x2               semaphore.view.js:5   semaphore.js:3833
-#typesModal    semaphore.css:1553                 semaphore.js:3720 x3   semaphore.view.js:5
+#tip           semaphore.css:237 x2               semaphore.view.js:5   semaphore.js:3844
+#typesModal    semaphore.css:1553                 semaphore.js:3731 x3   semaphore.view.js:5
 #wall          semaphore.css:291                  semaphore.js:1510 x17   semaphore.view.js:5
 .addbtn        semaphore.css:1346 x2              semaphore.js:1566 x3
 .asleep        semaphore.css:1133                 semaphore.js:2610
-.atend         semaphore.css:457                  semaphore.js:4355
+.atend         semaphore.css:457                  semaphore.js:4366
 .axis          semaphore.css:107 x4               semaphore.js:706   callboard.js:508
 .back          semaphore.css:493 x4               semaphore.js:440 x21   ledger.js:2210 x15   ledger.view.js:5 x3
 .bk            semaphore.css:201                  semaphore.js:561 x2
@@ -981,12 +981,12 @@ the two lists at the foot of this file is where those names gather.
 .dpw           semaphore.css:1394                 semaphore.js:841
 .dpwas         semaphore.css:1400                 semaphore.js:806 x3
 .dpwhen        semaphore.css:1398                 semaphore.js:805 x2
-.drop-above    semaphore.css:1574                 semaphore.js:3767 x2
-.drop-after    semaphore.css:1584 x3              ledger.js:11117 x3   semaphore.js:3766
-.drop-before   semaphore.css:1583 x3              ledger.js:11117 x3   semaphore.js:3766
-.drop-below    semaphore.css:1575                 semaphore.js:3767 x2
-.drop-into     semaphore.css:1585                 semaphore.js:3766
-.drop-merge    semaphore.css:1585                 semaphore.js:3766
+.drop-above    semaphore.css:1574                 semaphore.js:3778 x2
+.drop-after    semaphore.css:1584 x3              ledger.js:11117 x3   semaphore.js:3777
+.drop-before   semaphore.css:1583 x3              ledger.js:11117 x3   semaphore.js:3777
+.drop-below    semaphore.css:1575                 semaphore.js:3778 x2
+.drop-into     semaphore.css:1585                 semaphore.js:3777
+.drop-merge    semaphore.css:1585                 semaphore.js:3777
 .dsite         semaphore.css:1513 x3              semaphore.js:1440
 .due           semaphore.css:1131 x2              ledger.js:5402 x11   semaphore.js:2418 x7
 .duemk         semaphore.css:154 x2               semaphore.js:656
@@ -1074,10 +1074,10 @@ the two lists at the foot of this file is where those names gather.
 .lgrid         semaphore.css:721                  semaphore.js:2710
 .lhead         semaphore.css:755 x7               semaphore.js:2503
 .lk            semaphore.css:1337 x5              semaphore.js:1558
-.lkdragging    semaphore.css:641 x2               semaphore.js:4401 x3
+.lkdragging    semaphore.css:641 x2               semaphore.js:4412 x3
 .lkform        semaphore.css:362 x6               semaphore.js:2138 x3
 .lkind         semaphore.css:746 x5               semaphore.js:2322
-.lkup          semaphore.css:637 x5               semaphore.js:4402 x3
+.lkup          semaphore.css:637 x5               semaphore.js:4413 x3
 .lla           semaphore.css:881 x8               semaphore.js:2214 x2
 .llinks        semaphore.css:879                  semaphore.js:2457 x2
 .llist         semaphore.css:722                  semaphore.js:2730
@@ -1114,7 +1114,7 @@ the two lists at the foot of this file is where those names gather.
 .lx            semaphore.css:367 x5               semaphore.js:2141 x5
 .mail          semaphore.css:891 x2               semaphore.js:2214
 .mark          semaphore.css:64 x6                semaphore.js:1463 x3   bridge.js:457 x2   semaphore.view.js:5 x2
-.mbox          semaphore.css:237 x11              semaphore.view.js:5 x3   semaphore.js:3720 x2
+.mbox          semaphore.css:237 x11              semaphore.view.js:5 x3   semaphore.js:3731 x2
 .mbox-ask      semaphore.css:1539 x2              semaphore.view.js:5
 .mbtns         semaphore.css:1535                 semaphore.view.js:5 x3
 .mcell         semaphore.css:108 x2               semaphore.js:509
@@ -1183,14 +1183,14 @@ the two lists at the foot of this file is where those names gather.
 .tyarenas      semaphore.css:1566                 semaphore.js:3640 x2
 .tyblock       semaphore.css:1554 x7              semaphore.js:3648 x6
 .tycol         semaphore.css:771                  semaphore.js:2375
-.tyghost       semaphore.css:1578 x2              semaphore.js:3715
+.tyghost       semaphore.css:1578 x2              semaphore.js:3726
 .tygrip        semaphore.css:1557 x3              semaphore.js:3642 x3
 .tyline        semaphore.css:1543 x9              semaphore.js:3649 x3
 .tylost        semaphore.css:1565                 semaphore.js:3664
 .tyn           semaphore.css:1560 x3              semaphore.js:3654
 .tyrn          semaphore.css:1572                 semaphore.js:3643
 .tyrow         semaphore.css:1567 x7              semaphore.js:3641 x7
-.tysrc         semaphore.css:1577                 semaphore.js:3721 x3
+.tysrc         semaphore.css:1577                 semaphore.js:3732 x3
 .unc           semaphore.css:212 x10              semaphore.js:564 x7
 .uncertain     semaphore.css:1318                 semaphore.js:262 x18
 .w-central     semaphore.css:152                  —
@@ -1520,7 +1520,7 @@ the two lists at the foot of this file is where those names gather.
 ```
 #nt-search       notes.css:37                       notes.js:1412 x5   notes.view.js:15
 #nt-taginput     notes.css:834 x3                   notes.js:3068 x6
-.armed           notes.css:852 x3                   semaphore.js:4003 x3   notes.js:3036 x3
+.armed           notes.css:852 x3                   semaphore.js:4014 x3   notes.js:3036 x3
 .dragging        notes.css:143 x16                  ledger.js:673 x10   atlas.js:2184 x2   notes.js:851 x2
 .nt-arrange      notes.css:487 x6                   notes.js:1212
 .nt-arrange-say  notes.css:499                      notes.js:1226
