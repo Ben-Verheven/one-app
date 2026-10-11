@@ -385,13 +385,39 @@ a.wlink:active .wd,a.wlink:active::before{color:var(--brok)}
 .ln .t .ar{display:block;margin-top:2px;font:italic 13px/1.3 var(--body);color:var(--lquiet)}
 .ln .t .soon{font:11px var(--mono);font-style:normal;color:var(--today)}
 button.ln:active{background:rgba(216,205,184,.06)}
-.ln.has{gap:0;padding:0}
-.ln .lgo{flex:1;min-width:0;display:flex;align-items:baseline;gap:9px;padding:7px 0;color:inherit;text-decoration:none}
+/* A brokerage event's row, as the desk's: the event, its date and its arena,
+   pressed to open the arena as the desk's name is; the stamp beside them;
+   and under them the event's own website, or the way to give it one, and
+   the cross that takes the event off the board. The website is written out
+   whole, wrapped rather than cut, as Mark asked of the desk (2026-10-09). */
+.ln.has{flex-wrap:wrap;align-items:center;gap:0;padding:0}
+.ln .lgo{flex:1;min-width:0;display:flex;align-items:baseline;gap:9px;padding:7px 0;text-align:left}
 .ln .lgo:active{background:rgba(216,205,184,.06)}
-.ln .lar{flex:0 0 40px;align-self:stretch;min-height:44px;display:flex;align-items:center;justify-content:center;
-  font:20px/1 var(--body);color:var(--faint)}
-.ln .lar:active{color:var(--ink)}
-.ln .t .host{display:block;margin-top:2px;font:11px/1.3 var(--mono);color:var(--brok);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cufoot{flex:0 0 100%;display:flex;align-items:center;gap:6px;margin-top:-8px;padding-left:102px}
+.cusite{flex:1 1 auto;min-width:0;min-height:44px;display:flex;align-items:center;
+  font:11px/1.3 var(--mono);color:var(--brok);text-decoration:none;overflow-wrap:anywhere}
+.cusite.none{flex:0 0 auto;margin-right:auto}
+.cusite.none span{padding:7px 11px;border:1px dashed var(--line2);border-radius:var(--radius);
+  font:italic 13px/1 var(--body);color:var(--key2)}
+.cudel{flex:0 0 44px;width:44px;min-height:44px;text-align:center;font-size:14px;color:var(--muted)}
+.cudel:active,.cusite:active{color:var(--ink)}
+/* Limbo: the brokerage events that are over, kept until Mark takes each off
+   by hand (2026-10-11), folded into one line at the top */
+.culimbo{display:flex;align-items:center;gap:8px;width:calc(100% - 32px);min-height:44px;margin:12px 16px 0;padding:0 13px;
+  border:1px dashed var(--line2);border-radius:var(--radius);text-align:left;font:italic 14px/1.3 var(--body);color:var(--muted)}
+.culimbo .cap{font-style:normal;color:var(--ink)}
+.culimbo b{font:11px var(--mono);font-style:normal;color:var(--today)}
+.culimbo .lw{margin-left:auto;font:600 9px/1 var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--key2)}
+.culimbo:active{background:rgba(216,205,184,.06)}
+.evts.lim{padding-bottom:6px;border-bottom:1px solid var(--line)}
+/* the arena's links, offered as the new website, as the desk's box lists them */
+#sheet .cupick{display:block;width:100%;min-height:44px;padding:8px 12px;text-align:left;
+  border:1px solid var(--line);border-radius:var(--radius);background:var(--field);font:15px/1.3 var(--body);color:var(--ink)}
+#sheet .cupick+.cupick{margin-top:6px}
+#sheet .cupick i{display:block;font:11px/1.3 var(--mono);font-style:normal;color:var(--muted);overflow-wrap:anywhere}
+#sheet .cupick:active{background:rgba(42,38,32,.08)}
+#sheet input[type="date"]+input[type="date"]{margin-top:6px}
+#sheet .seg button:disabled{color:var(--line2);cursor:default}
 .cuhint{margin:8px 16px 0;font:italic 13px/1.45 var(--body);color:var(--faint)}
 .cuhint b{font:600 11px var(--mono);font-style:normal;color:var(--today)}
 .mark{position:relative;z-index:2;display:flex;align-items:center;gap:9px;margin:8px 0;color:var(--faint)}
@@ -1844,14 +1870,95 @@ function pinLink(a, lk){
 }
 
 /* a pinned link's own stamp: the day you last went through it */
-function stampLink(a, lk){
-  var t = isoToday(), was = keep(lk, ['stampedAt', 'stampPrev']), off = lk.stampedAt === t;
-  commit('semaphore', onLink(a.id, lk.id, function(k){
-      if (k.stampedAt === t){ k.stampedAt = k.stampPrev || null; delete k.stampPrev; }
-      else { k.stampPrev = k.stampedAt || null; k.stampedAt = t; }
-    }),
-    off ? 'Stamp taken off' : linkLabel(lk) + ' stamped',
-    onLink(a.id, lk.id, function(k){ putBack(k, was); }));
+function stampLink(a, lk){ stampSite(a.id, lk.id, linkLabel(lk)); }
+
+/* One stamp to a site, as on the desk (Mark, 2026-10-09). An event and a
+   pinned link are often one site — the platform pinned for the round is also
+   the page of the event it hosts — and two stamps on one site would disagree
+   by the next morning. So a press on either stamps every event and link with
+   that address, a same-day press takes it back on all of them, and each row
+   reads the newest stamp among them. An event with no website stands alone.
+   The desk's stampMates and toggleStamp, under names script 1 does not hold. */
+function siteKey(u){
+  return String(u || '').trim().toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '')
+    .replace(/[#?].*$/, '').replace(/\/+$/, '');
+}
+function siteRows(a){
+  return (a.dates || []).concat(((a.brokerage && a.brokerage.links) || []), a.links || []);
+}
+function findItem(blob, aid, id){
+  var hit = null;
+  ((blob && blob.arenas) || []).forEach(function(a){
+    if (a && a.id === aid) siteRows(a).forEach(function(m){ if (!hit && m && m.id === id) hit = m; });
+  });
+  return hit;
+}
+function siteMates(blob, aid, h){
+  var k = h.url && siteKey(h.url), out = [{ aid:aid, m:h }];
+  if (!k) return out;
+  ((blob && blob.arenas) || []).forEach(function(a){
+    if (a) siteRows(a).forEach(function(m){
+      if (m && m !== h && m.url && siteKey(m.url) === k) out.push({ aid:a.id, m:m });
+    });
+  });
+  return out;
+}
+function siteStamp(h){
+  var s = null;
+  siteMates(data.semaphore, null, h).forEach(function(x){
+    if (x.m.stampedAt && (!s || x.m.stampedAt > s)) s = x.m.stampedAt; });
+  return s;
+}
+function stampSite(aid, id, said){
+  var h = findItem(data.semaphore, aid, id);
+  if (!h) return;
+  var t = isoToday();
+  var was = siteMates(data.semaphore, aid, h).map(function(x){
+    return { aid:x.aid, id:x.m.id, k:keep(x.m, ['stampedAt', 'stampPrev']) }; });
+  var off = was.some(function(w){ return w.k.stampedAt === t; });
+  commit('semaphore', function(d){
+      var hh = findItem(d, aid, id);
+      if (!hh) return;
+      var ms = siteMates(d, aid, hh).map(function(x){ return x.m; });
+      if (ms.some(function(m){ return m.stampedAt === t; }))
+        ms.forEach(function(m){ if (m.stampedAt === t){ m.stampedAt = m.stampPrev || null; delete m.stampPrev; } });
+      else ms.forEach(function(m){ m.stampPrev = m.stampedAt || null; m.stampedAt = t; });
+    },
+    off ? 'Stamp taken off' : said + ' stamped',
+    function(d){ was.forEach(function(w){ var m = findItem(d, w.aid, w.id); if (m) putBack(m, w.k); }); });
+}
+
+/* A brokerage event added, given its website, or removed from Coming up,
+   as the desk's Coming up does (Mark asked for the same here, 2026-10-11).
+   There is one record of an event, a date on its arena, and every view on
+   the desk and here reads that, so removing it removes it from the whole
+   app; undo puts it back in its place, with the wait it may have ended. */
+function onDate(aid, did, fn){
+  return onArena(aid, function(x){ (x.dates || []).forEach(function(y){ if (y.id === did) fn(y); }); });
+}
+function setEventUrl(a, d, url){
+  var was = keep(d, ['url']);
+  commit('semaphore', onDate(a.id, d.id, function(y){ y.url = url; }), 'Website added',
+    onDate(a.id, d.id, function(y){ putBack(y, was); }));
+}
+function addEvent(aid, ev){
+  commit('semaphore', onArena(aid, function(x){
+      if (!Array.isArray(x.dates)) x.dates = [];
+      x.dates.push(JSON.parse(JSON.stringify(ev))); reconcile(x); }),
+    '\u201C' + ev.label + '\u201D added',
+    onArena(aid, function(x){ x.dates = (x.dates || []).filter(function(y){ return y.id !== ev.id; }); }));
+}
+function dropEvent(a, d){
+  var at = (a.dates || []).indexOf(d), copy = JSON.stringify(d), was = keep(a, ['hold']);
+  commit('semaphore', onArena(a.id, function(x){
+      x.dates = (x.dates || []).filter(function(y){ return y.id !== d.id; }); reconcile(x); }),
+    '\u201C' + dateName(d) + '\u201D removed',
+    onArena(a.id, function(x){
+      if (!Array.isArray(x.dates)) x.dates = [];
+      if (!x.dates.some(function(y){ return y.id === d.id; }))
+        x.dates.splice(at < 0 ? x.dates.length : Math.min(at, x.dates.length), 0, JSON.parse(copy));
+      putBack(x, was);
+    }));
 }
 
 /* a link or an email address on a lead, as the desk adds one */
@@ -2312,7 +2419,7 @@ function pinnedOf(){
      links stamped the same day. They replace the order of pinning. */
   function nm(x){ return plainOf((typeof linkName === 'function') ? linkName(x.lk) : linkLabel(x.lk)); }
   function az(x, y){ return nm(x).localeCompare(nm(y), undefined, { sensitivity:'base' }); }
-  function since(x){ return x.lk.stampedAt ? -daysTo(x.lk.stampedAt) : Infinity; }
+  function since(x){ var s = siteStamp(x.lk); return s ? -daysTo(s) : Infinity; }
   links.sort(pinsBy === 'days' ? function(x, y){
     var dx = since(x), dy = since(y);
     return dx === dy ? az(x, y) : dy > dx ? 1 : -1;
@@ -2356,7 +2463,7 @@ function drawPins(){
   if (p.links.length){
     var box = el('section', 'wpins');
     p.links.forEach(function(x){
-      var t = isoToday(), on = x.lk.stampedAt === t;
+      var t = isoToday(), st = siteStamp(x.lk), on = st === t;
       var row = el('div', 'wprow' + (on ? ' on' : ''));
       var tone = arenaTone(x.a);
       if (tone){ row.classList.add('toned'); row.style.setProperty('--tone', tone); }
@@ -2367,7 +2474,7 @@ function drawPins(){
          pinned link of the arena's own list is shown, and handled on the
          desk, so it keeps its days as plain text instead */
       var foot = el('div', 'wpfoot');
-      var d = x.lk.stampedAt ? Math.max(0, -daysTo(x.lk.stampedAt)) : null;
+      var d = st ? Math.max(0, -daysTo(st)) : null;
       if (x.scope === 'brokerage')
         foot.appendChild(tickBtn(on, on ? 'Stamped today — tap to undo'
           : (d === null ? 'Not stamped yet' : 'Stamped ' + d + ' days ago') + ' — stamp it once you have been through it',
@@ -2652,38 +2759,45 @@ function evDate(d){
 function comingUp(){
   var out = [], Sm = data.semaphore;
   if (!Sm || !Sm.arenas) return out;
-  var from = -14, to = 366;
   Sm.arenas.forEach(function(a){
     if (!a || a.frozenAt) return;
     (a.dates || []).forEach(function(d){
       if (!d || !d.start || d.gran === 'none') return;
-      if (!datesAll && d.kind === 'call') return;
+      var call = d.kind === 'call';
+      if (!datesAll && call) return;
       var s = daysTo(d.start), e = daysTo(d.end || d.start);
       /* A brokerage event that is over is no longer something to go to, and
-         Mark found the greyed ones crowding the top of the list (2026-10-10):
-         it leaves the day after it ends. One pencilled into a month, quarter,
-         half or year ends with that stretch, or "≈ Oct" would be gone on the
-         2nd. A call keeps its two weeks, since a deadline just passed still
-         says where the round stands. */
-      if (d.kind !== 'call' && /^(month|quarter|half|year)$/.test(d.gran)){
+         Mark found the greyed ones crowding the top of the list (2026-10-10).
+         Since 2026-10-11 it goes to Limbo the day after it ends and stays
+         there until he removes it, so nothing leaves the board unseen. One
+         pencilled into a month, quarter, half or year ends with that stretch,
+         or "≈ Oct" would be in Limbo on the 2nd. A call keeps its two weeks
+         in the list and then leaves it, since a deadline just passed still
+         says where the round stands and a call is not removed from here. */
+      if (!call && /^(month|quarter|half|year)$/.test(d.gran)){
         var p = String(d.start).split('-'), m = +p[1];
         var last = { month:m, quarter:Math.ceil(m / 3) * 3, half:m < 7 ? 6 : 12, year:12 }[d.gran];
         var lastDay = new Date(+p[0], last, 0);
         e = daysTo(p[0] + '-' + pad2(last) + '-' + pad2(lastDay.getDate()));
       }
-      if (e < (d.kind === 'call' ? from : 0) || s > to) return;
-      out.push({ d:d, a:a, s:s, e:e });
+      if ((call && e < -14) || s > 366) return;
+      out.push({ d:d, a:a, s:s, e:e, limbo:!call && e < 0 });
     });
   });
-  out.sort(function(x,y){ return x.d.start < y.d.start ? -1 : x.d.start > y.d.start ? 1
-    : (x.d.kind === 'call') - (y.d.kind === 'call'); });
+  /* what is over first, then by the day it starts, as the desk sorts: an
+     event that began last month and runs on is read with what is to come */
+  out.sort(function(x,y){ return (x.e >= 0) - (y.e >= 0)
+    || (x.d.start < y.d.start ? -1 : x.d.start > y.d.start ? 1 : 0)
+    || (x.d.kind === 'call') - (y.d.kind === 'call'); });
   return out;
 }
 
-/* The desk keeps an event's websites among its arena's brokerage links,
-   without saying which link belongs to which date. Pocket pairs them by
-   the words their titles share (and the year); an arena with a single
-   brokerage link gives that one. No fit → no link, the row opens the arena. */
+/* An event carries its own website since 2026-10-08 (`url`), and that is the
+   one shown, as on the desk. Before then its page sat among its arena's
+   brokerage links without saying which link belongs to which date, so when
+   one is added here the likeliest of them is offered first: paired by the
+   words their titles share (and the year); an arena with a single brokerage
+   link gives that one. */
 var EV_STOP = {};
 ('the and for with from event events brokerage day days info online calls call expected '
  + 'horizon europe european page public official tool platform matchmaking b2match networking')
@@ -2709,6 +2823,7 @@ function eventLink(d, a){
   return ls.length === 1 ? ls[0] : null;
 }
 
+var limboOpen = false;
 function drawDates(){
   var host = $('#v-dates');
   host.textContent = '';
@@ -2725,12 +2840,48 @@ function drawDates(){
   });
   host.appendChild(pills);
 
-  var list = comingUp();
+  var all = comingUp();
   badge('dates', 0);
-  if (list.length){
-    var hint = el('div', 'cuhint');
-    hint.appendChild(document.createTextNode('↗ opens the event\u2019s website, › its arena.'));
-    host.appendChild(hint);
+  var limbo = all.filter(function(x){ return x.limbo; });
+  var list = all.filter(function(x){ return !x.limbo; });
+  if (data.semaphore){
+    /* the desk's line over its list, counting what is still to come */
+    var brk = list.filter(function(x){ return x.d.kind !== 'call' && x.e >= 0; });
+    var bare = brk.filter(function(x){ return !x.d.url; }).length;
+    if (brk.length){
+      var hint = el('div', 'cuhint');
+      hint.appendChild(el('b', '', String(brk.length)));
+      hint.appendChild(document.createTextNode(' brokerage event' + (brk.length === 1 ? '' : 's') +
+        ' in the coming year' + (bare ? ', ' : '.')));
+      if (bare){
+        hint.appendChild(el('b', '', String(bare)));
+        hint.appendChild(document.createTextNode(' still without a website.'));
+      }
+      host.appendChild(hint);
+    }
+    var add = el('button', 'addlead', '+ Brokerage event');
+    add.addEventListener('click', newEvent);
+    host.appendChild(add);
+  }
+  if (limbo.length){
+    var lb = el('button', 'culimbo');
+    lb.setAttribute('aria-expanded', limboOpen ? 'true' : 'false');
+    lb.appendChild(el('span', 'cap', 'Limbo'));
+    lb.appendChild(el('b', '', String(limbo.length)));
+    lb.appendChild(document.createTextNode(limbo.length === 1 ? 'event is over' : 'events are over'));
+    lb.appendChild(el('span', 'lw', limboOpen ? 'Hide' : 'Show'));
+    lb.addEventListener('click', function(){ limboOpen = !limboOpen; drawDates(); });
+    host.appendChild(lb);
+    if (limboOpen){
+      var lw = el('div', 'evts lim');
+      var say = el('div', 'cuhint');
+      say.appendChild(document.createTextNode('Each waits here until you take it off with ✕.'));
+      lw.appendChild(say);
+      var ls = el('div', 'stream');
+      limbo.forEach(function(x){ ls.appendChild(eventRow(x)); });
+      lw.appendChild(ls);
+      host.appendChild(lw);
+    }
   }
   if (!list.length){
     host.appendChild(empty(datesAll ? 'Nothing dated' : 'No brokerage dates',
@@ -2749,7 +2900,7 @@ function drawDates(){
     wrap.appendChild(box);
   }
   list.forEach(function(x){
-    var d = x.d, ym = d.start.slice(0,7), past = x.e < 0;
+    var ym = x.d.start.slice(0,7), past = x.e < 0;
     if (ym < isoToday().slice(0,7)) ym = isoToday().slice(0,7);   /* running now */
     if (ym !== month){ month = ym; head(ym); }
     if (!past && !placed){
@@ -2757,49 +2908,232 @@ function drawDates(){
       m.appendChild(el('span', 'mlab', 'today'));
       box.appendChild(m); placed = true;
     }
-    var lk = d.kind === 'call' ? null : eventLink(d, x.a);
-    var r = el(lk ? 'div' : 'button', 'ln' + (d.kind === 'call' ? ' call' : ' brk') + (past ? ' past' : '')
-      + (lk ? ' has' : ''));
-    r.style.setProperty('--c', dateHue(d));
-    var row = r;
-    if (lk){
-      r = el('a', 'lgo');
-      r.href = lk.url; r.target = '_blank'; r.rel = 'noopener';
-      r.title = plainOf(lk.label) || lk.url;
-    }
-    r.appendChild(el('span', 'd' + (d.grade === 'fixed' ? '' : ' unc'),
-      (d.grade === 'fixed' ? '' : '≈ ') + evDate(d)));
-    var g = el('span', 'g');
-    g.appendChild(el('i', 'sw-' + (d.grade === 'fixed' ? 'fixed' : 'uncertain')));
-    r.appendChild(g);
-    var t = el('span', 't');
-    t.appendChild(document.createTextNode(dateName(d)));
-    if (d.kind === 'call'){
-      var role = (typeof ROLES !== 'undefined' && ROLES[d.role]) ? ROLES[d.role].short : d.role;
-      if (role) t.appendChild(el('span', 'stage', role));
-    }
-    var ar = el('span', 'ar', plainOf(x.a.name) || 'Arena');
-    if (d.kind !== 'call' && !past){
-      var when = x.s <= 0 ? 'on now' : x.s === 1 ? 'tomorrow'
-               : x.s <= 30 ? 'in ' + x.s + ' d' : '';
-      if (when){
-        ar.appendChild(document.createTextNode('  ·  '));
-        ar.appendChild(el('span', 'soon', when));
-      }
-    }
-    t.appendChild(ar);
-    if (lk) t.appendChild(el('span', 'host', '↗ ' + (linkHost(lk) || 'website')));
-    r.appendChild(t);
-    if (lk){
-      row.appendChild(r);
-      var go = el('button', 'lar', '›');
-      go.setAttribute('aria-label', 'Open arena');
-      go.addEventListener('click', function(){ openArenaById(x.a.id); });
-      row.appendChild(go);
-    } else r.addEventListener('click', function(){ openArenaById(x.a.id); });
-    box.appendChild(row);
+    box.appendChild(eventRow(x));
   });
   host.appendChild(wrap);
+}
+
+/* One row of Coming up. A call is read only, as on the desk, and opens its
+   arena. A brokerage event opens its arena too, and carries the desk's three
+   controls: its stamp with the days since, its website or "add website", and
+   the cross. Out of Limbo the cross asks first, since a thumb takes an event
+   still to come out of sight too easily; in Limbo, where every event waits
+   to be taken off, it removes at once, with the toast's undo. */
+function eventRow(x){
+  var d = x.d, call = d.kind === 'call', past = x.e < 0 && !x.limbo;
+  var row = el(call ? 'button' : 'div', 'ln' + (call ? ' call' : ' brk has') + (past ? ' past' : ''));
+  row.style.setProperty('--c', dateHue(d));
+  var r = call ? row : row.appendChild(el('button', 'lgo'));
+  r.appendChild(el('span', 'd' + (d.grade === 'fixed' ? '' : ' unc'),
+    (d.grade === 'fixed' ? '' : '≈ ') + evDate(d)));
+  var g = el('span', 'g');
+  g.appendChild(el('i', 'sw-' + (d.grade === 'fixed' ? 'fixed' : 'uncertain')));
+  r.appendChild(g);
+  var t = el('span', 't');
+  t.appendChild(document.createTextNode(dateName(d)));
+  if (call){
+    var role = (typeof ROLES !== 'undefined' && ROLES[d.role]) ? ROLES[d.role].short : d.role;
+    if (role) t.appendChild(el('span', 'stage', role));
+  }
+  var ar = el('span', 'ar', plainOf(x.a.name) || 'Arena');
+  if (!call && x.e >= 0){
+    var when = x.s <= 0 ? 'on now' : x.s === 1 ? 'tomorrow'
+             : x.s <= 30 ? 'in ' + x.s + ' d' : '';
+    if (when){
+      ar.appendChild(document.createTextNode('  ·  '));
+      ar.appendChild(el('span', 'soon', when));
+    }
+  }
+  t.appendChild(ar);
+  r.appendChild(t);
+  r.addEventListener('click', function(){ openArenaById(x.a.id); });
+  if (call) return row;
+
+  var st = siteStamp(d), on = st === isoToday(), n = st ? Math.max(0, -daysTo(st)) : null;
+  row.appendChild(tickBtn(on, on ? 'Stamped today — tap to undo'
+    : (n === null ? 'Not stamped yet' : 'Stamped ' + n + ' days ago') + ' — stamp it once you have been through it',
+    function(){ stampSite(x.a.id, d.id, dateName(d)); }, n));
+  var foot = row.appendChild(el('div', 'cufoot'));
+  if (d.url){
+    var lk = foot.appendChild(el('a', 'cusite', '↗ ' + (linkHost({ url:d.url }) || d.url)));
+    lk.href = d.url; lk.target = '_blank'; lk.rel = 'noopener';
+  } else {
+    var none = foot.appendChild(el('button', 'cusite none'));
+    none.appendChild(el('span', '', '+ add website'));
+    none.setAttribute('aria-label', 'This event has no website yet — add one');
+    none.addEventListener('click', function(){ addSite(x); });
+  }
+  var del = foot.appendChild(el('button', 'cudel', '✕'));
+  del.setAttribute('aria-label', 'Remove ' + dateName(d) + ' from the app');
+  del.addEventListener('click', function(){ if (x.limbo) dropEvent(x.a, d); else askDrop(x); });
+  return row;
+}
+
+function askDrop(x){
+  sheet(function(b, bar){
+    b.appendChild(el('h2', '', 'Remove this event?'));
+    b.appendChild(el('p', 'sub', dispDate(x.d) + ' · ' + (plainOf(x.a.name) || 'Arena')));
+    b.appendChild(el('p', '', '“' + dateName(x.d) + '” goes from the whole app: Coming up, ' +
+      'the board, the cards and the arena’s panel, on the desk as well.'));
+    var go = el('button', 'act', 'Remove');
+    go.addEventListener('click', function(){ shut(); dropEvent(x.a, x.d); });
+    b.appendChild(go);
+    closeBtn(bar);
+  });
+}
+
+/* An event's missing website, as the desk's "add website" opens the date's
+   own Website box: typed in, or picked from the arena's own links, where
+   most events already have their page. */
+function addSite(x){
+  var guess = eventLink(x.d, x.a);
+  sheet(function(b, bar){
+    b.appendChild(el('h2', '', dateName(x.d)));
+    b.appendChild(el('p', 'sub', dispDate(x.d) + ' · ' + (plainOf(x.a.name) || 'Arena')));
+    var panel = el('div', 'composer open');
+    b.appendChild(panel);
+    panel.appendChild(el('span', 'field', 'The event’s own page'));
+    var u = el('input', 'line');
+    u.type = 'text'; u.placeholder = 'https://…'; u.value = guess ? guess.url : '';
+    u.setAttribute('autocapitalize', 'off'); u.setAttribute('autocorrect', 'off');
+    u.setAttribute('inputmode', 'url'); u.spellcheck = false;
+    u.setAttribute('aria-label', 'Website');
+    panel.appendChild(u);
+    var save = el('button', 'act', 'Save the website');
+    save.addEventListener('click', function(){
+      var url = deskUrl(u.value);
+      if (!url){ u.focus(); return; }
+      shut();
+      setEventUrl(x.a, x.d, url);
+    });
+    panel.appendChild(save);
+    var mine = (((x.a.brokerage && x.a.brokerage.links) || []).concat(x.a.links || [])).filter(function(l){
+      return l && l.url && !/^mailto:/i.test(l.url); });
+    if (mine.length){
+      panel.appendChild(el('span', 'field', 'Or one of the arena’s links'));
+      mine.forEach(function(l){
+        var o = el('button', 'cupick', plainOf((typeof linkName === 'function') ? linkName(l) : linkLabel(l)));
+        o.appendChild(el('i', '', l.url));
+        o.addEventListener('click', function(){ u.value = l.url; u.focus(); });
+        panel.appendChild(o);
+      });
+    }
+    closeBtn(bar);
+  });
+}
+
+/* The desk's "+ Brokerage event": an ordinary date on the arena chosen
+   here, in the shape the desk's date form writes, so it is on the board, the
+   cards and the arena's panel the moment it is saved. The same questions, one
+   under another: the arena, the event, its website, how well it is known,
+   when, and how certain. Only an exact day or span can be called fixed. */
+var EV_GRANS = [['day','Exact day'], ['range','Exact span'], ['month','A month'],
+                ['quarter','A quarter'], ['half','A half-year'], ['year','A year']];
+function evSpan(gran, v){
+  function end(y, m){ return y + '-' + pad2(m) + '-' + pad2(new Date(y, m, 0).getDate()); }
+  var y = v.y, m1;
+  switch (gran){
+    case 'day': return v.day ? [v.day, v.day] : [null, null];
+    case 'range': if (!v.from || !v.to) return [null, null];
+      return v.to < v.from ? [v.to, v.from] : [v.from, v.to];
+    case 'month': return y && v.n ? [y + '-' + pad2(v.n) + '-01', end(y, v.n)] : [null, null];
+    case 'quarter': if (!y || !v.n) return [null, null]; m1 = (v.n - 1) * 3 + 1;
+      return [y + '-' + pad2(m1) + '-01', end(y, m1 + 2)];
+    case 'half': if (!y || !v.n) return [null, null]; m1 = v.n === 1 ? 1 : 7;
+      return [y + '-' + pad2(m1) + '-01', end(y, m1 + 5)];
+    case 'year': return y ? [y + '-01-01', y + '-12-31'] : [null, null];
+  }
+  return [null, null];
+}
+function newEvent(){
+  var arenas = liveList().slice().sort(function(x, y){
+    return plainOf(x.name).localeCompare(plainOf(y.name), undefined, { sensitivity:'base' }); });
+  sheet(function(b, bar){
+    b.appendChild(el('h2', '', 'New brokerage event'));
+    var panel = el('div', 'composer open');
+    b.appendChild(panel);
+    function field(label){ panel.appendChild(el('span', 'field', label)); }
+    function line(ph, url){
+      var i = el('input', 'line');
+      i.type = 'text'; i.placeholder = ph;
+      if (url){ i.setAttribute('autocapitalize', 'off'); i.setAttribute('autocorrect', 'off');
+                i.setAttribute('inputmode', 'url'); i.spellcheck = false; }
+      panel.appendChild(i);
+      return i;
+    }
+    function select(opts, value){
+      var s = el('select');
+      opts.forEach(function(o){ var x = el('option', '', o[1]); x.value = o[0]; s.appendChild(x); });
+      if (value != null) s.value = String(value);
+      return s;
+    }
+
+    field('Which arena is it for?');
+    var pick = panel.appendChild(select([['', 'Choose an arena']].concat(arenas.map(function(a){
+      return [a.id, plainOf(a.name) || 'Untitled']; }))));
+    field('Event');
+    var label = line('e.g. Cluster 4 brokerage day, Brussels');
+    field('Website');
+    var url = line('The event’s own page', true);
+    field('How well is it known');
+    var gran = panel.appendChild(select(EV_GRANS, 'day'));
+    field('When');
+    var when = panel.appendChild(el('div'));
+    field('Certainty');
+    var seg = panel.appendChild(el('div', 'seg'));
+    var grade = 'fixed', ins = {};
+
+    function drawGrade(){
+      var exact = gran.value === 'day' || gran.value === 'range';
+      if (!exact) grade = 'uncertain';
+      seg.textContent = '';
+      [['fixed', 'Fixed'], ['uncertain', 'Uncertain']].forEach(function(o){
+        var btn = seg.appendChild(el('button', o[0] === grade ? 'on' : '', o[1]));
+        btn.disabled = o[0] === 'fixed' && !exact;
+        btn.addEventListener('click', function(){ grade = o[0]; drawGrade(); });
+      });
+    }
+    function drawWhen(){
+      var g = gran.value, now = new Date(), Y = now.getFullYear(), M = now.getMonth() + 1;
+      when.textContent = ''; ins = {};
+      function date(k, lab){
+        var i = when.appendChild(el('input')); i.type = 'date'; i.setAttribute('aria-label', lab); ins[k] = i; }
+      if (g === 'day') date('day', 'Day');
+      else if (g === 'range'){ date('from', 'From'); date('to', 'To'); }
+      else {
+        var y = when.appendChild(el('input', 'line'));
+        y.type = 'number'; y.inputMode = 'numeric'; y.min = '2000'; y.max = '2100'; y.value = String(Y);
+        y.setAttribute('aria-label', 'Year'); ins.y = y;
+        var o = g === 'month' ? MONTHS.map(function(n, i){ return [i + 1, n]; })
+              : g === 'quarter' ? [[1,'Q1'], [2,'Q2'], [3,'Q3'], [4,'Q4']]
+              : g === 'half' ? [[1,'H1'], [2,'H2']] : null;
+        if (o){
+          var s = when.appendChild(select(o, g === 'month' ? M : g === 'quarter' ? Math.ceil(M / 3) : M < 7 ? 1 : 2));
+          s.style.marginTop = '6px'; ins.n = s;
+        }
+      }
+      drawGrade();
+    }
+    gran.addEventListener('change', drawWhen);
+    drawWhen();
+
+    var save = el('button', 'act', 'Add the event');
+    save.addEventListener('click', function(){
+      if (!pick.value){ pick.focus(); return; }
+      var g = gran.value, v = {};
+      Object.keys(ins).forEach(function(k){
+        v[k] = (k === 'y' || k === 'n') ? +ins[k].value : ins[k].value; });
+      var span = evSpan(g, v);
+      if (!span[0]){ toast('The date is incomplete — fill in when it is', null, true); return; }
+      var u = url.value.trim();
+      shut();
+      addEvent(pick.value, { id:uid(), kind:'brokerage', label:label.value.trim() || '(untitled)',
+        call:'', role:'', note:'', url:u ? deskUrl(u) : '', gran:g, grade:grade,
+        start:span[0], end:span[1] });
+    });
+    panel.appendChild(save);
+    closeBtn(bar);
+  });
 }
 
 /* Semaphore colours a date by what it is: brokerage red, or one of the

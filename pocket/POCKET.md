@@ -32,13 +32,19 @@ spells out the ring and adds the desk's *Wait for…* (`hold`), which lists the 
 dates to sleep until (since 2026-10-10). A brokerage link
 on a card or in an arena's sheet has its own pin. The sheet's pencil ✎ edits the arena's name, its
 About and Brokerage notes and both lists of links, saved together (since 2026-10-11). What stays on
-the desk: making and deleting arenas, an arena's type, tags and weight, dates, types (their order and
-colour too), the freezer, and the agent's Dispatches.
-- **Coming up** — every arena's dates on one line, brokerage by default; a brokerage event
-  leaves once it is over, a call two weeks after.
-  A brokerage event opens its website (↗) when one of its arena's brokerage links fits it
-  (`eventLink`: shared title words + year; a lone link counts); › opens the arena. The tab
-  carries no number (removed 2026-10-08 at Mark's request).
+the desk: making and deleting arenas, an arena's type, tags and weight, dates (but for what Coming up
+does to brokerage events), types (their order and colour too), the freezer, and the agent's Dispatches.
+- **Coming up** — the desk's Coming up since 2026-10-11 (`eventRow`): every arena's dates on one
+  line, brokerage by default, under the desk's line counting the year's brokerage events and those
+  still without a website, and *+ Brokerage event* (`newEvent`, the desk's form). A row opens its
+  arena; a brokerage event carries the desk's three controls: the stamp with its days, one stamp to a
+  site (`stampSite`, so a pinned link of the same address is stamped with it, from either side); the
+  event's own website (`url`), or *+ add website* (`addSite`, offering the arena's links, the likeliest
+  first by `eventLink`); and ✕, which removes the event from the whole app after asking (`askDrop`).
+  A brokerage event that is over goes to **Limbo**, one folded line at the top, and stays there until
+  Mark removes it, where ✕ does not ask (Pocket only; the desk shows the last fortnight instead). A
+  call is read only and leaves two weeks after. The tab carries no number (removed 2026-10-08 at
+  Mark's request).
 
 People (the Atlas list) has no tab: it opens from the ⌕ button and from a lead's match.
 The Ledger and its todos are not in Pocket. Single file, no build. Pages serves it at
@@ -79,9 +85,10 @@ re-extract the maths) but a Pocket change never touches it.
   token, renewed one at a time — Supabase ends a session whose renewal is used twice) → `rest()` → `pull()` (row `semaphore` only) →
   `commit()` → lead mutations (`setDone`, `setDate`, `setPath`, `addUpdate`, `editItem`, `addLead`,
   `addLeadLink`, `dropLeadLink`, `setScore`) and arena/link mutations (`stampArena`, `askAgent`, `holdArena`,
-  `editArena` + `linkOps`, `pinLink`, `stampLink`); every undo puts back a snapshot (`keep`/`putBack`) → board (`liveList`, which settles the types' tones as the desk does, `scoreOf`, `typeRows`) → views (`drawRot` + `wallCard` +
+  `editArena` + `linkOps`, `pinLink`, `stampLink` and `stampSite`, `addEvent`, `setEventUrl`, `dropEvent`); every undo puts back a snapshot (`keep`/`putBack`) → board (`liveList`, which settles the types' tones as the desk does, `scoreOf`, `typeRows`) → views (`drawRot` + `wallCard` +
   `cardLine`, `drawPins`/`pinnedOf`, `drawLeads`/`leadItems` + `leadRow` + `ruit`,
-  `drawDates`/`comingUp`) → sheets (`openArena` with the round, `openLead`, `newLead`, `openPerson`).
+  `drawDates`/`comingUp` + `eventRow`) → sheets (`openArena` with the round, `openLead`, `newLead`, `openPerson`,
+  `newEvent`, `addSite`, `askDrop`).
   `fitScreen` gives the home screen the room the insets no longer say (why: the viewport meta); ⚙ shows what it measured.
 - Both scripts share one global scope: a new top-level name must not collide with script 1
   (`shortDate` exists → Pocket uses `briefDate`; `openLeads` exists → `leadItems`).
