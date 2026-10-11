@@ -156,6 +156,15 @@ a{color:inherit}
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .wname.w-central{font-weight:600}
 .wname.w-peripheral{color:var(--muted)}
+/* The card's head filled with its type's colour, as the type's own band
+   above the row is (Mark, 2026-10-11), so a card says its type wherever it
+   stands — Back from waiting, Pinned — and not only under its band. On that
+   fill the quiet grey of the ring, pin, stamp and count fell to 2.6:1 on the
+   darkest tones, and a peripheral name to 4.2:1, so both are lifted a step:
+   the grey to 5.1:1 and the name to the bone of the chrome, 6.2:1, still
+   below the ink of an ordinary name. */
+.wcard.toned .wch{--faint:#C4B9A6;background:color-mix(in srgb,var(--tone) 30%,var(--paper))}
+.wcard.toned .wname.w-peripheral{color:var(--key2)}
 .wname:active{color:var(--brok-deep)}
 .lchip{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;
   border:1px solid var(--line);border-radius:99px;font:11px/1 var(--mono);color:var(--key2)}
@@ -272,6 +281,10 @@ a.wlink:active .wd,a.wlink:active::before{color:var(--brok)}
 .wprow .wlink{flex-wrap:wrap}
 .wprow .wlink .wn{flex:1 1 0;white-space:normal}
 .wprow .wlink .wd{display:none}
+/* a pinned link's name in its arena type's colour (Mark, 2026-10-11),
+   lifted a fifth towards the ink: the tone itself is 4.0:1 on the row at
+   its darkest (Slate), the mix 5.2:1, and still plainly that tone */
+.wprow.toned .wlink .wn{color:color-mix(in srgb,var(--tone) 80%,var(--ink))}
 .wpfoot{display:flex;align-items:center;gap:6px;margin-top:-6px}
 .wpa{flex:1 1 auto;min-width:0;min-height:44px;text-align:left;font:italic 12.5px/1.2 var(--body);color:var(--muted);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -2081,6 +2094,8 @@ function linkRow(lk, a, showPin){
 
 function wallCard(a, st, tier){
   var c = el('article', 'wcard t-' + tier + (stampedToday(a) ? ' stamped' : '') + (st && st.state === 'held' ? ' held' : ''));
+  var tone = arenaTone(a);
+  if (tone){ c.classList.add('toned'); c.style.setProperty('--tone', tone); }
   var head = el('header', 'wch');
   var wk = weightOf(a);
   var nm = el('button', 'wname' + (wk === 'ordinary' ? '' : ' w-' + wk), plainOf(a.name) || 'Untitled');
@@ -2369,6 +2384,8 @@ function drawPins(){
     p.links.forEach(function(x){
       var t = isoToday(), on = x.lk.stampedAt === t;
       var row = el('div', 'wprow' + (on ? ' on' : ''));
+      var tone = arenaTone(x.a);
+      if (tone){ row.classList.add('toned'); row.style.setProperty('--tone', tone); }
       row.appendChild(linkRow(x.lk, x.a));
       /* under the title: the stamp, carrying the days since it was last
          pressed as the card's stamp does, then the arena, then the pin.

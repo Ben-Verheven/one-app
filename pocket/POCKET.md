@@ -5,14 +5,14 @@ idle minute instead of the news. Since 2026-10-07 it is dressed and laid out lik
 Semaphore (the Cards view of 2026-10-06). Four tabs:
 
 - **Rotation** — the desk's rotation since 2026-10-11 (`typeRows`): a row for every arena type, in
-  the desk's order of types, each headed by a band in the type's colour; in each row the cards, all one size, in
+  the desk's order of types, each headed by a band in the type's colour, and every card's head filled with it too; in each row the cards, all one size, in
   standing order, swiped sideways, with a card stamped today towards the far end and, past those, a
   card asleep until a date of its own, whose foot says so in short ("Waiting for … · 1 Jan"). A card
   whose date has come within reach stands in a row of its own over all the types, *Back from waiting*
   (`wokeRow`), which opens the walk; stamping it ends the wait and sends it back to its row. Walked one card at a
   time with *Look around* → Next / Stamp & next, which takes the types in turn: every type's first
   card, then every type's second. Arenas with no brokerage material are ghosts under their row.
-- **Pinned** — pinned links first, A–Z or by days since the stamp (longest first), switched above them and remembered on the phone: the link's name on a line of its own, tapped
+- **Pinned** — pinned links first, A–Z or by days since the stamp (longest first), switched above them and remembered on the phone: the link's name on a line of its own, in its arena type's colour, tapped
   to go there (its host not shown), and under it the stamp ✓ carrying the days since, the arena and
   the pin to put it back (since 2026-10-11); then pinned cards.
 - **Leads** — every open lead in Spotted / Contacted / Talking, as the desk's Leads arrangement;
