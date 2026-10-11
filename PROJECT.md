@@ -349,7 +349,7 @@ a researcher's name written anywhere is `.atlas-ref`.
 | the month axis over the board, sticky, and the heading that orders by status | `.axisrow` = `.corner` + `.corner.where` (`.whsort`) + `.axis`; a month is `.mcell` |
 | one arena type's group on the board, its heading | `.grp`, its heading `.ghead` |
 | one arena type's row on the wall, its head, the strip of cards that scrolls sideways | `.wtrow`, `.wthead`, `.wtrack` |
-| the types, managed — opened by Types beside + Arena: a type's line, its arenas, its colour dot | `#typesModal` › `#tylist` › `.tyblock` (`.tyline`, `.tyarenas` › `.tyar`); `.lcolwrap.tycol` |
+| the types, managed — opened by Types beside + Arena: a type's line and its grip, its arenas as chips, its colour dot, the copy that follows a drag | `#typesModal` › `#tylist` › `.tyblock` (`.tyline` › `.tygrip`, `.tyarenas` › `.tychip`); `.lcolwrap.tycol`; `.tyghost` |
 | one arena's row, and where it stands (Open / Opens / Between) | `.row` = `.cell.name` + `.cell.where` (`.wpw`) + `.lane` |
 | a date on a lane | `.mk` — `.bk` brokerage (`.bk-fixed`, `.bk-unc`, `.bk-band`), `.cl.rb` a call's bar, `.now` today |
 | a card on the wall, its phase line and strip of time, its links band | `.wcard`; `.wline` (`.wph`, `.wstrip`: `.wsd` an event, `.wsb` a call, `.wsnow` today); `.wlk` › `.wlinks` › `.wlrow` |

@@ -3610,47 +3610,179 @@ function typesShown(){renderTypes();renderAll();}
    Everything about the types in one place, opened from the Types button
    beside + Arena (Mark, 2026-10-11): their order, which the cards, the board
    and Pocket all follow; their names and colours; merging one into another;
-   and moving an arena from one type to another, which before could only be
-   done one arena at a time in its own panel. A type's arenas are listed
-   under it on request, each with the type it belongs to as a choice, so
-   moving one is a single pick. Which types stand open is not saved. */
+   and moving an arena from one type to another. All of it by dragging, as
+   he asked the same day, over a first version of arrows and drop-down
+   menus: a type is dragged by its grip up or down to order it, or onto
+   another type to merge into it; a type opens to show its arenas as chips,
+   and a chip is dragged onto any other type, open or shut, to move there
+   (see "dragging in the list of types"). Which types stand open is not
+   saved. */
 const tyOpen=new Set();
 function renderTypes(){
-  const opts=sel=>(sel?'':'<option value="" selected>No type</option>')+
-    S.types.map(t=>'<option value="'+t.id+'"'+(t.id===sel?' selected':'')+'>'+esc(t.name)+'</option>').join('');
-  const arenasHTML=ars=>'<div class="tyarenas">'+ars.map(a=>
-    '<label class="tyar"><span class="tyan">'+esc(a.name)+(a.frozenAt?' <i>frozen</i>':'')+'</span>'+
-      '<select data-arenatype="'+a.id+'" aria-label="Type of '+esc(a.name)+'">'+opts(typeOf(a)?a.typeId:'')+'</select></label>').join('')+'</div>';
+  const chips=ars=>'<div class="tyarenas">'+ars.map(a=>
+    '<span class="tychip" data-tydrag="arena" data-id="'+a.id+'" title="Drag onto another type to move it there">'+
+      esc(a.name)+(a.frozenAt?' <i>frozen</i>':'')+'</span>').join('')+'</div>';
   const byName=(x,y)=>x.name.localeCompare(y.name);
-  let h=S.types.map((t,i)=>{
+  let h=S.types.map(t=>{
     const ars=S.arenas.filter(a=>a.typeId===t.id).sort(byName);
     const n=ars.length,open=n&&tyOpen.has(t.id);
-    const others=S.types.filter(u=>u!==t);
-    return '<section class="tyblock'+(open?' open':'')+'" style="--tone:'+esc(toneHex(t.color))+'">'+
+    return '<section class="tyblock'+(open?' open':'')+'" data-ty="'+t.id+'" style="--tone:'+esc(toneHex(t.color))+'">'+
       '<div class="tyline">'+
-        '<span class="tymove">'+
-          '<button class="ib" data-act="tyUp" data-id="'+t.id+'" title="Move '+esc(t.name)+' up"'+(i===0?' disabled':'')+'>▲</button>'+
-          '<button class="ib" data-act="tyDown" data-id="'+t.id+'" title="Move '+esc(t.name)+' down"'+(i===S.types.length-1?' disabled':'')+'>▼</button>'+
-        '</span>'+
+        '<span class="tygrip" data-tydrag="type" data-id="'+t.id+'" '+
+          'title="Drag up or down to reorder; drop onto another type to merge into it" aria-hidden="true">⠿</span>'+
         typeDotHTML(t)+
         '<input value="'+esc(t.name)+'" data-tyname="'+t.id+'" aria-label="Name of the type">'+
         '<button class="tyn" data-act="tyArenas" data-id="'+t.id+'"'+(n?'':' disabled')+
           ' aria-expanded="'+(open?'true':'false')+'">'+n+' arena'+(n===1?'':'s')+(n?(open?' ▾':' ▸'):'')+'</button>'+
-        (n&&others.length
-          ?'<select class="tymerge" data-merge="'+t.id+'" aria-label="Merge '+esc(t.name)+' into another type">'+
-             '<option value="" selected>Merge into…</option>'+
-             others.map(u=>'<option value="'+u.id+'">'+esc(u.name)+'</option>').join('')+'</select>'
-          :'<span class="tymerge"></span>')+
         '<button class="ib" data-act="delType" data-id="'+t.id+'"'+
           ' title="'+(n?'Merge it or move its arenas first':'Remove '+esc(t.name))+'"'+(n?' disabled':'')+'>✕</button>'+
       '</div>'+
-      (open?arenasHTML(ars):'')+
+      (open?chips(ars):'')+
     '</section>';
   }).join('');
   /* an arena whose type was taken from under it is offered a home here */
   const lost=S.arenas.filter(a=>!typeOf(a)).sort(byName);
-  if(lost.length)h+='<section class="tyblock open"><div class="tyline"><span class="tylost">Untyped</span></div>'+arenasHTML(lost)+'</section>';
+  if(lost.length)h+='<section class="tyblock open"><div class="tyline"><span class="tylost">Untyped</span></div>'+chips(lost)+'</section>';
   $('#tylist').innerHTML=h;
+}
+/* One type into another: every arena of it goes over, and it is removed.
+   Asked first, because it cannot be told apart afterwards. */
+function mergeTypes(from,to){
+  if(!from||!to||from===to)return;
+  const n=S.arenas.filter(a=>a.typeId===from.id).length;
+  Ask.ask('Merge '+from.name+' into '+to.name+'?',
+    (n===1?'Its one arena becomes ':n?'Its '+n+' arenas become ':'It has no arenas; ')+
+    (n?to.name+', in '+to.name+'’s colour, and ':'')+from.name+' is removed.','Merge',()=>{
+      S.arenas.forEach(a=>{if(a.typeId===from.id)a.typeId=to.id;});
+      S.types=S.types.filter(t=>t!==from);
+      delete S.ui.collapsed[from.id];
+      tyOpen.delete(from.id);if(n)tyOpen.add(to.id);
+      save();typesShown();
+    });
+}
+/* ───────── dragging in the list of types ─────────
+   The same hand as the links' own reordering (see "putting links in your own
+   order"): with a mouse a thing lifts once it has travelled a few pixels; on
+   the iPad a type's grip lifts at once, since it is nothing but a grip, and an
+   arena's chip once it has been held still for a moment, so a finger can
+   still scroll the list. A copy follows the pointer and the place it would
+   land is marked: a line above or below a type to put a type there, the type
+   itself outlined to merge into it or to take an arena. Near the edge of the
+   box the list scrolls. Escape puts everything back. */
+let tdDrag=null;
+document.addEventListener('pointerdown',e=>{
+  if(e.button!==0||tdDrag)return;
+  const src=e.target.closest&&e.target.closest('#tylist [data-tydrag]');
+  if(!src)return;
+  const kind=src.dataset.tydrag;
+  const D=tdDrag={src,kind,id:src.dataset.id,pid:e.pointerId,x:e.clientX,y:e.clientY,lx:e.clientX,ly:e.clientY,
+    on:false,hold:e.pointerType!=='mouse'&&kind==='arena',timer:0,ghost:null,ox:0,oy:0,drop:null,raf:0};
+  src.addEventListener('pointermove',tdMove);
+  src.addEventListener('pointerup',tdUp);
+  src.addEventListener('pointercancel',tdCancel);
+  src.addEventListener('touchmove',tdTouch,{passive:false});
+  if(D.hold)D.timer=setTimeout(()=>{if(tdDrag===D&&!D.on)tdLift();},LK_HOLD);
+});
+function tdTouch(e){if(tdDrag&&(tdDrag.on||!tdDrag.hold))e.preventDefault();}
+function tdLift(){
+  const D=tdDrag;if(!D)return;
+  D.on=true;
+  try{D.src.setPointerCapture(D.pid);}catch(err){}
+  const face=D.kind==='type'?D.src.closest('.tyline'):D.src;
+  const r=face.getBoundingClientRect();
+  D.ox=D.x-r.left;D.oy=D.y-r.top;
+  D.ghost=face.cloneNode(true);
+  D.ghost.classList.add('tyghost');
+  /* a type's copy is cut short, so it does not cover the mark saying where it would land */
+  D.ghost.style.width=(D.kind==='type'?Math.min(r.width,340):r.width)+'px';
+  const tone=D.src.closest('.tyblock');
+  if(tone&&tone.style.getPropertyValue('--tone'))D.ghost.style.setProperty('--tone',tone.style.getPropertyValue('--tone'));
+  $('#typesModal .mbox').appendChild(D.ghost);
+  (D.kind==='type'?D.src.closest('.tyblock'):D.src).classList.add('tysrc');
+  tdPlace();
+  const box=$('#typesModal .mbox');
+  const step=()=>{
+    if(tdDrag!==D)return;
+    const b=box.getBoundingClientRect();
+    if(D.ly<b.top+48)box.scrollTop-=8;else if(D.ly>b.bottom-48)box.scrollTop+=8;
+    D.raf=requestAnimationFrame(step);
+  };
+  D.raf=requestAnimationFrame(step);
+}
+function tdPlace(){
+  const D=tdDrag;
+  D.ghost.style.left=(D.lx-D.ox)+'px';D.ghost.style.top=(D.ly-D.oy)+'px';
+}
+/* where a drop at this height would land */
+function tdTarget(y){
+  const D=tdDrag;
+  const blocks=[...document.querySelectorAll('#tylist .tyblock[data-ty]')];
+  if(!blocks.length)return null;
+  let b=blocks.find(x=>{const r=x.getBoundingClientRect();return y>=r.top-3&&y<=r.bottom+3;});
+  if(!b&&D.kind==='type'){
+    if(y<blocks[0].getBoundingClientRect().top)return {b:blocks[0],how:'before'};
+    if(y>blocks[blocks.length-1].getBoundingClientRect().bottom)return {b:blocks[blocks.length-1],how:'after'};
+  }
+  if(!b)return null;
+  if(D.kind==='arena'){
+    const ar=arena(D.id);
+    return ar&&ar.typeId!==b.dataset.ty?{b,how:'into'}:null;
+  }
+  if(b.dataset.ty===D.id)return null;
+  const r=b.getBoundingClientRect(),edge=Math.min(12,r.height*.25);
+  return {b,how:y<r.top+edge?'before':y>r.bottom-edge?'after':'merge'};
+}
+function tdMark(t){
+  document.querySelectorAll('#tylist .tyblock[data-say]').forEach(x=>{
+    x.classList.remove('drop-before','drop-after','drop-merge','drop-into');x.removeAttribute('data-say');});
+  if(!t)return;
+  t.b.classList.add('drop-'+t.how);
+  t.b.dataset.say=t.how==='merge'?'Merge into this type':t.how==='into'?'Move here':'';
+}
+function tdMove(e){
+  const D=tdDrag;if(!D||e.pointerId!==D.pid)return;
+  D.lx=e.clientX;D.ly=e.clientY;
+  if(!D.on){
+    const far=Math.abs(e.clientY-D.y)>LK_SLOP||Math.abs(e.clientX-D.x)>LK_SLOP;
+    if(!far)return;
+    if(D.hold){tdCancel();return;}              /* moved before the hold: that is a scroll */
+    tdLift();
+  }
+  e.preventDefault();
+  tdPlace();
+  D.drop=tdTarget(e.clientY);
+  tdMark(D.drop);
+}
+function tdEnd(){
+  const D=tdDrag;if(!D)return null;
+  clearTimeout(D.timer);cancelAnimationFrame(D.raf);
+  D.src.removeEventListener('pointermove',tdMove);
+  D.src.removeEventListener('pointerup',tdUp);
+  D.src.removeEventListener('pointercancel',tdCancel);
+  D.src.removeEventListener('touchmove',tdTouch,{passive:false});
+  try{D.src.releasePointerCapture(D.pid);}catch(err){}
+  if(D.ghost)D.ghost.remove();
+  document.querySelectorAll('#tylist .tysrc').forEach(x=>x.classList.remove('tysrc'));
+  tdMark(null);
+  tdDrag=null;
+  return D;
+}
+function tdCancel(){tdEnd();}
+function tdUp(){
+  const D=tdEnd();if(!D||!D.on||!D.drop)return;
+  const{b,how}=D.drop,to=S.types.find(t=>t.id===b.dataset.ty);
+  if(!to)return;
+  if(D.kind==='arena'){
+    const ar=arena(D.id);if(!ar)return;
+    ar.typeId=to.id;tyOpen.add(to.id);save();typesShown();
+    return;
+  }
+  const from=S.types.find(t=>t.id===D.id);if(!from)return;
+  if(how==='merge'){mergeTypes(from,to);return;}
+  const rest=S.types.filter(t=>t!==from);
+  const i=rest.indexOf(to)+(how==='after'?1:0);
+  rest.splice(i,0,from);
+  S.types=rest;save();typesShown();
 }
 
 /* ============ tooltip ============ */
@@ -3896,14 +4028,6 @@ document.addEventListener('click',e=>{
     case 'closeModals':closeModals();break;
     case 'quickCreate':quickCreate();break;
     case 'seed':seed();break;
-    case 'tyUp':
-    case 'tyDown':{
-      const i=S.types.findIndex(t=>t.id===id);
-      const j=act==='tyUp'?i-1:i+1;
-      if(i<0||j<0||j>=S.types.length)break;
-      const[m]=S.types.splice(i,1);S.types.splice(j,0,m);
-      save();typesShown();
-      break;}
     case 'addType':{const n=$('#tyNew').value.trim();if(!n)break;
       if(S.types.some(t=>t.name.toLowerCase()===n.toLowerCase())){
         Ask.tell('That type already exists','There is already a type called \u201C'+n+'\u201D.');break;}
@@ -4119,30 +4243,6 @@ document.addEventListener('change',e=>{
     f.querySelector('.gradefld').innerHTML='<label>Certainty</label>'+gradeSegHTML(el.value,f.grade.value);
     return;
   }
-  /* an arena to another type, from the list of types; the type it went to
-     opens, so it can be seen to have arrived */
-  if(el.dataset.arenatype){
-    const ar=arena(el.dataset.arenatype),t=S.types.find(t=>t.id===el.value);
-    if(ar&&t){ar.typeId=t.id;tyOpen.add(t.id);save();typesShown();}
-    return;
-  }
-  /* one type into another: every arena of it goes over, and it is removed */
-  if(el.dataset.merge){
-    const from=S.types.find(t=>t.id===el.dataset.merge),to=S.types.find(t=>t.id===el.value);
-    renderTypes();                       /* the choice goes back to Merge into… until it is confirmed */
-    if(!from||!to||from===to)return;
-    const n=S.arenas.filter(a=>a.typeId===from.id).length;
-    Ask.ask('Merge '+from.name+' into '+to.name+'?',
-      (n===1?'Its one arena becomes ':'Its '+n+' arenas become ')+to.name+', in '+to.name+'’s colour, and '+
-      from.name+' is removed.','Merge',()=>{
-        S.arenas.forEach(a=>{if(a.typeId===from.id)a.typeId=to.id;});
-        S.types=S.types.filter(t=>t!==from);
-        delete S.ui.collapsed[from.id];
-        tyOpen.delete(from.id);tyOpen.add(to.id);
-        save();typesShown();
-      });
-    return;
-  }
   /* type rename */
   if(el.dataset.tyname){
     const t=S.types.find(t=>t.id===el.dataset.tyname);
@@ -4180,6 +4280,7 @@ document.addEventListener('keydown',e=>{
     }
     return;
   }
+  if(tdDrag){tdCancel();return;}                             /* a type or arena being dragged */
   if(colOpen){colOpen=null;typesShown();return;}             /* a colour menu */
   if(Ask.isOpen()){Ask.shut();return;}                       /* the question */
   if(document.querySelector('.modal.open')){closeModals();return;}   /* a sheet */

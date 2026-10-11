@@ -1529,34 +1529,46 @@
 #pane-semaphore #askModal{z-index:40}
 #pane-semaphore #askModal.tell #askNo{display:none}
 #pane-semaphore .tyline{display:flex;gap:8px;align-items:center;padding:4px 0}
-#pane-semaphore .tymove{display:flex;flex-direction:column;gap:1px}
-#pane-semaphore .tymove .ib{font-size:10px;line-height:1;padding:4px 8px}
-#pane-semaphore .tymove .ib:disabled{opacity:.25;cursor:default}
-#pane-semaphore .tymove .ib:disabled:hover{background:none;color:var(--faint)}
 #pane-semaphore .tyline input{flex:1;border:1px solid var(--line);border-radius:var(--radius);background:var(--field);
   color:var(--ink);padding:6px 9px;font-family:var(--body);font-size:14px}
-/* ── the types, managed (renderTypes) ──
-   Wider than the other boxes: a type's line carries its arrows, colour, name,
-   its arenas, the merge and the cross, and its arenas open under it two to a
-   row, each with its type as a choice. Each type is edged in its colour. */
+/* ── the types, managed (renderTypes, and "dragging in the list of types") ──
+   Wider than the other boxes: a type's line carries its grip, colour, name,
+   its arenas and the cross, and its arenas open under it as chips. Each type
+   is edged in its colour. The grip takes the finger outright (touch-action),
+   so a type lifts at once on the iPad; a chip leaves the finger to scroll
+   until it is held. */
 #pane-semaphore #typesModal .mbox{width:720px}
-#pane-semaphore .tyblock{margin:3px 0;padding:2px 0 2px 8px;border-left:4px solid var(--tone,var(--line2));
+#pane-semaphore .tyblock{position:relative;margin:3px 0;padding:2px 0 2px 4px;border-left:4px solid var(--tone,var(--line2));
   border-radius:0 var(--radius) var(--radius) 0}
 #pane-semaphore .tyblock.open{background:var(--well);padding-bottom:6px}
+#pane-semaphore .tygrip{flex:0 0 26px;height:32px;display:grid;place-items:center;font-size:15px;line-height:1;
+  color:var(--key);cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;border-radius:var(--radius)}
+#pane-semaphore .tygrip:hover{color:var(--ink);background:var(--sink)}
 #pane-semaphore .tyline .tyn{flex:0 0 92px;text-align:right;font-size:12.5px;color:var(--muted);padding:6px 4px;border-radius:var(--radius)}
 #pane-semaphore .tyline .tyn:not(:disabled):hover{background:var(--sink);color:var(--ink)}
 #pane-semaphore .tyline .tyn:disabled{cursor:default}
-#pane-semaphore .tyline .tymerge{flex:0 0 140px}
 #pane-semaphore .tyline>.ib:disabled{color:var(--line2);cursor:default}
 #pane-semaphore .tyline>.ib:disabled:hover{background:none}
 #pane-semaphore .tylost{padding:6px 2px;font:600 10px var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
-#pane-semaphore .tyarenas{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 16px;padding:6px 6px 2px 40px}
-#pane-semaphore .tyar{display:flex;align-items:center;gap:8px;min-width:0;font-size:13.5px;color:var(--ink)}
-#pane-semaphore .tyan{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#pane-semaphore .tyan i{font-size:11.5px;color:var(--faint)}
-#pane-semaphore .tyar select{flex:0 0 140px}
-#pane-semaphore .tyline select,#pane-semaphore .tyar select{min-width:0;border:1px solid var(--line);border-radius:var(--radius);
-  background:var(--field);color:var(--ink);padding:5px 6px;font:12.5px var(--body)}
+#pane-semaphore .tyarenas{display:flex;flex-wrap:wrap;gap:6px;padding:6px 8px 2px 34px}
+#pane-semaphore .tychip{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border:1px solid var(--line);
+  border-radius:999px;background:var(--field);font-size:13px;color:var(--ink);cursor:grab;
+  user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+#pane-semaphore .tychip:hover{border-color:var(--line2)}
+#pane-semaphore .tychip i{font-size:11.5px;color:var(--faint)}
+/* what is being dragged: its place stays, quieted, and a copy follows the pointer */
+#pane-semaphore .tyblock.tysrc>.tyline,#pane-semaphore .tychip.tysrc{background:var(--sink);border-style:dashed;color:var(--faint)}
+#pane-semaphore .tyghost{position:fixed;z-index:60;margin:0;pointer-events:none;background:var(--panel);
+  border-radius:var(--radius);box-shadow:var(--shadow);cursor:grabbing}
+#pane-semaphore .tyline.tyghost{padding:4px 8px;border-left:4px solid var(--tone,var(--line2))}
+/* where it would land: a line between types, or the type itself outlined,
+   saying what dropping there does */
+#pane-semaphore .tyblock.drop-before{box-shadow:0 -3px 0 var(--ink)}
+#pane-semaphore .tyblock.drop-after{box-shadow:0 3px 0 var(--ink)}
+#pane-semaphore .tyblock.drop-merge,#pane-semaphore .tyblock.drop-into{outline:2px solid var(--ink);outline-offset:1px;background:var(--well)}
+#pane-semaphore .tyblock[data-say]:not([data-say=""])::after{content:attr(data-say);position:absolute;right:10px;top:-11px;
+  padding:2px 8px;border-radius:999px;background:var(--ink);color:var(--field);font:600 9.5px var(--sans);
+  letter-spacing:.12em;text-transform:uppercase;pointer-events:none}
 /* ---------- tooltip ---------- */
 #pane-semaphore #tip{position:fixed;z-index:50;max-width:280px;background:var(--surface2);
      color:var(--ink);border:1px solid var(--line2);box-shadow:var(--shadow);border-radius:var(--radius);

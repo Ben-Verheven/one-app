@@ -78,7 +78,7 @@ ITEA 4 ; Programme ; software"></textarea>
 <div class="modal" id="typesModal">
   <div class="mbox">
     <h2>Arena types</h2>
-    <p class="sub">The order here is the order of the rows on the cards, the board and Pocket; move a type with its arrows. Rename in place. The dot is the type's colour, which its rows and its arenas' leads wear; click it to choose another. Open a type's arenas to move one to another type, or merge the whole type into another. A type can be removed once it holds no arenas.</p>
+    <p class="sub">Drag a type by its grip to reorder — the order here is the order of the rows on the cards, the board and Pocket — or drop it onto another type to merge the two. Open a type to see its arenas, and drag one onto any other type to move it there. Rename in place; the dot is the type's colour. A type can be removed once it holds no arenas.</p>
     <div id="tylist"></div>
     <div class="taddrow" style="margin-top:10px">
       <input type="text" id="tyNew" placeholder="New type name">

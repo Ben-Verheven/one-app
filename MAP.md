@@ -360,7 +360,7 @@ _No section banners._
 
 ## `rooms/semaphore/semaphore.js`
 
-4390 lines · 231 KB
+4491 lines · 235 KB
 
 ```
 Brokerage Semaphore                               semaphore.js:1
@@ -397,16 +397,17 @@ leads, lent to the Ledger's board                 semaphore.js:3467
 modals                                            semaphore.js:3562
 asking, and saying                                semaphore.js:3565
 the types, managed                                semaphore.js:3609
-tooltip                                           semaphore.js:3656
-events                                            semaphore.js:3688
-typing, and the forms it goes into                semaphore.js:3984
-escape, and closing by clicking away              semaphore.js:4170
-putting links in your own order                   semaphore.js:4210
+dragging in the list of types                     semaphore.js:3663
+tooltip                                           semaphore.js:3788
+events                                            semaphore.js:3820
+typing, and the forms it goes into                semaphore.js:4108
+escape, and closing by clicking away              semaphore.js:4270
+putting links in your own order                   semaphore.js:4311
 ```
 
 ## `rooms/semaphore/semaphore.css`
 
-1567 lines · 116 KB
+1579 lines · 117 KB
 
 ```
 Brokerage Semaphore                               semaphore.css:1
@@ -434,8 +435,8 @@ arena panel                                       semaphore.css:1174
 dispatches                                        semaphore.css:1356
 coming up                                         semaphore.css:1408
 modals                                            semaphore.css:1511
-the types, managed (renderTypes)                  semaphore.css:1538
-tooltip                                           semaphore.css:1560
+the types, managed (renderTypes                   semaphore.css:1534
+tooltip                                           semaphore.css:1572
 ```
 
 ## `rooms/callboard/callboard.view.js`
@@ -638,4 +639,4 @@ Generated data. Never open, never edit, never upload.
 
 ---
 
-**35865 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.
+**35978 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.

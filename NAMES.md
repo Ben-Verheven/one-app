@@ -98,7 +98,7 @@ the two lists at the foot of this file is where those names gather.
 
 ## Ledger — `rooms/ledger/ledger.css`
 
-795 names.
+793 names.
 
 ```
 #ct-board                 ledger.css:579                     ledger.view.js:5
@@ -291,8 +291,6 @@ the two lists at the foot of this file is where those names gather.
 .dp-today-btn             ledger.css:117 x4                  ledger.js:3344
 .dp-wk                    ledger.css:2175 x2                 ledger.js:3333
 .drag-over                ledger.css:408 x7                  ledger.js:665 x3
-.drop-after               ledger.css:2987 x2                 ledger.js:11117 x3
-.drop-before              ledger.css:2987 x2                 ledger.js:11117 x3
 .drop-target              ledger.css:2924 x3                 ledger.js:11116 x3
 .ed-actions               ledger.css:3566                    ledger.js:12271
 .ed-btn                   ledger.css:3568 x2                 ledger.js:12272 x2
@@ -495,7 +493,7 @@ the two lists at the foot of this file is where those names gather.
 .lead-sub                 ledger.css:1263 x4                 ledger.js:8979
 .lead-sub-in              ledger.css:1326                    ledger.js:8980
 .lead-text                ledger.css:1262                    ledger.js:8976
-.leads                    ledger.css:3432 x2                 semaphore.js:297 x11   ledger.js:6768 x5   semaphore.view.js:5 x2
+.leads                    ledger.css:3432 x2                 semaphore.js:297 x11   ledger.js:6768 x5   semaphore.view.js:5
 .marker-range             ledger.css:3164 x2                 ledger.js:3435
 .marker-row               ledger.css:3158                    ledger.js:3430
 .marker-swatch            ledger.css:3162                    ledger.js:3425
@@ -900,7 +898,7 @@ the two lists at the foot of this file is where those names gather.
 
 ## Semaphore — `rooms/semaphore/semaphore.css`
 
-358 names.
+362 names.
 
 ```
 #askModal      semaphore.css:1529 x2              semaphore.js:3573 x2   semaphore.view.js:5
@@ -912,12 +910,12 @@ the two lists at the foot of this file is where those names gather.
 #freezer       semaphore.css:1144                 semaphore.js:436 x7   semaphore.view.js:5
 #search        semaphore.css:96 x3                semaphore.js:438 x12   atlas.js:604 x6   callboard.view.js:5 x4
 #searchBtn     semaphore.css:100                  semaphore.js:469 x2   semaphore.view.js:5
-#tip           semaphore.css:225 x2               semaphore.view.js:5   semaphore.js:3657
-#typesModal    semaphore.css:1542                 semaphore.view.js:5   semaphore.js:3895
+#tip           semaphore.css:225 x2               semaphore.view.js:5   semaphore.js:3789
+#typesModal    semaphore.css:1540                 semaphore.js:3700 x3   semaphore.view.js:5
 #wall          semaphore.css:279                  semaphore.js:1494 x17   semaphore.view.js:5
 .addbtn        semaphore.css:1334 x2              semaphore.js:1550 x3
 .asleep        semaphore.css:1121                 semaphore.js:2594
-.atend         semaphore.css:445                  semaphore.js:4207
+.atend         semaphore.css:445                  semaphore.js:4308
 .axis          semaphore.css:107 x4               semaphore.js:690   callboard.js:508
 .back          semaphore.css:481 x4               semaphore.js:437 x21   ledger.js:2210 x15   ledger.view.js:5 x3
 .bk            semaphore.css:189                  semaphore.js:558 x2
@@ -983,6 +981,10 @@ the two lists at the foot of this file is where those names gather.
 .dpw           semaphore.css:1382                 semaphore.js:825
 .dpwas         semaphore.css:1388                 semaphore.js:790 x3
 .dpwhen        semaphore.css:1386                 semaphore.js:789 x2
+.drop-after    semaphore.css:1567 x3              ledger.js:11117 x3   semaphore.js:3737
+.drop-before   semaphore.css:1566 x3              ledger.js:11117 x3   semaphore.js:3737
+.drop-into     semaphore.css:1568                 semaphore.js:3737
+.drop-merge    semaphore.css:1568                 semaphore.js:3737
 .dsite         semaphore.css:1501 x3              semaphore.js:1424
 .due           semaphore.css:1119 x2              ledger.js:5402 x11   semaphore.js:2402 x7
 .duemk         semaphore.css:154 x2               semaphore.js:647
@@ -1028,7 +1030,7 @@ the two lists at the foot of this file is where those names gather.
 .hit           semaphore.css:480 x2               semaphore.js:2473 x2
 .how           semaphore.css:295 x6               semaphore.js:671 x6   ledger.js:8852   atlas.js:1557
 .howbtn        semaphore.css:290 x3               semaphore.js:3110
-.ib            semaphore.css:356 x12              semaphore.js:1407 x17
+.ib            semaphore.css:356 x9               semaphore.js:1407 x15
 .jan           semaphore.css:110                  semaphore.js:506
 .k-contacted   semaphore.css:704                  —
 .k-talking     semaphore.css:705                  —
@@ -1070,10 +1072,10 @@ the two lists at the foot of this file is where those names gather.
 .lgrid         semaphore.css:709                  semaphore.js:2694
 .lhead         semaphore.css:743 x7               semaphore.js:2487
 .lk            semaphore.css:1325 x5              semaphore.js:1542
-.lkdragging    semaphore.css:629 x2               semaphore.js:4253 x3
+.lkdragging    semaphore.css:629 x2               semaphore.js:4354 x3
 .lkform        semaphore.css:350 x6               semaphore.js:2122 x3
 .lkind         semaphore.css:734 x5               semaphore.js:2306
-.lkup          semaphore.css:625 x5               semaphore.js:4254 x3
+.lkup          semaphore.css:625 x5               semaphore.js:4355 x3
 .lla           semaphore.css:869 x8               semaphore.js:2198 x2
 .llinks        semaphore.css:867                  semaphore.js:2441 x2
 .llist         semaphore.css:710                  semaphore.js:2714
@@ -1110,7 +1112,7 @@ the two lists at the foot of this file is where those names gather.
 .lx            semaphore.css:355 x5               semaphore.js:2125 x5
 .mail          semaphore.css:879 x2               semaphore.js:2198
 .mark          semaphore.css:64 x6                semaphore.js:1447 x3   bridge.js:457 x2   semaphore.view.js:5 x2
-.mbox          semaphore.css:225 x11              semaphore.view.js:5 x3
+.mbox          semaphore.css:225 x11              semaphore.view.js:5 x3   semaphore.js:3700 x2
 .mbox-ask      semaphore.css:1527 x2              semaphore.view.js:5
 .mbtns         semaphore.css:1523                 semaphore.view.js:5 x3
 .mcell         semaphore.css:108 x2               semaphore.js:506
@@ -1176,16 +1178,16 @@ the two lists at the foot of this file is where those names gather.
 .toned         semaphore.css:940 x2               semaphore.js:2474
 .turn          semaphore.css:468 x9               semaphore.js:2614 x6
 .turning       semaphore.css:401 x11              ledger.js:7803 x8   semaphore.js:2968 x3
-.tyan          semaphore.css:1555 x2              semaphore.js:3622
-.tyar          semaphore.css:1554 x3              semaphore.js:3622
-.tyarenas      semaphore.css:1553                 semaphore.js:3621
-.tyblock       semaphore.css:1543 x2              semaphore.js:3629 x2
+.tyarenas      semaphore.css:1553                 semaphore.js:3622
+.tyblock       semaphore.css:1541 x7              semaphore.js:3629 x6
+.tychip        semaphore.css:1554 x4              semaphore.js:3623
 .tycol         semaphore.css:759                  semaphore.js:2359
-.tyline        semaphore.css:1531 x9              semaphore.js:3630 x2
-.tylost        semaphore.css:1552                 semaphore.js:3652
-.tymerge       semaphore.css:1549                 semaphore.js:3640 x2
-.tymove        semaphore.css:1532 x4              semaphore.js:3631
-.tyn           semaphore.css:1546 x3              semaphore.js:3637
+.tyghost       semaphore.css:1561 x2              semaphore.js:3695
+.tygrip        semaphore.css:1544 x2              semaphore.js:3631
+.tyline        semaphore.css:1531 x9              semaphore.js:3630 x3
+.tylost        semaphore.css:1552                 semaphore.js:3645
+.tyn           semaphore.css:1547 x3              semaphore.js:3635
+.tysrc         semaphore.css:1560                 semaphore.js:3701 x3
 .unc           semaphore.css:200 x10              semaphore.js:561 x7
 .uncertain     semaphore.css:1306                 semaphore.js:262 x18
 .w-central     semaphore.css:152                  —
@@ -1300,7 +1302,7 @@ the two lists at the foot of this file is where those names gather.
 .dim           callboard.css:188 x2               callboard.js:264 x3
 .dname         callboard.css:164                  callboard.js:153 x2
 .dnum          callboard.css:163                  callboard.js:153 x2
-.drag          callboard.css:285                  ledger.js:4388 x4   callboard.js:508 x4   atlas.js:2224
+.drag          callboard.css:285                  ledger.js:4388 x4   callboard.js:508 x4   semaphore.view.js:5
 .dtag          callboard.css:73 x4                callboard.js:239 x3
 .famkey        callboard.css:295 x4               callboard.view.js:5 x2   callboard.js:136 x2
 .fi            callboard.css:296                  callboard.js:140
@@ -1514,7 +1516,7 @@ the two lists at the foot of this file is where those names gather.
 ```
 #nt-search       notes.css:37                       notes.js:1412 x5   notes.view.js:15
 #nt-taginput     notes.css:834 x3                   notes.js:3068 x6
-.armed           notes.css:852 x3                   semaphore.js:3826 x3   notes.js:3036 x3
+.armed           notes.css:852 x3                   semaphore.js:3958 x3   notes.js:3036 x3
 .dragging        notes.css:143 x16                  ledger.js:673 x10   atlas.js:2184 x2   notes.js:851 x2
 .nt-arrange      notes.css:487 x6                   notes.js:1212
 .nt-arrange-say  notes.css:499                      notes.js:1226
@@ -1701,6 +1703,6 @@ strength of this list is how a working room loses its paint.
 
 ---
 
-**1569 names** across 6 stylesheets. 1542 are written somewhere the scan can see;
+**1571 names** across 6 stylesheets. 1544 are written somewhere the scan can see;
 9 are written but never painted, 27 painted but never written — 22 of
 those assembled at runtime from a fragment, and 5 with no explanation at all.
