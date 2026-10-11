@@ -144,6 +144,10 @@ a{color:inherit}
 .wcard{margin:0 12px 10px;border:1px solid var(--line);border-radius:var(--radius-lg);
   background:var(--surface);box-shadow:inset 0 1px 0 rgba(255,255,255,.035);overflow:hidden}
 .wcard.stamped{opacity:.62}
+/* asleep until its date: faded as on the desk, all but the line that says
+   what it waits for, which is the one thing live on it while it sleeps */
+.wcard.held{border-color:var(--grid)}
+.wcard.held>:not(.wsay){opacity:.42}
 .wch{display:flex;align-items:center;gap:6px;padding:4px 6px 4px 13px;min-height:48px;
   border-bottom:1px solid var(--grid);background:var(--strip)}
 .wname{flex:1;min-width:0;padding:8px 0;text-align:left;font:400 16px/1.25 var(--body);color:var(--ink);
@@ -2006,7 +2010,7 @@ function linkRow(lk, a, showPin){
 /* ── a card on the wall ─────────────────────────────────────────────── */
 
 function wallCard(a, st, tier){
-  var c = el('article', 'wcard t-' + tier + (stampedToday(a) ? ' stamped' : ''));
+  var c = el('article', 'wcard t-' + tier + (stampedToday(a) ? ' stamped' : '') + (st && st.state === 'held' ? ' held' : ''));
   var head = el('header', 'wch');
   var wk = weightOf(a);
   var nm = el('button', 'wname' + (wk === 'ordinary' ? '' : ' w-' + wk), plainOf(a.name) || 'Untitled');

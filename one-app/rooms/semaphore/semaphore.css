@@ -324,6 +324,16 @@
 #pane-semaphore .wcard.t-rest:not(:hover):not(:focus-within) .wch .stamp:not(.on),
 #pane-semaphore .wcard.t-rest:not(:hover):not(:focus-within) .wch .wedit{display:none}
 #pane-semaphore .wcard.t-rest.held{background:var(--surface);border-color:var(--grid)}
+/* A card asleep until its date is faded (Mark, 2026-10-11), so a row reads
+   at a glance for what is in play. Opacity, against the rule that contrast is
+   set as colour, because here the dimness is the message and not a quiet
+   colour gone too quiet: everything on the card is put back at full strength
+   the moment it is reached for, and the one line that is live while it sleeps
+   — what it waits for, in its foot — is never faded. */
+#pane-semaphore .wcard.held .wfront>.wch,#pane-semaphore .wcard.held .wfront>.wscroll{opacity:.42;transition:opacity .16s}
+#pane-semaphore .wcard.held .wfront{border-color:var(--grid)}
+#pane-semaphore .wcard.held:hover .wfront>.wch,#pane-semaphore .wcard.held:hover .wfront>.wscroll,
+#pane-semaphore .wcard.held:focus-within .wfront>.wch,#pane-semaphore .wcard.held:focus-within .wfront>.wscroll{opacity:1}
 #pane-semaphore .wcnt{flex:0 0 auto;font:9.5px var(--mono);color:var(--faint);opacity:0}
 #pane-semaphore .wcard:hover .wcnt{opacity:1}
 /* The sweep stamp, always in sight on a card (Mark, 2026-10-11): it used to
