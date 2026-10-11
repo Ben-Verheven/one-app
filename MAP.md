@@ -26,7 +26,7 @@ rooms                                                hub.js:296
 
 ## `shell/bridge.js`
 
-1329 lines · 58 KB
+1498 lines · 67 KB
 
 ```
 Bridge — what the five rooms say to each other.             bridge.js:1
@@ -41,11 +41,12 @@ the ring                                                    bridge.js:446
 the name                                                    bridge.js:561
 the page change                                             bridge.js:615
 the rooms that keep their own state, on the Ledger's cloud  bridge.js:651
-which copy wins                                             bridge.js:730
-what the room says about itself                             bridge.js:785
-the agents' inboxes: what the scheduled agents found        bridge.js:1149
-open where we left off                                      bridge.js:1264
-on the iPad, links open in DuckDuckGo                       bridge.js:1275
+which copy wins                                             bridge.js:733
+what the room says about itself                             bridge.js:788
+putting two copies together                                 bridge.js:981
+the agents' inboxes: what the scheduled agents found        bridge.js:1318
+open where we left off                                      bridge.js:1433
+on the iPad, links open in DuckDuckGo                       bridge.js:1444
 ```
 
 ## `shell/boot.js`
@@ -640,4 +641,4 @@ Generated data. Never open, never edit, never upload.
 
 ---
 
-**36060 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.
+**36229 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.

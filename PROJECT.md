@@ -183,7 +183,7 @@ only the cloud joins them.
 | `pj-cloud-dirty` | this device holds a change the cloud has not been told about |
 | `pj-restore-v1` | the last three restore points, each a whole Export blob |
 | `pj-projects-v1`, `pj-callinfo-v1` | legacy, read once and migrated |
-| `semaphore.v1` (+`-ts`, `-seen`, `-dirty`, `-sum`) | Semaphore's board |
+| `semaphore.v1` (+`-ts`, `-seen`, `-dirty`, `-sum`, `-base`) | Semaphore's board |
 | `notes.v1` (+`-ts`, `-seen`, `-dirty`, `-sum`) | the Notes room: notes, book order, which of the two ways in, the tag ties, the colours chosen for tags, and what is pinned in which book |
 | `hub.room` | which room to open on |
 | `hub.storage.*` | the Atlas's own edits, and their `-ts`, `-seen`, `-dirty`, `-sum` |
@@ -244,6 +244,18 @@ Ledger restore point and the cloud's is taken, with a note saying so; and a
 change to where the room was looking only — its `ui` keys — is not sent on
 its own. A device that has never synced under the two keys decides once by
 the old `-ts` stamp.
+
+**The Semaphore's two copies are put together instead** (since 2026-10-11),
+because Pocket writes the same board from the phone: a card stamped there
+while the desk held an unsent change used to set that change aside. The
+room keeps a fourth key, `-base`, a fingerprint of what the cloud said at
+the last exchange — a hash of every piece, not a third copy of the board —
+and when both copies have moved, each piece (every field of every arena and
+type, and each lead, link and date whole) comes from the side that changed
+it. Only where both changed the very same piece does the cloud's win, and
+then the restore point and the note are as before. A fingerprint that is
+not of the exchange `-sum` names decides nothing: the room takes the cloud's
+copy as the others do.
 
 **Two scheduled agents read the web at night and write only to inboxes of
 their own** — `semaphore_inbox` (programmes' pages: new calls, dates,

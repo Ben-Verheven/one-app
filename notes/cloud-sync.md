@@ -112,3 +112,31 @@ the design; these are the parts only testing showed.
 - Headless Chromium on file:// occasionally lost ALL localStorage on a
   reload right after writes (Pocket test, ~1 in 4); not reproducible with
   plain keys — treat as harness noise, not a code bug.
+
+**Putting the Semaphore's two copies together (2026-10-11).** PROJECT.md
+owns the rule; this is what building it showed.
+- Mark asked for it after hearing how a clash went: the desk's unsent
+  change became a restore point the moment Pocket wrote, and Pocket writes
+  small, separate things — a stamp, a lead's step — so nearly every clash
+  was two changes that did not touch.
+- A third full copy of the board was the obvious base and was refused for
+  room: `localStorage` is five megabytes for everything, and the iPad's
+  Safari has less. Fingerprints of every piece measured 29% of a large
+  board (267 K characters) with the ids written out — the ids are most of
+  it — and 17% with each id kept as a short hash of itself; computing one
+  takes about 50 ms, once per exchange.
+- Key order alone must not read as a change, or a lead the desk's migrate
+  rewrote would clash with everything: pieces are hashed from a canonical
+  copy, keys sorted.
+- The fingerprint is trusted only while its own sum matches `-sum`; an
+  older one would attribute a change made between the two exchanges to the
+  wrong side.
+- Tested end to end with the stand-in cloud described above (real
+  supabase-js, a `page.route` fake) and a "phone" that changes the fake's
+  row from the Node side as Pocket's `commit` does: the desk offline (the
+  route aborts), a change on each side, the desk back — in different
+  arenas, in one arena's different fields, in the same field, across a
+  reload while offline, and with a stale fingerprint. The room's chip is in
+  a hidden pane while the Ledger shows, so the test presses it through the
+  DOM. The room still uploads its whole store, `ui` with it; only the
+  comparisons leave the view out.

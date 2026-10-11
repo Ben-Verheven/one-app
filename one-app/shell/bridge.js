@@ -666,7 +666,9 @@
      `things` names the room's own list twice over: it is the key the
      count is taken from, and the word the "this device is empty" refusal
      is written with. `ui`, for a room that has any, names the keys of its
-     store that only say where the room was looking — see `body()`. `pane`
+     store that only say where the room was looking — see `body()`. `merge`,
+     for a room whose store can be put together piece by piece, says so —
+     see "putting two copies together". `pane`
      and `chip` are written out in full rather than built from `room`,
      because `names.py` scans the source for the ids it indexes and a name
      spelled `'pane-' + ROOM` is a name no scanner can see — NAMES.md would
@@ -688,6 +690,7 @@
       var CFG = 'pj-cloud-config', ROW = spec.row;
       var KEY = spec.key, TS = spec.key + '-ts';
       var SEEN = spec.key + '-seen', DIRTY = spec.key + '-dirty', SUM = spec.key + '-sum';
+      var BASE = spec.key + '-base';
       var ROOM = spec.room, NAME = spec.name, THINGS = spec.things;
       var UI = spec.ui || [];
 
@@ -748,7 +751,7 @@
         try {
           if (!v) return;
           localStorage.setItem(SEEN, v);
-          if (said != null) localStorage.setItem(SUM, sum(said));
+          if (said != null) { localStorage.setItem(SUM, sum(said)); keepBase(said); }
         } catch (e) {}
       }
       function seenSum() { try { return localStorage.getItem(SUM); } catch (e) { return null; } }
@@ -911,10 +914,12 @@
             /* it has moved, and this device holds nothing unsent */
             if (was && !isDirty()) { take(d, true, false); return; }
             /* both have moved. The Ledger asks; a room has no box to ask
-               with, so what is here is kept as a restore point and the
-               cloud's is taken — nothing is lost either way, and the note
-               says where the other copy went. */
-            if (was) { take(d, true, true); return; }
+               with, so the two are put together where the room allows it
+               (see "putting two copies together"), and otherwise what is
+               here is kept as a restore point and the cloud's is taken —
+               nothing is lost either way, and the note says where the other
+               copy went. */
+            if (was) { if (!mergeIn(d)) take(d, true, true); return; }
             /* Never synced under the two keys, which is every device the
                first time this build opens: the old rule, once. After this
                exchange the device has a `-seen` and never comes here again. */
@@ -971,6 +976,170 @@
         set('synced', 'took the cloud copy');
         if (clash) Hub.note(NAME + ' \u2014 this device and the cloud had both changed. The cloud\u2019s ' +
           'copy is on screen; this device\u2019s is a restore point in the Ledger\u2019s cloud panel.', 12000);
+      }
+
+      /* ── putting two copies together ─────────────────────────────────
+         When this device and the cloud have both changed, a room used to keep
+         what is here as a restore point and take the cloud's copy whole — so
+         a card stamped in Pocket while the desk held an unsent change undid
+         that change on the desk. Mark asked for the two to be put together
+         instead (2026-10-11), for the Semaphore, whose changes from the phone
+         are small and nearly always somewhere else on the board.
+
+         Three copies decide it: this device's, the cloud's, and what the
+         cloud said at the last exchange — which side changed a piece is the
+         side whose piece differs from that. Only a fingerprint of the last
+         exchange is kept (`-base`), not a third copy of the board, because
+         `localStorage` is five megabytes shared with everything else: a hash
+         of every piece, and the order of every list of things with ids, each
+         id kept as a short hash of itself since the ids are most of it. It is
+         used only while it is the fingerprint of the copy `-sum` names, so a
+         stale one can never decide anything. The pieces are every key of
+         every object, every member of a list whose members all have ids (an
+         arena, a type) and, one list further in, each member whole (a lead, a
+         link, a date). Where both sides changed the very same piece the
+         cloud's wins, as it always did, and this device's whole copy is
+         still a restore point in the Ledger. Tried against a stand-in cloud,
+         with Pocket's writes and the desk's in the same arena and in others. */
+      function canon(x) {
+        if (x === null || typeof x !== 'object') return JSON.stringify(x);
+        if (Array.isArray(x)) return '[' + x.map(function (v) { return v === undefined ? 'null' : canon(v); }).join(',') + ']';
+        return '{' + Object.keys(x).sort().filter(function (k) { return x[k] !== undefined; })
+          .map(function (k) { return JSON.stringify(k) + ':' + canon(x[k]); }).join(',') + '}';
+      }
+      function H(x) { return x === undefined ? '-' : sum(canon(x)).split('.')[0]; }
+      function isObj(x) { return !!x && typeof x === 'object' && !Array.isArray(x); }
+      function isIdList(x) {
+        if (!Array.isArray(x)) return false;
+        var seen = new Set();
+        for (var i = 0; i < x.length; i++) {
+          var e = x[i];
+          if (!isObj(e) || typeof e.id !== 'string' || !e.id || seen.has(e.id)) return false;
+          seen.add(e.id);
+        }
+        return true;
+      }
+      function sid(id) { return sum(id).split('.')[0]; }
+      function fpOf(x, deep) {
+        if (isIdList(x)) return { h: H(x), a: x.map(function (e) { return [sid(e.id), deep ? H(e) : fpOf(e, true)]; }) };
+        if (isObj(x)) {
+          var k = {};
+          Object.keys(x).forEach(function (n) { k[n] = fpOf(x[n], deep); });
+          return { h: H(x), k: k };
+        }
+        return H(x);
+      }
+      function keepBase(said) {
+        if (!spec.merge) return;
+        try { localStorage.setItem(BASE, JSON.stringify({ s: sum(said), t: fpOf(JSON.parse(said), false) })); }
+        catch (e) { try { localStorage.removeItem(BASE); } catch (e2) {} }
+      }
+      function readBase() {
+        try { return JSON.parse(localStorage.getItem(BASE) || 'null'); } catch (e) { return null; }
+      }
+      function own(o, k) { return o && Object.prototype.hasOwnProperty.call(o, k) ? o[k] : undefined; }
+      /* one piece, three ways: the base's fingerprint `f`, this device's `a`,
+         the cloud's `b`; undefined is a piece that is not there */
+      function merge3(f, a, b, path, out) {
+        var ha = H(a), hb = H(b);
+        if (ha === hb) return a;
+        var h0 = f === undefined ? '-' : typeof f === 'string' ? f : f.h;
+        if (ha === h0) return b;
+        if (hb === h0) return a;
+        if (isObj(a) && isObj(b) && (f === undefined || isObj(f) && f.k))
+          return mergeKeys(f ? f.k : {}, a, b, path, out);
+        if (isIdList(a) && isIdList(b) && (f === undefined || isObj(f) && f.a))
+          return mergeList(f ? f.a : [], a, b, path, out);
+        out.push(path);
+        return b;
+      }
+      function mergeKeys(fk, a, b, path, out) {
+        var r = {}, keys = Object.keys(b);
+        Object.keys(a).concat(Object.keys(fk)).forEach(function (k) { if (keys.indexOf(k) < 0) keys.push(k); });
+        keys.forEach(function (k) {
+          var v = merge3(own(fk, k), own(a, k), own(b, k), path.concat(k), out);
+          if (v !== undefined) r[k] = v;
+        });
+        return r;
+      }
+      /* A list keeps the order of the side that moved things in it — the
+         cloud's when both did, or neither — and a member only one side has
+         goes in after the one it followed there. */
+      function mergeList(fa, a, b, path, out) {
+        var base = new Map(fa), A = new Map(), B = new Map(), ids = [];
+        a.forEach(function (e) { A.set(e.id, e); });
+        b.forEach(function (e) { B.set(e.id, e); });
+        /* a member neither side has any longer is gone from both */
+        a.map(function (e) { return e.id; }).concat(b.map(function (e) { return e.id; }))
+          .forEach(function (id) { if (ids.indexOf(id) < 0) ids.push(id); });
+        var got = new Map();
+        ids.forEach(function (id) {
+          var v = merge3(base.get(sid(id)), A.get(id), B.get(id), path.concat(id), out);
+          if (v !== undefined) got.set(id, v);
+        });
+        var was = fa.map(function (p) { return p[0]; });
+        function moved(list) {
+          var now = list.map(function (e) { return sid(e.id); }).filter(function (k) { return base.has(k); });
+          return now.join('\n') !== was.filter(function (k) { return now.indexOf(k) >= 0; }).join('\n');
+        }
+        var first = moved(a) && !moved(b) ? a : b, second = first === a ? b : a;
+        var seq = first.map(function (e) { return e.id; }).filter(function (id) { return got.has(id); });
+        second.forEach(function (e, i) {
+          if (!got.has(e.id) || seq.indexOf(e.id) >= 0) return;
+          var at = 0;
+          for (var j = i - 1; j >= 0; j--) { var k = seq.indexOf(second[j].id); if (k >= 0) { at = k + 1; break; } }
+          seq.splice(at, 0, e.id);
+        });
+        return seq.map(function (id) { return got.get(id); });
+      }
+      function bare(s) {
+        var o = {};
+        Object.keys(s || {}).forEach(function (k) { if (UI.indexOf(k) < 0) o[k] = s[k]; });
+        return o;
+      }
+      /* Both have moved, and the room can be merged: put the two together,
+         keep a restore point of what was here, and send the result. False
+         when it cannot be done, and the old road is taken instead. */
+      function mergeIn(d) {
+        if (!spec.merge) return false;
+        var base = readBase(), loc = local();
+        if (!base || !base.t || base.s !== seenSum() || !loc) return false;
+        var clash = [];
+        var mine = bare(loc), theirs = bare(d);
+        var merged = merge3(base.t, mine, theirs, [], clash);
+        if (!isObj(merged)) return false;
+        UI.forEach(function (k) { if (loc[k] !== undefined) merged[k] = loc[k]; });
+        var kept = keepHere('before ' + NAME + ' put this device\u2019s copy and the cloud\u2019s together');
+        if (clash.length && !kept) return false;
+        var ok = false;
+        applying = true;
+        try { ok = api.applyState(merged) !== false; } catch (e) { console.error(e); }
+        applying = false;
+        if (!ok) return false;
+        /* the cloud still holds its own copy until the push lands */
+        var said = body(d);
+        lastBody = said;
+        setSeen(remoteStamp, said);
+        setDirty(true);
+        setStamp(new Date().toISOString());
+        var where = [];
+        clash.forEach(function (p) {
+          var nm = p[0];
+          if (p[0] === THINGS && p.length > 1) {
+            var it = ((d && d[THINGS]) || []).concat(loc[THINGS] || [])
+              .filter(function (x) { return x && x.id === p[1]; })[0];
+            nm = (it && it.name) || THINGS;
+          }
+          if (where.indexOf(nm) < 0) where.push(nm);
+        });
+        Hub.note(clash.length
+          ? NAME + ' \u2014 this device and the cloud had both changed, and the two are put together, except where ' +
+            'both changed the same thing (' + where.join(', ') + '): there the cloud\u2019s is on screen, and this ' +
+            'device\u2019s copy is a restore point in the Ledger\u2019s cloud panel.'
+          : NAME + ' \u2014 this device and the cloud had both changed, in different places, so the two are put ' +
+            'together and nothing is lost.', 12000);
+        push();
+        return true;
       }
 
       /* Has the cloud's row moved since this session last read or wrote
@@ -1130,7 +1299,7 @@
   }
 
   roomCloud({ room: 'semaphore', name: 'Semaphore', row: 'semaphore',
-              key: 'semaphore.v1', things: 'arenas', ui: ['ui'],
+              key: 'semaphore.v1', things: 'arenas', ui: ['ui'], merge: true,
               pane: 'pane-semaphore', chip: 'semcloud' });
 
   roomCloud({ room: 'notes', name: 'Notes', row: 'notes',

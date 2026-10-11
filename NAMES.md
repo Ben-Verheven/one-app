@@ -36,7 +36,7 @@ the two lists at the foot of this file is where those names gather.
 #pane-atlas      shell.css:209 x25                  bridge.js:20 x3
 #pane-callboard  shell.css:117 x16                  bridge.js:287
 #pane-ledger     shell.css:348 x19                  bridge.js:485
-#pane-notes      shell.css:715 x11                  bridge.js:1138
+#pane-notes      shell.css:715 x11                  bridge.js:1307
 #pane-semaphore  shell.css:251 x22                  bridge.js:365 x2
 #reader          shell.css:238                      callboard.js:453 x4   callboard.view.js:5 x2   bridge.js:288
 #root            shell.css:621                      ledger.view.js:5 x2   ledger.js:4767
@@ -1032,7 +1032,7 @@ the two lists at the foot of this file is where those names gather.
 .gone          semaphore.css:751 x5               ledger.js:8639 x4   semaphore.js:836 x4   atlas.js:1564
 .granIn        semaphore.css:1315 x3              semaphore.js:1254 x3
 .grow          semaphore.css:69 x2                semaphore.js:2162 x6   semaphore.view.js:5 x2   ledger.view.js:5
-.held          semaphore.css:324 x4               semaphore.js:1883 x4   bridge.js:1024 x2   ledger.js:2500 x2
+.held          semaphore.css:324 x4               semaphore.js:1883 x4   bridge.js:1193 x2   ledger.js:2500 x2
 .hi            semaphore.css:1224                 semaphore.js:1441 x2   atlas.js:1255
 .hit           semaphore.css:876                  semaphore.js:2513
 .how           semaphore.css:303 x6               semaphore.js:676 x10   ledger.js:8853 x2   atlas.js:1557
@@ -1429,7 +1429,7 @@ the two lists at the foot of this file is where those names gather.
 .etype       atlas.css:325                      atlas.js:983
 .from        atlas.css:197                      ledger.js:2199 x21   atlas.js:765 x19   semaphore.js:363 x12
 .gp          atlas.css:348                      atlas.js:1552
-.grp         atlas.css:211 x8                   atlas.js:980 x4   semaphore.js:707 x2   bridge.js:1262
+.grp         atlas.css:211 x8                   atlas.js:980 x4   semaphore.js:707 x2   bridge.js:1431
 .hair        atlas.css:128                      atlas.js:968
 .halo        atlas.css:237                      atlas.js:2151
 .hint        atlas.css:89 x2                    atlas.js:689 x35   semaphore.js:668 x7   semaphore.view.js:5
