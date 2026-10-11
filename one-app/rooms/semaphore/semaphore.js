@@ -832,10 +832,10 @@ function renderDispatch(){
         '>Check again</button>');
   if(!finds.rows.length){
     el.innerHTML=head+'<p class="dpnote">Each night the agent looks through about three arenas, and any '+
-      'you have asked it to, for links to brokerage events and partner-search tools, and offers a short '+
-      'rewrite of their About and Brokerage texts where those are wrong, out of date or missing something '+
-      'important. Once a week it looks '+
-      'for calls and programmes you are not watching yet. Whatever it finds waits here.</p>';
+      'you have asked it to, for brokerage events (new ones, and changes to the ones on the board) and '+
+      'partner-search tools, and offers a short rewrite of their About and Brokerage texts where those are '+
+      'wrong, out of date or missing something important. Once a week it looks for call dates, new and '+
+      'changed, and programmes you are not watching yet. Whatever it finds waits here.</p>';
     return;
   }
   const groups=order.map(k=>{
@@ -3018,9 +3018,9 @@ function howHTML(){
       'and the days since you last pressed it.')+
     line('Ask the agent','The ring in a card\u2019s head asks the nightly agent to look at that arena on its '+
       'next run, on top of the ones it picks itself. It goes out once the agent has been. What the agent '+
-      'brings is links \u2014 events and tools \u2014 and short rewrites of the card\u2019s About and '+
-      'Brokerage texts, and they wait in <b>Dispatches</b>; once accepted, the links are marked <b>new</b> '+
-      'until you next sweep the arena, and a rewrite takes the old text\u2019s place.')+
+      'brings is brokerage events, partner-search tools and short rewrites of the card\u2019s About and '+
+      'Brokerage texts, and they wait in <b>Dispatches</b>; once accepted, events and links are marked '+
+      '<b>new</b> until you next sweep the arena, and a rewrite takes the old text\u2019s place.')+
     '</dl><p class="coda">None of this is a setting, and none of the arithmetic is on screen. '+
     'Position is the whole readout: the higher a card stands, the more of itself it shows. Order runs '+
     'in rungs \u2014 what you promised, then what is asking to be looked at, then what is merely due a '+
