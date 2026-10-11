@@ -12,8 +12,9 @@ Semaphore (the Cards view of 2026-10-06). Four tabs:
   (`wokeRow`), which opens the walk; stamping it ends the wait and sends it back to its row. Walked one card at a
   time with *Look around* → Next / Stamp & next, which takes the types in turn: every type's first
   card, then every type's second. Arenas with no brokerage material are ghosts under their row.
-- **Pinned** — pinned links first (oldest pin first), each with its own stamp ✓, the days since,
-  and its pin to put it back; then pinned cards.
+- **Pinned** — pinned links first (oldest pin first): the link's name on a line of its own, tapped
+  to go there (its host not shown), and under it the stamp ✓ carrying the days since, the arena and
+  the pin to put it back (since 2026-10-11); then pinned cards.
 - **Leads** — every open lead in Spotted / Contacted / Talking, as the desk's Leads arrangement;
   Contacted split by its two paths; each lead shows the desk's diamond ("ruit"). In a lead's sheet
   the diamond is pressed to move it (the desk's own `leadPath`), and links/emails are added there,

@@ -264,20 +264,21 @@ a.wlink:active .wd,a.wlink:active::before{color:var(--brok)}
 /* ── pinned links ───────────────────────────────────────────────────── */
 
 .wpins{margin:0 12px 6px;padding-bottom:16px;border-bottom:1px dashed var(--grid)}
-.wprow{display:flex;align-items:center;gap:4px;margin-bottom:6px;padding:2px 10px 2px 2px;
+.wprow{margin-bottom:6px;padding:2px 4px 2px 4px;
   border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
-.wprow .wlink{flex:1;min-width:0;display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:10px;row-gap:2px;align-items:baseline}
-.wprow .wlink .wn,.wprow .wlink .wd,.wprow .wlink .wfresh{grid-column:2;justify-self:start;max-width:100%}
-.wprow .wlink .wd{margin-left:0}
-.wprow .stamp{flex:0 0 40px;width:40px}
-.wprow.on .wpage{color:var(--muted)}
-.wprow .pin{flex:0 0 32px;width:32px;margin-right:-6px}
-.wpmeta{flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-end;gap:3px;max-width:40%;min-width:0}
-.wpa{max-width:100%;padding:5px 0 1px;font:italic 12.5px/1.2 var(--body);color:var(--muted);
+/* the title has the whole first line and wraps rather than being cut, and
+   the host is not shown: Mark reads a pinned link by its name and only
+   wants to go there (2026-10-11) */
+.wprow .wlink{flex-wrap:wrap}
+.wprow .wlink .wn{flex:1 1 0;white-space:normal}
+.wprow .wlink .wd{display:none}
+.wpfoot{display:flex;align-items:center;gap:6px;margin-top:-6px}
+.wpa{flex:1 1 auto;min-width:0;min-height:44px;text-align:left;font:italic 12.5px/1.2 var(--body);color:var(--muted);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .wpa:active{color:var(--brok-deep)}
-.wpage{font:11px/1 var(--mono);color:var(--ink);padding-bottom:5px}
+.wpage{flex:0 0 auto;font:11px/1 var(--mono);color:var(--ink)}
 .wpage.never{color:var(--faint)}
+.wprow .pin{flex:0 0 40px;width:40px}
 
 /* ── leads, as the desk's Leads arrangement draws them ──────────────── */
 
@@ -2343,25 +2344,27 @@ function drawPins(){
     p.links.forEach(function(x){
       var t = isoToday(), on = x.lk.stampedAt === t;
       var row = el('div', 'wprow' + (on ? ' on' : ''));
-      /* the link's own stamp and pin are the desk's brokerage-link fields; a
-         pinned link of the arena's own list is shown, and handled on the desk */
+      row.appendChild(linkRow(x.lk, x.a));
+      /* under the title: the stamp, carrying the days since it was last
+         pressed as the card's stamp does, then the arena, then the pin.
+         The link's own stamp and pin are the desk's brokerage-link fields; a
+         pinned link of the arena's own list is shown, and handled on the
+         desk, so it keeps its days as plain text instead */
+      var foot = el('div', 'wpfoot');
+      var d = x.lk.stampedAt ? Math.max(0, -daysTo(x.lk.stampedAt)) : null;
       if (x.scope === 'brokerage')
-        row.appendChild(tickBtn(on, on ? 'Stamped today — tap to undo' : 'Stamp it once you have been through it',
-          function(){ stampLink(x.a, x.lk); }));
-      var lk = linkRow(x.lk, x.a);
-      row.appendChild(lk);
-      var meta = el('span', 'wpmeta');
+        foot.appendChild(tickBtn(on, on ? 'Stamped today — tap to undo'
+          : (d === null ? 'Not stamped yet' : 'Stamped ' + d + ' days ago') + ' — stamp it once you have been through it',
+          function(){ stampLink(x.a, x.lk); }, d));
       var ar = el('button', 'wpa', plainOf(x.a.name) || 'Arena');
       ar.addEventListener('click', function(){ openArenaById(x.a.id); });
-      meta.appendChild(ar);
-      var d = x.lk.stampedAt ? -daysTo(x.lk.stampedAt) : null;
-      var age = el('span', 'wpage' + (d === null ? ' never' : ''),
-        d === null ? 'never' : d <= 0 ? 'today' : d + ' d');
-      age.title = d === null ? 'Not stamped yet' : d <= 0 ? 'Stamped today' : 'Stamped ' + d + ' days ago';
-      meta.appendChild(age);
-      row.appendChild(meta);
-      if (x.scope === 'brokerage')
-        row.appendChild(pinBtn(true, 'Unpin — put it back on its card', function(){ pinLink(x.a, x.lk); }));
+      foot.appendChild(ar);
+      if (x.scope !== 'brokerage')
+        foot.appendChild(el('span', 'wpage' + (d === null ? ' never' : ''),
+          d === null ? 'never' : d === 0 ? 'today' : d + ' d'));
+      else
+        foot.appendChild(pinBtn(true, 'Unpin — put it back on its card', function(){ pinLink(x.a, x.lk); }));
+      row.appendChild(foot);
       box.appendChild(row);
     });
     host.appendChild(box);
