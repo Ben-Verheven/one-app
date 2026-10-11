@@ -692,11 +692,10 @@ function renderBoard(){keepPlace(()=>{
     const group=vis.filter(a=>a.typeId===ty.id).sort(boardOrder());
     if(!group.length)continue;
     const col=!!S.ui.collapsed[ty.id];
-    h+='<div class="grp'+(col?' collapsed':'')+'">'+
+    h+='<div class="grp'+(col?' collapsed':'')+'" style="--tone:'+esc(toneHex(ty.color))+'">'+
        '<div class="ghead"><div class="gc">'+
        '<button class="caret" data-act="toggleGroup" data-id="'+ty.id+'" aria-label="Collapse group">'+(col?'\u25B8':'\u25BE')+'</button>'+
-       typeDotHTML(ty,'board')+
-       '<span class="gname">'+esc(ty.name)+'</span><span class="gcount">'+group.length+'</span>'+typeMoveHTML(ty)+'</div></div>';
+       '<span class="gname">'+esc(ty.name)+'</span><span class="gcount">'+group.length+'</span></div></div>';
     if(col){h+='</div>';continue;}
     for(const a of group)h+=boardRow(a,bg);
     h+='</div>';
@@ -2347,21 +2346,18 @@ function leadColHTML(a){
   return '<span class="lcolwrap"><span class="lcol" style="--c:'+esc(hex)+'" '+
     'title="'+esc((t?t.name+' \u2014 ':'')+'the colour of '+a.name+'\u2019s type')+'"><i aria-hidden="true"></i></span></span>';
 }
-/* ───────── a type's head ─────────
-   The head of a type's row, on the wall and on the board alike, carries the
-   type's colour as a dot that opens the swatches, and the two arrows that
-   move the type up or down. Mark sorts his types himself (2026-10-11), and
-   the one order serves the wall, the board and Pocket. Only one menu is open
-   at a time; a press anywhere else or Escape shuts it. The same type's dot
-   stands in several places at once — its row, and the list of types over it —
-   so the menu remembers which dot it was opened from (`at`), or it opened
-   under both. */
+/* ───────── a type's colour dot ─────────
+   In the list of types each type carries its colour as a dot that opens the
+   swatches. Only one menu is open at a time; a press anywhere else or Escape
+   shuts it. The dot and the arrows that moved a type stood on the rows'
+   own heads for a day, until Mark asked for everything about types in one
+   place (2026-10-11, see "the types, managed"). */
 let colOpen=null;
-function typeDotHTML(t,at){
-  const open=colOpen===at+':'+t.id,cur=TONES.find(x=>x.k===t.color);
+function typeDotHTML(t){
+  const open=colOpen===t.id,cur=TONES.find(x=>x.k===t.color);
   const tip='Colour of '+t.name+(cur?' \u2014 '+cur.label:'')+' \u2014 click to change';
   return '<span class="lcolwrap tycol">'+
-    '<button class="lcol'+(open?' open':'')+'" data-act="typeColMenu" data-id="'+t.id+'" data-at="'+at+'" style="--c:'+esc(toneHex(t.color))+'" '+
+    '<button class="lcol'+(open?' open':'')+'" data-act="typeColMenu" data-id="'+t.id+'" style="--c:'+esc(toneHex(t.color))+'" '+
       'aria-haspopup="listbox" aria-expanded="'+(open?'true':'false')+'" '+
       'title="'+esc(tip)+'" aria-label="'+esc(tip)+'"><i aria-hidden="true"></i></button>'+
     (open
@@ -2371,13 +2367,6 @@ function typeDotHTML(t,at){
             'style="--c:'+x.color+'" title="'+x.label+'" aria-label="'+x.label+'"></button>').join('')+
         '</span>'
       : '')+
-  '</span>';
-}
-function typeMoveHTML(t){
-  const i=S.types.indexOf(t);
-  return '<span class="tymv">'+
-    '<button data-act="tyUp" data-id="'+t.id+'" title="Move '+esc(t.name)+' up" aria-label="Move '+esc(t.name)+' up"'+(i===0?' disabled':'')+'>\u25B2</button>'+
-    '<button data-act="tyDown" data-id="'+t.id+'" title="Move '+esc(t.name)+' down" aria-label="Move '+esc(t.name)+' down"'+(i===S.types.length-1?' disabled':'')+'>\u25BC</button>'+
   '</span>';
 }
 function leadRowHTML(a,l,hit,say){
@@ -3120,11 +3109,6 @@ function paintWall(){
   const howBtn=S.ui.wallSort==='rotation'
     ?'<button class="howbtn'+(S.ui.howOpen?' on':'')+'" data-act="toggleHow" '+
       'aria-expanded="'+(S.ui.howOpen?'true':'false')+'">How the order works</button>':'';
-  /* The list of types — make, rename, remove, colour, order — had no way in
-     once the header lost its Types button (2026-10-09); the rotation's rows
-     are the types, so it is offered beside them. */
-  const typesBtn=S.ui.wallSort==='rotation'
-    ?'<button class="howbtn" data-act="openTypes">Types</button>':'';
 
   /* ---- pinned: the links and the cards you keep to hand ----
      Two kinds of thing are pinned, and both are kept here. A whole card, drawn
@@ -3242,7 +3226,7 @@ function paintWall(){
   const n=vis.filter(a=>standing(a).score>=ask).length;
   let h='<div class="whead">'+sortBtns+
     (n?'<span class="wsay"><b>'+n+'</b> '+(n===1?'card is':'cards are')+
-      ' asking for something.</span>':'')+typesBtn+howBtn+'</div>'+howHTML();
+      ' asking for something.</span>':'')+howBtn+'</div>'+howHTML();
   let any=false;
   for(const[t,arenas]of rows){
     const{list,empty}=rotationSplit(arenas);
@@ -3250,11 +3234,10 @@ function paintWall(){
     const k=list.filter(x=>x.s.score>=ask).length;
     if(cards.length)any=true;
     h+='<section class="wtrow"'+(t?' style="--tone:'+esc(toneHex(t.color))+'"':'')+'>'+
-      '<div class="wthead">'+(t?typeDotHTML(t,'wall'):'')+
+      '<div class="wthead">'+
         '<span class="wtn">'+esc(t?t.name:'Untyped')+'</span>'+
         '<span class="wtc">'+arenas.length+' arena'+(arenas.length===1?'':'s')+
-          (k?' \u00B7 <b>'+k+' asking</b>':'')+'</span>'+
-        (t?typeMoveHTML(t):'')+'</div>'+
+          (k?' \u00B7 <b>'+k+' asking</b>':'')+'</span></div>'+
       (cards.length?'<div class="wtrack" data-ty="'+(t?t.id:'')+'">'+
         cards.map(x=>wallCard(x.a,x.s,'lead')).join('')+'</div>':'')+
       (empty.length?'<p class="wrest">No brokerage material yet \u2014 '+
@@ -3623,19 +3606,51 @@ $('#askNo').addEventListener('click',Ask.shut);
 /* A type's colour or place shows on the wall, the board, the leads and the
    list of types at once, so a change to either redraws all four. */
 function typesShown(){renderTypes();renderAll();}
+/* ───────── the types, managed ─────────
+   Everything about the types in one place, opened from the Types button
+   beside + Arena (Mark, 2026-10-11): their order, which the cards, the board
+   and Pocket all follow; their names and colours; merging one into another;
+   and moving an arena from one type to another, which before could only be
+   done one arena at a time in its own panel. A type's arenas are listed
+   under it on request, each with the type it belongs to as a choice, so
+   moving one is a single pick. Which types stand open is not saved. */
+const tyOpen=new Set();
 function renderTypes(){
-  $('#tylist').innerHTML=S.types.map((t,i)=>{
-    const n=S.arenas.filter(a=>a.typeId===t.id).length;
-    return '<div class="tyline">'+
-      '<span class="tymove">'+
-        '<button class="ib" data-act="tyUp" data-id="'+t.id+'" title="Move up"'+(i===0?' disabled':'')+'>\u25B2</button>'+
-        '<button class="ib" data-act="tyDown" data-id="'+t.id+'" title="Move down"'+(i===S.types.length-1?' disabled':'')+'>\u25BC</button>'+
-      '</span>'+
-      typeDotHTML(t,'list')+
-      '<input value="'+esc(t.name)+'" data-tyname="'+t.id+'">'+
-      '<span class="cnt">'+n+' arena'+(n===1?'':'s')+'</span>'+
-      '<button class="ib" data-act="delType" data-id="'+t.id+'" title="Remove">\u2715</button></div>';
+  const opts=sel=>(sel?'':'<option value="" selected>No type</option>')+
+    S.types.map(t=>'<option value="'+t.id+'"'+(t.id===sel?' selected':'')+'>'+esc(t.name)+'</option>').join('');
+  const arenasHTML=ars=>'<div class="tyarenas">'+ars.map(a=>
+    '<label class="tyar"><span class="tyan">'+esc(a.name)+(a.frozenAt?' <i>frozen</i>':'')+'</span>'+
+      '<select data-arenatype="'+a.id+'" aria-label="Type of '+esc(a.name)+'">'+opts(typeOf(a)?a.typeId:'')+'</select></label>').join('')+'</div>';
+  const byName=(x,y)=>x.name.localeCompare(y.name);
+  let h=S.types.map((t,i)=>{
+    const ars=S.arenas.filter(a=>a.typeId===t.id).sort(byName);
+    const n=ars.length,open=n&&tyOpen.has(t.id);
+    const others=S.types.filter(u=>u!==t);
+    return '<section class="tyblock'+(open?' open':'')+'" style="--tone:'+esc(toneHex(t.color))+'">'+
+      '<div class="tyline">'+
+        '<span class="tymove">'+
+          '<button class="ib" data-act="tyUp" data-id="'+t.id+'" title="Move '+esc(t.name)+' up"'+(i===0?' disabled':'')+'>▲</button>'+
+          '<button class="ib" data-act="tyDown" data-id="'+t.id+'" title="Move '+esc(t.name)+' down"'+(i===S.types.length-1?' disabled':'')+'>▼</button>'+
+        '</span>'+
+        typeDotHTML(t)+
+        '<input value="'+esc(t.name)+'" data-tyname="'+t.id+'" aria-label="Name of the type">'+
+        '<button class="tyn" data-act="tyArenas" data-id="'+t.id+'"'+(n?'':' disabled')+
+          ' aria-expanded="'+(open?'true':'false')+'">'+n+' arena'+(n===1?'':'s')+(n?(open?' ▾':' ▸'):'')+'</button>'+
+        (n&&others.length
+          ?'<select class="tymerge" data-merge="'+t.id+'" aria-label="Merge '+esc(t.name)+' into another type">'+
+             '<option value="" selected>Merge into…</option>'+
+             others.map(u=>'<option value="'+u.id+'">'+esc(u.name)+'</option>').join('')+'</select>'
+          :'<span class="tymerge"></span>')+
+        '<button class="ib" data-act="delType" data-id="'+t.id+'"'+
+          ' title="'+(n?'Merge it or move its arenas first':'Remove '+esc(t.name))+'"'+(n?' disabled':'')+'>✕</button>'+
+      '</div>'+
+      (open?arenasHTML(ars):'')+
+    '</section>';
   }).join('');
+  /* an arena whose type was taken from under it is offered a home here */
+  const lost=S.arenas.filter(a=>!typeOf(a)).sort(byName);
+  if(lost.length)h+='<section class="tyblock open"><div class="tyline"><span class="tylost">Untyped</span></div>'+arenasHTML(lost)+'</section>';
+  $('#tylist').innerHTML=h;
 }
 
 /* ============ tooltip ============ */
@@ -3679,10 +3694,11 @@ document.addEventListener('click',e=>{
   if(!b)return;
   const act=b.dataset.act,id=b.dataset.id,a=arena(b.dataset.a||id);
   switch(act){
-    case 'typeColMenu':{const k=b.dataset.at+':'+id;colOpen=colOpen===k?null:k;typesShown();
+    case 'typeColMenu':{colOpen=colOpen===id?null:id;typesShown();
       const sw=colOpen&&document.querySelector('.lcolpop .lsw.sel');
       if(sw)sw.focus({preventScroll:true});break;}
     case 'typeColPop':break;
+    case 'tyArenas':if(tyOpen.has(id))tyOpen.delete(id);else tyOpen.add(id);renderTypes();break;
     case 'typeColor':{colOpen=null;const t=S.types.find(t=>t.id===id);
       if(t&&toneHex(b.dataset.v))t.color=b.dataset.v;
       save();typesShown();break;}
@@ -3895,7 +3911,7 @@ document.addEventListener('click',e=>{
     case 'delType':{const n=S.arenas.filter(x=>x.typeId===id).length;
       if(n){Ask.tell('Still in use',
         n+' arena'+(n===1?' still uses':'s still use')+' this type. Give '+
-        (n===1?'it':'them')+' another type first, and this one can go.');break;}
+        (n===1?'it':'them')+' another type, or merge this one into another, and it can go.');break;}
       S.types=S.types.filter(t=>t.id!==id);save();renderTypes();renderAll();break;}
     case 'addDate':drawer.editing=true;drawer.edit='new';renderDrawer();
       {const f=$('#card .dform');if(f){f.scrollIntoView({block:'center'});
@@ -4103,10 +4119,34 @@ document.addEventListener('change',e=>{
     f.querySelector('.gradefld').innerHTML='<label>Certainty</label>'+gradeSegHTML(el.value,f.grade.value);
     return;
   }
+  /* an arena to another type, from the list of types; the type it went to
+     opens, so it can be seen to have arrived */
+  if(el.dataset.arenatype){
+    const ar=arena(el.dataset.arenatype),t=S.types.find(t=>t.id===el.value);
+    if(ar&&t){ar.typeId=t.id;tyOpen.add(t.id);save();typesShown();}
+    return;
+  }
+  /* one type into another: every arena of it goes over, and it is removed */
+  if(el.dataset.merge){
+    const from=S.types.find(t=>t.id===el.dataset.merge),to=S.types.find(t=>t.id===el.value);
+    renderTypes();                       /* the choice goes back to Merge into… until it is confirmed */
+    if(!from||!to||from===to)return;
+    const n=S.arenas.filter(a=>a.typeId===from.id).length;
+    Ask.ask('Merge '+from.name+' into '+to.name+'?',
+      (n===1?'Its one arena becomes ':'Its '+n+' arenas become ')+to.name+', in '+to.name+'’s colour, and '+
+      from.name+' is removed.','Merge',()=>{
+        S.arenas.forEach(a=>{if(a.typeId===from.id)a.typeId=to.id;});
+        S.types=S.types.filter(t=>t!==from);
+        delete S.ui.collapsed[from.id];
+        tyOpen.delete(from.id);tyOpen.add(to.id);
+        save();typesShown();
+      });
+    return;
+  }
   /* type rename */
   if(el.dataset.tyname){
     const t=S.types.find(t=>t.id===el.dataset.tyname);
-    if(t&&el.value.trim()){t.name=el.value.trim();save();renderBoard();renderDrawer();}
+    if(t&&el.value.trim()){t.name=el.value.trim();save();renderAll();}
     return;
   }
 });

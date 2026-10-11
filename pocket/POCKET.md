@@ -5,7 +5,7 @@ idle minute instead of the news. Since 2026-10-07 it is dressed and laid out lik
 Semaphore (the Cards view of 2026-10-06). Four tabs:
 
 - **Rotation** — the desk's rotation since 2026-10-11 (`typeRows`): a row for every arena type, in
-  the desk's order of types, headed in the type's colour; in each row the cards, all one size, in
+  the desk's order of types, each headed by a band in the type's colour; in each row the cards, all one size, in
   standing order, swiped sideways, with a card stamped today at the far end. Walked one card at a
   time with *Look around* → Next / Stamp & next, which takes the types in turn: every type's first
   card, then every type's second. Arenas with no brokerage material are ghosts under their row.

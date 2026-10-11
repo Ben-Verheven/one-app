@@ -354,13 +354,13 @@ The new-todo pane                                          ledger.css:3973
 
 ## `rooms/semaphore/semaphore.view.js`
 
-108 lines · 5 KB
+111 lines · 5 KB
 
 _No section banners._
 
 ## `rooms/semaphore/semaphore.js`
 
-4350 lines · 228 KB
+4390 lines · 231 KB
 
 ```
 Brokerage Semaphore                               semaphore.js:1
@@ -372,40 +372,41 @@ date semantics                                    semaphore.js:353
 filtering                                         semaphore.js:388
 search                                            semaphore.js:458
 render: board                                     semaphore.js:475
-render: freezer                                   semaphore.js:714
-dispatches                                        semaphore.js:743
-coming up                                         semaphore.js:1086
-drawer                                            semaphore.js:1296
-read view: one stream, in time order              semaphore.js:1394
-edit view                                         semaphore.js:1518
-actions                                           semaphore.js:1646
-standing                                          semaphore.js:1674
-one ladder, four rungs                            semaphore.js:1706
-the line on top of a card                         semaphore.js:1962
-leads                                             semaphore.js:2132
-the ruit                                          semaphore.js:2215
-the score                                         semaphore.js:2269
-one lead card, in both rooms                      semaphore.js:2311
-the colour dot                                    semaphore.js:2339
-a type's head                                     semaphore.js:2350
-turning                                           semaphore.js:2804
-one rhythm for the wall                           semaphore.js:2814
-pinned: the links and the cards you keep to hand  semaphore.js:3129
-leads: one board, three sections                  semaphore.js:3160
-the rotation: a strip for every type              semaphore.js:3226
-leads, lent to the Ledger's board                 semaphore.js:3484
-modals                                            semaphore.js:3579
-asking, and saying                                semaphore.js:3582
-tooltip                                           semaphore.js:3641
-events                                            semaphore.js:3673
-typing, and the forms it goes into                semaphore.js:3968
-escape, and closing by clicking away              semaphore.js:4130
-putting links in your own order                   semaphore.js:4170
+render: freezer                                   semaphore.js:713
+dispatches                                        semaphore.js:742
+coming up                                         semaphore.js:1085
+drawer                                            semaphore.js:1295
+read view: one stream, in time order              semaphore.js:1393
+edit view                                         semaphore.js:1517
+actions                                           semaphore.js:1645
+standing                                          semaphore.js:1673
+one ladder, four rungs                            semaphore.js:1705
+the line on top of a card                         semaphore.js:1961
+leads                                             semaphore.js:2131
+the ruit                                          semaphore.js:2214
+the score                                         semaphore.js:2268
+one lead card, in both rooms                      semaphore.js:2310
+the colour dot                                    semaphore.js:2338
+a type's colour dot                               semaphore.js:2349
+turning                                           semaphore.js:2793
+one rhythm for the wall                           semaphore.js:2803
+pinned: the links and the cards you keep to hand  semaphore.js:3113
+leads: one board, three sections                  semaphore.js:3144
+the rotation: a strip for every type              semaphore.js:3210
+leads, lent to the Ledger's board                 semaphore.js:3467
+modals                                            semaphore.js:3562
+asking, and saying                                semaphore.js:3565
+the types, managed                                semaphore.js:3609
+tooltip                                           semaphore.js:3656
+events                                            semaphore.js:3688
+typing, and the forms it goes into                semaphore.js:3984
+escape, and closing by clicking away              semaphore.js:4170
+putting links in your own order                   semaphore.js:4210
 ```
 
 ## `rooms/semaphore/semaphore.css`
 
-1547 lines · 114 KB
+1567 lines · 116 KB
 
 ```
 Brokerage Semaphore                               semaphore.css:1
@@ -414,26 +415,27 @@ radar                                             semaphore.css:84
 swatches (grade glyph language)                   semaphore.css:85
 search                                            semaphore.css:95
 board                                             semaphore.css:101
-the sheet                                         semaphore.css:217
-faint was #8C8474, which cleared nothing          semaphore.css:228
-shared card                                       semaphore.css:251
-brokerage wall                                    semaphore.css:264
-the rotation: a strip for every type (paintWall)  semaphore.css:355
-a card has two sides                              semaphore.css:383
-the line on top of a card (cardLineHTML)          semaphore.css:506
-pinned links (pinRowHTML)                         semaphore.css:651
-leads                                             semaphore.css:679
-the three sections                                semaphore.css:691
-the leads view                                    semaphore.css:712
-Editing in the card                               semaphore.css:777
-the lead itself                                   semaphore.css:806
-one lead card, in both rooms                      semaphore.css:925
-freezer                                           semaphore.css:1141
-arena panel                                       semaphore.css:1175
-dispatches                                        semaphore.css:1357
-coming up                                         semaphore.css:1409
-modals                                            semaphore.css:1512
-tooltip                                           semaphore.css:1540
+the sheet                                         semaphore.css:221
+faint was #8C8474, which cleared nothing          semaphore.css:232
+shared card                                       semaphore.css:255
+brokerage wall                                    semaphore.css:268
+the rotation: a strip for every type (paintWall)  semaphore.css:359
+a card has two sides                              semaphore.css:382
+the line on top of a card (cardLineHTML)          semaphore.css:505
+pinned links (pinRowHTML)                         semaphore.css:650
+leads                                             semaphore.css:678
+the three sections                                semaphore.css:690
+the leads view                                    semaphore.css:711
+Editing in the card                               semaphore.css:776
+the lead itself                                   semaphore.css:805
+one lead card, in both rooms                      semaphore.css:924
+freezer                                           semaphore.css:1140
+arena panel                                       semaphore.css:1174
+dispatches                                        semaphore.css:1356
+coming up                                         semaphore.css:1408
+modals                                            semaphore.css:1511
+the types, managed (renderTypes)                  semaphore.css:1538
+tooltip                                           semaphore.css:1560
 ```
 
 ## `rooms/callboard/callboard.view.js`
@@ -636,4 +638,4 @@ Generated data. Never open, never edit, never upload.
 
 ---
 
-**35802 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.
+**35865 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.

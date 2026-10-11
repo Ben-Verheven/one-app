@@ -26,6 +26,9 @@ Hub.markup('semaphore', `
     <button class="btn ghost" id="searchBtn" data-act="openSearch">Search</button>
     <input id="search" type="search" placeholder="Search\u2026" hidden
            title="Searches arena names, tags, notes, tools, dates and leads">
+    <!-- The types — their order, names, colours, merging them and moving an
+         arena between them — are kept in one place, opened from here. -->
+    <button class="btn" data-act="openTypes">Types</button>
     <button class="btn primary" data-act="addArena">+ Arena</button>
     <!-- Carrying files by hand is the Ledger's job, once, for the whole app:
          its Export writes this board out beside the journal and its Import
@@ -75,7 +78,7 @@ ITEA 4 ; Programme ; software"></textarea>
 <div class="modal" id="typesModal">
   <div class="mbox">
     <h2>Arena types</h2>
-    <p class="sub">Rename in place — every arena of that type follows. The dot is the type's colour, which its arenas' leads wear everywhere; click it to choose another. Reorder with the arrows; the cards, the board and Pocket all use this order. A type can be removed once no arena uses it.</p>
+    <p class="sub">The order here is the order of the rows on the cards, the board and Pocket; move a type with its arrows. Rename in place. The dot is the type's colour, which its rows and its arenas' leads wear; click it to choose another. Open a type's arenas to move one to another type, or merge the whole type into another. A type can be removed once it holds no arenas.</p>
     <div id="tylist"></div>
     <div class="taddrow" style="margin-top:10px">
       <input type="text" id="tyNew" placeholder="New type name">

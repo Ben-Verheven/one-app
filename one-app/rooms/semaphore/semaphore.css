@@ -118,23 +118,27 @@
                 border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:6px solid var(--today)}
 #pane-semaphore .grp{position:relative;margin-top:14px;padding-left:13px}
 #pane-semaphore .axisrow+.grp{margin-top:8px}
-#pane-semaphore .grp::before{content:"";position:absolute;left:0;top:0;bottom:5px;width:1px;background:var(--line2)}
+#pane-semaphore .grp::before{content:"";position:absolute;left:0;top:0;bottom:5px;width:2px;background:var(--tone,var(--line2))}
 #pane-semaphore .grp>.ghead{position:relative;z-index:1}
 #pane-semaphore .grp.collapsed::before{display:none}
 #pane-semaphore .grp>.row,#pane-semaphore .grp>.ghead{grid-template-columns:223px 88px 1fr}
-#pane-semaphore .ghead .gc{grid-column:1 / -1;display:flex;align-items:center;gap:7px;height:20px;
+/* The group's head is filled with its type's colour, struck into the ground
+   as the wall's row heads are (see "the rotation: a strip for every type"),
+   with the group's rule down the left in the same colour, so a type reads as
+   one block from its head to its last row. */
+#pane-semaphore .ghead .gc{grid-column:1 / -1;display:flex;align-items:center;gap:7px;height:24px;
             margin-left:-13px;padding:0 9px 0 19px;
-            background:rgba(216,205,184,.07);border-radius:0 var(--radius) var(--radius) 0;
-            box-shadow:inset 1px 0 0 var(--line2)}
+            background:color-mix(in srgb,var(--tone,#7D7466) 30%,var(--paper));border-radius:0 var(--radius) var(--radius) 0;
+            box-shadow:inset 4px 0 0 var(--tone,var(--line2))}
 /* The only way to fold a group, and a 13×9 mark to aim at. The arrow keeps
    its size and its place in the line; the target reaches past it into the
    band's own padding, which is dead space either way. */
-#pane-semaphore .ghead button.caret{position:relative;color:var(--faint);font-size:9px;
+#pane-semaphore .ghead button.caret{position:relative;color:var(--key2);font-size:9px;
   width:13px;line-height:1}
 #pane-semaphore .ghead button.caret::before{content:'';position:absolute;
   top:-8px;bottom:-8px;left:-19px;right:-8px}
-#pane-semaphore .ghead .gname{font:600 9.5px var(--sans);letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
-#pane-semaphore .ghead .gcount{font:10px var(--mono);color:var(--faint)}
+#pane-semaphore .ghead .gname{font:600 9.5px var(--sans);letter-spacing:.18em;text-transform:uppercase;color:var(--ink)}
+#pane-semaphore .ghead .gcount{font:10px var(--mono);color:var(--key2)}
 #pane-semaphore .row{border-bottom:1px solid var(--grid)}
 #pane-semaphore .row:hover{background:rgba(216,205,184,.045)}
 #pane-semaphore .cell.name{display:flex;align-items:center;gap:8px;min-width:0;padding:0 8px 0 4px;height:36px}
@@ -353,32 +357,27 @@
 #pane-semaphore .tabn{margin-left:7px;font:9.5px var(--mono);padding:1px 5px;border-radius:99px;
   background:rgba(42,38,32,.16);color:var(--ink)}
 /* ── the rotation: a strip for every type (paintWall) ──
-   A row's head carries the type's colour dot, its name in that colour, how
-   many arenas it holds and how many are asking, and the arrows that move the
-   type. The row trails off to the right and scrolls on its own, under a rule
-   in the type's colour; its cards are all one size, the width a full card had
-   on the old wall, and a little of the next card shows at the edge to say
-   there is more. */
-#pane-semaphore .wtrow{padding:14px 0 16px;border-top:1px solid var(--grid)}
-#pane-semaphore .wthead{display:flex;align-items:center;gap:9px;margin-bottom:10px}
-#pane-semaphore .wtn{font:600 10px var(--sans);letter-spacing:.18em;text-transform:uppercase;color:var(--tone,var(--muted))}
-#pane-semaphore .wtc{font-size:12.5px;font-style:italic;color:var(--muted)}
+   A row's head is a band filled with the type's colour, so the rows can be
+   told apart at a glance (Mark, 2026-10-11, who found a coloured dot and name
+   too quiet): the name in full ink on it, how many arenas the type holds and
+   how many are asking. The band's colour is the tone struck into the room's
+   ground, not laid over it with opacity, so the lettering's contrast is set
+   and holds for every tone (ink 7:1 and more, the count 6:1 and more). The
+   row trails off to the right and scrolls on its own, under a rule in the
+   type's colour; its cards are all one size, the width a full card had on the
+   old wall, and a little of the next card shows at the edge to say there is
+   more. */
+#pane-semaphore .wtrow{padding:14px 0 16px}
+#pane-semaphore .wthead{display:flex;align-items:center;gap:10px;margin-bottom:10px;padding:7px 12px;
+  background:color-mix(in srgb,var(--tone,#7D7466) 30%,var(--paper));
+  border-left:4px solid var(--tone,var(--line2));border-radius:0 var(--radius) var(--radius) 0}
+#pane-semaphore .wtn{font:600 10.5px var(--sans);letter-spacing:.18em;text-transform:uppercase;color:var(--ink)}
+#pane-semaphore .wtc{font-size:12.5px;font-style:italic;color:var(--key2)}
 #pane-semaphore .wtc b{font-style:normal;font-weight:400;color:var(--notice-ink)}
 #pane-semaphore .wtrack{display:flex;gap:14px;align-items:flex-start;overflow-x:auto;
-  padding:2px 2px 12px 12px;border-left:3px solid var(--tone,var(--line2));scroll-snap-type:x proximity}
+  padding:2px 2px 12px 12px;border-left:4px solid var(--tone,var(--line2));scroll-snap-type:x proximity}
 #pane-semaphore .wtrack>.wcard{flex:0 0 302px;scroll-snap-align:start}
 #pane-semaphore .wtrow .wrest{margin-top:4px}
-/* The arrows that move a type up or down, at the head of its row here and of
-   its group on the board. With a mouse they wait until the head is hovered;
-   on a touch screen there is no hover, so they stay. The end a type cannot
-   move past has no arrow. */
-#pane-semaphore .tymv{display:inline-flex;gap:2px;margin-left:2px}
-#pane-semaphore .tymv button{width:20px;height:20px;font-size:8px;line-height:1;color:var(--key);border-radius:4px}
-#pane-semaphore .tymv button:hover,#pane-semaphore .tymv button:focus-visible{color:var(--ink);background:var(--sink)}
-#pane-semaphore .tymv button:disabled{visibility:hidden}
-@media (hover:hover) and (pointer:fine){
-  #pane-semaphore .wthead:not(:hover):not(:focus-within) .tymv,
-  #pane-semaphore .ghead:not(:hover):not(:focus-within) .tymv{visibility:hidden}}
 #pane-semaphore .wgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(282px,1fr));gap:14px;align-items:start}
 /* ───────── a card has two sides ─────────
    The front is what the arena is: its state, its notes, its tools. The back is
@@ -1531,12 +1530,33 @@
 #pane-semaphore #askModal.tell #askNo{display:none}
 #pane-semaphore .tyline{display:flex;gap:8px;align-items:center;padding:4px 0}
 #pane-semaphore .tymove{display:flex;flex-direction:column;gap:1px}
-#pane-semaphore .tymove .ib{font-size:7px;line-height:1;padding:2px 4px}
+#pane-semaphore .tymove .ib{font-size:10px;line-height:1;padding:4px 8px}
 #pane-semaphore .tymove .ib:disabled{opacity:.25;cursor:default}
 #pane-semaphore .tymove .ib:disabled:hover{background:none;color:var(--faint)}
 #pane-semaphore .tyline input{flex:1;border:1px solid var(--line);border-radius:var(--radius);background:var(--field);
   color:var(--ink);padding:6px 9px;font-family:var(--body);font-size:14px}
-#pane-semaphore .tyline .cnt{font-size:11px;color:var(--faint);width:64px;text-align:right}
+/* ── the types, managed (renderTypes) ──
+   Wider than the other boxes: a type's line carries its arrows, colour, name,
+   its arenas, the merge and the cross, and its arenas open under it two to a
+   row, each with its type as a choice. Each type is edged in its colour. */
+#pane-semaphore #typesModal .mbox{width:720px}
+#pane-semaphore .tyblock{margin:3px 0;padding:2px 0 2px 8px;border-left:4px solid var(--tone,var(--line2));
+  border-radius:0 var(--radius) var(--radius) 0}
+#pane-semaphore .tyblock.open{background:var(--well);padding-bottom:6px}
+#pane-semaphore .tyline .tyn{flex:0 0 92px;text-align:right;font-size:12.5px;color:var(--muted);padding:6px 4px;border-radius:var(--radius)}
+#pane-semaphore .tyline .tyn:not(:disabled):hover{background:var(--sink);color:var(--ink)}
+#pane-semaphore .tyline .tyn:disabled{cursor:default}
+#pane-semaphore .tyline .tymerge{flex:0 0 140px}
+#pane-semaphore .tyline>.ib:disabled{color:var(--line2);cursor:default}
+#pane-semaphore .tyline>.ib:disabled:hover{background:none}
+#pane-semaphore .tylost{padding:6px 2px;font:600 10px var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+#pane-semaphore .tyarenas{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 16px;padding:6px 6px 2px 40px}
+#pane-semaphore .tyar{display:flex;align-items:center;gap:8px;min-width:0;font-size:13.5px;color:var(--ink)}
+#pane-semaphore .tyan{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#pane-semaphore .tyan i{font-size:11.5px;color:var(--faint)}
+#pane-semaphore .tyar select{flex:0 0 140px}
+#pane-semaphore .tyline select,#pane-semaphore .tyar select{min-width:0;border:1px solid var(--line);border-radius:var(--radius);
+  background:var(--field);color:var(--ink);padding:5px 6px;font:12.5px var(--body)}
 /* ---------- tooltip ---------- */
 #pane-semaphore #tip{position:fixed;z-index:50;max-width:280px;background:var(--surface2);
      color:var(--ink);border:1px solid var(--line2);box-shadow:var(--shadow);border-radius:var(--radius);

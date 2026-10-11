@@ -107,14 +107,17 @@ a{color:inherit}
 .whead{padding:14px 16px 10px;font:italic 14px/1.4 var(--body);color:var(--faint)}
 .whead b{font-style:normal;font-weight:400;color:var(--notice-ink)}
 /* ── the rotation: a row for every type ──
-   A head in the type's colour, then the type's cards side by side, all one
-   size, swiped sideways; the next card shows at the edge to say there is
-   more, and a card stamped today waits at the far end. */
+   A head filled with the type's colour, as on the desk — the tone struck
+   into the ground, so the lettering's contrast is set for every tone — then
+   the type's cards side by side, all one size, swiped sideways; the next
+   card shows at the edge to say there is more, and a card stamped today
+   waits at the far end. */
 .wtrow{margin-top:16px}
-.wthead{display:flex;align-items:center;gap:9px;margin:0 16px 9px}
-.wtdot{flex:0 0 10px;height:10px;border-radius:50%;background:var(--tone,var(--key))}
-.wtn{font:600 11px/1.2 var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--tone,var(--key))}
-.wtc{font:italic 13px/1.2 var(--body);color:var(--muted)}
+.wthead{display:flex;align-items:center;gap:9px;margin:0 12px 9px;padding:9px 12px;
+  background:color-mix(in srgb,var(--tone,#7D7466) 30%,var(--paper));
+  border-left:4px solid var(--tone,var(--line2));border-radius:0 var(--radius) var(--radius) 0}
+.wtn{font:600 11px/1.2 var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--ink)}
+.wtc{font:italic 13px/1.2 var(--body);color:var(--key2)}
 .wtc b{font-style:normal;font-weight:400;color:var(--notice-ink)}
 .wtrack{display:flex;align-items:flex-start;gap:10px;overflow-x:auto;padding:0 12px 4px;
   scroll-snap-type:x mandatory;scroll-padding:0 12px;scrollbar-width:none}
@@ -2156,7 +2159,6 @@ function drawRot(){
     var sec = el('section', 'wtrow');
     if (tone) sec.style.setProperty('--tone', tone);
     var h = el('div', 'wthead');
-    h.appendChild(el('i', 'wtdot'));
     h.appendChild(el('span', 'wtn', r.t ? (plainOf(r.t.name) || 'Untitled type') : 'Untyped'));
     var k = r.todo.filter(function(x){ return asking(x.s); }).length;
     var c = el('span', 'wtc', r.n + (r.n === 1 ? ' arena' : ' arenas'));
