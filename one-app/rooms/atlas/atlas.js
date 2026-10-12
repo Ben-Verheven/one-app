@@ -408,6 +408,23 @@ const Core = (() => {
     return out;
   }
 
+  /* A rewritten description is searched as plain text, beside the graph and
+     never through it. The rewrite mints no term (see the edit overlay), so
+     without this a word Mark wrote about a colleague could not find them —
+     he would type it and get nothing. It reads only descriptions he has
+     rewritten: the source's own were already searched by the build, and
+     everything they hold is in the graph. A hit here is a flag on the
+     researcher, like a name hit, with no path, no weight and no score. */
+  function matchSaid(q) {
+    const nm = norm(q);
+    if (nm.length < 3) return [];
+    const out = [];
+    R.forEach((r, i) => {
+      if (r.descEdit && (" " + norm(r.desc) + " ").includes(" " + nm + " ")) out.push(i);
+    });
+    return out;
+  }
+
   // when nothing matches: nearest labels, ranked by shared words then distance
   function suggestions(q, cap = 9) {
     const nm = norm(q);
@@ -487,16 +504,16 @@ const Core = (() => {
     let anyMatch = false;
     for (const q of chips) {
       const { nm, matches } = matchQuery(q, strict);
-      const names = matchNames(q);
-      if (matches.length || names.length) anyMatch = true;
+      const names = matchNames(q), said = matchSaid(q);
+      if (matches.length || names.length || said.length) anyMatch = true;
       const hits = matches.length ? traverse(matches, maxHops) : [];
-      perChip.push({ q, nm, matches, hits, names });
+      perChip.push({ q, nm, matches, hits, names, said });
     }
     const byR = new Map();
     perChip.forEach((pc, ci) => {
       for (const h of pc.hits) {
         let e = byR.get(h.rid);
-        if (!e) { e = { rid: h.rid, score: 0, sl: [0, 0, 0, 0], chips: {}, nameHit: false }; byR.set(h.rid, e); }
+        if (!e) { e = { rid: h.rid, score: 0, sl: [0, 0, 0, 0], chips: {}, nameHit: false, saidHit: false }; byR.set(h.rid, e); }
         const a = att[h.ai];
         const contrib = weights[a[2]] * Math.pow(decay, h.d) * MTQ[h.mt] * h.w
                         * Math.min(a[9], 2);
@@ -506,15 +523,21 @@ const Core = (() => {
       }
       for (const rid of pc.names) {
         let e = byR.get(rid);
-        if (!e) { e = { rid, score: 0, sl: [0, 0, 0, 0], chips: {}, nameHit: false }; byR.set(rid, e); }
+        if (!e) { e = { rid, score: 0, sl: [0, 0, 0, 0], chips: {}, nameHit: false, saidHit: false }; byR.set(rid, e); }
         e.nameHit = true;
+      }
+      for (const rid of pc.said) {
+        let e = byR.get(rid);
+        if (!e) { e = { rid, score: 0, sl: [0, 0, 0, 0], chips: {}, nameHit: false, saidHit: false }; byR.set(rid, e); }
+        e.saidHit = true;
       }
     });
     let list = [...byR.values()];
     if (requireAll && chips.length > 1) {
       list = list.filter(e =>
         perChip.every((pc, ci) =>
-          (e.chips[ci] && e.chips[ci].length) || pc.names.includes(e.rid)));
+          (e.chips[ci] && e.chips[ci].length) || pc.names.includes(e.rid)
+          || pc.said.includes(e.rid)));
     }
     // order hits inside each chip group: layer asc? No — by contribution desc,
     // then depth asc; the display keeps both dimensions visible regardless.
@@ -536,7 +559,10 @@ const Core = (() => {
         e.chips[ci] = ded;
       }
     }
-    list.sort((a, b) => (b.nameHit - a.nameHit) || (b.score - a.score));
+    /* A hit in his own words ranks just under a name hit. It has no score,
+       and at the foot of the list it fell past the 40 cards shown whenever
+       the word was a common one — the one place he looked for it. */
+    list.sort((a, b) => (b.nameHit - a.nameHit) || (b.saidHit - a.saidHit) || (b.score - a.score));
     return { perChip, list, anyMatch };
   }
 
@@ -1102,9 +1128,9 @@ function renderSearchResultsOnly() {
 
   // per-chip entry report
   const entry = res.perChip.map((pc, ci) => {
-    const n = pc.matches.length + pc.names.length;
+    const n = pc.matches.length + pc.names.length + pc.said.length;
     return `<span class="chip ${n ? "" : ""}" style="${n ? "" : "border-color:var(--danger);color:var(--danger)"}">
-      ${esc(pc.q)} · ${n ? `${pc.matches.length} entr${pc.matches.length === 1 ? "y" : "ies"}${pc.names.length ? " + name" : ""}` : "no entry point"}</span>`;
+      ${esc(pc.q)} · ${n ? `${pc.matches.length} entr${pc.matches.length === 1 ? "y" : "ies"}${pc.names.length ? " + name" : ""}${pc.said.length ? " + your description" : ""}` : "no entry point"}</span>`;
   }).join(" ");
   const shown = res.list.length;
   html += `<div class="rescount">${entry} &nbsp;→&nbsp; ${shown} researcher${shown === 1 ? "" : "s"} reached
@@ -1112,7 +1138,7 @@ function renderSearchResultsOnly() {
 
   if (!shown) {
     html += `<div class="empty"><h2>No researcher reached.</h2>`;
-    const bad = res.perChip.filter(pc => !pc.matches.length && !pc.names.length);
+    const bad = res.perChip.filter(pc => !pc.matches.length && !pc.names.length && !pc.said.length);
     for (const pc of bad) {
       const sug = Core.suggestions(pc.q);
       html += `<p>“${esc(pc.q)}” has no entry point in the graph${State.opts.strict < 2 ? " (fuzzy matching is off)" : ""}.</p>`;
@@ -1144,9 +1170,10 @@ function cardHTML(e, res, maxScore) {
   let paths = "";
   res.perChip.forEach((pc, ci) => {
     const hits = e.chips[ci] || [];
-    const nameHit = pc.names.includes(e.rid);
-    if (!hits.length && !nameHit) return;
-    paths += `<div class="qgroup"><b>${esc(pc.q)}</b> — ${hits.length} path${hits.length === 1 ? "" : "s"}${nameHit ? " · matches the researcher's name" : ""}</div>`;
+    const nameHit = pc.names.includes(e.rid), saidHit = pc.said.includes(e.rid);
+    if (!hits.length && !nameHit && !saidHit) return;
+    paths += `<div class="qgroup"><b>${esc(pc.q)}</b> — ${hits.length} path${hits.length === 1 ? "" : "s"}${nameHit ? " · matches the researcher's name" : ""}${saidHit ? " · in the description you wrote" : ""}</div>`;
+    if (saidHit) paths += saidSnippetHTML(r, pc.nm);
     const expanded = State.expanded.has(e.rid + ":" + ci);
     const show = expanded ? hits : hits.slice(0, 3);
     paths += show.map(h => pathHTML(pc, h)).join("");
@@ -1253,6 +1280,30 @@ function snippetHTML(a) {
   const hi = esc(sent.slice(0, ps - ss)) + "<mark>" + esc(sent.slice(ps - ss, pe - ss)) +
              "</mark>" + esc(sent.slice(pe - ss));
   return `<div class="snippet">“…${hi}…”<span class="from">${esc(from)}</span></div>`;
+}
+
+/* The sentence of his rewritten description that holds the word, with the
+   word marked. The match was made on normalised text, so the mark is found
+   again by walking the raw words and normalising runs of them until one
+   equals the query. Punctuation riding on a word is marked with it, the
+   way the dossier inks it. */
+function saidSnippetHTML(r, nm) {
+  const sents = String(r.desc).split(/(?<=[.!?])\s+/);
+  const sent = sents.find(t => (" " + Core.norm(t) + " ").includes(" " + nm + " ")) || "";
+  const ws = [...sent.matchAll(/\S+/g)];
+  let hi = esc(sent);
+  outer: for (let i = 0; i < ws.length; i++) {
+    for (let j = i; j < ws.length; j++) {
+      const run = Core.norm(ws.slice(i, j + 1).map(m => m[0]).join(" "));
+      if (run === nm) {
+        const st = ws[i].index, en = ws[j].index + ws[j][0].length;
+        hi = esc(sent.slice(0, st)) + "<mark>" + esc(sent.slice(st, en)) + "</mark>" + esc(sent.slice(en));
+        break outer;
+      }
+      if (run.length > nm.length) break;
+    }
+  }
+  return `<div class="snippet">“${hi}”<span class="from">${esc(r.name)} — the description you wrote</span></div>`;
 }
 
 function annotateStarts(res) {
@@ -1791,7 +1842,7 @@ function openDossier(rid) {
   if (dEd) {
     b += `<textarea class="dedit" id="dtext" rows="7"
       placeholder="What does this researcher work on?">${esc(State.descSeed != null ? State.descSeed : (desc || ""))}</textarea>`
-      + `<div class="hint" style="margin-top:7px">Rewriting this changes what you read here and nothing the Atlas knows:`
+      + `<div class="hint" style="margin-top:7px">Rewriting this changes what you read here, and Search finds your words in it, but nothing the graph knows:`
       + ` the terms it drew out of the original description, and every path that runs through them, stay exactly as the build measured them.</div>`;
   } else if (desc) {
     /* Unedited, the spans are the build's own and land on the character.

@@ -26,6 +26,12 @@ term, cuts no attachment and moves no weight, for the reason directly
 above: the terms in a description were drawn out of it by the build's
 extractor, and nothing this room can write is that extractor. The dossier
 says so under the box rather than leaving him to find out.
+Search still lands on his words: `matchSaid` reads each rewritten
+description as plain text beside the graph and flags the researcher the
+way a name hit does, with no path and no score. Mark asked for exactly
+that on 2026-10-12, as the safe stand-in for teaching the graph new words,
+on the condition that the graph itself behave as before. Keep it beside the
+graph; routing it through `traverse` would be the extractor this room is not.
 Two consequences that will break if anybody forgets them:
 
 - **`r.descBase` is the text the offsets belong to.** Every `desc`
