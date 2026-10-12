@@ -4148,6 +4148,17 @@ $('#s-pass').addEventListener('keydown', function(e){ if (e.key === 'Enter') $('
   stage.addEventListener('touchend', function(){ y0 = null; }, { passive:true });
 })();
 
+/* A home-screen app is not reloaded when it comes back to the front: iOS
+   wakes it as it was left, with the board it fetched then and the order
+   worked out that day. So the rotation on the phone stood behind the desk's,
+   which fetches again on every return — cards stamped at the desk since,
+   and the cards stamped "today" still at the far end after midnight (Mark,
+   2026-10-12). Coming back to the front now fetches, as a pull-down does. */
+document.addEventListener('visibilitychange', function(){
+  if (document.visibilityState === 'visible' && auth && cfg &&
+      !$('#setup').classList.contains('up')) pull();
+});
+
 (function(){
   try {
     var idx = JSON.parse(document.getElementById('atlas-index').textContent);
