@@ -1451,6 +1451,13 @@
 #pane-semaphore .cuwline{grid-column:3/4;width:min(420px,100%);margin:4px 0 2px}
 #pane-semaphore .cuwline .wline{padding:4px 0 2px}
 #pane-semaphore .cuwline .wph{display:none}
+/* The event the strip is unfolded under, marked on it: a larger diamond in
+   a ring of ink — not gold, which is today's line on the same strip — and
+   its span, if it has one, in full brokerage red. Drawn over its neighbours, since a
+   second event a few days off would otherwise cover it. */
+#pane-semaphore .wsd.this{z-index:3}
+#pane-semaphore .wsd.this::before{width:9px;height:9px;box-shadow:0 0 0 2px var(--paper),0 0 0 3.5px var(--ink)}
+#pane-semaphore .wsr.this{background:var(--brok)}
 #pane-semaphore .cuend{flex:0 0 auto;display:flex;align-items:center;gap:6px;margin-left:12px}
 /* The website is shown whole. It was cut at 260px, and since the button is a
    flex box the browser drew no ellipsis, only a name sliced off mid-word

@@ -398,6 +398,11 @@ a.wlink:active .wd,a.wlink:active::before{color:var(--brok)}
 .cuwx.on{transform:rotate(180deg);color:var(--key2)}
 .cuwline{flex:0 0 100%;padding:0 16px 10px 102px}
 .cuwline .wph{display:none}
+/* the event the strip is unfolded under: a larger diamond in a ring of ink
+   (gold is today's line), drawn over its neighbours, and its span in full red */
+.wsd.this{z-index:3}
+.wsd.this::before{width:9px;height:9px;box-shadow:0 0 0 2px var(--paper),0 0 0 3.5px var(--ink)}
+.wsr.this{background:var(--brok)}
 .ln.hi{background:rgba(240,180,41,.10);box-shadow:0 0 0 6px rgba(240,180,41,.10);border-radius:5px}
 .wsd::after{content:"";position:absolute;left:-8px;right:-8px;top:-8px;bottom:-8px}
 button.ln:active{background:rgba(216,205,184,.06)}
@@ -2089,7 +2094,9 @@ function saying(st){
    anywhere on it opens the arena. A top card draws up to four calls, a
    middle card two. Built as markup from escaped values only. */
 
-function cardLine(a, t){
+/* hi: the event Coming up unfolds the strip under, marked on it, with the
+   strip widened to reach it (2026-10-12, as on the desk) */
+function cardLine(a, t, hi){
   var now = T(todayISO());
   var runs = callRuns(a), live = runs.live, last = runs.last;
   var evs = (a.dates || []).filter(function(d){ return d.kind !== 'call' && d.start && d.gran !== 'none'; })
@@ -2121,16 +2128,19 @@ function cardLine(a, t){
     (n ? '<span class="wpn">' + n + '</span>' : '') + '</div>';
 
   var rows = live.slice(0, t === 'mid' ? 2 : 4);
-  var t0 = now - 35*DAY, t1 = now + 100*DAY;
+  var me = hi ? evs.filter(function(x){ return x.d.id === hi; })[0] : null;
+  var t0 = Math.min(now - 35*DAY, me ? me.s - 14*DAY : Infinity), t1 = now + 100*DAY;
   rows.forEach(function(r){ t1 = Math.max(t1, r.close ? T(r.close.end || r.close.start) : T(r.open.start) + 60*DAY); });
   ahead.slice(0,3).forEach(function(x){ t1 = Math.max(t1, x.e); });
-  t1 = Math.min(t1 + 12*DAY, now + 380*DAY);
+  if (me) t1 = Math.max(t1, me.e);
+  t1 = Math.min(t1 + 12*DAY, Math.max(now + 380*DAY, me ? me.e + 12*DAY : 0));
   function P(v){ return Math.max(0, Math.min(100, (v - t0)/(t1 - t0)*100)).toFixed(2); }
   var lane = '';
   evs.forEach(function(x){
     if (x.e < t0 || x.s > t1) return;
-    var cls = (x.e < now ? ' past' : '') + (x.d.grade === 'fixed' ? '' : ' unc') + (isFresh(a, x.d) ? ' fresh' : '');
-    if (x.e - x.s >= 3*DAY) lane += '<span class="wsr' + (x.e < now ? ' past' : '') + '" style="left:' + P(x.s) +
+    var cls = (x.e < now ? ' past' : '') + (x.d.grade === 'fixed' ? '' : ' unc') + (isFresh(a, x.d) ? ' fresh' : '') +
+      (x === me ? ' this' : '');
+    if (x.e - x.s >= 3*DAY) lane += '<span class="wsr' + (x.e < now ? ' past' : '') + (x === me ? ' this' : '') + '" style="left:' + P(x.s) +
       '%;width:' + (P(x.e) - P(x.s)).toFixed(2) + '%"></span>';
     lane += '<span class="wsd' + cls + '" data-d="' + esc(x.d.id) + '" style="left:' + P(x.s) + '%"></span>';
   });
@@ -3032,7 +3042,7 @@ function eventRow(x){
   del.addEventListener('click', function(){ if (x.limbo) dropEvent(x.a, d); else askDrop(x); });
   if (evOpen[key]){
     var html = '';
-    try { html = cardLine(x.a, 'top'); } catch(e){ console.error(e); }
+    try { html = cardLine(x.a, 'top', d.id); } catch(e){ console.error(e); }
     if (html){
       var sl = row.appendChild(el('div', 'wline cuwline'));
       sl.innerHTML = html;

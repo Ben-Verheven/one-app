@@ -361,7 +361,7 @@ _No section banners._
 
 ## `rooms/semaphore/semaphore.js`
 
-4617 lines · 245 KB
+4622 lines · 245 KB
 
 ```
 Brokerage Semaphore                   semaphore.js:1
@@ -384,32 +384,32 @@ actions                               semaphore.js:1691
 standing                              semaphore.js:1719
 one ladder, four rungs                semaphore.js:1751
 the line on top of a card             semaphore.js:2007
-leads                                 semaphore.js:2179
-the ruit                              semaphore.js:2263
-the score                             semaphore.js:2317
-one lead card, in both rooms          semaphore.js:2377
-the colour dot                        semaphore.js:2405
-a type's colour dot                   semaphore.js:2416
-one face                              semaphore.js:2859
-one rhythm for the wall               semaphore.js:2866
-pinned: the links you keep to hand    semaphore.js:3148
-leads: one board, three sections      semaphore.js:3171
-the rotation: a strip for every type  semaphore.js:3237
-leads, lent to the Ledger's board     semaphore.js:3513
-modals                                semaphore.js:3614
-asking, and saying                    semaphore.js:3617
-the types, managed                    semaphore.js:3661
-dragging in the list of types         semaphore.js:3718
-tooltip                               semaphore.js:3879
-events                                semaphore.js:3911
-typing, and the forms it goes into    semaphore.js:4217
-escape, and closing by clicking away  semaphore.js:4395
-putting links in your own order       semaphore.js:4437
+leads                                 semaphore.js:2184
+the ruit                              semaphore.js:2268
+the score                             semaphore.js:2322
+one lead card, in both rooms          semaphore.js:2382
+the colour dot                        semaphore.js:2410
+a type's colour dot                   semaphore.js:2421
+one face                              semaphore.js:2864
+one rhythm for the wall               semaphore.js:2871
+pinned: the links you keep to hand    semaphore.js:3153
+leads: one board, three sections      semaphore.js:3176
+the rotation: a strip for every type  semaphore.js:3242
+leads, lent to the Ledger's board     semaphore.js:3518
+modals                                semaphore.js:3619
+asking, and saying                    semaphore.js:3622
+the types, managed                    semaphore.js:3666
+dragging in the list of types         semaphore.js:3723
+tooltip                               semaphore.js:3884
+events                                semaphore.js:3916
+typing, and the forms it goes into    semaphore.js:4222
+escape, and closing by clicking away  semaphore.js:4400
+putting links in your own order       semaphore.js:4442
 ```
 
 ## `rooms/semaphore/semaphore.css`
 
-1599 lines · 118 KB
+1606 lines · 119 KB
 
 ```
 Brokerage Semaphore                               semaphore.css:1
@@ -436,9 +436,9 @@ freezer                                           semaphore.css:1123
 arena panel                                       semaphore.css:1157
 dispatches                                        semaphore.css:1339
 coming up                                         semaphore.css:1391
-modals                                            semaphore.css:1526
-the types, managed (renderTypes                   semaphore.css:1549
-tooltip                                           semaphore.css:1592
+modals                                            semaphore.css:1533
+the types, managed (renderTypes                   semaphore.css:1556
+tooltip                                           semaphore.css:1599
 ```
 
 ## `rooms/callboard/callboard.view.js`
@@ -641,4 +641,4 @@ Generated data. Never open, never edit, never upload.
 
 ---
 
-**36345 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.
+**36357 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.

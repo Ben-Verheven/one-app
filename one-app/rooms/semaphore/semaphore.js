@@ -1262,7 +1262,7 @@ function comingRow(it){
       (call?'':'<button class="cudel" data-act="cuDel" data-a="'+a.id+'" data-d="'+d.id+'"'+(it.limbo?' data-limbo="1"':'')+' '+
         'title="Remove this event from the app" aria-label="Remove '+esc(dtLabel(d))+'">\u2715</button>')+
     '</span>'+
-    (open?'<div class="cuwline">'+cardLineHTML(a,'top')+'</div>':'')+
+    (open?'<div class="cuwline">'+cardLineHTML(a,'top',d.id)+'</div>':'')+
   '</div>';
 }
 /* A brokerage event added from the list is an ordinary date on the arena
@@ -2079,7 +2079,10 @@ function runTip(r){
   const stages=r.dls.length>1?'\n'+r.dls.length+' deadlines: '+r.dls.map(shortDate).join(', '):'';
   return names.join('\n')+'\n'+span+stages+(r.unc?'\nUncertain':'');
 }
-function cardLineHTML(a,t){
+/* `hi`, the id of one brokerage event: Coming up unfolds an arena's strip
+   under one of its events and has that event marked on it (Mark,
+   2026-10-12), with the strip widened to reach it however far off it is. */
+function cardLineHTML(a,t,hi){
   const now=T(todayISO());
   const{live,last}=callRuns(a);
   const evs=(a.dates||[]).filter(d=>d.kind!=='call'&&d.start&&d.gran!=='none')
@@ -2112,19 +2115,21 @@ function cardLineHTML(a,t){
 
   /* the strip */
   const rows=live.slice(0,t==='mid'?2:4);
-  const t0=now-35*DAY;
+  const me=hi?evs.find(x=>x.d.id===hi):null;
+  const t0=Math.min(now-35*DAY,me?me.s-14*DAY:Infinity);
   let t1=now+100*DAY;
   /* a call with no deadline yet gets two months past its opening, so it is
      seen to begin rather than squeezed against the edge */
   for(const r of rows)t1=Math.max(t1,r.close?T(r.close.end||r.close.start):T(r.open.start)+60*DAY);
   for(const x of ahead.slice(0,3))t1=Math.max(t1,x.e);
-  t1=Math.min(t1+12*DAY,now+380*DAY);
+  if(me)t1=Math.max(t1,me.e);
+  t1=Math.min(t1+12*DAY,Math.max(now+380*DAY,me?me.e+12*DAY:0));
   const P=v=>Math.max(0,Math.min(100,(v-t0)/(t1-t0)*100)).toFixed(2);
   let lane='';
   for(const x of evs){
     if(x.e<t0||x.s>t1)continue;
-    const cls=(x.e<now?' past':'')+(x.d.grade==='fixed'?'':' unc')+(isFresh(a,x.d)?' fresh':'');
-    if(x.e-x.s>=3*DAY)lane+='<span class="wsr'+(x.e<now?' past':'')+'" style="left:'+P(x.s)+'%;width:'+(P(x.e)-P(x.s)).toFixed(2)+'%"></span>';
+    const cls=(x.e<now?' past':'')+(x.d.grade==='fixed'?'':' unc')+(isFresh(a,x.d)?' fresh':'')+(x===me?' this':'');
+    if(x.e-x.s>=3*DAY)lane+='<span class="wsr'+(x.e<now?' past':'')+(x===me?' this':'')+'" style="left:'+P(x.s)+'%;width:'+(P(x.e)-P(x.s)).toFixed(2)+'%"></span>';
     lane+='<button class="wsd'+cls+'" data-act="jumpDate" data-tipd data-a="'+a.id+'" data-d="'+x.d.id+'" '+
       'style="left:'+P(x.s)+'%" aria-label="'+esc(dtLabel(x.d)+', '+dispDate(x.d))+'"></button>';
   }
