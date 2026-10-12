@@ -38,11 +38,11 @@ function fakeCloud(page, rows, said) {
 }
 
 /* What each view holds once drawn: the length of its words. Every tab
-   says something even when empty ("Nothing pinned yet"), so a number alone
+   says something even when empty ("No brokerage dates"), so a number alone
    proves nothing; it is read against the same tab over an empty cloud. */
 async function views(page, shoot) {
   const out = {};
-  for (const tab of ['rot', 'dates', 'pins', 'leads']) {
+  for (const tab of ['rot', 'dates', 'leads']) {
     await page.click('#tabs button[data-tab="' + tab + '"]');
     await page.waitForTimeout(150);
     out[tab] = await page.evaluate(t =>
@@ -87,15 +87,6 @@ async function run(browser, name, rows, login, shoot) {
   const arenas = await seed.semaphore(desk, 0);
   const board = await desk.evaluate(() => JSON.parse(JSON.stringify(window.Hub.api('semaphore').state())));
   await desk.close();
-  /* The example set pins nothing, which would leave Pinned showing only
-     its empty message: two brokerage links, on two arenas, are pinned here.
-     Only links can be pinned since 2026-10-11, and one link alone says fewer
-     words than the message it replaces, which the verdict below would read
-     as a tab that drew nothing. */
-  if (board.arenas && board.arenas.length) {
-    const withLink = board.arenas.filter(a => a.brokerage && (a.brokerage.links || []).length);
-    withLink.slice(0, 2).forEach(a => { a.brokerage.links[0].pin = new Date().toISOString(); });
-  }
 
   const report = [
     await run(browser, 'full board', [{ id: 'semaphore', data: board }], true, !!shot),

@@ -360,8 +360,9 @@ a researcher's name written anywhere is `.atlas-ref`.
 | on screen | in the code |
 |---|---|
 | the room's scroller — the page itself does not scroll | `#semscroll` |
-| the header: the view switcher, Search, Dispatches and the cloud chip | `header.top`; `#viewseg`, `#searchBtn` and its box `#search`, `#dispatchBtn`, `#semcloud` |
-| the Cards view (the wall), the Board view, the freezer | `#wall`, `#board`, `#freezer` |
+| the header: the view switcher (Rotation · Coming up · Board), Leads beside it, Search, Dispatches and the cloud chip | `header.top`; `#viewseg`, `#leadsBtn`, `#searchBtn` and its box `#search`, `#dispatchBtn`, `#semcloud` |
+| the Rotation and Leads (both on the wall), the Board, Coming up, the freezer | `#wall`, `#board`, `#coming`, `#freezer` |
+| Limbo in Coming up — its fog, its ghost — and the events in it when open | `.culimbo` › `.culb` (`.culfog`, `.culgh`, `.culc`), `.cuspine` |
 | the month axis over the board, sticky, and the heading that names and chooses the order (My order / By date) | `.axisrow` = `.corner.sorter` (`.whsort`, its menu `.whmenu`) + `.axis`; a month is `.mcell` |
 | one arena type's group on the board, its heading | `.grp`, its heading `.ghead` |
 | one arena type's row on the wall, its head, the strip of cards that scrolls sideways | `.wtrow`, `.wthead`, `.wtrack` |
@@ -369,8 +370,7 @@ a researcher's name written anywhere is `.atlas-ref`.
 | one arena's row | `.row` = `.cell.name` + `.lane` |
 | a date on a lane | `.mk` — `.bk` brokerage (`.bk-fixed`, `.bk-unc`, `.bk-band`), `.cl.rb` a call's bar, `.now` today |
 | a card on the wall, its phase line and strip of time, its links band | `.wcard`; `.wline` (`.wph`, `.wstrip`: `.wsd` an event, `.wsb` a call, `.wsnow` today); `.wlk` › `.wlinks` › `.wlrow` |
-| the ring that asks the nightly agent, a link's pin and cross, a card link's stamp | `.wask`; `.lpin`, `.ldel`; `.wlc` › `.stamp` |
-| the pinned links on Pinned, each with its stamp and days since, and the pencil that edits it | `.wplist` › `.wprow` › `.wpfoot`, `.wped`, `.pkform` |
+| the ring that asks the nightly agent, a link's cross, a card link's stamp | `.wask`; `.ldel`; `.wlc` › `.stamp` |
 | the arena drawer | `#card` and its `.scrim` |
 
 **The Call Board** — the cluster row is the bar, `#hdr` › `.tabs`; the

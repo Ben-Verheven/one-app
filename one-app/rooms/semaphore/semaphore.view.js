@@ -11,13 +11,20 @@ Hub.markup('semaphore', `
     <h1><i class="markglyph"></i>Brokerage Semaphore</h1>
   </div>
   <div class="grow"></div>
+  <!-- Rotation, Coming up, Board, in that order (Mark, 2026-10-12). The
+       rotation keeps its view name, brokerage, from when it was the wall of
+       cards. Coming up is every arena's brokerage events on one line in time
+       order: the phone companion's, given the desk's width. -->
   <div class="viewseg" id="viewseg">
-    <button data-act="setView" data-v="brokerage">Cards</button>
-    <button data-act="setView" data-v="board">Board</button>
-    <!-- Every arena's dates on one line in time order, brokerage first: the
-         phone companion's "Coming up", given the desk's width. -->
+    <button data-act="setView" data-v="brokerage">Rotation</button>
     <button data-act="setView" data-v="coming">Coming up</button>
+    <button data-act="setView" data-v="board">Board</button>
   </div>
+  <!-- Leads is not a way of looking at the arenas but the work they turned
+       up, so it stands apart from the three, in a button of its own kind,
+       its ruit drawn small in front of the word (Mark, 2026-10-12). -->
+  <button class="leadsbtn" id="leadsBtn" data-act="setView" data-v="leads"
+          title="Every lead you are pursuing, in the step it has reached"><i class="lbr" aria-hidden="true"><i></i></i>Leads</button>
   <div class="grow"></div>
   <div class="actions">
     <!-- Search is a button until it is wanted, and only then a box: the

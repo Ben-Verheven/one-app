@@ -2,7 +2,8 @@
 
 `pocket/index.html` is the phone companion of One App's **Semaphore room only** — made to open in an
 idle minute instead of the news. Since 2026-10-07 it is dressed and laid out like the desk's
-Semaphore (the Cards view of 2026-10-06). Four tabs:
+Semaphore (the Cards view of 2026-10-06). Three tabs, Rotation, Coming up and Leads (Pinned went on
+2026-10-12, here and on the desk):
 
 - **Rotation** — the desk's rotation since 2026-10-11 (`typeRows`): a row for every arena type, in
   the desk's order of types, each headed by a band in the type's colour, and every card's head filled with it too; in each row the cards, all one size, in
@@ -12,10 +13,6 @@ Semaphore (the Cards view of 2026-10-06). Four tabs:
   (`wokeRow`), which opens the walk; stamping it ends the wait and sends it back to its row. Walked one card at a
   time with *Look around* → Next / Stamp & next, which takes the types in turn: every type's first
   card, then every type's second. Arenas with no brokerage material are ghosts under their row.
-- **Pinned** — the pinned links, A–Z or by days since the stamp (longest first), switched above them and remembered on the phone: the link's name on a line of its own, in its arena type's colour, tapped
-  to go there (its host not shown), and under it the stamp ✓ carrying the days since, the arena and
-  the pin to put it back (since 2026-10-11); its pencil ✎ changes the link's name and address (`editPin`,
-  through `editArena`), as the desk's Pinned does. Whole cards are not pinned since 2026-10-11, here or on the desk.
 - **Leads** — every open lead in Spotted / Contacted / Talking, as the desk's Leads arrangement;
   Contacted split by its two paths; each lead shows the desk's diamond ("ruit"). In a lead's sheet
   the diamond is pressed to move it (the desk's own `leadPath`), and links/emails are added there,
@@ -30,23 +27,21 @@ Every card carries the desk's two small controls: the ring (ask the nightly agen
 and the stamp (✓, which also marks the agent's findings seen). An arena's sheet
 spells out the ring and adds the desk's *Wait for…* (`hold`), which lists the arena's coming
 dates to sleep until (since 2026-10-10). A brokerage link
-on a card or in an arena's sheet has its own pin; on a card also its site's stamp, with the days since,
-and no host (since 2026-10-12). The sheet's pencil ✎ edits the arena's name, its
+on a card carries its site's stamp, with the days since, and no host (since 2026-10-12). The sheet's pencil ✎ edits the arena's name, its
 About and Brokerage notes and both lists of links, saved together (since 2026-10-11). What stays on
 the desk: making and deleting arenas, an arena's type, tags and weight, dates (but for what Coming up
 does to brokerage events), types (their order and colour too), the freezer, and the agent's Dispatches.
 - **Coming up** — the desk's Coming up since 2026-10-11 (`eventRow`): every arena's dates on one
-  line, brokerage by default, under the desk's line counting the year's brokerage events and those
-  still without a website, and *+ Brokerage event* (`newEvent`, the desk's form). A row opens its
+  line, brokerage only and with no count over it (since 2026-10-12), and *+ Brokerage event* (`newEvent`, the desk's form). A row opens its
   arena, whose name stands in a box of its type's colour; no row counts the days to go, only "on now"
   (2026-10-12). A brokerage event carries the desk's controls: the stamp, a white disc holding the days
   since and reddening over a fortnight, one stamp to a
-  site (`stampSite`, so a link of the same site, pinned or on a card, is stamped with it, from either side; the site is `siteKey`'s); the
+  site (`stampSite`, so a link of the same site on a card is stamped with it, from either side; the site is `siteKey`'s); the
   event's own website (`url`), or *+ add website* (`addSite`, offering the arena's links, the likeliest
   first by `eventLink`); ▾, which unfolds the arena's strip of time from its card under the row, the event itself marked on it; and
-  ✕, which removes the event from the whole app after asking (`askDrop`), and with it the cards' unpinned links to its site (`eventCardLinks`). The event's own note (`memo`, since 2026-10-12): a book under the date where it has one, which opens it under the row, tapped there to change it; where it has none, the diamond is tapped, turns into a book and opens the sheet to write one (`noteSheet`, `setEventMemo`). A brokerage event tapped on
+  ✕, which removes the event from the whole app after asking (`askDrop`), and with it the cards' links to its site (`eventCardLinks`). The event's own note (`memo`, since 2026-10-12): a book under the date where it has one, which opens it under the row, tapped there to change it; where it has none, the diamond is tapped, turns into a book and opens the sheet to write one (`noteSheet`, `setEventMemo`). A brokerage event tapped on
   a card, its diamond or the phase line naming it, is shown here (`jumpEvent`), as on the desk.
-  A brokerage event that is over goes to **Limbo**, one folded line at the top, and stays there until
+  A brokerage event that is over goes to **Limbo**, one folded box of fog at the top (`.limbox`, spooky since 2026-10-12), and stays there until
   Mark removes it, where ✕ does not ask, as on the desk. A
   call is read only and leaves two weeks after. The tab carries no number (removed 2026-10-08 at
   Mark's request).
@@ -90,8 +85,8 @@ re-extract the maths) but a Pocket change never touches it.
   token, renewed one at a time — Supabase ends a session whose renewal is used twice) → `rest()` → `pull()` (row `semaphore` only) →
   `commit()` → lead mutations (`setDone`, `setDate`, `setPath`, `addUpdate`, `editItem`, `addLead`,
   `addLeadLink`, `dropLeadLink`, `setScore`) and arena/link mutations (`stampArena`, `askAgent`, `holdArena`,
-  `editArena` + `linkOps`, `pinLink`, `stampLink` and `stampSite`, `addEvent`, `setEventUrl`, `dropEvent`); every undo puts back a snapshot (`keep`/`putBack`) → board (`liveList`, which settles the types' tones as the desk does, `scoreOf`, `typeRows`) → views (`drawRot` + `wallCard` +
-  `cardLine`, `drawPins`/`pinnedOf`, `drawLeads`/`leadItems` + `leadRow` + `ruit`,
+  `editArena` + `linkOps`, `stampLink` and `stampSite`, `addEvent`, `setEventUrl`, `dropEvent`); every undo puts back a snapshot (`keep`/`putBack`) → board (`liveList`, which settles the types' tones as the desk does, `scoreOf`, `typeRows`) → views (`drawRot` + `wallCard` +
+  `cardLine`, `drawLeads`/`leadItems` + `leadRow` + `ruit`,
   `drawDates`/`comingUp` + `eventRow`) → sheets (`openArena` with the round, `openLead`, `newLead`, `openPerson`,
   `newEvent`, `addSite`, `askDrop`).
   `fitScreen` gives the home screen the room the insets no longer say (why: the viewport meta); ⚙ shows what it measured.

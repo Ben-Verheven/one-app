@@ -284,14 +284,21 @@
 #pane-semaphore .viewseg button:last-child{border-right:none}
 #pane-semaphore .viewseg button:hover{color:var(--key2)}
 #pane-semaphore .viewseg button.on{background:rgba(216,205,184,.17);color:var(--ink)}
+/* Leads, beside the three views and not one of them (Mark, 2026-10-12): a
+   rounded button in the leads' own clay, with their ruit drawn small in
+   front of the word — a diamond with the Spotted dot at its left point. Lit,
+   it fills with the clay. */
+#pane-semaphore .leadsbtn{display:flex;align-items:center;gap:9px;min-height:31px;padding:5px 16px 5px 13px;
+  border:1px solid rgba(185,134,118,.55);border-radius:999px;background:rgba(185,134,118,.10);
+  font:italic 15px/1 var(--body);color:#E3BFB2;transition:background .14s,border-color .14s,color .14s}
+#pane-semaphore .leadsbtn:hover{background:rgba(185,134,118,.2);border-color:#B98676;color:#F2D6CC}
+#pane-semaphore .leadsbtn.on{background:#B98676;border-color:#B98676;color:#21180F}
+#pane-semaphore .leadsbtn .lbr{position:relative;width:15px;height:9px;flex:0 0 auto}
+#pane-semaphore .leadsbtn .lbr::before{content:"";position:absolute;left:4px;top:1px;width:7px;height:7px;
+  border:1.3px solid currentColor;transform:rotate(45deg) scale(.95);border-radius:1px}
+#pane-semaphore .leadsbtn .lbr>i{position:absolute;left:0;top:2.5px;width:4px;height:4px;border-radius:50%;background:currentColor}
 #pane-semaphore #wall{padding:22px 22px 70px}
 #pane-semaphore .whead{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;margin-bottom:18px}
-#pane-semaphore .wsort{display:flex;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--slab)}
-#pane-semaphore .wsort button{padding:5px 13px;font-family:var(--sans);font-size:10px;letter-spacing:.12em;
-  text-transform:uppercase;color:var(--faint);border-right:1px solid var(--line)}
-#pane-semaphore .wsort button:last-child{border-right:none}
-#pane-semaphore .wsort button:hover{color:var(--key2)}
-#pane-semaphore .wsort button.on{background:rgba(216,205,184,.15);color:var(--ink)}
 #pane-semaphore .wsay{font-family:var(--body);font-size:12.5px;font-style:italic;color:var(--faint)}
 #pane-semaphore .wsay b{font-style:normal;font-weight:400;color:var(--notice-ink)}
 /* the one place the mechanics are spelled out, and it stays shut until asked */
@@ -543,36 +550,30 @@
 #pane-semaphore .wlk .wlinks{padding:0}
 #pane-semaphore .wlk .wlink{padding:5px 9px}
 #pane-semaphore .wlk .wlink .wn{font-size:13.5px}
-#pane-semaphore .wlk .lpin,#pane-semaphore .wlk .ldel{height:24px}
-#pane-semaphore .wlk .wpinned{padding:4px 9px 3px}
+#pane-semaphore .wlk .ldel{height:24px}
 #pane-semaphore .wlk .wnone{margin:3px 3px 2px;padding:8px}
-#pane-semaphore .wpinned{padding:8px 13px;font-family:var(--body);font-size:12.5px;font-style:italic;color:var(--faint)}
 #pane-semaphore .wlinks{padding:6px}
 #pane-semaphore .wlrow{display:flex;align-items:stretch}
 #pane-semaphore .wlrow+.wlrow{margin-top:1px}
 #pane-semaphore .wlrow>.wlink{flex:1;min-width:0}
-/* The pin and the cross wait at the end of a row until it is reached for —
-   a card of eight links with sixteen controls standing would be a toolbar —
+/* The cross waits at the end of a row until it is reached for —
+   a card of eight links with eight crosses standing would be a toolbar —
    and stand for good where there is no hover to reach with. The cross asks
    once: pressed, it becomes the word, and only a second press removes. */
 #pane-semaphore .wlc{flex:0 0 auto;display:flex;align-items:center;gap:1px;padding-left:2px}
 #pane-semaphore .wlc>button{opacity:0}
 #pane-semaphore .wlrow:hover .wlc>button,#pane-semaphore .wlrow:focus-within .wlc>button,
-#pane-semaphore .wlc>.armed,#pane-semaphore .wlc>.lpin.on{opacity:1}
+#pane-semaphore .wlc>.armed{opacity:1}
 @media (hover:none){#pane-semaphore .wlc>button{opacity:1}}
 /* A card link's stamp stands at the far end of its row, under the card's
    own, and always in sight, as that one is (Mark, 2026-10-12). */
 #pane-semaphore .wlc>.stamp:not(.on){opacity:1}
 #pane-semaphore .wlc>.stamp{margin-left:4px}
-#pane-semaphore .lpin,#pane-semaphore .ldel{height:26px;min-width:24px;display:flex;align-items:center;justify-content:center;
+#pane-semaphore .ldel{height:26px;min-width:24px;display:flex;align-items:center;justify-content:center;
         border-radius:var(--radius);color:var(--faint);font-size:10.5px;
         transition:opacity .14s,background-color .14s,color .14s}
-#pane-semaphore .lpin i{width:7px;height:7px;transform:rotate(45deg);border:1px solid currentColor;border-radius:1px}
-#pane-semaphore .lpin:hover,#pane-semaphore .ldel:hover{background:rgba(216,205,184,.09);color:var(--key2)}
-#pane-semaphore #card .lpin:hover,#pane-semaphore #card .ldel:hover{background:rgba(42,38,32,.07);color:var(--ink)}
-#pane-semaphore .lpin.on{color:var(--key2)}
-#pane-semaphore .lpin.on i{background:currentColor}
-#pane-semaphore #card .lpin.on{color:var(--ink)}
+#pane-semaphore .ldel:hover{background:rgba(216,205,184,.09);color:var(--key2)}
+#pane-semaphore #card .ldel:hover{background:rgba(42,38,32,.07);color:var(--ink)}
 #pane-semaphore .ldel.armed{padding:0 8px;font:600 8.5px var(--sans);letter-spacing:.12em;text-transform:uppercase;
         color:var(--brok-deep);background:var(--brok-soft)}
 #pane-semaphore .wlink{display:flex;align-items:baseline;gap:10px;padding:8px 9px;border-radius:var(--radius);
@@ -611,35 +612,6 @@
 #pane-semaphore .wlinks.lkdragging .wlrow:not(.lkup) .wd{color:var(--faint)}
 #pane-semaphore .wnone{margin:9px;padding:13px;text-align:center;font-family:var(--body);font-size:13px;font-style:italic;
         color:var(--faint);border:1px dashed var(--line);border-radius:var(--radius);background:var(--sink)}
-/* ---- pinned links (pinRowHTML) ----
-   One list, one box under the other (Mark, 2026-10-11, over two columns),
-   laid out as Pocket's: the name has the whole first line, and the stamp,
-   the arena, the pencil and the pin stand under it. */
-#pane-semaphore .wplist{display:flex;flex-direction:column;gap:6px}
-#pane-semaphore .wprow{padding:4px 8px 4px 10px;border:1px solid var(--line);
-        border-radius:var(--radius);background:var(--surface)}
-/* A link of a typed arena wears its type the way the rotation's bands do
-   (Mark, 2026-10-11, who found the coloured name alone too quiet): the tone
-   struck into the ground, a rule of it down the left, the name in full ink
-   on it (7.9:1 and more). The quiet greys are lifted on that ground, as on
-   Pocket's card heads: the room's muted is 4.1:1 on the darkest band, the
-   key2 put in its place 6.2:1, the lifted faint 5.0:1. */
-#pane-semaphore .wprow.toned{--muted:var(--key2);--faint:#C4B9A6;
-        background:color-mix(in srgb,var(--tone) 30%,var(--paper));
-        border-color:transparent;border-left:4px solid var(--tone);border-radius:0 var(--radius) var(--radius) 0}
-#pane-semaphore .wplink{display:flex;align-items:baseline;gap:8px;padding:3px 0 2px;text-decoration:none;color:var(--ink)}
-#pane-semaphore .wplink .wn{flex:1 1 0;min-width:0;font-family:var(--body);font-size:14.5px;line-height:1.35;overflow-wrap:anywhere}
-#pane-semaphore .wplink .wfresh{align-self:center}
-#pane-semaphore a.wplink:hover .wn{text-decoration:underline;text-underline-offset:3px}
-#pane-semaphore .wplink.dead .wn{color:var(--faint)}
-#pane-semaphore .wpfoot{display:flex;align-items:center;gap:8px;min-height:26px}
-#pane-semaphore .wprow .stamp{opacity:1}
-#pane-semaphore .wpa{flex:1 1 auto;min-width:0;text-align:left;font-family:var(--body);font-size:12px;font-style:italic;color:var(--muted);
-        white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#pane-semaphore .wpa:hover{color:var(--brok-deep)}
-#pane-semaphore .wped{flex:0 0 auto;font-size:13px;line-height:1;padding:3px 4px;color:var(--muted)}
-#pane-semaphore .wped:hover{color:var(--ink)}
-#pane-semaphore .pkform{margin:3px 0 4px}
 #pane-semaphore .wrest{margin-top:12px;font-size:12px;color:var(--faint);line-height:2}
 #pane-semaphore .wghost{font-family:var(--sans);font-size:10px;letter-spacing:.05em;color:var(--faint);
         border:1px solid var(--line);border-radius:var(--radius);
@@ -1540,16 +1512,57 @@
 /* Limbo: the brokerage events that are over, kept until each is taken off,
    folded into one line over the months. Its cross is always in sight, since
    taking them off is what Limbo is for. */
-#pane-semaphore .culimbo{margin:8px 0 6px;padding-bottom:8px;border-bottom:1px solid var(--grid)}
-#pane-semaphore .culb{display:flex;align-items:center;gap:8px;width:100%;min-height:40px;padding:0 14px;text-align:left;
-  border:1px dashed var(--line2);border-radius:var(--radius);font:italic 14px/1.3 var(--body);color:var(--muted)}
-#pane-semaphore .culb:hover{background:rgba(216,205,184,.06)}
-#pane-semaphore .culc{font:600 9.5px/1 var(--sans);font-style:normal;letter-spacing:.16em;text-transform:uppercase;color:var(--ink)}
-#pane-semaphore .culb b{font:11.5px var(--mono);font-weight:400;color:var(--today)}
-#pane-semaphore .culw{margin-left:auto;font:600 9px/1 var(--sans);font-style:normal;letter-spacing:.16em;
-  text-transform:uppercase;color:var(--key2)}
-#pane-semaphore .culh{margin:10px 0 4px 148px;font:italic 13px/1.4 var(--body);color:var(--muted)}
-#pane-semaphore .culimbo .cuspine{margin-left:148px}
+/* Spooky (Mark, 2026-10-12): a cold, misty ground with fog drifting across
+   it, a ghost bobbing at its left, and the word itself a pale spectral green
+   that glows and now and then flickers. The colours are set as colours, not
+   as opacity: the word is 11:1 on the darkest part of the mist, the quiet
+   line 7:1. Unfolded, the same mist holds the events, so they read as being
+   in Limbo rather than under it. */
+#pane-semaphore .culimbo{--lg-ink:#D6EDE4;--lg-glow:rgba(150,235,200,.5);--lg-quiet:#A9B9BD;--lg-line:rgba(170,215,205,.22);
+  position:relative;margin:8px 0 10px;border:1px solid var(--lg-line);border-radius:var(--radius-lg);overflow:hidden;
+  background:radial-gradient(120% 140% at 0% 0%,rgba(120,150,170,.16),transparent 60%),
+    radial-gradient(90% 120% at 100% 100%,rgba(110,90,150,.18),transparent 65%),
+    linear-gradient(180deg,#16191C,#121417);
+  box-shadow:inset 0 0 34px rgba(150,190,200,.07),0 0 0 1px rgba(0,0,0,.3)}
+#pane-semaphore .culb{position:relative;display:flex;align-items:center;gap:10px;width:100%;min-height:46px;padding:0 60px 0 16px;
+  text-align:left;font:italic 14px/1.3 var(--body);color:var(--lg-quiet);overflow:hidden;isolation:isolate}
+#pane-semaphore .culb:hover{background:rgba(170,215,205,.05)}
+#pane-semaphore .culb:hover .culgh{color:#F2FFF9}
+/* the fog: two banks of mist at different speeds, under the words */
+#pane-semaphore .culfog{position:absolute;inset:-40% -50%;z-index:-1;pointer-events:none;
+  background:radial-gradient(28% 55% at 20% 55%,rgba(190,215,220,.2),transparent 70%),
+    radial-gradient(22% 45% at 55% 40%,rgba(170,200,215,.15),transparent 70%),
+    radial-gradient(30% 60% at 85% 60%,rgba(160,150,200,.18),transparent 70%);
+  filter:blur(6px);animation:culDrift 22s ease-in-out infinite alternate}
+#pane-semaphore .culfog::after{content:"";position:absolute;inset:0;
+  background:radial-gradient(25% 50% at 35% 65%,rgba(200,225,225,.09),transparent 70%),
+    radial-gradient(25% 50% at 75% 30%,rgba(180,210,225,.08),transparent 70%);
+  animation:culDrift 31s ease-in-out infinite alternate-reverse}
+/* two will-o'-the-wisps, drifting up and fading */
+#pane-semaphore .culfog::before{content:"";position:absolute;width:5px;height:5px;left:58%;top:62%;border-radius:50%;
+  background:#BFF5DE;box-shadow:0 0 8px 3px rgba(150,235,200,.55),180px -14px 0 -1px #CFC4F2,180px -14px 8px 2px rgba(180,160,240,.45);
+  animation:culWisp 9s ease-in-out infinite}
+/* a cobweb strung across the far corner */
+#pane-semaphore .culimbo::after{content:"";position:absolute;top:-1px;right:-1px;width:64px;height:64px;pointer-events:none;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64' fill='none' stroke='%23C8E1DA' stroke-opacity='.32' stroke-width='.8'%3E%3Cpath d='M64 0L4 0M64 0L18 30M64 0L40 50M64 0L64 60'/%3E%3Cpath d='M50 0Q52 8 58 12Q60 6 64 14M36 0Q40 16 52 22Q58 16 64 28M22 0Q28 24 46 34Q56 28 64 42M10 0Q18 32 42 44Q56 40 64 56'/%3E%3C/svg%3E") no-repeat}
+#pane-semaphore .culgh{flex:0 0 auto;color:var(--lg-ink);filter:drop-shadow(0 0 5px var(--lg-glow));
+  animation:culBob 3.6s ease-in-out infinite;transition:color .2s}
+#pane-semaphore .culc{font:600 12px/1 var(--serif);font-style:normal;letter-spacing:.42em;text-transform:uppercase;
+  color:var(--lg-ink);text-shadow:0 0 6px var(--lg-glow),0 0 16px rgba(150,235,200,.25);animation:culFlicker 7s linear infinite}
+#pane-semaphore .culb b{font:11.5px var(--mono);font-weight:400;color:#A6E9CF;text-shadow:0 0 6px rgba(150,235,200,.35)}
+#pane-semaphore .culw{margin-left:auto;font:600 9px/1 var(--sans);font-style:normal;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--lg-ink)}
+#pane-semaphore .culh{margin:2px 0 4px 148px;font:italic 13px/1.4 var(--body);color:var(--lg-quiet)}
+#pane-semaphore .culimbo .cuspine{margin-left:148px;padding-bottom:6px}
+#pane-semaphore .culimbo.open .culb{border-bottom:1px solid var(--lg-line)}
+#pane-semaphore .culimbo .culn .cud,#pane-semaphore .culimbo .culn .cuname{color:var(--lg-ink)}
+@keyframes culDrift{from{transform:translateX(-6%)}to{transform:translateX(6%)}}
+@keyframes culBob{0%,100%{transform:translateY(1px)}50%{transform:translateY(-2px)}}
+@keyframes culWisp{0%{transform:translate(0,6px);opacity:0}25%,70%{opacity:1}100%{transform:translate(-30px,-14px);opacity:0}}
+@keyframes culFlicker{0%,91%,95%,100%{color:var(--lg-ink)}92%,94%{color:#8FA8A1}93%{color:#C4DCD3}}
+@media (prefers-reduced-motion:reduce){
+  #pane-semaphore .culfog,#pane-semaphore .culfog::after,#pane-semaphore .culfog::before,
+  #pane-semaphore .culgh,#pane-semaphore .culc{animation:none}}
 @media (hover:hover) and (pointer:fine){#pane-semaphore .culn.limbo .cudel{opacity:1}}
 /* the event a diamond on the board or a card was pressed for */
 #pane-semaphore .culn.cuhi{background:var(--hi);box-shadow:0 0 0 6px var(--hi);border-radius:5px}

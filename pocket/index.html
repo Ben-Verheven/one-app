@@ -22,7 +22,7 @@
    Pocket — Semaphore, away from the desk.
 
    Made for the idle minute: open it instead of the news, walk the
-   rotation one card at a time, glance at what you pinned, keep the leads
+   rotation one card at a time, glance at what is coming up, keep the leads
    moving. People is a helper you reach from the magnifier or from a lead.
 
    Dressed as the desk's Semaphore room is since October 2026: warm
@@ -158,7 +158,7 @@ a{color:inherit}
 .wname.w-peripheral{color:var(--muted)}
 /* The card's head filled with its type's colour, as the type's own band
    above the row is (Mark, 2026-10-11), so a card says its type wherever it
-   stands — Back from waiting, Pinned — and not only under its band. On that
+   stands — Back from waiting or its own row — and not only under its band. On that
    fill the quiet grey of the ring, stamp and count fell to 2.6:1 on the
    darkest tones, and a peripheral name to 4.2:1, so both are lifted a step:
    the grey to 5.0:1 and the name to the bone of the chrome, 6.2:1, still
@@ -166,16 +166,12 @@ a{color:inherit}
 .wcard.toned .wch{--faint:#C4B9A6;background:color-mix(in srgb,var(--tone) 30%,var(--paper))}
 .wcard.toned .wname.w-peripheral{color:var(--key2)}
 .wname:active{color:var(--brok-deep)}
-/* the pin (a diamond) and the ring (ask the nightly agent): small marks,
-   thumb-sized targets */
-.pin,.wask{flex:0 0 36px;width:36px;height:44px;display:flex;align-items:center;justify-content:center;border-radius:var(--radius)}
-.pin i{width:9px;height:9px;transform:rotate(45deg);border:1px solid var(--faint);border-radius:1px}
-.pin.on i{background:var(--key2);border-color:var(--key2);box-shadow:0 0 8px rgba(216,205,184,.35)}
+/* the ring (ask the nightly agent): a small mark, a thumb-sized target */
+.wask{flex:0 0 36px;width:36px;height:44px;display:flex;align-items:center;justify-content:center;border-radius:var(--radius)}
 .wask i{width:11px;height:11px;border-radius:50%;border:1px solid var(--faint)}
 .wask.on i{background:var(--notice);border-color:var(--notice);box-shadow:0 0 0 3px var(--notice-line)}
-.pin:active,.wask:active{background:rgba(216,205,184,.12)}
-#sheet .pin.on i{box-shadow:none}
-/* a link with its pin, or its cross, beside it */
+.wask:active{background:rgba(216,205,184,.12)}
+/* a link with its stamp, or its cross, beside it */
 .wlrow{display:flex;align-items:center}
 .wlrow>.wlink{flex:1;min-width:0}
 .ldel{flex:0 0 auto;min-width:40px;height:40px;padding:0 8px;border-radius:var(--radius);color:var(--faint);
@@ -243,8 +239,6 @@ a{color:inherit}
 .wlink .wn{flex:0 1 auto;min-width:0;font:15px/1.3 var(--body);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .wlink .wd{flex:0 1 auto;min-width:0;max-width:44%;margin-left:auto;font:10.5px var(--mono);color:var(--faint);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.wlink .pd{flex:0 0 auto;align-self:center;width:7px;height:7px;transform:rotate(45deg);border-radius:1px;
-  background:var(--key2)}
 a.wlink:active{background:rgba(216,205,184,.09)}
 a.wlink:active .wd,a.wlink:active::before{color:var(--brok)}
 .wlink.dead{color:var(--faint)}
@@ -265,30 +259,8 @@ a.wlink:active .wd,a.wlink:active::before{color:var(--brok)}
   border-radius:var(--radius);font:400 10px/1.2 var(--sans);letter-spacing:.06em;font-style:normal;color:var(--faint)}
 .wghost:active{border-color:var(--line2);color:var(--ink)}
 
-/* ── pinned links ───────────────────────────────────────────────────── */
-
-.wpins{margin:0 12px 6px}
-.wprow{margin-bottom:6px;padding:2px 4px 2px 4px;
-  border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
-/* the title has the whole first line and wraps rather than being cut, and
-   the host is not shown: Mark reads a pinned link by its name and only
-   wants to go there (2026-10-11) */
-.wprow .wlink{flex-wrap:wrap}
-.wprow .wlink .wn{flex:1 1 0;white-space:normal}
-.wprow .wlink .wd,.wlk .wlink .wd{display:none}
-/* a pinned link's name in its arena type's colour (Mark, 2026-10-11),
-   lifted a fifth towards the ink: the tone itself is 4.0:1 on the row at
-   its darkest (Slate), the mix 5.2:1, and still plainly that tone */
-.wprow.toned .wlink .wn{color:color-mix(in srgb,var(--tone) 80%,var(--ink))}
-.wpfoot{display:flex;align-items:center;gap:6px;margin-top:-6px}
-.wpa{flex:1 1 auto;min-width:0;min-height:44px;text-align:left;font:italic 12.5px/1.2 var(--body);color:var(--muted);
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.wpa:active{color:var(--brok-deep)}
-.wpage{flex:0 0 auto;font:11px/1 var(--mono);color:var(--ink)}
-.wpage.never{color:var(--faint)}
-.wprow .pin{flex:0 0 40px;width:40px}
-.wped{flex:0 0 40px;width:40px;min-height:44px;font-size:16px;color:var(--muted)}
-.wped:active{color:var(--ink)}
+/* a card's links show their names alone, the host left off (2026-10-12) */
+.wlk .wlink .wd{display:none}
 
 /* ── leads, as the desk's Leads arrangement draws them ──────────────── */
 
@@ -444,14 +416,45 @@ button.ln:active{background:rgba(216,205,184,.06)}
 .cudel{flex:0 0 44px;width:44px;min-height:44px;text-align:center;font-size:14px;color:var(--muted)}
 .cudel:active,.cusite:active{color:var(--ink)}
 /* Limbo: the brokerage events that are over, kept until Mark takes each off
-   by hand (2026-10-11), folded into one line at the top */
-.culimbo{display:flex;align-items:center;gap:8px;width:calc(100% - 32px);min-height:44px;margin:12px 16px 0;padding:0 13px;
-  border:1px dashed var(--line2);border-radius:var(--radius);text-align:left;font:italic 14px/1.3 var(--body);color:var(--muted)}
-.culimbo .cap{font-style:normal;color:var(--ink)}
-.culimbo b{font:11px var(--mono);font-style:normal;color:var(--today)}
-.culimbo .lw{margin-left:auto;font:600 9px/1 var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--key2)}
-.culimbo:active{background:rgba(216,205,184,.06)}
-.evts.lim{padding-bottom:6px;border-bottom:1px solid var(--line)}
+   by hand (2026-10-11), folded into one line at the top. Spooky since
+   2026-10-12, as on the desk: a cold misty box with fog drifting through
+   it, a bobbing ghost, two wisps, a cobweb in the corner, and the word in a
+   glowing spectral green that now and then flickers. Colours are set as
+   colours: the word 11:1 on the mist, the quiet line 7:1. Open, the same
+   box holds the events. */
+.limbox{--lg-ink:#D6EDE4;--lg-glow:rgba(150,235,200,.5);--lg-quiet:#A9B9BD;--lg-line:rgba(170,215,205,.22);
+  position:relative;margin:12px 12px 4px;border:1px solid var(--lg-line);border-radius:var(--radius-lg);overflow:hidden;
+  background:radial-gradient(120% 140% at 0% 0%,rgba(120,150,170,.16),transparent 60%),
+    radial-gradient(90% 120% at 100% 100%,rgba(110,90,150,.18),transparent 65%),
+    linear-gradient(180deg,#16191C,#121417);
+  box-shadow:inset 0 0 30px rgba(150,190,200,.07)}
+.limbox::after{content:"";position:absolute;top:-1px;right:-1px;width:54px;height:54px;pointer-events:none;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64' fill='none' stroke='%23C8E1DA' stroke-opacity='.32' stroke-width='.8'%3E%3Cpath d='M64 0L4 0M64 0L18 30M64 0L40 50M64 0L64 60'/%3E%3Cpath d='M50 0Q52 8 58 12Q60 6 64 14M36 0Q40 16 52 22Q58 16 64 28M22 0Q28 24 46 34Q56 28 64 42M10 0Q18 32 42 44Q56 40 64 56'/%3E%3C/svg%3E") no-repeat;
+  background-size:100% 100%}
+.culimbo{position:relative;isolation:isolate;overflow:hidden;display:flex;align-items:center;gap:9px;width:100%;
+  min-height:50px;padding:0 50px 0 14px;text-align:left;font:italic 14px/1.3 var(--body);color:var(--lg-quiet)}
+.culimbo .cap{font:600 11.5px/1 var(--sans);font-style:normal;letter-spacing:.4em;color:var(--lg-ink);
+  text-shadow:0 0 6px var(--lg-glow),0 0 16px rgba(150,235,200,.25);animation:culFlicker 7s linear infinite}
+.culimbo b{font:11px var(--mono);font-style:normal;color:#A6E9CF;text-shadow:0 0 6px rgba(150,235,200,.35)}
+.culimbo .lw{margin-left:auto;font:600 9px/1 var(--sans);letter-spacing:.2em;text-transform:uppercase;color:var(--lg-ink)}
+.culimbo:active{background:rgba(170,215,205,.06)}
+.culgh{flex:0 0 auto;color:var(--lg-ink);filter:drop-shadow(0 0 5px var(--lg-glow));animation:culBob 3.6s ease-in-out infinite}
+.culfog{position:absolute;inset:-40% -60%;z-index:-1;pointer-events:none;
+  background:radial-gradient(28% 55% at 20% 55%,rgba(190,215,220,.2),transparent 70%),
+    radial-gradient(22% 45% at 55% 40%,rgba(170,200,215,.15),transparent 70%),
+    radial-gradient(30% 60% at 85% 60%,rgba(160,150,200,.18),transparent 70%);
+  filter:blur(6px);animation:culDrift 22s ease-in-out infinite alternate}
+.culfog::before{content:"";position:absolute;width:5px;height:5px;left:58%;top:62%;border-radius:50%;
+  background:#BFF5DE;box-shadow:0 0 8px 3px rgba(150,235,200,.55),90px -12px 0 -1px #CFC4F2,90px -12px 8px 2px rgba(180,160,240,.45);
+  animation:culWisp 9s ease-in-out infinite}
+.limbox.open .culimbo{border-bottom:1px solid var(--lg-line)}
+.limbox .evts.lim{padding-bottom:6px}
+.limbox .cuhint{color:var(--lg-quiet)}
+@keyframes culDrift{from{transform:translateX(-6%)}to{transform:translateX(6%)}}
+@keyframes culBob{0%,100%{transform:translateY(1px)}50%{transform:translateY(-2px)}}
+@keyframes culWisp{0%{transform:translate(0,6px);opacity:0}25%,70%{opacity:1}100%{transform:translate(-30px,-14px);opacity:0}}
+@keyframes culFlicker{0%,91%,95%,100%{color:var(--lg-ink)}92%,94%{color:#8FA8A1}93%{color:#C4DCD3}}
+@media (prefers-reduced-motion:reduce){.culfog,.culfog::before,.culgh,.culimbo .cap{animation:none}}
 /* the arena's links, offered as the new website, as the desk's box lists them */
 #sheet .cupick{display:block;width:100%;min-height:44px;padding:8px 12px;text-align:left;
   border:1px solid var(--line);border-radius:var(--radius);background:var(--field);font:15px/1.3 var(--body);color:var(--ink)}
@@ -739,7 +742,6 @@ input[type="search"]:focus{outline:none;border-color:var(--key)}
 
 <main id="stage">
   <section class="view on" id="v-rot"></section>
-  <section class="view" id="v-pins"></section>
   <section class="view" id="v-leads"></section>
   <section class="view" id="v-dates"></section>
   <section class="view" id="v-people">
@@ -755,7 +757,6 @@ input[type="search"]:focus{outline:none;border-color:var(--key)}
 <nav id="tabs">
   <button data-tab="rot" class="on"><svg viewBox="0 0 22 16" aria-hidden="true"><rect x="2" y="1.5" width="18" height="5" rx="1.5"/><rect x="2" y="9.5" width="18" height="5" rx="1.5"/></svg>Rotation</button>
   <button data-tab="dates"><svg viewBox="0 0 22 16" aria-hidden="true"><path d="M2 8H20"/><rect class="fill" x="8" y="5" width="6" height="6" rx="1" transform="rotate(45 11 8)"/></svg>Coming up</button>
-  <button data-tab="pins"><svg viewBox="0 0 22 16" aria-hidden="true"><rect class="fill" x="7" y="4" width="8" height="8" rx="1" transform="rotate(45 11 8)"/></svg>Pinned</button>
   <button data-tab="leads"><svg viewBox="0 0 22 16" aria-hidden="true"><path d="M3 8 11 2.5 19 8 11 13.5Z"/><circle class="fill" cx="3" cy="8" r="2"/><circle cx="19" cy="8" r="2" fill="#191713"/></svg>Leads</button>
 </nav>
 
@@ -935,7 +936,7 @@ function defaultTypes(){
 function blank(){
   return {v:1,types:defaultTypes(),arenas:[],
     ui:{q:'',collapsed:{},view:'board',
-        wallSort:'rotation',boardSort:'date',cuAll:false,
+        wallSort:'rotation',boardSort:'date',
         howOpen:false,freezerOpen:false}};
 }
 /* An arena remembers which of its own dates it is waiting for. That goes stale
@@ -977,12 +978,12 @@ function migrate(s){
     if(!Array.isArray(a.brokerage.links))a.brokerage.links=[];
     if(typeof a.brokerage.notes!=='string')a.brokerage.notes='';
     /* Pinning once belonged to a single brokerage link, then to the whole card
-       as well. Mark took the whole card's pin away on 2026-10-11 — Pinned is
-       the round of links he keeps to hand and nothing else — so an arena's own
-       `pin` is dropped here, and a link's `pin`, the moment it was pinned, is
-       kept. */
+       as well. Mark took the whole card's pin away on 2026-10-11, and Pinned
+       itself with the links' pins on 2026-10-12, so every `pin` is dropped
+       here and a link that stood on Pinned is back on its card. */
     delete a.pin;
-    a.brokerage.links.forEach(l=>{if(!l.id)l.id=uid();});
+    a.brokerage.links.forEach(l=>{if(!l.id)l.id=uid();delete l.pin;});
+    (a.links||[]).forEach(l=>{delete l.pin;});
     /* the freezer holds the date it went in, so the panel can say since when */
     if(typeof a.frozenAt!=='string')a.frozenAt=null;
     /* how much this arena is worth of the rotation; unset means ordinary */
@@ -1095,9 +1096,8 @@ function migrate(s){
     ui.q        = typeof u.q==='string' ? u.q : d.q;
     ui.collapsed= map(u.collapsed) || {};
     ui.view     = ['brokerage','dispatch','coming'].includes(u.view) ? u.view : 'board';
-    ui.cuAll    = u.cuAll===true;
     /* By type was merged into the rotation (2026-10-11), so it lands there */
-    ui.wallSort = ['pinned','leads'].includes(u.wallSort) ? u.wallSort : 'rotation';
+    ui.wallSort = u.wallSort==='leads' ? 'leads' : 'rotation';
     /* the board's two orders since 2026-10-11 (see "the board's two orders");
        the two it had before — next publication, and by status — both read as
        the date order, which took their place */
@@ -1860,7 +1860,7 @@ function holdArena(a, d){
    none; the two notes trimmed; a link {id, label, url} with its address read
    the desk's way. `ch` holds only what was changed. Links are changed one by
    one by their id on whatever the cloud holds, never by putting the list
-   back whole, so a pin set on the desk a moment earlier, or a link the
+   back whole, so a link changed on the desk a moment earlier, or a link the
    nightly agent found with its foundAt, is kept. Undo puts back the fields
    it touched, as they were. */
 function linkOps(list, ops){
@@ -1911,22 +1911,13 @@ function waitDates(a){
     .sort(function(x, y){ return x.start < y.start ? -1 : x.start > y.start ? 1 : 0; });
 }
 
-/* A brokerage link pinned is the moment it was pinned, which is the order
-   Pinned lists them in; unpinned, it is back on its card. */
-function pinLink(a, lk){
-  var was = keep(lk, ['pin']), on = !lk.pin, now = new Date().toISOString();
-  commit('semaphore', onLink(a.id, lk.id, function(k){ if (k.pin) delete k.pin; else k.pin = now; }),
-    on ? 'Link pinned' : 'Link back on its card',
-    onLink(a.id, lk.id, function(k){ putBack(k, was); }));
-}
-
-/* a pinned link's own stamp: the day you last went through it */
+/* a card link's own stamp: the day you last went through its site */
 function stampLink(a, lk){ stampSite(a.id, lk.id, linkLabel(lk)); }
 
 /* One stamp to a site, as on the desk (Mark, 2026-10-09). An event and a
-   pinned link are often one site — the platform pinned for the round is also
-   the page of the event it hosts — and two stamps on one site would disagree
-   by the next morning. So a press on either stamps every event and link with
+   link are often one site — the platform kept for the round is also the page
+   of the event it hosts — and two stamps on one site would disagree by the
+   next morning. So a press on either stamps every event and link with
    that address, a same-day press takes it back on all of them, and each row
    reads the newest stamp among them. An event with no website stands alone.
    The desk's stampMates and toggleStamp, under names script 1 does not hold.
@@ -2022,14 +2013,14 @@ function addEvent(aid, ev){
     onArena(aid, function(x){ x.dates = (x.dates || []).filter(function(y){ return y.id !== ev.id; }); }));
 }
 /* The event's links on the cards go with it, on every arena, as the desk's
-   cuLinks finds them (Mark, 2026-10-12): the cards' links to the same site,
-   a pinned link left where it is. Undo puts each back in its place. */
+   cuLinks finds them (Mark, 2026-10-12): the cards' links to the same site.
+   Undo puts each back in its place. */
 function eventCardLinks(blob, d){
   var k = d.url && siteKey(d.url), out = [];
   if (!k) return out;
   ((blob && blob.arenas) || []).forEach(function(a){
     ((a && a.brokerage && a.brokerage.links) || []).forEach(function(lk, i){
-      if (lk && !lk.pin && lk.url && siteKey(lk.url) === k)
+      if (lk && lk.url && siteKey(lk.url) === k)
         out.push({ aid:a.id, at:i, copy:JSON.stringify(lk), id:lk.id });
     });
   });
@@ -2251,8 +2242,8 @@ function cardLine(a, t, hi){
     (more > 0 ? '<p class="wlmore">+' + more + ' more call' + (more > 1 ? 's' : '') + '</p>' : '');
 }
 
-/* the three small controls a card and a link carry, as on the desk:
-   the ring (ask the nightly agent), the pin (a diamond), the stamp (a tick) */
+/* the two small controls a card and a link carry, as on the desk:
+   the ring (ask the nightly agent) and the stamp (a tick) */
 function ringBtn(a){
   var on = !!a.askAt, b = el('button', 'wask' + (on ? ' on' : ''));
   b.appendChild(el('i'));
@@ -2260,14 +2251,6 @@ function ringBtn(a){
   b.setAttribute('aria-label', on ? 'Asked the nightly agent — tap to take it back'
                                   : 'Ask the nightly agent to look at this arena');
   b.addEventListener('click', function(e){ e.stopPropagation(); askAgent(a); });
-  return b;
-}
-function pinBtn(on, label, act){
-  var b = el('button', 'pin' + (on ? ' on' : ''));
-  b.appendChild(el('i'));
-  b.setAttribute('aria-pressed', on ? 'true' : 'false');
-  b.setAttribute('aria-label', label);
-  b.addEventListener('click', function(e){ e.stopPropagation(); e.preventDefault(); act(); });
   return b;
 }
 /* `days`, where given, is how long since the stamp was last pressed, shown
@@ -2280,14 +2263,11 @@ function tickBtn(on, label, act, days){
   b.addEventListener('click', function(e){ e.stopPropagation(); act(); });
   return b;
 }
-/* a brokerage link with its pin beside it: pinning sends it to Pinned. On a
-   card it also carries its site's stamp, as the desk's card does
-   (2026-10-12), and its host is left off there (.wlk .wd) */
-function pinnableRow(lk, a, onCard){
+/* a brokerage link. On a card it carries its site's stamp, as the desk's
+   card does (2026-10-12), and its host is left off there (.wlk .wd) */
+function brokLinkRow(lk, a, onCard){
   var w = el('div', 'wlrow');
-  w.appendChild(linkRow(lk, a, true));
-  w.appendChild(pinBtn(!!lk.pin, lk.pin ? 'Unpin — put it back on its card' : 'Pin — keep it on Pinned',
-    function(){ pinLink(a, lk); }));
+  w.appendChild(linkRow(lk, a));
   if (onCard && lk.url){
     var st = siteStamp(lk), on = st === isoToday(), d = st ? Math.max(0, -daysTo(st)) : null;
     w.appendChild(tickBtn(on, on ? 'Stamped today — tap to undo'
@@ -2298,7 +2278,7 @@ function pinnableRow(lk, a, onCard){
 }
 
 /* one link row, named and hosted the way Semaphore names them */
-function linkRow(lk, a, showPin){
+function linkRow(lk, a){
   var nm = (typeof linkName === 'function') ? linkName(lk) : linkLabel(lk);
   var r;
   if (lk.url){
@@ -2307,7 +2287,6 @@ function linkRow(lk, a, showPin){
   } else r = el('span', 'wlink dead');
   r.appendChild(el('span', 'wn', plainOf(nm)));
   if (a && isFresh(a, lk)) r.appendChild(el('i', 'wfresh', 'new'));
-  if (showPin && lk.pin) r.appendChild(el('span', 'pd'));
   /* an email shows its address where a site shows its host */
   var host = /^mailto:/i.test(lk.url || '') ? lk.url.slice(7) : lk.url ? linkHost(lk) : '';
   if (host && host !== nm) r.appendChild(el('span', 'wd', host));
@@ -2327,7 +2306,7 @@ function wallCard(a, st, tier){
   head.appendChild(nm);
 
   var bk = a.brokerage || { links:[] };
-  var shown = (bk.links || []).filter(function(l){ return l && !l.pin; });
+  var shown = (bk.links || []).filter(function(l){ return l; });
   if (tier === 'rest' && shown.length) head.appendChild(el('span', 'wcnt', String(shown.length)));
 
   /* a tail card is one line of name, so it carries the ring only while it
@@ -2356,7 +2335,7 @@ function wallCard(a, st, tier){
     /* the desk's band, without its "Links" heading since 2026-10-11 */
     var band = el('div', 'wlk');
     var cap = tier === 'mid' ? 2 : 3;
-    shown.slice(0, cap).forEach(function(lk){ band.appendChild(pinnableRow(lk, a, true)); });
+    shown.slice(0, cap).forEach(function(lk){ band.appendChild(brokLinkRow(lk, a, true)); });
     if (shown.length > cap){
       var more = el('button', 'wlkmore', '+ ' + (shown.length - cap) + ' more in the arena');
       more.addEventListener('click', function(){ openArena(a, st); });
@@ -2518,144 +2497,6 @@ function drawRot(){
     host.appendChild(sec);
   });
   host.querySelectorAll('.wtrack').forEach(function(r){ if (at[r.dataset.ty]) r.scrollLeft = at[r.dataset.ty]; });
-}
-
-/* ── pinned: the links you keep to hand ─────────────────────────────────
-   A single link (`pin` on the link, the moment it was pinned), as the desk's
-   Pinned arrangement: in the order chosen above them, each with its own stamp
-   and the days since, so the round can be walked the way the rotation is. A
-   pinned link stands only here; the cards leave it out. A whole card was
-   pinned here too until Mark took that away on 2026-10-11. */
-
-function pinnedOf(){
-  var arenas = liveList();
-  var links = [];
-  arenas.forEach(function(a){
-    [['brokerage', (a.brokerage || {}).links || []], ['arena', a.links || []]].forEach(function(p){
-      p[1].forEach(function(lk){ if (lk && lk.pin) links.push({ a:a, lk:lk, scope:p[0] }); });
-    });
-  });
-  /* Two orders, chosen above the list (Mark, 2026-10-11): A–Z by the name
-     shown, or by days — the link longest without a stamp first, one never
-     stamped before all of them, as the round is walked — and A–Z among
-     links stamped the same day. They replace the order of pinning. */
-  function nm(x){ return plainOf((typeof linkName === 'function') ? linkName(x.lk) : linkLabel(x.lk)); }
-  function az(x, y){ return nm(x).localeCompare(nm(y), undefined, { sensitivity:'base' }); }
-  function since(x){ var s = siteStamp(x.lk); return s ? -daysTo(s) : Infinity; }
-  links.sort(pinsBy === 'days' ? function(x, y){
-    var dx = since(x), dy = since(y);
-    return dx === dy ? az(x, y) : dy > dx ? 1 : -1;
-  } : az);
-  return { links:links };
-}
-var pinsBy = 'az';
-try { if (localStorage.getItem('pocket.pinsBy') === 'days') pinsBy = 'days'; } catch(e){}
-
-function drawPins(){
-  var host = $('#v-pins');
-  host.textContent = '';
-  if (!data.semaphore){
-    host.appendChild(empty('Nothing pinned yet', 'Pull down to fetch from the cloud.'));
-    return;
-  }
-  var p = pinnedOf();
-  if (!p.links.length){
-    host.appendChild(empty('Nothing pinned yet',
-      'Tap the diamond beside one of a card’s links to keep it here.'));
-    return;
-  }
-  var hd = el('div', 'whead');
-  hd.appendChild(el('b', '', String(p.links.length)));
-  hd.appendChild(document.createTextNode((p.links.length === 1 ? ' link' : ' links') + ' kept to hand.'));
-  host.appendChild(hd);
-
-  if (p.links.length > 1){
-    var pills = el('div', 'pills');
-    [['A–Z', 'az'], ['By days', 'days']].forEach(function(o){
-      var b = el('button', 'cap' + (pinsBy === o[1] ? ' on' : ''), o[0]);
-      b.addEventListener('click', function(){
-        pinsBy = o[1];
-        try { localStorage.setItem('pocket.pinsBy', o[1]); } catch(e){}
-        drawPins();
-      });
-      pills.appendChild(b);
-    });
-    host.appendChild(pills);
-  }
-  if (p.links.length){
-    var box = el('section', 'wpins');
-    p.links.forEach(function(x){
-      var t = isoToday(), st = siteStamp(x.lk), on = st === t;
-      var row = el('div', 'wprow' + (on ? ' on' : ''));
-      var tone = arenaTone(x.a);
-      if (tone){ row.classList.add('toned'); row.style.setProperty('--tone', tone); }
-      row.appendChild(linkRow(x.lk, x.a));
-      /* under the title: the stamp, carrying the days since it was last
-         pressed as the card's stamp does, then the arena, then the pin.
-         The link's own stamp and pin are the desk's brokerage-link fields; a
-         pinned link of the arena's own list is shown, and handled on the
-         desk, so it keeps its days as plain text instead */
-      var foot = el('div', 'wpfoot');
-      var d = st ? Math.max(0, -daysTo(st)) : null;
-      if (x.scope === 'brokerage')
-        foot.appendChild(tickBtn(on, on ? 'Stamped today — tap to undo'
-          : (d === null ? 'Not stamped yet' : 'Stamped ' + d + ' days ago') + ' — stamp it once you have been through it',
-          function(){ stampLink(x.a, x.lk); }, d));
-      var ar = el('button', 'wpa', plainOf(x.a.name) || 'Arena');
-      ar.addEventListener('click', function(){ openArenaById(x.a.id); });
-      foot.appendChild(ar);
-      if (x.scope !== 'brokerage')
-        foot.appendChild(el('span', 'wpage' + (d === null ? ' never' : ''),
-          d === null ? 'never' : d === 0 ? 'today' : d + ' d'));
-      var ed = el('button', 'wped', '✎');
-      ed.setAttribute('aria-label', 'Change its name or address');
-      ed.addEventListener('click', function(){ editPin(x); });
-      foot.appendChild(ed);
-      if (x.scope === 'brokerage')
-        foot.appendChild(pinBtn(true, 'Unpin — put it back on its card', function(){ pinLink(x.a, x.lk); }));
-      row.appendChild(foot);
-      box.appendChild(row);
-    });
-    host.appendChild(box);
-  }
-}
-
-/* A pinned link's name and address, changed from Pinned as on the desk
-   (Mark, 2026-10-11), through the arena's own editArena, so the change is
-   one link by its id on whatever the cloud holds, with its undo. Emptied of
-   both it stays as it was: taking a link away is the arena sheet's cross. */
-function editPin(x){
-  sheet(function(b, bar){
-    closeBtn(bar);
-    b.appendChild(el('h2', '', plainOf((typeof linkName === 'function') ? linkName(x.lk) : linkLabel(x.lk))));
-    b.appendChild(el('p', 'sub', plainOf(x.a.name) || 'Arena'));
-    var panel = el('div', 'composer open');
-    b.appendChild(panel);
-    panel.appendChild(el('span', 'field', 'Name'));
-    var n = el('input', 'line');
-    n.type = 'text'; n.placeholder = 'Name it — optional'; n.value = x.lk.label || '';
-    n.setAttribute('aria-label', 'Link name');
-    panel.appendChild(n);
-    panel.appendChild(el('span', 'field', 'Address'));
-    var u = el('input', 'line');
-    u.type = 'text'; u.placeholder = 'https://…'; u.value = x.lk.url || '';
-    u.setAttribute('autocapitalize', 'off'); u.setAttribute('autocorrect', 'off');
-    u.setAttribute('inputmode', 'url'); u.spellcheck = false;
-    u.setAttribute('aria-label', 'Link address');
-    panel.appendChild(u);
-    var save = el('button', 'act', 'Save changes');
-    save.addEventListener('click', function(){
-      var label = n.value.trim(), url = deskUrl(u.value);
-      shut();
-      if (!label && !url) return;
-      if (label === String(x.lk.label || '').trim() && url === deskUrl(x.lk.url)) return;
-      var ops = { edit:{}, drop:[], add:[] }, ch = {};
-      ops.edit[x.lk.id] = { label:label, url:url };
-      ch[x.scope === 'brokerage' ? 'bklinks' : 'links'] = ops;
-      editArena(x.a, ch);
-    });
-    panel.appendChild(save);
-  });
 }
 
 /* ── the leads ──────────────────────────────────────────────────────── */
@@ -2857,9 +2698,6 @@ function drawLeads(){
 
 /* ── coming up: every arena's dates on one line ─────────────────────── */
 
-var datesAll = false;
-try { datesAll = localStorage.getItem('pocket.datesAll') === '1'; } catch(e){}
-
 function evDate(d){
   var M = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   var p = String(d.start).split('-'), y = +p[0], m = +p[1], dd = +p[2];
@@ -2885,17 +2723,17 @@ function comingUp(){
     if (!a || a.frozenAt) return;
     (a.dates || []).forEach(function(d){
       if (!d || !d.start || d.gran === 'none') return;
-      var call = d.kind === 'call';
-      if (!datesAll && call) return;
+      /* brokerage only (Mark, 2026-10-12): the calls left with the
+         Brokerage / Everything switch, as on the desk */
+      if (d.kind === 'call') return;
+      var call = false;
       var s = daysTo(d.start), e = daysTo(d.end || d.start);
       /* A brokerage event that is over is no longer something to go to, and
          Mark found the greyed ones crowding the top of the list (2026-10-10).
          Since 2026-10-11 it goes to Limbo the day after it ends and stays
          there until he removes it, so nothing leaves the board unseen. One
          pencilled into a month, quarter, half or year ends with that stretch,
-         or "≈ Oct" would be in Limbo on the 2nd. A call keeps its two weeks
-         in the list and then leaves it, since a deadline just passed still
-         says where the round stands and a call is not removed from here. */
+         or "≈ Oct" would be in Limbo on the 2nd. */
       if (!call && /^(month|quarter|half|year)$/.test(d.gran)){
         var p = String(d.start).split('-'), m = +p[1];
         var last = { month:m, quarter:Math.ceil(m / 3) * 3, half:m < 7 ? 6 : 12, year:12 }[d.gran];
@@ -2970,50 +2808,33 @@ function drawDates(){
   var host = $('#v-dates');
   host.textContent = '';
 
-  var pills = el('div', 'pills');
-  [['Brokerage', false], ['Everything', true]].forEach(function(o){
-    var b = el('button', 'cap' + (datesAll === o[1] ? ' on' : ''), o[0]);
-    b.addEventListener('click', function(){
-      datesAll = o[1];
-      try { localStorage.setItem('pocket.datesAll', o[1] ? '1' : '0'); } catch(e){}
-      drawDates();
-    });
-    pills.appendChild(b);
-  });
-  host.appendChild(pills);
-
   var all = comingUp();
   badge('dates', 0);
   var limbo = all.filter(function(x){ return x.limbo; });
   var list = all.filter(function(x){ return !x.limbo; });
+  /* no count of the year's events, nor of those without a website (Mark,
+     2026-10-12, as on the desk) */
   if (data.semaphore){
-    /* the desk's line over its list, counting what is still to come */
-    var brk = list.filter(function(x){ return x.d.kind !== 'call' && x.e >= 0; });
-    var bare = brk.filter(function(x){ return !x.d.url; }).length;
-    if (brk.length){
-      var hint = el('div', 'cuhint');
-      hint.appendChild(el('b', '', String(brk.length)));
-      hint.appendChild(document.createTextNode(' brokerage event' + (brk.length === 1 ? '' : 's') +
-        ' in the coming year' + (bare ? ', ' : '.')));
-      if (bare){
-        hint.appendChild(el('b', '', String(bare)));
-        hint.appendChild(document.createTextNode(' still without a website.'));
-      }
-      host.appendChild(hint);
-    }
     var add = el('button', 'addlead', '+ Brokerage event');
     add.addEventListener('click', newEvent);
     host.appendChild(add);
   }
+  /* Limbo is drawn as one (Mark, 2026-10-12, as on the desk): a box of
+     drifting fog with a small ghost in it, holding the events that are over
+     when it is open. */
   if (limbo.length){
+    var lbox = el('div', 'limbox' + (limboOpen ? ' open' : ''));
     var lb = el('button', 'culimbo');
     lb.setAttribute('aria-expanded', limboOpen ? 'true' : 'false');
+    lb.appendChild(el('span', 'culfog')).setAttribute('aria-hidden', 'true');
+    lb.insertAdjacentHTML('beforeend', '<svg class="culgh" viewBox="0 0 16 18" width="16" height="18" aria-hidden="true"><path d="M8 1.5C4.7 1.5 2.5 4 2.5 7.2V16l1.8-1.4L6.1 16 8 14.6 9.9 16l1.8-1.4L13.5 16V7.2C13.5 4 11.3 1.5 8 1.5z" fill="currentColor"/><ellipse cx="6" cy="7.6" rx="1.05" ry="1.45" fill="#15171A"/><ellipse cx="10" cy="7.6" rx="1.05" ry="1.45" fill="#15171A"/><ellipse cx="8" cy="11" rx=".9" ry="1.1" fill="#15171A"/></svg>');
     lb.appendChild(el('span', 'cap', 'Limbo'));
     lb.appendChild(el('b', '', String(limbo.length)));
     lb.appendChild(document.createTextNode(limbo.length === 1 ? 'event is over' : 'events are over'));
     lb.appendChild(el('span', 'lw', limboOpen ? 'Hide' : 'Show'));
     lb.addEventListener('click', function(){ limboOpen = !limboOpen; drawDates(); });
-    host.appendChild(lb);
+    lbox.appendChild(lb);
+    host.appendChild(lbox);
     if (limboOpen){
       var lw = el('div', 'evts lim');
       var say = el('div', 'cuhint');
@@ -3022,14 +2843,13 @@ function drawDates(){
       var ls = el('div', 'stream');
       limbo.forEach(function(x){ ls.appendChild(eventRow(x)); });
       lw.appendChild(ls);
-      host.appendChild(lw);
+      lbox.appendChild(lw);
     }
   }
   if (!list.length){
-    host.appendChild(empty(datesAll ? 'Nothing dated' : 'No brokerage dates',
+    host.appendChild(empty('No brokerage dates',
       !data.semaphore ? 'Pull down to fetch from the cloud.'
-        : datesAll ? 'No arena has a date in the coming year.'
-                   : 'No brokerage event is on the books for the coming year. Try Everything.'));
+        : 'No brokerage event is on the books for the coming year.'));
     return;
   }
 
@@ -3091,7 +2911,7 @@ function eventRow(x){
     var role = (typeof ROLES !== 'undefined' && ROLES[d.role]) ? ROLES[d.role].short : d.role;
     if (role) t.appendChild(el('span', 'stage', role));
   }
-  /* the arena wears its type as Pinned's boxes do, and no count of the
+  /* the arena wears its type as the rotation's bands do, and no count of the
      days to go is given, only that an event is under way (Mark, 2026-10-12) */
   var ar = el('span', 'ar');
   var at = ar.appendChild(el('span', 'at', plainOf(x.a.name) || 'Arena'));
@@ -4102,7 +3922,7 @@ function openArena(a, st){
       if (a.notes) ab.appendChild(el('p', '', plainOf(a.notes)));
       if (links.length){
         var lw = el('div', 'wlinks');
-        links.forEach(function(l){ lw.appendChild(linkRow(l, a, true)); });
+        links.forEach(function(l){ lw.appendChild(linkRow(l, a)); });
         ab.appendChild(lw);
       }
       section(b, 'About', ab);
@@ -4112,7 +3932,7 @@ function openArena(a, st){
     if (bk.notes) bb.appendChild(el('p', '', plainOf(bk.notes)));
     if ((bk.links || []).length){
       var tw = el('div', 'wlinks');
-      bk.links.forEach(function(lk){ if (lk) tw.appendChild(pinnableRow(lk, a)); });
+      bk.links.forEach(function(lk){ if (lk) tw.appendChild(brokLinkRow(lk, a)); });
       bb.appendChild(tw);
     }
     if (!bk.notes && !(bk.links || []).length) bb.appendChild(el('p', 'none', 'Nothing recorded yet.'));
@@ -4209,7 +4029,7 @@ function openPerson(r){
 
 /* ── chrome ─────────────────────────────────────────────────────────── */
 
-function draw(){ stamp(); drawRot(); drawPins(); drawLeads(); drawDates(); drawPeople($('#q').value); }
+function draw(){ stamp(); drawRot(); drawLeads(); drawDates(); drawPeople($('#q').value); }
 
 function goPeople(q){
   $('#q').value = q || '';

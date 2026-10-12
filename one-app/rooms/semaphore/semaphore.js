@@ -152,7 +152,7 @@ function defaultTypes(){
 function blank(){
   return {v:1,types:defaultTypes(),arenas:[],
     ui:{q:'',collapsed:{},view:'board',
-        wallSort:'rotation',boardSort:'date',cuAll:false,
+        wallSort:'rotation',boardSort:'date',
         howOpen:false,freezerOpen:false}};
 }
 /* An arena remembers which of its own dates it is waiting for. That goes stale
@@ -194,12 +194,12 @@ function migrate(s){
     if(!Array.isArray(a.brokerage.links))a.brokerage.links=[];
     if(typeof a.brokerage.notes!=='string')a.brokerage.notes='';
     /* Pinning once belonged to a single brokerage link, then to the whole card
-       as well. Mark took the whole card's pin away on 2026-10-11 — Pinned is
-       the round of links he keeps to hand and nothing else — so an arena's own
-       `pin` is dropped here, and a link's `pin`, the moment it was pinned, is
-       kept. */
+       as well. Mark took the whole card's pin away on 2026-10-11, and Pinned
+       itself with the links' pins on 2026-10-12, so every `pin` is dropped
+       here and a link that stood on Pinned is back on its card. */
     delete a.pin;
-    a.brokerage.links.forEach(l=>{if(!l.id)l.id=uid();});
+    a.brokerage.links.forEach(l=>{if(!l.id)l.id=uid();delete l.pin;});
+    (a.links||[]).forEach(l=>{delete l.pin;});
     /* the freezer holds the date it went in, so the panel can say since when */
     if(typeof a.frozenAt!=='string')a.frozenAt=null;
     /* how much this arena is worth of the rotation; unset means ordinary */
@@ -312,9 +312,8 @@ function migrate(s){
     ui.q        = typeof u.q==='string' ? u.q : d.q;
     ui.collapsed= map(u.collapsed) || {};
     ui.view     = ['brokerage','dispatch','coming'].includes(u.view) ? u.view : 'board';
-    ui.cuAll    = u.cuAll===true;
     /* By type was merged into the rotation (2026-10-11), so it lands there */
-    ui.wallSort = ['pinned','leads'].includes(u.wallSort) ? u.wallSort : 'rotation';
+    ui.wallSort = u.wallSort==='leads' ? 'leads' : 'rotation';
     /* the board's two orders since 2026-10-11 (see "the board's two orders");
        the two it had before — next publication, and by status — both read as
        the date order, which took their place */
@@ -1133,10 +1132,9 @@ function acceptAllFinds(){
    for: the event's own website in a column of its own, opened in one press,
    and a way to remove an event that should not be on the board at all.
 
-   Brokerage first, as everywhere in this room: calls come in only when
-   "Everything" is chosen, quieter, in their own stage colour. The window is
-   the phone's: a year forward, and for a call a fortnight back, so a
-   deadline just passed still says where the round stands. A brokerage event
+   Brokerage only (Mark, 2026-10-12): the calls, which came in when
+   "Everything" was chosen, went with that switch; they are on the board and
+   the cards. The window is the phone's: a year forward. A brokerage event
    that is over goes to Limbo, folded into one line at the top, and stays
    there until Mark takes it off by hand (2026-10-11, the same in Pocket):
    the fortnight before it, a line of its own too, let an event leave the
@@ -1161,6 +1159,7 @@ const cuNote=new Set();        /* arena|event of the rows whose note is open und
 let cuNoteT=null;              /* the save a pause in typing is waiting for */
 const BOOK_SHUT='<svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><path d="M3 2.5h7.5a2 2 0 0 1 2 2v9H5a2 2 0 0 1-2-2z" fill="currentColor" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M3 11.5a2 2 0 0 1 2-2h7.5M6 5h4.5M6 7h3" fill="none" stroke="var(--paper)" stroke-width="1.1"/></svg>';
 const BOOK_OPEN='<svg viewBox="0 0 18 16" width="17" height="15" aria-hidden="true"><path d="M9 4C7 2.8 4.5 2.5 2 3v9.5c2.5-.5 5-.2 7 1 2-1.2 4.5-1.5 7-1V3c-2.5-.5-5-.2-7 1z" fill="currentColor" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/><path d="M9 4v9.5" stroke="var(--paper)" stroke-width="1.1"/></svg>';
+const LIMBO_GHOST='<svg class="culgh" viewBox="0 0 16 18" width="16" height="18" aria-hidden="true"><path d="M8 1.5C4.7 1.5 2.5 4 2.5 7.2V16l1.8-1.4L6.1 16 8 14.6 9.9 16l1.8-1.4L13.5 16V7.2C13.5 4 11.3 1.5 8 1.5z" fill="currentColor"/><ellipse cx="6" cy="7.6" rx="1.05" ry="1.45" fill="#15171A"/><ellipse cx="10" cy="7.6" rx="1.05" ry="1.45" fill="#15171A"/><ellipse cx="8" cy="11" rx=".9" ry="1.1" fill="#15171A"/></svg>';
 function memoOf(d){return String((d&&d.memo)||'').trim();}
 /* A note emptied and closed is no note: the key goes, and "+ note" comes back. */
 function memoTidy(d){
@@ -1185,14 +1184,12 @@ function jumpDate(aid,did){
   if(row)row.scrollIntoView({block:'center'});
 }
 function comingUp(){
-  const now=T(todayISO()),from=now-14*DAY,to=now+366*DAY,out=[];
+  const now=T(todayISO()),to=now+366*DAY,out=[];
   for(const a of visibleArenas())for(const d of a.dates||[]){
-    if(!d.start||d.gran==='none')continue;
-    const call=d.kind==='call';
-    if(!S.ui.cuAll&&call)continue;
+    if(!d.start||d.gran==='none'||d.kind==='call')continue;
     const s=T(d.start),e=T(d.end||d.start);
-    if((call&&e<from)||s>to)continue;
-    out.push({a,d,s,e,limbo:!call&&e<now});
+    if(s>to)continue;
+    out.push({a,d,s,e,limbo:e<now});
   }
   /* What is over goes above the today line and everything else below it,
      so an event that began in September and runs into November is read
@@ -1220,11 +1217,11 @@ function cuDate(d){
     default:return dd+' '+MONTHS[m-1];
   }
 }
-/* An event is stamped once you have been through it, as a pinned link is,
+/* An event is stamped once you have been through it, as a card's link is,
    and counts the days since the same way (Mark, 2026-10-09). An event and a
-   pinned link are often one site — the platform pinned for the round is also
-   the page of the event it hosts — and two stamps on one site would disagree
-   by the next morning. So a site keeps one stamp: a press on either stamps
+   link are often one site — the platform kept for the round is also the page
+   of the event it hosts — and two stamps on one site would disagree by the
+   next morning. So a site keeps one stamp: a press on either stamps
    every event and link with that address, and each row reads the newest
    stamp among them, which is what lets a link stamped before events had
    stamps count for the event too. An event with no website stands alone.
@@ -1243,14 +1240,12 @@ function stampMates(h){
 /* An event removed from the list takes its links off the cards with it
    (Mark, 2026-10-12): a link to an event that is gone from the board would
    stand on the rotation cards as a place still to go. Its links are the
-   cards' links to the same site, on every arena, as the stamp has it; a
-   pinned link is on no card, and is a platform kept to hand beyond the one
-   event, so it stays. */
+   cards' links to the same site, on every arena, as the stamp has it. */
 function cuLinks(d){
   const k=d.url&&siteKey(d.url),out=[];
   if(!k)return out;
   for(const a of S.arenas)for(const lk of (a.brokerage&&a.brokerage.links)||[])
-    if(!lk.pin&&lk.url&&siteKey(lk.url)===k)out.push({a,lk});
+    if(lk.url&&siteKey(lk.url)===k)out.push({a,lk});
   return out;
 }
 function cuDrop(a,d){
@@ -1283,7 +1278,7 @@ function cuStampHTML(a,d){
     (n===null?'':'style="--age:'+Math.round(Math.min(n,14)/14*100)+'%" ')+'title="'+tip+'" aria-label="'+tip+'">'+
     (n===null?'\u2713':n)+'</button>';
 }
-/* the stamp and its count, as Pinned draws them */
+/* the stamp and its count, as the cards' links draw them */
 function stampSay(st){
   const t=todayISO(),on=st===t;
   const d=st?daysBetween(T(st),T(t)):null;
@@ -1366,25 +1361,21 @@ function renderComing(){
   if(!el)return;
   const all=comingUp(),now=T(todayISO());
   const limbo=all.filter(x=>x.limbo),list=all.filter(x=>!x.limbo);
-  const brk=list.filter(x=>x.d.kind!=='call'&&x.e>=now);
-  const bare=brk.filter(x=>!x.d.url).length;
-  const pills='<div class="wsort">'+[['0','Brokerage'],['1','Everything']].map(([v,n])=>
-    '<button class="'+((S.ui.cuAll?'1':'0')===v?'on':'')+'" data-act="cuAll" data-v="'+v+'">'+n+'</button>').join('')+'</div>';
+  /* no count of the year's events, nor of those without a website (Mark,
+     2026-10-12): the list says it, and "add website" stands on each one */
   const addBtn='<button class="btn'+(cuNew?' on':'')+'" data-act="cuNew" aria-expanded="'+cuNew+'">+ Brokerage event</button>';
-  const head='<div class="dpbar">'+pills+
-    '<span class="dpsay">'+(brk.length
-      ?'<b>'+brk.length+'</b> brokerage event'+(brk.length===1?'':'s')+' in the coming year'+
-        (bare?', <b>'+bare+'</b> still without a website':'')+'.'
-      :'')+'</span><span class="spacer"></span>'+addBtn+'</div>'+(cuNew?cuFormHTML():'');
-  const lim=limbo.length?'<div class="culimbo"><button class="culb" data-act="cuLimbo" aria-expanded="'+cuLimbo+'">'+
+  const head='<div class="dpbar"><span class="spacer"></span>'+addBtn+'</div>'+(cuNew?cuFormHTML():'');
+  /* Limbo is drawn as one (Mark, 2026-10-12): a room of drifting fog with a
+     small ghost in it, where the events that are over wait to be let go. */
+  const lim=limbo.length?'<div class="culimbo'+(cuLimbo?' open':'')+'"><button class="culb" data-act="cuLimbo" aria-expanded="'+cuLimbo+'">'+
+      '<span class="culfog" aria-hidden="true"></span>'+LIMBO_GHOST+
       '<span class="culc">Limbo</span><b>'+limbo.length+'</b> '+(limbo.length===1?'event is over':'events are over')+
       '<span class="culw">'+(cuLimbo?'Hide':'Show')+'</span></button>'+
     (cuLimbo?'<p class="culh">Each waits here until you take it off with \u2715.</p>'+
       '<div class="cuspine">'+limbo.map(comingRow).join('')+'</div>':'')+'</div>':'';
   if(!list.length){
     const why=liveArenas().length&&!visibleArenas().length?emptyReason(false):
-      [S.ui.cuAll?'Nothing dated in the coming year.':'No brokerage event in the coming year.',
-       S.ui.cuAll?'Give an arena a date and it appears here.':'Choose Everything to see the calls as well.'];
+      ['No brokerage event in the coming year.','Press + Brokerage event, or give an arena one, and it appears here.'];
     el.innerHTML=head+(lim?'<div class="culist">'+lim+'</div>':'')+'<div class="empty"><p>'+why[0]+'</p><p class="hint" style="margin-top:6px">'+why[1]+'</p></div>';
     return;
   }
@@ -1419,7 +1410,7 @@ const drawer={id:null,edit:null,hi:null,editing:false,scope:null};
    an arena's panel; no arena's id can be that word. */
 const BOARD='leads-board';
 let leadLastArena=null;
-let lkEdit={a:null,l:null},leadEdit={a:null,l:null},waitPick=null,settleId=null,pinEdit=null;
+let lkEdit={a:null,l:null},leadEdit={a:null,l:null},waitPick=null,settleId=null;
 /* the lead whose Complete is asking how it ended, which is about the moment */
 let endAsk={a:null,l:null};
 /* the update being written, and the leads showing their whole history —
@@ -2042,21 +2033,16 @@ function foundTitle(x){
 function freshTag(a,x){
   return isFresh(a,x)?'<i class="wfresh" title="'+esc(foundTitle(x))+'">new</i>':'';
 }
-/* Every link row, on a card and in the panel alike: the link, then the two
-   things you do to it in passing — pin it, or take it off. `scope` says which
-   of the arena's two lists it is in, so a row can also be dragged to a new
-   place (see "putting links in your own order").
-
-   A pinned link has gone to the Pinned arrangement and stands there on its
-   own, so a card leaves it out (`onCard`): seen twice it would be read as
-   two things. The panel still lists it, pin lit — the panel is the arena's
-   whole record, and the place to take a pin back. */
+/* Every link row, on a card and in the panel alike: the link, then the thing
+   you do to it in passing — take it off. `scope` says which of the arena's
+   two lists it is in, so a row can also be dragged to a new place (see
+   "putting links in your own order"). */
 /* On a rotation card a link is its name alone, its host left off (Mark,
    2026-10-12): the address is a hover away, in the title. In its place the
    link carries its stamp, the site's (stampMates), so a site gone through
    from one card shows as gone through on every card that links it. */
 function wallLinkRows(a,list,scope,onCard){
-  return (list||[]).filter(lk=>!(onCard&&lk.pin)).map(lk=>{
+  return (list||[]).map(lk=>{
     const nm=esc(linkName(lk));
     const body=lk.url
       ? '<a class="wlink" draggable="false" href="'+esc(lk.url)+'" target="_blank" rel="noopener" title="'+esc(lk.url)+'">'+
@@ -2072,9 +2058,6 @@ function wallLinkRows(a,list,scope,onCard){
     }
     return '<div class="wlrow" data-lk="'+esc(lk.id||'')+'">'+body+
       '<span class="wlc">'+
-        '<button class="lpin'+(lk.pin?' on':'')+'" data-act="lkPin"'+ref+
-          ' title="'+(lk.pin?'Pinned — click to take it off Pinned':'Pin this link — it moves to Pinned')+'"'+
-          ' aria-label="'+(lk.pin?'Unpin ':'Pin ')+nm+'"><i></i></button>'+
         '<button class="ldel" data-act="lkDel"'+ref+' title="Remove this link" aria-label="Remove '+nm+'">✕</button>'+
         stamp+
       '</span></div>';
@@ -2088,7 +2071,7 @@ function linkList(a,scope){
   return a.brokerage.links||(a.brokerage.links=[]);
 }
 function linkOf(a,scope,id){const l=linkList(a,scope);return l?l.find(x=>x.id===id):null;}
-/* a change to a link shows on the card, in the panel and on Pinned at once */
+/* a change to a link shows on the card and in the panel at once */
 function relinked(){save();repaint();renderDrawer();}
 function wallLinks(a,scope,rows){
   return '<div class="wlinks" data-a="'+a.id+'" data-lks="'+scope+'">'+rows+'</div>';
@@ -2805,8 +2788,7 @@ function askHTML(a){
 }
 function headHTML(a,st,t){
   const bk=a.brokerage||{links:[]};
-  /* pinned links live on Pinned, not on the card, so they are not counted here */
-  const n=(bk.links||[]).filter(l=>!l.pin).length;
+  const n=(bk.links||[]).length;
   const nNew=t==='rest'?freshItems(a).length:0;
   /* the title and its count share one flexible cell, so whatever is written
      there can never move the controls on the right */
@@ -2923,9 +2905,8 @@ function wallCard(a,st,tier){
   /* At most three links on a card, so a card with many does not grow tall
      for them (Mark, 2026-10-11); the rest are a press away in the panel. */
   const LK_ON_CARD=3;
-  const loose=(bk.links||[]).filter(l=>!l.pin);
+  const loose=bk.links||[];
   const rows=t==='rest'?'':wallLinkRows(a,loose.slice(0,LK_ON_CARD),'brokerage',true);
-  const nPinned=(bk.links||[]).length-loose.length;
   const nMore=loose.length-LK_ON_CARD;
   /* The face is built in three parts: a head that never moves, a middle that
      takes whatever room the card has and scrolls when there is more than that,
@@ -2951,7 +2932,6 @@ function wallCard(a,st,tier){
       (t==='rest'?'':'<div class="wlk">'+
         (rows?wallLinks(a,'brokerage',rows)+
             (nMore>0?'<button class="wlmore" data-act="openArena" data-id="'+a.id+'">+ '+nMore+' more in the arena</button>':'')
-          :nPinned?'<p class="wpinned">'+(nPinned===1?'Its one link is':'Its '+nPinned+' links are')+' on Pinned</p>'
           :'<p class="wnone">No links yet</p>')+'</div>')+
     '</div></div>'+
     waitFootHTML(a,s,t)+
@@ -3170,7 +3150,7 @@ function howHTML(){
       '\u2014 and closes it without throwing it away; a project opens the Ledger\u2019s new project with '+
       'the lead\u2019s name and links filled in. The closed ones fold into a single line at the foot of the '+
       'arena\u2019s list, with what the arena has given under it: its leads so far, how many reached '+
-      'talking and how many became projects. <b>Leads</b>, beside the arrangements above, drops the wall altogether and lists every '+
+      'talking and how many became projects. <b>Leads</b>, the button beside the views above, drops the wall altogether and lists every '+
       'lead from every arena, the three steps one under another, as the Ledger lists them.')+
     line('Wait for a date','Not a lead but the opposite: the card putting itself away rather than pursuing '+
       'anything. It sleeps until <b>three weeks</b> before its '+
@@ -3179,9 +3159,6 @@ function howHTML(){
       'it over, so it comes back up to date. Stamp it there and the wait is over and the card back in its '+
       'own row. Move that date and the wait moves with it; delete it, or let it pass, and the card is '+
       'simply back in the rotation.')+
-    line('Pinned','A separate arrangement, and the only one you author. Click the diamond beside one of a '+
-      'card\u2019s links and that link moves to <b>Pinned</b>, off every card, with a stamp of its own '+
-      'and the days since you last pressed it.')+
     line('Ask the agent','The ring in a card\u2019s head asks the nightly agent to look at that arena on its '+
       'next run, on top of the ones it picks itself. It goes out once the agent has been. What the agent '+
       'brings is brokerage events, partner-search tools and short rewrites of the card\u2019s About and '+
@@ -3194,40 +3171,6 @@ function howHTML(){
     'is asking to be looked at, then what is merely due a turn, then what is parked \u2014 and within '+
     'a rung, by how much. A card you stamp today waits at the far right of its row until tomorrow.</p></div>';
 }
-/* One pinned link, as Pocket draws it (Mark, 2026-10-11): the name on a line
-   of its own, wrapping rather than cut, on a box in its arena type's colour,
-   and its host not shown, since a pinned link is read by its name; under it the
-   stamp carrying the days since it was last pressed, the arena it came from,
-   the pencil that changes its name and address, and the pin to put it back.
-   While the pencil is open the name gives way to the form (`pinEdit`). */
-function pinRowHTML(p){
-  const{a,lk,scope}=p;
-  const ref=' data-a="'+a.id+'" data-lks="'+scope+'" data-l="'+esc(lk.id||'')+'"';
-  const{on,d,ageTip,stTip}=stampSay(stampOf(lk));
-  const nm=esc(linkName(lk));
-  const tone=arenaTone(a);
-  const top=pinEdit===lk.id
-    ?'<form class="lkform pkform" data-pka="'+a.id+'" data-pks="'+scope+'" data-pkl="'+esc(lk.id||'')+'">'+
-       '<input class="lu" name="url" value="'+esc(lk.url||'')+'" placeholder="https://…" aria-label="Link address" autocomplete="off">'+
-       '<input class="lx" name="label" value="'+esc(lk.label||'')+'" placeholder="Name it — optional" aria-label="Link name" autocomplete="off">'+
-       '<button type="submit" class="ib" title="Save" aria-label="Save">✓</button>'+
-       '<button type="button" class="ib" data-act="lkCancel" title="Cancel" aria-label="Cancel">✕</button>'+
-     '</form>'
-    :lk.url
-      ?'<a class="wplink" href="'+esc(lk.url)+'" target="_blank" rel="noopener" title="'+esc(lk.url)+'">'+
-         '<span class="wn">'+nm+'</span>'+freshTag(a,lk)+'</a>'
-      :'<span class="wplink dead"><span class="wn">'+nm+'</span></span>';
-  const tip=on?stTip:ageTip+' — stamp it once you have been through it';
-  return '<div class="wprow'+(on?' on':'')+(tone?' toned':'')+'"'+(tone?' style="--tone:'+esc(tone)+'"':'')+'>'+top+
-    '<div class="wpfoot">'+
-      '<button class="stamp'+(on?' on':'')+(d===null?'':' dated')+'" data-act="lkStamp"'+ref+' title="'+tip+'" aria-label="'+tip+'">✓'+
-        (d===null?'':'<span class="sdays">'+Math.max(0,d)+'</span>')+'</button>'+
-      '<button class="wpa" data-act="openArena" data-id="'+a.id+'" title="Open '+esc(a.name)+'">'+esc(a.name)+'</button>'+
-      '<button class="wped" data-act="pinEdit"'+ref+' title="Change its name or address" aria-label="Edit '+nm+'">✎</button>'+
-      '<button class="lpin on" data-act="lkPin"'+ref+' title="Pinned — click to put it back on its card" aria-label="Unpin '+nm+'"><i></i></button>'+
-    '</div>'+
-  '</div>';
-}
 function paintWall(){
   const w=$('#wall');
   const vis=visibleArenas();
@@ -3238,39 +3181,10 @@ function paintWall(){
     return;
   }
   const has=hasBrokerage;
-  const sortBtns='<div class="wsort">'+
-    [['rotation','Rotation','A row for every type, in your order of types; in each row, first is whatever wants attention today'],
-     ['pinned','Pinned','The links you have pinned, each with its own stamp'],
-     ['leads','Leads','One board \u2014 every lead you are pursuing, in the step it has reached']].map(([v,n,t])=>
-      '<button class="'+(S.ui.wallSort===v?'on':'')+'" data-act="setWallSort" data-v="'+v+'" title="'+t+'">'+n+'</button>').join('')+
-    '</div>';
   /* the mechanics only govern the rotation, so they are only offered there */
   const howBtn=S.ui.wallSort==='rotation'
     ?'<button class="howbtn'+(S.ui.howOpen?' on':'')+'" data-act="toggleHow" '+
       'aria-expanded="'+(S.ui.howOpen?'true':'false')+'">How the order works</button>':'';
-
-  /* ---- pinned: the links you keep to hand ----
-     Single links: the platforms gone through so often that they are a round
-     of their own rather than part of one arena's. Each carries its own stamp,
-     and how many days ago it was last pressed, so the round can be walked the
-     way the rotation is. A pinned link stands only here; no card shows it as
-     well. Whole cards could be pinned here too until Mark took that away on
-     2026-10-11: a card belongs in its type's row, and the links were what he
-     kept to hand. */
-  if(S.ui.wallSort==='pinned'){
-    const pins=[];
-    for(const a of vis)for(const scope of ['brokerage','arena'])
-      for(const lk of linkList(a,scope))if(lk.pin)pins.push({a,lk,scope});
-    pins.sort((x,y)=>String(x.lk.pin).localeCompare(String(y.lk.pin)));
-    let h='<div class="whead">'+sortBtns+
-      (pins.length?'<span class="wsay"><b>'+pins.length+'</b> link'+(pins.length===1?'':'s')+' kept to hand.</span>':'')+'</div>';
-    if(pins.length)h+='<div class="wplist">'+pins.map(pinRowHTML).join('')+'</div>';
-    else
-      h+='<div class="empty"><p>Nothing pinned yet.</p>'+
-        '<p class="hint" style="margin-top:6px">Click the diamond beside one of a card\u2019s links to keep it here.</p></div>';
-    w.innerHTML=h;
-    return;
-  }
 
   /* ---- leads: one board, three sections, every arena's leads in them ----
      Not a wall of arenas each carrying its own three steps — that was the same
@@ -3289,7 +3203,7 @@ function paintWall(){
     const owed=all.filter(({l})=>l.due&&daysBetween(T(l.due),T(todayISO()))>=0).length;
     const arenas=new Set(all.map(({a})=>a.id)).size;
     const adding=leadEdit.a===BOARD;
-    let h='<div class="whead lhead">'+sortBtns+
+    let h='<div class="whead lhead">'+
       (all.length?'<span class="wsay"><b>'+all.length+'</b> lead'+(all.length===1?'':'s')+
         ' across <b>'+arenas+'</b> arena'+(arenas===1?'':'s')+
         (owed?', <b>'+owed+'</b> owed today':'')+'.</span>':'')+
@@ -3365,7 +3279,7 @@ function paintWall(){
   const rows=S.types.map(t=>[t,rest.filter(a=>a.typeId===t.id)])
     .concat([[null,rest.filter(a=>!typeOf(a))]]).filter(r=>r[1].length);
   const n=vis.filter(a=>standing(a).score>=ask).length;
-  let h='<div class="whead">'+sortBtns+
+  let h='<div class="whead">'+
     (n?'<span class="wsay"><b>'+n+'</b> '+(n===1?'card is':'cards are')+
       ' asking for something.</span>':'')+howBtn+
     '<button class="howbtn" data-act="resetStamps" title="Take the stamp off every card in the rotation">Reset all stamps</button>'+
@@ -3406,8 +3320,9 @@ function applyView(){
   $('#wall').hidden=v!=='brokerage';
   $('#dispatch').hidden=v!=='dispatch';
   $('#coming').hidden=v!=='coming';
-  document.querySelectorAll('#viewseg button, #dispatchBtn').forEach(b=>
-    b.classList.toggle('on',b.dataset.v===S.ui.view));
+  const lv=v==='brokerage'&&S.ui.wallSort==='leads'?'leads':v;
+  document.querySelectorAll('#viewseg button, #leadsBtn, #dispatchBtn').forEach(b=>
+    b.classList.toggle('on',b.dataset.v===lv));
   const tab=document.querySelector('#viewseg button[data-v=brokerage]');
   if(tab){
     const n=promptCount();
@@ -3571,7 +3486,7 @@ function focusNote(){
   if(el)el.focus({preventScroll:true});
 }
 function closeComposers(){lkEdit={a:null,l:null};leadEdit={a:null,l:null};
-  noteEdit={a:null,l:null};endAsk={a:null,l:null};waitPick=null;pinEdit=null;}
+  noteEdit={a:null,l:null};endAsk={a:null,l:null};waitPick=null;}
 function renderAll(){
   if(S.ui.view==='brokerage')renderWall();else renderBoard();
   if(S.ui.view==='dispatch')renderDispatch();
@@ -4116,7 +4031,7 @@ document.addEventListener('click',e=>{
     /* Every card's stamp at once, so the whole rotation starts round again
        (Mark, 2026-10-11). Asked first: there is no taking it back, the
        stamps' days are gone. A frozen arena is out of the rotation, and a
-       pinned link's own stamp is not a card's, so both keep theirs. */
+       link's own stamp is not a card's, so both keep theirs. */
     case 'resetStamps':{
       const on=S.arenas.filter(x=>!x.frozenAt&&x.sweptAt);
       if(!on.length){Ask.tell('Nothing to reset','No card in the rotation has a stamp.');break;}
@@ -4221,8 +4136,6 @@ document.addEventListener('click',e=>{
     case 'lkAdd':{closeComposers();lkEdit={a:id,l:b.dataset.l||null};if(b.dataset.l)leadOpen.add(b.dataset.l);
       repaint();renderDrawer();focusLk();break;}
     case 'lkCancel':{closeComposers();repaint();renderDrawer();break;}
-    case 'pinEdit':{const open=pinEdit===b.dataset.l;closeComposers();if(!open)pinEdit=b.dataset.l;
-      repaint();renderDrawer();focusLk();break;}
 
     case 'waitPick':{closeComposers();waitPick=id;repaint();renderDrawer();break;}
     case 'holdSet':{const ar=arena(id);if(!ar)break;
@@ -4242,12 +4155,7 @@ document.addEventListener('click',e=>{
     case 'thaw':{const ar=arena(id);if(!ar)break;
       ar.frozenAt=null;save();renderAll();break;}
     case 'toggleFreezer':S.ui.freezerOpen=!S.ui.freezerOpen;save();renderFreezer();break;
-    /* A link pinned is the moment it was pinned, which is the order Pinned
-       lists them in; unpinned, it is back on its card where it was. */
-    case 'lkPin':{const lk=linkOf(a,b.dataset.lks,b.dataset.l);if(!lk)break;
-      if(lk.pin)delete lk.pin;else lk.pin=new Date().toISOString();
-      relinked();break;}
-    /* the link's own sweep, on Pinned and on the cards: the day you last went
+    /* the link's own sweep, on the cards: the day you last went
        through its site, and a same-day press takes it back, as the arena's
        stamp does */
     case 'lkStamp':{const lk=linkOf(a,b.dataset.lks,b.dataset.l);if(!lk)break;
@@ -4268,11 +4176,11 @@ document.addEventListener('click',e=>{
     case 'askAgent':{const ar=arena(id);if(!ar)break;
       ar.askAt=ar.askAt?null:new Date().toISOString();
       relinked();break;}
-    case 'setWallSort':{const v=b.dataset.v;
-      S.ui.wallSort=['pinned','leads'].includes(v)?v:'rotation';
-      save();renderWall();break;}
+    /* Leads is drawn on the wall, as the rotation is, so its button sets the
+       wall's arrangement as well as the view; Rotation sets it back. */
     case 'setView':{const v=b.dataset.v;
-      S.ui.view=['brokerage','dispatch','coming'].includes(v)?v:'board';
+      if(v==='leads'||v==='brokerage')S.ui.wallSort=v==='leads'?'leads':'rotation';
+      S.ui.view=['brokerage','dispatch','coming','leads'].includes(v)?(v==='leads'?'brokerage':v):'board';
       cuHi=null;
       save();renderAll();
       /* the findings are asked for when you come to look at them, and again
@@ -4281,7 +4189,6 @@ document.addEventListener('click',e=>{
       if(S.ui.view==='dispatch')loadFinds();
       break;}
     case 'findRefresh':loadFinds();break;
-    case 'cuAll':S.ui.cuAll=b.dataset.v==='1';save();renderComing();break;
     case 'cuLimbo':cuLimbo=!cuLimbo;renderComing();break;
     case 'cuNote':{if(!a)break;const dt=a.dates.find(d=>d.id===b.dataset.d);if(!dt)break;
       const k=a.id+'|'+dt.id;
@@ -4445,18 +4352,6 @@ function typedAddr(url){
   return url;
 }
 document.addEventListener('submit',e=>{
-  /* a pinned link's new name and address; emptied of both, it stays as it
-     was, since taking a link away is the cross on its card */
-  const pf=e.target.closest('.pkform');
-  if(pf){
-    e.preventDefault();
-    const lk=linkOf(arena(pf.dataset.pka),pf.dataset.pks,pf.dataset.pkl);
-    const url=typedAddr(pf.elements.url.value),label=pf.elements.label.value.trim();
-    closeComposers();
-    if(lk&&(url||label)){lk.url=url;lk.label=label;}
-    relinked();
-    return;
-  }
   const lf=e.target.closest('.lkform');
   if(lf){
     e.preventDefault();
@@ -4637,7 +4532,7 @@ document.addEventListener('keydown',e=>{
   if(sortOpen){sortOpen=false;renderBoard();return;}         /* the board's order */
   if(Ask.isOpen()){Ask.shut();return;}                       /* the question */
   if(document.querySelector('.modal.open')){closeModals();return;}   /* a sheet */
-  if(lkEdit.a||leadEdit.a||noteEdit.a||waitPick||pinEdit){  /* a composer */
+  if(lkEdit.a||leadEdit.a||noteEdit.a||waitPick){  /* a composer */
     closeComposers();repaint();renderDrawer();return;
   }
   if(drawer.edit){drawer.edit=null;renderDrawer();return;}   /* a date form */
@@ -4679,7 +4574,7 @@ const LK_HOLD=380,LK_SLOP=5;
 const LK_MS=(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)?0:160;
 document.addEventListener('pointerdown',e=>{
   if(e.button!==0||lkDrag)return;
-  /* the pin and the cross are pressed, never dragged */
+  /* the cross and the stamp are pressed, never dragged */
   if(e.target.closest&&e.target.closest('.wlc'))return;
   const row=e.target.closest&&e.target.closest('.wlrow[data-lk]');
   const list=row&&row.parentElement;
@@ -4765,9 +4660,9 @@ function lkUp(e){
     L.row.style.transition='';L.row.classList.remove('lkup');L.list.classList.remove('lkdragging');
     const arr=linkList(arena(L.list.dataset.a),L.list.dataset.lks);
     if(!arr)return;
-    /* A card leaves its pinned links out, so the rows on screen can be fewer
+    /* A card shows at most three links, so the rows on screen can be fewer
        than the list. The ones shown are dealt back into the places the shown
-       ones held, and a pinned link keeps its own place among them. */
+       ones held, and a link not shown keeps its own place among them. */
     const ids=[...L.list.children].map(r=>r.dataset.lk);
     const shown=new Set(ids);
     const slots=[];arr.forEach((l,k)=>{if(shown.has(l.id))slots.push(k);});

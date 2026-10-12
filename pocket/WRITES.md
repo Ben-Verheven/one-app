@@ -36,18 +36,16 @@ Every change is undoable from the toast; undo puts back exactly the fields it to
 | arena ask | `askAt` | ISO moment / `null` | ✓ |
 | arena wait | `hold`, `holdPrev` | `{dateId}`, one of the arena's own dates / `null` to stop waiting; a stamp on a card back from waiting moves `hold` to `holdPrev` for the day (the desk's own sweep), and the same-day undo moves it back | ✓ |
 | arena edit | `name`, `notes`, `brokerage.notes` | the name trimmed, `'Unnamed arena'` for none; notes trimmed | ✓ only the fields changed; `brokerage` made `{notes:'',links:[]}` when absent |
-| arena links | `links[]`, `brokerage.links[]` | `{id, label, url}`; a changed address without a scheme gets `https://` | ✓ add, change label/url, remove — each by id on the cloud's copy, so a link's `pin`, `stampedAt` and `foundAt` stay; an address with @ → `mailto:` (the desk's brokerage form) |
+| arena links | `links[]`, `brokerage.links[]` | `{id, label, url}`; a changed address without a scheme gets `https://` | ✓ add, change label/url, remove — each by id on the cloud's copy, so a link's `stampedAt` and `foundAt` stay; an address with @ → `mailto:` (the desk's brokerage form) |
 | lead score | `score` | `1`…`5`; the key deleted for no score | ✓ |
-| brokerage link pin | `brokerage.links[].pin` | ISO moment when pinned; key deleted when unpinned | ✓ |
 | brokerage link stamp | `stampedAt`, `stampPrev` | day; same-day stamp → `stampPrev`, which is then deleted. One stamp to a site: the press writes every date and link (brokerage or the arena's own) of the same site (`siteKey`), on any arena | ✓ since 2026-10-11 the same for every row of the site |
 | event stamp | `dates[].stampedAt`, `stampPrev` | as the link stamp, and with it, through the event's `url`; an event without one stands alone | ✓ (Coming up) |
 | event note | `dates[].memo` | Mark's own note on a brokerage event, trailing space trimmed; the key deleted when emptied. Not the date's `note` | ✓ (Coming up); undo puts it back. Since 2026-10-12, after the contract's export |
 | event website | `dates[].url` | an address with @ → `mailto:`, no scheme → `https://` | ✓ only where it had none |
 | event new | `dates[]` + `{id,kind:'brokerage',label,call:'',role:'',note:'',url,gran,grade,start,end}` | uuid id; `label` `'(untitled)'` for none; `start`/`end` the stretch `gran` names (`day`/`range`/`month`/`quarter`/`half`/`year`); `grade` `fixed` only for a day or a span | ✓ |
-| event remove | `dates[]`, `hold`, `brokerage.links[]` on every arena | the date taken out; `reconcile` ends a wait for it; the cards' unpinned links to the event's site (`siteKey`) taken out with it | ✓ undo puts it back in its place, and the wait, and each link in its place |
+| event remove | `dates[]`, `hold`, `brokerage.links[]` on every arena | the date taken out; `reconcile` ends a wait for it; the cards' links to the event's site (`siteKey`) taken out with it | ✓ undo puts it back in its place, and the wait, and each link in its place |
 
-A pin on one of the arena's *own* links (`links[].pin`) is not in the contract: Pocket shows such a
-link on Pinned but leaves its pin and its own stamp button to the desk; its `stampedAt` is written only
+An arena's *own* link (`links[]`) has no stamp button in Pocket; its `stampedAt` is written only
 when a stamp on an event or brokerage link of the same address carries it, as the desk does. The
 contract's export predates the dates' `url` (2026-10-08) and `stampedAt` (2026-10-09); both are
 written in the desk's shape above.
@@ -60,5 +58,5 @@ the arena's own `color` before it is no longer written either), and the agent's 
 ## Stored only on the phone
 `pocket.cfg` (URL + key + the email last used, written at the first login; until then
 Pocket uses `BUILT_IN`), `pocket.auth` (the login session, since
-2026-10-09), `pocket.cache` (last Semaphore copy), `pocket.datesAll` (Coming up filter), `pocket.pinsBy` (Pinned's order).
+2026-10-09), `pocket.cache` (last Semaphore copy), nothing else (`pocket.datesAll` and `pocket.pinsBy`, left behind by the Coming up filter and Pinned, both gone 2026-10-12, are read by nothing).
 Nothing of these goes to the cloud. Log out removes `pocket.auth` and `pocket.cache`.
