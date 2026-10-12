@@ -361,7 +361,7 @@ _No section banners._
 
 ## `rooms/semaphore/semaphore.js`
 
-4772 lines · 254 KB
+4791 lines · 255 KB
 
 ```
 Brokerage Semaphore                   semaphore.js:1
@@ -377,34 +377,34 @@ the board's two orders                semaphore.js:621
 render: freezer                       semaphore.js:734
 dispatches                            semaphore.js:763
 coming up                             semaphore.js:1127
-drawer                                semaphore.js:1366
-read view: one stream, in time order  semaphore.js:1468
-edit view                             semaphore.js:1592
-actions                               semaphore.js:1720
-standing                              semaphore.js:1748
-one ladder, four rungs                semaphore.js:1780
-the line on top of a card             semaphore.js:2048
-leads                                 semaphore.js:2225
-the ruit                              semaphore.js:2319
-the score                             semaphore.js:2373
-one lead card, in both rooms          semaphore.js:2433
-the colour dot                        semaphore.js:2461
-a type's colour dot                   semaphore.js:2472
-one face                              semaphore.js:2915
-one rhythm for the wall               semaphore.js:2922
-pinned: the links you keep to hand    semaphore.js:3204
-leads: one board, three sections      semaphore.js:3227
-the rotation: a strip for every type  semaphore.js:3296
-leads, lent to the Ledger's board     semaphore.js:3656
-modals                                semaphore.js:3757
-asking, and saying                    semaphore.js:3760
-the types, managed                    semaphore.js:3804
-dragging in the list of types         semaphore.js:3861
-tooltip                               semaphore.js:4022
-events                                semaphore.js:4054
-typing, and the forms it goes into    semaphore.js:4367
-escape, and closing by clicking away  semaphore.js:4548
-putting links in your own order       semaphore.js:4591
+drawer                                semaphore.js:1383
+read view: one stream, in time order  semaphore.js:1485
+edit view                             semaphore.js:1609
+actions                               semaphore.js:1737
+standing                              semaphore.js:1765
+one ladder, four rungs                semaphore.js:1797
+the line on top of a card             semaphore.js:2065
+leads                                 semaphore.js:2242
+the ruit                              semaphore.js:2336
+the score                             semaphore.js:2390
+one lead card, in both rooms          semaphore.js:2450
+the colour dot                        semaphore.js:2478
+a type's colour dot                   semaphore.js:2489
+one face                              semaphore.js:2932
+one rhythm for the wall               semaphore.js:2939
+pinned: the links you keep to hand    semaphore.js:3221
+leads: one board, three sections      semaphore.js:3244
+the rotation: a strip for every type  semaphore.js:3313
+leads, lent to the Ledger's board     semaphore.js:3673
+modals                                semaphore.js:3774
+asking, and saying                    semaphore.js:3777
+the types, managed                    semaphore.js:3821
+dragging in the list of types         semaphore.js:3878
+tooltip                               semaphore.js:4039
+events                                semaphore.js:4071
+typing, and the forms it goes into    semaphore.js:4386
+escape, and closing by clicking away  semaphore.js:4567
+putting links in your own order       semaphore.js:4610
 ```
 
 ## `rooms/semaphore/semaphore.css`
@@ -642,4 +642,4 @@ Generated data. Never open, never edit, never upload.
 
 ---
 
-**36637 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.
+**36656 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.

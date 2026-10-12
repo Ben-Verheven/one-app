@@ -1218,6 +1218,23 @@ function stampMates(h){
   }
   return out;
 }
+/* An event removed from the list takes its links off the cards with it
+   (Mark, 2026-10-12): a link to an event that is gone from the board would
+   stand on the rotation cards as a place still to go. Its links are the
+   cards' links to the same site, on every arena, as the stamp has it; a
+   pinned link is on no card, and is a platform kept to hand beyond the one
+   event, so it stays. */
+function cuLinks(d){
+  const k=d.url&&siteKey(d.url),out=[];
+  if(!k)return out;
+  for(const a of S.arenas)for(const lk of (a.brokerage&&a.brokerage.links)||[])
+    if(!lk.pin&&lk.url&&siteKey(lk.url)===k)out.push({a,lk});
+  return out;
+}
+function cuDrop(a,d){
+  for(const{a:x,lk}of cuLinks(d))x.brokerage.links=x.brokerage.links.filter(l=>l!==lk);
+  a.dates=a.dates.filter(y=>y!==d);reconcile(a);save();renderAll();
+}
 function stampOf(h){
   let s=null;
   for(const m of stampMates(h))if(m.stampedAt&&(!s||m.stampedAt>s))s=m.stampedAt;
@@ -4256,13 +4273,15 @@ document.addEventListener('click',e=>{
       /* In Limbo every event is there to be taken off, and asking each time
          would make clearing it a dialog per row; the ask stays for an event
          still to come, which a stray click must not lose. */
-      if(b.dataset.limbo){a.dates=a.dates.filter(d=>d.id!==did);reconcile(a);save();renderAll();break;}
+      if(b.dataset.limbo){cuDrop(a,dt);break;}
+      const nl=cuLinks(dt).length;
       Ask.ask('Remove this event?',
         '\u201C'+dtLabel(dt)+'\u201D \u2014 '+dispDate(dt)+', on '+a.name+
-        '. It goes from the whole app: this list, the board, the cards and the arena\u2019s panel.',
+        '. It goes from the whole app: this list, the board, the cards and the arena\u2019s panel'+
+        (nl?', and '+(nl===1?'its link goes':'its '+nl+' links go')+' from the cards with it':'')+'.',
         'Remove',()=>{
-          const ar=arena(aid);if(!ar)return;
-          ar.dates=ar.dates.filter(d=>d.id!==did);reconcile(ar);save();renderAll();
+          const ar=arena(aid),d=ar&&ar.dates.find(x=>x.id===did);if(!d)return;
+          cuDrop(ar,d);
         });
       break;}
     case 'findAll':{

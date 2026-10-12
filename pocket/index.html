@@ -1989,17 +1989,49 @@ function addEvent(aid, ev){
     '\u201C' + ev.label + '\u201D added',
     onArena(aid, function(x){ x.dates = (x.dates || []).filter(function(y){ return y.id !== ev.id; }); }));
 }
+/* The event's links on the cards go with it, on every arena, as the desk's
+   cuLinks finds them (Mark, 2026-10-12): the cards' links to the same site,
+   a pinned link left where it is. Undo puts each back in its place. */
+function eventCardLinks(blob, d){
+  var k = d.url && siteKey(d.url), out = [];
+  if (!k) return out;
+  ((blob && blob.arenas) || []).forEach(function(a){
+    ((a && a.brokerage && a.brokerage.links) || []).forEach(function(lk, i){
+      if (lk && !lk.pin && lk.url && siteKey(lk.url) === k)
+        out.push({ aid:a.id, at:i, copy:JSON.stringify(lk), id:lk.id });
+    });
+  });
+  return out;
+}
 function dropEvent(a, d){
   var at = (a.dates || []).indexOf(d), copy = JSON.stringify(d), was = keep(a, ['hold']);
-  commit('semaphore', onArena(a.id, function(x){
-      x.dates = (x.dates || []).filter(function(y){ return y.id !== d.id; }); reconcile(x); }),
+  var lks = eventCardLinks(data.semaphore, d), gone = {};
+  lks.forEach(function(l){ gone[l.id] = 1; });
+  commit('semaphore', function(blob){
+      (blob.arenas || []).forEach(function(x){
+        if (x.brokerage && Array.isArray(x.brokerage.links))
+          x.brokerage.links = x.brokerage.links.filter(function(k){ return !gone[k.id]; });
+      });
+      onArena(a.id, function(x){
+        x.dates = (x.dates || []).filter(function(y){ return y.id !== d.id; }); reconcile(x); })(blob);
+    },
     '\u201C' + dateName(d) + '\u201D removed',
-    onArena(a.id, function(x){
-      if (!Array.isArray(x.dates)) x.dates = [];
-      if (!x.dates.some(function(y){ return y.id === d.id; }))
-        x.dates.splice(at < 0 ? x.dates.length : Math.min(at, x.dates.length), 0, JSON.parse(copy));
-      putBack(x, was);
-    }));
+    function(blob){
+      onArena(a.id, function(x){
+        if (!Array.isArray(x.dates)) x.dates = [];
+        if (!x.dates.some(function(y){ return y.id === d.id; }))
+          x.dates.splice(at < 0 ? x.dates.length : Math.min(at, x.dates.length), 0, JSON.parse(copy));
+        putBack(x, was);
+      })(blob);
+      lks.forEach(function(l){
+        onArena(l.aid, function(x){
+          x.brokerage = x.brokerage || { notes:'', links:[] };
+          if (!Array.isArray(x.brokerage.links)) x.brokerage.links = [];
+          if (!x.brokerage.links.some(function(k){ return k.id === l.id; }))
+            x.brokerage.links.splice(Math.min(l.at, x.brokerage.links.length), 0, JSON.parse(l.copy));
+        })(blob);
+      });
+    });
 }
 
 /* a link or an email address on a lead, as the desk adds one */
@@ -3078,8 +3110,10 @@ function askDrop(x){
   sheet(function(b, bar){
     b.appendChild(el('h2', '', 'Remove this event?'));
     b.appendChild(el('p', 'sub', dispDate(x.d) + ' · ' + (plainOf(x.a.name) || 'Arena')));
+    var nl = eventCardLinks(data.semaphore, x.d).length;
     b.appendChild(el('p', '', '“' + dateName(x.d) + '” goes from the whole app: Coming up, ' +
-      'the board, the cards and the arena’s panel, on the desk as well.'));
+      'the board, the cards and the arena’s panel, on the desk as well' +
+      (nl ? ', and ' + (nl === 1 ? 'its link goes' : 'its ' + nl + ' links go') + ' from the cards with it' : '') + '.'));
     var go = el('button', 'act', 'Remove');
     go.addEventListener('click', function(){ shut(); dropEvent(x.a, x.d); });
     b.appendChild(go);

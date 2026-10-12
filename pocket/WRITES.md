@@ -43,7 +43,7 @@ Every change is undoable from the toast; undo puts back exactly the fields it to
 | event stamp | `dates[].stampedAt`, `stampPrev` | as the link stamp, and with it, through the event's `url`; an event without one stands alone | ✓ (Coming up) |
 | event website | `dates[].url` | an address with @ → `mailto:`, no scheme → `https://` | ✓ only where it had none |
 | event new | `dates[]` + `{id,kind:'brokerage',label,call:'',role:'',note:'',url,gran,grade,start,end}` | uuid id; `label` `'(untitled)'` for none; `start`/`end` the stretch `gran` names (`day`/`range`/`month`/`quarter`/`half`/`year`); `grade` `fixed` only for a day or a span | ✓ |
-| event remove | `dates[]`, `hold` | the date taken out; `reconcile` ends a wait for it | ✓ undo puts it back in its place, and the wait |
+| event remove | `dates[]`, `hold`, `brokerage.links[]` on every arena | the date taken out; `reconcile` ends a wait for it; the cards' unpinned links to the event's site (`siteKey`) taken out with it | ✓ undo puts it back in its place, and the wait, and each link in its place |
 
 A pin on one of the arena's *own* links (`links[].pin`) is not in the contract: Pocket shows such a
 link on Pinned but leaves its pin and its own stamp button to the desk; its `stampedAt` is written only
