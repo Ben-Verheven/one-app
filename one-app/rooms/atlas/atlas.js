@@ -765,7 +765,7 @@ function weighAttachment(ai) {
    is still being typed, so the filing is never something you find out
    about afterwards — which is the whole bargain: the app does it, and it
    says what it did, and one press undoes it. */
-function addKeyword(rid) {
+function addKeyword(rid, seed) {
   const who = R[rid].name;
   const IDLE = "Type a keyword. Where it files itself is shown here before you commit it.";
   openModal(`<div class="mh">Assign a keyword to ${esc(who)}</div><div class="mb">
@@ -804,6 +804,7 @@ function addKeyword(rid) {
   inp.onkeydown = ev => { if (ev.key === "Enter") go(); };
   $("#kwcancel").onclick = closeModal;
   $("#kwok").onclick = go;
+  if (seed) { inp.value = seed; look(); }
   inp.focus();
 }
 
@@ -1857,8 +1858,10 @@ function openDossier(rid) {
        2026-09-11, having first been given the whole of it tinted and ruled
        down the side, which said only "somebody has been here". */
     const dBase = (r.descBase && r.descBase !== "nan") ? r.descBase : "";
-    b += `<div class="prose">${highlightSpans(desc, spans, "l2",
-      mine ? addedMask(dBase, desc) : null)}</div>`;
+    b += `<div class="prose" data-dsel="1">${highlightSpans(desc, spans, "l2",
+      mine ? addedMask(dBase, desc) : null)}</div>`
+      + `<div id="dselkw" style="margin-top:7px" hidden><button class="ebtn w" data-selkw="1"`
+      + ` title="Assign the words you selected as a keyword — the box says where it will be filed first"></button></div>`;
   } else b += `<div class="hint">No description in the source database.</div>`;
   b += `</div>`;
 
@@ -1922,6 +1925,21 @@ function openDossier(rid) {
   db.querySelectorAll("[data-addkw]").forEach(bn => bn.onclick = ev => {
     ev.stopPropagation(); addKeyword(rid);
   });
+  /* Words selected in the description become a keyword through the same
+     box as + add, already filled in. A rewritten description mints no term
+     (see the edit overlay), so this is the way his own words reach the
+     graph: one at a time, each one he chose, each filed by the rules that
+     never move the file's own words. The press is caught on mousedown so
+     the selection it reads is still there. */
+  const selBtn = db.querySelector("[data-selkw]");
+  if (selBtn) {
+    selBtn.onmousedown = ev => ev.preventDefault();
+    selBtn.onclick = ev => {
+      ev.stopPropagation();
+      const v = selBtn.dataset.v;
+      if (v) { window.getSelection().removeAllRanges(); addKeyword(rid, v); }
+    };
+  }
   db.querySelectorAll("[data-dedit]").forEach(bn => bn.onclick = ev => {
     ev.stopPropagation();
     State.descEdit = rid; openDossier(rid);
@@ -1967,6 +1985,22 @@ function openDossier(rid) {
   db.querySelectorAll("[data-dwalk]").forEach(bn => bn.onclick = () => { closeDossier(); goWalk({ kind: "r", i: rid }); });
 }
 function closeDossier() { State.descEdit = null; $("#dossier").classList.remove("open"); }
+
+/* One listener for the page, because a selection belongs to the document
+   and not to any element: it shows the description's keyword button while
+   a few words of it are selected, and hides it otherwise. Edge punctuation
+   is trimmed off, so dragging over "learning." offers "learning"; more
+   than six words is a sentence rather than a keyword and offers nothing. */
+document.addEventListener("selectionchange", () => {
+  const box = document.getElementById("dselkw");
+  if (!box) return;
+  const sel = window.getSelection(), prose = box.previousElementSibling;
+  const v = sel && sel.rangeCount && prose && prose.contains(sel.anchorNode) && prose.contains(sel.focusNode)
+    ? sel.toString().replace(/\s+/g, " ").replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, "") : "";
+  const ok = !!v && v.split(" ").length <= 6;
+  box.hidden = !ok;
+  if (ok) { const bn = box.firstElementChild; bn.dataset.v = v; bn.textContent = `+ keyword “${v}”`; }
+});
 
 // ===========================================================================
 // MAP & WALK — one canvas, two readings.  The map is the whole department on

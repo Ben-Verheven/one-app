@@ -407,7 +407,9 @@ on its own keyword heading rather than the graph-wide **Edit graph** — that
 toggle guards cuts and merges, which are careful acts, and writing down
 what a colleague works on should not cost arming the whole graph. The word
 is written onto the end of that researcher's declared-keyword line, so its
-provenance reads like any other declared keyword.
+provenance reads like any other declared keyword. Selecting a few words
+of the description offers them as a keyword through the same box, which is
+how words Mark wrote into a description reach the graph.
 
 **Where a hand-assigned keyword is filed** is decided by the two rules
 that made every term-to-concept edge in the file: the word *is* one of the

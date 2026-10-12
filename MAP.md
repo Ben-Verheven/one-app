@@ -492,7 +492,7 @@ _No section banners._
 
 ## `rooms/atlas/atlas.js`
 
-2468 lines · 120 KB
+2502 lines · 121 KB
 
 ```
 Researcher Atlas                                          atlas.js:1
@@ -512,18 +512,18 @@ persistence                                               atlas.js:610
 state                                                     atlas.js:628
 modal                                                     atlas.js:689
 edit actions                                              atlas.js:735
-rail                                                      atlas.js:936
-search mode                                               atlas.js:1081
-BROWSE — the department as it organizes itself            atlas.js:1360
-NEWS — what the scheduled people-agent found on the web   atlas.js:1455
-DOSSIER — one researcher                                  atlas.js:1647
-MAP & WALK — one canvas, two readings                     atlas.js:1971
-canvas                                                    atlas.js:2044
-concentric walk                                           atlas.js:2079
-canvas interaction                                        atlas.js:2208
-walk rail                                                 atlas.js:2269
-SHELL — tabs, edit toggle, about, init.                   atlas.js:2347
-exposed to the hub                                        atlas.js:2429
+rail                                                      atlas.js:937
+search mode                                               atlas.js:1082
+BROWSE — the department as it organizes itself            atlas.js:1361
+NEWS — what the scheduled people-agent found on the web   atlas.js:1456
+DOSSIER — one researcher                                  atlas.js:1648
+MAP & WALK — one canvas, two readings                     atlas.js:2005
+canvas                                                    atlas.js:2078
+concentric walk                                           atlas.js:2113
+canvas interaction                                        atlas.js:2242
+walk rail                                                 atlas.js:2303
+SHELL — tabs, edit toggle, about, init.                   atlas.js:2381
+exposed to the hub                                        atlas.js:2463
 ```
 
 ## `rooms/atlas/atlas.css`
@@ -642,4 +642,4 @@ Generated data. Never open, never edit, never upload.
 
 ---
 
-**36569 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.
+**36603 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.

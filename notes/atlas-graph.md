@@ -32,6 +32,9 @@ way a name hit does, with no path and no score. Mark asked for exactly
 that on 2026-10-12, as the safe stand-in for teaching the graph new words,
 on the condition that the graph itself behave as before. Keep it beside the
 graph; routing it through `traverse` would be the extractor this room is not.
+The way his words do reach the graph is the one he proposed the same day:
+select them in the description and assign them as a keyword, one choice
+at a time — never by scanning the rewrite for him.
 Two consequences that will break if anybody forgets them:
 
 - **`r.descBase` is the text the offsets belong to.** Every `desc`
