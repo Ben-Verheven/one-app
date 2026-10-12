@@ -1440,6 +1440,8 @@
 #pane-semaphore .cuat.toned{padding:1px 8px 2px 7px;color:var(--ink);
   background:color-mix(in srgb,var(--tone) 30%,var(--paper));border-left:3px solid var(--tone);border-radius:0 var(--radius) var(--radius) 0}
 #pane-semaphore .culn.past .cuat.toned{color:var(--muted)}
+#pane-semaphore .cuat{text-align:left;text-decoration:underline;text-decoration-color:transparent;text-underline-offset:3px;transition:text-decoration-color .14s}
+#pane-semaphore .cuat:hover{text-decoration-color:currentColor}
 #pane-semaphore .cusoon{font:11.5px var(--mono);font-style:normal;color:var(--today)}
 /* the fold that shows the arena's strip of time, as its card draws it */
 #pane-semaphore .cuwx{width:22px;height:20px;border-radius:var(--radius);font-size:11px;line-height:1;color:var(--muted);

@@ -1252,7 +1252,9 @@ function comingRow(it){
       '<button class="cuname" data-act="openDate" data-a="'+a.id+'" data-d="'+d.id+'" title="Open '+esc(a.name)+'">'+
         esc(dtLabel(d))+'</button>'+
       (call?'<span class="custage">'+esc(roleOf(d).short)+'</span>':'')+
-      '<span class="cuar"><span class="cuat'+(tone?' toned':'')+'"'+(tone?' style="--tone:'+esc(tone)+'"':'')+'>'+esc(a.name)+'</span>'+
+      /* the arena's name opens its panel, as a tap on it does in Pocket
+         (Mark, 2026-10-12) */
+      '<span class="cuar"><button class="cuat'+(tone?' toned':'')+'" data-act="openArena" data-id="'+a.id+'" title="Open '+esc(a.name)+'"'+(tone?' style="--tone:'+esc(tone)+'"':'')+'>'+esc(a.name)+'</button>'+
         (when?'<span class="cusoon">'+when+'</span>':'')+
         (call?'':'<button class="cuwx'+(open?' on':'')+'" data-act="cuStrip" data-a="'+a.id+'" data-d="'+d.id+'" aria-expanded="'+open+'" '+
           'title="'+(open?'Fold away':'Show')+' the arena\u2019s calls and events in time" aria-label="The arena\u2019s calls and events in time">'+
