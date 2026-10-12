@@ -1391,15 +1391,15 @@ function granInputsHTML(gran,dt){
   const yIn='<input type="number" name="y" min="2000" max="2100" value="'+curY+'" aria-label="Year">';
   const mSel=(sel)=>'<select name="m" aria-label="Month">'+MONTHS.map((n,i)=>'<option value="'+(i+1)+'"'+((i+1)===sel?' selected':'')+'>'+n+'</option>').join('')+'</select>';
   switch(gran){
-    case 'day':return '<input type="date" name="day" value="'+(dt&&dt.gran==='day'?dt.start:'')+'">';
+    case 'day':return '<input type="text" inputmode="none" readonly data-cal name="day" placeholder="Pick a day" value="'+(dt&&dt.gran==='day'?dt.start:'')+'">';
     case 'month':return yIn+mSel(dt&&dt.gran==='month'?+dt.start.slice(5,7):new Date().getMonth()+1);
     case 'quarter':{const q=dt&&dt.gran==='quarter'?Math.floor((+dt.start.slice(5,7)-1)/3)+1:1;
       return yIn+'<select name="q" aria-label="Quarter">'+[1,2,3,4].map(n=>'<option value="'+n+'"'+(n===q?' selected':'')+'>Q'+n+'</option>').join('')+'</select>';}
     case 'half':{const hh=dt&&dt.gran==='half'?(+dt.start.slice(5,7)<7?1:2):1;
       return yIn+'<select name="h" aria-label="Half">'+[1,2].map(n=>'<option value="'+n+'"'+(n===hh?' selected':'')+'>H'+n+'</option>').join('')+'</select>';}
     case 'year':return yIn;
-    case 'range':return '<input type="date" name="from" value="'+(dt&&dt.gran==='range'?dt.start:'')+'" aria-label="From">'+
-                        '<input type="date" name="to" value="'+(dt&&dt.gran==='range'?dt.end:'')+'" aria-label="To">';
+    case 'range':return '<input type="text" inputmode="none" readonly data-cal name="from" placeholder="From" value="'+(dt&&dt.gran==='range'?dt.start:'')+'" aria-label="From">'+
+                        '<input type="text" inputmode="none" readonly data-cal name="to" placeholder="To" value="'+(dt&&dt.gran==='range'?dt.end:'')+'" aria-label="To">';
     default:return '<p class="fhint">Parked off the timeline until a date exists.</p>';
   }
 }
@@ -2511,12 +2511,12 @@ function leadRowHTML(a,l,hit,say){
     : editing
     ? '<label class="lwhen set" title="The day to come back to this \u2014 click to change it">'+
         '<span>'+esc(l.due?(say?longDay(l.due):shortDow(l.due)):'No date')+'</span>'+
-        '<input type="date" name="due" value="'+esc(l.due||'')+'" data-say="'+(say?1:'')+'" '+
+        '<input type="text" inputmode="none" readonly data-cal data-cal-none name="due" value="'+esc(l.due||'')+'" data-say="'+(say?1:'')+'" '+
           'aria-label="Come back on"></label>'
     : '<label class="lwhen'+(l.due?' set':'')+(due?' late':'')+'" '+
         'title="'+(l.due?esc(longDay(l.due))+' — ':'')+'The day to come back to this — click to set it">'+
         '<span>'+esc(l.due?(say?longDay(l.due):shortDow(l.due)):'No date')+'</span>'+
-        '<input type="date" value="'+esc(l.due||'')+'" data-lda="'+a.id+'" data-ldl="'+l.id+'" '+
+        '<input type="text" inputmode="none" readonly data-cal data-cal-none value="'+esc(l.due||'')+'" data-lda="'+a.id+'" data-ldl="'+l.id+'" '+
           'aria-label="Come back on"></label>';
   /* How a lead ends. In the arena's panel it stands at the top right of the
      open card, where the eye leaves it, and only once the card is open
@@ -3392,11 +3392,95 @@ function focusLk(){
   const el=document.querySelector('.lkform input[name=url]');
   if(el)el.focus({preventScroll:true});
 }
-/* the chip is the control, so pointing at it and pressing should open the
+/* The calendar: the Ledger's, drawn again in this room's paint. A
+   type="date" field opens the browser's own picker, which cannot be marked
+   or styled, and on iPadOS is Safari's wheel over the top of everything, so
+   this was the one room whose dates looked like another app's. The same
+   grid and the same marks as the Ledger's: weeks from Monday, today filled,
+   the field's own day ringed and arrowed, Today at the foot. A field that
+   may stand empty (data-cal-none, a lead's day to come back) also gets No
+   date there, because the native picker's clear button was the only way a
+   day was ever taken off. Every date field here is read-only text with
+   data-cal, so a press opens this and no keyboard comes up. */
+const Cal=(()=>{
+  let inp=null,pop=null,y=0,m=0;
+  const iso=(yy,mm,dd)=>yy+'-'+String(mm+1).padStart(2,'0')+'-'+String(dd).padStart(2,'0');
+  const isIso=v=>/^\d{4}-\d{2}-\d{2}$/.test(v||'');
+  function open(el){
+    close();
+    el.blur();
+    const today=new Date(),cur=isIso(el.value)?new Date(el.value+'T00:00:00'):null;
+    inp=el;y=(cur||today).getFullYear();m=(cur||today).getMonth();
+    pop=document.createElement('div');
+    pop.className='calpop';
+    pop.addEventListener('click',pick);
+    document.body.appendChild(pop);
+    draw();
+    /* The pane carries a transform, which makes it the box a fixed child is
+       placed against, so window coordinates land one scroll offset out: the
+       Ledger's calendar drew four hundred pixels above the window that way.
+       Park at 0,0, read where that landed, take the difference off. */
+    pop.style.left='0px';pop.style.top='0px';
+    const org=pop.getBoundingClientRect(),r=el.getBoundingClientRect(),ph=pop.offsetHeight;
+    const top=(r.bottom+6<=window.innerHeight-ph)?r.bottom+6:Math.max(6,r.top-ph-6);
+    const left=Math.min(Math.max(6,r.left),window.innerWidth-pop.offsetWidth-6);
+    pop.style.top=(top-org.top)+'px';pop.style.left=(left-org.left)+'px';
+  }
+  function close(){
+    if(pop&&pop.parentNode)pop.parentNode.removeChild(pop);
+    inp=null;pop=null;
+  }
+  function draw(){
+    const t=new Date(),todayIso=iso(t.getFullYear(),t.getMonth(),t.getDate());
+    const sel=isIso(inp.value)?inp.value:null;
+    const lead=(new Date(y,m,1).getDay()+6)%7,inMonth=new Date(y,m+1,0).getDate();
+    const cells=[];
+    for(let i=0;i<42;i++){
+      const d=new Date(y,m,1-lead+i);
+      cells.push({y:d.getFullYear(),m:d.getMonth(),d:d.getDate(),other:i<lead||i>=lead+inMonth});
+    }
+    pop.innerHTML=
+      '<div class="calhdr"><button type="button" class="btn calnav" data-calnav="-1" aria-label="Previous month">\u2039</button>'+
+      '<span class="caltitle">'+LONG_MONTHS[m]+' '+y+'</span>'+
+      '<button type="button" class="btn calnav" data-calnav="1" aria-label="Next month">\u203a</button></div>'+
+      '<div class="calwk">'+['Mo','Tu','We','Th','Fr','Sa','Su'].map(w=>'<span>'+w+'</span>').join('')+'</div>'+
+      '<div class="calgrid">'+cells.map(c=>{
+        const ci=iso(c.y,c.m,c.d);
+        return '<button type="button" class="calday'+(c.other?' other':'')+(ci===todayIso?' today':'')+
+          (ci===sel?' sel':'')+'" data-calday="'+ci+'">'+(ci===sel?'<span class="calarrow">\u25BE</span>':'')+
+          '<span class="calnum">'+c.d+'</span></button>';
+      }).join('')+'</div>'+
+      '<div class="calfoot"><button type="button" class="btn" data-calday="'+todayIso+'">Today</button>'+
+      (inp.hasAttribute('data-cal-none')&&inp.value?'<button type="button" class="btn" data-calday="">No date</button>':'')+
+      '</div>';
+  }
+  /* Kept inside the box: a press here that reached the room's own click
+     handling would land on whatever stands under the calendar. */
+  function pick(e){
+    e.stopPropagation();
+    const b=e.target.closest('button');if(!b||!inp)return;
+    if(b.dataset.calnav){
+      m+=+b.dataset.calnav;
+      if(m<0){m=11;y--;}
+      if(m>11){m=0;y++;}
+      draw();return;
+    }
+    const el=inp;
+    el.value=b.dataset.calday;
+    close();
+    el.dispatchEvent(new Event('input',{bubbles:true}));
+    el.dispatchEvent(new Event('change',{bubbles:true}));
+  }
+  return {open,close,isOpen:()=>!!pop,
+    outside:e=>{if(pop&&!pop.contains(e.target)&&e.target!==inp)close();}};
+})();
+document.addEventListener('mousedown',Cal.outside);
+document.addEventListener('touchstart',Cal.outside);
+/* the chip is the control, so pointing at it and pressing opens the
    calendar rather than merely putting a cursor in an invisible field */
 document.addEventListener('click',e=>{
-  const inp=e.target&&e.target.closest&&e.target.closest('.lwhen input');
-  if(inp&&inp.showPicker){try{inp.showPicker();}catch(err){}}
+  const inp=e.target&&e.target.closest&&e.target.closest('input[data-cal]');
+  if(inp)Cal.open(inp);
 },true);
 /* A box that grows with what is in it, so a couple of sentences stay in sight. */
 function growBox(el){
@@ -4448,6 +4532,7 @@ document.addEventListener('keydown',e=>{
     }
     return;
   }
+  if(Cal.isOpen()){Cal.close();return;}                     /* the calendar */
   if(tdDrag){tdCancel();return;}                             /* a type or arena being dragged */
   if(colOpen){colOpen=null;typesShown();return;}             /* a colour menu */
   if(sortOpen){sortOpen=false;renderBoard();return;}         /* the board's order */
@@ -4639,7 +4724,8 @@ try{
        own key handler is not the one listening: the innermost thing first,
        as that handler does. */
     escape:     function(){
-      if(Ask.isOpen())Ask.shut();
+      if(Cal.isOpen())Cal.close();
+      else if(Ask.isOpen())Ask.shut();
       else if(document.querySelector('.modal.open'))closeModals();
       else closeDrawer();
     },

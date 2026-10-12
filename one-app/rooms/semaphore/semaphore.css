@@ -805,7 +805,6 @@
 #pane-semaphore .lead .lwhen.shut{cursor:default;opacity:.7}
 #pane-semaphore .lead .lwhen input{position:absolute;inset:0;width:100%;height:100%;margin:0;padding:0;
   border:0;background:none;color:transparent;opacity:0;cursor:pointer}
-#pane-semaphore .lead .lwhen input::-webkit-calendar-picker-indicator{opacity:0;cursor:pointer}
 /* One label gutter for every band under the name — match, links, log — cut to
    the longest word that can ever stand in it, so the column never moves from
    one lead to the next or from one card to the next.
@@ -1331,6 +1330,7 @@
 #pane-semaphore .dform .granIn input,#pane-semaphore .dform .granIn select{flex:1;min-width:0;border:1px solid var(--line);border-radius:var(--radius);
        background:var(--field);color:var(--ink);padding:8px 10px;font-family:var(--body);font-size:14.5px;
        box-shadow:inset 0 1px 2px rgba(0,0,0,.2)}
+#pane-semaphore .dform .granIn input[data-cal]{cursor:pointer}
 #pane-semaphore .dform .granIn .fhint{margin:0;align-self:center}
 #pane-semaphore .dform .fbtns{display:flex;gap:8px;justify-content:flex-end;margin-top:15px}
 #pane-semaphore .taddrow{display:flex;gap:6px;margin-top:8px}
@@ -1602,6 +1602,33 @@
 #pane-semaphore .tyblock[data-say]:not([data-say=""])::after{content:attr(data-say);position:absolute;right:10px;top:-11px;
   padding:2px 8px;border-radius:999px;background:var(--ink);color:var(--field);font:600 9.5px var(--sans);
   letter-spacing:.12em;text-transform:uppercase;pointer-events:none}
+/* ---------- the calendar ---------- */
+/* The Ledger's calendar (its .dp-popup) at the Ledger's measure, in this
+   room's paint: bone where the Ledger has gilt, and today in the board's own
+   amber, so the day filled here is the day the board's today line stands on.
+   Above the sheets (30) and the question (40), under the tip (50). The days
+   of the months either side are coloured quiet rather than faded, so they
+   stay legible on the panel they sit on. */
+#pane-semaphore .calpop{position:fixed;z-index:45;width:236px;padding:10px;font-family:var(--body);
+  background:var(--surface2);border:1px solid var(--line2);border-radius:var(--radius-lg);box-shadow:var(--shadow)}
+#pane-semaphore .calhdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+#pane-semaphore .caltitle{font:600 11px var(--serif);letter-spacing:.14em;text-transform:uppercase;color:var(--key2)}
+#pane-semaphore .calpop .btn{min-height:26px;padding:3px 9px;font-size:10px}
+#pane-semaphore .calpop .calnav{min-width:28px;font-size:14px;line-height:1}
+#pane-semaphore .calwk,#pane-semaphore .calgrid{display:grid;grid-template-columns:repeat(7,1fr)}
+#pane-semaphore .calwk{margin-bottom:2px}
+#pane-semaphore .calwk span{font:9px var(--sans);letter-spacing:.08em;text-transform:uppercase;text-align:center;color:var(--muted)}
+#pane-semaphore .calgrid{gap:1px}
+#pane-semaphore .calday{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;
+  height:30px;padding:5px 0 4px;border-radius:var(--radius);color:var(--ink)}
+#pane-semaphore .calday:hover{background:rgba(216,205,184,.08)}
+#pane-semaphore .calday.other{color:var(--faint)}
+#pane-semaphore .calnum{display:flex;align-items:center;justify-content:center;width:20px;height:20px;
+  border-radius:50%;font-size:12px}
+#pane-semaphore .calday.today .calnum{background:var(--today);color:#2A2620;font-weight:600}
+#pane-semaphore .calday.sel .calnum{box-shadow:inset 0 0 0 1.5px var(--key2)}
+#pane-semaphore .calarrow{position:absolute;top:-1px;font-size:9px;line-height:1;color:var(--key2)}
+#pane-semaphore .calfoot{display:flex;justify-content:center;gap:6px;margin-top:6px;padding-top:6px;border-top:1px solid var(--grid)}
 /* ---------- tooltip ---------- */
 #pane-semaphore #tip{position:fixed;z-index:50;max-width:280px;background:var(--surface2);
      color:var(--ink);border:1px solid var(--line2);box-shadow:var(--shadow);border-radius:var(--radius);

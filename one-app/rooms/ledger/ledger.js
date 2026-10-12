@@ -3410,9 +3410,10 @@ var Editors=(function(){
     if(!l.length){el.innerHTML='';return;}
     el.innerHTML=l.map(function(m,i){
       function dateInp(field,val,title){
-        return '<input type="date" class="editor-inp" style="flex:0 0 140px" value="'+esc(val)+'"'
+        return '<input type="text" inputmode="none" data-datefield readonly class="editor-inp" '
+          +'style="flex:0 0 140px" placeholder="Pick a day" value="'+esc(val)+'"'
           +(title?' title="'+title+'"':'')
-          +' onchange="PL.markerField(\''+ctx+'\','+i+',\''+field+'\',this.value)" />';
+          +' onclick="PL.openDatePicker(this)" onchange="PL.markerField(\''+ctx+'\','+i+',\''+field+'\',this.value)" />';
       }
       var dates=m.isRange
         ? dateInp('date',m.date,'Start')
@@ -13410,7 +13411,8 @@ var ProjectForm=(function(){
           +'\u2014 a saved shape of call, and its closing date</span></label>'
           +'<div class="np-bb-row">'
             +'<select id="np-backbone" class="np-bb-pick" onchange="PL.backboneChoose()"></select>'
-            +'<input type="date" id="np-backbone-date" class="np-bb-date" onchange="PL.backboneChoose()" />'
+            +'<input type="text" inputmode="none" data-datefield readonly id="np-backbone-date" class="np-bb-date" '
+              +'placeholder="Closing date" onclick="PL.openDatePicker(this)" onchange="PL.backboneChoose()" />'
           +'</div><div id="np-backbone-note" class="np-bb-note"></div></div>'
         +'<div class="fg"><label>Key dates</label>'
           +'<div id="np-markers-list"></div>'

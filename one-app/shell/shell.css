@@ -245,7 +245,8 @@ html #pane-callboard .tabs > *:first-child{margin-left:auto}
 /* A lead card on the Ledger opens its arena where it stands, so the
    Semaphore's drawer is borrowed as the reader is: the board is hidden,
    the scrim comes along to take the click that closes it, and a box the
-   drawer raises — a question, a sheet — still takes its own clicks.
+   drawer raises — a question, a sheet, the calendar — still takes its
+   own clicks.
    `html` in front because the room's own ground is set at that weight
    further down, and a lent pane must not paint it over the Ledger. */
 html #pane-semaphore.oa-lending{
@@ -255,7 +256,8 @@ html #pane-semaphore.oa-lending{
 }
 #pane-semaphore.oa-lending > #semscroll{display:none}
 #pane-semaphore.oa-lending .scrim.open,
-#pane-semaphore.oa-lending .modal.open{pointer-events:auto}
+#pane-semaphore.oa-lending .modal.open,
+#pane-semaphore.oa-lending .calpop{pointer-events:auto}
 #pane-semaphore.oa-lending #card{
   pointer-events:auto;
   box-shadow:-18px 0 48px rgba(8,6,2,.42);
