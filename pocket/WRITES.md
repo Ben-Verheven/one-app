@@ -41,6 +41,7 @@ Every change is undoable from the toast; undo puts back exactly the fields it to
 | brokerage link pin | `brokerage.links[].pin` | ISO moment when pinned; key deleted when unpinned | ✓ |
 | brokerage link stamp | `stampedAt`, `stampPrev` | day; same-day stamp → `stampPrev`, which is then deleted. One stamp to a site: the press writes every date and link (brokerage or the arena's own) of the same site (`siteKey`), on any arena | ✓ since 2026-10-11 the same for every row of the site |
 | event stamp | `dates[].stampedAt`, `stampPrev` | as the link stamp, and with it, through the event's `url`; an event without one stands alone | ✓ (Coming up) |
+| event note | `dates[].memo` | Mark's own note on a brokerage event, trailing space trimmed; the key deleted when emptied. Not the date's `note` | ✓ (Coming up); undo puts it back. Since 2026-10-12, after the contract's export |
 | event website | `dates[].url` | an address with @ → `mailto:`, no scheme → `https://` | ✓ only where it had none |
 | event new | `dates[]` + `{id,kind:'brokerage',label,call:'',role:'',note:'',url,gran,grade,start,end}` | uuid id; `label` `'(untitled)'` for none; `start`/`end` the stretch `gran` names (`day`/`range`/`month`/`quarter`/`half`/`year`); `grade` `fixed` only for a day or a span | ✓ |
 | event remove | `dates[]`, `hold`, `brokerage.links[]` on every arena | the date taken out; `reconcile` ends a wait for it; the cards' unpinned links to the event's site (`siteKey`) taken out with it | ✓ undo puts it back in its place, and the wait, and each link in its place |

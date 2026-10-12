@@ -414,7 +414,19 @@ button.ln:active{background:rgba(216,205,184,.06)}
 .ln.has{flex-wrap:wrap;align-items:center;gap:0;padding:0}
 .ln .lgo{flex:1;min-width:0;display:flex;align-items:baseline;gap:9px;padding:7px 0;text-align:left}
 .ln .lgo:active{background:rgba(216,205,184,.06)}
-.cufoot{flex:0 0 100%;display:flex;align-items:center;gap:6px;margin-top:-8px;padding-left:102px}
+.cufoot{position:relative;flex:0 0 100%;display:flex;align-items:center;gap:6px;margin-top:-8px;padding-left:102px}
+/* an event's note: its handle under the date, the note itself under the row */
+.cunb{position:absolute;left:0;top:0;width:70px;min-height:44px;display:flex;align-items:center;justify-content:flex-end;
+  color:var(--key2)}
+.cunb span{font:italic 13px/1 var(--body);color:var(--muted)}
+.cunb.bk{width:44px;left:26px;justify-content:center}
+.cunb.on{color:var(--ink)}
+.cunb:active{color:var(--ink)}
+.cunote{flex:0 0 calc(100% - 102px);margin:2px 0 8px 102px;display:flex;align-items:flex-start;gap:8px;padding:9px 11px;
+  text-align:left;background:var(--field);border:1px solid var(--line);border-radius:var(--radius)}
+.cunote .cunt{flex:1;min-width:0;font:14px/1.45 var(--body);color:var(--ink);white-space:pre-wrap;overflow-wrap:anywhere}
+.cunote .cune{flex:0 0 auto;font-size:13px;color:var(--muted)}
+.cunote:active{background:rgba(216,205,184,.06)}
 .cusite{flex:1 1 auto;min-width:0;min-height:44px;display:flex;align-items:center;
   font:11px/1.3 var(--mono);color:var(--brok);text-decoration:none;overflow-wrap:anywhere}
 .cusite.none{flex:0 0 auto;margin-right:auto}
@@ -1982,6 +1994,17 @@ function setEventUrl(a, d, url){
   commit('semaphore', onDate(a.id, d.id, function(y){ y.url = url; }), 'Website added',
     onDate(a.id, d.id, function(y){ putBack(y, was); }));
 }
+/* An event's own note, the desk's `memo` (2026-10-12): Mark's words on the
+   event, kept apart from the date's one-line `note`, which says what the
+   date rests on. A note emptied is no note: the key goes, as on the desk. */
+function setEventMemo(a, d, text){
+  var was = keep(d, ['memo']), t = String(text || '').replace(/\s+$/, '');
+  if (!t.trim()) t = '';
+  if ((d.memo || '') === t) return;
+  commit('semaphore', onDate(a.id, d.id, function(y){ if (t) y.memo = t; else delete y.memo; }),
+    t ? 'Note saved' : 'Note removed',
+    onDate(a.id, d.id, function(y){ putBack(y, was); }));
+}
 function addEvent(aid, ev){
   commit('semaphore', onArena(aid, function(x){
       if (!Array.isArray(x.dates)) x.dates = [];
@@ -2916,6 +2939,7 @@ function eventLink(d, a){
 var limboOpen = false;
 var evHi = null;       /* the event a press on a card came for */
 var evOpen = {};       /* arena|event of the rows whose arena's strip is unfolded */
+var evNote = {};       /* arena|event of the rows whose note is open under the row */
 /* A brokerage event pressed on a card — its diamond on the strip, or the
    phase line naming it — is shown in Coming up rather than opening the
    arena (Mark, 2026-10-12, as on the desk), because the list is where its
@@ -3070,6 +3094,26 @@ function eventRow(x){
     : (n === null ? 'Not stamped yet' : 'Stamped ' + n + ' days ago') + ' — stamp it once you have been through it');
   sb.addEventListener('click', function(e){ e.stopPropagation(); stampSite(x.a.id, d.id, dateName(d)); });
   var foot = row.appendChild(el('div', 'cufoot'));
+  /* The note's handle stands under the date, in the date's own column: the
+     book where the event holds a note, which opens it under the row, and
+     "+ note" where it has none, which opens the sheet to write one. The desk
+     has "+ note" in the row's end beside the website; here that line is
+     already full with the website, the fold and the cross. */
+  var memo = String(d.memo || '').trim();
+  var nb = foot.appendChild(el('button', 'cunb' + (memo ? ' bk' : '') + (evNote[key] ? ' on' : '')));
+  if (memo){
+    nb.innerHTML = evNote[key] ? BOOK_OPEN : BOOK_SHUT;
+    nb.setAttribute('aria-expanded', evNote[key] ? 'true' : 'false');
+    nb.setAttribute('aria-label', evNote[key] ? 'Close the note' : 'Open your note');
+    nb.addEventListener('click', function(){
+      if (evNote[key]) delete evNote[key]; else evNote[key] = 1;
+      drawDates();
+    });
+  } else {
+    nb.appendChild(el('span', '', '+ note'));
+    nb.setAttribute('aria-label', 'Write a note on this event');
+    nb.addEventListener('click', function(){ noteSheet(x); });
+  }
   if (d.url){
     var lk = foot.appendChild(el('a', 'cusite', '↗ ' + (linkHost({ url:d.url }) || d.url)));
     lk.href = d.url; lk.target = '_blank'; lk.rel = 'noopener';
@@ -3091,6 +3135,13 @@ function eventRow(x){
   var del = foot.appendChild(el('button', 'cudel', '✕'));
   del.setAttribute('aria-label', 'Remove ' + dateName(d) + ' from the app');
   del.addEventListener('click', function(){ if (x.limbo) dropEvent(x.a, d); else askDrop(x); });
+  if (memo && evNote[key]){
+    var nbox = row.appendChild(el('button', 'cunote'));
+    nbox.appendChild(el('span', 'cunt', memo));
+    nbox.appendChild(el('span', 'cune', '✎'));
+    nbox.setAttribute('aria-label', 'Change your note');
+    nbox.addEventListener('click', function(){ noteSheet(x); });
+  }
   if (evOpen[key]){
     var html = '';
     try { html = cardLine(x.a, 'top', d.id); } catch(e){ console.error(e); }
@@ -3104,6 +3155,39 @@ function eventRow(x){
     }
   }
   return row;
+}
+
+var BOOK_SHUT = '<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M3 2.5h7.5a2 2 0 0 1 2 2v9H5a2 2 0 0 1-2-2z" fill="currentColor" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M3 11.5a2 2 0 0 1 2-2h7.5M6 5h4.5M6 7h3" fill="none" stroke="var(--paper)" stroke-width="1.1"/></svg>';
+var BOOK_OPEN = '<svg viewBox="0 0 18 16" width="18" height="16" aria-hidden="true"><path d="M9 4C7 2.8 4.5 2.5 2 3v9.5c2.5-.5 5-.2 7 1 2-1.2 4.5-1.5 7-1V3c-2.5-.5-5-.2-7 1z" fill="currentColor" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/><path d="M9 4v9.5" stroke="var(--paper)" stroke-width="1.1"/></svg>';
+
+/* An event's note, written or changed. The desk writes it in place as it is
+   typed; here every write is one trip to the cloud, so the note is written
+   in a sheet and saved once. Saved, it stands open under its row. */
+function noteSheet(x){
+  sheet(function(b, bar){
+    b.appendChild(el('h2', '', dateName(x.d)));
+    b.appendChild(el('p', 'sub', dispDate(x.d) + ' · ' + (plainOf(x.a.name) || 'Arena')));
+    var panel = el('div', 'composer open');
+    b.appendChild(panel);
+    panel.appendChild(el('span', 'field', 'Your note'));
+    var ta = el('textarea');
+    ta.value = x.d.memo || '';
+    ta.placeholder = 'Your note on this event';
+    ta.style.minHeight = '120px';
+    ta.setAttribute('aria-label', 'Your note');
+    panel.appendChild(ta);
+    var save = el('button', 'act', 'Save the note');
+    save.addEventListener('click', function(){
+      var t = ta.value;
+      shut();
+      if (t.trim()) evNote[x.a.id + '|' + x.d.id] = 1;
+      setEventMemo(x.a, x.d, t);
+      drawDates();
+    });
+    panel.appendChild(save);
+    closeBtn(bar);
+    setTimeout(function(){ ta.focus(); }, 60);
+  });
 }
 
 function askDrop(x){

@@ -1465,6 +1465,24 @@
 #pane-semaphore .cuwline{grid-column:3/4;width:min(420px,100%);margin:4px 0 2px}
 #pane-semaphore .cuwline .wline{padding:4px 0 2px}
 #pane-semaphore .cuwline .wph{display:none}
+/* An event's own note. The book stands against the date's left, the date
+   and the book pushed to the right of their column together: a book at the
+   column's far left stood a hand's width from a short date like "≈ Oct" and
+   read as belonging to nothing. A span across two months is wider than the
+   column, and pushes the book out into the gap before it rather than over
+   the date. The book is the note's handle whenever there is a note, or one
+   open; an event with neither has "+ note" in its end instead. */
+#pane-semaphore .cud{display:flex;justify-content:flex-end;align-items:center;gap:4px}
+#pane-semaphore .cubk{flex:0 0 28px;width:28px;height:28px;margin:-6px 0;display:grid;place-items:center;
+  border-radius:var(--radius);color:var(--key2);font-style:normal;transition:background-color .14s,color .14s}
+#pane-semaphore .cubk:hover{background:rgba(216,205,184,.1);color:var(--ink)}
+#pane-semaphore .cubk.on{color:var(--ink)}
+#pane-semaphore .cunote{grid-column:3/5;max-width:640px;margin:6px 0 4px}
+#pane-semaphore .cunta{display:block;width:100%;resize:none;overflow:hidden;padding:9px 12px;
+  font:14px/1.5 var(--body);color:var(--ink);background:var(--well);
+  border:1px solid var(--line);border-radius:var(--radius);transition:border-color .14s}
+#pane-semaphore .cunta::placeholder{color:var(--faint);font-style:italic}
+#pane-semaphore .cunta:focus{outline:none;border-color:var(--line2)}
 /* The event the strip is unfolded under, marked on it: a larger diamond in
    a ring of ink — not gold, which is today's line on the same strip — and
    its span, if it has one, in full brokerage red. Drawn over its neighbours, since a

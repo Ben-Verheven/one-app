@@ -1009,6 +1009,7 @@ function takeFind(r){
   if(page)dt.url=page;
   const i=r.replaces_date_id?(a.dates||[]).findIndex(d=>d.id===r.replaces_date_id):-1;
   if(i>=0){dt.id=a.dates[i].id;dt.note=a.dates[i].note||'';dt.url=dt.url||a.dates[i].url||'';
+    if(a.dates[i].memo)dt.memo=a.dates[i].memo;   /* a corrected date keeps Mark's note on it */
     if(a.dates[i].stampedAt){dt.stampedAt=a.dates[i].stampedAt;dt.stampPrev=a.dates[i].stampPrev||null;}
     a.dates[i]=dt;}
   else a.dates.push(dt);
@@ -1146,6 +1147,24 @@ let cuLimbo=false;             /* Limbo, unfolded on request */
 let cuHi=null;                 /* the event a press on the board or a card came for */
 let cuNew=false;               /* the new-event form is open */
 const cuOpen=new Set();        /* arena|event of the rows whose arena's strip is unfolded */
+/* An event's own note (`memo`), Mark's to write (2026-10-12). It is kept
+   apart from the date's one-line `note`, which says what a date rests on and
+   which the arena's panel, the board and the nightly agent's "extrapolated
+   from" all write. A book left of the date says an event holds one, and opens
+   it under the row, where it is read and written in place; an event without
+   one says "+ note" beside its website instead, so that a column of empty
+   books does not stand beside every event in the list. */
+const cuNote=new Set();        /* arena|event of the rows whose note is open under the row */
+let cuNoteT=null;              /* the save a pause in typing is waiting for */
+const BOOK_SHUT='<svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><path d="M3 2.5h7.5a2 2 0 0 1 2 2v9H5a2 2 0 0 1-2-2z" fill="currentColor" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M3 11.5a2 2 0 0 1 2-2h7.5M6 5h4.5M6 7h3" fill="none" stroke="var(--paper)" stroke-width="1.1"/></svg>';
+const BOOK_OPEN='<svg viewBox="0 0 18 16" width="17" height="15" aria-hidden="true"><path d="M9 4C7 2.8 4.5 2.5 2 3v9.5c2.5-.5 5-.2 7 1 2-1.2 4.5-1.5 7-1V3c-2.5-.5-5-.2-7 1z" fill="currentColor" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/><path d="M9 4v9.5" stroke="var(--paper)" stroke-width="1.1"/></svg>';
+function memoOf(d){return String((d&&d.memo)||'').trim();}
+/* A note emptied and closed is no note: the key goes, and "+ note" comes back. */
+function memoTidy(d){
+  if(!d)return;
+  const t=memoOf(d);
+  if(t)d.memo=String(d.memo).replace(/\s+$/,'');else delete d.memo;
+}
 /* A brokerage diamond, on the board or on a card, is pressed to see that
    event in the list: Mark asked for it (2026-10-08), because the list is
    where an event's website and its neighbours in time are. An event the
@@ -1284,8 +1303,12 @@ function comingRow(it){
     :'<button class="cusite none" data-act="cuSite" data-a="'+a.id+'" data-d="'+d.id+'" '+
       'title="This event has no website yet \u2014 add one">add website</button>';
   const stamp=call?'':cuStampHTML(a,d);
+  const memo=!call&&memoOf(d),nopen=!call&&cuNote.has(a.id+'|'+d.id);
+  const book=memo||nopen?'<button class="cubk'+(nopen?' on':'')+'" data-act="cuNote" data-a="'+a.id+'" data-d="'+d.id+'" '+
+    'aria-expanded="'+nopen+'" title="'+(nopen?'Close the note':'Your note on this event')+'" aria-label="'+(nopen?'Close the note':'Open your note')+'">'+
+    (nopen?BOOK_OPEN:BOOK_SHUT)+'</button>':'';
   return '<div class="culn'+(call?' call':'')+(past?' past':'')+(it.limbo?' limbo':'')+(cuHi===d.id?' cuhi':'')+'" data-cud="'+d.id+'" style="--c:'+dtColor(d)+'">'+
-    '<span class="cud'+(d.grade==='fixed'?'':' unc')+'" title="'+esc(dispDate(d))+'">'+
+    '<span class="cud'+(d.grade==='fixed'?'':' unc')+'" title="'+esc(dispDate(d))+'">'+book+
       (d.grade==='fixed'?'':'\u2248\u2009')+esc(cuDate(d))+'</span>'+
     '<span class="cug"><i class="sw sw-'+d.grade+'"></i></span>'+
     '<span class="cut">'+
@@ -1300,10 +1323,13 @@ function comingRow(it){
           'title="'+(open?'Fold away':'Show')+' the arena\u2019s calls and events in time" aria-label="The arena\u2019s calls and events in time">'+
           '\u25BE</button>')+'</span>'+
     '</span>'+
-    '<span class="cuend">'+site+stamp+
+    '<span class="cuend">'+(call||memo||nopen?'':'<button class="cusite none cunadd" data-act="cuNote" data-a="'+a.id+'" data-d="'+d.id+'" '+
+      'title="Write a note on this event">note</button>')+site+stamp+
       (call?'':'<button class="cudel" data-act="cuDel" data-a="'+a.id+'" data-d="'+d.id+'"'+(it.limbo?' data-limbo="1"':'')+' '+
         'title="Remove this event from the app" aria-label="Remove '+esc(dtLabel(d))+'">\u2715</button>')+
     '</span>'+
+    (nopen?'<div class="cunote"><textarea class="cunta" data-a="'+a.id+'" data-d="'+d.id+'" rows="2" '+
+      'placeholder="Your note on this event" aria-label="Your note on '+esc(dtLabel(d))+'">'+esc(d.memo||'')+'</textarea></div>':'')+
     (open?'<div class="cuwline">'+cardLineHTML(a,'top',d.id)+'</div>':'')+
   '</div>';
 }
@@ -1378,6 +1404,7 @@ function renderComing(){
       '<small>'+m.slice(0,4)+'</small></div><div class="cuspine">'+rows+'</div></section>';
   }).join('');
   el.innerHTML=head+'<div class="culist">'+lim+body+(placed?'':'<div class="cutoday"><span>today</span></div>')+'</div>';
+  el.querySelectorAll('.cunta').forEach(autoGrow);
 }
 
 /* ============ drawer ============ */
@@ -4252,6 +4279,13 @@ document.addEventListener('click',e=>{
     case 'findRefresh':loadFinds();break;
     case 'cuAll':S.ui.cuAll=b.dataset.v==='1';save();renderComing();break;
     case 'cuLimbo':cuLimbo=!cuLimbo;renderComing();break;
+    case 'cuNote':{if(!a)break;const dt=a.dates.find(d=>d.id===b.dataset.d);if(!dt)break;
+      const k=a.id+'|'+dt.id;
+      if(cuNote.has(k)){cuNote.delete(k);clearTimeout(cuNoteT);cuNoteT=null;memoTidy(dt);save();renderComing();break;}
+      cuNote.add(k);renderComing();
+      /* an empty note is opened to be written, so the caret is put in it */
+      if(!memoOf(dt)){const t=document.querySelector('#coming .cunta[data-a="'+a.id+'"][data-d="'+dt.id+'"]');if(t)t.focus();}
+      break;}
     case 'cuStrip':{const k=b.dataset.a+'|'+b.dataset.d;if(cuOpen.has(k))cuOpen.delete(k);else cuOpen.add(k);renderComing();break;}
     case 'cuStamp':{if(!a)break;const dt=a.dates.find(d=>d.id===b.dataset.d);if(!dt)break;
       toggleStamp(dt);save();renderComing();break;}
@@ -4324,6 +4358,7 @@ document.addEventListener('click',e=>{
       const cp={...dt,id:uid(),grade:'uncertain',start:shiftYear(dt.start),end:shiftYear(dt.end),
                 note:dt.kind==='call'?'':(dt.note?dt.note+' \u00B7 ':'')+'extrapolated from '+dispDate(dt)};
       delete cp.stampedAt;delete cp.stampPrev;   /* next year's edition has not been through anyone's hands */
+      delete cp.memo;                            /* nor has anyone written on it yet */
       a.dates.push(cp);reconcile(a);drawer.hi=cp.id;save();renderAll();break;}
     case 'delDate':{if(!a)break;const dt=a.dates.find(d=>d.id===b.dataset.d);
       if(!dt)break;
@@ -4550,6 +4585,21 @@ document.addEventListener('change',e=>{
 
 document.addEventListener('input',e=>{
   if(e.target.matches&&e.target.matches('textarea[data-field]'))autoGrow(e.target);
+  /* An event's note is kept as it is typed, and saved once the typing
+     pauses: a save on every keystroke would send the board to the cloud
+     for every letter. The list is not redrawn, which would take the caret
+     out of the box. */
+  if(e.target.matches&&e.target.matches('textarea.cunta')){
+    const a=arena(e.target.dataset.a),dt=a&&(a.dates||[]).find(d=>d.id===e.target.dataset.d);
+    if(!dt)return;
+    dt.memo=e.target.value;autoGrow(e.target);
+    clearTimeout(cuNoteT);cuNoteT=setTimeout(()=>{cuNoteT=null;save();},600);
+  }
+});
+/* leaving the box saves what is waiting at once, so a reload straight after
+   cannot lose the last words */
+document.addEventListener('focusout',e=>{
+  if(cuNoteT&&e.target.matches&&e.target.matches('textarea.cunta')){clearTimeout(cuNoteT);cuNoteT=null;save();}
 });
 $('#search').addEventListener('input',()=>{S.ui.q=$('#search').value;searchChanged();});
 $('#search').addEventListener('blur',()=>applySearchBox(false));
