@@ -581,20 +581,28 @@
 /* The board and the deadline timeline are two readings of the same calls,
    so they are two sides of one sheet. The corner above the name column —
    the one place on the board that carried nothing — turns it over. */
+/* Flat at rest, 3D only while it turns, for the reason the call card
+   gives below. The board used to stay a 3D object standing still: its face
+   held up 0.6px under the perspective, so the whole board was drawn as a
+   graphics-card layer scaled by a hair, and on Mark's Windows screen that
+   left thin dark lines across the lanes and the effort strip, one at each
+   seam between the tiles the card draws in. */
 #pane-ledger .hz-flip{perspective:2400px}
-#pane-ledger .hz-flip-inner{min-height:60px;position:relative;transform-style:preserve-3d;
+#pane-ledger .hz-flip-inner{min-height:60px;position:relative;
   transition:height 0.68s cubic-bezier(0.4,0.1,0.2,1)}
-#pane-ledger .hz-flip.flipped .hz-flip-inner{transform:rotateX(180deg)}
-#pane-ledger .hz-face{position:absolute;top:0;left:0;width:100%;
+#pane-ledger .hz-flip.turning .hz-flip-inner{transform-style:preserve-3d;will-change:transform}
+#pane-ledger .hz-flip.flipped.turning .hz-flip-inner{transform:rotateX(180deg)}
+#pane-ledger .hz-face{position:absolute;top:0;left:0;width:100%}
+/* Coplanar sheets z-fight; a hair of depth settles it. And
+   backface-visibility alone is not enough here — the faces carry their
+   own scroll containers and the far one will bleed through mid-turn, so
+   exactly one is ever painted, swapped below at the half-way point
+   where the sheet is edge-on. Hidden, not undisplayed: the layout box
+   is what the height measurement reads. */
+#pane-ledger .hz-flip.turning .hz-face{
   backface-visibility:hidden;-webkit-backface-visibility:hidden;
-  /* Coplanar sheets z-fight; a hair of depth settles it. And
-     backface-visibility alone is not enough here — the faces carry their
-     own scroll containers and the far one will bleed through mid-turn, so
-     exactly one is ever painted, swapped below at the half-way point
-     where the sheet is edge-on. Hidden, not undisplayed: the layout box
-     is what the height measurement reads. */
   transform:translateZ(0.6px)}
-#pane-ledger .hz-face-back{transform:rotateX(180deg) translateZ(0.6px)}
+#pane-ledger .hz-flip.turning .hz-face-back{transform:rotateX(180deg) translateZ(0.6px)}
 /* The negative only — see the call card's faces for why. */
 #pane-ledger .hz-flip:not(.showing-back) .hz-face-back{visibility:hidden}
 #pane-ledger .hz-flip.showing-back .hz-face-front{visibility:hidden}

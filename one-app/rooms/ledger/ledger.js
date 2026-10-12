@@ -4919,7 +4919,7 @@ var Board=(function(){
   var only=null;
   var face='board';               // which side is up
   var agendaOn=false;
-  var faceSwap=null;
+  var faceSwap=null,turnEnd=null;
   function cancelFaceSwap(){if(faceSwap){clearTimeout(faceSwap);faceSwap=null;}}
   var FLIP_MS=Turn.MS;            // the app's one turn duration
   var drag=null;
@@ -7200,6 +7200,17 @@ var Board=(function(){
     if(want==='timeline')Timeline.refreshFace();
     Menu.close();
     el.classList.toggle('flipped',want==='timeline');
+    /* A 3D object only for the length of the turn, flat again the moment
+       it lands — see .hz-flip in the stylesheet for the lines it left. */
+    if(turnEnd){clearTimeout(turnEnd);turnEnd=null;}
+    if(Turn.can()){
+      el.classList.add('turning');
+      turnEnd=setTimeout(function(){
+        turnEnd=null;
+        var live=byId('hz-flip');
+        if(live)live.classList.remove('turning');
+      },FLIP_MS);
+    }
     Turn.play(byId('hz-flip-inner'),'X',want==='timeline');
     /* The sheet is edge-on half-way through, which is the single instant
        nothing is visible either way — so that is when the painted face
