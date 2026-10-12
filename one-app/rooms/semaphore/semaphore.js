@@ -1151,9 +1151,12 @@ const cuOpen=new Set();        /* arena|event of the rows whose arena's strip is
    apart from the date's one-line `note`, which says what a date rests on and
    which the arena's panel, the board and the nightly agent's "extrapolated
    from" all write. A book left of the date says an event holds one, and opens
-   it under the row, where it is read and written in place; an event without
-   one says "+ note" beside its website instead, so that a column of empty
-   books does not stand beside every event in the list. */
+   it under the row, where it is read and written in place. An event without
+   one has no book, so that a column of empty books does not stand beside
+   every event in the list: its diamond on the spine turns into a book under
+   the pointer, and pressed opens the note to be written (Mark, 2026-10-12,
+   in place of a "+ note" beside the website). Without a hover, on the
+   iPad, the diamond is pressed all the same. */
 const cuNote=new Set();        /* arena|event of the rows whose note is open under the row */
 let cuNoteT=null;              /* the save a pause in typing is waiting for */
 const BOOK_SHUT='<svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><path d="M3 2.5h7.5a2 2 0 0 1 2 2v9H5a2 2 0 0 1-2-2z" fill="currentColor" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M3 11.5a2 2 0 0 1 2-2h7.5M6 5h4.5M6 7h3" fill="none" stroke="var(--paper)" stroke-width="1.1"/></svg>';
@@ -1310,7 +1313,9 @@ function comingRow(it){
   return '<div class="culn'+(call?' call':'')+(past?' past':'')+(it.limbo?' limbo':'')+(cuHi===d.id?' cuhi':'')+'" data-cud="'+d.id+'" style="--c:'+dtColor(d)+'">'+
     '<span class="cud'+(d.grade==='fixed'?'':' unc')+'" title="'+esc(dispDate(d))+'">'+book+
       (d.grade==='fixed'?'':'\u2248\u2009')+esc(cuDate(d))+'</span>'+
-    '<span class="cug"><i class="sw sw-'+d.grade+'"></i></span>'+
+    '<span class="cug">'+(call||memo||nopen?'<i class="sw sw-'+d.grade+'"></i>':
+      '<button class="cugb" data-act="cuNote" data-a="'+a.id+'" data-d="'+d.id+'" title="Write a note on this event" aria-label="Write a note on '+esc(dtLabel(d))+'">'+
+        '<i class="sw sw-'+d.grade+'"></i><span class="cugbk">'+BOOK_SHUT+'</span></button>')+'</span>'+
     '<span class="cut">'+
       '<button class="cuname" data-act="openDate" data-a="'+a.id+'" data-d="'+d.id+'" title="Open '+esc(a.name)+'">'+
         esc(dtLabel(d))+'</button>'+
@@ -1323,8 +1328,7 @@ function comingRow(it){
           'title="'+(open?'Fold away':'Show')+' the arena\u2019s calls and events in time" aria-label="The arena\u2019s calls and events in time">'+
           '\u25BE</button>')+'</span>'+
     '</span>'+
-    '<span class="cuend">'+(call||memo||nopen?'':'<button class="cusite none cunadd" data-act="cuNote" data-a="'+a.id+'" data-d="'+d.id+'" '+
-      'title="Write a note on this event">note</button>')+site+stamp+
+    '<span class="cuend">'+site+stamp+
       (call?'':'<button class="cudel" data-act="cuDel" data-a="'+a.id+'" data-d="'+d.id+'"'+(it.limbo?' data-limbo="1"':'')+' '+
         'title="Remove this event from the app" aria-label="Remove '+esc(dtLabel(d))+'">\u2715</button>')+
     '</span>'+

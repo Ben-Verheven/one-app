@@ -1471,12 +1471,24 @@
    read as belonging to nothing. A span across two months is wider than the
    column, and pushes the book out into the gap before it rather than over
    the date. The book is the note's handle whenever there is a note, or one
-   open; an event with neither has "+ note" in its end instead. */
+   open; an event with neither has its diamond, which turns into a book. */
 #pane-semaphore .cud{display:flex;justify-content:flex-end;align-items:center;gap:4px}
 #pane-semaphore .cubk{flex:0 0 28px;width:28px;height:28px;margin:-6px 0;display:grid;place-items:center;
   border-radius:var(--radius);color:var(--key2);font-style:normal;transition:background-color .14s,color .14s}
 #pane-semaphore .cubk:hover{background:rgba(216,205,184,.1);color:var(--ink)}
 #pane-semaphore .cubk.on{color:var(--ink)}
+/* The diamond that becomes a book: the diamond unturns and shrinks away as
+   the book turns up out of its angle, the two crossing on one spot, so it
+   reads as one mark changing its mind rather than one swapped for another.
+   The button is wider than the nine-pixel diamond, so it can be hit. */
+#pane-semaphore .cugb{width:26px;height:26px;margin:-6px;display:grid;place-items:center;border-radius:50%;color:var(--key2)}
+#pane-semaphore .cugb>*{grid-area:1/1}
+#pane-semaphore .cugb .sw{transition:transform .22s cubic-bezier(.65,0,.35,1),opacity .18s}
+#pane-semaphore .cugbk{display:grid;opacity:0;transform:rotate(45deg) scale(.5);
+  transition:transform .22s cubic-bezier(.65,0,.35,1),opacity .18s}
+#pane-semaphore .cugb:hover .sw,#pane-semaphore .cugb:focus-visible .sw{opacity:0;transform:rotate(0deg) scale(.4)}
+#pane-semaphore .cugb:hover .cugbk,#pane-semaphore .cugb:focus-visible .cugbk{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){#pane-semaphore .cugb .sw,#pane-semaphore .cugbk{transition:none}}
 #pane-semaphore .cunote{grid-column:3/5;max-width:640px;margin:6px 0 4px}
 #pane-semaphore .cunta{display:block;width:100%;resize:none;overflow:hidden;padding:9px 12px;
   font:14px/1.5 var(--body);color:var(--ink);background:var(--well);
