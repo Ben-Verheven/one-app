@@ -8751,10 +8751,9 @@ var TodoCard=(function(){
    idea of what a card is; but where a todo has its effort, a lead has the
    three steps Semaphore moves it through, and where a todo has Done and
    Delete, a lead has Complete, which is all Semaphore lets you do to end
-   one — and which asks how it ended. Its colour is its arena type's, from a
-   family of greyed earth tones kept apart from the categories' clean tints,
-   because it is not a category and must not borrow one (see "A lead's
-   colour" below).
+   one — and which asks how it ended. Its colour is its arena type's, from the
+   Semaphore's own family of tones, chosen there (see "A lead's colour"
+   below).
 
    A lead can be started here as well (Mark, 2026-10-06): the line's name
    opens a new-lead card in the list, which files the lead under the arena

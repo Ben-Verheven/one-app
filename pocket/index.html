@@ -161,7 +161,7 @@ a{color:inherit}
    stands — Back from waiting, Pinned — and not only under its band. On that
    fill the quiet grey of the ring, stamp and count fell to 2.6:1 on the
    darkest tones, and a peripheral name to 4.2:1, so both are lifted a step:
-   the grey to 5.1:1 and the name to the bone of the chrome, 6.2:1, still
+   the grey to 5.0:1 and the name to the bone of the chrome, 6.2:1, still
    below the ink of an ordinary name. */
 .wcard.toned .wch{--faint:#C4B9A6;background:color-mix(in srgb,var(--tone) 30%,var(--paper))}
 .wcard.toned .wname.w-peripheral{color:var(--key2)}
@@ -371,7 +371,9 @@ a.wlink:active .wd,a.wlink:active::before{color:var(--brok)}
 .ln .d{flex:0 0 70px;text-align:right;font:11px/1.45 var(--mono);color:var(--muted);padding-top:1px;
   overflow-wrap:break-word}
 .ln .d.unc{font-style:italic;opacity:.85}
-.ln .g{flex:0 0 14px;height:14px;display:flex;align-items:center;justify-content:center;align-self:center;position:relative;z-index:1}
+/* the diamond stands on the name's first line, beside the date, rather than
+   halfway down a name that runs to four lines (2026-10-12) */
+.ln .g{flex:0 0 14px;height:14px;display:flex;align-items:center;justify-content:center;align-self:flex-start;margin-top:4px;position:relative;z-index:1}
 .ln .g::before{content:'';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:17px;height:17px;
   border-radius:50%;background:var(--gbg,var(--paper))}
 .ln .g>*{position:relative}
@@ -390,7 +392,7 @@ a.wlink:active .wd,a.wlink:active::before{color:var(--brok)}
 /* Coming up's stamp: the days inside a white disc that reddens over a
    fortnight (Mark, 2026-10-12), the number in the paper's own dark, 4.8:1
    on the full red and more on everything lighter */
-.stamp.custamp b{width:26px;height:26px;border:none;background:color-mix(in srgb,var(--brok) var(--age),#FFFFFF);
+.stamp.custamp b{width:24px;height:24px;border:none;background:color-mix(in srgb,var(--brok) var(--age),#FFFFFF);
   color:var(--paper);font:500 12px/1 var(--mono)}
 .cuwx{flex:0 0 44px;width:44px;min-height:44px;text-align:center;font-size:13px;color:var(--muted);transition:transform .15s}
 .cuwx.on{transform:rotate(180deg);color:var(--key2)}
@@ -842,30 +844,39 @@ function dtLabel(dt){
    2026-10-11). Before, each arena had a colour of its own, chosen on one of
    its leads, and the leads of two Joint Undertakings looked unrelated.
 
-   The tones are the soft earth tints the arenas wore: every one greyed down,
-   so a lead never reads as one of the Ledger's clean category tints. Mark
-   wanted more of them, so there are two shades of nine hues, light over deep,
-   where there were ten single tones; the old keys are all still here, so a
-   colour he chose for an arena can be carried over to its type. A type stores
-   the key, not the hex, so adjusting a tone here moves every type wearing it. */
+   The tones began as soft earth tints, every one greyed down, so a lead
+   never read as one of the Ledger's clean category tints. Mark wanted more
+   of them, and then harder ones (2026-10-12): two shades of thirteen hues,
+   light over deep, at twice the old colourfulness, every one of the same
+   lightness in its row so none shouts over the others; four hues (aqua and
+   teal, cornflower and cobalt, lilac and violet, rose and berry) fill what
+   were the widest gaps around the wheel. The old keys are all still here,
+   so a colour he chose for an arena can be carried over to its type. A type
+   stores the key, not the hex, so adjusting a tone here moves every type
+   wearing it. */
 const TONES=[
-  {k:'blush',     label:'Blush',     color:'#ca9c9b'}, {k:'terracotta',label:'Terracotta',color:'#c7a08a'},
-  {k:'sand',      label:'Sand',      color:'#bea582'}, {k:'straw',     label:'Straw',     color:'#b4a981'},
-  {k:'olive',     label:'Olive',     color:'#a1b08a'}, {k:'sage',      label:'Sage',      color:'#90b3a2'},
-  {k:'mist',      label:'Mist',      color:'#8ab1bb'}, {k:'dusk',      label:'Dusk',      color:'#9ca9c6'},
-  {k:'mauve',     label:'Mauve',     color:'#b99ec0'},
-  {k:'rosewood',  label:'Rosewood',  color:'#a97777'}, {k:'rust',      label:'Rust',      color:'#a57c65'},
-  {k:'umber',     label:'Umber',     color:'#9c815c'}, {k:'ochre',     label:'Ochre',     color:'#92865b'},
-  {k:'moss',      label:'Moss',      color:'#7d8d64'}, {k:'fern',      label:'Fern',      color:'#6a907f'},
-  {k:'slate',     label:'Slate',     color:'#638e99'}, {k:'twilight',  label:'Twilight',  color:'#7886a5'},
-  {k:'plum',      label:'Plum',      color:'#977a9e'}
+  {k:'blush',      label:'Blush',      color:'#e19292'}, {k:'terracotta', label:'Terracotta', color:'#db9973'},
+  {k:'sand',       label:'Sand',       color:'#cda364'}, {k:'straw',      label:'Straw',      color:'#bdaa62'},
+  {k:'olive',      label:'Olive',      color:'#9db672'}, {k:'sage',       label:'Sage',       color:'#6ebe9b'},
+  {k:'aqua',       label:'Aqua',       color:'#59beb8'}, {k:'mist',       label:'Mist',       color:'#5bbad0'},
+  {k:'cornflower', label:'Cornflower', color:'#71b3e1'}, {k:'dusk',       label:'Dusk',       color:'#8faae8'},
+  {k:'lilac',      label:'Lilac',      color:'#aca0e2'}, {k:'mauve',      label:'Mauve',      color:'#c598d1'},
+  {k:'rose',       label:'Rose',       color:'#d992b3'},
+  {k:'rosewood',   label:'Rosewood',   color:'#ad6464'}, {k:'rust',       label:'Rust',       color:'#a96b45'},
+  {k:'umber',      label:'Umber',      color:'#9c7334'}, {k:'ochre',      label:'Ochre',      color:'#8d7b32'},
+  {k:'moss',       label:'Moss',       color:'#6f8644'}, {k:'fern',       label:'Fern',       color:'#3c8d6d'},
+  {k:'teal',       label:'Teal',       color:'#1b8e88'}, {k:'slate',      label:'Slate',      color:'#218a9f'},
+  {k:'cobalt',     label:'Cobalt',     color:'#4183ae'}, {k:'twilight',   label:'Twilight',   color:'#617ab5'},
+  {k:'violet',     label:'Violet',     color:'#7d71b0'}, {k:'plum',       label:'Plum',       color:'#9469a0'},
+  {k:'berry',      label:'Berry',      color:'#a66384'}
 ];
 /* The order a type is handed a tone when it has none: hues far apart first,
    because neighbours on the wheel are close by design, and two types made one
    after the other must not come out Terracotta and Rust. A type keeps the tone
    it was given, so moving types up and down never recolours them. */
-const TONE_SPREAD=['terracotta','sage','dusk','sand','mauve','slate','olive','rosewood','ochre',
-  'mist','plum','straw','fern','blush','twilight','umber','moss','rust'];
+const TONE_SPREAD=['terracotta','sage','cobalt','sand','mauve','teal','olive','rosewood','ochre',
+  'lilac','mist','berry','straw','fern','dusk','rust','aqua','plum','blush','violet','umber',
+  'cornflower','moss','rose','twilight','slate'];
 const toneHex=k=>{const t=TONES.find(t=>t.k===k);return t?t.color:'';};
 function freeTone(types){
   const used=new Set((types||[]).map(t=>t.color));
@@ -2988,11 +2999,12 @@ function eventRow(x){
 
   /* The stamp is the count, as on the desk since 2026-10-12: the days since
      it was pressed inside a white disc in place of the tick, reddening to
-     the brokerage red over fourteen days; blank until the first stamp. */
+     the brokerage red over fourteen days; until the first stamp, the empty
+     ring and its tick (2026-10-12). */
   var st = siteStamp(d), on = st === isoToday(), n = st ? Math.max(0, -daysTo(st)) : null;
-  var sb = row.appendChild(el('button', 'stamp custamp'));
-  sb.appendChild(el('b', '', n === null ? '' : String(n)));
-  sb.style.setProperty('--age', (n === null ? 0 : Math.round(Math.min(n, 14) / 14 * 100)) + '%');
+  var sb = row.appendChild(el('button', 'stamp' + (n === null ? '' : ' custamp')));
+  sb.appendChild(el('b', '', n === null ? '✓' : String(n)));
+  if (n !== null) sb.style.setProperty('--age', Math.round(Math.min(n, 14) / 14 * 100) + '%');
   sb.setAttribute('aria-label', on ? 'Stamped today — tap to undo'
     : (n === null ? 'Not stamped yet' : 'Stamped ' + n + ' days ago') + ' — stamp it once you have been through it');
   sb.addEventListener('click', function(e){ e.stopPropagation(); stampSite(x.a.id, d.id, dateName(d)); });

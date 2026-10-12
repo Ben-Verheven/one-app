@@ -617,9 +617,9 @@
 /* A link of a typed arena wears its type the way the rotation's bands do
    (Mark, 2026-10-11, who found the coloured name alone too quiet): the tone
    struck into the ground, a rule of it down the left, the name in full ink
-   on it (8:1 and more). The quiet greys are lifted on that ground, as on
-   Pocket's card heads: the room's muted is 4.2:1 on the darkest band, the
-   key2 put in its place 6.2:1, the lifted faint 5.1:1. */
+   on it (7.9:1 and more). The quiet greys are lifted on that ground, as on
+   Pocket's card heads: the room's muted is 4.1:1 on the darkest band, the
+   key2 put in its place 6.2:1, the lifted faint 5.0:1. */
 #pane-semaphore .wprow.toned{--muted:var(--key2);--faint:#C4B9A6;
         background:color-mix(in srgb,var(--tone) 30%,var(--paper));
         border-color:transparent;border-left:4px solid var(--tone);border-radius:0 var(--radius) var(--radius) 0}
@@ -720,8 +720,8 @@
    colour, standing between the ruit and the arena as it does there; it takes
    back most of the ruit's margin, so the columns after it move by only a few
    pixels. At the head of a type it is a button, and its menu hangs under it
-   on the dark panel: the eighteen swatches nine to a row, the light shades
-   over the deep ones, so each hue stands over its own darker self. */
+   on the dark panel: the twenty-six swatches thirteen to a row, the light
+   shades over the deep ones, so each hue stands over its own darker self. */
 #pane-semaphore .lead.wide .lcolwrap{position:relative;flex:0 0 22px;margin:0 -6px 0 -22px;display:flex}
 #pane-semaphore .lcolwrap.tycol{position:relative;flex:0 0 22px;display:inline-flex}
 #pane-semaphore .lcol{width:22px;height:22px;padding:0;border:1px solid transparent;border-radius:50%;
@@ -732,7 +732,7 @@
 #pane-semaphore span.lcol{cursor:inherit}
 @media (hover:hover) and (pointer:fine){#pane-semaphore button.lcol:hover{border-color:var(--line2);background:var(--sink)}}
 #pane-semaphore .lcolpop{position:absolute;z-index:30;top:calc(100% + 6px);left:-10px;
-  display:grid;grid-template-columns:repeat(9,30px);gap:8px;padding:10px;cursor:default;
+  display:grid;grid-template-columns:repeat(13,30px);gap:8px;padding:10px;cursor:default;
   background:var(--panel);border:1px solid var(--line2);border-radius:9px;box-shadow:0 10px 28px rgba(0,0,0,.45)}
 #pane-semaphore .lcolpop .lsw{width:28px;height:28px;justify-self:center;padding:0;border:0;border-radius:50%;
   cursor:pointer;background:var(--c);box-shadow:0 0 0 1px rgba(0,0,0,.25)}
@@ -1406,7 +1406,13 @@
 #pane-semaphore .cuspine{position:relative}
 #pane-semaphore .cuspine::before{content:"";position:absolute;left:127px;top:12px;bottom:12px;width:1px;
   background:var(--line);pointer-events:none}
-#pane-semaphore .culn{position:relative;display:flex;align-items:center;gap:10px;padding:7px 0;min-height:44px}
+/* A grid rather than a row, so that the strip unfolded under an event
+   (cuwline) starts under the event's name and the date, the diamond, the
+   website and the stamp stay on the event's own line. As a wrapping row, a
+   name long enough to fill the line pushed the website and the stamp under
+   it, to the left of the strip (Mark, 2026-10-12). */
+#pane-semaphore .culn{position:relative;display:grid;grid-template-columns:110px 14px minmax(0,1fr) auto;
+  align-items:center;column-gap:10px;padding:7px 0;min-height:44px}
 /* Past is said in colour rather than by fading the row, which would take
    already quiet italics below what can be read on this ground. */
 #pane-semaphore .culn.past .cud,#pane-semaphore .culn.past .cuname,
@@ -1430,7 +1436,7 @@
 #pane-semaphore .cuar{display:flex;align-items:center;gap:8px;font:italic 13px/1.3 var(--body);color:var(--muted)}
 /* The arena wears its type the way Pinned's boxes do (Mark, 2026-10-12): the
    tone struck into the ground with a rule of it down the left, the name in
-   full ink on it, 8:1 and more on the deepest tone. */
+   full ink on it, 7.9:1 and more on the deepest tone. */
 #pane-semaphore .cuat.toned{padding:1px 8px 2px 7px;color:var(--ink);
   background:color-mix(in srgb,var(--tone) 30%,var(--paper));border-left:3px solid var(--tone);border-radius:0 var(--radius) var(--radius) 0}
 #pane-semaphore .culn.past .cuat.toned{color:var(--muted)}
@@ -1442,8 +1448,7 @@
 #pane-semaphore .cuwx.on{transform:rotate(180deg);color:var(--key2)}
 /* Only the strip: the phase line above it counts the days to go, which this
    list does not say (Mark, 2026-10-12). */
-#pane-semaphore .culn.cuopen{flex-wrap:wrap}
-#pane-semaphore .cuwline{flex:0 0 380px;margin:-4px 0 4px 144px}
+#pane-semaphore .cuwline{grid-column:3/4;width:min(420px,100%);margin:4px 0 2px}
 #pane-semaphore .cuwline .wline{padding:4px 0 2px}
 #pane-semaphore .cuwline .wph{display:none}
 #pane-semaphore .cuend{flex:0 0 auto;display:flex;align-items:center;gap:6px;margin-left:12px}
@@ -1463,10 +1468,11 @@
 /* The stamp is always in sight here, as on Pinned: walking the list is what
    it is for. It sits after the website, whose width changes from row to
    row, so that the stamps stand in one column. Its count is inside it
-   (cuStampHTML): a white disc, blank until the first stamp, that reddens to
-   the brokerage red over fourteen days. The number is in the paper's own
+   (cuStampHTML): a white disc that reddens to the brokerage red over
+   fourteen days; until the first stamp it is the empty ring with its tick. The number is in the paper's own
    dark, 4.8:1 on the full red and more on everything lighter. */
-#pane-semaphore .culn .stamp.custamp{flex:0 0 24px;width:24px;height:24px;opacity:1;border:none;
+#pane-semaphore .culn .stamp{flex:0 0 24px;width:24px;height:24px;opacity:1}
+#pane-semaphore .culn .stamp.custamp{border:none;
   background:color-mix(in srgb,var(--brok) var(--age),#FFFFFF);color:var(--paper);font:500 11.5px/1 var(--mono)}
 /* No growing on hover here: the pointer is still on the stamp after the
    press, so the filled disc stood larger than the column it belongs to and

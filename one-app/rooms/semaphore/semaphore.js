@@ -87,30 +87,39 @@ function dtSub(dt){
    2026-10-11). Before, each arena had a colour of its own, chosen on one of
    its leads, and the leads of two Joint Undertakings looked unrelated.
 
-   The tones are the soft earth tints the arenas wore: every one greyed down,
-   so a lead never reads as one of the Ledger's clean category tints. Mark
-   wanted more of them, so there are two shades of nine hues, light over deep,
-   where there were ten single tones; the old keys are all still here, so a
-   colour he chose for an arena can be carried over to its type. A type stores
-   the key, not the hex, so adjusting a tone here moves every type wearing it. */
+   The tones began as soft earth tints, every one greyed down, so a lead
+   never read as one of the Ledger's clean category tints. Mark wanted more
+   of them, and then harder ones (2026-10-12): two shades of thirteen hues,
+   light over deep, at twice the old colourfulness, every one of the same
+   lightness in its row so none shouts over the others; four hues (aqua and
+   teal, cornflower and cobalt, lilac and violet, rose and berry) fill what
+   were the widest gaps around the wheel. The old keys are all still here,
+   so a colour he chose for an arena can be carried over to its type. A type
+   stores the key, not the hex, so adjusting a tone here moves every type
+   wearing it. */
 const TONES=[
-  {k:'blush',     label:'Blush',     color:'#ca9c9b'}, {k:'terracotta',label:'Terracotta',color:'#c7a08a'},
-  {k:'sand',      label:'Sand',      color:'#bea582'}, {k:'straw',     label:'Straw',     color:'#b4a981'},
-  {k:'olive',     label:'Olive',     color:'#a1b08a'}, {k:'sage',      label:'Sage',      color:'#90b3a2'},
-  {k:'mist',      label:'Mist',      color:'#8ab1bb'}, {k:'dusk',      label:'Dusk',      color:'#9ca9c6'},
-  {k:'mauve',     label:'Mauve',     color:'#b99ec0'},
-  {k:'rosewood',  label:'Rosewood',  color:'#a97777'}, {k:'rust',      label:'Rust',      color:'#a57c65'},
-  {k:'umber',     label:'Umber',     color:'#9c815c'}, {k:'ochre',     label:'Ochre',     color:'#92865b'},
-  {k:'moss',      label:'Moss',      color:'#7d8d64'}, {k:'fern',      label:'Fern',      color:'#6a907f'},
-  {k:'slate',     label:'Slate',     color:'#638e99'}, {k:'twilight',  label:'Twilight',  color:'#7886a5'},
-  {k:'plum',      label:'Plum',      color:'#977a9e'}
+  {k:'blush',      label:'Blush',      color:'#e19292'}, {k:'terracotta', label:'Terracotta', color:'#db9973'},
+  {k:'sand',       label:'Sand',       color:'#cda364'}, {k:'straw',      label:'Straw',      color:'#bdaa62'},
+  {k:'olive',      label:'Olive',      color:'#9db672'}, {k:'sage',       label:'Sage',       color:'#6ebe9b'},
+  {k:'aqua',       label:'Aqua',       color:'#59beb8'}, {k:'mist',       label:'Mist',       color:'#5bbad0'},
+  {k:'cornflower', label:'Cornflower', color:'#71b3e1'}, {k:'dusk',       label:'Dusk',       color:'#8faae8'},
+  {k:'lilac',      label:'Lilac',      color:'#aca0e2'}, {k:'mauve',      label:'Mauve',      color:'#c598d1'},
+  {k:'rose',       label:'Rose',       color:'#d992b3'},
+  {k:'rosewood',   label:'Rosewood',   color:'#ad6464'}, {k:'rust',       label:'Rust',       color:'#a96b45'},
+  {k:'umber',      label:'Umber',      color:'#9c7334'}, {k:'ochre',      label:'Ochre',      color:'#8d7b32'},
+  {k:'moss',       label:'Moss',       color:'#6f8644'}, {k:'fern',       label:'Fern',       color:'#3c8d6d'},
+  {k:'teal',       label:'Teal',       color:'#1b8e88'}, {k:'slate',      label:'Slate',      color:'#218a9f'},
+  {k:'cobalt',     label:'Cobalt',     color:'#4183ae'}, {k:'twilight',   label:'Twilight',   color:'#617ab5'},
+  {k:'violet',     label:'Violet',     color:'#7d71b0'}, {k:'plum',       label:'Plum',       color:'#9469a0'},
+  {k:'berry',      label:'Berry',      color:'#a66384'}
 ];
 /* The order a type is handed a tone when it has none: hues far apart first,
    because neighbours on the wheel are close by design, and two types made one
    after the other must not come out Terracotta and Rust. A type keeps the tone
    it was given, so moving types up and down never recolours them. */
-const TONE_SPREAD=['terracotta','sage','dusk','sand','mauve','slate','olive','rosewood','ochre',
-  'mist','plum','straw','fern','blush','twilight','umber','moss','rust'];
+const TONE_SPREAD=['terracotta','sage','cobalt','sand','mauve','teal','olive','rosewood','ochre',
+  'lilac','mist','berry','straw','fern','dusk','rust','aqua','plum','blush','violet','umber',
+  'cornflower','moss','rose','twilight','slate'];
 const toneHex=k=>{const t=TONES.find(t=>t.k===k);return t?t.color:'';};
 function freeTone(types){
   const used=new Set((types||[]).map(t=>t.color));
@@ -1202,13 +1211,15 @@ function toggleStamp(h){
    the circle in place of the tick, and the circle is white, reddening over a
    fortnight (Mark, 2026-10-12) — a list walked event by event is read for
    what has waited longest, and a tick beside a number said the same thing
-   twice. Fourteen days and more is the room's brokerage red. */
+   twice. Fourteen days and more is the room's brokerage red. An event never
+   stamped keeps the empty ring and its tick (Mark, 2026-10-12), so that it
+   reads as not yet done rather than as a blank count. */
 function cuStampHTML(a,d){
   const st=stampSay(stampOf(d)),n=st.d===null?null:Math.max(0,st.d);
   const tip=st.on?st.stTip:st.ageTip+' \u2014 stamp it once you have been through it';
-  return '<button class="stamp custamp" data-act="cuStamp" data-a="'+a.id+'" data-d="'+d.id+'" '+
-    'style="--age:'+(n===null?0:Math.round(Math.min(n,14)/14*100))+'%" title="'+tip+'" aria-label="'+tip+'">'+
-    (n===null?'':n)+'</button>';
+  return '<button class="stamp'+(n===null?'':' custamp')+'" data-act="cuStamp" data-a="'+a.id+'" data-d="'+d.id+'" '+
+    (n===null?'':'style="--age:'+Math.round(Math.min(n,14)/14*100)+'%" ')+'title="'+tip+'" aria-label="'+tip+'">'+
+    (n===null?'\u2713':n)+'</button>';
 }
 /* the stamp and its count, as Pinned draws them */
 function stampSay(st){
@@ -1233,7 +1244,7 @@ function comingRow(it){
     :'<button class="cusite none" data-act="cuSite" data-a="'+a.id+'" data-d="'+d.id+'" '+
       'title="This event has no website yet \u2014 add one">add website</button>';
   const stamp=call?'':cuStampHTML(a,d);
-  return '<div class="culn'+(call?' call':'')+(past?' past':'')+(it.limbo?' limbo':'')+(cuHi===d.id?' cuhi':'')+(open?' cuopen':'')+'" data-cud="'+d.id+'" style="--c:'+dtColor(d)+'">'+
+  return '<div class="culn'+(call?' call':'')+(past?' past':'')+(it.limbo?' limbo':'')+(cuHi===d.id?' cuhi':'')+'" data-cud="'+d.id+'" style="--c:'+dtColor(d)+'">'+
     '<span class="cud'+(d.grade==='fixed'?'':' unc')+'" title="'+esc(dispDate(d))+'">'+
       (d.grade==='fixed'?'':'\u2248\u2009')+esc(cuDate(d))+'</span>'+
     '<span class="cug"><i class="sw sw-'+d.grade+'"></i></span>'+
