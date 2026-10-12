@@ -1427,8 +1427,25 @@
 #pane-semaphore .cuname:hover{color:var(--key2);text-decoration-color:var(--key)}
 #pane-semaphore .culn.call .cuname{font-size:14px;color:var(--muted)}
 #pane-semaphore .custage{font:600 8.5px/1 var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--c)}
-#pane-semaphore .cuar{font:italic 13px/1.3 var(--body);color:var(--muted)}
+#pane-semaphore .cuar{display:flex;align-items:center;gap:8px;font:italic 13px/1.3 var(--body);color:var(--muted)}
+/* The arena wears its type the way Pinned's boxes do (Mark, 2026-10-12): the
+   tone struck into the ground with a rule of it down the left, the name in
+   full ink on it, 8:1 and more on the deepest tone. */
+#pane-semaphore .cuat.toned{padding:1px 8px 2px 7px;color:var(--ink);
+  background:color-mix(in srgb,var(--tone) 30%,var(--paper));border-left:3px solid var(--tone);border-radius:0 var(--radius) var(--radius) 0}
+#pane-semaphore .culn.past .cuat.toned{color:var(--muted)}
 #pane-semaphore .cusoon{font:11.5px var(--mono);font-style:normal;color:var(--today)}
+/* the fold that shows the arena's strip of time, as its card draws it */
+#pane-semaphore .cuwx{width:22px;height:20px;border-radius:var(--radius);font-size:11px;line-height:1;color:var(--muted);
+  font-style:normal;transition:color .14s,background-color .14s,transform .14s}
+#pane-semaphore .cuwx:hover{color:var(--ink);background:rgba(216,205,184,.09)}
+#pane-semaphore .cuwx.on{transform:rotate(180deg);color:var(--key2)}
+/* Only the strip: the phase line above it counts the days to go, which this
+   list does not say (Mark, 2026-10-12). */
+#pane-semaphore .culn.cuopen{flex-wrap:wrap}
+#pane-semaphore .cuwline{flex:0 0 380px;margin:-4px 0 4px 144px}
+#pane-semaphore .cuwline .wline{padding:4px 0 2px}
+#pane-semaphore .cuwline .wph{display:none}
 #pane-semaphore .cuend{flex:0 0 auto;display:flex;align-items:center;gap:6px;margin-left:12px}
 /* The website is shown whole. It was cut at 260px, and since the button is a
    flex box the browser drew no ellipsis, only a name sliced off mid-word
@@ -1445,18 +1462,16 @@
 #pane-semaphore .cusite.none::before{content:"+"}
 /* The stamp is always in sight here, as on Pinned: walking the list is what
    it is for. It sits after the website, whose width changes from row to
-   row, so that the stamps and their counts stand in one column; the count
-   keeps a fixed width for the same reason, and is blank rather than a dash
-   until the first stamp, since a dash down every row of a fresh list is
-   noise. */
-#pane-semaphore .culn .stamp{opacity:1}
+   row, so that the stamps stand in one column. Its count is inside it
+   (cuStampHTML): a white disc, blank until the first stamp, that reddens to
+   the brokerage red over fourteen days. The number is in the paper's own
+   dark, 4.8:1 on the full red and more on everything lighter. */
+#pane-semaphore .culn .stamp.custamp{flex:0 0 24px;width:24px;height:24px;opacity:1;border:none;
+  background:color-mix(in srgb,var(--brok) var(--age),#FFFFFF);color:var(--paper);font:500 11.5px/1 var(--mono)}
 /* No growing on hover here: the pointer is still on the stamp after the
    press, so the filled disc stood larger than the column it belongs to and
-   read as having moved (Mark, 2026-10-09). The ring answers in colour. */
-#pane-semaphore .culn .stamp:hover{transform:none}
-#pane-semaphore .cuage{flex:0 0 46px;text-align:left;font:11.5px var(--mono);color:var(--ink)}
-#pane-semaphore .culn .stamp.on+.cuage{color:var(--muted)}
-#pane-semaphore .culn.past .cuage{color:var(--faint)}
+   read as having moved (Mark, 2026-10-09). It answers with a ring instead. */
+#pane-semaphore .culn .stamp:hover{transform:none;box-shadow:0 0 0 2px var(--key)}
 #pane-semaphore .cudel{width:26px;height:26px;border-radius:var(--radius);font-size:11px;color:var(--faint);
   transition:color .14s,background-color .14s}
 #pane-semaphore .cudel:hover{color:var(--brok-deep);background:var(--brok-soft)}

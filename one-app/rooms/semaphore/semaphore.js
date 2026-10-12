@@ -1115,6 +1115,7 @@ function acceptAllFinds(){
 let cuLimbo=false;             /* Limbo, unfolded on request */
 let cuHi=null;                 /* the event a press on the board or a card came for */
 let cuNew=false;               /* the new-event form is open */
+const cuOpen=new Set();        /* arena|event of the rows whose arena's strip is unfolded */
 /* A brokerage diamond, on the board or on a card, is pressed to see that
    event in the list: Mark asked for it (2026-10-08), because the list is
    where an event's website and its neighbours in time are. An event the
@@ -1197,6 +1198,18 @@ function toggleStamp(h){
     for(const m of mates)if(m.stampedAt===t){m.stampedAt=m.stampPrev||null;delete m.stampPrev;}
   }else for(const m of mates){m.stampPrev=m.stampedAt||null;m.stampedAt=t;}
 }
+/* Here the stamp is the count: the days since it was pressed stand inside
+   the circle in place of the tick, and the circle is white, reddening over a
+   fortnight (Mark, 2026-10-12) — a list walked event by event is read for
+   what has waited longest, and a tick beside a number said the same thing
+   twice. Fourteen days and more is the room's brokerage red. */
+function cuStampHTML(a,d){
+  const st=stampSay(stampOf(d)),n=st.d===null?null:Math.max(0,st.d);
+  const tip=st.on?st.stTip:st.ageTip+' \u2014 stamp it once you have been through it';
+  return '<button class="stamp custamp" data-act="cuStamp" data-a="'+a.id+'" data-d="'+d.id+'" '+
+    'style="--age:'+(n===null?0:Math.round(Math.min(n,14)/14*100))+'%" title="'+tip+'" aria-label="'+tip+'">'+
+    (n===null?'':n)+'</button>';
+}
 /* the stamp and its count, as Pinned draws them */
 function stampSay(st){
   const t=todayISO(),on=st===t;
@@ -1210,18 +1223,17 @@ const LONG_MONTHS=['January','February','March','April','May','June','July','Aug
   'September','October','November','December'];
 function comingRow(it){
   const{a,d}=it,now=T(todayISO()),call=d.kind==='call',past=it.e<now&&!it.limbo;
-  const sIn=daysBetween(now,it.s);
-  const when=call||it.e<now?'':it.s<=now?'on now':sIn===1?'tomorrow':sIn<=30?'in '+sIn+' d':'';
+  /* no count of the days to go (Mark, 2026-10-12): the date stands on the
+     left already, and only an event under way says so */
+  const when=!call&&it.e>=now&&it.s<=now?'on now':'';
+  const tone=arenaTone(a),open=!call&&cuOpen.has(a.id+'|'+d.id);
   const site=call?'':d.url
     ?'<a class="cusite" href="'+esc(d.url)+'" target="_blank" rel="noopener" title="'+esc(d.url)+'">'+
       esc(linkName({url:d.url}))+'</a>'
     :'<button class="cusite none" data-act="cuSite" data-a="'+a.id+'" data-d="'+d.id+'" '+
       'title="This event has no website yet \u2014 add one">add website</button>';
-  const st=call?null:stampSay(stampOf(d));
-  const stamp=st?'<button class="stamp'+(st.on?' on':'')+'" data-act="cuStamp" data-a="'+a.id+'" data-d="'+d.id+'" '+
-      'title="'+st.stTip+'" aria-label="'+st.stTip+'">\u2713</button>'+
-    '<span class="cuage'+(st.d===null?' never':'')+'" title="'+st.ageTip+'">'+(st.d===null?'':st.age)+'</span>':'';
-  return '<div class="culn'+(call?' call':'')+(past?' past':'')+(it.limbo?' limbo':'')+(cuHi===d.id?' cuhi':'')+'" data-cud="'+d.id+'" style="--c:'+dtColor(d)+'">'+
+  const stamp=call?'':cuStampHTML(a,d);
+  return '<div class="culn'+(call?' call':'')+(past?' past':'')+(it.limbo?' limbo':'')+(cuHi===d.id?' cuhi':'')+(open?' cuopen':'')+'" data-cud="'+d.id+'" style="--c:'+dtColor(d)+'">'+
     '<span class="cud'+(d.grade==='fixed'?'':' unc')+'" title="'+esc(dispDate(d))+'">'+
       (d.grade==='fixed'?'':'\u2248\u2009')+esc(cuDate(d))+'</span>'+
     '<span class="cug"><i class="sw sw-'+d.grade+'"></i></span>'+
@@ -1229,12 +1241,17 @@ function comingRow(it){
       '<button class="cuname" data-act="openDate" data-a="'+a.id+'" data-d="'+d.id+'" title="Open '+esc(a.name)+'">'+
         esc(dtLabel(d))+'</button>'+
       (call?'<span class="custage">'+esc(roleOf(d).short)+'</span>':'')+
-      '<span class="cuar">'+esc(a.name)+(when?' \u00B7 <span class="cusoon">'+when+'</span>':'')+'</span>'+
+      '<span class="cuar"><span class="cuat'+(tone?' toned':'')+'"'+(tone?' style="--tone:'+esc(tone)+'"':'')+'>'+esc(a.name)+'</span>'+
+        (when?'<span class="cusoon">'+when+'</span>':'')+
+        (call?'':'<button class="cuwx'+(open?' on':'')+'" data-act="cuStrip" data-a="'+a.id+'" data-d="'+d.id+'" aria-expanded="'+open+'" '+
+          'title="'+(open?'Fold away':'Show')+' the arena\u2019s calls and events in time" aria-label="The arena\u2019s calls and events in time">'+
+          '\u25BE</button>')+'</span>'+
     '</span>'+
     '<span class="cuend">'+site+stamp+
       (call?'':'<button class="cudel" data-act="cuDel" data-a="'+a.id+'" data-d="'+d.id+'"'+(it.limbo?' data-limbo="1"':'')+' '+
         'title="Remove this event from the app" aria-label="Remove '+esc(dtLabel(d))+'">\u2715</button>')+
     '</span>'+
+    (open?'<div class="cuwline">'+cardLineHTML(a,'top')+'</div>':'')+
   '</div>';
 }
 /* A brokerage event added from the list is an ordinary date on the arena
@@ -1995,7 +2012,9 @@ function wallLinks(a,scope,rows){
    bars say nothing. Brokerage events are diamonds on a lane above, and
    today is the gold line through both. Names are in the room's tooltip:
    the strip is a picture of where you are, the panel is where you read.
-   Everything on it opens the panel on its own date, as the rows did.
+   A call on it opens the panel on its own date, as the rows did; a
+   brokerage event, on the strip or named by the phase line, is shown in
+   Coming up (jumpDate), where its website and its stamp are.
 
    A call whose deadline has passed leaves the card; the panel keeps it.
    A top card draws up to four calls, a middle card two, the tail none. */
@@ -2077,7 +2096,7 @@ function cardLineHTML(a,t){
       (fresh?freshTag(a,fresh):'')+'</span>'+
     (n?'<span class="wpn">'+n+'</span>':'');
   const phase=ph.d
-    ?'<button class="wph" data-act="openDate" data-a="'+a.id+'" data-d="'+ph.d.id+'">'+phInner+'</button>'
+    ?'<button class="wph" data-act="'+(ph.d.kind==='call'?'openDate':'jumpDate')+'" data-a="'+a.id+'" data-d="'+ph.d.id+'">'+phInner+'</button>'
     :'<div class="wph">'+phInner+'</div>';
 
   /* the strip */
@@ -4055,6 +4074,7 @@ document.addEventListener('click',e=>{
     case 'findRefresh':loadFinds();break;
     case 'cuAll':S.ui.cuAll=b.dataset.v==='1';save();renderComing();break;
     case 'cuLimbo':cuLimbo=!cuLimbo;renderComing();break;
+    case 'cuStrip':{const k=b.dataset.a+'|'+b.dataset.d;if(cuOpen.has(k))cuOpen.delete(k);else cuOpen.add(k);renderComing();break;}
     case 'cuStamp':{if(!a)break;const dt=a.dates.find(d=>d.id===b.dataset.d);if(!dt)break;
       toggleStamp(dt);save();renderComing();break;}
     case 'jumpDate':jumpDate(b.dataset.a,b.dataset.d);break;

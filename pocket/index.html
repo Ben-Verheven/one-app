@@ -384,6 +384,20 @@ a.wlink:active .wd,a.wlink:active::before{color:var(--brok)}
 .ln .t .nt{display:block;margin-top:2px;font:italic 13px/1.45 var(--body);color:var(--faint)}
 .ln .t .ar{display:block;margin-top:2px;font:italic 13px/1.3 var(--body);color:var(--lquiet)}
 .ln .t .soon{font:11px var(--mono);font-style:normal;color:var(--today)}
+.ln .t .ar .soon{margin-left:8px}
+.ln .t .at.toned{display:inline-block;padding:1px 8px 2px 7px;color:var(--ink);
+  background:color-mix(in srgb,var(--tone) 30%,var(--paper));border-left:3px solid var(--tone);border-radius:0 var(--radius) var(--radius) 0}
+/* Coming up's stamp: the days inside a white disc that reddens over a
+   fortnight (Mark, 2026-10-12), the number in the paper's own dark, 4.8:1
+   on the full red and more on everything lighter */
+.stamp.custamp b{width:26px;height:26px;border:none;background:color-mix(in srgb,var(--brok) var(--age),#FFFFFF);
+  color:var(--paper);font:500 12px/1 var(--mono)}
+.cuwx{flex:0 0 44px;width:44px;min-height:44px;text-align:center;font-size:13px;color:var(--muted);transition:transform .15s}
+.cuwx.on{transform:rotate(180deg);color:var(--key2)}
+.cuwline{flex:0 0 100%;padding:0 16px 10px 102px}
+.cuwline .wph{display:none}
+.ln.hi{background:rgba(240,180,41,.10);box-shadow:0 0 0 6px rgba(240,180,41,.10);border-radius:5px}
+.wsd::after{content:"";position:absolute;left:-8px;right:-8px;top:-8px;bottom:-8px}
 button.ln:active{background:rgba(216,205,184,.06)}
 /* A brokerage event's row, as the desk's: the event, its date and its arena,
    pressed to open the arena as the desk's name is; the stamp beside them;
@@ -2088,7 +2102,8 @@ function cardLine(a, t){
   else ph = { w:'No call dated', c:'none', pre:'', d:null };
   var n = ph.d && !ph.still ? until(ph.d) : '';
   var fresh = (a.dates || []).filter(function(d){ return isFresh(a, d); })[0];
-  var h = '<div class="wph"><span class="wpw ' + ph.c + '">' + ph.w + '</span>' +
+  var h = '<div class="wph"' + (ph.d && ph.d.kind !== 'call' ? ' data-d="' + esc(ph.d.id) + '"' : '') + '>' +
+    '<span class="wpw ' + ph.c + '">' + ph.w + '</span>' +
     '<span class="wpt">' + esc(ph.pre) +
       (ph.d ? '<span class="wpd' + (ph.d.grade === 'fixed' ? '' : ' unc') + '">' + esc(when(ph.d)) + '</span>' : '') +
       (fresh ? '<i class="wfresh">new</i>' : '') + '</span>' +
@@ -2106,7 +2121,7 @@ function cardLine(a, t){
     var cls = (x.e < now ? ' past' : '') + (x.d.grade === 'fixed' ? '' : ' unc') + (isFresh(a, x.d) ? ' fresh' : '');
     if (x.e - x.s >= 3*DAY) lane += '<span class="wsr' + (x.e < now ? ' past' : '') + '" style="left:' + P(x.s) +
       '%;width:' + (P(x.e) - P(x.s)).toFixed(2) + '%"></span>';
-    lane += '<span class="wsd' + cls + '" style="left:' + P(x.s) + '%"></span>';
+    lane += '<span class="wsd' + cls + '" data-d="' + esc(x.d.id) + '" style="left:' + P(x.s) + '%"></span>';
   });
   var bars = rows.map(function(r){
     var x0 = r.open ? +P(T(r.open.start)) : 0;
@@ -2226,7 +2241,10 @@ function wallCard(a, st, tier){
   if (lineHTML){
     var line = el('div', 'wline');
     line.innerHTML = lineHTML;
-    line.addEventListener('click', function(){ openArena(a, st); });
+    line.addEventListener('click', function(e){
+      var at = e.target.closest('[data-d]');
+      if (at) jumpEvent(a, at.dataset.d); else openArena(a, st);
+    });
     c.appendChild(line);
   }
 
@@ -2824,6 +2842,25 @@ function eventLink(d, a){
 }
 
 var limboOpen = false;
+var evHi = null;       /* the event a press on a card came for */
+var evOpen = {};       /* arena|event of the rows whose arena's strip is unfolded */
+/* A brokerage event pressed on a card — its diamond on the strip, or the
+   phase line naming it — is shown in Coming up rather than opening the
+   arena (Mark, 2026-10-12, as on the desk), because the list is where its
+   website and its stamp are. One the list does not hold, more than a year
+   off or a frozen arena's, opens the arena as before. The diamonds are
+   small, so each takes a press a little wider than itself (.wsd::after). */
+function jumpEvent(a, did){
+  var x = comingUp().filter(function(y){ return y.a === a && y.d.id === did; })[0];
+  if (!x || x.d.kind === 'call'){ openArenaById(a.id); return; }
+  if (x.limbo) limboOpen = true;
+  evHi = a.id + '|' + did;
+  shut();
+  drawDates();
+  goTab('dates');
+  var row = document.querySelector('#v-dates .ln.hi');
+  if (row) row.scrollIntoView({ block:'center' });
+}
 function drawDates(){
   var host = $('#v-dates');
   host.textContent = '';
@@ -2921,7 +2958,9 @@ function drawDates(){
    to be taken off, it removes at once, with the toast's undo. */
 function eventRow(x){
   var d = x.d, call = d.kind === 'call', past = x.e < 0 && !x.limbo;
-  var row = el(call ? 'button' : 'div', 'ln' + (call ? ' call' : ' brk has') + (past ? ' past' : ''));
+  var key = x.a.id + '|' + d.id;
+  var row = el(call ? 'button' : 'div', 'ln' + (call ? ' call' : ' brk has') + (past ? ' past' : '') +
+    (evHi === key ? ' hi' : ''));
   row.style.setProperty('--c', dateHue(d));
   var r = call ? row : row.appendChild(el('button', 'lgo'));
   r.appendChild(el('span', 'd' + (d.grade === 'fixed' ? '' : ' unc'),
@@ -2935,24 +2974,28 @@ function eventRow(x){
     var role = (typeof ROLES !== 'undefined' && ROLES[d.role]) ? ROLES[d.role].short : d.role;
     if (role) t.appendChild(el('span', 'stage', role));
   }
-  var ar = el('span', 'ar', plainOf(x.a.name) || 'Arena');
-  if (!call && x.e >= 0){
-    var when = x.s <= 0 ? 'on now' : x.s === 1 ? 'tomorrow'
-             : x.s <= 30 ? 'in ' + x.s + ' d' : '';
-    if (when){
-      ar.appendChild(document.createTextNode('  ·  '));
-      ar.appendChild(el('span', 'soon', when));
-    }
-  }
+  /* the arena wears its type as Pinned's boxes do, and no count of the
+     days to go is given, only that an event is under way (Mark, 2026-10-12) */
+  var ar = el('span', 'ar');
+  var at = ar.appendChild(el('span', 'at', plainOf(x.a.name) || 'Arena'));
+  var tone = arenaTone(x.a);
+  if (tone){ at.classList.add('toned'); at.style.setProperty('--tone', tone); }
+  if (!call && x.e >= 0 && x.s <= 0) ar.appendChild(el('span', 'soon', 'on now'));
   t.appendChild(ar);
   r.appendChild(t);
   r.addEventListener('click', function(){ openArenaById(x.a.id); });
   if (call) return row;
 
+  /* The stamp is the count, as on the desk since 2026-10-12: the days since
+     it was pressed inside a white disc in place of the tick, reddening to
+     the brokerage red over fourteen days; blank until the first stamp. */
   var st = siteStamp(d), on = st === isoToday(), n = st ? Math.max(0, -daysTo(st)) : null;
-  row.appendChild(tickBtn(on, on ? 'Stamped today — tap to undo'
-    : (n === null ? 'Not stamped yet' : 'Stamped ' + n + ' days ago') + ' — stamp it once you have been through it',
-    function(){ stampSite(x.a.id, d.id, dateName(d)); }, n));
+  var sb = row.appendChild(el('button', 'stamp custamp'));
+  sb.appendChild(el('b', '', n === null ? '' : String(n)));
+  sb.style.setProperty('--age', (n === null ? 0 : Math.round(Math.min(n, 14) / 14 * 100)) + '%');
+  sb.setAttribute('aria-label', on ? 'Stamped today — tap to undo'
+    : (n === null ? 'Not stamped yet' : 'Stamped ' + n + ' days ago') + ' — stamp it once you have been through it');
+  sb.addEventListener('click', function(e){ e.stopPropagation(); stampSite(x.a.id, d.id, dateName(d)); });
   var foot = row.appendChild(el('div', 'cufoot'));
   if (d.url){
     var lk = foot.appendChild(el('a', 'cusite', '↗ ' + (linkHost({ url:d.url }) || d.url)));
@@ -2963,9 +3006,30 @@ function eventRow(x){
     none.setAttribute('aria-label', 'This event has no website yet — add one');
     none.addEventListener('click', function(){ addSite(x); });
   }
+  /* the fold that shows the arena's strip of time under the row, as its
+     card draws it, without the phase line and its count of days */
+  var wx = foot.appendChild(el('button', 'cuwx' + (evOpen[key] ? ' on' : ''), '▾'));
+  wx.setAttribute('aria-expanded', evOpen[key] ? 'true' : 'false');
+  wx.setAttribute('aria-label', 'The arena’s calls and events in time');
+  wx.addEventListener('click', function(){
+    if (evOpen[key]) delete evOpen[key]; else evOpen[key] = 1;
+    drawDates();
+  });
   var del = foot.appendChild(el('button', 'cudel', '✕'));
   del.setAttribute('aria-label', 'Remove ' + dateName(d) + ' from the app');
   del.addEventListener('click', function(){ if (x.limbo) dropEvent(x.a, d); else askDrop(x); });
+  if (evOpen[key]){
+    var html = '';
+    try { html = cardLine(x.a, 'top'); } catch(e){ console.error(e); }
+    if (html){
+      var sl = row.appendChild(el('div', 'wline cuwline'));
+      sl.innerHTML = html;
+      sl.addEventListener('click', function(e){
+        var at = e.target.closest('.wsd[data-d]');
+        if (at && at.dataset.d !== d.id) jumpEvent(x.a, at.dataset.d);
+      });
+    }
+  }
   return row;
 }
 

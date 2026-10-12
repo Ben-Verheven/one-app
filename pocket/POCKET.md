@@ -37,10 +37,14 @@ does to brokerage events), types (their order and colour too), the freezer, and 
 - **Coming up** — the desk's Coming up since 2026-10-11 (`eventRow`): every arena's dates on one
   line, brokerage by default, under the desk's line counting the year's brokerage events and those
   still without a website, and *+ Brokerage event* (`newEvent`, the desk's form). A row opens its
-  arena; a brokerage event carries the desk's three controls: the stamp with its days, one stamp to a
+  arena, whose name stands in a box of its type's colour; no row counts the days to go, only "on now"
+  (2026-10-12). A brokerage event carries the desk's controls: the stamp, a white disc holding the days
+  since and reddening over a fortnight, one stamp to a
   site (`stampSite`, so a pinned link of the same address is stamped with it, from either side); the
   event's own website (`url`), or *+ add website* (`addSite`, offering the arena's links, the likeliest
-  first by `eventLink`); and ✕, which removes the event from the whole app after asking (`askDrop`).
+  first by `eventLink`); ▾, which unfolds the arena's strip of time from its card under the row; and
+  ✕, which removes the event from the whole app after asking (`askDrop`). A brokerage event tapped on
+  a card, its diamond or the phase line naming it, is shown here (`jumpEvent`), as on the desk.
   A brokerage event that is over goes to **Limbo**, one folded line at the top, and stays there until
   Mark removes it, where ✕ does not ask, as on the desk. A
   call is read only and leaves two weeks after. The tab carries no number (removed 2026-10-08 at
