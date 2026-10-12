@@ -560,6 +560,10 @@
 #pane-semaphore .wlrow:hover .wlc>button,#pane-semaphore .wlrow:focus-within .wlc>button,
 #pane-semaphore .wlc>.armed,#pane-semaphore .wlc>.lpin.on{opacity:1}
 @media (hover:none){#pane-semaphore .wlc>button{opacity:1}}
+/* A card link's stamp stands at the far end of its row, under the card's
+   own, and always in sight, as that one is (Mark, 2026-10-12). */
+#pane-semaphore .wlc>.stamp:not(.on){opacity:1}
+#pane-semaphore .wlc>.stamp{margin-left:4px}
 #pane-semaphore .lpin,#pane-semaphore .ldel{height:26px;min-width:24px;display:flex;align-items:center;justify-content:center;
         border-radius:var(--radius);color:var(--faint);font-size:10.5px;
         transition:opacity .14s,background-color .14s,color .14s}

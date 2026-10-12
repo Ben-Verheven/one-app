@@ -369,7 +369,7 @@ a researcher's name written anywhere is `.atlas-ref`.
 | one arena's row | `.row` = `.cell.name` + `.lane` |
 | a date on a lane | `.mk` — `.bk` brokerage (`.bk-fixed`, `.bk-unc`, `.bk-band`), `.cl.rb` a call's bar, `.now` today |
 | a card on the wall, its phase line and strip of time, its links band | `.wcard`; `.wline` (`.wph`, `.wstrip`: `.wsd` an event, `.wsb` a call, `.wsnow` today); `.wlk` › `.wlinks` › `.wlrow` |
-| the ring that asks the nightly agent, a link's pin and cross | `.wask`; `.lpin`, `.ldel` |
+| the ring that asks the nightly agent, a link's pin and cross, a card link's stamp | `.wask`; `.lpin`, `.ldel`; `.wlc` › `.stamp` |
 | the pinned links on Pinned, each with its stamp and days since, and the pencil that edits it | `.wplist` › `.wprow` › `.wpfoot`, `.wped`, `.pkform` |
 | the arena drawer | `#card` and its `.scrim` |
 

@@ -275,7 +275,7 @@ a.wlink:active .wd,a.wlink:active::before{color:var(--brok)}
    wants to go there (2026-10-11) */
 .wprow .wlink{flex-wrap:wrap}
 .wprow .wlink .wn{flex:1 1 0;white-space:normal}
-.wprow .wlink .wd{display:none}
+.wprow .wlink .wd,.wlk .wlink .wd{display:none}
 /* a pinned link's name in its arena type's colour (Mark, 2026-10-11),
    lifted a fifth towards the ink: the tone itself is 4.0:1 on the row at
    its darkest (Slate), the mix 5.2:1, and still plainly that tone */
@@ -1908,10 +1908,21 @@ function stampLink(a, lk){ stampSite(a.id, lk.id, linkLabel(lk)); }
    by the next morning. So a press on either stamps every event and link with
    that address, a same-day press takes it back on all of them, and each row
    reads the newest stamp among them. An event with no website stands alone.
-   The desk's stampMates and toggleStamp, under names script 1 does not hold. */
+   The desk's stampMates and toggleStamp, under names script 1 does not hold.
+   "That address" is the site, as the desk's siteKey has it since 2026-10-12:
+   the host, or on a host that carries many events side by side the path to
+   the one event, so every page of one event or tool shares its stamp. */
+var SHARED_HOSTS = /^(?:b2match\.(?:io|com|eu)|(?:.+\.)?(?:europa\.eu|google\.com|linkedin\.com|youtube\.com|github\.com|eventbrite\.[a-z.]+|meetup\.com|lu\.ma|zoom\.us|microsoft\.com|sharepoint\.com))$/;
 function siteKey(u){
-  return String(u || '').trim().toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '')
+  var k = String(u || '').trim().toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '')
     .replace(/[#?].*$/, '').replace(/\/+$/, '');
+  var i = k.indexOf('/'), host = (i < 0 ? k : k.slice(0, i)).replace(/:\d+$/, '');
+  if (!SHARED_HOSTS.test(host)) return host;
+  var segs = (i < 0 ? '' : k.slice(i + 1)).split('/')
+    .filter(function(x){ return x && !/^[a-z]{2}(?:[-_][a-z]{2})?$/.test(x); });
+  var e = -1;
+  segs.forEach(function(x, j){ if (e < 0 && /^(?:e|event|events)$/.test(x)) e = j; });
+  return [host].concat(e >= 0 && segs[e + 1] ? segs.slice(0, e + 2) : segs).join('/');
 }
 function siteRows(a){
   return (a.dates || []).concat(((a.brokerage && a.brokerage.links) || []), a.links || []);
@@ -2205,12 +2216,20 @@ function tickBtn(on, label, act, days){
   b.addEventListener('click', function(e){ e.stopPropagation(); act(); });
   return b;
 }
-/* a brokerage link with its pin beside it: pinning sends it to Pinned */
-function pinnableRow(lk, a){
+/* a brokerage link with its pin beside it: pinning sends it to Pinned. On a
+   card it also carries its site's stamp, as the desk's card does
+   (2026-10-12), and its host is left off there (.wlk .wd) */
+function pinnableRow(lk, a, onCard){
   var w = el('div', 'wlrow');
   w.appendChild(linkRow(lk, a, true));
   w.appendChild(pinBtn(!!lk.pin, lk.pin ? 'Unpin — put it back on its card' : 'Pin — keep it on Pinned',
     function(){ pinLink(a, lk); }));
+  if (onCard && lk.url){
+    var st = siteStamp(lk), on = st === isoToday(), d = st ? Math.max(0, -daysTo(st)) : null;
+    w.appendChild(tickBtn(on, on ? 'Stamped today — tap to undo'
+      : (d === null ? 'Not stamped yet' : 'Stamped ' + d + ' days ago') + ' — stamp it once you have been through it',
+      function(){ stampLink(a, lk); }, d));
+  }
   return w;
 }
 
@@ -2273,7 +2292,7 @@ function wallCard(a, st, tier){
     /* the desk's band, without its "Links" heading since 2026-10-11 */
     var band = el('div', 'wlk');
     var cap = tier === 'mid' ? 2 : 3;
-    shown.slice(0, cap).forEach(function(lk){ band.appendChild(pinnableRow(lk, a)); });
+    shown.slice(0, cap).forEach(function(lk){ band.appendChild(pinnableRow(lk, a, true)); });
     if (shown.length > cap){
       var more = el('button', 'wlkmore', '+ ' + (shown.length - cap) + ' more in the arena');
       more.addEventListener('click', function(){ openArena(a, st); });

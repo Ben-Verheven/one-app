@@ -1033,6 +1033,27 @@ function siteFor(r){
 function linkKey(u){
   return String(u||'').trim().toLowerCase().replace(/^https?:\/\//,'').replace(/^www\./,'').replace(/[#?].*$/,'').replace(/\/+$/,'');
 }
+/* One site, for the stamp (Mark, 2026-10-12): a stamp stands on every link
+   that reaches the same event or tool, however each is named and whichever
+   page of it each points at — its front page, its sign-up, its list of
+   participants, another language. linkKey alone kept those apart, so one
+   event linked from three cards carried three stamps. The site is the host,
+   which is the event itself wherever it has a host of its own
+   (an-event.b2match.io). Where one host carries many events or tools side by
+   side — b2match.com, every europa.eu portal, the big general platforms — the
+   host would give them all one stamp, so there the site is the path, the
+   language left out, and it stops at the event's own name where the path has
+   one (/e/an-event, /events/an-event). A host goes on SHARED_HOSTS when two
+   unrelated links turn out to share a stamp. */
+const SHARED_HOSTS=/^(?:b2match\.(?:io|com|eu)|(?:.+\.)?(?:europa\.eu|google\.com|linkedin\.com|youtube\.com|github\.com|eventbrite\.[a-z.]+|meetup\.com|lu\.ma|zoom\.us|microsoft\.com|sharepoint\.com))$/;
+function siteKey(u){
+  const k=linkKey(u),i=k.indexOf('/');
+  const host=(i<0?k:k.slice(0,i)).replace(/:\d+$/,'');
+  if(!SHARED_HOSTS.test(host))return host;
+  const segs=(i<0?'':k.slice(i+1)).split('/').filter(x=>x&&!/^[a-z]{2}(?:[-_][a-z]{2})?$/.test(x));
+  const e=segs.findIndex(x=>/^(?:e|event|events)$/.test(x));
+  return [host].concat(e>=0&&segs[e+1]?segs.slice(0,e+2):segs).join('/');
+}
 function hasLink(a,u){
   const k=linkKey(u);
   if(!k)return false;
@@ -1184,14 +1205,16 @@ function cuDate(d){
    by the next morning. So a site keeps one stamp: a press on either stamps
    every event and link with that address, and each row reads the newest
    stamp among them, which is what lets a link stamped before events had
-   stamps count for the event too. An event with no website stands alone. */
+   stamps count for the event too. An event with no website stands alone.
+   "That address" is the site (siteKey), so the links on the rotation cards
+   share it as well. */
 function stampMates(h){
-  const k=h.url&&linkKey(h.url),out=[h];
+  const k=h.url&&siteKey(h.url),out=[h];
   if(!k)return out;
   for(const a of S.arenas){
-    for(const d of a.dates||[])if(d!==h&&d.url&&linkKey(d.url)===k)out.push(d);
+    for(const d of a.dates||[])if(d!==h&&d.url&&siteKey(d.url)===k)out.push(d);
     for(const lk of ((a.brokerage&&a.brokerage.links)||[]).concat(a.links||[]))
-      if(lk!==h&&lk.url&&linkKey(lk.url)===k)out.push(lk);
+      if(lk!==h&&lk.url&&siteKey(lk.url)===k)out.push(lk);
   }
   return out;
 }
@@ -1976,20 +1999,32 @@ function freshTag(a,x){
    own, so a card leaves it out (`onCard`): seen twice it would be read as
    two things. The panel still lists it, pin lit — the panel is the arena's
    whole record, and the place to take a pin back. */
+/* On a rotation card a link is its name alone, its host left off (Mark,
+   2026-10-12): the address is a hover away, in the title. In its place the
+   link carries its stamp, the site's (stampMates), so a site gone through
+   from one card shows as gone through on every card that links it. */
 function wallLinkRows(a,list,scope,onCard){
   return (list||[]).filter(lk=>!(onCard&&lk.pin)).map(lk=>{
     const nm=esc(linkName(lk));
     const body=lk.url
       ? '<a class="wlink" draggable="false" href="'+esc(lk.url)+'" target="_blank" rel="noopener" title="'+esc(lk.url)+'">'+
-          '<span class="wn">'+nm+'</span>'+freshTag(a,lk)+'<span class="wd">'+esc(linkHost(lk))+'</span></a>'
+          '<span class="wn">'+nm+'</span>'+freshTag(a,lk)+(onCard?'':'<span class="wd">'+esc(linkHost(lk))+'</span>')+'</a>'
       : '<span class="wlink dead"><span class="wn">'+nm+'</span>'+freshTag(a,lk)+'</span>';
     const ref=' data-a="'+a.id+'" data-lks="'+scope+'" data-l="'+esc(lk.id||'')+'"';
+    let stamp='';
+    if(onCard&&lk.url){
+      const{on,d,ageTip,stTip}=stampSay(stampOf(lk));
+      const tip=on?stTip:ageTip+' — stamp it once you have been through it';
+      stamp='<button class="stamp'+(on?' on':'')+(d===null?'':' dated')+'" data-act="lkStamp"'+ref+' title="'+tip+'" aria-label="'+tip+'">✓'+
+        (d===null?'':'<span class="sdays">'+Math.max(0,d)+'</span>')+'</button>';
+    }
     return '<div class="wlrow" data-lk="'+esc(lk.id||'')+'">'+body+
       '<span class="wlc">'+
         '<button class="lpin'+(lk.pin?' on':'')+'" data-act="lkPin"'+ref+
           ' title="'+(lk.pin?'Pinned — click to take it off Pinned':'Pin this link — it moves to Pinned')+'"'+
           ' aria-label="'+(lk.pin?'Unpin ':'Pin ')+nm+'"><i></i></button>'+
         '<button class="ldel" data-act="lkDel"'+ref+' title="Remove this link" aria-label="Remove '+nm+'">✕</button>'+
+        stamp+
       '</span></div>';
   }).join('');
 }
@@ -4057,8 +4092,9 @@ document.addEventListener('click',e=>{
     case 'lkPin':{const lk=linkOf(a,b.dataset.lks,b.dataset.l);if(!lk)break;
       if(lk.pin)delete lk.pin;else lk.pin=new Date().toISOString();
       relinked();break;}
-    /* the link's own sweep, on Pinned: the day you last went through it, and
-       a same-day press takes it back, as the arena's stamp does */
+    /* the link's own sweep, on Pinned and on the cards: the day you last went
+       through its site, and a same-day press takes it back, as the arena's
+       stamp does */
     case 'lkStamp':{const lk=linkOf(a,b.dataset.lks,b.dataset.l);if(!lk)break;
       toggleStamp(lk);relinked();break;}
     /* Quick, but not one slip from gone: the first press turns the cross into

@@ -39,7 +39,7 @@ Every change is undoable from the toast; undo puts back exactly the fields it to
 | arena links | `links[]`, `brokerage.links[]` | `{id, label, url}`; a changed address without a scheme gets `https://` | ✓ add, change label/url, remove — each by id on the cloud's copy, so a link's `pin`, `stampedAt` and `foundAt` stay; an address with @ → `mailto:` (the desk's brokerage form) |
 | lead score | `score` | `1`…`5`; the key deleted for no score | ✓ |
 | brokerage link pin | `brokerage.links[].pin` | ISO moment when pinned; key deleted when unpinned | ✓ |
-| brokerage link stamp | `stampedAt`, `stampPrev` | day; same-day stamp → `stampPrev`, which is then deleted. One stamp to a site: the press writes every date and link (brokerage or the arena's own) with the same address, on any arena | ✓ since 2026-10-11 the same for every row of the site |
+| brokerage link stamp | `stampedAt`, `stampPrev` | day; same-day stamp → `stampPrev`, which is then deleted. One stamp to a site: the press writes every date and link (brokerage or the arena's own) of the same site (`siteKey`), on any arena | ✓ since 2026-10-11 the same for every row of the site |
 | event stamp | `dates[].stampedAt`, `stampPrev` | as the link stamp, and with it, through the event's `url`; an event without one stands alone | ✓ (Coming up) |
 | event website | `dates[].url` | an address with @ → `mailto:`, no scheme → `https://` | ✓ only where it had none |
 | event new | `dates[]` + `{id,kind:'brokerage',label,call:'',role:'',note:'',url,gran,grade,start,end}` | uuid id; `label` `'(untitled)'` for none; `start`/`end` the stretch `gran` names (`day`/`range`/`month`/`quarter`/`half`/`year`); `grade` `fixed` only for a day or a span | ✓ |

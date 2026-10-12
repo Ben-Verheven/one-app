@@ -30,7 +30,8 @@ Every card carries the desk's two small controls: the ring (ask the nightly agen
 and the stamp (✓, which also marks the agent's findings seen). An arena's sheet
 spells out the ring and adds the desk's *Wait for…* (`hold`), which lists the arena's coming
 dates to sleep until (since 2026-10-10). A brokerage link
-on a card or in an arena's sheet has its own pin. The sheet's pencil ✎ edits the arena's name, its
+on a card or in an arena's sheet has its own pin; on a card also its site's stamp, with the days since,
+and no host (since 2026-10-12). The sheet's pencil ✎ edits the arena's name, its
 About and Brokerage notes and both lists of links, saved together (since 2026-10-11). What stays on
 the desk: making and deleting arenas, an arena's type, tags and weight, dates (but for what Coming up
 does to brokerage events), types (their order and colour too), the freezer, and the agent's Dispatches.
@@ -40,7 +41,7 @@ does to brokerage events), types (their order and colour too), the freezer, and 
   arena, whose name stands in a box of its type's colour; no row counts the days to go, only "on now"
   (2026-10-12). A brokerage event carries the desk's controls: the stamp, a white disc holding the days
   since and reddening over a fortnight, one stamp to a
-  site (`stampSite`, so a pinned link of the same address is stamped with it, from either side); the
+  site (`stampSite`, so a link of the same site, pinned or on a card, is stamped with it, from either side; the site is `siteKey`'s); the
   event's own website (`url`), or *+ add website* (`addSite`, offering the arena's links, the likeliest
   first by `eventLink`); ▾, which unfolds the arena's strip of time from its card under the row, the event itself marked on it; and
   ✕, which removes the event from the whole app after asking (`askDrop`). A brokerage event tapped on
