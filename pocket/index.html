@@ -418,8 +418,17 @@ button.ln:active{background:rgba(216,205,184,.06)}
 /* an event's note: its handle under the date, the note itself under the row */
 .cunb{position:absolute;left:0;top:0;width:70px;min-height:44px;display:flex;align-items:center;justify-content:flex-end;
   color:var(--key2)}
-.cunb span{font:italic 13px/1 var(--body);color:var(--muted)}
 .cunb.bk{width:44px;left:26px;justify-content:center}
+/* The diamond that writes a note: a thumb's width of target round the nine
+   pixels, and on the tap the diamond unturns and shrinks as the book turns
+   up out of its angle, as the desk's does under the pointer. */
+.ln .g.gnote::after{content:'';position:absolute;left:-9px;right:-9px;top:-15px;bottom:-15px}
+.ln .g .gbk{position:absolute;left:50%;top:50%;width:16px;height:16px;margin:-8px 0 0 -8px;display:grid;place-items:center;
+  color:var(--key2);opacity:0;transform:rotate(45deg) scale(.5);transition:transform .22s cubic-bezier(.65,0,.35,1),opacity .18s}
+.ln .g.gnote>i{transition:transform .22s cubic-bezier(.65,0,.35,1),opacity .18s}
+.ln .g.turn>i{opacity:0;transform:rotate(0deg) scale(.4)}
+.ln .g.turn .gbk{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){.ln .g .gbk,.ln .g.gnote>i{transition:none}}
 .cunb.on{color:var(--ink)}
 .cunb:active{color:var(--ink)}
 .cunote{flex:0 0 calc(100% - 102px);margin:2px 0 8px 102px;display:flex;align-items:flex-start;gap:8px;padding:9px 11px;
@@ -3064,6 +3073,18 @@ function eventRow(x){
   var g = el('span', 'g');
   g.appendChild(el('i', 'sw-' + (d.grade === 'fixed' ? 'fixed' : 'uncertain')));
   r.appendChild(g);
+  /* An event without a note is written one by tapping its diamond (Mark,
+     2026-10-12), as the desk's diamond is pressed: the diamond turns into a
+     book, and the sheet opens on the book. It stands inside the row's own
+     button, which opens the arena, so the row's press asks whether it came
+     from the diamond. */
+  var memo = call ? '' : String(d.memo || '').trim();
+  if (!call && !memo){
+    g.classList.add('gnote');
+    var gbk = g.appendChild(el('span', 'gbk'));
+    gbk.innerHTML = BOOK_SHUT;
+    g.setAttribute('aria-label', 'Write a note on ' + dateName(d));
+  }
   var t = el('span', 't');
   t.appendChild(document.createTextNode(dateName(d)));
   if (call){
@@ -3079,7 +3100,15 @@ function eventRow(x){
   if (!call && x.e >= 0 && x.s <= 0) ar.appendChild(el('span', 'soon', 'on now'));
   t.appendChild(ar);
   r.appendChild(t);
-  r.addEventListener('click', function(){ openArenaById(x.a.id); });
+  r.addEventListener('click', function(e){
+    if (!call && !memo && e.target.closest('.g')){
+      g.classList.add('turn');
+      var still = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+      setTimeout(function(){ noteSheet(x); }, still ? 0 : 230);
+      return;
+    }
+    openArenaById(x.a.id);
+  });
   if (call) return row;
 
   /* The stamp is the count, as on the desk since 2026-10-12: the days since
@@ -3095,13 +3124,10 @@ function eventRow(x){
   sb.addEventListener('click', function(e){ e.stopPropagation(); stampSite(x.a.id, d.id, dateName(d)); });
   var foot = row.appendChild(el('div', 'cufoot'));
   /* The note's handle stands under the date, in the date's own column: the
-     book where the event holds a note, which opens it under the row, and
-     "+ note" where it has none, which opens the sheet to write one. The desk
-     has "+ note" in the row's end beside the website; here that line is
-     already full with the website, the fold and the cross. */
-  var memo = String(d.memo || '').trim();
-  var nb = foot.appendChild(el('button', 'cunb' + (memo ? ' bk' : '') + (evNote[key] ? ' on' : '')));
+     book where the event holds a note, which opens it under the row. Where
+     it has none, the diamond is the handle (above). */
   if (memo){
+    var nb = foot.appendChild(el('button', 'cunb bk' + (evNote[key] ? ' on' : '')));
     nb.innerHTML = evNote[key] ? BOOK_OPEN : BOOK_SHUT;
     nb.setAttribute('aria-expanded', evNote[key] ? 'true' : 'false');
     nb.setAttribute('aria-label', evNote[key] ? 'Close the note' : 'Open your note');
@@ -3109,10 +3135,6 @@ function eventRow(x){
       if (evNote[key]) delete evNote[key]; else evNote[key] = 1;
       drawDates();
     });
-  } else {
-    nb.appendChild(el('span', '', '+ note'));
-    nb.setAttribute('aria-label', 'Write a note on this event');
-    nb.addEventListener('click', function(){ noteSheet(x); });
   }
   if (d.url){
     var lk = foot.appendChild(el('a', 'cusite', '↗ ' + (linkHost({ url:d.url }) || d.url)));

@@ -44,7 +44,7 @@ does to brokerage events), types (their order and colour too), the freezer, and 
   site (`stampSite`, so a link of the same site, pinned or on a card, is stamped with it, from either side; the site is `siteKey`'s); the
   event's own website (`url`), or *+ add website* (`addSite`, offering the arena's links, the likeliest
   first by `eventLink`); ▾, which unfolds the arena's strip of time from its card under the row, the event itself marked on it; and
-  ✕, which removes the event from the whole app after asking (`askDrop`), and with it the cards' unpinned links to its site (`eventCardLinks`). Under the date, the event's own note (`memo`, since 2026-10-12): a book where it has one, which opens it under the row, tapped there to change it, or *+ note* to write one, both in a sheet (`noteSheet`, `setEventMemo`). A brokerage event tapped on
+  ✕, which removes the event from the whole app after asking (`askDrop`), and with it the cards' unpinned links to its site (`eventCardLinks`). The event's own note (`memo`, since 2026-10-12): a book under the date where it has one, which opens it under the row, tapped there to change it; where it has none, the diamond is tapped, turns into a book and opens the sheet to write one (`noteSheet`, `setEventMemo`). A brokerage event tapped on
   a card, its diamond or the phase line naming it, is shown here (`jumpEvent`), as on the desk.
   A brokerage event that is over goes to **Limbo**, one folded line at the top, and stays there until
   Mark removes it, where ✕ does not ask, as on the desk. A
