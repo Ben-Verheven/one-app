@@ -1367,6 +1367,10 @@ function renderComing(){
 const drawer={id:null,edit:null,hi:null,editing:false,scope:null};
 /* which card has its follow-up composer open, which has its link composer open,
    and which one just moved */
+/* leadEdit.a is BOARD while the new-lead form stands on Leads rather than in
+   an arena's panel; no arena's id can be that word. */
+const BOARD='leads-board';
+let leadLastArena=null;
 let lkEdit={a:null,l:null},leadEdit={a:null,l:null},waitPick=null,settleId=null,pinEdit=null;
 /* the lead whose Complete is asking how it ended, which is about the moment */
 let endAsk={a:null,l:null};
@@ -2229,7 +2233,10 @@ function lkFormHTML(a,leadId){
    on the Ledger's board. They are worked in the arena's panel and on Leads,
    not on the cards: Mark took them off the rotation cards on 2026-10-11. */
 /* The form a NEW lead is written in. An existing lead is edited in its own
-   card now (see "one lead card, in both rooms"), so this has one job. */
+   card now (see "one lead card, in both rooms"), so this has one job. Without
+   an arena it is the one Leads opens, where no arena is in hand yet, and the
+   arena is chosen in front of the rest, as Coming up's new event chooses its
+   own (Mark asked to add leads from Leads on 2026-10-12). */
 function leadFormHTML(a){
   /* Both boxes grow as you type rather than scrolling sideways: what you are
      writing here is a couple of sentences, and losing sight of the first half
@@ -2239,7 +2246,14 @@ function leadFormHTML(a){
      what this card had too much of. */
   const box=(k,v,ph)=>'<textarea class="grow" name="'+k+'" rows="1" placeholder="'+ph+'" '+
     'aria-label="'+ph+'">'+esc(v||'')+'</textarea>';
-  return '<form class="leadform" data-la="'+a.id+'" data-lid="new">'+
+  /* the rotation's order, top card first, as the Ledger's new lead offers
+     them, and the last one filed under kept: leads come out of one sweep */
+  const pick=a?'':'<select name="arena" required aria-label="The arena this lead is filed under">'+
+    '<option value="">Choose an arena</option>'+
+    arenasForBoard().map(x=>'<option value="'+x.id+'"'+(x.id===leadLastArena?' selected':'')+'>'+
+      esc(x.name)+'</option>').join('')+'</select>';
+  return '<form class="leadform'+(a?'':' leadboard')+'" data-la="'+(a?a.id:'')+'" data-lid="new">'+
+    pick+
     box('project','','What is the project?')+
     box('match','','Who could be a good match?')+
     /* the link a lead is found with gets a name as well, as every other link
@@ -3226,10 +3240,13 @@ function paintWall(){
     for(const a of vis)for(const l of openLeads(a))all.push({a,l});
     const owed=all.filter(({l})=>l.due&&daysBetween(T(l.due),T(todayISO()))>=0).length;
     const arenas=new Set(all.map(({a})=>a.id)).size;
-    let h='<div class="whead">'+sortBtns+
+    const adding=leadEdit.a===BOARD;
+    let h='<div class="whead lhead">'+sortBtns+
       (all.length?'<span class="wsay"><b>'+all.length+'</b> lead'+(all.length===1?'':'s')+
         ' across <b>'+arenas+'</b> arena'+(arenas===1?'':'s')+
-        (owed?', <b>'+owed+'</b> owed today':'')+'.</span>':'')+'</div>';
+        (owed?', <b>'+owed+'</b> owed today':'')+'.</span>':'')+
+      '<button class="btn leadnew'+(adding?' on':'')+'" data-act="leadAddBoard" aria-expanded="'+adding+'">+ Lead</button>'+
+      '</div>'+(adding?leadFormHTML(null):'');
     if(all.length){
       const ql=S.ui.q.trim().toLowerCase();
       const hit=new Set();
@@ -3270,7 +3287,7 @@ function paintWall(){
       h+='<div class="empty"><p>Nothing being pursued.</p>'+
         '<p class="hint" style="margin-top:6px">'+
         (shut?'The '+shut+' closed lead'+(shut===1?' is':'s are')+' still on their own cards.<br>':'')+
-        'Open an arena and press + Lead to start one.</p></div>';
+        'Press + Lead to start one.</p></div>';
     }
     w.innerHTML=h;
     return;
@@ -4095,6 +4112,12 @@ document.addEventListener('click',e=>{
       repaint();renderDrawer();focusLead();break;}
     case 'leadEdit':{closeComposers();leadEdit={a:id,l:b.dataset.l};leadOpen.add(b.dataset.l);
       repaint();renderDrawer();focusLead();break;}
+    case 'leadAddBoard':{const was=leadEdit.a===BOARD;closeComposers();
+      if(!was)leadEdit={a:BOARD,l:'new'};
+      repaint();renderDrawer();
+      if(!was){growAll();const f=document.querySelector('.leadboard select[name=arena]');
+        if(f)f.focus({preventScroll:true});}
+      break;}
     case 'leadCancel':{closeComposers();repaint();renderDrawer();break;}
     /* another link row, added in place: a redraw would cost what is typed */
     case 'leadLinkRow':{
@@ -4411,14 +4434,17 @@ document.addEventListener('submit',e=>{
   const df=e.target.closest('.leadform');
   if(df){
     e.preventDefault();
-    const a=arena(df.dataset.la);if(!a)return;
+    const a=arena(df.dataset.la||(df.elements.arena&&df.elements.arena.value));
+    if(!a){Ask.tell('Which arena?','Choose the arena this lead belongs to, and it is filed there.');return;}
     /* the same filing the Ledger's new lead uses, so a lead begun in either
        room is born the same way, at Spotted */
     const links=[...df.querySelectorAll('.lnrow')].map(r=>({
       url:r.querySelector('[name=url]').value,label:r.querySelector('[name=label]').value}));
     closeComposers();
-    if(!leadAdd(a.id,{project:df.elements.project.value,match:df.elements.match.value,links})){
-      repaint();renderDrawer();}
+    const lid=leadAdd(a.id,{project:df.elements.project.value,match:df.elements.match.value,links});
+    /* on Leads the new lead stands open, so it is seen where it landed */
+    if(!df.dataset.la&&lid){leadLastArena=a.id;leadOpen.add(lid);}
+    if(!lid||!df.dataset.la){repaint();renderDrawer();}
     return;
   }
   const cf=e.target.closest('.cuform');

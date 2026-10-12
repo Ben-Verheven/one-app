@@ -692,6 +692,14 @@
 /* As wide as the Ledger's list and no wider: its board is 1144px with the
    flank, and a lead row there is the 1000 left beside it. */
 #pane-semaphore .lruns{display:flex;flex-direction:column;gap:14px;max-width:1144px}
+/* + Lead stands at the far end of the head, as + Brokerage event does on
+   Coming up, and its form opens under the head, a lead's width rather than
+   the board's: what is typed in it is a couple of sentences */
+#pane-semaphore .whead.lhead{max-width:1144px}
+#pane-semaphore .whead .leadnew{margin-left:auto;align-self:center}
+#pane-semaphore .leadform.leadboard{max-width:640px;margin:-6px 0 18px}
+#pane-semaphore .leadform select{flex:1 1 100%;min-width:0;border:1px solid var(--line);border-radius:var(--radius);
+  background:var(--surface);color:var(--ink);padding:6px 8px;font-family:var(--body);font-size:13px}
 #pane-semaphore .lrun{display:flex;align-items:stretch;gap:12px}
 #pane-semaphore .lflank{position:relative;flex:0 0 132px;display:flex;flex-direction:column;gap:3px;
   padding:6px 12px 6px 11px}
