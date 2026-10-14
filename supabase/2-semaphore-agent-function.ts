@@ -1,30 +1,28 @@
-// semaphore-agent — the gatekeeper between the scheduled agent and Supabase.
+// semaphore-agent — the gatekeeper between the Marketplace agent and Supabase.
 //
 // The agent holds one password (AGENT_TOKEN) and nothing else. With it, it can
-// do three things and only these three:
-//   watchlist  read a trimmed copy of the Semaphore board (no leads), with
-//              each arena's `asked` flag: Mark pressed "ask the agent" on it,
-//              or its wait wakes tomorrow (see wakeAsk), and the agent has
-//              not looked at it since. Each arena's two
-//              texts, About and Brokerage, are in it since 2026-10-10, so the
-//              nightly agent can offer a short rewrite of either that keeps
-//              what is still true in them. Each arena's general tool, the
-//              one brokerage link Mark marked to go through now and then, is
-//              in it since 2026-10-14 (`tool`), so the agent can keep its
-//              address current, or offer one where there is none
-//   suggest    add rows to semaphore_inbox
-//   checked    record which arenas it has looked at
-// and, since 2026-10-14, when Mark turned the agent from a nightly round into
-// one he asks on demand and wanted it to do the work rather than leave it in
-// Dispatches:
-//   board      read the whole Semaphore board but the leads, which stay his
-//   edit       add, change and delete dates (calls and brokerage events, with
-//              their websites), the links on a card and its brokerage links,
-//              the general tool, and the About and Brokerage texts, straight
-//              on the board. It cannot delete an arena, touch an arena's
-//              name, type, tags or weight, the types, the leads, Mark's own
-//              notes on events or his stamps: an op for any of those does not
-//              exist. A new arena is still only a suggestion.
+// do only these:
+//   board      read the whole Marketplace board but the leads, which stay
+//              Mark's: the arenas (their calls, links, About and Brokerage
+//              texts) and the venues (the events and partner-search tools he
+//              visits, each serving one or more arenas)
+//   watchlist  the same, trimmed, with when the agent last looked at each
+//              arena and venue, and the suggestions it made lately
+//   edit       change the board itself: add, correct and delete call dates;
+//              add, correct, re-date and let go venues, the arenas they
+//              serve and their other pages; the arenas' links and their two
+//              texts. It cannot delete an arena, touch an arena's name,
+//              type, tags or weight, the types, the leads, Mark's own notes
+//              (`memo`) or his visits and rhythm: an op for any of those
+//              does not exist.
+//   suggest    add rows to semaphore_inbox: a new arena waits there for Mark
+//   checked    record which arenas and venues it has looked at
+// The board is the Semaphore's until 2026-10-14, when it became the
+// Marketplace and was kept around venues (see PROJECT.md). The stored board
+// may still carry a brokerage event as a date on an arena, or a tool as a
+// link; every read turns those into venues with the very ids the app gives
+// them (absorbVenues, a copy of the app's own), so the agent and the app
+// never make two copies of one venue.
 // It never sees the app's key; what it may change is what `edit` spells out.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
@@ -52,15 +50,129 @@ const http = (v: unknown) => {
   return s && /^https?:\/\//i.test(s) ? s : null;
 };
 
+// ── venues, as the app reads them (semaphore.js, "venues"): kept the same ──
+const linkKey0 = (u: unknown) =>
+  String(u ?? "").trim().toLowerCase().replace(/^https?:\/\//, "")
+    .replace(/^www\./, "").replace(/[#?].*$/, "").replace(/\/+$/, "");
+const SHARED_HOSTS = /^(?:b2match\.(?:io|com|eu)|(?:.+\.)?(?:europa\.eu|google\.com|linkedin\.com|youtube\.com|github\.com|eventbrite\.[a-z.]+|meetup\.com|lu\.ma|zoom\.us|microsoft\.com|sharepoint\.com|gov\.pl|horizoneuropencpportal\.eu|eurekanetwork\.org)|proposals\.etag\.ee)$/;
+function siteKey(u: unknown): string {
+  const k = linkKey0(u), i = k.indexOf("/");
+  const host = (i < 0 ? k : k.slice(0, i)).replace(/:\d+$/, "");
+  if (!SHARED_HOSTS.test(host)) return host;
+  const segs = (i < 0 ? "" : k.slice(i + 1)).split("/").filter((x) => x && !/^[a-z]{2}(?:[-_][a-z]{2})?$/.test(x));
+  const e = segs.findIndex((x) => /^(?:e|event|events)$/.test(x));
+  return [host].concat(e >= 0 && segs[e + 1] ? segs.slice(0, e + 2) : segs).join("/");
+}
+function hashKey(s: string): string {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193); }
+  return (h >>> 0).toString(36);
+}
+const ISO_DAY = /^\d{4}-\d{2}-\d{2}$/;
+const GOT = ["nothing", "something", "lead"];
+const fixedOk = (g: string) => g === "day" || g === "range";
+function tidyVenue(v: any): any {
+  if (!v.id) v.id = crypto.randomUUID();
+  v.kind = v.kind === "tool" ? "tool" : "event";
+  v.name = String(v.name ?? "").trim() || "Unnamed venue";
+  v.url = typeof v.url === "string" ? v.url.trim() : "";
+  v.arenas = [...new Set((Array.isArray(v.arenas) ? v.arenas : []).filter((x: any) => typeof x === "string" && x))];
+  if (!Array.isArray(v.pages)) v.pages = [];
+  v.pages = v.pages.filter((p: any) => p && typeof p === "object" && p.url);
+  v.pages.forEach((p: any) => { if (!p.id) p.id = crypto.randomUUID(); if (typeof p.label !== "string") p.label = ""; });
+  const seen = new Set();
+  v.visits = (Array.isArray(v.visits) ? v.visits : []).filter((x: any) => x && ISO_DAY.test(x.at || x.id || "")).map((x: any) => {
+    const at = x.at || x.id; const o: any = { id: at, at };
+    if (GOT.includes(x.got)) o.got = x.got;
+    if (typeof x.text === "string" && x.text.trim()) o.text = x.text.trim();
+    if (typeof x.leadId === "string" && x.leadId) o.leadId = x.leadId;
+    return o;
+  }).filter((x: any) => !seen.has(x.at) && seen.add(x.at)).sort((x: any, y: any) => x.at.localeCompare(y.at));
+  if (v.kind === "event") {
+    if (!GRANS.includes(v.gran)) v.gran = v.start ? ((v.end && v.start !== v.end) ? "range" : "day") : "none";
+    if (!v.start || v.gran === "none") { v.start = null; v.end = null; if (v.gran !== "none") v.gran = "none"; }
+    if (v.start && !v.end) v.end = v.start;
+    if (v.start && v.end < v.start) { const e = v.end; v.end = v.start; v.start = e; }
+    v.grade = v.grade === "fixed" && fixedOk(v.gran) ? "fixed" : "uncertain";
+  } else { delete v.gran; delete v.start; delete v.end; delete v.grade; delete v.opens; delete v.closes; }
+  for (const k of ["opens", "closes"]) if (k in v && !ISO_DAY.test(v[k] || "")) v[k] = null;
+  if (!(v.every >= 1 && v.every <= 365)) delete v.every; else v.every = Math.round(v.every);
+  if (typeof v.note !== "string") v.note = "";
+  if (typeof v.memo === "string" && !v.memo.trim()) delete v.memo;
+  return v;
+}
+function takeStamps(v: any, x: any) {
+  for (const at of [x.stampPrev, x.stampedAt]) {
+    if (at && ISO_DAY.test(at) && !v.visits.some((y: any) => y.at === at)) v.visits.push({ id: at, at });
+  }
+  v.visits.sort((p: any, q: any) => p.at.localeCompare(q.at));
+}
+const hostOf = (u: string) => { try { return new URL(u).hostname.replace(/^www\./, ""); } catch { return ""; } };
+function absorbVenues(s: any): any {
+  if (!Array.isArray(s.venues)) s.venues = [];
+  s.venues = s.venues.filter((v: any) => v && typeof v === "object").map(tidyVenue);
+  const byId = new Map(s.venues.map((v: any) => [v.id, v])), bySite = new Map();
+  for (const v of s.venues) { const k = v.url && siteKey(v.url); if (k && !bySite.has(k)) bySite.set(k, v); }
+  const add = (v: any) => { s.venues.push(v); byId.set(v.id, v); const k = v.url && siteKey(v.url); if (k && !bySite.has(k)) bySite.set(k, v); };
+  for (const a of s.arenas ?? []) {
+    const keep: any[] = [];
+    for (const d of a.dates ?? []) {
+      if (d.kind === "call") { keep.push(d); continue; }
+      const k = d.url && siteKey(d.url);
+      let v: any = byId.get(d.id) ?? null;
+      if (!v && k) { const w: any = bySite.get(k); if (w && w.kind === "event" && w.start === d.start) v = w; }
+      if (v) { if (!v.arenas.includes(a.id)) v.arenas.push(a.id); takeStamps(v, d); if (!v.memo && d.memo) v.memo = d.memo; continue; }
+      v = tidyVenue({ id: d.id, kind: "event", name: d.label || "", url: d.url || "", arenas: [a.id],
+        gran: d.gran, start: d.start, end: d.end, grade: d.grade, opens: null, closes: null,
+        note: d.note || "", memo: d.memo, visits: [], pages: [] });
+      if (d.foundAt) v.foundAt = d.foundAt;
+      takeStamps(v, d); add(v);
+    }
+    a.dates = keep;
+  }
+  for (const a of s.arenas ?? []) {
+    const bk = a.brokerage; if (!bk || !Array.isArray(bk.links)) continue;
+    const keep: any[] = [];
+    for (const l of bk.links) {
+      const k = l.url && !/^mailto:/i.test(l.url) && siteKey(l.url);
+      let v: any = k ? bySite.get(k) : null;
+      if (!v && k && (a.toolId === l.id || l.stampedAt)) {
+        const id = "vt" + hashKey(k);
+        v = byId.get(id) ?? null;
+        if (!v) { v = tidyVenue({ id, kind: "tool", name: l.label || hostOf(l.url) || k, url: l.url, arenas: [], note: "", visits: [], pages: [] });
+          if (l.foundAt) v.foundAt = l.foundAt; add(v); }
+      }
+      if (!v) { keep.push(l); continue; }
+      if (!v.arenas.includes(a.id)) v.arenas.push(a.id);
+      takeStamps(v, l);
+      if (!v.url) v.url = l.url;
+      else if (linkKey0(l.url) !== linkKey0(v.url) && !v.pages.some((p: any) => linkKey0(p.url) === linkKey0(l.url))) {
+        v.pages.push({ id: l.id, label: l.label || "", url: l.url });
+      }
+    }
+    bk.links = keep;
+    delete a.toolId;
+  }
+  return s;
+}
+
 async function watchlist() {
   const { data: row, error } = await db
     .from("app_state").select("data,updated_at").eq("id", "semaphore").single();
   if (error) return json({ error: error.message }, 500);
-  const s = (row?.data ?? {}) as any;
+  const s = absorbVenues(structuredClone(row?.data ?? {}));
   const types = Object.fromEntries(
     (s.types ?? []).map((t: any) => [t.id, t.name]),
   );
   const link = (l: any) => ({ label: l?.label ?? "", url: l?.url ?? "" });
+
+  const { data: log } = await db
+    .from("semaphore_agent_log").select("arena_id,run,checked_at")
+    .order("checked_at", { ascending: false }).limit(3000);
+  const last: Record<string, string> = {};
+  for (const r of log ?? []) last[r.arena_id] ??= r.checked_at;
+
+  const name: Record<string, string> = Object.fromEntries((s.arenas ?? []).map((a: any) => [a.id, a.name]));
   const arenas = (s.arenas ?? []).map((a: any) => ({
     id: a.id,
     name: a.name,
@@ -69,84 +181,39 @@ async function watchlist() {
     weight: a.weight ?? "ordinary",
     frozen: !!a.frozenAt,
     links: (a.links ?? []).map(link),
+    // what is left on the arena of its brokerage links once the venues are
+    // taken out: info pages, last year's pages, and places not yet made venues
     brokerage_links: (a.brokerage?.links ?? []).map(link),
     arena_info: a.notes ?? "",
     brokerage_info: a.brokerage?.notes ?? "",
-    tool: (() => {
-      const t = a.toolId && (a.brokerage?.links ?? []).find((l: any) => l.id === a.toolId);
-      return t ? link(t) : null;
-    })(),
-    dates: (a.dates ?? []).map((d: any) => ({
-      id: d.id, kind: d.kind, label: d.label ?? "", call: d.call ?? "",
-      role: d.role ?? "", gran: d.gran, start: d.start, end: d.end,
-      grade: d.grade,
-      // a brokerage event's own website, once it has one (2026-10-08) — the
-      // website catch-up reads this to know which events still need one
-      url: d.url ?? "",
+    calls: (a.dates ?? []).map((d: any) => ({
+      id: d.id, call: d.call ?? "", role: d.role ?? "", gran: d.gran,
+      start: d.start, end: d.end, grade: d.grade, note: d.note ?? "",
     })),
+    agent_checked_at: last[a.id] ?? null,
   }));
-
-  const { data: log } = await db
-    .from("semaphore_agent_log").select("arena_id,run,checked_at")
-    .order("checked_at", { ascending: false }).limit(2000);
-  const last: Record<string, string> = {};
-  for (const r of log ?? []) last[r.arena_id] ??= r.checked_at;
+  // A venue's visits are Mark's: only the day of the last one is passed on,
+  // so the agent can tell a venue he goes to from one he never opens.
+  const venues = (s.venues ?? []).map((v: any) => ({
+    id: v.id, kind: v.kind, name: v.name, url: v.url,
+    arenas: v.arenas, arena_names: v.arenas.map((id: string) => name[id]).filter(Boolean),
+    gran: v.gran ?? null, start: v.start ?? null, end: v.end ?? null, grade: v.grade ?? null,
+    opens: v.opens ?? null, closes: v.closes ?? null, note: v.note ?? "",
+    pages: (v.pages ?? []).map(link),
+    last_visit: v.visits.length ? v.visits[v.visits.length - 1].at : null,
+    agent_checked_at: last["venue:" + v.id] ?? null,
+  }));
 
   const { data: recent } = await db
     .from("semaphore_inbox")
     .select("created_at,kind,arena_id,arena_name,date_kind,label,call,role,gran,start_date,end_date,grade,replaces_date_id,url,note,status")
     .order("created_at", { ascending: false }).limit(300);
 
-  // An ask is a moment on the arena (askAt, written by the app). It stands
-  // until the log shows a visit after it — the app reads the same log to put
-  // the ring on the card out.
-  const askAt: Record<string, string | null> = Object.fromEntries(
-    (s.arenas ?? []).map((a: any) => [a.id, a.askAt ?? null]),
-  );
-  const asked = (id: string) => {
-    const at = askAt[id];
-    if (!at) return false;
-    const seen = last[id];
-    return !seen || Date.parse(seen) < Date.parse(at);
-  };
-
-  // A card put to sleep until one of its dates (the app's `hold`, which
-  // names the date by id) wakes three weeks before that date. Mark wants
-  // it to come back with what has changed while it slept, so the day
-  // before it wakes counts as an ask made by the wait itself: from the
-  // start of that day, in UTC, until the log shows a visit after it, so
-  // the first nightly run to see it is the night going into the wake day,
-  // Dutch time. Nothing is written for it, which is why the app's ring does
-  // not light for it. A frozen arena is left out, since its wait resumes
-  // only when it is thawed, and a date already over ends the wait, as in
-  // the app.
-  const NEAR = 21, DAY = 86400000;
-  const today = new Date().toISOString().slice(0, 10);
-  const wakeAsk: Record<string, { wakes_on: string; since: string } | null> =
-    Object.fromEntries((s.arenas ?? []).map((a: any) => {
-      const d = a.hold?.dateId && !a.frozenAt
-        ? (a.dates ?? []).find((x: any) => x.id === a.hold.dateId && D(x.start))
-        : null;
-      if (!d || (D(d.end) ?? d.start) < today) return [a.id, null];
-      const wake = Date.parse(d.start + "T00:00:00Z") - NEAR * DAY;
-      const since = new Date(wake - DAY).toISOString();
-      if (Date.now() < Date.parse(since)) return [a.id, null];
-      const seen = last[a.id];
-      if (seen && Date.parse(seen) >= Date.parse(since)) return [a.id, null];
-      return [a.id, { wakes_on: new Date(wake).toISOString().slice(0, 10), since }];
-    }));
-
   return json({
     board_updated_at: row?.updated_at,
     types: Object.values(types),
-    arenas: arenas.map((a: any) => ({
-      ...a,
-      agent_checked_at: last[a.id] ?? null,
-      asked_at: askAt[a.id] ?? null,
-      asked: asked(a.id) || !!wakeAsk[a.id],
-      // set when the ask is the wait's: the day the card comes back
-      wait_wakes_on: wakeAsk[a.id]?.wakes_on ?? null,
-    })),
+    arenas,
+    venues,
     recent_suggestions: recent ?? [],
   });
 }
@@ -249,10 +316,11 @@ async function checked(items: any[], run: string) {
   if (!Array.isArray(items) || items.length > 100) {
     return json({ error: "items must be a list of at most 100" }, 400);
   }
+  // a venue is logged as "venue:<its id>", beside the arenas
   const rows = items
-    .filter((i) => S(i.arena_id, 100))
+    .filter((i) => S(i.arena_id, 100) || S(i.venue_id, 100))
     .map((i) => ({
-      arena_id: S(i.arena_id, 100), run,
+      arena_id: S(i.arena_id, 100) ?? "venue:" + S(i.venue_id, 100), run,
       found: Number.isFinite(i.found) ? Math.max(0, Math.floor(i.found)) : 0,
       note: S(i.note, 600),
     }));
@@ -263,16 +331,18 @@ async function checked(items: any[], run: string) {
 }
 
 // The whole board as the app keeps it, less what is Mark's alone: the leads
-// and where the room was looking (`ui`).
+// and where the room was looking (`ui`). The venues come whole, his visits
+// and note with them, to be read; no op writes either.
 async function board() {
   const { data: row, error } = await db
     .from("app_state").select("data,updated_at").eq("id", "semaphore").single();
   if (error) return json({ error: error.message }, 500);
-  const s = (row?.data ?? {}) as any;
+  const s = absorbVenues(structuredClone(row?.data ?? {}));
   return json({
     board_updated_at: row?.updated_at,
     types: s.types ?? [],
     arenas: (s.arenas ?? []).map(({ leads: _l, ...a }: any) => a),
+    venues: s.venues,
   });
 }
 
@@ -314,9 +384,117 @@ function shapeDate(d: any, f: any): string | null {
   return null;
 }
 
+// A venue's facts as the app's own form would leave them: a name, a site,
+// the kind, and for an event its meeting days read as a date is read, with
+// the stretch its marketplace is open in either side. Mark's note, his
+// visits and his rhythm are never written here, so a changed venue keeps
+// them.
+function shapeVenue(v: any, f: any): string | null {
+  if ("name" in f) v.name = S(f.name, 300) ?? "";
+  if ("url" in f) {
+    if (f.url && !http(f.url)) return "url must start with http:// or https://";
+    v.url = http(f.url) ?? "";
+  }
+  if ("kind" in f) {
+    if (f.kind !== "event" && f.kind !== "tool") return "kind must be event or tool";
+    v.kind = f.kind;
+  }
+  if ("note" in f) v.note = S(f.note, 600) ?? "";
+  if (v.kind === "event") {
+    if ("gran" in f) v.gran = oneOf(f.gran, GRANS);
+    if ("start" in f) v.start = D(f.start);
+    if ("end" in f) v.end = D(f.end);
+    if ("grade" in f) v.grade = f.grade === "fixed" ? "fixed" : "uncertain";
+    for (const k of ["opens", "closes"]) {
+      if (!(k in f)) continue;
+      if (f[k] != null && f[k] !== "" && !D(f[k])) return k + " must be YYYY-MM-DD or null";
+      v[k] = D(f[k]);
+    }
+    v.gran ??= v.start ? "day" : "none";
+    if (!GRANS.includes(v.gran)) return "gran must be one of " + GRANS.join(", ");
+    if (v.gran !== "none" && !v.start) return "start must be YYYY-MM-DD";
+    if (v.opens && v.closes && v.closes < v.opens) return "closes is before opens";
+  }
+  if (!v.name && !v.url) return "a venue needs a name or a url";
+  if (!v.name) v.name = hostOf(v.url);
+  return null;
+}
+function siteTaken(s: any, url: string, but?: string): any {
+  const k = url && siteKey(url);
+  return k ? (s.venues ?? []).find((v: any) => v.id !== but && v.url && siteKey(v.url) === k) ?? null : null;
+}
+// One op on a venue of a board read a moment ago, as applyOp below is for
+// an arena.
+function venueOp(s: any, op: any): any {
+  const now = new Date().toISOString();
+  const arenaOk = (id: unknown) => (s.arenas ?? []).some((a: any) => a.id === id);
+  if (op.op === "add_venue") {
+    const f = op.venue ?? {};
+    const arenas = (Array.isArray(f.arenas) ? f.arenas : []).filter(arenaOk);
+    if (!arenas.length) return { error: "venue.arenas must name at least one arena_id on the board" };
+    const v: any = { kind: f.kind === "tool" ? "tool" : "event", name: "", url: "", arenas,
+      visits: [], pages: [], note: "", foundAt: now };
+    const why = shapeVenue(v, f);
+    if (why) return { error: why };
+    const dup = siteTaken(s, v.url);
+    if (dup) return { error: "that site is already a venue: " + dup.id + " (" + dup.name + "); use add_venue_arena or update_venue" };
+    const tid = v.kind === "tool" && v.url ? "vt" + hashKey(siteKey(v.url)) : null;
+    v.id = tid && !(s.venues ?? []).some((x: any) => x.id === tid) ? tid : crypto.randomUUID();
+    s.venues.push(tidyVenue(v));
+    return { ok: true, venue_id: v.id };
+  }
+  const v = (s.venues ?? []).find((x: any) => x.id === op.venue_id);
+  if (!v) return { error: "venue_id is not on the board" };
+  switch (op.op) {
+    case "update_venue": {
+      const copy = structuredClone(v);
+      const why = shapeVenue(copy, op.set ?? {});
+      if (why) return { error: why };
+      const dup = copy.url && copy.url !== v.url ? siteTaken(s, copy.url, v.id) : null;
+      if (dup) return { error: "that site is already a venue: " + dup.id + " (" + dup.name + ")" };
+      Object.assign(v, tidyVenue(copy));
+      return { ok: true };
+    }
+    // Letting a venue go, as the app's own "Let it go": off the board, and a
+    // lead started from it only forgets where it came from.
+    case "delete_venue": {
+      s.venues = s.venues.filter((x: any) => x !== v);
+      for (const a of s.arenas ?? []) for (const l of a.leads ?? []) if (l.venueId === v.id) delete l.venueId;
+      return { ok: true };
+    }
+    case "add_venue_arena": {
+      if (!arenaOk(op.arena_id)) return { error: "arena_id is not on the board" };
+      if (!v.arenas.includes(op.arena_id)) v.arenas.push(op.arena_id);
+      return { ok: true };
+    }
+    case "remove_venue_arena": {
+      v.arenas = v.arenas.filter((x: string) => x !== op.arena_id);
+      return { ok: true };
+    }
+    case "add_venue_page": {
+      const url = http(op.url);
+      if (!url) return { error: "url must start with http:// or https://" };
+      if (linkKey(url) === linkKey(v.url) || v.pages.some((p: any) => linkKey(p.url) === linkKey(url))) {
+        return { error: "that page is already on the venue" };
+      }
+      const p = { id: crypto.randomUUID(), label: S(op.label, 200) ?? "", url };
+      v.pages.push(p);
+      return { ok: true, page_id: p.id };
+    }
+    case "delete_venue_page": {
+      if (!v.pages.some((p: any) => p.id === op.page_id)) return { error: "page_id is not on that venue" };
+      v.pages = v.pages.filter((p: any) => p.id !== op.page_id);
+      return { ok: true };
+    }
+    default:
+      return { error: "a venue op must be add_venue, update_venue, delete_venue, add_venue_arena, remove_venue_arena, add_venue_page or delete_venue_page" };
+  }
+}
+
 // One op on one arena of a board read a moment ago. Returns what it did, or
 // why not; the board is changed in place only when it succeeds.
 function applyOp(s: any, op: any): any {
+  if (typeof op?.op === "string" && op.op.includes("venue")) return venueOp(s, op);
   const a = (s.arenas ?? []).find((x: any) => x.id === op?.arena_id);
   if (!a) return { error: "arena_id is not on the board" };
   a.dates ??= [];
@@ -327,8 +505,11 @@ function applyOp(s: any, op: any): any {
   const anyLink = (id: unknown) =>
     a.links.find((l: any) => l.id === id) ?? a.brokerage.links.find((l: any) => l.id === id);
   switch (op.op) {
+    // An arena's dates are its calls since the Marketplace (2026-10-14): a
+    // brokerage event is a venue.
     case "add_date": {
-      const d: any = { id: crypto.randomUUID(), kind: "brokerage", label: "", call: "", role: "", note: "", url: "" };
+      if ((op.date ?? {}).kind !== "call") return { error: "an arena's dates are calls (kind \"call\"); a brokerage event is a venue: use add_venue" };
+      const d: any = { id: crypto.randomUUID(), kind: "call", label: "", call: "", role: "", note: "", url: "" };
       const why = shapeDate(d, op.date ?? {});
       if (why) return { error: why };
       a.dates.push(d);
@@ -337,6 +518,7 @@ function applyOp(s: any, op: any): any {
     case "update_date": {
       const d = a.dates.find((x: any) => x.id === op.date_id);
       if (!d) return { error: "date_id is not on that arena" };
+      if ((op.set ?? {}).kind && op.set.kind !== "call") return { error: "a brokerage event is a venue: use update_venue" };
       const copy = { ...d };
       const why = shapeDate(copy, op.set ?? {});
       if (why) return { error: why };
@@ -379,14 +561,9 @@ function applyOp(s: any, op: any): any {
       if (a.toolId === op.link_id) a.toolId = null;
       return { ok: true };
     }
-    case "set_tool": {
-      if (op.link_id == null) { a.toolId = null; return { ok: true }; }
-      if (!a.brokerage.links.some((l: any) => l.id === op.link_id)) {
-        return { error: "the general tool must be one of the arena's brokerage links" };
-      }
-      a.toolId = op.link_id;
-      return { ok: true };
-    }
+    // The general tool became a tool venue (2026-10-14).
+    case "set_tool":
+      return { error: "an arena's tools are venues now: add_venue with kind \"tool\", or add_venue_arena to a tool already on the board" };
     case "set_text": {
       const v = op.value == null ? "" : String(op.value).trim();
       if (v.length > 2000) return { error: "a text may be at most 2000 characters" };
@@ -396,13 +573,13 @@ function applyOp(s: any, op: any): any {
       return { ok: true };
     }
     default:
-      return { error: "op must be add_date, update_date, delete_date, add_link, update_link, delete_link, set_tool or set_text" };
+      return { error: "op must be add_date, update_date, delete_date, add_link, update_link, delete_link or set_text, or one of the venue ops" };
   }
 }
 
-// The ops are applied to a fresh read of the board and written back only if
-// nobody wrote it in between (the desk, Pocket); otherwise they are applied
-// again to the newer board. The app then takes the change as it takes
+// The ops are applied to a fresh read of the board, its venues made as the
+// app makes them, and written back only if nobody wrote it in between (the
+// desk, Pocket); otherwise they are applied again to the newer board. The app then takes the change as it takes
 // Pocket's, piece by piece. Every write leaves a copy in app_state_history,
 // as the app's own uploads do, so a bad run can be undone from the Ledger's
 // cloud panel.
@@ -413,8 +590,8 @@ async function edit(ops: any[]) {
     const { data: row, error } = await db
       .from("app_state").select("data,updated_at").eq("id", "semaphore").single();
     if (error) return json({ error: error.message }, 500);
-    const s = structuredClone(row.data ?? {}) as any;
-    const results = ops.map((op) => ({ op: op?.op, arena_id: op?.arena_id, ...applyOp(s, op) }));
+    const s = absorbVenues(structuredClone(row.data ?? {}));
+    const results = ops.map((op) => ({ op: op?.op, arena_id: op?.arena_id, venue_id: op?.venue_id, ...applyOp(s, op) }));
     if (!results.some((r: any) => r.ok)) return json({ results });
     const now = new Date().toISOString();
     const { data: done, error: werr } = await db

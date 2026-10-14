@@ -293,19 +293,24 @@ event or a tool it brings becomes a venue, as on every read. Where each
 agent is told what to do is its scheduled task; the SQL and the functions
 are in `supabase/`.
 
-**The Marketplace's agent is no longer a nightly round** (since 2026-10-14):
-its three scheduled tasks are deleted, and one task, **Semaphore agent
-(on demand)**, has no schedule and runs when Mark fires it — from a Claude
-session told what to check, which passes the request as the firing's text,
-or with Run now, which does a round of its own. It no longer only suggests: the gatekeeper's `board` gives it the
-whole board but the leads, and `edit` lets it add, change and delete dates,
-an event's website, a card's links and brokerage links, the general tool and
-the two texts straight on the board, which the room then takes in as it
-takes Pocket's. What `edit` has no op for it cannot do: delete an arena,
-change an arena's name, type, tags, weight or freezer, the types, the leads,
-Mark's `memo` or his stamps. A new arena is still a Dispatches finding.
-What it changed is told only in its own report, and every write leaves a
-copy in `app_state_history`.
+**The Marketplace has one agent, and it works on demand** (since
+2026-10-14): its three nightly tasks are deleted, and one task,
+**Marketplace agent (on demand)**, has no schedule and runs when Mark
+fires it — from a Claude session told what to do, which passes the request
+as the firing's text, or with Run now, which does a round of its own. It
+is put to work on anything in the Marketplace, and does the work rather
+than suggesting it: the gatekeeper's `board` gives it the whole board but
+the leads, venues and all, and `edit` lets it add, correct, re-date and let
+go venues, add an arena or a page to one, add, change and delete call
+dates, and change the arenas' links and two texts, straight on the board,
+which the room then takes in as it takes Pocket's. The gatekeeper reads
+the board through a copy of the room's own `absorbVenues`, so what it
+writes is in the venues' shape with the venues' own ids. What `edit` has
+no op for it cannot do: delete an arena, change an arena's name, type,
+tags, weight or freezer, the types, the leads, or a venue's `memo`, visits
+or rhythm. A new arena is still a Dispatches finding. What it changed is
+told only in its own report, and every write leaves a copy in
+`app_state_history`.
 
 A second table, **`app_state_history`**, keeps a copy of every upload —
 `row_id`, the blob, a count and `saved_at` — the newest twenty of each
