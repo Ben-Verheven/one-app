@@ -99,8 +99,9 @@
 #pane-semaphore #search:focus{outline:none;border-color:var(--key);box-shadow:0 0 0 2px rgba(216,205,184,.1)}
 #pane-semaphore #search[hidden],#pane-semaphore #searchBtn[hidden]{display:none}
 /* ---------- board ---------- */
-#pane-semaphore #board{padding:0 22px 60px}
-#pane-semaphore .axisrow,#pane-semaphore .row,#pane-semaphore .ghead{display:grid;grid-template-columns:236px 1fr}
+#pane-semaphore #board{position:relative;padding:0 22px 60px}
+/* --namew is the column of names, dragged wider by its edge (.namegrip) */
+#pane-semaphore .axisrow,#pane-semaphore .row,#pane-semaphore .ghead{display:grid;grid-template-columns:var(--namew,236px) 1fr}
 #pane-semaphore .axisrow{position:sticky;top:0;z-index:6;background:var(--paper);border-bottom:1px solid var(--line2)}
 #pane-semaphore .axisrow .corner{display:flex;align-items:flex-end;padding:6px 8px 4px 2px;font:9.5px var(--sans);
                  letter-spacing:.16em;text-transform:uppercase;color:var(--faint)}
@@ -121,7 +122,35 @@
 #pane-semaphore .grp::before{content:"";position:absolute;left:0;top:0;bottom:5px;width:2px;background:var(--tone,var(--line2))}
 #pane-semaphore .grp>.ghead{position:relative;z-index:1}
 #pane-semaphore .grp.collapsed::before{display:none}
-#pane-semaphore .grp>.row,#pane-semaphore .grp>.ghead{grid-template-columns:223px 1fr}
+#pane-semaphore .grp>.row,#pane-semaphore .grp>.ghead{grid-template-columns:calc(var(--namew,236px) - 13px) 1fr}
+/* The grip is the column's edge, the board's whole height: a hairline shows
+   under the pointer and while dragging, nothing otherwise. Ten pixels wide so
+   a finger on the iPad finds it too. */
+#pane-semaphore .namegrip{position:absolute;top:0;bottom:0;left:calc(22px + var(--namew,236px) - 5px);width:10px;
+  z-index:7;cursor:col-resize;touch-action:none}
+#pane-semaphore .namegrip::after{content:"";position:absolute;top:0;bottom:0;left:4px;width:2px;background:var(--key);
+  opacity:0;transition:opacity .14s}
+#pane-semaphore .namegrip:hover::after,#pane-semaphore .namegrip.on::after{opacity:.55}
+@media (hover:none){#pane-semaphore .namegrip::after{opacity:.18}}
+/* The general tool (see "the general tool" in the script): a diamond after
+   the name, the brokerage event's shape. Never marked off, it is the
+   outline alone; marked, it fills white and reddens to the brokerage red
+   over a fortnight, with the days since standing upright inside it in the
+   paper's dark. */
+#pane-semaphore .toolmk{position:relative;flex:0 0 22px;width:22px;height:22px;padding:0;border:none;background:none;cursor:pointer}
+#pane-semaphore .toolmk::before{content:"";position:absolute;left:4px;top:4px;width:14px;height:14px;box-sizing:border-box;
+  transform:rotate(45deg);border-radius:2px;border:1.5px solid var(--brok)}
+#pane-semaphore .toolmk.dated::before{border:none;background:color-mix(in srgb,var(--brok) var(--age),#FFFFFF)}
+#pane-semaphore .toolmk span{position:relative;display:block;text-align:center;font:600 9.5px/22px var(--mono);
+  color:var(--paper);letter-spacing:-.04em}
+#pane-semaphore .toolmk:hover::before{box-shadow:0 0 0 2px var(--key)}
+/* in the panel: the diamond that makes a brokerage link the general tool */
+#pane-semaphore .ltool{position:relative;width:24px;height:26px;padding:0;border:none;background:none;cursor:pointer}
+#pane-semaphore .ltool::before{content:"";position:absolute;left:8px;top:9px;width:8px;height:8px;box-sizing:border-box;
+  transform:rotate(45deg);border-radius:1px;border:1.5px solid var(--faint)}
+#pane-semaphore .ltool:hover::before{border-color:var(--brok)}
+#pane-semaphore .ltool.on::before{border-color:var(--brok);background:var(--brok)}
+#pane-semaphore .wlc>.ltool.on{opacity:1}
 /* The group's head is filled with its type's colour, struck into the ground
    as the wall's row heads are (see "the rotation: a strip for every type"),
    with the group's rule down the left in the same colour, so a type reads as
@@ -1131,7 +1160,7 @@
 #pane-semaphore .frost{flex:0 0 9px;width:9px;height:9px;transform:rotate(45deg);border-radius:1.5px;
        border:1px solid currentColor;opacity:.8}
 #pane-semaphore .frbody{padding:1px 2px 18px}
-#pane-semaphore .frgrp{display:grid;grid-template-columns:236px 1fr;align-items:baseline;gap:9px;padding:8px 0}
+#pane-semaphore .frgrp{display:grid;grid-template-columns:var(--namew,236px) 1fr;align-items:baseline;gap:9px;padding:8px 0}
 #pane-semaphore .frgrp+.frgrp{border-top:1px solid var(--grid)}
 #pane-semaphore .frty{font:600 9.5px var(--sans);letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
 #pane-semaphore .frty i{margin-left:8px;font:10px var(--mono);font-style:normal;letter-spacing:0;color:var(--faint)}
@@ -1699,7 +1728,8 @@
 #pane-semaphore #tip{position:fixed;z-index:50;max-width:280px;background:var(--surface2);
      color:var(--ink);border:1px solid var(--line2);box-shadow:var(--shadow);border-radius:var(--radius);
      padding:8px 11px;font-family:var(--body);font-size:13px;line-height:1.5;pointer-events:none;display:none;white-space:pre-line}
-@media(max-width:860px){#pane-semaphore .axisrow,#pane-semaphore .row,#pane-semaphore .ghead{grid-template-columns:150px 1fr}
-#pane-semaphore .grp>.row,#pane-semaphore .grp>.ghead{grid-template-columns:137px 1fr}
+@media(max-width:860px){#pane-semaphore .axisrow,#pane-semaphore .row,#pane-semaphore .ghead{grid-template-columns:var(--namew,150px) 1fr}
+#pane-semaphore .grp>.row,#pane-semaphore .grp>.ghead{grid-template-columns:calc(var(--namew,150px) - 13px) 1fr}
+#pane-semaphore .namegrip{left:calc(22px + var(--namew,150px) - 5px)}
 #pane-semaphore .frgrp{grid-template-columns:1fr;gap:6px}
 #pane-semaphore header.top{flex-wrap:wrap}}

@@ -149,10 +149,14 @@ function defaultTypes(){
   return ['Partnership','Mission','Cluster','Joint Undertaking','Programme']
     .map((n,i)=>({id:uid(),name:n,color:TONE_SPREAD[i]}));
 }
+/* How wide the board's column of names is, once dragged by its edge (Mark,
+   2026-10-14), so a long arena name can be read whole; null until then, and
+   the stylesheet's own width stands. */
+const NAME_MIN=140,NAME_MAX=560;
 function blank(){
   return {v:1,types:defaultTypes(),arenas:[],
     ui:{q:'',collapsed:{},view:'board',
-        wallSort:'rotation',boardSort:'date',
+        wallSort:'rotation',boardSort:'date',nameW:null,
         howOpen:false,freezerOpen:false}};
 }
 /* An arena remembers which of its own dates it is waiting for. That goes stale
@@ -318,6 +322,7 @@ function migrate(s){
        the two it had before — next publication, and by status — both read as
        the date order, which took their place */
     ui.boardSort = u.boardSort==='mine' ? 'mine' : 'date';
+    ui.nameW = Number.isFinite(u.nameW) ? Math.min(NAME_MAX,Math.max(NAME_MIN,Math.round(u.nameW))) : null;
     ui.howOpen     = u.howOpen===true;
     ui.freezerOpen = u.freezerOpen===true;
     s.ui=ui;
@@ -650,6 +655,29 @@ const boardOrder=()=>S.ui.boardSort==='mine'?mineOrder:dateOrder;
 const BOARD_SORTS={mine:{name:'My order',long:'Your own order, as set in Types'},
                    date:{name:'By date',long:'Soonest first: the nearest deadline, call opening or brokerage event'}};
 let sortOpen=false;
+/* ───────── the general tool ─────────
+   One of an arena's brokerage links can be its general tool — the platform
+   or partner search that has no date of its own and is simply gone through
+   now and then (Mark, 2026-10-14). It is chosen in the arena's panel, by the
+   diamond beside the link (`toolId` on the arena), and stands on the Board
+   right after the arena's name, drawn as a brokerage event is: a diamond.
+   A press marks it gone through today, and the diamond then carries the days
+   since, white turning to the brokerage red over a fortnight as Coming up's
+   stamps do. The stamp is the link's own (toggleStamp), so it is the same
+   stamp the rotation cards show for that site, and a same-day press takes
+   it back. */
+function generalTool(a){
+  return a.toolId?((a.brokerage&&a.brokerage.links)||[]).find(l=>l.id===a.toolId)||null:null;
+}
+function toolMarkHTML(a){
+  const lk=generalTool(a);
+  if(!lk)return '';
+  const st=stampSay(stampOf(lk)),n=st.d===null?null:Math.max(0,st.d);
+  const tip=linkName(lk)+' \u2014 '+(st.on?st.stTip:st.ageTip+' \u2014 click once you have been through it');
+  return '<button class="toolmk'+(n===null?'':' dated')+'" data-act="toolStamp" data-id="'+a.id+'" '+
+    (n===null?'':'style="--age:'+Math.round(Math.min(n,14)/14*100)+'%" ')+
+    'title="'+esc(tip)+'" aria-label="'+esc(tip)+'"><span>'+(n===null?'':n>99?'99+':n)+'</span></button>';
+}
 /* The board stays a picture of the calendar. The one thing that gets a mark
    here is a wait whose date is coming up, in the green todos always wear. */
 function boardRow(a,bg){
@@ -664,12 +692,13 @@ function boardRow(a,bg){
   /* The column beside the names that said Open / Opens / Between went on
      2026-10-11 (Mark): the calendar beside the name says it already. */
   return '<div class="row"><div class="cell name">'+
-    '<button class="nm'+weightClass(a)+'" data-act="openArena" data-id="'+a.id+'">'+esc(a.name)+'</button>'+due+loomBtn+
+    '<button class="nm'+weightClass(a)+'" data-act="openArena" data-id="'+a.id+'">'+esc(a.name)+'</button>'+toolMarkHTML(a)+due+loomBtn+
     '</div>'+
     '<div class="lane" style="background-image:'+bg+'" data-aid="'+a.id+'">'+laneHTML(a)+'</div></div>';
 }
 function renderBoard(){keepPlace(()=>{
   winTimes();
+  nameWidth();
   const board=$('#board');
   if(loadError){
     board.innerHTML='<div class="empty"><p>The saved board could not be read.</p>'+
@@ -727,8 +756,41 @@ function renderBoard(){keepPlace(()=>{
     for(const a of orphans)h+=boardRow(a,bg);
     h+='</div>';
   }
-  board.innerHTML=h;
+  /* the edge of the column of names, the whole board's height, to drag
+     (see "the width of the names") */
+  board.innerHTML=h+'<div class="namegrip" title="Drag to widen or narrow the arenas\u2019 names" aria-hidden="true"></div>';
 });}
+/* ───────── the width of the names ─────────
+   Mark asked on 2026-10-14 to drag the board so more of each arena's name
+   shows. The column's width is one variable, `--namew`, on the room, so the
+   board's rows, its heading and the freezer under it move together; the
+   grip on the column's edge sets it while dragging without a redraw, and
+   the width is kept in the ui on letting go. */
+function nameWidth(){
+  if(S.ui.nameW)document.body.style.setProperty('--namew',S.ui.nameW+'px');
+  else document.body.style.removeProperty('--namew');
+}
+let nameDrag=null;
+document.addEventListener('pointerdown',e=>{
+  const g=e.target.closest&&e.target.closest('.namegrip');
+  if(!g||e.button!==0)return;
+  e.preventDefault();
+  const c=document.querySelector('.axisrow .corner');
+  const w=c?Math.round(c.getBoundingClientRect().width):(S.ui.nameW||236);
+  nameDrag={x:e.clientX,w,now:w};
+  g.classList.add('on');
+});
+document.addEventListener('pointermove',e=>{
+  if(!nameDrag)return;
+  nameDrag.now=Math.min(NAME_MAX,Math.max(NAME_MIN,Math.round(nameDrag.w+e.clientX-nameDrag.x)));
+  document.body.style.setProperty('--namew',nameDrag.now+'px');
+});
+document.addEventListener('pointerup',()=>{
+  if(!nameDrag)return;
+  S.ui.nameW=nameDrag.now;nameDrag=null;
+  const g=document.querySelector('.namegrip.on');if(g)g.classList.remove('on');
+  save();
+});
 
 /* ============ render: freezer ============
    The board's own footnote: it belongs to the timeline, not to the brokerage
@@ -2056,8 +2118,17 @@ function wallLinkRows(a,list,scope,onCard){
       stamp='<button class="stamp'+(on?' on':'')+(d===null?'':' dated')+'" data-act="lkStamp"'+ref+' title="'+tip+'" aria-label="'+tip+'">✓'+
         (d===null?'':'<span class="sdays">'+Math.max(0,d)+'</span>')+'</button>';
     }
+    /* in the panel, a brokerage link can be made the arena's general tool
+       (see "the general tool") */
+    const isTool=a.toolId&&a.toolId===lk.id;
+    const tool=!onCard&&scope==='brokerage'
+      ? '<button class="ltool'+(isTool?' on':'')+'" data-act="lkTool"'+ref+' aria-pressed="'+(isTool?'true':'false')+'" '+
+          'title="'+(isTool?'The general tool of this arena, marked beside its name on the Board \u2014 click to unset':
+            'Make this the arena\u2019s general tool: a marker beside its name on the Board, to mark off when gone through')+'" '+
+          'aria-label="General tool"></button>'
+      : '';
     return '<div class="wlrow" data-lk="'+esc(lk.id||'')+'">'+body+
-      '<span class="wlc">'+
+      '<span class="wlc">'+tool+
         '<button class="ldel" data-act="lkDel"'+ref+' title="Remove this link" aria-label="Remove '+nm+'">✕</button>'+
         stamp+
       '</span></div>';
@@ -4227,6 +4298,11 @@ document.addEventListener('click',e=>{
        stamp does */
     case 'lkStamp':{const lk=linkOf(a,b.dataset.lks,b.dataset.l);if(!lk)break;
       toggleStamp(lk);relinked();break;}
+    case 'lkTool':{const lk=linkOf(a,b.dataset.lks,b.dataset.l);if(!lk)break;
+      if(a.toolId===lk.id)delete a.toolId;else a.toolId=lk.id;
+      relinked();break;}
+    case 'toolStamp':{const lk=a&&generalTool(a);if(!lk)break;
+      toggleStamp(lk);relinked();break;}
     /* Quick, but not one slip from gone: the first press turns the cross into
        the word, a second within three seconds removes the link. The button is
        changed in place rather than redrawn, so nothing else on the wall moves
@@ -4239,6 +4315,7 @@ document.addEventListener('click',e=>{
       }
       const k=list.findIndex(l=>l.id===b.dataset.l);
       if(k>=0)list.splice(k,1);
+      if(a.toolId===b.dataset.l)delete a.toolId;
       relinked();break;}
     case 'askAgent':{const ar=arena(id);if(!ar)break;
       ar.askAt=ar.askAt?null:new Date().toISOString();
