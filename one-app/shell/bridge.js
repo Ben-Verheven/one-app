@@ -1441,12 +1441,24 @@
 })();
 
 
-/* ── the weekly Excel: every lead, and every closed todo ─────────────────
+/* ── the weekly Excel: every lead, open and closed ──────────────────────
    Mark asked on 2026-10-14 for one Excel file he can bring up to date once a
-   week: every lead on its own row — arena, project, coordinator, contact,
-   where the contact has got to, its links and its updates — and beside them
-   every todo closed in the Ledger. The leads are the Semaphore's and the
-   todos the Ledger's, so it is written here, where both may be asked.
+   week, every lead on its own row: arena, project, coordinator, contact,
+   how far the contact has got, its links and its updates. The leads are the
+   Semaphore's, but a file written for reading elsewhere is a door out of
+   the app, so it is written here and the room only reads its leads out.
+
+   Its shape is his, from the first file he saw: no front sheet, no sheet of
+   updates on their own, no closed todos. The open leads on one sheet, in
+   sections by step; the closed ones on a second, the latest closed on top,
+   so the sheet fills up as leads are finished. The step is the app's ruit
+   laid out as four columns that fill up — Spotted, Researchers, Lead,
+   Talking — one lit cell for each dot the ruit lights. Every row is one
+   line high; the +  in the margin beside a lead opens its links and its
+   updates, one to a row and written out in full, and any field too long
+   for its column. The links are real links. The arena wears its type's
+   colour, as a lead does in the app, and each group of columns a colour
+   of its own.
 
    Writing the file again is the update. Where the browser lets a page keep
    hold of a file (Chrome and Edge on the desk), the first press asks where
@@ -1455,11 +1467,9 @@
    (Safari, the iPad) each press downloads a fresh copy under the same name.
    ⌥ (Alt) with the press asks for the place again.
 
-   What has changed since the last export is marked rather than kept apart:
-   a lead that is new or has changed, an update and a closed todo that the
-   last file did not hold, are filled pale yellow and say "new" or "changed"
-   in the first column. The fingerprints that tell are kept on this device
-   (`leads-excel-v1`), only once the file has been written.
+   A lead that is new or has changed since the last export says so in the
+   first column, in yellow. The fingerprints that tell are kept on this
+   device (`leads-excel-v1`), only once the file has been written.
 
    No library: an .xlsx is a zip of a few XML files, and the zip is written
    here without compression, which Excel reads as readily. A library from a
@@ -1468,24 +1478,25 @@
   'use strict';
   if (typeof Hub === 'undefined' || !Hub.on) return;
 
-  var NAME = 'Leads and closed todos.xlsx';
+  var NAME = 'Leads.xlsx';
   var SEEN = 'leads-excel-v1';
-  var MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
-  function iso(d) {
-    return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
-  }
   function isDay(s) { return typeof s === 'string' && /^\d{4}-\d{2}-\d{2}/.test(s); }
-  function sayDay(s) {
-    var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s || '');
-    return m ? (+m[3]) + ' ' + MON[+m[2] - 1] + ' ' + m[1] : '';
-  }
   /* FNV-1a over a string: enough to tell whether a lead has changed */
   function sum(s) {
     var h = 0x811c9dc5;
     for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193); }
     return (h >>> 0).toString(36);
   }
+  /* a colour toward white, for the pale grounds under each group */
+  function tint(hex, k) {
+    var n = parseInt(String(hex || '#999999').replace('#', ''), 16);
+    var c = [n >> 16 & 255, n >> 8 & 255, n & 255].map(function (v) {
+      return ('0' + Math.round(v + (255 - v) * k).toString(16)).slice(-2);
+    });
+    return c.join('').toUpperCase();
+  }
+  function rgb(hex) { return 'FF' + String(hex).replace('#', '').toUpperCase(); }
 
   /* ── the zip ── */
   var CRC = (function () {
@@ -1529,33 +1540,6 @@
       { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
   }
 
-  /* ── the workbook ──
-     Styles by number, each in a plain and a yellow ("new") version, the
-     yellow one always the next number up. */
-  var ST = { head: 1, text: 2, date: 4, num: 6, title: 8 };
-  var STYLES = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
-    '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
-    '<numFmts count="1"><numFmt numFmtId="164" formatCode="d mmm yyyy"/></numFmts>' +
-    '<fonts count="3"><font><sz val="11"/><name val="Calibri"/></font>' +
-      '<font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font>' +
-      '<font><b/><sz val="13"/><name val="Calibri"/></font></fonts>' +
-    '<fills count="4"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill>' +
-      '<fill><patternFill patternType="solid"><fgColor rgb="FF5B4A2E"/><bgColor indexed="64"/></patternFill></fill>' +
-      '<fill><patternFill patternType="solid"><fgColor rgb="FFFFF2B3"/><bgColor indexed="64"/></patternFill></fill></fills>' +
-    '<borders count="2"><border/><border><bottom style="thin"><color rgb="FFD9D2C3"/></bottom></border></borders>' +
-    '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>' +
-    '<cellXfs count="9">' +
-      '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>' +
-      '<xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1" applyAlignment="1"><alignment vertical="center"/></xf>' +
-      '<xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf>' +
-      '<xf numFmtId="0" fontId="0" fillId="3" borderId="1" xfId="0" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf>' +
-      '<xf numFmtId="164" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1" applyAlignment="1"><alignment vertical="top" horizontal="left"/></xf>' +
-      '<xf numFmtId="164" fontId="0" fillId="3" borderId="1" xfId="0" applyNumberFormat="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="top" horizontal="left"/></xf>' +
-      '<xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1" applyAlignment="1"><alignment vertical="top" horizontal="center"/></xf>' +
-      '<xf numFmtId="0" fontId="0" fillId="3" borderId="1" xfId="0" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="top" horizontal="center"/></xf>' +
-      '<xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1"/>' +
-    '</cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>';
-
   /* Text Excel can hold: no control characters, and no more than a cell takes */
   function xt(s) {
     s = String(s == null ? '' : s).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F￾￿]/g, '');
@@ -1567,48 +1551,219 @@
     var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(day);
     return (Date.UTC(+m[1], +m[2] - 1, +m[3]) - Date.UTC(1899, 11, 30)) / 864e5;
   }
-  /* One cell: a day is a real date, so the sheet sorts and filters by it */
-  function cell(ref, v, kind, hl) {
-    if (v === '' || v == null || (kind === 'num' && !v)) return hl ? '<c r="' + ref + '" s="' + (ST.text + 1) + '"/>' : '';
-    if (kind === 'date' && isDay(v)) return '<c r="' + ref + '" s="' + (ST.date + (hl ? 1 : 0)) + '"><v>' + serial(v) + '</v></c>';
-    if (kind === 'num') return '<c r="' + ref + '" s="' + (ST.num + (hl ? 1 : 0)) + '"><v>' + (+v) + '</v></c>';
-    return '<c r="' + ref + '" t="inlineStr" s="' + (ST.text + (hl ? 1 : 0)) + '"><is><t xml:space="preserve">' + xt(v) + '</t></is></c>';
+
+  /* ── the styles ──
+     Asked for by what they look like and numbered as they are first asked
+     for, so a colour the board has never used costs nothing. */
+  function Styles() {
+    var fills = ['<fill><patternFill patternType="none"/></fill>', '<fill><patternFill patternType="gray125"/></fill>'];
+    var fonts = ['<font><sz val="11"/><name val="Calibri"/></font>'];
+    var borders = ['<border/>'], xfs = ['<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>'];
+    var seen = {};
+    function idx(list, x) { var i = list.indexOf(x); if (i < 0) { list.push(x); i = list.length - 1; } return i; }
+    function get(o) {
+      var key = JSON.stringify(o);
+      if (seen[key] != null) return seen[key];
+      var f = o.font || {};
+      var font = idx(fonts, '<font>' + (f.b ? '<b/>' : '') + (f.i ? '<i/>' : '') + (f.u ? '<u/>' : '') +
+        '<sz val="' + (f.sz || 11) + '"/>' + (f.color ? '<color rgb="' + rgb(f.color) + '"/>' : '') + '<name val="Calibri"/></font>');
+      var fill = o.fill ? idx(fills, '<fill><patternFill patternType="solid"><fgColor rgb="' + rgb(o.fill) +
+        '"/><bgColor indexed="64"/></patternFill></fill>') : 0;
+      var border = o.line ? idx(borders, '<border><left/><right/><top/><bottom style="thin"><color rgb="' +
+        rgb(o.line) + '"/></bottom><diagonal/></border>') : 0;
+      var al = '<alignment vertical="' + (o.v || 'center') + '"' + (o.h ? ' horizontal="' + o.h + '"' : '') +
+        (o.wrap ? ' wrapText="1"' : '') + (o.indent ? ' indent="' + o.indent + '"' : '') + '/>';
+      xfs.push('<xf numFmtId="' + (o.date ? 164 : 0) + '" fontId="' + font + '" fillId="' + fill + '" borderId="' +
+        border + '" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1">' + al + '</xf>');
+      return (seen[key] = xfs.length - 1);
+    }
+    function xml() {
+      return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+        '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
+        '<numFmts count="1"><numFmt numFmtId="164" formatCode="d mmm yyyy"/></numFmts>' +
+        '<fonts count="' + fonts.length + '">' + fonts.join('') + '</fonts>' +
+        '<fills count="' + fills.length + '">' + fills.join('') + '</fills>' +
+        '<borders count="' + borders.length + '">' + borders.join('') + '</borders>' +
+        '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>' +
+        '<cellXfs count="' + xfs.length + '">' + xfs.join('') + '</cellXfs>' +
+        '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>';
+    }
+    return { get: get, xml: xml };
   }
-  /* A sheet of one table: a header row frozen at the top with a filter on
-     it, and a row per record, filled yellow where `hl` says it is new. */
-  function sheet(cols, rows) {
-    var last = col(cols.length - 1), n = rows.length + 1;
-    var x = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
-      '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
-      '<sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>' +
-      '<sheetFormatPr defaultRowHeight="15"/><cols>' +
-      cols.map(function (c, i) { return '<col min="' + (i + 1) + '" max="' + (i + 1) + '" width="' + c.w + '" customWidth="1"/>'; }).join('') +
-      '</cols><sheetData><row r="1" ht="22" customHeight="1">' +
-      cols.map(function (c, i) { return '<c r="' + col(i) + '1" t="inlineStr" s="' + ST.head + '"><is><t>' + xt(c.h) + '</t></is></c>'; }).join('') +
-      '</row>';
-    rows.forEach(function (r, ri) {
-      x += '<row r="' + (ri + 2) + '">' + cols.map(function (c, i) {
-        return cell(col(i) + (ri + 2), r.v[i], c.k, r.hl);
-      }).join('') + '</row>';
+
+  /* ── the look ──
+     Each group of columns has a strong colour for its heading and the same
+     colour, very pale, under its cells, so a row can be read across and a
+     column found by its colour. The step's colour is the lead clay the
+     Semaphore draws a lead's edge in; the scores and the endings are the
+     app's own. */
+  var INK = '#2F2A22', QUIET = '#8A8070', RULE = '#E2DCCF', LINK = '#2B5C8A';
+  var GROUPS = { arena: '#4A4033', lead: '#6B5537', step: '#A0624F', judge: '#5E6B4A', notes: '#3F5A6B' };
+  var LIT = '#C98A6B';
+  var SCORE = { 1: '#d9826f', 2: '#dda063', 3: '#d6c06a', 4: '#a9c27a', 5: '#7fb889' };
+  var ENDED = { 'Became a project': '#7fb889', 'Went nowhere': '#cfc8bb', 'They declined': '#d9826f', 'Closed': '#cfc8bb' };
+
+  function columns(closed) {
+    var c = [
+      { g: 'arena', h: '', w: 8, k: 'mark' },
+      { g: 'arena', h: 'Arena', w: 22, k: 'arena' },
+      { g: 'arena', h: 'Type', w: 14, k: 'type' },
+      { g: 'lead', h: 'Project', w: 36, k: 'project', b: true },
+      { g: 'lead', h: 'Coordinator', w: 22, k: 'coordinator' },
+      { g: 'lead', h: 'Main contact', w: 20, k: 'contact' },
+      { g: 'lead', h: 'Match', w: 30, k: 'match' },
+      { g: 'step', h: 'Spotted', w: 9, k: 'ruit', dot: 'sp' },
+      { g: 'step', h: 'Researchers', w: 11.5, k: 'ruit', dot: 'r' },
+      { g: 'step', h: 'Lead', w: 9, k: 'ruit', dot: 'l' },
+      { g: 'step', h: 'Talking', w: 9, k: 'ruit', dot: 't' },
+      { g: 'judge', h: 'Score', w: 7.5, k: 'score' }
+    ];
+    if (closed) c.push({ g: 'judge', h: 'Closed on', w: 12.5, k: 'doneAt' }, { g: 'judge', h: 'How it ended', w: 17, k: 'ended' });
+    return c.concat([
+      { g: 'notes', h: 'Links', w: 30, k: 'link' },
+      { g: 'notes', h: 'Date', w: 12.5, k: 'udate' },
+      { g: 'notes', h: 'Updates — newest first', w: 70, k: 'utext' }
+    ]);
+  }
+  var GROUP_NAME = { arena: 'Arena', lead: 'The lead', step: 'Where we are', judge: '', notes: 'Links and updates' };
+
+  function lit(l, dot) {
+    if (dot === 'sp') return true;
+    if (dot === 'r') return l.toResearchers;
+    if (dot === 'l') return l.toLead;
+    return l.stage === 'talking';
+  }
+
+  /* One sheet. `sections` is a list of {title, leads}; a title of null
+     draws no band. */
+  function sheet(S, cols, sections, mark, tab) {
+    var x = '', links = [], merges = [], r = 0, last = col(cols.length - 1);
+    var groupsAt = [];
+    function c(i, row, s, inner, t) {
+      return '<c r="' + col(i) + row + '" s="' + s + '"' + (t ? ' t="' + t + '"' : '') + '>' + (inner || '') + '</c>';
+    }
+    function str(i, row, s, v) { return c(i, row, s, '<is><t xml:space="preserve">' + xt(v) + '</t></is>', 'inlineStr'); }
+    function day(i, row, s, v) { return isDay(v) ? c(i, row, s, '<v>' + serial(v) + '</v>') : str(i, row, s, v || ''); }
+    function link(i, row, s, k, more) {
+      var url = String(k.url || '');
+      if (/^(https?:|mailto:)/i.test(url)) links.push({ ref: col(i) + row, url: url });
+      return str(i, row, s, k.name + (more ? '   +' + more : ''));
+    }
+    /* the two heading rows: the groups, merged across their columns, and
+       under them each column's own name */
+    r++;
+    var row1 = '', from = 0;
+    cols.forEach(function (cl, i) {
+      row1 += str(i, r, S.get({ fill: GROUPS[cl.g], font: { b: true, color: '#FFFFFF', sz: 10 }, h: 'left', indent: 1 }),
+        i === from ? GROUP_NAME[cl.g] : '');
+      if (i === cols.length - 1 || cols[i + 1].g !== cl.g) {
+        if (i > from) merges.push(col(from) + r + ':' + col(i) + r);
+        from = i + 1;
+      }
     });
-    return x + '</sheetData><autoFilter ref="A1:' + last + n + '"/>' +
-      '<pageMargins left="0.5" right="0.5" top="0.6" bottom="0.6" header="0.3" footer="0.3"/></worksheet>';
-  }
-  /* The front sheet: what the file is, when it was written, what yellow means */
-  function about(lines) {
-    var x = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
-      '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
-      '<cols><col min="1" max="1" width="30" customWidth="1"/><col min="2" max="2" width="70" customWidth="1"/></cols><sheetData>';
-    lines.forEach(function (l, i) {
-      var r = i + 1;
-      x += '<row r="' + r + '">' +
-        (l[0] ? '<c r="A' + r + '" t="inlineStr" s="' + (i ? 0 : ST.title) + '"><is><t xml:space="preserve">' + xt(l[0]) + '</t></is></c>' : '') +
-        (l[1] ? '<c r="B' + r + '" t="inlineStr" s="' + (l[2] ? ST.text + 1 : 0) + '"><is><t xml:space="preserve">' + xt(l[1]) + '</t></is></c>' : '') +
-        '</row>';
+    x += '<row r="' + r + '" ht="18" customHeight="1">' + row1 + '</row>';
+    r++;
+    x += '<row r="' + r + '" ht="22" customHeight="1">' + cols.map(function (cl, i) {
+      return str(i, r, S.get({ fill: '#' + tint(GROUPS[cl.g], 0.72), font: { b: true, color: INK, sz: 10 },
+        h: cl.k === 'ruit' || cl.k === 'score' ? 'center' : 'left', indent: cl.k === 'ruit' || cl.k === 'score' ? 0 : 1 }), cl.h);
+    }).join('') + '</row>';
+
+    sections.forEach(function (sec) {
+      if (sec.title) {
+        r++;
+        x += '<row r="' + r + '" ht="24" customHeight="1">' + cols.map(function (cl, i) {
+          return str(i, r, S.get({ fill: '#' + tint(LIT, 0.55), font: { b: true, color: INK, sz: 11 }, v: 'bottom', indent: 1 }),
+            i ? '' : sec.title);
+        }).join('') + '</row>';
+        merges.push('A' + r + ':' + last + r);
+      }
+      sec.leads.forEach(function (l) {
+        var ups = l.updates.slice().reverse();
+        r++;
+        /* what the + opens: as many rows as there are links or updates,
+           and the first of them carries whatever was too long for its
+           column in full */
+        var long = cols.filter(function (cl) {
+          return /^(project|coordinator|contact|match)$/.test(cl.k) && String(l[cl.k] || '').length > cl.w * 1.05;
+        });
+        var n = Math.max(ups.length, l.links.length > 1 ? l.links.length : 0, long.length ? 1 : 0);
+        var main = cols.map(function (cl, i) {
+          var g = '#' + tint(GROUPS[cl.g], 0.9), base = { fill: g, line: RULE, font: { color: INK }, indent: 1 };
+          switch (cl.k) {
+            case 'mark': return mark[l.aid + '|' + l.id]
+              ? str(i, r, S.get({ fill: '#FFE58A', line: RULE, font: { b: true, color: INK, sz: 9 }, h: 'center' }), mark[l.aid + '|' + l.id])
+              : str(i, r, S.get({ fill: g, line: RULE }), '');
+            case 'arena': return str(i, r, S.get({ fill: l.tone || '#cfc8bb', line: RULE, font: { b: true, color: INK }, indent: 1 }), l.arena);
+            case 'type': return str(i, r, S.get({ fill: '#' + tint(l.tone || '#cfc8bb', 0.55), line: RULE, font: { color: INK, sz: 10 }, indent: 1 }), l.type);
+            case 'ruit': {
+              var on = lit(l, cl.dot);
+              return str(i, r, S.get(on ? { fill: LIT, line: RULE, font: { b: true, color: '#FFFFFF' }, h: 'center' }
+                : { fill: g, line: RULE, font: { color: '#C9BFAE' }, h: 'center' }), on ? '●' : '○');
+            }
+            case 'score': return l.score
+              ? c(i, r, S.get({ fill: SCORE[l.score], line: RULE, font: { b: true, color: INK }, h: 'center' }), '<v>' + l.score + '</v>')
+              : str(i, r, S.get({ fill: g, line: RULE }), '');
+            case 'doneAt': return day(i, r, S.get({ fill: g, line: RULE, font: { color: INK }, date: true, h: 'left', indent: 1 }), l.doneAt || '');
+            case 'ended': return str(i, r, S.get({ fill: ENDED[l.ended] || g, line: RULE, font: { b: true, color: INK, sz: 10 }, indent: 1 }), l.ended);
+            case 'link': return l.links.length
+              ? link(i, r, S.get({ fill: g, line: RULE, font: { u: true, color: LINK }, indent: 1 }), l.links[0], l.links.length - 1)
+              : str(i, r, S.get({ fill: g, line: RULE }), '');
+            case 'udate': return ups.length
+              ? day(i, r, S.get({ fill: g, line: RULE, font: { color: QUIET, sz: 10 }, date: true, h: 'left', indent: 1 }), ups[0].at || ups[0].when)
+              : str(i, r, S.get({ fill: g, line: RULE }), '');
+            case 'utext': return str(i, r, S.get(base), ups.length ? ups[0].text : '');
+            default: return str(i, r, S.get(cl.b ? { fill: g, line: RULE, font: { b: true, color: INK }, indent: 1 } : base),
+              cl.k === 'project' ? (l.project || l.name) : l[cl.k] || '');
+          }
+        }).join('');
+        x += '<row r="' + r + '" ht="20" customHeight="1"' + (n ? ' collapsed="1"' : '') + '>' + main + '</row>';
+        for (var j = 0; j < n; j++) {
+          r++;
+          var lines = 1;
+          var cells = cols.map(function (cl, i) {
+            var ground = { fill: '#FBF9F5', font: { color: INK, sz: 10 }, v: 'top', wrap: true, indent: 1 };
+            var v = '';
+            if (cl.k === 'link' && l.links.length > 1 && l.links[j])
+              return link(i, r, S.get({ fill: '#FBF9F5', font: { u: true, color: LINK, sz: 10 }, v: 'top', indent: 1 }), l.links[j], 0);
+            if (cl.k === 'udate' && ups[j])
+              return day(i, r, S.get({ fill: '#FBF9F5', font: { color: QUIET, sz: 10 }, v: 'top', date: true, h: 'left', indent: 1 }), ups[j].at || ups[j].when);
+            if (cl.k === 'utext' && ups[j]) v = ups[j].text;
+            if (j === 0 && long.indexOf(cl) >= 0) v = cl.k === 'project' ? (l.project || l.name) : l[cl.k];
+            if (v) lines = Math.max(lines, String(v).split('\n').reduce(function (n2, t) {
+              return n2 + Math.max(1, Math.ceil(t.length / (cl.w * 1.05)));
+            }, 0));
+            return str(i, r, S.get(ground), v);
+          }).join('');
+          x += '<row r="' + r + '" ht="' + Math.min(409, 4 + 14 * lines) + '" customHeight="1" outlineLevel="1" hidden="1">' + cells + '</row>';
+        }
+      });
     });
-    return x + '</sheetData></worksheet>';
+    var ws = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" ' +
+        'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">' +
+      '<sheetPr><tabColor rgb="' + rgb(tab) + '"/><outlinePr summaryBelow="0"/><pageSetUpPr fitToPage="1"/></sheetPr>' +
+      '<sheetViews><sheetView workbookViewId="0" zoomScale="110"><pane xSplit="4" ySplit="2" topLeftCell="E3" ' +
+        'activePane="bottomRight" state="frozen"/></sheetView></sheetViews>' +
+      '<sheetFormatPr defaultRowHeight="15" outlineLevelRow="1"/><cols>' +
+      cols.map(function (cl, i) { return '<col min="' + (i + 1) + '" max="' + (i + 1) + '" width="' + cl.w + '" customWidth="1"/>'; }).join('') +
+      '</cols><sheetData>' + x + '</sheetData>' +
+      (merges.length ? '<mergeCells count="' + merges.length + '">' +
+        merges.map(function (m) { return '<mergeCell ref="' + m + '"/>'; }).join('') + '</mergeCells>' : '') +
+      (links.length ? '<hyperlinks>' + links.map(function (k, i) {
+        return '<hyperlink ref="' + k.ref + '" r:id="rId' + (i + 1) + '"/>'; }).join('') + '</hyperlinks>' : '') +
+      /* printed, a sheet is one page wide, on its side */
+      '<pageMargins left="0.4" right="0.4" top="0.5" bottom="0.5" header="0.3" footer="0.3"/>' +
+      '<pageSetup paperSize="9" orientation="landscape" fitToWidth="1" fitToHeight="0"/></worksheet>';
+    var rels = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+      links.map(function (k, i) {
+        return '<Relationship Id="rId' + (i + 1) + '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink" ' +
+          'Target="' + xt(k.url) + '" TargetMode="External"/>';
+      }).join('') + '</Relationships>';
+    return { xml: ws, rels: links.length ? rels : null };
   }
-  function book(sheets) {
+
+  function book(S, sheets) {
     var M = 'http://schemas.openxmlformats.org/', R = M + 'officeDocument/2006/relationships';
     var files = [
       { name: '[Content_Types].xml', text: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
@@ -1626,129 +1781,63 @@
       { name: 'xl/workbook.xml', text: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
         '<workbook xmlns="' + M + 'spreadsheetml/2006/main" xmlns:r="' + R + '"><sheets>' +
         sheets.map(function (s, i) { return '<sheet name="' + xt(s.name) + '" sheetId="' + (i + 1) + '" r:id="rId' + (i + 1) + '"/>'; }).join('') +
-        '</sheets><definedNames>' +
-        sheets.map(function (s, i) {
-          return s.filter ? '<definedName name="_xlnm._FilterDatabase" localSheetId="' + i + '" hidden="1">\'' +
-            xt(s.name) + '\'!' + s.filter + '</definedName>' : '';
-        }).join('') + '</definedNames></workbook>' },
+        '</sheets></workbook>' },
       { name: 'xl/_rels/workbook.xml.rels', text: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
         '<Relationships xmlns="' + M + 'package/2006/relationships">' +
         sheets.map(function (s, i) {
           return '<Relationship Id="rId' + (i + 1) + '" Type="' + R + '/worksheet" Target="worksheets/sheet' + (i + 1) + '.xml"/>';
         }).join('') +
-        '<Relationship Id="rId' + (sheets.length + 1) + '" Type="' + R + '/styles" Target="styles.xml"/></Relationships>' },
-      { name: 'xl/styles.xml', text: STYLES }
+        '<Relationship Id="rId' + (sheets.length + 1) + '" Type="' + R + '/styles" Target="styles.xml"/></Relationships>' }
     ];
-    sheets.forEach(function (s, i) { files.push({ name: 'xl/worksheets/sheet' + (i + 1) + '.xml', text: s.xml }); });
+    sheets.forEach(function (s, i) {
+      files.push({ name: 'xl/worksheets/sheet' + (i + 1) + '.xml', text: s.xml });
+      if (s.rels) files.push({ name: 'xl/worksheets/_rels/sheet' + (i + 1) + '.xml.rels', text: s.rels });
+    });
+    files.push({ name: 'xl/styles.xml', text: S.xml() });
     return zip(files);
-  }
-  function table(name, cols, rows) {
-    return { name: name, xml: sheet(cols, rows), filter: '$A$1:$' + col(cols.length - 1) + '$' + (rows.length + 1) };
   }
 
   /* ── what goes in it ── */
   function read() {
-    var S = Hub.api('semaphore'), L = Hub.api('ledger');
+    var S = Hub.api('semaphore');
     var leads = (S && S.allLeads) ? S.allLeads() : null;
-    if (!leads) return null;
-    var todos = [];
-    var projects = (L && L.projects) ? L.projects() : {}, calls = (L && L.calls) ? L.calls() : {};
-    Object.keys(projects || {}).forEach(function (pid) {
-      var p = projects[pid], c = p && p.callId && calls[p.callId];
-      (p && p.todos || []).forEach(function (t) {
-        if (!t || !t.done) return;
-        todos.push({ id: t.id, doneAt: isDay(t.doneAt) ? t.doneAt.slice(0, 10) : '',
-          project: p.name || '', call: (c && c.name) || '', text: t.text || '',
-          deadline: t.deadline || t.dueDate || '',
-          updates: (t.subStamps || []).map(function (u) { return (u.stamp ? u.stamp + ' — ' : '') + (u.text || ''); }).reverse().join('\n'),
-          checklist: (t.checklist || []).map(function (ci) { return (ci.done ? '✓ ' : '○ ') + (ci.text || ''); }).join('\n') });
-      });
-    });
-    return { leads: leads, todos: todos };
+    return leads ? { leads: leads } : null;
   }
-  /* Furthest along first, as a report is read: Talking, then Contacted with
-     both paths over one, then Spotted, each by its day; then the closed
-     leads, the latest closed first. */
-  var RANK = { talking: 0, contacted: 1, spotted: 4 }, KRANK = { both: 0, researchers: 1, lead: 2 };
-  function rank(l) { return l.doneAt ? 9 : RANK[l.stage] + (l.stage === 'contacted' ? KRANK[l.kind] || 0 : 0); }
-  function order(a, b) {
-    var d = rank(a) - rank(b); if (d) return d;
-    if (a.doneAt || b.doneAt) return (b.doneAt || '').localeCompare(a.doneAt || '');
+  /* Within a step the day decides as it does in the app, then the name;
+     Contacted keeps the app's order of its two paths, both ways first. */
+  var KRANK = { both: 0, researchers: 1, lead: 2 };
+  function byDay(a, b) {
+    if (a.stage === 'contacted' && b.stage === 'contacted' && a.kind !== b.kind) return KRANK[a.kind] - KRANK[b.kind];
     if (!!a.due !== !!b.due) return a.due ? -1 : 1;
     if (a.due !== b.due) return a.due < b.due ? -1 : 1;
     return a.name.localeCompare(b.name);
   }
-  function upKey(l, u) { return l.aid + '|' + l.id + '|' + sum((u.at || u.when) + '|' + u.text); }
 
   function build(data, seen) {
-    var today = iso(new Date()), was = seen || null;
-    var next = { at: today, leads: {}, ups: {}, todos: {} };
-    var leads = data.leads.slice().sort(order);
-    var leadRows = [], upRows = [], nNew = 0;
-    leads.forEach(function (l) {
-      var fp = sum(JSON.stringify(l));
+    var was = seen || null;
+    var next = { at: new Date().toISOString().slice(0, 10), leads: {} }, mark = {};
+    data.leads.forEach(function (l) {
       /* by arena and lead together: a lead copied with its arena keeps its id */
-      var key = l.aid + '|' + l.id;
+      var key = l.aid + '|' + l.id, fp = sum(JSON.stringify(l));
       next.leads[key] = fp;
-      var mark = !was ? '' : !was.leads[key] ? 'new' : was.leads[key] !== fp ? 'changed' : '';
-      if (mark) nNew++;
-      var ups = l.updates.slice().reverse();
-      ups.forEach(function (u) {
-        var k = upKey(l, u); next.ups[k] = 1;
-        var fresh = !!was && !was.ups[k];
-        upRows.push({ hl: fresh, at: u.at, v: [fresh ? 'new' : '', isDay(u.at) ? u.at : u.when, l.arena, l.name, u.text] });
-      });
-      leadRows.push({ hl: !!mark, v: [mark, l.arena, l.type, l.project || l.name, l.coordinator, l.contact, l.match,
-        l.doneAt ? 'Closed — ' + l.where.toLowerCase() : l.where, l.score || '', l.doneAt ? '' : (l.due || ''),
-        l.doneAt || '', l.ended,
-        l.links.map(function (k) { return k.url && k.url !== k.name ? k.name + ' — ' + k.url : k.name; }).join('\n'),
-        ups.map(function (u) { return (isDay(u.at) ? sayDay(u.at) : u.when) + ' — ' + u.text; }).join('\n'),
-        ups.length && isDay(ups[0].at) ? ups[0].at : (ups.length ? ups[0].when : '')] });
+      var m = !was ? '' : !was.leads[key] ? 'new' : was.leads[key] !== fp ? 'changed' : '';
+      if (m) mark[key] = m;
     });
-    upRows.sort(function (a, b) { return (b.at || '').localeCompare(a.at || ''); });
-    var todos = data.todos.slice().sort(function (a, b) {
-      if (!!a.doneAt !== !!b.doneAt) return a.doneAt ? -1 : 1;
-      return (b.doneAt || '').localeCompare(a.doneAt || '');
+    var open = data.leads.filter(function (l) { return !l.doneAt; });
+    /* the app's three steps, furthest along first, each a section of its own */
+    var sections = [['talking', 'Talking'], ['contacted', 'Contacted'], ['spotted', 'Spotted']].map(function (s) {
+      var ls = open.filter(function (l) { return l.stage === s[0]; }).sort(byDay);
+      return { title: s[1] + '  ·  ' + ls.length + ' lead' + (ls.length === 1 ? '' : 's'), leads: ls };
+    }).filter(function (s) { return s.leads.length; });
+    var closed = data.leads.filter(function (l) { return !!l.doneAt; }).sort(function (a, b) {
+      return (b.doneAt || '').localeCompare(a.doneAt || '') || a.name.localeCompare(b.name);
     });
-    var nTodo = 0;
-    var todoRows = todos.map(function (t) {
-      next.todos[t.id] = 1;
-      var fresh = !!was && !was.todos[t.id];
-      if (fresh) nTodo++;
-      return { hl: fresh, v: [fresh ? 'new' : '', t.doneAt, t.project, t.call, t.text, t.deadline, t.updates, t.checklist] };
-    });
-    var open = data.leads.filter(function (l) { return !l.doneAt; }).length;
-    var front = [
-      ['Leads and closed todos', ''],
-      ['', ''],
-      ['Written', sayDay(today)],
-      ['Previous export', was ? sayDay(was.at) : 'none — this is the first, so nothing is marked new'],
-      ['Leads', open + ' open, ' + (data.leads.length - open) + ' closed'],
-      ['Closed todos', String(todos.length)],
-      ['', ''],
-      ['Since the previous export', was ? nNew + ' lead' + (nNew === 1 ? '' : 's') + ' new or changed, ' +
-        nTodo + ' todo' + (nTodo === 1 ? '' : 's') + ' newly closed' : ''],
-      ['', 'Rows in yellow are new or changed since the previous export.', true],
-      ['', ''],
-      ['', 'Written by One App. Each export replaces the whole file, so changes made in it are overwritten next time.']
-    ];
-    var wb = book([
-      { name: 'About', xml: about(front) },
-      table('Leads', [
-        { h: 'Since last', w: 10 }, { h: 'Arena', w: 22 }, { h: 'Type', w: 14 }, { h: 'Project', w: 34 },
-        { h: 'Coordinator', w: 24 }, { h: 'Main contact', w: 22 }, { h: 'Match', w: 30 },
-        { h: 'Where we are', w: 30 }, { h: 'Score', w: 7, k: 'num' }, { h: 'Next date', w: 13, k: 'date' },
-        { h: 'Closed on', w: 13, k: 'date' }, { h: 'How it ended', w: 17 }, { h: 'Links', w: 40 },
-        { h: 'Updates, newest first', w: 60 }, { h: 'Last update', w: 13, k: 'date' }], leadRows),
-      table('Lead updates', [
-        { h: 'Since last', w: 10 }, { h: 'Date', w: 13, k: 'date' }, { h: 'Arena', w: 22 },
-        { h: 'Lead', w: 34 }, { h: 'Update', w: 80 }], upRows),
-      table('Closed todos', [
-        { h: 'Since last', w: 10 }, { h: 'Closed on', w: 13, k: 'date' }, { h: 'Project', w: 30 },
-        { h: 'Call', w: 18 }, { h: 'Todo', w: 50 }, { h: 'Deadline', w: 13, k: 'date' },
-        { h: 'Updates', w: 50 }, { h: 'Checklist', w: 40 }], todoRows)
-    ]);
-    return { blob: wb, next: next };
+    var S = Styles();
+    var one = sheet(S, columns(false), sections, mark, GROUPS.step);
+    var two = sheet(S, columns(true), [{ title: null, leads: closed }], mark, '#8A8070');
+    return { blob: book(S, [
+      { name: 'Open leads', xml: one.xml, rels: one.rels },
+      { name: 'Closed leads', xml: two.xml, rels: two.rels }]), next: next };
   }
 
   /* ── where it goes ──

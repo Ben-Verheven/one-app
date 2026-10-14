@@ -141,9 +141,9 @@ bridge can push that room to the cloud. And one from the Ledger,
 **`semaphore:project`**, with a name and links, when a lead is completed as
 having become a project, in the Semaphore or on the Ledger's lead card.
 And **`leads:excel`**, from the Excel button on the Semaphore's Leads, which
-the bridge answers by writing every lead (`allLeads()`) and every todo the
-Ledger has closed into one .xlsx file — the same file again each time where
-the browser can keep hold of one; the bridge's own comment says how.
+the bridge answers by writing every lead (`allLeads()`), open and closed,
+into one .xlsx file — the same file again each time where the browser can
+keep hold of one; the bridge's own comment says how.
 
 What the bridge actually does: turns any researcher's name, written
 anywhere in any room, into a link that opens the Atlas dossier over the

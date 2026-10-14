@@ -3686,21 +3686,21 @@ function leadsForBoard(){
 }
 /* Every lead there is, open and closed, frozen arenas' too, read out in
    words for the weekly Excel (Mark, 2026-10-14) — the bridge writes the
-   file, since it holds the Ledger's closed todos as well. "Where" is the
+   file, and this room only reads its leads out for it. "Where" is the
    step in this room's own words, Contacted saying which of its two paths;
    a closed lead keeps the step it had reached and says how it ended. */
 function leadsForExcel(){
   const out=[];
   S.arenas.forEach(a=>(a.leads||[]).forEach(l=>{
     const st=stageOf(l);
-    out.push({id:l.id,aid:a.id,arena:a.name,type:(typeOf(a)||{}).name||'',frozen:!!a.frozenAt,
+    out.push({id:l.id,aid:a.id,arena:a.name,type:(typeOf(a)||{}).name||'',tone:arenaTone(a),frozen:!!a.frozenAt,
       name:leadName(l),project:l.project||'',match:l.match||'',
       coordinator:l.coordinator||'',contact:l.contact||'',
-      stage:st,kind:st==='contacted'?leadKind(l):'',
+      stage:st,kind:st==='contacted'?leadKind(l):'',toResearchers:!!l.toResearchers,toLead:!!l.toLead,
       where:st==='contacted'?'Contacted \u2014 '+KIND_NAME[leadKind(l)]:st==='talking'?'Talking':'Spotted',
       score:l.score||0,due:l.due||null,doneAt:l.doneAt||null,
       ended:l.doneAt?(isOutcome(l.outcome)?OUTCOMES[l.outcome].name:'Closed'):'',
-      links:(l.links||[]).map(k=>({name:linkName(k),url:String(k.url||'').replace(/^mailto:/i,'')})),
+      links:(l.links||[]).map(k=>({name:linkName(k),url:String(k.url||'')})),
       updates:(l.updates||[]).map(u=>({at:u.at||'',when:updWhen(u),text:u.text||''}))});
   }));
   return out;
