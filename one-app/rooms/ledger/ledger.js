@@ -2725,7 +2725,7 @@ function closeCloudPanel(){
    The key in the file is the room's own name, so a file can be read by
    eye, and `what` is how the toast says it out loud. Adding a room here
    is the whole of joining the export — both halves read this list. */
-var ROOM_STORES=[{id:'semaphore',what:'the Semaphore board'},
+var ROOM_STORES=[{id:'semaphore',what:'the Marketplace board'},
                  {id:'notes',    what:'the notes'},
                  {id:'atlas',    what:'the Atlas edits'}];
 
@@ -6972,7 +6972,7 @@ var Board=(function(){
   function leadsNewClick(evt){
     stopEvt(evt);
     if(open&&open.leads==='new'){clearDetail();return;}
-    if(!Leads.canAdd()){toast('The Semaphore has no arena to file a lead under.');return;}
+    if(!Leads.canAdd()){toast('The Marketplace has no arena to file a lead under.');return;}
     if(face==='timeline')flip('board');
     Leads.newOpen();
     open={leads:'new'};showSlice();
@@ -8821,7 +8821,7 @@ var Leads=(function(){
     try{ok=sock.change(key.slice(0,i),key.slice(i+1),op,val);}
     catch(e){console.error(e);}
     keep=null;
-    if(!ok)toast('That lead could not be changed — it may have moved in the Semaphore.');
+    if(!ok)toast('That lead could not be changed — it may have moved in the Marketplace.');
     return ok;
   }
 
@@ -8898,7 +8898,7 @@ var Leads=(function(){
       +gap
       +'<button class="todo-btn todo-btn-quiet" onclick="PL.leadBeginEdit(\''+k+'\',event)">✎ Edit</button>'
       +'<button class="todo-btn todo-btn-done todo-actions-end" '
-        +'title="Done with this one — say how it ended; it stays in the Semaphore’s record" '
+        +'title="Done with this one — say how it ended; it stays in the Marketplace’s record" '
         +'onclick="PL.leadDone(\''+k+'\',event)">'
         +'<span class="todo-done-box" aria-hidden="true">✓</span>Complete</button>'
       +'</div>';
@@ -8991,7 +8991,7 @@ var Leads=(function(){
         }).join('')+'</div>':'';
 
     var hex=hexOf(l);
-    var colTip=(l.type?l.type+' \u2014 ':'')+'the colour of '+l.arena+'\u2019s type, chosen in the Semaphore';
+    var colTip=(l.type?l.type+' \u2014 ':'')+'the colour of '+l.arena+'\u2019s type, chosen in the Marketplace';
     return '<div class="todo-card-later lead-card'+(keep===key?' open':'')+'" id="lead-'+lid+'" '
       +'style="--edge:'+hex+';--lead:'+hex+'" data-lead="'+esc(key)+'" '
       +'onclick="PL.toggleTodoExpand(this,event)">'
@@ -9004,7 +9004,7 @@ var Leads=(function(){
       /* The arena is in the project's seat and is the way across, the way a
          project's name is: it opens that arena in the Semaphore. */
       +'<button type="button" class="todo-later-proj todo-proj-btn" '
-        +'title="'+esc('Open '+l.arena+' in the Semaphore')+'" '
+        +'title="'+esc('Open '+l.arena+' in the Marketplace')+'" '
         +'onclick="PL.leadArena(\''+k+'\',event)">'+esc(l.arena)+'</button>'
       /* What it is, and under it, quieter, who could fit it — the match is on
          the shut card since Mark asked for it there (2026-10-06), and the

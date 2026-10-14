@@ -1,6 +1,6 @@
 # Working on One App
 
-One App: one HTML page, five independent vanilla-JS rooms: Ledger, Semaphore, Call Board, Atlas and Notes. Pocket, the Semaphore's phone companion, is `pocket/index.html`. No framework, no bundler, no build step. GitHub Pages serves this repository as it stands on `main`, so a push is live about a minute later. The tree must still run from file://, because the OneDrive folder is the way back.
+One App: one HTML page, five independent vanilla-JS rooms: Ledger, Marketplace, Call Board, Atlas and Notes. Pocket, the Marketplace's phone companion, is `pocket/index.html`. No framework, no bundler, no build step. GitHub Pages serves this repository as it stands on `main`, so a push is live about a minute later. The tree must still run from file://, because the OneDrive folder is the way back.
 
 Read PROJECT.md first. It is the only description of how the app works and why every rule below exists. For Pocket, read pocket/POCKET.md. This file says how to behave; those say how the apps behave.
 

@@ -31,7 +31,9 @@ const KINDS={brokerage:{name:'Brokerage'},call:{name:'Call'}};
    It buys frequency, not height — the same choice the open call makes. A central
    arena turns about twice as often, a peripheral one about a third as often, and
    the freezer is simply the step past peripheral: one axis, four positions, from
-   the work you are in to the work you have put away. */
+   the work you are in to the work you have put away. Since the Marketplace
+   (2026-10-14) it is the venues serving the arena that it quickens or slows
+   (see vEvery), the rotation of arenas having gone. */
 /* Where a lead has got to. Three steps and no more: the point is to know at a
    glance whether anyone has been written to yet, not to run a pipeline. There is
    deliberately no 'agreed' — the moment something is agreed it stops being a
@@ -58,9 +60,9 @@ const OUTCOMES={project:{name:'Became a project',said:'became a project'},
 const isOutcome=k=>Object.prototype.hasOwnProperty.call(OUTCOMES,k);
 
 const WEIGHTS={
-  central:   {name:'Central',   turn:.6,lift:1, long:'Work you are actually in. Comes round about twice as often.'},
-  ordinary:  {name:'Ordinary',  turn:1, lift:.5,long:'The ordinary rotation \u2014 about four weeks.'},
-  peripheral:{name:'Peripheral',turn:3, lift:0, long:'Watched out of diligence. Comes round about a third as often.'}
+  central:   {name:'Central',   turn:.6,lift:1, long:'Work you are actually in. Its venues come round about twice as often.'},
+  ordinary:  {name:'Ordinary',  turn:1, lift:.5,long:'Its venues come round at their own pace.'},
+  peripheral:{name:'Peripheral',turn:3, lift:0, long:'Watched out of diligence. Its venues come round about a third as often.'}
 };
 const weightOf=a=>WEIGHTS[a&&a.weight]?a.weight:'ordinary';
 const weightClass=a=>{const w=weightOf(a);return w==='ordinary'?'':' w-'+w;};
@@ -154,10 +156,9 @@ function defaultTypes(){
    the stylesheet's own width stands. */
 const NAME_MIN=140,NAME_MAX=560;
 function blank(){
-  return {v:1,types:defaultTypes(),arenas:[],
-    ui:{q:'',collapsed:{},view:'board',
-        wallSort:'rotation',boardSort:'date',nameW:null,
-        howOpen:false,freezerOpen:false}};
+  return {v:1,types:defaultTypes(),arenas:[],venues:[],
+    ui:{q:'',collapsed:{},view:'now',
+        boardSort:'date',nameW:null,freezerOpen:false}};
 }
 /* An arena remembers which of its own dates it is waiting for. That goes stale
    the moment the dates change, so this puts it straight — a wait ends when the
@@ -295,6 +296,9 @@ function migrate(s){
      once to give the types theirs, then gone. */
   settleTones(s);
   s.arenas.forEach(a=>{delete a.color;});
+  /* the events and tools, wherever they still stand on an arena, become
+     venues (see "venues") */
+  absorbVenues(s);
   /* ── the ui, whole ──
      Every field below was guarded one at a time, and each guard asked only
      whether `s.ui` existed at all. A board arriving with *some* of a ui —
@@ -315,15 +319,16 @@ function migrate(s){
     const ui=Object.assign({},d);
     ui.q        = typeof u.q==='string' ? u.q : d.q;
     ui.collapsed= map(u.collapsed) || {};
-    ui.view     = ['brokerage','dispatch','coming'].includes(u.view) ? u.view : 'board';
-    /* By type was merged into the rotation (2026-10-11), so it lands there */
-    ui.wallSort = u.wallSort==='leads' ? 'leads' : 'rotation';
+    /* Now, the Board, Leads and Dispatches since the Marketplace
+       (2026-10-14). The Rotation and Coming up went with it and land on
+       Now; Leads was the wall in its leads arrangement until then. */
+    ui.view     = ['now','board','leads','dispatch'].includes(u.view) ? u.view
+                : u.view==='brokerage'&&u.wallSort==='leads' ? 'leads' : 'now';
     /* the board's two orders since 2026-10-11 (see "the board's two orders");
        the two it had before — next publication, and by status — both read as
        the date order, which took their place */
     ui.boardSort = u.boardSort==='mine' ? 'mine' : 'date';
     ui.nameW = Number.isFinite(u.nameW) ? Math.min(NAME_MAX,Math.max(NAME_MIN,Math.round(u.nameW))) : null;
-    ui.howOpen     = u.howOpen===true;
     ui.freezerOpen = u.freezerOpen===true;
     s.ui=ui;
   }
@@ -342,6 +347,162 @@ function migrate(s){
      those dates change — on load here, and at the moment of an edit below. */
   s.arenas.forEach(reconcile);
   return s;
+}
+/* ============ venues ============
+   The Marketplace is kept around the places Mark goes to look for projects
+   and partners: a brokerage event's marketplace, a partner-search tool
+   (Mark, 2026-10-14, when the Semaphore became the Marketplace). Until then
+   the room was kept around the arenas, and what he actually visited was
+   scattered over it: an event was one day among an arena's dates, a tool
+   was one brokerage link among many, and the same partner search stood on
+   seven arenas as seven links. Stamps already belonged to the site rather
+   than the link (siteKey), and removing an event took its links off every
+   card, both because the venue was the real thing all along.
+
+   A venue is an event or a tool. An event has a life: coming, open (its
+   marketplace, where profiles and project ideas pile up), its meeting days,
+   open a while after, then over. A tool is always open. A venue serves one
+   arena or several, and is listed once. It has a rhythm, how often it wants
+   a visit, and a record of the visits, each one answering "anything?": a
+   leads that start from it say so (`venueId`), so a venue can show what it
+   has given.
+
+   It is kept in `S.venues`, beside the arenas, and a visit's id is its day,
+   so the same visit made on the desk and the iPad is one visit when the two
+   copies are put together. */
+const RHYTHM={open:4,meeting:2,after:7,tool:21};   /* days between visits, by where a venue stands */
+const SPOT_MAX=14;          /* a span up to two weeks is meeting days; longer is an open stretch or a guess at a season */
+const NOW_BACK=28,NOW_AHEAD=84;   /* the Now page's strip: four weeks back, twelve ahead (Mark chose the strip of time) */
+const VGOT={nothing:'nothing new',something:'something',lead:'a lead'};
+
+/* A short fixed name for a site, so the venue a tool link becomes has the
+   same id on every device that turns it into one: two devices each making
+   it with an id of its own would have put two copies of it on the board
+   when their copies were put together. */
+function hashKey(s){
+  let h=0x811c9dc5;
+  for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,0x01000193);}
+  return (h>>>0).toString(36);
+}
+const ISO_DAY=/^\d{4}-\d{2}-\d{2}$/;
+function tidyVenue(v){
+  if(!v.id)v.id=uid();
+  v.kind=v.kind==='tool'?'tool':'event';
+  v.name=String(v.name==null?'':v.name).trim()||'Unnamed venue';
+  v.url=typeof v.url==='string'?v.url.trim():'';
+  v.arenas=[...new Set((Array.isArray(v.arenas)?v.arenas:[]).filter(x=>typeof x==='string'&&x))];
+  if(!Array.isArray(v.pages))v.pages=[];
+  v.pages=v.pages.filter(p=>p&&typeof p==='object'&&p.url);
+  v.pages.forEach(p=>{if(!p.id)p.id=uid();if(typeof p.label!=='string')p.label='';});
+  /* one visit a day, its id the day itself */
+  const seen=new Set();
+  v.visits=(Array.isArray(v.visits)?v.visits:[]).filter(x=>x&&ISO_DAY.test(x.at||x.id||'')).map(x=>{
+    const at=x.at||x.id;const o={id:at,at};
+    if(VGOT[x.got])o.got=x.got;
+    if(typeof x.text==='string'&&x.text.trim())o.text=x.text.trim();
+    if(typeof x.leadId==='string'&&x.leadId)o.leadId=x.leadId;
+    return o;
+  }).filter(x=>!seen.has(x.at)&&seen.add(x.at)).sort((x,y)=>x.at.localeCompare(y.at));
+  if(v.kind==='event'){
+    if(!['day','month','quarter','half','year','range','none'].includes(v.gran))
+      v.gran=v.start?((v.end&&v.start!==v.end)?'range':'day'):'none';
+    if(!v.start||v.gran==='none'){v.start=null;v.end=null;if(v.gran!=='none')v.gran='none';}
+    if(v.start&&!v.end)v.end=v.start;
+    if(v.start&&v.end<v.start){const e=v.end;v.end=v.start;v.start=e;}
+    if(v.grade!=='fixed'||!gradeOptions(v.gran).includes('fixed'))v.grade=v.grade==='fixed'&&gradeOptions(v.gran).includes('fixed')?'fixed':'uncertain';
+  }else{delete v.gran;delete v.start;delete v.end;delete v.grade;delete v.opens;delete v.closes;}
+  ['opens','closes'].forEach(k=>{if(k in v&&!ISO_DAY.test(v[k]||''))v[k]=null;});
+  if(!(v.every>=1&&v.every<=365))delete v.every;else v.every=Math.round(v.every);
+  if(typeof v.note!=='string')v.note='';
+  if(typeof v.memo==='string'&&!v.memo.trim())delete v.memo;
+  return v;
+}
+function joinVenue(v,aid){if(aid&&!v.arenas.includes(aid))v.arenas.push(aid);}
+/* the stamps an event or a link carried become visits */
+function takeStamps(v,x){
+  for(const at of [x.stampPrev,x.stampedAt])
+    if(at&&ISO_DAY.test(at)&&!v.visits.some(y=>y.at===at))v.visits.push({id:at,at});
+  v.visits.sort((p,q)=>p.at.localeCompare(q.at));
+}
+/* Everything the room used to keep about events and tools is turned into
+   venues here, on every read of the board and not once: Pocket, an older
+   copy of the desk and the agent's Dispatches can all still put a
+   brokerage date or link on an arena, and each is taken in the moment it
+   arrives. A brokerage date becomes an event venue under its own id, or
+   joins the event already standing at the same site on the same day. The
+   general tool, and every brokerage link that was ever stamped, becomes a
+   tool venue. Any other brokerage link to a venue's site joins that venue,
+   adding its arena, so GREENET's seven links become one venue serving
+   seven arenas. The links left over are background, as the agent finds
+   them: info pages, last year's "basis" pages. */
+function absorbVenues(s){
+  if(!Array.isArray(s.venues))s.venues=[];
+  s.venues=s.venues.filter(v=>v&&typeof v==='object').map(tidyVenue);
+  const byId=new Map(s.venues.map(v=>[v.id,v])),bySite=new Map();
+  for(const v of s.venues){const k=v.url&&siteKey(v.url);if(k&&!bySite.has(k))bySite.set(k,v);}
+  const add=v=>{s.venues.push(v);byId.set(v.id,v);const k=v.url&&siteKey(v.url);if(k&&!bySite.has(k))bySite.set(k,v);};
+  for(const a of s.arenas){
+    const keep=[];
+    for(const d of a.dates||[]){
+      if(d.kind==='call'){keep.push(d);continue;}
+      const k=d.url&&siteKey(d.url);
+      let v=byId.get(d.id)||null;
+      if(!v&&k){const w=bySite.get(k);if(w&&w.kind==='event'&&w.start===d.start)v=w;}
+      if(v){joinVenue(v,a.id);takeStamps(v,d);if(!v.memo&&d.memo)v.memo=d.memo;continue;}
+      v=tidyVenue({id:d.id,kind:'event',name:d.label||'',url:d.url||'',arenas:[a.id],
+        gran:d.gran,start:d.start,end:d.end,grade:d.grade,opens:null,closes:null,
+        note:d.note||'',memo:d.memo,visits:[],pages:[]});
+      if(d.foundAt)v.foundAt=d.foundAt;
+      takeStamps(v,d);add(v);
+    }
+    a.dates=keep;
+  }
+  for(const a of s.arenas){
+    const bk=a.brokerage;if(!bk||!Array.isArray(bk.links))continue;
+    const keep=[];
+    for(const l of bk.links){
+      const k=l.url&&!/^mailto:/i.test(l.url)&&siteKey(l.url);
+      let v=k?bySite.get(k):null;
+      if(!v&&k&&(a.toolId===l.id||l.stampedAt)){
+        const id='vt'+hashKey(k);
+        v=byId.get(id)||null;
+        if(!v){v=tidyVenue({id,kind:'tool',name:l.label||linkHost(l)||k,url:l.url,arenas:[],note:'',visits:[],pages:[]});
+          if(l.foundAt)v.foundAt=l.foundAt;add(v);}
+      }
+      if(!v){keep.push(l);continue;}
+      joinVenue(v,a.id);takeStamps(v,l);
+      if(!v.url)v.url=l.url;
+      else if(linkKey(l.url)!==linkKey(v.url)&&!v.pages.some(p=>linkKey(p.url)===linkKey(l.url)))
+        v.pages.push({id:l.id,label:l.label||'',url:l.url});
+    }
+    bk.links=keep;
+    delete a.toolId;
+  }
+  return s;
+}
+/* One site, for the stamp (Mark, 2026-10-12): a stamp stands on every link
+   that reaches the same event or tool, however each is named and whichever
+   page of it each points at — its front page, its sign-up, its list of
+   participants, another language. linkKey alone kept those apart, so one
+   event linked from three cards carried three stamps. The site is the host,
+   which is the event itself wherever it has a host of its own
+   (an-event.b2match.io). Where one host carries many events or tools side by
+   side — b2match.com, every europa.eu portal, the big general platforms — the
+   host would give them all one stamp, so there the site is the path, the
+   language left out, and it stops at the event's own name where the path has
+   one (/e/an-event, /events/an-event). A host goes on SHARED_HOSTS when two
+   unrelated links turn out to share a stamp, or a venue: the Estonian
+   research council's proposals site carries three partnerships' partner
+   searches side by side, and the Polish centres' sites several more
+   (found when the Marketplace made venues of them, 2026-10-14). */
+const SHARED_HOSTS=/^(?:b2match\.(?:io|com|eu)|(?:.+\.)?(?:europa\.eu|google\.com|linkedin\.com|youtube\.com|github\.com|eventbrite\.[a-z.]+|meetup\.com|lu\.ma|zoom\.us|microsoft\.com|sharepoint\.com|gov\.pl|horizoneuropencpportal\.eu|eurekanetwork\.org)|proposals\.etag\.ee)$/;
+function siteKey(u){
+  const k=linkKey(u),i=k.indexOf('/');
+  const host=(i<0?k:k.slice(0,i)).replace(/:\d+$/,'');
+  if(!SHARED_HOSTS.test(host))return host;
+  const segs=(i<0?'':k.slice(i+1)).split('/').filter(x=>x&&!/^[a-z]{2}(?:[-_][a-z]{2})?$/.test(x));
+  const e=segs.findIndex(x=>/^(?:e|event|events)$/.test(x));
+  return [host].concat(e>=0&&segs[e+1]?segs.slice(0,e+2):segs).join('/');
 }
 /* Reading the board is the one place this app can lose everything: if migrate
    throws, the old code caught it, opened a blank board and let the next save
@@ -488,9 +649,7 @@ function cleanTags(list){
    and a box with words in it stays open, so a narrowed board always shows
    what narrowed it. */
 function searchChanged(){
-  save();
-  if(S.ui.view==='brokerage')renderWall();else renderBoard();
-  if(S.ui.view==='coming')renderComing();
+  save();repaint();applyView();
 }
 function applySearchBox(open){
   const si=$('#search'),b=$('#searchBtn');
@@ -574,19 +733,23 @@ function callSpans(a){
 function laneHTML(a){
   let h='';
   const now=T(todayISO());
-  for(const dt of a.dates){
-    if(dt.kind==='call'||!dt.start)continue;
-    const s=T(dt.start),e=T(dt.end)+DAY;
-    if(e<T0||s>T1)continue;
-    const L=Math.max(0,X(s)),R=Math.min(100,X(e)),W=R-L;
-    const unc=dt.grade!=='fixed',past=e<=now;
-    const data=' data-act="jumpDate" data-a="'+a.id+'" data-d="'+dt.id+'" data-tipd="1" tabindex="0" role="button" aria-label="'+esc(dtLabel(dt))+'"';
-    if(dt.gran==='day'){
-      h+='<div class="mk bk '+(unc?'bk-unc':'bk-fixed')+(past?' past':'')+'" style="left:'+X(s+DAY/2)+'%"'+data+'></div>';
-    }else{
-      const lbl=W>7?'<span class="bl">'+esc(dtLabel(dt))+'</span>':'';
-      h+='<div class="mk bk bk-band'+(unc?' unc':'')+(past?' past':'')+'" style="left:'+L+'%;width:'+W+'%"'+data+'>'+lbl+'</div>';
-    }
+  /* The venues the arena is served by, since the Marketplace (2026-10-14):
+     an event's meeting days as its brokerage date was drawn, and the
+     marketplace's open stretch either side, where it has one, as a soft
+     band under them. A press opens the venue. */
+  for(const v of venuesOf(a)){
+    const w=vWin(v);if(!w)continue;
+    if(w.to+DAY<T0||w.from>T1)continue;
+    const unc=v.grade!=='fixed';
+    const data=' data-act="openVenue" data-v="'+v.id+'" data-tipv="'+v.id+'" tabindex="0" role="button" aria-label="'+esc(v.name)+'"';
+    const band=(s,e,cls,lbl)=>{const L=Math.max(0,X(s)),R=Math.min(100,X(e)),W=R-L;
+      return '<div class="mk bk '+cls+(e<=now?' past':'')+'" style="left:'+L+'%;width:'+Math.max(W,.3)+'%"'+data+'>'+
+        (lbl&&W>7?'<span class="bl">'+esc(v.name)+'</span>':'')+'</div>';};
+    if(w.ms===null){h+=band(w.from,w.to+DAY,'bk-band'+(unc?' unc':''),true);continue;}
+    if(w.from<w.ms||w.to>w.me)h+=band(w.from,w.to+DAY,'bk-win',false);
+    if(v.gran==='day'||w.me===w.ms)
+      h+='<div class="mk bk '+(unc?'bk-unc':'bk-fixed')+(w.me+DAY<=now?' past':'')+'" style="left:'+X(w.ms+DAY/2)+'%"'+data+'></div>';
+    else h+=band(w.ms,w.me+DAY,'bk-band'+(unc?' unc':''),false);
   }
   /* Where two bars overlap, a bar takes the lowest level whose previous
      occupant has already cleared, with daylight between them, three levels
@@ -631,7 +794,7 @@ function laneHTML(a){
           brokerage event still to come, so the arena with the nearest
           thing to act on stands at the top. A brokerage entry spanning more
           than about six weeks is a season pencilled in, not an event, and
-          does not count, as in eventNear. An arena with nothing coming goes
+          does not count. An arena with nothing coming goes
           to the foot, by name.
    It replaced two orders that each said half of this: the next publication
    only, and Opens / Open / Between. */
@@ -644,6 +807,10 @@ function nextKeyT(a){
                        :T(dt.end||dt.start)-T(dt.start)>45*DAY)continue;
     best=Math.min(best,Math.max(now,T(dt.start)));
   }
+  for(const v of venuesOf(a)){
+    const w=vWin(v);
+    if(w&&w.ms!==null&&w.me>=now)best=Math.min(best,Math.max(now,w.ms));
+  }
   return best;
 }
 function mineOrder(x,y){return bkPos(x)-bkPos(y)||x.name.localeCompare(y.name);}
@@ -655,48 +822,35 @@ const boardOrder=()=>S.ui.boardSort==='mine'?mineOrder:dateOrder;
 const BOARD_SORTS={mine:{name:'My order',long:'Your own order, as set in Types'},
                    date:{name:'By date',long:'Soonest first: the nearest deadline, call opening or brokerage event'}};
 let sortOpen=false;
-/* ───────── the general tool ─────────
-   One of an arena's brokerage links can be its general tool — the platform
-   or partner search that has no date of its own and is simply gone through
-   now and then (Mark, 2026-10-14). It is chosen in the arena's panel, by the
-   diamond beside the link (`toolId` on the arena), and stands on the Board
-   at the right of the name column, against its drag line, drawn as a
-   brokerage event is: a diamond. A press opens the tool's site and marks it
-   gone through today, since going there is what the mark records (Mark,
-   2026-10-14); the diamond then carries the days since, white turning to the
-   brokerage red over a fortnight as Coming up's stamps do. The stamp is the
-   link's own, so it is the same stamp the rotation cards show for that site.
-   A second press the same day only opens the site: when the press meant
-   "toggle", opening the tool twice took the mark back. A mistaken mark is
-   undone from the rotation card's stamp. */
-function generalTool(a){
-  return a.toolId?((a.brokerage&&a.brokerage.links)||[]).find(l=>l.id===a.toolId)||null:null;
-}
+/* ───────── the arena's tools ─────────
+   An arena had one general tool, a brokerage link marked to be gone through
+   now and then, standing as a diamond at the right of the name column
+   against its drag line (Mark, 2026-10-14). The tools are venues now and an
+   arena can have several, so the diamond stands for the one that has waited
+   longest, carries the days since its last visit, reddening towards the day
+   it is due as the Now page's stamps do, and a press opens its site, as Go
+   does, so that coming back asks what it gave. */
+function arenaTools(a){return venuesOf(a).filter(v=>v.kind==='tool');}
 function toolMarkHTML(a){
-  const lk=generalTool(a);
-  if(!lk)return '';
-  const st=stampSay(stampOf(lk)),n=st.d===null?null:Math.max(0,st.d);
-  const tip=linkName(lk)+' \u2014 '+(st.on?'Gone through today \u2014 click to open it':
-    st.ageTip+' \u2014 click to open it and mark it gone through');
-  return '<button class="toolmk'+(n===null?'':' dated')+'" data-act="toolStamp" data-id="'+a.id+'" '+
-    (n===null?'':'style="--age:'+Math.round(Math.min(n,14)/14*100)+'%" ')+
+  const ts=arenaTools(a);
+  if(!ts.length)return '';
+  const t=ts.slice().sort((x,y)=>(vSince(y)===null?1e9:vSince(y))-(vSince(x)===null?1e9:vSince(x)))[0];
+  const d=vSince(t),n=d===null?null:Math.max(0,d),e=vEvery(t)||14;
+  const tip=t.name+(ts.length>1?' (and '+(ts.length-1)+' more tool'+(ts.length>2?'s':'')+')':'')+' \u2014 '+
+    (d===null?'not visited yet':d<=0?'visited today':'last visit '+(d===1?'yesterday':d+' days ago'))+' \u2014 click to go';
+  return '<button class="toolmk'+(n===null?'':' dated')+'" data-act="toolGo" data-v="'+t.id+'" '+
+    (n===null?'':'style="--age:'+Math.round(Math.min(n/e,1)*100)+'%" ')+
     'title="'+esc(tip)+'" aria-label="'+esc(tip)+'"><span>'+(n===null?'':n>99?'99+':n)+'</span></button>';
 }
-/* The board stays a picture of the calendar. The one thing that gets a mark
-   here is a wait whose date is coming up, in the green todos always wear. */
+/* The board stays a picture of the calendar. */
 function boardRow(a,bg){
   const looms=a.dates.filter(d=>!d.start);
   const loomBtn=looms.length?
     '<button class="loom" data-act="openArena" data-id="'+a.id+'" data-tipl="1"><i class="sw sw-uncertain"></i>'+looms.length+'</button>':'';
-  const st=standing(a);
-  const owed=st.state==='wake'?'Coming up: '+st.hold.label:'';
-  const due=owed?
-    '<button class="duemk" data-act="openArena" data-id="'+a.id+'" '+
-    'title="'+esc(owed)+'" aria-label="'+esc(owed)+'"></button>':'';
   /* The column beside the names that said Open / Opens / Between went on
      2026-10-11 (Mark): the calendar beside the name says it already. */
   return '<div class="row"><div class="cell name">'+
-    '<button class="nm'+weightClass(a)+'" data-act="openArena" data-id="'+a.id+'">'+esc(a.name)+'</button>'+due+loomBtn+toolMarkHTML(a)+
+    '<button class="nm'+weightClass(a)+'" data-act="openArena" data-id="'+a.id+'">'+esc(a.name)+'</button>'+loomBtn+toolMarkHTML(a)+
     '</div>'+
     '<div class="lane" style="background-image:'+bg+'" data-aid="'+a.id+'">'+laneHTML(a)+'</div></div>';
 }
@@ -846,7 +1000,6 @@ function loadFinds(){
     finds.state='nocloud';finds.rows=[];renderDispatch();return;
   }
   finds.state='reading';finds.error=null;renderDispatch();
-  settleAsks();
   api.list((rows,err)=>{
     if(err){finds.state='error';finds.error=err;finds.rows=[];}
     else{finds.state='ready';finds.rows=rows;}
@@ -872,7 +1025,7 @@ function findText(r){
   const a=arena(r.arena_id);
   if(r.kind==='link'){
     const ev=siteFor(r);
-    if(ev)return 'Website — <b>'+esc(dtLabel(ev))+'</b> <span class="dpwhen">'+esc(dispDate(ev))+'</span>'+
+    if(ev)return 'Website — <b>'+esc(ev.name)+'</b> <span class="dpwhen">'+esc(dispDate(ev))+'</span>'+
       ' <span class="dpwas">'+esc(findHost(r.url))+'</span>';
     return 'Link — <b>'+esc(r.label||findHost(r.url))+'</b> for the brokerage links';
   }
@@ -889,16 +1042,16 @@ function findText(r){
      arena that has one the finding is a new address for it (see takeFind) */
   /* a removal names the date as the board holds it now, and why */
   if(r.kind==='remove'){
-    const old=a&&(a.dates||[]).find(d=>d.id===r.replaces_date_id);
+    const old=a&&(a.dates||[]).find(d=>d.id===r.replaces_date_id)||venue(r.replaces_date_id);
     if(!old)return 'Remove a date — <span class="dpwas">no longer on the board</span>';
-    return 'Remove — <b>'+esc(dtLabel(old))+'</b> <span class="dpwhen">'+esc(dispDate(old))+'</span>'+
+    return 'Remove — <b>'+esc(old.name||dtLabel(old))+'</b> <span class="dpwhen">'+esc(dispDate(old))+'</span>'+
       (r.note?' <span class="dpwas dpold">'+esc(r.note)+'</span>':'');
   }
   if(r.kind==='tool'){
-    const cur=a&&generalTool(a);
-    return 'General tool — <b>'+esc(r.label||findHost(r.url))+'</b>'+
-      (!cur?' for the Board':linkKey(cur.url)===linkKey(r.url)?'<span class="dpwas dpold">already the tool</span>':
-        '<span class="dpwas dpold">was: '+esc(linkName(cur))+' · '+esc(findHost(cur.url))+'</span>');
+    const cur=a&&arenaTools(a).length===1?arenaTools(a)[0]:null;
+    return 'Tool — <b>'+esc(r.label||findHost(r.url))+'</b>'+
+      (!cur?' as a venue':linkKey(cur.url)===linkKey(r.url)?'<span class="dpwas dpold">already its tool</span>':
+        '<span class="dpwas dpold">was: '+esc(cur.name)+' · '+esc(findHost(cur.url))+'</span>');
   }
   const dt=findDate(r);
   const when='<span class="dpwhen">'+esc(dispDate(dt))+'</span>';
@@ -906,7 +1059,7 @@ function findText(r){
      are being asked about */
   let was='';
   if(r.replaces_date_id&&a){
-    const old=(a.dates||[]).find(d=>d.id===r.replaces_date_id);
+    const old=(a.dates||[]).find(d=>d.id===r.replaces_date_id)||venue(r.replaces_date_id);
     if(old)was=' <span class="dpwas">was '+esc(dispDate(old))+'</span>';
   }
   if(dt.kind==='call')
@@ -987,11 +1140,9 @@ function renderDispatch(){
       '<button class="btn ghost" data-act="findRefresh"'+(finds.all?' disabled':'')+
         '>Check again</button>');
   if(!finds.rows.length){
-    el.innerHTML=head+'<p class="dpnote">Each night the agent looks through about three arenas, and any '+
-      'you have asked it to, for brokerage events (new ones, and changes to the ones on the board) and '+
-      'partner-search tools, keeps each arena\u2019s general tool up to date, offers to remove a date found to be wrong, and offers a short rewrite of their About and Brokerage texts where those are '+
-      'wrong, out of date or missing something important. Once a week it looks for call dates, new and '+
-      'changed, and programmes you are not watching yet. Whatever it finds waits here.</p>';
+    el.innerHTML=head+'<p class="dpnote">The Marketplace agent works when you ask it to, from a Claude '+
+      'session, and changes the board itself: venues, their dates and websites, call dates, links and the '+
+      'About and Brokerage texts. What it changed is in its own report. Only a new arena it suggests waits here.</p>';
     return;
   }
   const groups=order.map(k=>{
@@ -1002,27 +1153,6 @@ function renderDispatch(){
       ' <b>· '+rows.length+'</b></p>'+rows.map(findRow).join('')+'</div>';
   }).join('');
   el.innerHTML=head+'<div class="dplist">'+groups+'</div>';
-}
-
-/* An ask to the agent (see askHTML) is put out here, once the agent's own log
-   shows it has looked at that arena since the ask was made. The times are
-   compared as moments, not as text: the database writes them in a different
-   spelling from the browser's. */
-function settleAsks(){
-  const api=(typeof Hub!=='undefined'&&Hub.api)?Hub.api('semaphore-inbox'):null;
-  if(!api||!api.visits||!api.ready())return;
-  const asked=S.arenas.filter(a=>a.askAt);
-  if(!asked.length)return;
-  const since=asked.map(a=>a.askAt).sort()[0];
-  api.visits(since,(rows,err)=>{
-    if(err||!rows)return;
-    let changed=false;
-    for(const a of asked){
-      const at=Date.parse(a.askAt);
-      if(rows.some(r=>r.arena_id===a.id&&Date.parse(r.checked_at)>at)){a.askAt=null;changed=true;}
-    }
-    if(changed)relinked();
-  });
 }
 
 /* Accepting is the only door a finding has into the board, so every shape it
@@ -1068,40 +1198,67 @@ function takeFind(r){
      2026-10-14). Until this there was no way to say so, and a correction
      would only have made a second copy. Accept deletes it as the panel's
      ✕ does, so a wait on it ends with it. */
+  /* A brokerage event the finding names is a venue now, under the date's
+     own id (see absorbVenues), so a removal or a correction reaches it there. */
   if(r.kind==='remove'){
     const dt=(a.dates||[]).find(d=>d.id===r.replaces_date_id);
-    if(!dt)return 'That date is no longer on '+a.name+'.';
+    if(!dt){
+      const v=venue(r.replaces_date_id);
+      if(!v)return 'That date is no longer on '+a.name+'.';
+      dropVenue(v.id);
+      return v.name+' removed.';
+    }
     a.dates=a.dates.filter(d=>d!==dt);reconcile(a);
     save();renderAll();
     return 'Date removed from '+a.name+'.';
   }
+  /* A tool is a venue (2026-10-14). One already standing at the same site
+     only takes this arena in; an arena with one tool is given the new
+     address, as the general tool was; otherwise it is a new tool. */
   if(r.kind==='tool'){
     if(!r.url)return 'That finding had no address, so nothing changed.';
-    a.brokerage=a.brokerage||{notes:'',links:[]};
-    const cur=generalTool(a),k=linkKey(r.url);
-    const had=a.brokerage.links.find(l=>linkKey(l.url)===k);
-    if(had&&had===cur)return 'That is already the general tool of '+a.name+'.';
-    if(had)a.toolId=had.id;
-    else if(cur){cur.url=r.url;if(r.label)cur.label=r.label;cur.foundAt=now;}
-    else{const lk={id:uid(),label:r.label||'',url:r.url,foundAt:now};a.brokerage.links.push(lk);a.toolId=lk.id;}
+    const k=siteKey(r.url);
+    const same=(S.venues||[]).find(v=>v.url&&siteKey(v.url)===k);
+    if(same){
+      if(same.arenas.includes(a.id))return 'That is already a tool of '+a.name+'.';
+      joinVenue(same,a.id);save();renderAll();
+      return same.name+' now serves '+a.name+' too.';
+    }
+    const cur=arenaTools(a);
+    if(cur.length===1){cur[0].url=r.url;if(r.label)cur[0].name=r.label;cur[0].foundAt=now;save();renderAll();
+      return 'New address for '+cur[0].name+'.';}
+    const id=venue('vt'+hashKey(k))?uid():'vt'+hashKey(k);
+    S.venues.push(tidyVenue({id,kind:'tool',name:r.label||findHost(r.url),url:r.url,arenas:[a.id],
+      note:'',visits:[],pages:[],foundAt:now}));
     save();renderAll();
-    return (cur&&!had?'New address for the general tool of ':'General tool set on ')+a.name+'.';
+    return 'Tool added to '+a.name+'.';
   }
   if(r.kind==='link'){
     const ev=siteFor(r);
     if(ev){
       ev.url=r.url;
       save();renderAll();
-      return 'Website added to '+dtLabel(ev)+'.';
+      return 'Website added to '+ev.name+'.';
     }
     if(hasLink(a,r.url))return 'That link is already on '+a.name+'.';
     a.brokerage=a.brokerage||{notes:'',links:[]};
     a.brokerage.links.push({id:uid(),label:r.label||'',url:r.url,foundAt:now});
+    absorbVenues(S);
     save();renderAll();
     return 'Link added to '+a.name+'.';
   }
   const dt=findDate(r);
   dt.foundAt=now;
+  if(dt.kind==='brokerage'&&r.replaces_date_id){
+    const v=venue(r.replaces_date_id);
+    if(v&&v.kind==='event'){
+      if(!gradeOptions(dt.gran).includes(dt.grade))dt.grade=gradeDefault(dt.gran);
+      Object.assign(v,{gran:dt.gran,start:dt.start,end:dt.end,grade:dt.grade});
+      if(!v.url&&(r.url||r.source_url))v.url=r.url||r.source_url;
+      tidyVenue(v);save();renderAll();
+      return 'Date corrected on '+v.name+'.';
+    }
+  }
   /* A brokerage event is something you go to, so its page comes with it into
      the brokerage links: the event's own page when the agent gave one, else
      the page it read the date on. Until this the page was shown in Dispatches
@@ -1124,46 +1281,26 @@ function takeFind(r){
     a.dates[i]=dt;}
   else a.dates.push(dt);
   reconcile(a);
+  absorbVenues(S);           /* a brokerage date is a venue at once */
   save();renderAll();
   return (i>=0?'Date corrected on ':'Date added to ')+a.name+(linked?', with its page.':'.');
 }
 /* An info finding's date_kind says which of the arena's two texts it is for,
    named as the arena's panel names them. */
 function infoName(r){return r.date_kind==='brokerage'?'Brokerage':'About';}
-/* A link finding that names one of the arena's brokerage events (its
-   `replaces_date_id`) is that event's website, found by the catch-up task or
-   the nightly agent: it goes on the event, not among the arena's links. One
-   naming a date that has since gone is an ordinary link again. */
+/* A link finding that names one of the brokerage events (its
+   `replaces_date_id`) is that event's website: it goes on the event's
+   venue, which carries the date's id, not among the arena's links. One
+   naming an event that has since gone is an ordinary link again. */
 function siteFor(r){
   if(r.kind!=='link'||!r.replaces_date_id)return null;
-  const a=findArena(r);
-  return a&&(a.dates||[]).find(d=>d.id===r.replaces_date_id&&d.kind!=='call')||null;
+  const v=venue(r.replaces_date_id);
+  return v&&v.kind==='event'?v:null;
 }
 /* Two spellings of one address — a trailing slash, a www, http against https —
    are the same page, and a second copy of it among the links is noise. */
 function linkKey(u){
   return String(u||'').trim().toLowerCase().replace(/^https?:\/\//,'').replace(/^www\./,'').replace(/[#?].*$/,'').replace(/\/+$/,'');
-}
-/* One site, for the stamp (Mark, 2026-10-12): a stamp stands on every link
-   that reaches the same event or tool, however each is named and whichever
-   page of it each points at — its front page, its sign-up, its list of
-   participants, another language. linkKey alone kept those apart, so one
-   event linked from three cards carried three stamps. The site is the host,
-   which is the event itself wherever it has a host of its own
-   (an-event.b2match.io). Where one host carries many events or tools side by
-   side — b2match.com, every europa.eu portal, the big general platforms — the
-   host would give them all one stamp, so there the site is the path, the
-   language left out, and it stops at the event's own name where the path has
-   one (/e/an-event, /events/an-event). A host goes on SHARED_HOSTS when two
-   unrelated links turn out to share a stamp. */
-const SHARED_HOSTS=/^(?:b2match\.(?:io|com|eu)|(?:.+\.)?(?:europa\.eu|google\.com|linkedin\.com|youtube\.com|github\.com|eventbrite\.[a-z.]+|meetup\.com|lu\.ma|zoom\.us|microsoft\.com|sharepoint\.com))$/;
-function siteKey(u){
-  const k=linkKey(u),i=k.indexOf('/');
-  const host=(i<0?k:k.slice(0,i)).replace(/:\d+$/,'');
-  if(!SHARED_HOSTS.test(host))return host;
-  const segs=(i<0?'':k.slice(i+1)).split('/').filter(x=>x&&!/^[a-z]{2}(?:[-_][a-z]{2})?$/.test(x));
-  const e=segs.findIndex(x=>/^(?:e|event|events)$/.test(x));
-  return [host].concat(e>=0&&segs[e+1]?segs.slice(0,e+2):segs).join('/');
 }
 function hasLink(a,u){
   const k=linkKey(u);
@@ -1235,293 +1372,528 @@ function acceptAllFinds(){
   next();
 }
 
-/* ============ coming up ============
-   Every arena's dates on one line, in time order — the phone companion's
-   "Coming up", which Mark asked for here too (2026-10-08) and chose in the
-   same shape: a spine down the page, a date on its left, the event and its
-   arena on its right. The desk's width goes to what the phone had no room
-   for: the event's own website in a column of its own, opened in one press,
-   and a way to remove an event that should not be on the board at all.
-
-   Brokerage only (Mark, 2026-10-12): the calls, which came in when
-   "Everything" was chosen, went with that switch; they are on the board and
-   the cards. The window is the phone's: a year forward. A brokerage event
-   that is over goes to Limbo, folded into one line at the top, and stays
-   there until Mark takes it off by hand (2026-10-11, the same in Pocket):
-   the fortnight before it, a line of its own too, let an event leave the
-   board unseen, and unfolded it was a whole screen of September before the
-   first thing still to come. The filters above apply, the freezer is out,
-   as on the board. A month with nothing in it is left out. */
-let cuLimbo=false;             /* Limbo, unfolded on request */
-let cuHi=null;                 /* the event a press on the board or a card came for */
-let cuNew=false;               /* the new-event form is open */
-const cuOpen=new Set();        /* arena|event of the rows whose arena's strip is unfolded */
-/* An event's own note (`memo`), Mark's to write (2026-10-12). It is kept
-   apart from the date's one-line `note`, which says what a date rests on and
-   which the arena's panel, the board and the nightly agent's "extrapolated
-   from" all write. A book left of the date says an event holds one, and opens
-   it under the row, where it is read and written in place. An event without
-   one has no book, so that a column of empty books does not stand beside
-   every event in the list: its diamond on the spine turns into a book under
-   the pointer, and pressed opens the note to be written (Mark, 2026-10-12,
-   in place of a "+ note" beside the website). Without a hover, on the
-   iPad, the diamond is pressed all the same. */
-const cuNote=new Set();        /* arena|event of the rows whose note is open under the row */
-let cuNoteT=null;              /* the save a pause in typing is waiting for */
-const BOOK_SHUT='<svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><path d="M3 2.5h7.5a2 2 0 0 1 2 2v9H5a2 2 0 0 1-2-2z" fill="currentColor" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M3 11.5a2 2 0 0 1 2-2h7.5M6 5h4.5M6 7h3" fill="none" stroke="var(--paper)" stroke-width="1.1"/></svg>';
-const BOOK_OPEN='<svg viewBox="0 0 18 16" width="17" height="15" aria-hidden="true"><path d="M9 4C7 2.8 4.5 2.5 2 3v9.5c2.5-.5 5-.2 7 1 2-1.2 4.5-1.5 7-1V3c-2.5-.5-5-.2-7 1z" fill="currentColor" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/><path d="M9 4v9.5" stroke="var(--paper)" stroke-width="1.1"/></svg>';
+/* ── venues, on screen ── */
 const LIMBO_GHOST='<svg class="culgh" viewBox="0 0 16 18" width="16" height="18" aria-hidden="true"><path d="M8 1.5C4.7 1.5 2.5 4 2.5 7.2V16l1.8-1.4L6.1 16 8 14.6 9.9 16l1.8-1.4L13.5 16V7.2C13.5 4 11.3 1.5 8 1.5z" fill="currentColor"/><ellipse cx="6" cy="7.6" rx="1.05" ry="1.45" fill="#15171A"/><ellipse cx="10" cy="7.6" rx="1.05" ry="1.45" fill="#15171A"/><ellipse cx="8" cy="11" rx=".9" ry="1.1" fill="#15171A"/></svg>';
-function memoOf(d){return String((d&&d.memo)||'').trim();}
-/* A note emptied and closed is no note: the key goes, and "+ note" comes back. */
-function memoTidy(d){
-  if(!d)return;
-  const t=memoOf(d);
-  if(t)d.memo=String(d.memo).replace(/\s+$/,'');else delete d.memo;
+function venue(id){return (S.venues||[]).find(v=>v.id===id)||null;}
+function venueArenas(v){return v.arenas.map(arena).filter(Boolean);}
+function venuesOf(a){return (S.venues||[]).filter(v=>v.arenas.includes(a.id));}
+/* A venue all of whose arenas are in the freezer is in the freezer with
+   them; one serving no arena at all is still in sight, so it can be given one. */
+function liveVenue(v){const as=venueArenas(v);return !as.length||as.some(a=>!a.frozenAt);}
+function venueHay(v){
+  return [v.name,v.url,v.note||'',v.memo||'']
+    .concat(v.pages.map(p=>(p.label||'')+' '+p.url),v.visits.map(x=>x.text||''),venueArenas(v).map(a=>a.name))
+    .join('\n').toLowerCase();
 }
-/* A brokerage diamond, on the board or on a card, is pressed to see that
-   event in the list: Mark asked for it (2026-10-08), because the list is
-   where an event's website and its neighbours in time are. An event the
-   list does not hold — more than a year off — opens its arena's panel as
-   every press did before. */
-function jumpDate(aid,did){
-  const a=arena(aid),d=a&&(a.dates||[]).find(x=>x.id===did);
-  if(!d)return;
-  const now=T(todayISO()),e=T(d.end||d.start);
-  if(d.kind==='call'||!d.start||T(d.start)>now+366*DAY||!visibleArenas().includes(a)){
-    openDrawer(aid,did);return;}
-  if(e<now)cuLimbo=true;
-  cuHi=did;S.ui.view='coming';save();renderAll();
-  const row=document.querySelector('#coming .culn[data-cud="'+did+'"]');
-  if(row)row.scrollIntoView({block:'center'});
+function visibleVenues(){
+  const ql=S.ui.q.trim().toLowerCase();
+  const vis=new Set(visibleArenas().map(a=>a.id));
+  return (S.venues||[]).filter(v=>liveVenue(v)&&(!ql||venueHay(v).includes(ql)||v.arenas.some(id=>vis.has(id))));
 }
-function comingUp(){
-  const now=T(todayISO()),to=now+366*DAY,out=[];
-  for(const a of visibleArenas())for(const d of a.dates||[]){
-    if(!d.start||d.gran==='none'||d.kind==='call')continue;
-    const s=T(d.start),e=T(d.end||d.start);
-    if(s>to)continue;
-    out.push({a,d,s,e,limbo:e<now});
-  }
-  /* What is over goes above the today line and everything else below it,
-     so an event that began in September and runs into November is read
-     with what is still to come, not above the fortnight just past. */
-  out.sort((x,y)=>(x.e>=now)-(y.e>=now)||x.s-y.s||(x.d.kind==='call')-(y.d.kind==='call')||
-    dtLabel(x.d).localeCompare(dtLabel(y.d)));
+/* An event's own date is its meeting days when it is a day or a span of up
+   to two weeks; anything longer, or a month or a season, is the stretch it
+   is open in, or a guess at one. */
+function isSpot(v){
+  if(v.kind!=='event'||!v.start)return false;
+  return v.gran==='day'||(v.gran==='range'&&T(v.end)-T(v.start)<=SPOT_MAX*DAY);
+}
+/* from and to: the whole stretch the venue is open in; ms and me: its
+   meeting days, when it has any. A season is an event known only to a
+   month, a quarter or a year, with no open stretch given: a guess at when
+   it will be, not a marketplace that is open all that while, so it asks
+   for no visits until its days are known. A span given exactly, however
+   long, is the stretch a marketplace is open (a b2match sign-up running
+   two months, say). */
+function vWin(v){
+  if(v.kind!=='event')return null;
+  const ms=v.start?T(v.start):null,me=v.start?T(v.end||v.start):null;
+  const o=v.opens?T(v.opens):ms,c=v.closes?T(v.closes):me;
+  if(o===null||c===null)return null;
+  const spot=isSpot(v);
+  const season=!spot&&v.gran!=='range'&&!v.opens&&!v.closes;
+  return {from:Math.min(o,ms===null?o:ms),to:Math.max(c,me===null?c:me),ms:spot?ms:null,me:spot?me:null,season};
+}
+function vState(v){
+  if(v.kind==='tool')return 'tool';
+  const w=vWin(v);if(!w)return 'undated';
+  const now=T(todayISO());
+  if(now<w.from)return 'coming';
+  if(now>w.to)return 'over';
+  if(w.season)return 'season';
+  if(w.ms!==null&&now>=w.ms&&now<=w.me)return 'meeting';
+  if(w.ms!==null&&now>w.me)return 'after';
+  return 'open';
+}
+function lastVisit(v){const n=v.visits.length;return n?v.visits[n-1]:null;}
+function vSince(v){const x=lastVisit(v);return x?daysBetween(T(x.at),T(todayISO())):null;}
+/* How often a venue wants a visit. Where it stands sets the base: an open
+   marketplace every four days, its meeting days every other day, a week
+   after them, a standing tool every three weeks; one that is coming, over
+   or undated wants none. The weight of the arenas it serves scales it, as
+   the weight used to scale an arena's turn in the rotation: a venue serving
+   a central arena comes round more often. What the visits gave scales it
+   last: something found in either of the last two brings it round sooner,
+   three answered visits in a row with nothing new send it further off. A
+   rhythm Mark sets himself (`every`) stands as he set it. */
+function vEvery(v){
+  if(v.every)return v.every;
+  const base=RHYTHM[vState(v)];if(!base)return null;
+  const as=venueArenas(v).filter(a=>!a.frozenAt);
+  let e=base*(as.length?Math.min(...as.map(a=>WEIGHTS[weightOf(a)].turn)):1);
+  const said=v.visits.filter(x=>x.got);
+  const last2=said.slice(-2),last3=said.slice(-3);
+  if(last2.some(x=>x.got!=='nothing'))e*=.75;
+  else if(last3.length===3&&last3.every(x=>x.got==='nothing'))e*=1.5;
+  return Math.max(1,Math.round(e));
+}
+function vDue(v){
+  const e=vEvery(v);if(!e)return false;
+  const d=vSince(v);return d===null||d>=e;
+}
+/* what a venue has given: its visits, the ones that found something, and
+   the leads started from it */
+function vLeads(v){
+  const out=[];
+  for(const a of S.arenas)for(const l of a.leads||[])if(l.venueId===v.id)out.push({a,l});
   return out;
 }
-/* The date as the list gives it: the month and year are already on the
-   left, so a day is "9 Oct" and a span "14–15 Oct" rather than two lines of
-   full dates in a column made for one. */
-function cuDate(d){
-  const[y,m,dd]=d.start.split('-').map(Number);
-  switch(d.gran){
-    case 'month':return MONTHS[m-1];
-    case 'quarter':return 'Q'+(Math.floor((m-1)/3)+1);
-    case 'half':return 'H'+(m<7?1:2);
-    case 'year':return String(y);
-    case 'range':{
-      if(!d.end||d.end===d.start)return dd+' '+MONTHS[m-1];
-      const[y2,m2,d2]=d.end.split('-').map(Number);
-      if(y2===y&&m2===m)return dd+'\u2013'+d2+' '+MONTHS[m-1];
-      return dd+' '+MONTHS[m-1]+' \u2013 '+d2+' '+MONTHS[m2-1];
-    }
-    default:return dd+' '+MONTHS[m-1];
+function vYield(v){
+  const n=v.visits.length,found=v.visits.filter(x=>x.got==='something'||x.got==='lead').length,leads=vLeads(v).length;
+  return {n,found,leads};
+}
+function vYieldSay(v){
+  const y=vYield(v);
+  if(!y.n&&!y.leads)return 'not visited yet';
+  return y.n+' visit'+(y.n===1?'':'s')+(y.found?' · '+y.found+' found':'')+(y.leads?' · '+y.leads+' lead'+(y.leads===1?'':'s'):'');
+}
+function vHost(v){return v.url?linkName({url:v.url}):'';}
+function vDateSay(v){
+  if(v.kind==='tool')return 'always open';
+  const st=vState(v),w=vWin(v);
+  const day=t=>shortDay(new Date(t).toISOString().slice(0,10));
+  const meets=v.start?(v.grade==='fixed'?'':'≈ ')+shortDate(v):'';
+  switch(st){
+    case 'undated':return 'date not known yet';
+    case 'season':return 'expected '+meets+', not dated yet';
+    case 'coming':return v.opens&&T(v.opens)>T(todayISO())?'opens '+day(T(v.opens)):
+      w.season?'expected '+meets:isSpot(v)?'meets '+meets:'opens '+day(w.from);
+    case 'meeting':return 'meeting now';
+    case 'open':return w.ms!==null?'open · meets '+meets:'open · closes '+day(w.to);
+    case 'after':return 'still open · closes '+day(w.to);
+    default:return 'over · '+meets;
   }
 }
-/* An event is stamped once you have been through it, as a card's link is,
-   and counts the days since the same way (Mark, 2026-10-09). An event and a
-   link are often one site — the platform kept for the round is also the page
-   of the event it hosts — and two stamps on one site would disagree by the
-   next morning. So a site keeps one stamp: a press on either stamps
-   every event and link with that address, and each row reads the newest
-   stamp among them, which is what lets a link stamped before events had
-   stamps count for the event too. An event with no website stands alone.
-   "That address" is the site (siteKey), so the links on the rotation cards
-   share it as well. */
-function stampMates(h){
-  const k=h.url&&siteKey(h.url),out=[h];
-  if(!k)return out;
-  for(const a of S.arenas){
-    for(const d of a.dates||[])if(d!==h&&d.url&&siteKey(d.url)===k)out.push(d);
-    for(const lk of ((a.brokerage&&a.brokerage.links)||[]).concat(a.links||[]))
-      if(lk!==h&&lk.url&&siteKey(lk.url)===k)out.push(lk);
-  }
-  return out;
+function vGlyph(v){
+  return v.kind==='tool'?'<i class="vgl tool" aria-hidden="true"></i>':
+    '<i class="vgl ev'+(v.grade==='fixed'?'':' unc')+'" aria-hidden="true"></i>';
 }
-/* An event removed from the list takes its links off the cards with it
-   (Mark, 2026-10-12): a link to an event that is gone from the board would
-   stand on the rotation cards as a place still to go. Its links are the
-   cards' links to the same site, on every arena, as the stamp has it. */
-function cuLinks(d){
-  const k=d.url&&siteKey(d.url),out=[];
-  if(!k)return out;
-  for(const a of S.arenas)for(const lk of (a.brokerage&&a.brokerage.links)||[])
-    if(lk.url&&siteKey(lk.url)===k)out.push({a,lk});
-  return out;
+/* the arenas a venue serves, each in its type's colour */
+function vArenaChips(v,max){
+  const as=venueArenas(v);
+  const shown=max?as.slice(0,max):as;
+  return '<span class="vchips">'+shown.map(a=>{const tone=arenaTone(a);
+    return '<button class="cuat'+(tone?' toned':'')+'" data-act="openArena" data-id="'+a.id+'" title="Open '+esc(a.name)+'"'+
+      (tone?' style="--tone:'+esc(tone)+'"':'')+'>'+esc(a.name)+'</button>';}).join('')+
+    (as.length>shown.length?'<span class="vmore" title="'+esc(as.slice(shown.length).map(a=>a.name).join(', '))+'">+'+(as.length-shown.length)+'</span>':'')+
+    (as.length?'':'<span class="vmore">no arena</span>')+'</span>';
 }
-function cuDrop(a,d){
-  for(const{a:x,lk}of cuLinks(d))x.brokerage.links=x.brokerage.links.filter(l=>l!==lk);
-  a.dates=a.dates.filter(y=>y!==d);reconcile(a);save();renderAll();
+/* The stamp: the days since the last visit inside a disc that reddens
+   towards the day the venue is due, so a column of them reads for what has
+   waited longest; a venue never visited keeps the empty ring and its tick.
+   Pressing it records today's visit and asks what it gave. */
+function vStampHTML(v){
+  const d=vSince(v),e=vEvery(v)||14;
+  const age=d===null?0:Math.round(Math.min(Math.max(d,0)/e,1)*100);
+  const tip=d===null?'Not visited yet — press once you have been':
+    (d<=0?'Visited today — press to say what it gave, or take it back':'Last visit '+(d===1?'yesterday':d+' days ago')+' — press once you have been again');
+  return '<span class="vsw"><button class="stamp vstamp'+(d===null?'':' custamp')+'" data-act="vStamp" data-v="'+v.id+'" '+
+    (d===null?'':'style="--age:'+age+'%" ')+'title="'+tip+'" aria-label="'+tip+'">'+(d===null?'✓':d>99?'99+':Math.max(0,d))+'</button>'+
+    (vPop===v.id?vAskHTML(v,'pop'):'')+'</span>';
 }
-function stampOf(h){
-  let s=null;
-  for(const m of stampMates(h))if(m.stampedAt&&(!s||m.stampedAt>s))s=m.stampedAt;
-  return s;
+/* Go opens the venue's own site, and the app remembers it, so that coming
+   back asks what it gave (see "the visit question"). */
+function vGoHTML(v){
+  return v.url
+    ?'<a class="vgo" href="'+esc(v.url)+'" target="_blank" rel="noopener" data-act="vGo" data-v="'+v.id+'" title="'+esc(v.url)+'">Go ↗</a>'
+    :'<button class="vgo none" data-act="vEdit" data-v="'+v.id+'" title="No website yet — add one">+ site</button>';
 }
-/* a same-day press takes it back, on every row that shares the site */
-function toggleStamp(h){
-  const t=todayISO(),mates=stampMates(h);
-  if(mates.some(m=>m.stampedAt===t)){
-    for(const m of mates)if(m.stampedAt===t){m.stampedAt=m.stampPrev||null;delete m.stampPrev;}
-  }else for(const m of mates){m.stampPrev=m.stampedAt||null;m.stampedAt=t;}
-}
-/* Here the stamp is the count: the days since it was pressed stand inside
-   the circle in place of the tick, and the circle is white, reddening over a
-   fortnight (Mark, 2026-10-12) — a list walked event by event is read for
-   what has waited longest, and a tick beside a number said the same thing
-   twice. Fourteen days and more is the room's brokerage red. An event never
-   stamped keeps the empty ring and its tick (Mark, 2026-10-12), so that it
-   reads as not yet done rather than as a blank count. */
-function cuStampHTML(a,d){
-  const st=stampSay(stampOf(d)),n=st.d===null?null:Math.max(0,st.d);
-  const tip=st.on?st.stTip:st.ageTip+' \u2014 stamp it once you have been through it';
-  return '<button class="stamp'+(n===null?'':' custamp')+'" data-act="cuStamp" data-a="'+a.id+'" data-d="'+d.id+'" '+
-    (n===null?'':'style="--age:'+Math.round(Math.min(n,14)/14*100)+'%" ')+'title="'+tip+'" aria-label="'+tip+'">'+
-    (n===null?'\u2713':n)+'</button>';
-}
-/* the stamp and its count, as the cards' links draw them */
-function stampSay(st){
-  const t=todayISO(),on=st===t;
-  const d=st?daysBetween(T(st),T(t)):null;
-  return{on,d,
-    age:d===null?'\u2014':d<=0?'today':d+' d',
-    ageTip:d===null?'Not stamped yet':d<=0?'Stamped today':'Stamped '+(d===1?'yesterday':d+' days ago'),
-    stTip:on?'Stamped today \u2014 click to undo':'Stamp it once you have been through it'};
-}
-const LONG_MONTHS=['January','February','March','April','May','June','July','August',
-  'September','October','November','December'];
-function comingRow(it){
-  const{a,d}=it,now=T(todayISO()),call=d.kind==='call',past=it.e<now&&!it.limbo;
-  /* no count of the days to go (Mark, 2026-10-12): the date stands on the
-     left already, and only an event under way says so */
-  const when=!call&&it.e>=now&&it.s<=now?'on now':'';
-  const tone=arenaTone(a),open=!call&&cuOpen.has(a.id+'|'+d.id);
-  const site=call?'':d.url
-    ?'<a class="cusite" href="'+esc(d.url)+'" target="_blank" rel="noopener" title="'+esc(d.url)+'">'+
-      esc(linkName({url:d.url}))+'</a>'
-    :'<button class="cusite none" data-act="cuSite" data-a="'+a.id+'" data-d="'+d.id+'" '+
-      'title="This event has no website yet \u2014 add one">add website</button>';
-  const stamp=call?'':cuStampHTML(a,d);
-  const memo=!call&&memoOf(d),nopen=!call&&cuNote.has(a.id+'|'+d.id);
-  const book=memo||nopen?'<button class="cubk'+(nopen?' on':'')+'" data-act="cuNote" data-a="'+a.id+'" data-d="'+d.id+'" '+
-    'aria-expanded="'+nopen+'" title="'+(nopen?'Close the note':'Your note on this event')+'" aria-label="'+(nopen?'Close the note':'Open your note')+'">'+
-    (nopen?BOOK_OPEN:BOOK_SHUT)+'</button>':'';
-  return '<div class="culn'+(call?' call':'')+(past?' past':'')+(it.limbo?' limbo':'')+(cuHi===d.id?' cuhi':'')+'" data-cud="'+d.id+'" style="--c:'+dtColor(d)+'">'+
-    '<span class="cud'+(d.grade==='fixed'?'':' unc')+'" title="'+esc(dispDate(d))+'">'+book+
-      (d.grade==='fixed'?'':'\u2248\u2009')+esc(cuDate(d))+'</span>'+
-    '<span class="cug">'+(call||memo||nopen?'<i class="sw sw-'+d.grade+'"></i>':
-      '<button class="cugb" data-act="cuNote" data-a="'+a.id+'" data-d="'+d.id+'" title="Write a note on this event" aria-label="Write a note on '+esc(dtLabel(d))+'">'+
-        '<i class="sw sw-'+d.grade+'"></i><span class="cugbk">'+BOOK_SHUT+'</span></button>')+'</span>'+
-    '<span class="cut">'+
-      '<button class="cuname" data-act="openDate" data-a="'+a.id+'" data-d="'+d.id+'" title="Open '+esc(a.name)+'">'+
-        esc(dtLabel(d))+'</button>'+
-      (call?'<span class="custage">'+esc(roleOf(d).short)+'</span>':'')+
-      /* the arena's name opens its panel, as a tap on it does in Pocket
-         (Mark, 2026-10-12) */
-      '<span class="cuar"><button class="cuat'+(tone?' toned':'')+'" data-act="openArena" data-id="'+a.id+'" title="Open '+esc(a.name)+'"'+(tone?' style="--tone:'+esc(tone)+'"':'')+'>'+esc(a.name)+'</button>'+
-        (when?'<span class="cusoon">'+when+'</span>':'')+
-        (call?'':'<button class="cuwx'+(open?' on':'')+'" data-act="cuStrip" data-a="'+a.id+'" data-d="'+d.id+'" aria-expanded="'+open+'" '+
-          'title="'+(open?'Fold away':'Show')+' the arena\u2019s calls and events in time" aria-label="The arena\u2019s calls and events in time">'+
-          '\u25BE</button>')+'</span>'+
-    '</span>'+
-    '<span class="cuend">'+site+stamp+
-      (call?'':'<button class="cudel" data-act="cuDel" data-a="'+a.id+'" data-d="'+d.id+'"'+(it.limbo?' data-limbo="1"':'')+' '+
-        'title="Remove this event from the app" aria-label="Remove '+esc(dtLabel(d))+'">\u2715</button>')+
-    '</span>'+
-    (nopen?'<div class="cunote"><textarea class="cunta" data-a="'+a.id+'" data-d="'+d.id+'" rows="2" '+
-      'placeholder="Your note on this event" aria-label="Your note on '+esc(dtLabel(d))+'">'+esc(d.memo||'')+'</textarea></div>':'')+
-    (open?'<div class="cuwline">'+cardLineHTML(a,'top',d.id)+'</div>':'')+
+
+/* ── the visit question ──
+   One question after a visit, three answers: nothing new, something (with a
+   line if he likes), or a lead. It is asked in a small box under the stamp
+   when the stamp is pressed, and in a bar at the foot of the room when he
+   comes back to the app after pressing Go (Mark chose both, 2026-10-14).
+   "Not now" on the bar records nothing: a Go pressed by mistake is not a
+   visit. */
+let vPop=null;                /* the venue whose stamp's box is open */
+let vBack=null;               /* {id,at}: the venue Go was last pressed for, until he is back */
+let vAsking=null;             /* the venue the bar at the foot is asking about */
+function vAskHTML(v,where){
+  const today=v.visits.find(x=>x.at===todayISO());
+  const got=today&&today.got;
+  const on=k=>got===k?' on':'';
+  const q=where==='bar'?'Back from <b>'+esc(v.name)+'</b>. Anything there?':'Visited today — anything?';
+  return '<div class="vask '+where+'" data-v="'+v.id+'" role="group" aria-label="What the visit gave">'+
+    '<span class="vq">'+q+'</span>'+
+    '<button class="va'+on('nothing')+'" data-act="vAns" data-v="'+v.id+'" data-g="nothing">Nothing new</button>'+
+    '<span class="vsome"><button class="va s'+on('something')+'" data-act="vAns" data-v="'+v.id+'" data-g="something">Something…</button>'+
+      '<input class="vtx" type="text" placeholder="What, in a line — optional" value="'+esc(today&&today.text||'')+'" aria-label="What you saw"></span>'+
+    '<button class="va l'+on('lead')+'" data-act="vAns" data-v="'+v.id+'" data-g="lead">A lead</button>'+
+    (where==='bar'?'<button class="vx" data-act="vAskOff">Not now</button>':
+      (today?'<button class="vx" data-act="vUnstamp" data-v="'+v.id+'">Take it back</button>':''))+
   '</div>';
 }
-/* A brokerage event added from the list is an ordinary date on the arena
-   chosen here — the same date the arena's panel makes, read by the same
-   reader — so it is on the board, the cards and the panel the moment it is
-   saved (Mark, 2026-10-08). The form is the panel's date form laid out
-   across the desk, with the arena in front, since here there is none yet. */
-function cuFormHTML(){
-  const arenas=liveArenas().slice().sort((x,y)=>x.name.localeCompare(y.name));
+function visitToday(v){
+  const t=todayISO();let x=v.visits.find(y=>y.at===t);
+  if(!x){x={id:t,at:t};v.visits.push(x);}
+  return x;
+}
+function vAnswer(v,got,text){
+  const x=visitToday(v);
+  if(VGOT[got])x.got=got;
+  const t=String(text||'').trim();
+  if(got==='something'&&t)x.text=t;else if(got!=='something'&&!x.leadId)delete x.text;
+  return x;
+}
+function renderAsk(){
+  const el=$('#vbar');if(!el)return;
+  const v=vAsking&&venue(vAsking);
+  el.hidden=!v;
+  el.innerHTML=v?vAskHTML(v,'bar'):'';
+}
+/* Back in the app after Go: the page coming to the front again. A second
+   or two is allowed for, since a Go whose tab never really opened is not a
+   visit to ask about. */
+function cameBack(){
+  if(!vBack||document.visibilityState==='hidden')return;
+  if(Date.now()-vBack.at<1500)return;
+  const v=venue(vBack.id);vBack=null;
+  if(!v)return;
+  vAsking=v.id;renderAsk();
+}
+document.addEventListener('visibilitychange',cameBack);
+window.addEventListener('focus',cameBack);
+
+/* ── the Now page: a strip of time ──
+   Every venue as a bar across four weeks back and twelve ahead, the
+   marketplace's open stretch a soft band, its meeting days a diamond, a
+   tool a dashed line that never ends, and today the gold line through all
+   of them (Mark chose this over one list in bands and three columns,
+   2026-10-14). A venue that is due wears a red ring on today's line. The
+   visits are the small ticks under each bar. What lies further ahead than
+   the strip, or has no date yet, is folded away under Later; what is over
+   waits in Limbo, as it did on Coming up, until it is let go. */
+let nowLater=false,nowLimbo=false;
+function nowSpan(){const now=T(todayISO());return {now,t0:now-NOW_BACK*DAY,t1:now+NOW_AHEAD*DAY};}
+function vTrackHTML(v,sp){
+  const{now,t0,t1}=sp;
+  const P=t=>((t-t0)/(t1-t0)*100);
+  const C=x=>Math.max(0,Math.min(100,x));
+  let h='';
+  const tip=' data-tipv="'+v.id+'"';
+  if(v.kind==='tool')h+='<i class="vbar tool"'+tip+'></i>';
+  else{
+    const w=vWin(v);
+    if(w&&w.from>t1)h+='<span class="vbeyond"'+tip+'>'+esc(vDateSay(v))+' →</span>';
+    else if(w){
+      const spot=w.ms!==null;
+      const unc=v.grade!=='fixed';
+      /* the open stretch, where there is more of it than the meeting days */
+      if(!spot||w.from<w.ms||w.to>w.me){
+        const L=C(P(w.from)),R=C(P(w.to+DAY));
+        h+='<i class="vbar'+(unc&&!spot?' unc':'')+'" style="left:'+L.toFixed(2)+'%;width:'+Math.max(R-L,.6).toFixed(2)+'%"'+tip+'></i>';
+      }
+      if(spot){
+        if(w.me>w.ms){const L=C(P(w.ms)),R=C(P(w.me+DAY));
+          h+='<i class="vmeet" style="left:'+L.toFixed(2)+'%;width:'+Math.max(R-L,.6).toFixed(2)+'%"'+tip+'></i>';}
+        const x=P(w.ms+DAY/2);
+        if(x>=0&&x<=100)h+='<i class="vdia'+(unc?' unc':'')+'" style="left:'+x.toFixed(2)+'%"'+tip+'></i>';
+      }
+      const lx=spot?P(w.me+DAY):P(w.to+DAY);
+      if(lx<92&&lx>-1)h+='<span class="vlab" style="left:'+C(lx).toFixed(2)+'%">'+esc(spot||w.season?(unc?'≈ ':'')+shortDate(v):'closes '+shortDay(new Date(w.to).toISOString().slice(0,10)))+'</span>';
+    }
+  }
+  for(const x of v.visits){const t=T(x.at);if(t>=t0&&t<=t1)
+    h+='<i class="vtick'+(x.got&&x.got!=='nothing'?' found':'')+'" style="left:'+P(t+DAY/2).toFixed(2)+'%" title="'+esc(shortDay(x.at)+(x.got?' — '+VGOT[x.got]:''))+'"></i>';}
+  h+='<i class="vnow" style="left:'+P(now+DAY/2).toFixed(2)+'%"></i>';
+  if(vDue(v))h+='<i class="vpulse" style="left:'+P(now+DAY/2).toFixed(2)+'%" title="Due for a visit"></i>';
+  return '<div class="vtrack" data-act="openVenue" data-v="'+v.id+'">'+h+'</div>';
+}
+function nowRow(v,sp,over){
+  const due=vDue(v);
+  return '<div class="vrow'+(due?' due':'')+(over?' over':'')+(vPop===v.id?' popped':'')+'" data-vid="'+v.id+'">'+
+    '<div class="vname">'+vGlyph(v)+
+      '<span class="vnt"><button class="vnm" data-act="openVenue" data-v="'+v.id+'" title="'+esc(v.name)+'">'+esc(v.name)+'</button>'+
+        vArenaChips(v,2)+'</span></div>'+
+    (over?'<div class="vtrack over"><span class="vlab" style="left:0">'+esc(vDateSay(v))+'</span></div>':vTrackHTML(v,sp))+
+    '<div class="vend">'+(over?'':vStampHTML(v))+vGoHTML(v)+
+      (over?'<button class="cudel" data-act="vDrop" data-v="'+v.id+'" data-limbo="1" title="Let it go — off the board" aria-label="Let '+esc(v.name)+' go">✕</button>':'')+
+    '</div></div>';
+}
+function nowAxisHTML(sp){
+  const{now,t0,t1}=sp;
+  const P=t=>((t-t0)/(t1-t0)*100);
+  let h='';
+  /* a Monday every two weeks, and the first of each month marked apart */
+  const d=new Date(t0);d.setDate(d.getDate()+((8-d.getDay())%7));
+  for(let i=0;d.getTime()<t1;i++,d.setDate(d.getDate()+7)){
+    const x=P(d.getTime());
+    h+='<i class="vwk" style="left:'+x.toFixed(2)+'%"></i>';
+    if(i%2===0&&x<96)h+='<span style="left:'+x.toFixed(2)+'%">'+d.getDate()+' '+MONTHS[d.getMonth()]+'</span>';
+  }
+  return h+'<b class="vnowc" style="left:'+P(now+DAY/2).toFixed(2)+'%"></b>';
+}
+function nowEmptyHTML(){
+  if(!S.arenas.length&&!(S.venues||[]).length)
+    return '<div class="empty"><p>Nothing in the Marketplace yet.</p>'+
+      '<p class="hint" style="margin-top:6px">Add a venue, or an arena first,<br>or load the example set to see how it reads.</p>'+
+      '<div class="btns"><button class="btn primary" data-act="vNew">+ Venue</button>'+
+      '<button class="btn" data-act="addArena">+ Arena</button>'+
+      '<button class="btn" data-act="seed">Load example set</button></div></div>';
+  const q=S.ui.q.trim();
+  return '<div class="empty"><p>'+(q?'No venue matches the search.':'No venue yet.')+'</p>'+
+    '<p class="hint" style="margin-top:6px">'+(q?'Clear it, or try a shorter word.':'Press + Venue for an event or a partner-search tool you visit.')+'</p></div>';
+}
+function renderNow(){keepPlace(()=>{
+  const el=$('#now');if(!el)return;
+  const sp=nowSpan();
+  const all=visibleVenues();
+  if(!all.length){el.innerHTML=nowEmptyHTML();return;}
+  const by=v=>{const w=vWin(v);return w?w.from:Infinity;};
+  const name=(x,y)=>x.name.localeCompare(y.name);
+  const over=all.filter(v=>vState(v)==='over').sort((x,y)=>by(y)-by(x)||name(x,y));
+  const events=all.filter(v=>v.kind==='event'&&vState(v)!=='over');
+  const near=events.filter(v=>{const w=vWin(v);return w&&w.from<=sp.t1;}).sort((x,y)=>by(x)-by(y)||name(x,y));
+  const later=events.filter(v=>!near.includes(v)).sort((x,y)=>by(x)-by(y)||name(x,y));
+  const tools=all.filter(v=>v.kind==='tool').sort((x,y)=>(vDue(y)-vDue(x))||((vSince(y)??999)-(vSince(x)??999))||name(x,y));
+  const due=all.filter(vDue).length;
+  let h='<div class="vhead"><span class="wsay">'+(due?'<b>'+due+'</b> '+(due===1?'venue is':'venues are')+' due for a visit.':'Nothing is due for a visit.')+'</span>'+
+    '<span class="vkey"><i class="vgl ev"></i>meeting days<i class="vkbar"></i>open<i class="vgl tool"></i>tool<i class="vkp"></i>due</span></div>';
+  if(over.length)h+='<div class="culimbo'+(nowLimbo?' open':'')+'"><button class="culb" data-act="vLimbo" aria-expanded="'+nowLimbo+'">'+
+      '<span class="culfog" aria-hidden="true"></span>'+LIMBO_GHOST+
+      '<span class="culc">Limbo</span><b>'+over.length+'</b> '+(over.length===1?'venue is over':'venues are over')+
+      '<span class="culw">'+(nowLimbo?'Hide':'Show')+'</span></button>'+
+    (nowLimbo?'<p class="culh">Each waits here until you let it go with ✕.</p><div class="vrows">'+over.map(v=>nowRow(v,sp,true)).join('')+'</div>':'')+'</div>';
+  h+='<div class="vaxis"><span class="vaxl">Venue</span><div class="vaxt">'+nowAxisHTML(sp)+'</div><span></span></div>';
+  if(near.length)h+='<p class="vsec">Events</p><div class="vrows">'+near.map(v=>nowRow(v,sp)).join('')+'</div>';
+  if(later.length)h+='<button class="vlater'+(nowLater?' on':'')+'" data-act="vLater" aria-expanded="'+nowLater+'">'+
+      '<span aria-hidden="true">'+(nowLater?'▾':'▸')+'</span>Later<b>'+later.length+'</b>'+
+      '<i>further ahead than twelve weeks, or not dated yet</i></button>'+
+    (nowLater?'<div class="vrows">'+later.map(v=>nowRow(v,sp)).join('')+'</div>':'');
+  if(tools.length)h+='<p class="vsec">Tools</p><div class="vrows">'+tools.map(v=>nowRow(v,sp)).join('')+'</div>';
+  el.innerHTML=h;
+});}
+
+/* ── a venue, opened ──
+   Its panel takes the arena's place in the drawer: the life, the rhythm,
+   every visit, the leads it gave, the arenas it serves, its other pages
+   and Mark's own note. Pencil edits what it is and when. */
+const VENUE_LEAD='venue-lead';     /* leadEdit.a while a lead is being started from a venue's panel */
+let vNoteT=null;
+function vLifeHTML(v){
+  const w=vWin(v);
+  if(!w)return '';
+  const now=T(todayISO()),t0=Math.min(w.from,now)-7*DAY,t1=Math.max(w.to,now)+7*DAY;
+  const P=t=>((t-t0)/(t1-t0)*100).toFixed(2);
+  const day=t=>shortDay(new Date(t).toISOString().slice(0,10));
+  const spot=w.ms!==null;
+  let h='<div class="vlife"><i class="vax"></i>';
+  if(!spot||w.from<w.ms||w.to>w.me)h+='<i class="vbar'+(v.grade!=='fixed'&&!spot?' unc':'')+'" style="left:'+P(w.from)+'%;width:'+(P(w.to+DAY)-P(w.from))+'%"></i>';
+  if(spot){h+='<i class="vdia'+(v.grade==='fixed'?'':' unc')+'" style="left:'+P(w.ms+DAY/2)+'%"></i>'+
+    '<span class="vlt up" style="left:'+P(w.ms+DAY/2)+'%">meets '+esc(shortDate(v))+'</span>';}
+  if(v.opens||!spot)h+='<span class="vlt" style="left:'+P(w.from)+'%">opens<br>'+day(w.from)+'</span>';
+  if(v.closes||!spot)h+='<span class="vlt" style="left:'+P(w.to)+'%">closes<br>'+day(w.to)+'</span>';
+  h+='<i class="vnow" style="left:'+P(now+DAY/2)+'%"></i><span class="vlt up now" style="left:'+P(now+DAY/2)+'%">today</span>';
+  return h+'</div>';
+}
+function vEveryHTML(v){
+  const auto=v.every?null:vEvery(v);
+  const opts=[0,1,2,3,4,5,7,10,14,21,30,45,60];
+  return '<select class="vevery" data-vevery="'+v.id+'" aria-label="How often to visit">'+
+    opts.map(n=>'<option value="'+n+'"'+((v.every||0)===n?' selected':'')+'>'+
+      (n?'every '+n+' day'+(n===1?'':'s'):(auto?'by itself — now every '+auto+' day'+(auto===1?'':'s'):'by itself — none while '+({coming:'it is coming',over:'it is over',undated:'it has no date',season:'its days are not known'}[vState(v)]||'it rests')))+
+    '</option>').join('')+'</select>';
+}
+/* An event's dates in words: meeting days with the stretch either side, an
+   exact span it is open, or a season it is expected in. */
+function vFactsHTML(v){
+  const when=v.start?esc((v.grade==='fixed'?'':'\u2248 ')+dispDate(v)):'<i>no date yet</i>';
+  const row=(k,x)=>'<dt>'+k+'</dt><dd>'+x+'</dd>';
+  if(!v.start||isSpot(v))
+    return row('opens',v.opens?esc(fmtDay(v.opens)):'<i>not given \u2014 open from its meeting days</i>')+
+      row('meeting days',when)+
+      row('closes',v.closes?esc(fmtDay(v.closes)):'<i>not given \u2014 closes with its meeting days</i>');
+  const w=vWin(v);
+  return (v.opens?row('opens',esc(fmtDay(v.opens))):'')+
+    row(w&&w.season?'expected':'open',when)+
+    (v.closes?row('closes',esc(fmtDay(v.closes))):'');
+}
+function venueReadHTML(v){
+  const kind=v.kind==='tool'?'Tool':'Event';
+  const d=vSince(v);
+  const visits=v.visits.slice().reverse();
+  const leads=vLeads(v);
+  const addable=liveArenas().filter(a=>!v.arenas.includes(a.id)).sort((x,y)=>x.name.localeCompare(y.name));
+  const adding=leadEdit.a===VENUE_LEAD;
+  return '<div class="cbody vpanel">'+
+    '<div class="chead vchead">'+
+      '<button class="x" data-act="closeDrawer" aria-label="Close">✕</button>'+
+      '<p class="vkind">'+kind+' venue'+(vHost(v)?' · '+esc(vHost(v)):'')+'</p>'+
+      '<h2 id="aname">'+esc(v.name)+'</h2>'+
+      '<div class="vchrow">'+vGoHTML(v)+vStampHTML(v)+
+        '<span class="vlast">'+(d===null?'not visited yet':'last visit '+(d<=0?'today':d===1?'yesterday':d+' days ago'))+
+          (vEvery(v)?' · every '+vEvery(v)+' d':'')+'</span></div>'+
+    '</div>'+
+    (v.kind==='event'?'<section class="vps"><p class="vph">Its life <i>'+esc(vDateSay(v))+'</i></p>'+vLifeHTML(v)+
+      '<dl class="vdl">'+vFactsHTML(v)+(v.note?'<dt>basis</dt><dd>'+esc(v.note)+'</dd>':'')+
+      '</dl></section>':'')+
+    '<section class="vps"><p class="vph">Rhythm</p>'+vEveryHTML(v)+'</section>'+
+    '<section class="vps"><p class="vph">Visits <i>'+esc(vYieldSay(v))+'</i></p>'+
+      (visits.length?visits.map(x=>{
+        const ld=x.leadId&&leads.find(y=>y.l.id===x.leadId);
+        return '<div class="vvis"><span class="vvd">'+esc(shortDay(x.at))+'</span>'+
+          '<span class="vgot '+(x.got||'none')+'">'+(x.got?VGOT[x.got]:'stamped')+'</span>'+
+          '<span class="vvt">'+(ld?'→ <button class="vld" data-act="openArena" data-id="'+ld.a.id+'">'+esc(leadName(ld.l))+'</button>':esc(x.text||''))+'</span>'+
+          '<button class="lx" data-act="vVisitDel" data-v="'+v.id+'" data-at="'+x.at+'" title="Take this visit out" aria-label="Remove visit">✕</button></div>';
+      }).join(''):'<p class="vnone">None yet. Press the stamp once you have been.</p>')+
+    '</section>'+
+    '<section class="vps"><p class="vph">Leads from here</p>'+
+      (leads.length?leads.map(({a,l})=>'<p class="vlead"><button data-act="openArena" data-id="'+a.id+'">'+esc(leadName(l))+'</button>'+
+        '<i>'+esc(a.name)+' · '+(l.doneAt?(isOutcome(l.outcome)?OUTCOMES[l.outcome].said:'closed'):STAGE_NAME[stageOf(l)])+'</i></p>').join(''):'')+
+      (adding?leadFormHTML(null,v):'<div class="leadadd"><button data-act="vLeadNew" data-v="'+v.id+'">+ Lead from here</button></div>')+
+    '</section>'+
+    '<section class="vps"><p class="vph">Serves</p>'+
+      '<div class="vserves">'+venueArenas(v).map(a=>{const tone=arenaTone(a);
+        return '<span class="vsv"><button class="cuat'+(tone?' toned':'')+'" data-act="openArena" data-id="'+a.id+'"'+(tone?' style="--tone:'+esc(tone)+'"':'')+'>'+esc(a.name)+'</button>'+
+          '<button class="lx" data-act="vArenaDel" data-v="'+v.id+'" data-id="'+a.id+'" title="It does not serve '+esc(a.name)+'" aria-label="Remove '+esc(a.name)+'">✕</button></span>';}).join('')+
+      '</div>'+
+      (addable.length?'<select class="vaddar" data-vaddarena="'+v.id+'" aria-label="Another arena it serves"><option value="">+ Another arena it serves</option>'+
+        addable.map(a=>'<option value="'+a.id+'">'+esc(a.name)+'</option>').join('')+'</select>':'')+
+    '</section>'+
+    '<section class="vps"><p class="vph">Other pages</p>'+
+      v.pages.map(p=>'<div class="vpg"><a href="'+esc(p.url)+'" target="_blank" rel="noopener" title="'+esc(p.url)+'">↗ '+esc(p.label||linkName(p))+'</a>'+
+        '<span class="vpgh">'+esc(linkHost(p))+'</span>'+
+        '<button class="lx" data-act="vPageDel" data-v="'+v.id+'" data-p="'+p.id+'" title="Take this page off" aria-label="Remove page">✕</button></div>').join('')+
+      '<form class="vpageform" data-v="'+v.id+'"><input name="url" placeholder="https://… another page of it" aria-label="Address" autocomplete="off">'+
+        '<input name="label" placeholder="Name it — optional" aria-label="Name" autocomplete="off"><button type="submit" class="ib" title="Add" aria-label="Add page">✓</button></form>'+
+    '</section>'+
+    '<section class="vps"><p class="vph">Your note</p>'+
+      '<textarea class="vmemo" data-vmemo="'+v.id+'" rows="2" placeholder="Anything worth remembering about it">'+esc(v.memo||'')+'</textarea></section>'+
+  '</div>'+
+  '<div class="cfoot">'+
+    '<button class="btn" data-act="vEdit" data-v="'+v.id+'">Edit</button>'+
+    '<span class="sp"></span>'+
+    '<button class="btn ghost" data-act="vDrop" data-v="'+v.id+'" title="Take it off the board altogether">Let it go</button>'+
+  '</div>';
+}
+/* The form a venue is made and changed in. An event's meeting days are
+   written the way an arena's dates are, with the same reading of how well
+   they are known; the open stretch either side is two optional days. */
+function venueFormHTML(v,aid){
+  const ev=!v||v.kind==='event';
+  const g=v&&v.kind==='event'?v.gran:'day';
+  const dt=v&&v.kind==='event'&&v.start?v:null;
+  const grade=v&&v.kind==='event'?v.grade:gradeDefault(g);
   const grans=[['day','Exact day'],['range','Exact span'],['month','A month'],['quarter','A quarter'],
-               ['half','A half-year'],['year','A year']]
-    .map(([v,n])=>'<option value="'+v+'">'+n+'</option>').join('');
-  return '<form class="dform cuform" data-a="" data-d="new">'+
-    '<input type="hidden" name="kind" value="brokerage"><input type="hidden" name="note" value="">'+
-    '<div class="fld"><label>Arena</label><select name="arena" required>'+
-      '<option value="">Choose an arena</option>'+
-      arenas.map(a=>'<option value="'+a.id+'">'+esc(a.name)+'</option>').join('')+'</select></div>'+
-    '<div class="fld"><label>Event</label><input name="label" placeholder="e.g. Cluster 4 brokerage day, Brussels" autocomplete="off"></div>'+
-    '<div class="fld"><label>Website</label><input name="url" placeholder="The event\u2019s own page" autocomplete="off"></div>'+
-    '<div class="fld"><label>How well is it known</label><select name="gran">'+grans+'</select></div>'+
-    '<div class="fld"><label>When</label><span class="granIn">'+granInputsHTML('day',null)+'</span></div>'+
-    '<div class="fld gradefld"><label>Certainty</label>'+gradeSegHTML('day','fixed')+'</div>'+
-    '<div class="fbtns"><button type="button" class="btn" data-act="cuNew">Cancel</button>'+
-      '<button type="submit" class="btn primary">Add event</button></div>'+
+               ['half','A half-year'],['year','A year'],['none','No date yet']]
+    .map(([x,n])=>'<option value="'+x+'"'+(x===g?' selected':'')+'>'+n+'</option>').join('');
+  const arenas=liveArenas().slice().sort((x,y)=>x.name.localeCompare(y.name));
+  return '<form class="dform vform" data-v="'+(v?v.id:'new')+'">'+
+    '<input type="hidden" name="kind" value="'+(ev?'event':'tool')+'">'+
+    '<div class="fld"><label>Kind</label><div class="seg">'+
+      '<button type="button" class="seg-b'+(ev?' on':'')+'" data-act="vKind" data-k="event">Event</button>'+
+      '<button type="button" class="seg-b'+(ev?'':' on')+'" data-act="vKind" data-k="tool">Tool</button></div>'+
+      '<p class="fhint">'+(ev?'A marketplace around meeting days.':'A partner search that is always open.')+'</p></div>'+
+    (v?'':'<div class="fld"><label>Serves</label><select name="arena"><option value="">Choose an arena</option>'+
+      arenas.map(a=>'<option value="'+a.id+'"'+(a.id===aid?' selected':'')+'>'+esc(a.name)+'</option>').join('')+'</select></div>')+
+    '<div class="fld"><label>Name</label><input name="label" value="'+esc(v?v.name:'')+'" placeholder="e.g. Cluster 4 brokerage day, Brussels" autocomplete="off"></div>'+
+    '<div class="fld"><label>Website</label><input name="url" value="'+esc(v?v.url:'')+'" placeholder="Its own page" autocomplete="off"></div>'+
+    '<div class="vevf"'+(ev?'':' hidden')+'>'+
+      '<div class="fld"><label>Meeting days — how well known</label><select name="gran">'+grans+'</select></div>'+
+      '<div class="fld"><label>When</label><span class="granIn">'+granInputsHTML(g,dt)+'</span></div>'+
+      '<div class="fld gradefld"><label>Certainty</label>'+gradeSegHTML(g,grade)+'</div>'+
+      '<div class="f2"><div class="fld"><label>Opens</label><input type="text" inputmode="none" readonly data-cal data-cal-none name="opens" placeholder="Optional" value="'+esc(v&&v.opens||'')+'"></div>'+
+      '<div class="fld"><label>Closes</label><input type="text" inputmode="none" readonly data-cal data-cal-none name="closes" placeholder="Optional" value="'+esc(v&&v.closes||'')+'"></div></div>'+
+      '<p class="fhint">When its marketplace opens before the meeting days and closes after them. Leave both empty and it is open on its meeting days only.</p>'+
+      '<div class="fld"><label>Basis</label><input name="note" value="'+esc(v&&v.note||'')+'" placeholder="Where the date comes from — optional" autocomplete="off"></div>'+
+    '</div>'+
+    '<div class="fbtns"><button type="button" class="btn" data-act="vEditCancel">Cancel</button>'+
+      '<button type="submit" class="btn primary">'+(v?'Save':'Add venue')+'</button></div>'+
   '</form>';
 }
-function renderComing(){
-  const el=$('#coming');
-  if(!el)return;
-  const all=comingUp(),now=T(todayISO());
-  const limbo=all.filter(x=>x.limbo),list=all.filter(x=>!x.limbo);
-  /* no count of the year's events, nor of those without a website (Mark,
-     2026-10-12): the list says it, and "add website" stands on each one */
-  const addBtn='<button class="btn'+(cuNew?' on':'')+'" data-act="cuNew" aria-expanded="'+cuNew+'">+ Brokerage event</button>';
-  const head='<div class="dpbar"><span class="spacer"></span>'+addBtn+'</div>'+(cuNew?cuFormHTML():'');
-  /* Limbo is drawn as one (Mark, 2026-10-12): a room of drifting fog with a
-     small ghost in it, where the events that are over wait to be let go. */
-  const lim=limbo.length?'<div class="culimbo'+(cuLimbo?' open':'')+'"><button class="culb" data-act="cuLimbo" aria-expanded="'+cuLimbo+'">'+
-      '<span class="culfog" aria-hidden="true"></span>'+LIMBO_GHOST+
-      '<span class="culc">Limbo</span><b>'+limbo.length+'</b> '+(limbo.length===1?'event is over':'events are over')+
-      '<span class="culw">'+(cuLimbo?'Hide':'Show')+'</span></button>'+
-    (cuLimbo?'<p class="culh">Each waits here until you take it off with \u2715.</p>'+
-      '<div class="cuspine">'+limbo.map(comingRow).join('')+'</div>':'')+'</div>':'';
-  if(!list.length){
-    const why=liveArenas().length&&!visibleArenas().length?emptyReason(false):
-      ['No brokerage event in the coming year.','Press + Brokerage event, or give an arena one, and it appears here.'];
-    el.innerHTML=head+(lim?'<div class="culist">'+lim+'</div>':'')+'<div class="empty"><p>'+why[0]+'</p><p class="hint" style="margin-top:6px">'+why[1]+'</p></div>';
-    return;
+function venueEditHTML(v,aid){
+  return '<div class="cbody vpanel"><div class="chead">'+
+      '<button class="x" data-act="closeDrawer" aria-label="Close">✕</button>'+
+      '<h2 id="aname">'+(v?esc(v.name):'New venue')+'</h2>'+
+      '<p class="meta">'+(v?'Editing':'An event or a tool you visit')+'</p></div>'+
+    venueFormHTML(v,aid)+'</div>';
+}
+/* What the form says, or null when the date is incomplete (readDateForm
+   says so). An event with no date yet is still a venue: it waits under
+   Later until its day is known. */
+function readVenueForm(f){
+  const kind=f.elements.kind.value==='tool'?'tool':'event';
+  const url=f.elements.url.value.trim();
+  const o={kind,name:f.elements.label.value.trim(),url:url?leadLinkUrl(url):''};
+  if(kind==='event'){
+    f.elements.kind.value='brokerage';
+    const d=readDateForm(f);
+    f.elements.kind.value='event';
+    if(!d)return null;
+    Object.assign(o,{gran:d.gran,start:d.start,end:d.end,grade:d.grade,note:d.note,
+      opens:f.elements.opens.value||null,closes:f.elements.closes.value||null});
   }
-  /* An event still running is filed under this month rather than the month
-     it began in, so the list opens on now. */
-  const thisM=thisYM(),months=[],by=new Map();
-  for(const it of list){
-    let m=it.d.start.slice(0,7);
-    if(m<thisM&&it.e>=T(todayISO()))m=thisM;
-    if(!by.has(m)){by.set(m,[]);months.push(m);}
-    by.get(m).push(it);
-  }
-  let placed=false;
-  const body=months.map(m=>{
-    const rows=by.get(m).map(it=>{
-      let h='';
-      if(!placed&&it.e>=now){placed=true;h='<div class="cutoday"><span>today</span></div>';}
-      return h+comingRow(it);
-    }).join('');
-    return '<section class="cumon"><div class="cumn">'+LONG_MONTHS[+m.slice(5,7)-1]+
-      '<small>'+m.slice(0,4)+'</small></div><div class="cuspine">'+rows+'</div></section>';
-  }).join('');
-  el.innerHTML=head+'<div class="culist">'+lim+body+(placed?'':'<div class="cutoday"><span>today</span></div>')+'</div>';
-  el.querySelectorAll('.cunta').forEach(autoGrow);
+  return o;
+}
+function openVenue(id){
+  closeComposers();
+  drawer.id=null;drawer.vid=id;drawer.vnew=null;drawer.edit=null;drawer.hi=null;drawer.editing=false;drawer.scope=null;
+  renderDrawer();
+  $('#card').focus({preventScroll:true});
+}
+function newVenue(aid){
+  closeComposers();
+  drawer.id=null;drawer.vid=null;drawer.vnew={aid:aid||null};drawer.editing=true;drawer.edit=null;drawer.scope=null;
+  renderDrawer();
+  const f=$('#card .vform input[name=label]');if(f)f.focus({preventScroll:true});
+}
+/* Letting a venue go takes it off the whole board. A lead started from it
+   keeps its own record and only forgets where it came from. */
+function dropVenue(id){
+  S.venues=(S.venues||[]).filter(v=>v.id!==id);
+  for(const a of S.arenas)for(const l of a.leads||[])if(l.venueId===id)delete l.venueId;
+  if(drawer.vid===id)drawer.vid=null;
+  if(vPop===id)vPop=null;
+  if(vAsking===id){vAsking=null;renderAsk();}
+  save();renderAll();
+}
+/* The venues an arena is served by, in its panel: where it stands, the
+   stamp and Go, and a new one for it. */
+function arenaVenuesHTML(a){
+  const vs=venuesOf(a);
+  const by=v=>{const w=vWin(v);return v.kind==='tool'?2e15:w?w.from:1e15;};
+  const rows=vs.slice().sort((x,y)=>by(x)-by(y)||x.name.localeCompare(y.name)).map(v=>
+    '<div class="avrow'+(vState(v)==='over'?' over':'')+(vDue(v)?' due':'')+'">'+vGlyph(v)+
+      '<span class="avt"><button class="vnm" data-act="openVenue" data-v="'+v.id+'">'+esc(v.name)+'</button>'+
+        '<i>'+esc(vDateSay(v))+'</i></span>'+
+      '<span class="vend">'+vStampHTML(v)+vGoHTML(v)+'</span></div>').join('');
+  return '<section class="card pcard brok"><div class="chd"><span class="ctitle">Venues</span>'+
+      '<button class="ib cact" data-act="vNew" data-id="'+a.id+'" title="A new venue for '+esc(a.name)+'">+</button></div>'+
+    (rows?'<div class="avlist">'+rows+'</div>':'<div class="cbd"><p class="ptext vnone">No venue yet — an event or a partner search it is served by.</p></div>')+
+  '</section>';
 }
 
 /* ============ drawer ============ */
-const drawer={id:null,edit:null,hi:null,editing:false,scope:null};
+/* `vid` is a venue standing in the drawer in place of an arena, and `vnew`
+   the venue being made, with the arena it was begun from */
+const drawer={id:null,vid:null,vnew:null,edit:null,hi:null,editing:false,scope:null};
 /* which card has its follow-up composer open, which has its link composer open,
    and which one just moved */
 /* leadEdit.a is BOARD while the new-lead form stands on Leads rather than in
    an arena's panel; no arena's id can be that word. */
 const BOARD='leads-board';
 let leadLastArena=null;
-let lkEdit={a:null,l:null},leadEdit={a:null,l:null},waitPick=null,settleId=null;
+let lkEdit={a:null,l:null},leadEdit={a:null,l:null};
 /* the lead whose Complete is asking how it ended, which is about the moment */
 let endAsk={a:null,l:null};
 /* the update being written, and the leads showing their whole history —
@@ -1659,7 +2031,11 @@ function dateRow(a,dt,past){
 function streamHTML(a){
   const now=T(todayISO());
   const dated=[],undated=[];
-  a.dates.forEach(dt=>{
+  /* the events the arena is served by stand in its stream as its brokerage
+     dates did, in time order among the calls */
+  const evs=venuesOf(a).filter(v=>v.kind==='event').map(v=>({id:v.id,kind:'brokerage',label:v.name,
+    gran:v.gran,start:v.start,end:v.end,grade:v.grade,note:v.note,url:v.url}));
+  a.dates.concat(evs).forEach(dt=>{
     if(!dt.start)undated.push(dt);
     else dated.push({t:T(dt.start),end:T(dt.end),dt});
   });
@@ -1687,36 +2063,32 @@ function freshSaid(a){
   return n?'<i class="wfresh" title="'+n+' thing'+(n===1?'':'s')+' the nightly agent found, marked new below '+
     '\u2014 sweeping this arena marks '+(n===1?'it':'them')+' seen, here and on the card">'+n+' new</i>':'';
 }
+/* The panel's band of leads. It carried the arena's sweep, the ring that
+   asked the nightly agent and the wait as well, until the rotation of
+   arenas went with the Marketplace (2026-10-14): the venues come round now,
+   and the agent is asked from a Claude session. */
 function rotBarHTML(a){
-  const s=standing(a);
   return '<div class="rotbar">'+
-    '<div class="swept">'+
-      '<button class="stamp'+(a.sweptAt===todayISO()?' on':'')+'" data-act="sweep" data-id="'+a.id+'" '+
-        'title="'+esc(sweptTitle(a))+'" aria-label="'+esc(sweptTitle(a))+'">\u2713</button>'+
-      '<span>'+esc(sweptLine(a))+'</span>'+freshSaid(a)+'<span class="sp"></span>'+askHTML(a)+
-      (s.note?'<span class="season">'+s.note.text+'</span>':'')+
-    '</div>'+
+    (freshItems(a).length?'<div class="swept">'+freshSaid(a)+'</div>':'')+
     '<div class="wbody">'+leadListHTML(a,leadHits(a,S.ui.q.trim().toLowerCase()))+'</div>'+
-    frontStrips(a,s,[])+
-    (waitPick===a.id?waitPickHTML(a):offerHTML(a,s))+
   '</div>';
 }
 function readHTML(a){
   const tags=(a.tags||[]).map(t=>'#'+esc(t)).join('<i>\u00B7</i>');
   const bk=a.brokerage||{notes:'',links:[]};
   const blocks=panelCard('About',false,a.notes||'',a.links,'editCard',a)+
-               panelCard('Brokerage',true,bk.notes||'',bk.links,'editBrokerage',a);
+               panelCard('Brokerage',true,bk.notes||'',bk.links,'editBrokerage',a)+
+               arenaVenuesHTML(a);
   /* Freezing suspends the rotation entirely, so the panel stops offering the
      parts of it that could not fire — a follow-up or a wait set here would
      promise a return the freezer has already ruled out. Anything already parked
      keeps its place in the record and resumes on thaw, which the banner says. */
   const nOpen=openLeads(a).length;
-  const parked=a.hold?' Its wait resumes when you thaw it.'
-              :nOpen?' Its '+(nOpen===1?'lead resumes':nOpen+' leads resume')+' when you thaw it.':'';
+  const parked=nOpen?' Its '+(nOpen===1?'lead resumes':nOpen+' leads resume')+' when you thaw it.':'';
   const frozen=a.frozenAt
     ?'<div class="frozenbar"><i class="frost"></i>'+
        '<span class="frtx">In the freezer since '+esc(shortDay(a.frozenAt))+
-         ' \u2014 kept off the board and the wall.'+parked+'</span>'+
+         ' \u2014 kept off the board, and its venues off Now, unless they serve another arena too.'+parked+'</span>'+
        '<button class="btn" data-act="thaw" data-id="'+a.id+'">Thaw</button></div>'
     :'';
   return '<div class="cbody">'+
@@ -1733,7 +2105,7 @@ function readHTML(a){
     '<div class="cfoot">'+
       '<button class="btn" data-act="editCard">Edit</button>'+
       (a.frozenAt?'':'<button class="btn ghost" data-act="freeze" data-id="'+a.id+'" '+
-        'title="Keep this arena off the board and the wall">Freeze</button>')+
+        'title="Keep this arena off the board, and its venues off Now">Freeze</button>')+
       '<span class="sp"></span>'+
       '<button class="btn" data-act="startAdd" data-what="date">+ Date</button>'+
       '<button class="btn" data-act="startAdd" data-what="link">+ Link</button>'+
@@ -1782,7 +2154,7 @@ function editHTML(a){
       '<button type="button" class="seg-b'+(k===wq?' on':'')+'" data-act="setWeight" '+
       'data-id="'+a.id+'" data-v="'+k+'" title="'+esc(WEIGHTS[k].long)+'">'+WEIGHTS[k].name+'</button>').join('')+
     '</div><p class="fhint">'+esc(WEIGHTS[wq].long)+
-    ' It changes how often this arena comes round, not how loudly it shouts when it does. '+
+    ' It changes how often the venues serving this arena come round, not how loudly they shout when they do. '+
     'The freezer is the step past peripheral.</p></div>';
 
   let h='';
@@ -1845,10 +2217,18 @@ function autoGrow(el){
 }
 function renderDrawer(){
   const c=$('#card'),sc=$('#cardScrim');
-  const a=arena(drawer.id);
-  if(!a){c.classList.remove('open');sc.classList.remove('open');c.innerHTML='';return;}
+  const v=drawer.vid?venue(drawer.vid):null;
+  const a=v||drawer.vnew?null:arena(drawer.id);
+  if(!a&&!v&&!drawer.vnew){c.classList.remove('open');sc.classList.remove('open');c.innerHTML='';return;}
   const body=c.querySelector('.cbody');const top=body?body.scrollTop:0;
-  c.innerHTML=drawer.editing?editHTML(a):readHTML(a);
+  /* a venue's note keeps its caret while the panel is drawn again round it */
+  const typing=document.activeElement&&document.activeElement.matches&&document.activeElement.matches('textarea.vmemo')?document.activeElement:null;
+  if(typing&&v&&c.contains(typing))return;
+  c.innerHTML=drawer.vnew?venueEditHTML(null,drawer.vnew.aid):
+    v?(drawer.editing?venueEditHTML(v):venueReadHTML(v)):(drawer.editing?editHTML(a):readHTML(a));
+  c.querySelectorAll('textarea.vmemo').forEach(autoGrow);
+  if(v||drawer.vnew){growAll(c);sc.classList.add('open');c.classList.add('open');
+    const nb=c.querySelector('.cbody');if(nb)nb.scrollTop=top;return;}
   if(drawer.editing){
     const ta=c.querySelector('textarea[data-field=notes]');if(ta){ta.value=a.notes||'';autoGrow(ta);}
     const tb=c.querySelector('textarea[data-field=bknotes]');if(tb){tb.value=(a.brokerage&&a.brokerage.notes)||'';autoGrow(tb);}
@@ -1858,87 +2238,28 @@ function renderDrawer(){
   if(!drawer.editing)drawCallSpans(a);
 }
 function openDrawer(id,dateId){
-  drawer.id=id;drawer.edit=null;drawer.hi=dateId||null;drawer.editing=false;drawer.scope=null;
+  drawer.id=id;drawer.vid=null;drawer.vnew=null;drawer.edit=null;drawer.hi=dateId||null;drawer.editing=false;drawer.scope=null;
   renderDrawer();
   /* the panel is fixed inside a box that scrolls; focusing it without this
      asks the browser to bring it into view, and the board jumps to the top */
   $('#card').focus({preventScroll:true});
   if(dateId){const el=$('#card .ln.hi');if(el)el.scrollIntoView({block:'center'});}
 }
-function closeDrawer(){drawer.id=null;drawer.edit=null;drawer.hi=null;drawer.editing=false;drawer.scope=null;renderDrawer();}
+/* What the agent brought an arena is marked new until its panel has been
+   looked at and shut again; it was the arena's sweep that cleared it, until
+   the sweep went with the rotation (2026-10-14). */
+function closeDrawer(){
+  const a=!drawer.vid&&!drawer.vnew&&arena(drawer.id);
+  if(a&&freshItems(a).length){a.seenAt=new Date().toISOString();save();}
+  if(leadEdit.a===VENUE_LEAD)closeComposers();
+  drawer.id=null;drawer.vid=null;drawer.vnew=null;drawer.edit=null;drawer.hi=null;drawer.editing=false;drawer.scope=null;renderDrawer();
+  repaint();
+}
 
 /* ============ actions ============ */
 function bkPos(a){return typeof a.bkPos==='number'?a.bkPos:1e9;}
 
-/* The rotation wall's order. An arena with nothing recorded still earns a
-   card while it is asking for something — a wait whose day is in reach —
-   because a ghost at the foot of the wall cannot say so. It drops back to a
-   ghost once the day has passed. The wall asks it of one type at a time;
-   the new-lead menu on the Ledger lists the arenas the same way, type by
-   type in Mark's order of types, each type's cards first and its ghosts
-   after. */
-function hasBrokerage(a){const b=a.brokerage||{};return !!(b.notes||(b.links||[]).length||(a.leads||[]).length);}
-function rotationSplit(arenas){
-  const ask=RUNG.asking[0];
-  const scored=arenas.map(a=>({a,s:standing(a)}));
-  const list=scored.filter(x=>hasBrokerage(x.a)||x.s.score>=ask)
-    .sort((x,y)=>y.s.score-x.s.score||x.a.name.localeCompare(y.a.name));
-  const empty=scored.filter(x=>!hasBrokerage(x.a)&&x.s.score<ask).map(x=>x.a)
-    .sort((x,y)=>x.name.localeCompare(y.name));
-  return{list,empty};
-}
-function rotationOrder(arenas){
-  const out=[];
-  S.types.map(t=>t.id).concat([null]).forEach(id=>{
-    const{list,empty}=rotationSplit(arenas.filter(a=>id?a.typeId===id:!typeOf(a)));
-    out.push(...list.map(x=>x.a),...empty);
-  });
-  return out;
-}
-/* ───────── standing ─────────
-   A card's height on the wall is one number, and three things move it. None of
-   the arithmetic is ever on screen: a card shows a follow-up, or just its own
-   size.
-
-   SWEEP   the plain rotation. You go through a platform, you stamp it, it
-           sinks; time floats it back up. The calendar raises the ceiling — a
-           platform is worth trawling once its call is published, best shortly
-           after, tailing off towards the deadline.
-           Finding the event or the tool in the first place used to be a
-           fourth: a notice in the run-up to a publication that asked you to go
-           and look. It kept asking for hunts the scheduled agents now do every
-           night, so it is gone; what they find waits in Dispatches.
-   A lead's day used to be a fourth: on the day, its card went to the top of
-   the wall with a green strip. The Ledger's board now carries every lead on
-   its day, so the card no longer calls out for it (Mark, 2026-10-06) — a lead
-   changes nothing about where its arena stands. Putting a card away is the
-   wait, below.
-   WAIT    parked against a date of its own: dormant until three weeks out,
-           then awake and climbing as the day comes. */
-const SWEEP_CYCLE=28;                    /* days for an untouched card to climb back */
-const SWEEP_SHORT=7;                     /* ...and while one of its calls is open */
-
-const NEAR=21;                           /* three weeks: when a dated thing becomes your business */
-const EVENT_NEAR=30;                     /* a month either side of a brokerage event */
-const FORMING=42;                        /* six weeks: about how long a consortium takes to come
-                                            together — which is why brokerage surfaces within
-                                            roughly that long after a call opens, and why it is
-                                            worth nothing that long before the call shuts */
-const clamp01=x=>x<0?0:x>1?1:x;
 const daysBetween=(a,b)=>Math.round((b-a)/DAY);
-
-/* ───────── one ladder, four rungs ─────────
-   A card is in exactly one state, and the rungs do not overlap, so the order you
-   read down the wall is the order of the ladder itself: what is asking to be
-   looked at, what is merely due a turn, and what is parked. (There was a
-   fourth rung above them, for a lead whose day had come; see "standing".)
-   Before this the branches read as a ladder but the numbers did not — ordinary
-   rotation could climb past a card that was asking you a question. Now the kind
-   of thing decides the rung and the degree decides the place within it. */
-const RUNG={asking:[.68,.88],turning:[.10,.66],parked:[0,.04]};
-const rung=(r,t)=>r[0]+(r[1]-r[0])*clamp01(t);
-/* parked cards still order among themselves, by how soon they are due back */
-const soon=days=>clamp01(1-days/180);
 
 /* this year is understood, so it goes unsaid */
 const trimYear=s=>{const y=' '+new Date().getFullYear();return s.endsWith(y)?s.slice(0,-y.length):s;};
@@ -1947,99 +2268,7 @@ const shortDate=dt=>(dt.gran==='range'&&dt.start&&dt.end)
   ? shortDay(dt.start)+' \u2013 '+shortDay(dt.end)
   : trimYear(dispDate(dt));
 
-function callKey(dt){return (dt.call||'').trim().toLowerCase()||'#'+dt.id;}
-function windowsOf(a){
-  const by=new Map();
-  for(const dt of (a.dates||[])){
-    if(dt.kind!=='call'||!dt.start)continue;
-    const k=callKey(dt);
-    if(!by.has(k))by.set(k,{key:k,name:dt.call||'Untitled call'});
-    by.get(k)[ROLES[dt.role]?dt.role:'publication']=dt;
-  }
-  return [...by.values()];
-}
-
-/* How badly a call wants you to go through the platform for partners.
-
-   Partner search is front-loaded. Profiles take a week or two to appear on a
-   matchmaking platform after a call opens, so the trawl is worth most about
-   three weeks in; and by the last six weeks before the deadline the consortia
-   have closed and the writing has started, so a sweep then turns up little but
-   others in the same position. The ramp therefore runs over that forming window
-   rather than over the whole call, and its peak sits at a real three weeks
-   rather than at a share of however long the call happens to run — brokerage
-   lands a month or so after opening whether the call is open for three months
-   or for seven. */
-function sweepOf(w){
-  const now=T(todayISO());
-  const pub=w.publication,dl=w.deadline;
-  if(!pub)return null;
-  const from=T(pub.end);
-  const shut=dl?T(dl.end):from+3*FORMING*DAY;   /* no deadline recorded: assume about four months */
-  if(now<from||now>shut)return null;
-  const open=dl?('Open until <b>'+esc(shortDate(dl))+'</b>'):'Call open';
-  const close=Math.max(from+7*DAY,shut-Math.min(FORMING*DAY,.45*(shut-from)));
-  /* still open, but too late to be joining a consortium */
-  if(now>close)return {pull:0,text:open+' \u2014 consortia will be settled by now'};
-  const peak=from+Math.min(NEAR*DAY,(close-from)*.4);
-  const pull=now<=peak?(now-from)/(peak-from):1-(now-peak)/(close-peak);
-  return {pull:clamp01(pull),text:open};
-}
-/* The next dated thing this arena has coming, of any kind — what a card waits
-   for when you tell it to wait. */
-function futureDates(a){
-  const now=T(todayISO());
-  return (a.dates||[]).filter(d=>d.start&&T(d.end||d.start)>=now)
-    .sort((x,y)=>T(x.start)-T(y.start));
-}
-function nextDate(a){return futureDates(a)[0]||null;}
-/* The other thing that quickens a card, and the plainest one: a brokerage event
-   of its own, close by. From a month before until a month after, the arena is
-   worth looking at weekly whatever else is true of it — beforehand because
-   registration, profiles and the agenda all land in those weeks, and afterwards
-   because that is when the contacts made there are still warm.
-
-   Only an actual event counts. A brokerage entry pencilled into a quarter or a
-   year is a guess at a season, not a date, so anything spanning more than about
-   six weeks is left out of it. */
-function eventNear(a){
-  const now=T(todayISO());
-  for(const d of (a.dates||[])){
-    if(d.kind!=='brokerage'||!d.start)continue;
-    const s=T(d.start),e=T(d.end||d.start);
-    if(e-s>45*DAY)continue;
-    if(now>=s-EVENT_NEAR*DAY&&now<=e+EVENT_NEAR*DAY)return d;
-  }
-  return null;
-}
-/* Both branches used to test for a nought day, and both dates here are
-   noon-normalised \u2014 so a day that has neither arrived nor passed is always
-   at least one, and "tomorrow" and "yesterday", which were plainly what was
-   wanted, could not be reached. Today itself is caught by the middle line. */
-function eventNote(d){
-  const now=T(todayISO()),s=T(d.start),e=T(d.end||d.start);
-  const said='<b>'+esc(dtLabel(d))+'</b>';
-  if(now<s){const n=daysBetween(now,s);
-    return said+' \u2014 '+(n===1?'tomorrow':'in '+n+' days');}
-  if(now<=e)return said+' \u2014 on now';
-  const n=daysBetween(e,now);
-  return said+' \u2014 '+(n===1?'yesterday':n+' days ago');
-}
-
-/* A wait, resolved: dormant until a few weeks out, then awake and climbing as
-   the day approaches. The event is held by reference, so if you move the date
-   the wait moves with it; if you delete it, the wait is over. */
-function holdOf(a){
-  if(!a.hold||!a.hold.dateId)return null;
-  const dt=(a.dates||[]).find(d=>d.id===a.hold.dateId&&d.start);
-  if(!dt)return null;
-  const now=T(todayISO()),at=T(dt.start),gone=T(dt.end||dt.start);
-  if(gone<now)return null;                       /* the day has been and gone */
-  const wake=at-NEAR*DAY,near=daysBetween(now,at);
-  return {dt,at,wake,near,asleep:now<wake,label:dtLabel(dt)};
-}
-
-/* What a sweep turned up. A lead is open until you tick it off; a done one stays
+/* What a visit turned up. A lead is open until you tick it off; a done one stays
    in the record, because "did this arena ever produce anything" is a question
    worth being able to answer. */
 function openLeads(a){return (a.leads||[]).filter(l=>!l.doneAt);}
@@ -2069,60 +2298,6 @@ function sortedDone(a){return doneLeads(a).slice().sort((x,y)=>
   String(y.doneAt||'').localeCompare(String(x.doneAt||''))||leadName(x).localeCompare(leadName(y)));}
 function leadName(l){return l.project||(l.links[0]?linkName(l.links[0]):'')||'Untitled lead';}
 
-function standing(a){
-  const now=T(todayISO());
-  let sweep=null;
-  for(const w of windowsOf(a)){
-    const K=sweepOf(w);
-    if(K&&(!sweep||K.pull>sweep.pull))sweep={...K,call:w.name};
-  }
-  /* An open call puts the card on a short rotation rather than letting it stand:
-     the cadence tightens from four weeks to about a week at the peak of the
-     window, so it keeps coming back around while the call is live. The arena's
-     standing weight scales that whole cadence — the call says how live this
-     moment is, the weight says how much the arena is worth at all, and they
-     multiply rather than competing. */
-  const W=WEIGHTS[weightOf(a)];
-  let cycle=W.turn*(SWEEP_CYCLE-(SWEEP_CYCLE-SWEEP_SHORT)*(sweep?sweep.pull:0));
-  /* An event of its own is a floor, not another multiplier: within the month
-     either side the card comes round at least weekly however peripheral the
-     arena and however quiet its calls. */
-  const event=eventNear(a);
-  if(event)cycle=Math.min(cycle,SWEEP_SHORT);
-  const rest=a.sweptAt?clamp01(daysBetween(T(a.sweptAt),now)/cycle):1;
-  const hold=holdOf(a);
-  const st={sweep,event,rest,hold,note:null,state:'rotate',score:0};
-  if(hold&&hold.asleep){                    /* asleep until its own date */
-    st.state='held';st.score=rung(RUNG.parked,soon(daysBetween(now,hold.wake)));
-  }else if(hold){                                 /* that date is in reach */
-    st.state='wake';st.score=rung(RUNG.asking,1-hold.near/NEAR);
-  }else{                                          /* simply due a turn */
-    /* the event is the more immediate fact of the two, so it is the one said */
-    st.note=event?{pull:1,text:eventNote(event)}:sweep;
-    /* every term scales with rest, so a card just stamped sits at the foot of
-       the rung whatever its weight or its calls — nothing shouts at you the day
-       you handled it. The weight only breaks the tie when two cards have gone
-       equally stale. */
-    st.score=rung(RUNG.turning,.70*Math.pow(rest,1.4)+.20*(sweep?sweep.pull:0)*rest+.10*W.lift*rest);
-    st.state=sweep&&sweep.pull>.2?'sweep':'rotate';
-  }
-  return st;
-}
-function promptCount(){
-  /* whatever stands on the asking rung or above is asking you something */
-  return visibleArenas().filter(a=>standing(a).score>=RUNG.asking[0]).length;
-}
-function sweptTitle(a){
-  if(!a.sweptAt)return 'Not swept yet \u2014 click when you have been through the platform';
-  const d=daysBetween(T(a.sweptAt),T(todayISO()));
-  if(d<=0)return 'Swept today \u2014 click to undo';
-  return 'Swept '+(d===1?'yesterday':d+' days ago')+' \u2014 click to log a new sweep';
-}
-function sweptLine(a){
-  if(!a.sweptAt)return 'Never swept';
-  const d=daysBetween(T(a.sweptAt),T(todayISO()));
-  return d<=0?'Swept today':d===1?'Swept yesterday':'Swept '+d+' days ago';
-}
 /* What the nightly agents brought, and whether you have looked since. A date
    or a link that comes in through Dispatches carries `foundAt`, the moment it
    was accepted, and reads as new until the arena is next swept — a sweep is
@@ -2144,42 +2319,29 @@ function foundTitle(x){
 function freshTag(a,x){
   return isFresh(a,x)?'<i class="wfresh" title="'+esc(foundTitle(x))+'">new</i>':'';
 }
-/* Every link row, on a card and in the panel alike: the link, then the thing
-   you do to it in passing — take it off. `scope` says which of the arena's
-   two lists it is in, so a row can also be dragged to a new place (see
-   "putting links in your own order"). */
-/* On a rotation card a link is its name alone, its host left off (Mark,
-   2026-10-12): the address is a hover away, in the title. In its place the
-   link carries its stamp, the site's (stampMates), so a site gone through
-   from one card shows as gone through on every card that links it. */
-function wallLinkRows(a,list,scope,onCard){
+/* Every link row in the panel: the link, its host, then the things you do
+   to it in passing. `scope` says which of the arena's two lists it is in,
+   so a row can also be dragged to a new place (see "putting links in your
+   own order"). The rotation cards showed the same rows with a stamp, until
+   the cards went with the Marketplace (2026-10-14). */
+function wallLinkRows(a,list,scope){
   return (list||[]).map(lk=>{
     const nm=esc(linkName(lk));
     const body=lk.url
       ? '<a class="wlink" draggable="false" href="'+esc(lk.url)+'" target="_blank" rel="noopener" title="'+esc(lk.url)+'">'+
-          '<span class="wn">'+nm+'</span>'+freshTag(a,lk)+(onCard?'':'<span class="wd">'+esc(linkHost(lk))+'</span>')+'</a>'
+          '<span class="wn">'+nm+'</span>'+freshTag(a,lk)+'<span class="wd">'+esc(linkHost(lk))+'</span></a>'
       : '<span class="wlink dead"><span class="wn">'+nm+'</span>'+freshTag(a,lk)+'</span>';
     const ref=' data-a="'+a.id+'" data-lks="'+scope+'" data-l="'+esc(lk.id||'')+'"';
-    let stamp='';
-    if(onCard&&lk.url){
-      const{on,d,ageTip,stTip}=stampSay(stampOf(lk));
-      const tip=on?stTip:ageTip+' — stamp it once you have been through it';
-      stamp='<button class="stamp'+(on?' on':'')+(d===null?'':' dated')+'" data-act="lkStamp"'+ref+' title="'+tip+'" aria-label="'+tip+'">✓'+
-        (d===null?'':'<span class="sdays">'+Math.max(0,d)+'</span>')+'</button>';
-    }
-    /* in the panel, a brokerage link can be made the arena's general tool
-       (see "the general tool") */
-    const isTool=a.toolId&&a.toolId===lk.id;
-    const tool=!onCard&&scope==='brokerage'
-      ? '<button class="ltool'+(isTool?' on':'')+'" data-act="lkTool"'+ref+' aria-pressed="'+(isTool?'true':'false')+'" '+
-          'title="'+(isTool?'The general tool of this arena, marked beside its name on the Board \u2014 click to unset':
-            'Make this the arena\u2019s general tool: a marker beside its name on the Board, to mark off when gone through')+'" '+
-          'aria-label="General tool"></button>'
+    /* a brokerage link that is a place to go and look can be made a venue,
+       where it comes round and is visited (2026-10-14); it was the arena's
+       general tool, marked here by a diamond, until then */
+    const make=scope==='brokerage'&&lk.url&&!/^mailto:/i.test(lk.url)
+      ? '<button class="lmake" data-act="vMake"'+ref+' title="Make this a venue \u2014 a place you visit, which comes round on Now" '+
+          'aria-label="Make a venue of '+nm+'">\u2192 venue</button>'
       : '';
     return '<div class="wlrow" data-lk="'+esc(lk.id||'')+'">'+body+
-      '<span class="wlc">'+tool+
+      '<span class="wlc">'+make+
         '<button class="ldel" data-act="lkDel"'+ref+' title="Remove this link" aria-label="Remove '+nm+'">✕</button>'+
-        stamp+
       '</span></div>';
   }).join('');
 }
@@ -2191,36 +2353,19 @@ function linkList(a,scope){
   return a.brokerage.links||(a.brokerage.links=[]);
 }
 function linkOf(a,scope,id){const l=linkList(a,scope);return l?l.find(x=>x.id===id):null;}
-/* a change to a link shows on the card and in the panel at once */
+/* a change to a link shows in the panel and wherever else it is drawn */
 function relinked(){save();repaint();renderDrawer();}
 function wallLinks(a,scope,rows){
   return '<div class="wlinks" data-a="'+a.id+'" data-lks="'+scope+'">'+rows+'</div>';
 }
-/* ---- the line on top of a card ----
-   What a card has to say first is where its arena stands in a call's run:
-   open, about to open, or between calls, and how long until the next thing
-   that matters. It was a spine of up to four dates, and on a real wall
-   those were topic codes cut off at the same point, several of them
-   sharing one deadline, so finding out whether anything was open meant
-   reading every row, and the links under it read as more of the same
-   (Mark, 2026-10-07: "a mess"). Now it is one phase line over a strip of
-   time, picked from three drawn options.
-
-   The strip runs from five weeks back to the last date it shows. A call is
-   a bar from its publication to its deadline. The stages of one call —
-   Stage 1 and Stage 2, pre- and full proposals, outline and full proposal —
-   are one bar with a notch at each earlier deadline (`callBase`), and calls
-   with exactly the same dates are one bar, because a cluster's work
-   programme opens a dozen topics on the same two days and a dozen identical
-   bars say nothing. Brokerage events are diamonds on a lane above, and
-   today is the gold line through both. Names are in the room's tooltip:
-   the strip is a picture of where you are, the panel is where you read.
-   A call on it opens the panel on its own date, as the rows did; a
-   brokerage event, on the strip or named by the phase line, is shown in
-   Coming up (jumpDate), where its website and its stamp are.
-
-   A call whose deadline has passed leaves the card; the panel keeps it.
-   A top card draws up to four calls, a middle card two, the tail none. */
+/* ---- a call's run ----
+   The stages of one call — Stage 1 and Stage 2, pre- and full proposals,
+   outline and full proposal — are one bar with a notch at each earlier
+   deadline (`callBase`), and calls with exactly the same dates are one bar,
+   because a cluster's work programme opens a dozen topics on the same two
+   days and a dozen identical bars say nothing. Drawn so on the rotation
+   cards first (Mark, 2026-10-07), and on the board since; the cards went
+   with the Marketplace (2026-10-14). */
 function callBase(n){
   return String(n||'').replace(/\s*\(expected\)/ig,'')
     .replace(/\s*[–—-]\s*(stage\s*\d|pre-?proposals?|full( project)? proposals?|project outline).*$/i,'')
@@ -2271,95 +2416,6 @@ function runTip(r){
   const stages=r.dls.length>1?'\n'+r.dls.length+' deadlines: '+r.dls.map(shortDate).join(', '):'';
   return names.join('\n')+'\n'+span+stages+(r.unc?'\nUncertain':'');
 }
-/* `hi`, the id of one brokerage event: Coming up unfolds an arena's strip
-   under one of its events and has that event marked on it (Mark,
-   2026-10-12), with the strip widened to reach it however far off it is. */
-function cardLineHTML(a,t,hi){
-  const now=T(todayISO());
-  const{live,last}=callRuns(a);
-  const evs=(a.dates||[]).filter(d=>d.kind!=='call'&&d.start&&d.gran!=='none')
-    .map(d=>({d,s:T(d.start),e:T(d.end||d.start)})).sort((x,y)=>x.s-y.s);
-  const ahead=evs.filter(x=>x.e>=now);
-  if(!live.length&&!last&&!evs.length)return '';
-  const when=d=>(d.grade==='fixed'?'':'≈ ')+shortDate(d);
-  const until=d=>{const n=daysBetween(now,T(d.start));
-    return T(d.end||d.start)>=now&&n<=0?'on now':n<0?'':n===1?'tomorrow':'in '+n+' d';};
-
-  /* the phase line: the one sentence the card leads with */
-  let ph;
-  const o=live.find(r=>r.state==='open'&&r.next)||live.find(r=>r.state==='open');
-  const so=live.find(r=>r.state==='soon');
-  if(o&&o.next)ph={w:'Open',c:'open',pre:'next deadline ',d:o.next};
-  else if(o)ph={w:'Open',c:'open',pre:'published ',d:o.open,still:true};
-  else if(so)ph={w:'Opens',c:'soon',pre:'',d:so.open};
-  else if(ahead.length)ph={w:last?'Between calls':'No call dated',c:'none',pre:'brokerage ',d:ahead[0].d};
-  else if(last)ph={w:'Between calls',c:'none',pre:'last deadline ',d:last.close||last.open,still:true};
-  else ph={w:'No call dated',c:'none',pre:'',d:null};
-  const n=ph.d&&!ph.still?until(ph.d):'';
-  const fresh=(a.dates||[]).find(d=>isFresh(a,d));
-  const phInner='<span class="wpw '+ph.c+'">'+ph.w+'</span>'+
-    '<span class="wpt">'+esc(ph.pre)+(ph.d?'<span class="wpd'+(ph.d.grade==='fixed'?'':' unc')+'">'+esc(when(ph.d))+'</span>':'')+
-      (fresh?freshTag(a,fresh):'')+'</span>'+
-    (n?'<span class="wpn">'+n+'</span>':'');
-  const phase=ph.d
-    ?'<button class="wph" data-act="'+(ph.d.kind==='call'?'openDate':'jumpDate')+'" data-a="'+a.id+'" data-d="'+ph.d.id+'">'+phInner+'</button>'
-    :'<div class="wph">'+phInner+'</div>';
-
-  /* the strip */
-  const rows=live.slice(0,t==='mid'?2:4);
-  const me=hi?evs.find(x=>x.d.id===hi):null;
-  const t0=Math.min(now-35*DAY,me?me.s-14*DAY:Infinity);
-  let t1=now+100*DAY;
-  /* a call with no deadline yet gets two months past its opening, so it is
-     seen to begin rather than squeezed against the edge */
-  for(const r of rows)t1=Math.max(t1,r.close?T(r.close.end||r.close.start):T(r.open.start)+60*DAY);
-  for(const x of ahead.slice(0,3))t1=Math.max(t1,x.e);
-  if(me)t1=Math.max(t1,me.e);
-  t1=Math.min(t1+12*DAY,Math.max(now+380*DAY,me?me.e+12*DAY:0));
-  const P=v=>Math.max(0,Math.min(100,(v-t0)/(t1-t0)*100)).toFixed(2);
-  let lane='';
-  for(const x of evs){
-    if(x.e<t0||x.s>t1)continue;
-    const cls=(x.e<now?' past':'')+(x.d.grade==='fixed'?'':' unc')+(isFresh(a,x.d)?' fresh':'')+(x===me?' this':'');
-    if(x.e-x.s>=3*DAY)lane+='<span class="wsr'+(x.e<now?' past':'')+(x===me?' this':'')+'" style="left:'+P(x.s)+'%;width:'+(P(x.e)-P(x.s)).toFixed(2)+'%"></span>';
-    lane+='<button class="wsd'+cls+'" data-act="jumpDate" data-tipd data-a="'+a.id+'" data-d="'+x.d.id+'" '+
-      'style="left:'+P(x.s)+'%" aria-label="'+esc(dtLabel(x.d)+', '+dispDate(x.d))+'"></button>';
-  }
-  const bars=rows.map(r=>{
-    const x0=r.open?+P(T(r.open.start)):0;
-    const x1=r.close?+P(T(r.close.end||r.close.start)):100;
-    const w=Math.max(x1-x0,.8);
-    const notch=r.dls.slice(0,-1).map(d=>'<i style="left:'+((+P(T(d.start))-x0)/w*100).toFixed(1)+'%"></i>').join('');
-    const at=r.next||r.close||r.open;
-    const cls=(r.unc?' unc':'')+(r.open?'':' lead-in')+(r.close?'':' run-on')+(r.all.some(d=>isFresh(a,d))?' fresh':'');
-    return '<div class="wsrow"><button class="wsb'+cls+'" data-act="openDate" data-a="'+a.id+'" data-d="'+at.id+'" '+
-      'data-tipt="'+esc(runTip(r))+'" style="left:'+x0.toFixed(2)+'%;width:'+w.toFixed(2)+'%" '+
-      'aria-label="'+esc(dtLabel(at)+', '+dispDate(at))+'">'+notch+'</button></div>';
-  }).join('');
-  /* a letter per month, the year in place of January's; a label that would
-     run into the one before it (a year is four letters wide) is left out */
-  let ticks='',lastX=-99,lastW=0;
-  const span=(t1-t0)/DAY,step=span>300?2:1;
-  const m=new Date(t0);m.setDate(1);m.setMonth(m.getMonth()+1);
-  for(let i=0;m.getTime()<t1;i++,m.setMonth(m.getMonth()+1)){
-    const jan=m.getMonth()===0,x=+P(m.getTime());
-    ticks+='<i style="left:'+x.toFixed(2)+'%"></i>';
-    if((i%step===0||jan)&&x<96&&x-lastX>=lastW){
-      ticks+='<span class="'+(jan?'y':'')+'" style="left:'+x.toFixed(2)+'%">'+(jan?m.getFullYear():MONTHS[m.getMonth()][0])+'</span>';
-      lastX=x;lastW=jan?9:3.5;          /* in % of a strip 250–320px wide */
-    }
-  }
-  const more=live.length-rows.length;
-  return '<div class="wline">'+phase+
-    '<div class="wstrip">'+
-      '<div class="wsl">'+lane+'</div>'+
-      (bars?'<div class="wsbars">'+bars+'</div>':'')+
-      '<span class="wsnow" style="left:'+P(now)+'%"></span>'+
-      '<div class="wsx">'+ticks+'</div>'+
-    '</div>'+
-    (more>0?'<p class="wlmore">+'+more+' more call'+(more>1?'s':'')+'</p>':'')+
-  '</div>';
-}
 function linkHost(lk){
   try{return new URL(lk.url).hostname.replace(/^www\./,'');}catch(e){return '';}
 }
@@ -2388,7 +2444,7 @@ function lkFormHTML(a,leadId){
    an arena it is the one Leads opens, where no arena is in hand yet, and the
    arena is chosen in front of the rest, as Coming up's new event chooses its
    own (Mark asked to add leads from Leads on 2026-10-12). */
-function leadFormHTML(a){
+function leadFormHTML(a,ven){
   /* Both boxes grow as you type rather than scrolling sideways: what you are
      writing here is a couple of sentences, and losing sight of the first half
      of them while writing the second is the whole problem with a one-line
@@ -2399,11 +2455,16 @@ function leadFormHTML(a){
     'aria-label="'+ph+'">'+esc(v||'')+'</textarea>';
   /* the rotation's order, top card first, as the Ledger's new lead offers
      them, and the last one filed under kept: leads come out of one sweep */
-  const pick=a?'':'<select name="arena" required aria-label="The arena this lead is filed under">'+
+  /* Begun from a venue, it is filed under one of the arenas the venue
+     serves, chosen only when there is more than one, and it remembers the
+     venue (2026-10-14). */
+  const from=ven?venueArenas(ven).filter(x=>!x.frozenAt):null;
+  const pick=a?'':from&&from.length===1?'<input type="hidden" name="arena" value="'+from[0].id+'">':
+    '<select name="arena" required aria-label="The arena this lead is filed under">'+
     '<option value="">Choose an arena</option>'+
-    arenasForBoard().map(x=>'<option value="'+x.id+'"'+(x.id===leadLastArena?' selected':'')+'>'+
+    (from?from.map(x=>({id:x.id,name:x.name})):arenasForBoard()).map(x=>'<option value="'+x.id+'"'+(x.id===leadLastArena?' selected':'')+'>'+
       esc(x.name)+'</option>').join('')+'</select>';
-  return '<form class="leadform'+(a?'':' leadboard')+'" data-la="'+(a?a.id:'')+'" data-lid="new">'+
+  return '<form class="leadform'+(a?'':' leadboard')+'" data-la="'+(a?a.id:'')+'"'+(ven?' data-venue="'+ven.id+'"':'')+' data-lid="new">'+
     pick+
     box('project','','What is the project?')+
     box('match','','Who could be a good match?')+
@@ -2736,7 +2797,11 @@ function leadRowHTML(a,l,hit,say){
         (l.coordinator?'<p class="lwr"><i>coordinator</i><span>'+esc(l.coordinator)+'</span></p>':'')+
         (l.contact?'<p class="lwr"><i>contact</i><span>'+esc(l.contact)+'</span></p>':'')+'</div>')
     : '';
-  const body=who+(editing
+  /* the venue it was found at, which opens it */
+  const fromV=l.venueId&&venue(l.venueId);
+  const from=fromV&&!editing?leadSec('from','<button class="lfrom" data-act="openVenue" data-v="'+fromV.id+'" '+
+    'title="Open '+esc(fromV.name)+'">'+esc(fromV.name)+'</button>'):'';
+  const body=from+who+(editing
     ? leadSec('links','<div class="llinks ledlinks">'+
         (l.links||[]).map(k=>'<div class="ledrow" data-k="'+k.id+'">'+
           '<input class="ledin" name="url" value="'+esc(k.url||'')+'" placeholder="https://… or name@…" aria-label="Link or email address" autocomplete="off">'+
@@ -2868,101 +2933,6 @@ function leadEditRead(card){
       text:val(r,'text'),gone:r.classList.contains('gone')}))
   };
 }
-/* Which date to sleep until. The next one is rarely the right one: with a
-   deadline a fortnight out, what you actually want is to be woken for the call
-   after it, so the arena's whole future is offered rather than guessed at. */
-function waitPickHTML(a){
-  const list=futureDates(a);
-  if(!list.length)return '';
-  const now=T(todayISO());
-  return '<div class="waitpick"><p class="wphd">Sleep until \u2014 and come back three weeks before</p>'+
-    list.map(d=>{
-      const days=daysBetween(now,T(d.start));
-      const sub=d.kind==='call'?roleOf(d).short:(d.note||'');
-      return '<button class="wpo" data-act="holdSet" data-id="'+a.id+'" data-d="'+d.id+'" '+
-        'style="--c:'+dtColor(d)+'"><span class="dot"></span>'+
-        '<span class="wpn">'+esc(dtLabel(d))+(sub?'<i>'+esc(sub)+'</i>':'')+'</span>'+
-        '<span class="wpd">'+esc(shortDate(d))+(days>0?' \u00B7 '+days+'d':'')+'</span></button>';
-    }).join('')+
-    '<button class="wpx" data-act="lkCancel">Cancel</button></div>';
-}
-/* What the panel offers under the leads: a wait. */
-function offerHTML(a,st){
-  const nx=st.hold?null:nextDate(a);
-  if(!nx)return '';
-  return '<div class="offer"><span class="sp"></span>'+
-    '<button data-act="waitPick" data-id="'+a.id+'" '+
-    'title="Sleep until one of this arena\u2019s coming dates \u2014 back three weeks before">'+
-    'Wait for\u2026</button></div>';
-}
-
-/* A wait and a search hit. Both are strips under the head, the same shape,
-   because they answer the same question: why is this card where it is. A lead
-   whose day has come used to be a third; its day is on the Ledger's board now.
-   A hit names the lead the search found, and a press opens the arena's panel,
-   where its leads are: a card has had no side of leads since 2026-10-11. */
-/* What a card is waiting for, with the day and the way out of the wait. On
-   a card it stands in the foot, where "Wait for…" offers one (Mark,
-   2026-10-11: the wait answers that offer, so it goes where the offer was);
-   in the panel it stays with the other strips. */
-function holdStripHTML(a,hold){
-  const when=hold.asleep?shortDay(hold.dt.start):(hold.near<=0?'today':'in '+hold.near+'d');
-  return '<div class="strip'+(hold.asleep?' asleep':' due')+'"><span class="sg"></span>'+
-    '<button class="stx" data-act="waitPick" data-id="'+a.id+'" '+
-      'title="Wait for a different date instead">'+(hold.asleep?'Waiting for ':'Back for ')+esc(hold.label)+'</button>'+
-    '<span class="swhen">'+esc(when)+'</span>'+
-    '<button class="sdone" data-act="holdClear" data-id="'+a.id+'" '+
-      'title="Stop waiting \u2014 back into the rotation" aria-label="Stop waiting">\u2713</button></div>';
-}
-function frontStrips(a,st,hits,onCard){
-  let h='';
-  if(st.hold&&!onCard)h+=holdStripHTML(a,st.hold);
-  if(hits.length){
-    h+='<div class="strip find"><span class="sg"></span>'+
-      '<button class="stx" data-act="openArena" data-id="'+a.id+'">'+esc(leadName(hits[0]))+
-      (hits.length>1?' <i>+'+(hits.length-1)+'</i>':'')+'</button>'+
-      '<span class="swhen">found</span></div>';
-  }
-  return h;
-}
-/* Asking the nightly agent to look at this arena on its next run, on top of
-   the three it would have picked anyway. The ask is a moment (`askAt`) on the
-   arena, so it rides to the cloud with the board and the agent's gatekeeper
-   can see it; it stands until the agent's log says it has been since (see
-   settleAsks), and pressing it again takes it back. The daily run is Sunday
-   to Thursday night, so an ask made on a Friday waits for Sunday. */
-function askHTML(a){
-  const on=!!a.askAt;
-  const tip=on?'The nightly agent looks at this arena on its next run — click to take the request back'
-              :'Ask the nightly agent to look at this arena on its next run';
-  return '<button class="wask'+(on?' on':'')+'" data-act="askAgent" data-id="'+a.id+'" '+
-    'aria-pressed="'+(on?'true':'false')+'" title="'+tip+'" aria-label="'+esc(tip)+'"><i></i></button>';
-}
-function headHTML(a,st,t){
-  const bk=a.brokerage||{links:[]};
-  const n=(bk.links||[]).length;
-  const nNew=t==='rest'?freshItems(a).length:0;
-  /* the title and its count share one flexible cell, so whatever is written
-     there can never move the controls on the right */
-  return '<header class="wch">'+
-    '<span class="wnm">'+
-      '<button class="wname'+weightClass(a)+'" data-act="openArena" data-id="'+a.id+'" title="Open arena">'+esc(a.name)+'</button>'+
-      (t==='rest'&&n?'<span class="wcnt" title="'+n+' tool'+(n===1?'':'s')+'">'+n+'</span>':'')+
-      /* a tail card shows neither its dates nor its links, so what the agent
-         brought it is one dot beside the name */
-      (t==='rest'&&nNew?'<i class="wfdot" title="'+nNew+' new from the nightly agent — open the arena"></i>':'')+
-    '</span>'+
-    /* a tail card is one line of name, so it carries the ring only while it is lit */
-    (t!=='rest'||a.askAt?askHTML(a):'')+
-    /* The stamp carries the days since it was last pressed, 0 on the day
-       itself (Mark, 2026-10-11), so a row can be read for how long each card
-       has gone untouched without hovering. A card never stamped has none. */
-    '<button class="stamp'+(a.sweptAt===todayISO()?' on':'')+(a.sweptAt?' dated':'')+'" data-act="sweep" data-id="'+a.id+'" '+
-      'title="'+esc(sweptTitle(a))+'" aria-label="'+esc(sweptTitle(a))+'">\u2713'+
-      (a.sweptAt?'<span class="sdays">'+Math.max(0,daysBetween(T(a.sweptAt),T(todayISO())))+'</span>':'')+'</button>'+
-    '<button class="ib wedit" data-act="editBrokerage" data-id="'+a.id+'" title="Edit brokerage">\u270E</button>'+
-  '</header>';
-}
 /* The list itself, in the arena's panel. It was on the back of every card on
    the wall as well, until Mark took the leads off the rotation cards
    (2026-10-11): they are worked here, on Leads, on the Ledger and in Pocket. */
@@ -3027,302 +2997,7 @@ function leadListHTML(a,hits){
   }
   return h;
 }
-/* The wait is not a lead: it is the card putting itself away until a date on its
-   own timeline — the arena's own answer to "not now". That is a statement
-   about the arena, not about anything the sweeping turned up, so it belongs on
-   the face that says what the arena is: at the foot of the front, under a rule,
-   directly beneath the strip that will say "Waiting for…" once it is set.
-   Setting it and reading it are then the same place.
-
-   It is offered only where there is room to read it: the tail of the wall is
-   one line of name and count, and a verb under it would be the loudest thing
-   on a card that is meant to be quiet. */
-function waitFootHTML(a,st,t){
-  if(waitPick===a.id)
-    return '<div class="wfoot wfoot-pick">'+waitPickHTML(a)+'</div>';
-  if(t==='rest')return '';
-  if(st.hold)return '<div class="wfoot">'+holdStripHTML(a,st.hold)+'</div>';
-  const nx=nextDate(a);
-  if(!nx)return '';
-  return '<div class="wfoot"><div class="offer"><span class="sp"></span>'+
-    '<button data-act="waitPick" data-id="'+a.id+'" '+
-      'title="Sleep until one of this arena\u2019s coming dates \u2014 back three weeks before">'+
-      'Wait for\u2026</button></div></div>';
-}
-function wallCard(a,st,tier){
-  const bk=a.brokerage||{notes:'',links:[]};
-  const s=st||standing(a);
-  const t=tier||'lead';
-  const hits=leadHits(a,S.ui.q.trim().toLowerCase());
-  /* At most three links on a card, so a card with many does not grow tall
-     for them (Mark, 2026-10-11); the rest are a press away in the panel. */
-  const LK_ON_CARD=3;
-  const loose=bk.links||[];
-  const rows=t==='rest'?'':wallLinkRows(a,loose.slice(0,LK_ON_CARD),'brokerage',true);
-  const nMore=loose.length-LK_ON_CARD;
-  /* The face is built in three parts: a head that never moves, a middle that
-     takes whatever room the card has and scrolls when there is more than that,
-     and a foot pinned to the floor. It is what lets a row of cards line up —
-     every head on one line, every foot on another — however unequal what
-     lies between them happens to be. */
-  const front='<div class="wface wfront">'+
-    headHTML(a,s,t)+
-    '<div class="wscroll"><div class="wsin">'+
-      /* The front is the line and the links, nothing else (Mark, 2026-10-06):
-         where the arena stands in time, and where to go. The brokerage note
-         and the season sentence came off — the note is in the panel, and the
-         line says what the season sentence said, better. */
-      frontStrips(a,s,hits,true)+
-      (t==='rest'?'':cardLineHTML(a,t))+
-      /* The links are a different kind of thing from the line above them —
-         where to go, not where the arena stands — so they stand in a band
-         of their own on a darker ground under a firm rule (Mark, 2026-10-07:
-         "make visibly plain that this is something else"). They used to
-         follow the dates straight on in the same type, and read as more
-         dates. The band's "Links" heading went on 2026-10-11, at his asking:
-         the ground and the rule say it alone. */
-      (t==='rest'?'':'<div class="wlk">'+
-        (rows?wallLinks(a,'brokerage',rows)+
-            (nMore>0?'<button class="wlmore" data-act="openArena" data-id="'+a.id+'">+ '+nMore+' more in the arena</button>':'')
-          :'<p class="wnone">No links yet</p>')+'</div>')+
-    '</div></div>'+
-    waitFootHTML(a,s,t)+
-  '</div>';
-  return '<article class="wcard t-'+t+' s-'+s.state+(s.state==='held'?' held':'')+'" data-id="'+a.id+'">'+
-    '<div class="wfin">'+front+'</div></article>';
-}
-
-/* ───────── one face ─────────
-   A card is one face. It had a second, of leads, turned to with a 3D flip,
-   until Mark took the leads off the rotation cards (2026-10-11). The face
-   stands in a box (`.wfin`) that is handed its height, so a row of cards can
-   be evened up (below). */
-let faceObs=null;
-function faceOf(card){return card.querySelector('.wfront');}
-/* ───────── one rhythm for the wall ─────────
-   The FRONT of a card is as tall as what it holds, and every front in the same
-   row of the wall stands as tall as the tallest of them (`evenRows`), so a row
-   still reads as a grid, with every head on one line and every foot on
-   another. Fronts used to be put on the nearest rung above what they held,
-   and a rung is 88 or 104 pixels: a card holding
-   330 was drawn at 416, and the wall was full of empty floors (Mark,
-   2026-10-07: "some cards are large for no particular reason"). The front's
-   ladder now only says where it stops growing.
-
-   Past the top rung the card stops growing and its middle scrolls, which is
-   what the sill at its foot is for: a card on a wall that grew to fifteen
-   hundred pixels would stop being a card. The side of leads a card had until
-   2026-10-11 climbed a ladder of its own, in whole leads, and went with them.
-   Working through leads at length is what the Leads arrangement is for, and
-   it has no ladder at all — it is not a wall of cards but one board, and a
-   board is as tall as what stands on it. */
-const RUNGS={lead: {base:208,step:104,rungs:4,fit:true},
-             mid:  {base:152,step:88, rungs:3,fit:true},
-             rest: {base:44, step:44, rungs:4}};
-function ladderOf(card){
-  if(card.classList.contains('t-mid'))return RUNGS.mid;
-  if(card.classList.contains('t-rest'))return RUNGS.rest;
-  return RUNGS.lead;
-}
-/* What the face would be if nothing stopped it. The head and the foot are fixed
-   and the middle is a scroller, so the face's own height says nothing — only
-   the three parts, added up, do. */
-function faceNatural(f){
-  const mid=f.querySelector('.wsin');
-  if(!mid)return f.offsetHeight;
-  const hd=f.querySelector('.wch'),ft=f.querySelector('.wfoot');
-  return (hd?hd.offsetHeight:0)+midNatural(f,mid)+(ft?ft.offsetHeight:0);
-}
-/* The front's middle stretches to fill its box, so that its links band can
-   stand on the floor of a card evened up to its row's height, with the spare
-   room between the strip and the links rather than under the links. A
-   stretched middle measures as tall as the box it is in, which would never
-   let a card shrink back, so the front is measured by its parts. They carry
-   no margins of their own; the band's auto margin is the stretch. */
-function midNatural(f,mid){
-  if(!f.classList.contains('wfront'))return mid.offsetHeight;
-  let h=0;
-  for(let i=0;i<mid.children.length;i++)h+=mid.children[i].offsetHeight;
-  return h;
-}
-/* Measuring and setting are kept apart on purpose.
-   `offsetHeight` cannot be answered until the page is laid out, and setting a
-   height invalidates that layout — so a loop that reads one card, writes it,
-   then reads the next forces the browser to lay the whole document out again
-   on every card. Forty cards meant forty full reflows. So: read every card
-   first, decide every height, and only then write. One reflow, whatever the
-   size of the wall. `measureCard` never touches the DOM; `applyCard` never
-   reads it. */
-function measureCard(card){
-  const fin=card.querySelector('.wfin'),f=faceOf(card);
-  if(!fin||!f)return null;
-  const nat=faceNatural(f);
-  if(!nat)return null;                         /* hidden, not empty: keep the last good height */
-  const L=ladderOf(card);
-  let h=nat;
-  if(L){
-    const over=Math.max(0,nat-L.base);
-    h=L.fit?Math.min(nat,L.base+(L.rungs-1)*L.step)
-           :L.base+Math.min(Math.ceil(over/L.step),L.rungs-1)*L.step;
-  }
-  /* the face is told whether it overflows the box — once the row has had its
-     say about how tall the box is */
-  const faces=[];
-  card.querySelectorAll('.wface').forEach(fc=>faces.push([fc,faceNatural(fc)]));
-  return {fin:fin,h:h,faces:faces,even:!!(L&&L.fit),
-          par:card.parentElement,top:card.offsetTop,cap:L?L.base+(L.rungs-1)*L.step:h};
-}
-/* Every card in one row of the wall takes the tallest card's height. Cards
-   share a row when they share a parent and a top edge. */
-function evenRows(plan){
-  const rows=new Map();
-  for(const m of plan){
-    if(!m||!m.even)continue;
-    let byTop=rows.get(m.par);
-    if(!byTop)rows.set(m.par,byTop=new Map());
-    if(!byTop.has(m.top))byTop.set(m.top,[]);
-    byTop.get(m.top).push(m);
-  }
-  rows.forEach(byTop=>byTop.forEach(ms=>{
-    const h=Math.min(Math.max(...ms.map(m=>m.h)),Math.min(...ms.map(m=>m.cap)));
-    for(const m of ms)m.h=Math.max(m.h,h);
-  }));
-}
-function applyCard(m,instant){
-  if(!m)return;
-  for(let i=0;i<m.faces.length;i++)m.faces[i][0].classList.toggle('scrolls',m.faces[i][1]>m.h+1);
-  const fin=m.fin;
-  if(instant){
-    const prev=fin.style.transition;
-    fin.style.transition='none';
-    fin.style.height=m.h+'px';
-    void fin.offsetHeight;                     /* land it before the transition returns */
-    fin.style.transition=prev;
-  }else fin.style.height=m.h+'px';
-}
-/* One card changing size can change its whole row, so a card is fitted with
-   the cards beside it: read them all, even them out, then write. */
-function rowOf(card){
-  const p=card.parentElement,top=card.offsetTop;
-  if(!p||card.classList.contains('t-rest'))return [card];
-  return Array.prototype.filter.call(p.children,c=>c.classList.contains('wcard')&&c.offsetTop===top);
-}
-function fitCard(card,instant){
-  const plan=rowOf(card).map(measureCard);
-  evenRows(plan);
-  plan.forEach(m=>applyCard(m,instant));
-}
-function fitWall(instant){
-  const cards=document.querySelectorAll('#wall .wcard');
-  const plan=[];
-  cards.forEach(c=>plan.push(measureCard(c)));   /* every read … */
-  evenRows(plan);
-  plan.forEach(m=>applyCard(m,instant));        /* … then every write */
-  if(typeof ResizeObserver!=='function')return;
-  if(faceObs)faceObs.disconnect();
-  /* the face is pinned to the box now, so what changes size is the middle */
-  faceObs=new ResizeObserver(es=>es.forEach(en=>{
-    const card=en.target.closest&&en.target.closest('.wcard');
-    const face=en.target.closest&&en.target.closest('.wface');
-    if(card&&face&&faceOf(card)===face)fitCard(card);
-  }));
-  document.querySelectorAll('#wall .wsin').forEach(f=>faceObs.observe(f));
-}
-/* Stamping reorders the wall, so the wall moves rather than cuts: every card
-   that keeps its identity glides from where it was to where it now belongs. */
-function wallRects(){
-  const m=new Map();
-  document.querySelectorAll('#wall .wcard').forEach(el=>m.set(el.dataset.id,el.getBoundingClientRect()));
-  return m;
-}
-function wallGlide(pre){
-  const w=$('#wall');
-  if(w.hidden||!pre.size)return;
-  if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
-  w.querySelectorAll('.wcard').forEach(el=>{
-    const was=pre.get(el.dataset.id);
-    if(!was){el.animate([{opacity:0,transform:'translateY(7px)'},{opacity:1,transform:'none'}],
-      {duration:240,easing:'ease-out'});return;}
-    const now=el.getBoundingClientRect();
-    const dx=was.left-now.left,dy=was.top-now.top;
-    if(Math.abs(dx)<1&&Math.abs(dy)<1)return;
-    el.animate([{transform:'translate('+dx+'px,'+dy+'px)'},{transform:'none'}],
-      {duration:420,easing:'cubic-bezier(.22,.72,.24,1)'});
-  });
-}
-/* A row scrolls on its own, and painting the wall again would send every row
-   back to its first card — so a stamp made far along a row would lose the
-   place it was made in. Each row's place is held across the paint, by type. */
-function trackPlaces(){
-  const m=new Map();
-  document.querySelectorAll('#wall .wtrack').forEach(el=>m.set(el.dataset.ty,el.scrollLeft));
-  return m;
-}
-function renderWall(){keepPlace(()=>{
-  const pre=wallRects(),at=trackPlaces();
-  paintWall();
-  growAll($('#wall'));
-  fitWall(true);                 /* the faces are absolute: hand each box its height */
-  document.querySelectorAll('#wall .wtrack').forEach(el=>{const x=at.get(el.dataset.ty);if(x)el.scrollLeft=x;});
-  wallGlide(pre);
-  if(settleId){
-    const el=document.querySelector('#wall .wcard[data-id="'+settleId+'"]');
-    if(el){el.classList.add('settle');setTimeout(()=>el.classList.remove('settle'),1600);}
-    settleId=null;
-  }
-});}
-/* Written as three sentences about what you do, not three formulas. */
-function howHTML(){
-  if(!S.ui.howOpen)return '';
-  const line=(t,d)=>'<dt>'+t+'</dt><dd>'+d+'</dd>';
-  return '<div class="how"><dl>'+
-    line('Sweep','Stamp a card <b>\u2713</b> once you have been through its platform and it goes to the '+
-      'far right of its row, working its way back to the left over about four weeks. In the weeks just after one of its calls opens that '+
-      'cadence tightens to roughly <b>a week</b>, because partner search is front-loaded \u2014 and by '+
-      'the last six weeks before a deadline, when the consortia have closed and the writing has started, '+
-      'it loosens back to an ordinary turn. A brokerage event of the arena\u2019s own does the same more '+
-      'bluntly: from <b>a month before until a month after</b> it, the card comes round at least weekly '+
-      'whatever else is true of it \u2014 beforehand for the registration and the agenda, afterwards while '+
-      'the contacts made there are still warm.')+
-    line('How much it matters','Each arena carries a standing weight \u2014 <b>central</b>, <b>ordinary</b> '+
-      'or <b>peripheral</b> \u2014 set once in its own panel. It buys frequency rather than height: central '+
-      'comes round about twice as often, peripheral about a third as often, and the freezer is the step '+
-      'past peripheral. On the board and the wall it shows only in the weight of the name.')+
-    line('Leads','The links on a card are the arena\u2019s own tools \u2014 the platform, '+
-      'the programme page, the things you sweep. A <b>lead</b> is what the sweeping turned up: a partner, '+
-      'a project page, a thread. Leads are not on the cards: they are in the arena\u2019s panel, opened '+
-      'from its name, and under <b>Leads</b>. A lead is the same card there and on the Ledger: shut, it is its '+
-      '<b>ruit</b> \u2014 spotted, then researchers or the lead itself contacted, then talking \u2014 '+
-      'beside its name, with the match and the day under it; pressed, it opens to add an update or a '+
-      'link, to edit everything on it in place, and to complete it. Leads stand inside three sections '+
-      '\u2014 <b>spotted</b>, <b>contacted</b>, <b>talking</b> \u2014 and no further: the moment '+
-      'something is agreed it is a project for the ledger rather than a lead. A lead\u2019s day does not '+
-      'move its card on the wall; every lead stands on its day on the Ledger\u2019s board. Completing one '+
-      'asks how it ended \u2014 it <b>became a project</b>, it <b>went nowhere</b>, or <b>they declined</b> '+
-      '\u2014 and closes it without throwing it away; a project opens the Ledger\u2019s new project with '+
-      'the lead\u2019s name and links filled in. The closed ones fold into a single line at the foot of the '+
-      'arena\u2019s list, with what the arena has given under it: its leads so far, how many reached '+
-      'talking and how many became projects. <b>Leads</b>, the button beside the views above, drops the wall altogether and lists every '+
-      'lead from every arena, the three steps one under another, as the Ledger lists them.')+
-    line('Wait for a date','Not a lead but the opposite: the card putting itself away rather than pursuing '+
-      'anything. It sleeps until <b>three weeks</b> before its '+
-      'next dated thing, faded at the far right of its row, then wakes and comes back in a row of its own '+
-      'at the top, <b>Back from waiting</b>; the night before it wakes, the nightly agent is asked to look '+
-      'it over, so it comes back up to date. Stamp it there and the wait is over and the card back in its '+
-      'own row. Move that date and the wait moves with it; delete it, or let it pass, and the card is '+
-      'simply back in the rotation.')+
-    line('Ask the agent','The ring in a card\u2019s head asks the nightly agent to look at that arena on its '+
-      'next run, on top of the ones it picks itself. It goes out once the agent has been. What the agent '+
-      'brings is brokerage events, partner-search tools and short rewrites of the card\u2019s About and '+
-      'Brokerage texts, and they wait in <b>Dispatches</b>; once accepted, events and links are marked '+
-      '<b>new</b> until you next sweep the arena, and a rewrite takes the old text\u2019s place.')+
-    '</dl><p class="coda">None of this is a setting, and none of the arithmetic is on screen. '+
-    'Every type has a row of its own, in the order you give the types, and a card is only ever '+
-    'weighed against the others of its type. Within a row, position is the whole readout: the '+
-    'further left a card stands, the more it wants attention today. Order runs in rungs \u2014 what '+
-    'is asking to be looked at, then what is merely due a turn, then what is parked \u2014 and within '+
-    'a rung, by how much. A card you stamp today waits at the far right of its row until tomorrow.</p></div>';
-}
+function renderWall(){keepPlace(()=>{paintWall();growAll($('#wall'));});}
 function paintWall(){
   const w=$('#wall');
   const vis=visibleArenas();
@@ -3332,12 +3007,6 @@ function paintWall(){
       '<p class="hint" style="margin-top:6px">'+hint+'</p></div>';
     return;
   }
-  const has=hasBrokerage;
-  /* the mechanics only govern the rotation, so they are only offered there */
-  const howBtn=S.ui.wallSort==='rotation'
-    ?'<button class="howbtn'+(S.ui.howOpen?' on':'')+'" data-act="toggleHow" '+
-      'aria-expanded="'+(S.ui.howOpen?'true':'false')+'">How the order works</button>':'';
-
   /* ---- leads: one board, three sections, every arena's leads in them ----
      Not a wall of arenas each carrying its own three steps — that was the same
      list repeated once per card, and it told you nothing you could act on.
@@ -3349,7 +3018,7 @@ function paintWall(){
      Within a section the day decides, soonest first, then the undated: read
      down a section and you read forward in time. The closed ones are not here —
      they are a record and they stay on their own cards. */
-  if(S.ui.wallSort==='leads'){
+  {
     const all=[];
     for(const a of vis)for(const l of openLeads(a))all.push({a,l});
     const owed=all.filter(({l})=>l.due&&daysBetween(T(l.due),T(todayISO()))>=0).length;
@@ -3413,77 +3082,19 @@ function paintWall(){
     return;
   }
 
-  /* ---- the rotation: a strip for every type ----
-     Rotation and By type were two arrangements, and Mark merged them
-     (2026-10-11): the rotation used to rank every arena against every other,
-     so one busy type could fill the whole head of the wall while a quiet one
-     never stood high, and By type kept a hand-made order that did no
-     rotating at all. Now each type is a row in his own order of types, and
-     inside a row the cards stand in rotation order — standing() unchanged,
-     only compared within the type — so every type has a first card of its
-     own. The rows have no big and small cards any more: every card is one
-     size, the row trails off to the right and scrolls, and a card stamped
-     today goes towards the far right of its row, so the stamp visibly puts
-     it away. Past the stamped ones, at the very end, stand the cards asleep
-     until a date of their own (Mark, 2026-10-11: those waiting always on the
-     far right). One whose date has come within reach is awake and leaves its
-     row for a row of its own over all the others, "Back from waiting", which
-     is there only while it holds a card (Mark, 2026-10-11); stamping a card
-     there ends its wait (see the sweep) and sends it back to its own row. */
-  const ask=RUNG.asking[0];
-  const today=todayISO();
-  const woke=vis.filter(a=>standing(a).state==='wake');
-  const rest=vis.filter(a=>!woke.includes(a));
-  const rows=S.types.map(t=>[t,rest.filter(a=>a.typeId===t.id)])
-    .concat([[null,rest.filter(a=>!typeOf(a))]]).filter(r=>r[1].length);
-  const n=vis.filter(a=>standing(a).score>=ask).length;
-  let h='<div class="whead">'+
-    (n?'<span class="wsay"><b>'+n+'</b> '+(n===1?'card is':'cards are')+
-      ' asking for something.</span>':'')+howBtn+
-    '<button class="howbtn" data-act="resetStamps" title="Take the stamp off every card in the rotation">Reset all stamps</button>'+
-    '</div>'+howHTML();
-  let any=!!woke.length;
-  if(woke.length){
-    const back=woke.map(a=>({a,s:standing(a)})).sort((x,y)=>y.s.score-x.s.score||x.a.name.localeCompare(y.a.name));
-    h+='<section class="wtrow wwoke">'+
-      '<div class="wthead"><span class="wtn">Back from waiting</span>'+
-        '<span class="wtc">'+back.length+' card'+(back.length===1?'':'s')+' \u00B7 stamp one to send it back to its row</span></div>'+
-      '<div class="wtrack" data-ty="__woke">'+back.map(x=>wallCard(x.a,x.s,'lead')).join('')+'</div>'+
-    '</section>';
-  }
-  for(const[t,arenas]of rows){
-    const{list,empty}=rotationSplit(arenas);
-    const asleep=x=>x.s.state==='held';
-    const cards=list.filter(x=>!asleep(x)&&x.a.sweptAt!==today)
-      .concat(list.filter(x=>!asleep(x)&&x.a.sweptAt===today),list.filter(asleep));
-    const k=list.filter(x=>x.s.score>=ask).length;
-    if(cards.length)any=true;
-    h+='<section class="wtrow"'+(t?' style="--tone:'+esc(toneHex(t.color))+'"':'')+'>'+
-      '<div class="wthead">'+
-        '<span class="wtn">'+esc(t?t.name:'Untyped')+'</span>'+
-        '<span class="wtc">'+arenas.length+' arena'+(arenas.length===1?'':'s')+
-          (k?' \u00B7 <b>'+k+' asking</b>':'')+'</span></div>'+
-      (cards.length?'<div class="wtrack" data-ty="'+(t?t.id:'')+'">'+
-        cards.map(x=>wallCard(x.a,x.s,'lead')).join('')+'</div>':'')+
-      (empty.length?'<p class="wrest">No brokerage material yet \u2014 '+
-        empty.map(a=>'<button class="wghost" data-act="editBrokerage" data-id="'+a.id+'">'+esc(a.name)+'</button>').join('')+'</p>':'')+
-    '</section>';
-  }
-  if(!any)h+='<p class="wempty">Nothing recorded yet \u2014 add brokerage links to an arena first.</p>';
-  w.innerHTML=h;
 }
 function applyView(){
   const v=S.ui.view;
   $('#board').hidden=v!=='board';
-  $('#wall').hidden=v!=='brokerage';
+  $('#wall').hidden=v!=='leads';
   $('#dispatch').hidden=v!=='dispatch';
-  $('#coming').hidden=v!=='coming';
-  const lv=v==='brokerage'&&S.ui.wallSort==='leads'?'leads':v;
+  $('#now').hidden=v!=='now';
   document.querySelectorAll('#viewseg button, #leadsBtn, #dispatchBtn').forEach(b=>
-    b.classList.toggle('on',b.dataset.v===lv));
-  const tab=document.querySelector('#viewseg button[data-v=brokerage]');
+    b.classList.toggle('on',b.dataset.v===v));
+  /* how many venues are due for a visit, on the Now tab */
+  const tab=document.querySelector('#viewseg button[data-v=now]');
   if(tab){
-    const n=promptCount();
+    const n=visibleVenues().filter(vDue).length;
     tab.querySelector('.tabn')?.remove();
     if(n)tab.insertAdjacentHTML('beforeend','<span class="tabn">'+n+'</span>');
   }
@@ -3497,8 +3108,7 @@ function applyView(){
     if(n)dtab.insertAdjacentHTML('beforeend','<span class="tabn dpn">'+n+'</span>');
   }
 }
-/* every change to a card's standing goes through here, so the wall always
-   re-orders in one place and the card that moved is the one marked to settle */
+/* every change to a lead goes through here, so what shows is redrawn in one place */
 /* Rebuilding the room throws away the scroller's place. For an instant the
    board is empty, the browser clamps scrollTop to whatever the collapsed
    content allows — nearly always zero — and putting the content back does not
@@ -3513,14 +3123,13 @@ function keepPlace(fn){
   if(sc.scrollLeft!==left)sc.scrollLeft=left;
 }
 function repaint(){
-  if(S.ui.view==='brokerage')renderWall();
+  if(S.ui.view==='now')renderNow();
+  else if(S.ui.view==='leads')renderWall();
   else if(S.ui.view==='dispatch')renderDispatch();
-  else if(S.ui.view==='coming')renderComing();
   else renderBoard();
 }
-function restack(id){
+function restack(){
   closeComposers();save();
-  if(S.ui.view==='brokerage')settleId=id;
   repaint();renderDrawer();applyView();
 }
 /* Focusing a freshly painted composer asks the browser to bring it into view,
@@ -3644,12 +3253,10 @@ function focusNote(){
   if(el)el.focus({preventScroll:true});
 }
 function closeComposers(){lkEdit={a:null,l:null};leadEdit={a:null,l:null};
-  noteEdit={a:null,l:null};endAsk={a:null,l:null};waitPick=null;}
+  noteEdit={a:null,l:null};endAsk={a:null,l:null};}
 function renderAll(){
-  if(S.ui.view==='brokerage')renderWall();else renderBoard();
-  if(S.ui.view==='dispatch')renderDispatch();
-  if(S.ui.view==='coming')renderComing();
-  renderFreezer();renderDrawer();applySearchBox(false);applyView();
+  repaint();
+  renderFreezer();renderDrawer();renderAsk();applySearchBox(false);applyView();
 }
 
 function newArena(name,typeId,tags){
@@ -3770,7 +3377,12 @@ function seed(){
       C('Call 8','publication','half','uncertain',{y:2027,h:1})],
       {notes:'',links:[{id:uid(),label:'Xecs partner search',url:'https://xecs.eu'}]})
   );
+  /* a tool and a marketplace, so the Now page has one of each to show */
+  const tz=S.arenas.find(a=>a.name==='2ZERO'&&!a.toolId);
+  if(tz&&tz.brokerage.links[0])tz.toolId=tz.brokerage.links[0].id;
   migrate(S);          /* the example set goes in in the same shape as anything else */
+  const po=(S.venues||[]).find(v=>/^PO Days/.test(v.name));
+  if(po&&po.start){po.opens=po.start.slice(0,8)+'01';po.closes=po.start.slice(0,8)+'28';}
   save();renderAll();
 }
 
@@ -3830,13 +3442,15 @@ function leadsForExcel(){
    starts, at Spotted. The Ledger asks for these when Mark adds a lead from
    its board (2026-10-06), so a lead begun there is born here. A frozen
    arena is not offered: a lead filed into the freezer would vanish from
-   the board in the same press that made it. They come in the rotation
-   wall's order, top card first and the ghosts after, as Mark asked on
-   2026-10-06: the arena a lead is spotted in is the one being swept, and
-   that one is near the top of the wall. The rule is the wall's own, so
-   the two cannot drift apart. */
+   the board in the same press that made it. They came in the rotation
+   wall's order until the rotation of arenas went with the Marketplace
+   (2026-10-14); they come type by type now, in Mark's order of types, each
+   type's arenas in his own order, as the board's "My order" has them. */
 function arenasForBoard(){
-  return rotationOrder(liveArenas()).map(a=>({id:a.id,name:a.name}));
+  const out=[];
+  S.types.map(t=>t.id).concat([null]).forEach(id=>
+    out.push(...liveArenas().filter(a=>id?a.typeId===id:!typeOf(a)).sort(mineOrder)));
+  return out.map(a=>({id:a.id,name:a.name}));
 }
 /* A bare address with an @ in it is a person to write to; anything else
    without a scheme is a site. */
@@ -3856,6 +3470,8 @@ function leadAdd(aid,v){
   const l={id:uid(),project,match,links:links.map(k=>({id:uid(),label:k.label,url:leadLinkUrl(k.url)})),
     stage:'spotted',toResearchers:false,toLead:false,due:(v&&v.due)||null,doneAt:null,updates:[]};
   leadWhoSet(l,v||{});
+  /* the venue it was found at, when it was started from one (2026-10-14) */
+  if(v&&v.venueId&&venue(v.venueId))l.venueId=v.venueId;
   if(!Array.isArray(a.leads))a.leads=[];
   a.leads.push(l);
   restack(a.id);
@@ -4169,13 +3785,16 @@ function tdUp(){
 /* ============ tooltip ============ */
 const tip=$('#tip');
 document.addEventListener('mouseover',e=>{
-  const el=e.target.closest('[data-tipd],[data-tipl],[data-tipt]');
+  const el=e.target.closest('[data-tipd],[data-tipl],[data-tipt],[data-tipv]');
   if(!el){tip.style.display='none';return;}
   let txt='';
   const a=arena(el.dataset.a||el.dataset.id);
+  const v=el.dataset.tipv&&venue(el.dataset.tipv);
+  if(v)txt=v.name+'\n'+vDateSay(v)+(v.kind==='event'&&v.start&&vState(v)!=='undated'?' \u2014 '+(v.grade==='fixed'?'':'\u2248 ')+dispDate(v):'')+
+    '\n'+vYieldSay(v)+(vEvery(v)?' \u00B7 every '+vEvery(v)+' d':'');
   /* a bar on a card's strip can stand for several calls at once, so it
      brings its own words rather than one date's */
-  if(el.dataset.tipt&&a){
+  if(v){}else if(el.dataset.tipt&&a){
     txt=a.name+'\n'+el.dataset.tipt;
   }else if(el.dataset.tipl&&a){
     const looms=a.dates.filter(d=>!d.start);
@@ -4204,6 +3823,8 @@ document.addEventListener('click',e=>{
      unless the press is on a dot, which opens that one instead */
   if(colOpen&&!e.target.closest('.lcolpop,[data-act=typeColMenu]')){colOpen=null;typesShown();return;}
   if(sortOpen&&!e.target.closest('.whmenu,[data-act=boardSort]')){sortOpen=false;renderBoard();return;}
+  if(vPop&&!e.target.closest('.vask,[data-act=vStamp]')){vPop=null;repaint();renderDrawer();
+    if(!e.target.closest('[data-act]'))return;}
   const b=e.target.closest('[data-act]');
   if(!b)return;
   const act=b.dataset.act,id=b.dataset.id,a=arena(b.dataset.a||id);
@@ -4212,18 +3833,6 @@ document.addEventListener('click',e=>{
       const sw=colOpen&&document.querySelector('.lcolpop .lsw.sel');
       if(sw)sw.focus({preventScroll:true});break;}
     case 'typeColPop':break;
-    /* Every card's stamp at once, so the whole rotation starts round again
-       (Mark, 2026-10-11). Asked first: there is no taking it back, the
-       stamps' days are gone. A frozen arena is out of the rotation, and a
-       link's own stamp is not a card's, so both keep theirs. */
-    case 'resetStamps':{
-      const on=S.arenas.filter(x=>!x.frozenAt&&x.sweptAt);
-      if(!on.length){Ask.tell('Nothing to reset','No card in the rotation has a stamp.');break;}
-      Ask.ask('Reset all stamps?',
-        'The stamp comes off all '+on.length+' stamped card'+(on.length===1?'':'s')+' in the rotation, as if '+
-        'none had ever been swept, so every card comes round again. The days they were stamped are not kept.',
-        'Reset',()=>{on.forEach(x=>{x.sweptAt=null;x.sweptPrev=null;});save();renderAll();});
-      break;}
     case 'tyArenas':if(tyOpen.has(id))tyOpen.delete(id);else tyOpen.add(id);renderTypes();break;
     case 'typeColor':{colOpen=null;const t=S.types.find(t=>t.id===id);
       if(t&&toneHex(b.dataset.v))t.color=b.dataset.v;
@@ -4232,22 +3841,6 @@ document.addEventListener('click',e=>{
     case 'openArena':openDrawer(id);break;
     case 'openDate':openDrawer(b.dataset.a,b.dataset.d);break;
     case 'closeDrawer':closeDrawer();break;
-    case 'sweep':{const ar=arena(id);if(!ar)break;
-      const t=todayISO();
-      /* the sweep is also what marks the agent's findings seen (see isFresh),
-         to the moment rather than the day, so a finding accepted after this
-         morning's sweep is still new; the same-day undo gives the marks back */
-      /* Stamping a card that is back from waiting is the end of that wait:
-         its date has come within reach and the card has now been looked at,
-         so it goes back to its own row (Mark, 2026-10-11). The wait is kept
-         aside for the day, so taking the stamp off puts it back as well. */
-      if(ar.sweptAt===t){ar.sweptAt=ar.sweptPrev||null;ar.seenAt=ar.seenPrev||null;   /* same-day undo */
-           if(ar.holdPrev){ar.hold=ar.holdPrev;reconcile(ar);}delete ar.holdPrev;}
-      else{ar.sweptPrev=ar.sweptAt||null;ar.sweptAt=t;
-           ar.seenPrev=ar.seenAt||null;ar.seenAt=new Date().toISOString();
-           const h=holdOf(ar);
-           if(h&&!h.asleep){ar.holdPrev=ar.hold;ar.hold=null;}else delete ar.holdPrev;}
-      restack(ar.id);break;}
     /* A press on a lead's own ground opens or shuts it. Its links, its date
        and the fields of a composer inside it are presses of their own. */
     case 'leadOpen':{
@@ -4324,17 +3917,9 @@ document.addEventListener('click',e=>{
       repaint();renderDrawer();focusLk();break;}
     case 'lkCancel':{closeComposers();repaint();renderDrawer();break;}
 
-    case 'waitPick':{closeComposers();waitPick=id;repaint();renderDrawer();break;}
-    case 'holdSet':{const ar=arena(id);if(!ar)break;
-      const d=(ar.dates||[]).find(x=>x.id===b.dataset.d);if(!d)break;
-      closeComposers();ar.hold={dateId:d.id};restack(ar.id);break;}
-    case 'holdClear':{const ar=arena(id);if(!ar)break;ar.hold=null;restack(ar.id);break;}
     case 'setWeight':{const ar=arena(id);if(!ar)break;
       if(!WEIGHTS[b.dataset.v])break;
-      ar.weight=b.dataset.v;save();renderDrawer();
-      if(S.ui.view==='brokerage')renderWall();else renderBoard();
-      applyView();break;}
-    case 'toggleHow':S.ui.howOpen=!S.ui.howOpen;save();renderWall();break;
+      ar.weight=b.dataset.v;save();renderDrawer();repaint();applyView();break;}
     case 'freeze':{const ar=arena(id);if(!ar)break;
       ar.frozenAt=todayISO();
       S.ui.freezerOpen=true;                 /* show where it went */
@@ -4342,18 +3927,6 @@ document.addEventListener('click',e=>{
     case 'thaw':{const ar=arena(id);if(!ar)break;
       ar.frozenAt=null;save();renderAll();break;}
     case 'toggleFreezer':S.ui.freezerOpen=!S.ui.freezerOpen;save();renderFreezer();break;
-    /* the link's own sweep, on the cards: the day you last went
-       through its site, and a same-day press takes it back, as the arena's
-       stamp does */
-    case 'lkStamp':{const lk=linkOf(a,b.dataset.lks,b.dataset.l);if(!lk)break;
-      toggleStamp(lk);relinked();break;}
-    case 'lkTool':{const lk=linkOf(a,b.dataset.lks,b.dataset.l);if(!lk)break;
-      if(a.toolId===lk.id)delete a.toolId;else a.toolId=lk.id;
-      relinked();break;}
-    case 'toolStamp':{const lk=a&&generalTool(a);if(!lk)break;
-      if(lk.url)window.open(lk.url,'_blank','noopener');
-      if(stampOf(lk)!==todayISO()){toggleStamp(lk);relinked();}
-      break;}
     /* Quick, but not one slip from gone: the first press turns the cross into
        the word, a second within three seconds removes the link. The button is
        changed in place rather than redrawn, so nothing else on the wall moves
@@ -4366,17 +3939,10 @@ document.addEventListener('click',e=>{
       }
       const k=list.findIndex(l=>l.id===b.dataset.l);
       if(k>=0)list.splice(k,1);
-      if(a.toolId===b.dataset.l)delete a.toolId;
       relinked();break;}
-    case 'askAgent':{const ar=arena(id);if(!ar)break;
-      ar.askAt=ar.askAt?null:new Date().toISOString();
-      relinked();break;}
-    /* Leads is drawn on the wall, as the rotation is, so its button sets the
-       wall's arrangement as well as the view; Rotation sets it back. */
     case 'setView':{const v=b.dataset.v;
-      if(v==='leads'||v==='brokerage')S.ui.wallSort=v==='leads'?'leads':'rotation';
-      S.ui.view=['brokerage','dispatch','coming','leads'].includes(v)?(v==='leads'?'brokerage':v):'board';
-      cuHi=null;
+      S.ui.view=['now','leads','dispatch'].includes(v)?v:'board';
+      vPop=null;
       save();renderAll();
       /* the findings are asked for when you come to look at them, and again
          every time you come back: a list read an hour ago is a list another
@@ -4384,46 +3950,6 @@ document.addEventListener('click',e=>{
       if(S.ui.view==='dispatch')loadFinds();
       break;}
     case 'findRefresh':loadFinds();break;
-    case 'cuLimbo':cuLimbo=!cuLimbo;renderComing();break;
-    case 'cuNote':{if(!a)break;const dt=a.dates.find(d=>d.id===b.dataset.d);if(!dt)break;
-      const k=a.id+'|'+dt.id;
-      if(cuNote.has(k)){cuNote.delete(k);clearTimeout(cuNoteT);cuNoteT=null;memoTidy(dt);save();renderComing();break;}
-      cuNote.add(k);renderComing();
-      /* an empty note is opened to be written, so the caret is put in it */
-      if(!memoOf(dt)){const t=document.querySelector('#coming .cunta[data-a="'+a.id+'"][data-d="'+dt.id+'"]');if(t)t.focus();}
-      break;}
-    case 'cuStrip':{const k=b.dataset.a+'|'+b.dataset.d;if(cuOpen.has(k))cuOpen.delete(k);else cuOpen.add(k);renderComing();break;}
-    case 'cuStamp':{if(!a)break;const dt=a.dates.find(d=>d.id===b.dataset.d);if(!dt)break;
-      toggleStamp(dt);save();renderComing();break;}
-    case 'jumpDate':jumpDate(b.dataset.a,b.dataset.d);break;
-    case 'cuNew':{cuNew=!cuNew;renderComing();
-      const f=document.querySelector('#coming .cuform select[name=arena]');if(f)f.focus();break;}
-    /* An event's missing website is added where an event is edited: its
-       arena's panel opens on the date's own editor, the Website box first. */
-    case 'cuSite':{if(!a)break;openDrawer(a.id,b.dataset.d);
-      drawer.editing=true;drawer.edit=b.dataset.d;renderDrawer();
-      const f=document.querySelector('#card .dform input[name=url]');
-      if(f){f.scrollIntoView({block:'center'});f.focus({preventScroll:true});}
-      break;}
-    /* Removing an event from the list removes it from the board: there is
-       one record of it, on its arena, and every view reads that (Mark,
-       2026-10-08: "remove them from everywhere in the app"). */
-    case 'cuDel':{if(!a)break;const dt=a.dates.find(d=>d.id===b.dataset.d);if(!dt)break;
-      const aid=a.id,did=dt.id;
-      /* In Limbo every event is there to be taken off, and asking each time
-         would make clearing it a dialog per row; the ask stays for an event
-         still to come, which a stray click must not lose. */
-      if(b.dataset.limbo){cuDrop(a,dt);break;}
-      const nl=cuLinks(dt).length;
-      Ask.ask('Remove this event?',
-        '\u201C'+dtLabel(dt)+'\u201D \u2014 '+dispDate(dt)+', on '+a.name+
-        '. It goes from the whole app: this list, the board, the cards and the arena\u2019s panel'+
-        (nl?', and '+(nl===1?'its link goes':'its '+nl+' links go')+' from the cards with it':'')+'.',
-        'Remove',()=>{
-          const ar=arena(aid),d=ar&&ar.dates.find(x=>x.id===did);if(!d)return;
-          cuDrop(ar,d);
-        });
-      break;}
     case 'findAll':{
       const n=finds.rows.length;
       Ask.ask('Accept all '+n+'?',
@@ -4435,6 +3961,83 @@ document.addEventListener('click',e=>{
     }
     case 'findTake':answerFind(b.dataset.f,true);break;
     case 'findDrop':answerFind(b.dataset.f,false);break;
+    /* ── venues ── */
+    case 'openVenue':if(venue(b.dataset.v))openVenue(b.dataset.v);break;
+    /* the link opens the site by itself; the app only remembers the press */
+    case 'vGo':vBack={id:b.dataset.v,at:Date.now()};vAsking=null;renderAsk();break;
+    case 'toolGo':{const v=venue(b.dataset.v);if(!v)break;
+      if(!v.url){openVenue(v.id);break;}
+      window.open(v.url,'_blank','noopener');vBack={id:v.id,at:Date.now()};break;}
+    /* The stamp records today's visit and opens the question under it;
+       pressed again it shuts the question, the visit kept. */
+    case 'vStamp':{const v=venue(b.dataset.v);if(!v)break;
+      if(vPop===v.id){vPop=null;}
+      else{visitToday(v);vPop=v.id;if(vAsking===v.id){vAsking=null;renderAsk();}save();}
+      repaint();renderDrawer();applyView();
+      const tx=document.querySelector('.vask.pop .vtx');if(tx&&vPop)tx.focus({preventScroll:true});
+      break;}
+    case 'vAns':{const v=venue(b.dataset.v);if(!v)break;
+      const box=b.closest('.vask'),tx=box&&box.querySelector('.vtx');
+      const got=b.dataset.g;
+      vAnswer(v,got,tx?tx.value:'');
+      vPop=null;if(vAsking===v.id)vAsking=null;
+      save();renderAsk();
+      if(got==='lead'){openVenue(v.id);leadEdit={a:VENUE_LEAD,l:'new'};renderDrawer();focusLead();}
+      else{repaint();renderDrawer();}
+      applyView();break;}
+    case 'vUnstamp':{const v=venue(b.dataset.v);if(!v)break;
+      v.visits=v.visits.filter(x=>x.at!==todayISO());
+      vPop=null;save();repaint();renderDrawer();applyView();break;}
+    case 'vAskOff':vAsking=null;renderAsk();break;
+    case 'vLater':nowLater=!nowLater;renderNow();break;
+    case 'vLimbo':nowLimbo=!nowLimbo;renderNow();break;
+    /* In Limbo every venue is there to be let go, and asking each time would
+       make clearing it a question per row, as on Coming up; anywhere else a
+       stray press must not lose one. */
+    case 'vDrop':{const v=venue(b.dataset.v);if(!v)break;
+      if(b.dataset.limbo){dropVenue(v.id);break;}
+      const nl=vLeads(v).length;
+      Ask.ask('Let '+v.name+' go?',
+        'It goes off the whole board, with its '+v.visits.length+' visit'+(v.visits.length===1?'':'s')+
+        (v.pages.length?' and its other pages':'')+'.'+(nl?' The '+(nl===1?'lead':nl+' leads')+' started from it '+(nl===1?'stays':'stay')+', and only '+(nl===1?'forgets':'forget')+' where '+(nl===1?'it':'they')+' came from.':''),
+        'Let it go',()=>{closeDrawer();dropVenue(v.id);});
+      break;}
+    case 'vNew':newVenue(id||null);break;
+    case 'vEdit':{const v=venue(b.dataset.v);if(!v)break;
+      if(drawer.vid!==v.id)openVenue(v.id);
+      drawer.editing=true;renderDrawer();
+      const f=$('#card .vform input[name='+(v.url?'label':'url')+']');if(f)f.focus({preventScroll:true});
+      break;}
+    case 'vEditCancel':{
+      if(drawer.vnew){const aid=drawer.vnew.aid;drawer.vnew=null;drawer.editing=false;
+        if(aid)openDrawer(aid);else closeDrawer();break;}
+      drawer.editing=false;renderDrawer();break;}
+    case 'vKind':{const f=b.closest('.vform');if(!f)break;
+      const ev=b.dataset.k==='event';
+      f.elements.kind.value=ev?'event':'tool';
+      f.querySelectorAll('[data-act=vKind]').forEach(x=>x.classList.toggle('on',x===b));
+      const ef=f.querySelector('.vevf');if(ef)ef.hidden=!ev;
+      const hint=b.closest('.fld').querySelector('.fhint');
+      if(hint)hint.textContent=ev?'A marketplace around meeting days.':'A partner search that is always open.';
+      break;}
+    case 'vArenaDel':{const v=venue(b.dataset.v);if(!v)break;
+      v.arenas=v.arenas.filter(x=>x!==id);save();renderAll();break;}
+    case 'vPageDel':{const v=venue(b.dataset.v);if(!v)break;
+      v.pages=v.pages.filter(x=>x.id!==b.dataset.p);save();renderDrawer();break;}
+    case 'vVisitDel':{const v=venue(b.dataset.v);if(!v)break;
+      v.visits=v.visits.filter(x=>x.at!==b.dataset.at);save();renderAll();break;}
+    case 'vLeadNew':{const v=venue(b.dataset.v);if(!v)break;
+      closeComposers();leadEdit={a:VENUE_LEAD,l:'new'};renderDrawer();focusLead();break;}
+    /* A brokerage link in an arena's panel made a venue: a tool by default,
+       since an event wants its days, which the venue's own edit then asks. */
+    case 'vMake':{const lk=linkOf(a,'brokerage',b.dataset.l);if(!lk||!lk.url)break;
+      const k=siteKey(lk.url);
+      let v=(S.venues||[]).find(x=>x.url&&siteKey(x.url)===k);
+      if(!v){v=tidyVenue({id:venue('vt'+hashKey(k))?uid():'vt'+hashKey(k),kind:'tool',name:lk.label||linkHost(lk)||k,
+        url:lk.url,arenas:[a.id],note:'',visits:[],pages:[]});S.venues.push(v);}
+      joinVenue(v,a.id);
+      absorbVenues(S);       /* every other link to the same site joins it */
+      save();renderAll();openVenue(v.id);break;}
     case 'editBrokerage':{openDrawer(id);drawer.editing=true;drawer.scope='brokerage';renderDrawer();
       const ta=$('#card textarea[data-field=bknotes]');if(ta)ta.focus();break;}
     case 'openSearch':applySearchBox(true);$('#search').focus();break;
@@ -4471,7 +4074,7 @@ document.addEventListener('click',e=>{
       const aid=a.id,did=dt.id;
       Ask.ask('Delete this date?',
         '\u201C'+dtLabel(dt)+'\u201D \u2014 '+dispDate(dt)+
-        '. Anything waiting on it goes back into the rotation.',
+        '.',
         'Delete',()=>{
           const ar=arena(aid);if(!ar)return;
           ar.dates=ar.dates.filter(d=>d.id!==did);reconcile(ar);save();renderAll();
@@ -4518,7 +4121,9 @@ document.addEventListener('click',e=>{
         ' will be removed and cannot be brought back. To put it away instead, '+
         'freeze it \u2014 the freezer keeps everything.',
         'Delete',()=>{
-          S.arenas=S.arenas.filter(x=>x.id!==aid);closeDrawer();save();renderAll();
+          S.arenas=S.arenas.filter(x=>x.id!==aid);
+          (S.venues||[]).forEach(v=>{v.arenas=v.arenas.filter(x=>x!==aid);});
+          closeDrawer();save();renderAll();
         });
       break;}
   }
@@ -4527,7 +4132,7 @@ document.addEventListener('click',e=>{
 /* ───────── typing, and the forms it goes into ───────── */
 document.addEventListener('input',e=>{
   const t=e.target;
-  if(t&&t.classList&&t.classList.contains('grow')){growBox(t);fitWall();}
+  if(t&&t.classList&&t.classList.contains('grow'))growBox(t);
 },true);
 document.addEventListener('keydown',e=>{
   const t=e.target;
@@ -4589,24 +4194,47 @@ document.addEventListener('submit',e=>{
     const links=[...df.querySelectorAll('.lnrow')].map(r=>({
       url:r.querySelector('[name=url]').value,label:r.querySelector('[name=label]').value}));
     closeComposers();
+    const ven=df.dataset.venue&&venue(df.dataset.venue);
     const lid=leadAdd(a.id,{project:df.elements.project.value,match:df.elements.match.value,
-      coordinator:df.elements.coordinator.value,contact:df.elements.contact.value,links});
+      coordinator:df.elements.coordinator.value,contact:df.elements.contact.value,links,venueId:ven?ven.id:null});
+    /* a lead started from a venue is today's visit's answer */
+    if(ven&&lid){const x=vAnswer(ven,'lead');x.leadId=lid;leadLastArena=a.id;save();repaint();renderDrawer();return;}
     /* on Leads the new lead stands open, so it is seen where it landed */
     if(!df.dataset.la&&lid){leadLastArena=a.id;leadOpen.add(lid);}
     if(!lid||!df.dataset.la){repaint();renderDrawer();}
     return;
   }
-  const cf=e.target.closest('.cuform');
-  if(cf){
+  const vf=e.target.closest('.vform');
+  if(vf){
     e.preventDefault();
-    const a=arena(cf.elements.arena.value);
-    if(!a){Ask.tell('Which arena?','Choose the arena this event belongs to, and it is filed there.');return;}
-    const vals=readDateForm(cf);if(!vals)return;
-    const dt={id:uid(),...vals};
-    a.dates.push(dt);reconcile(a);
-    cuNew=false;cuHi=dt.id;save();renderAll();
-    const row=document.querySelector('#coming .culn[data-cud="'+dt.id+'"]');
-    if(row)row.scrollIntoView({block:'center'});
+    const o=readVenueForm(vf);if(!o)return;
+    if(vf.dataset.v==='new'){
+      const a=arena(vf.elements.arena&&vf.elements.arena.value);
+      if(!o.name&&!o.url){Ask.tell('Name it','Give the venue a name or its website.');return;}
+      const v=tidyVenue(Object.assign({id:uid(),arenas:a?[a.id]:[],visits:[],pages:[],note:''},o,
+        {name:o.name||linkName({url:o.url})}));
+      S.venues.push(v);
+      drawer.vnew=null;save();renderAll();openVenue(v.id);
+      return;
+    }
+    const v=venue(vf.dataset.v);if(!v)return;
+    const keep={id:v.id,arenas:v.arenas,visits:v.visits,pages:v.pages,memo:v.memo,every:v.every,foundAt:v.foundAt};
+    if(o.kind==='tool'){delete v.gran;delete v.start;delete v.end;delete v.grade;delete v.opens;delete v.closes;}
+    Object.assign(v,o,keep,{name:o.name||v.name});
+    tidyVenue(v);
+    drawer.editing=false;save();renderAll();
+    return;
+  }
+  const pf=e.target.closest('.vpageform');
+  if(pf){
+    e.preventDefault();
+    const v=venue(pf.dataset.v);if(!v)return;
+    const url=typedAddr(pf.elements.url.value);
+    if(!url)return;
+    if(!v.pages.some(x=>linkKey(x.url)===linkKey(url))&&linkKey(url)!==linkKey(v.url))
+      v.pages.push({id:uid(),label:pf.elements.label.value.trim(),url});
+    save();renderDrawer();
+    const f=document.querySelector('#card .vpageform input[name=url]');if(f)f.focus({preventScroll:true});
     return;
   }
   const f=e.target.closest('.dform');
@@ -4617,6 +4245,7 @@ document.addEventListener('submit',e=>{
   if(f.dataset.d==='new'){const dt={id:uid(),...vals};a.dates.push(dt);drawer.hi=dt.id;}
   else{const dt=a.dates.find(d=>d.id===f.dataset.d);if(dt)Object.assign(dt,vals);drawer.hi=f.dataset.d;}
   reconcile(a);              /* renaming a call, or moving its date, changes what it remembers */
+  absorbVenues(S);           /* a brokerage date written here is a venue at once */
   drawer.edit=null;save();renderAll();
 });
 
@@ -4633,6 +4262,16 @@ document.addEventListener('change',e=>{
     const a=arena(el.dataset.lsa);if(!a)return;
     const l=(a.leads||[]).find(x=>x.id===el.dataset.lsl);if(!l||l.doneAt)return;
     leadScore(l,el.value);save();repaint();renderDrawer();return;
+  }
+  /* a venue's rhythm, and another arena it serves */
+  if(el.dataset&&el.dataset.vevery){
+    const v=venue(el.dataset.vevery);if(!v)return;
+    const n=+el.value;if(n>=1)v.every=n;else delete v.every;
+    save();renderAll();return;
+  }
+  if(el.dataset&&el.dataset.vaddarena){
+    const v=venue(el.dataset.vaddarena);if(!v||!arena(el.value))return;
+    joinVenue(v,el.value);save();renderAll();return;
   }
   if(el.dataset&&el.dataset.lda&&el.dataset.ldl){
     const a=arena(el.dataset.lda);if(!a)return;
@@ -4659,7 +4298,7 @@ document.addEventListener('change',e=>{
     if(el.dataset.field==='bknotes'){a.brokerage=a.brokerage||{notes:'',links:[]};a.brokerage.notes=v;}
     else if(el.dataset.field==='tags'){a.tags=cleanTags(v.split(','));el.value=a.tags.join(', ');}
     else a[el.dataset.field]=el.dataset.field==='name'?(v.trim()||'Unnamed arena'):v.trim();
-    save();if(S.ui.view==='brokerage')renderWall();else renderBoard();
+    save();repaint();
     if(el.dataset.field==='name'){const h=$('#aname');if(h)h.textContent=a.name;el.value=a.name;}
     return;
   }
@@ -4680,21 +4319,20 @@ document.addEventListener('change',e=>{
 
 document.addEventListener('input',e=>{
   if(e.target.matches&&e.target.matches('textarea[data-field]'))autoGrow(e.target);
-  /* An event's note is kept as it is typed, and saved once the typing
+  /* A venue's note is kept as it is typed, and saved once the typing
      pauses: a save on every keystroke would send the board to the cloud
-     for every letter. The list is not redrawn, which would take the caret
+     for every letter. The panel is not redrawn, which would take the caret
      out of the box. */
-  if(e.target.matches&&e.target.matches('textarea.cunta')){
-    const a=arena(e.target.dataset.a),dt=a&&(a.dates||[]).find(d=>d.id===e.target.dataset.d);
-    if(!dt)return;
-    dt.memo=e.target.value;autoGrow(e.target);
-    clearTimeout(cuNoteT);cuNoteT=setTimeout(()=>{cuNoteT=null;save();},600);
+  if(e.target.matches&&e.target.matches('textarea.vmemo')){
+    const v=venue(e.target.dataset.vmemo);if(!v)return;
+    v.memo=e.target.value;autoGrow(e.target);
+    clearTimeout(vNoteT);vNoteT=setTimeout(()=>{vNoteT=null;tidyVenue(v);save();},600);
   }
 });
 /* leaving the box saves what is waiting at once, so a reload straight after
    cannot lose the last words */
 document.addEventListener('focusout',e=>{
-  if(cuNoteT&&e.target.matches&&e.target.matches('textarea.cunta')){clearTimeout(cuNoteT);cuNoteT=null;save();}
+  if(vNoteT&&e.target.matches&&e.target.matches('textarea.vmemo')){clearTimeout(vNoteT);vNoteT=null;save();}
 });
 $('#search').addEventListener('input',()=>{S.ui.q=$('#search').value;searchChanged();});
 $('#search').addEventListener('blur',()=>applySearchBox(false));
@@ -4728,9 +4366,11 @@ document.addEventListener('keydown',e=>{
   if(sortOpen){sortOpen=false;renderBoard();return;}         /* the board's order */
   if(Ask.isOpen()){Ask.shut();return;}                       /* the question */
   if(document.querySelector('.modal.open')){closeModals();return;}   /* a sheet */
-  if(lkEdit.a||leadEdit.a||noteEdit.a||waitPick){  /* a composer */
+  if(vPop){vPop=null;repaint();renderDrawer();return;}       /* a stamp's question */
+  if(lkEdit.a||leadEdit.a||noteEdit.a){            /* a composer */
     closeComposers();repaint();renderDrawer();return;
   }
+  if(drawer.vnew){drawer.vnew=null;closeDrawer();return;}    /* a venue being made */
   if(drawer.edit){drawer.edit=null;renderDrawer();return;}   /* a date form */
   if(drawer.editing){drawer.editing=false;renderDrawer();return;}  /* the edit face */
   if(drawer.id)closeDrawer();                                /* the panel itself */
@@ -4742,15 +4382,6 @@ document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{
   closeModals();
 }));
 $('#cardScrim').addEventListener('click',closeDrawer);
-
-/* A card's middle scrolls once it holds more than its rung; the sill says so
-   until there is nothing more under it. Caught on the wall rather than bound
-   per card, because the cards are rebuilt on every change. */
-$('#wall').addEventListener('scroll',e=>{
-  const s=e.target;
-  if(!s.classList||!s.classList.contains('wscroll'))return;
-  s.classList.toggle('atend',s.scrollTop+s.clientHeight>=s.scrollHeight-2);
-},true);
 
 /* ───────── putting links in your own order ─────────
    A link on a card or in the panel is picked up and dropped higher or lower
@@ -4885,10 +4516,6 @@ renderAll();
    this view asks for its findings a moment later rather than at mount, when
    there would be nothing to ask. */
 if(S.ui.view==='dispatch')setTimeout(loadFinds,800);
-/* The same wait for the asks to the agent, and again whenever the room is
-   come back to — the agent works at night, and the app is often left open. */
-setTimeout(settleAsks,1500);
-if(typeof Hub!=='undefined'&&Hub.onRoom)Hub.onRoom(now=>{if(now==='semaphore')settleAsks();});
 
 
 try{

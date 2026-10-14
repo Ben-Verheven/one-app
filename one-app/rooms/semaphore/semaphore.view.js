@@ -1,4 +1,4 @@
-/* Brokerage Semaphore — the room's own furniture. Plain HTML; Hub puts it in the
+/* The Marketplace (the Brokerage Semaphore until 2026-10-14) — the room's own furniture. Plain HTML; Hub puts it in the
    pane before the room is mounted. Two characters must not appear
    here, because the markup travels as a template literal: a
    backtick, and a dollar immediately followed by a brace. */
@@ -8,16 +8,14 @@ Hub.markup('semaphore', `
 
 <header class="top">
   <div class="mark">
-    <h1><i class="markglyph"></i>Brokerage Semaphore</h1>
+    <h1><i class="markglyph"></i>Marketplace</h1>
   </div>
   <div class="grow"></div>
-  <!-- Rotation, Coming up, Board, in that order (Mark, 2026-10-12). The
-       rotation keeps its view name, brokerage, from when it was the wall of
-       cards. Coming up is every arena's brokerage events on one line in time
-       order: the phone companion's, given the desk's width. -->
+  <!-- Now and Board (2026-10-14). Now is every venue on one strip of
+       time, what is due marked on today's line; it took the place of the
+       Rotation and Coming up. -->
   <div class="viewseg" id="viewseg">
-    <button data-act="setView" data-v="brokerage">Rotation</button>
-    <button data-act="setView" data-v="coming">Coming up</button>
+    <button data-act="setView" data-v="now">Now</button>
     <button data-act="setView" data-v="board">Board</button>
   </div>
   <!-- Leads is not a way of looking at the arenas but the work they turned
@@ -32,21 +30,22 @@ Hub.markup('semaphore', `
          open, so the board never hides arenas without saying why. -->
     <button class="btn ghost" id="searchBtn" data-act="openSearch">Search</button>
     <input id="search" type="search" placeholder="Search\u2026" hidden
-           title="Searches arena names, tags, notes, tools, dates and leads">
+           title="Searches venues, arena names, tags, notes, links, dates and leads">
     <!-- The types — their order, names, colours, merging them and moving an
          arena between them — are kept in one place, opened from here. -->
     <button class="btn" data-act="openTypes">Types</button>
-    <button class="btn primary" data-act="addArena">+ Arena</button>
+    <button class="btn primary" data-act="vNew">+ Venue</button>
+    <button class="btn" data-act="addArena">+ Arena</button>
     <!-- Carrying files by hand is the Ledger's job, once, for the whole app:
          its Export writes this board out beside the journal and its Import
          reads it back. What is left here is the one thing this room can
          answer for itself — whether its half of the cloud is up. -->
-    <!-- What the scheduled agent found overnight. It waits in a table of its
-         own in the cloud and nothing it says reaches the board until it is
-         accepted here, so it is a view of its own rather than a mark on the
-         board itself. It sits beside the cloud chip and not in the view
-         switcher: the switcher holds ways of looking at the same board, and
-         this is an inbox, which looked out of place as a fourth of them. -->
+    <!-- The new arenas the agent suggests. They wait in a table of their
+         own in the cloud and nothing reaches the board until it is accepted
+         here, so it is a view of its own rather than a mark on the board
+         itself. It sits beside the cloud chip and not in the view switcher:
+         the switcher holds ways of looking at the same board, and this is
+         an inbox. -->
     <button class="btn" id="dispatchBtn" data-act="setView" data-v="dispatch">Dispatches</button>
     <button class="oa-cloudchip" id="semcloud" type="button" data-state="waiting"
             title="Cloud sync">
@@ -55,13 +54,16 @@ Hub.markup('semaphore', `
   </div>
 </header>
 
+<main id="now" hidden></main>
 <main id="board"></main>
 <main id="wall" hidden></main>
-<main id="coming" hidden></main>
 <main id="dispatch" hidden></main>
 <section id="freezer" aria-label="Freezer" hidden></section>
 
 </div><!-- /#semscroll -->
+
+<!-- Back from a venue's site: what did it give? (see "the visit question") -->
+<div id="vbar" hidden></div>
 
 <div class="scrim" id="cardScrim"></div>
 <aside id="card" aria-label="Arena" tabindex="-1"></aside>

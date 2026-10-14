@@ -361,92 +361,91 @@ The new-todo pane                                          ledger.css:3998
 
 ## `rooms/semaphore/semaphore.view.js`
 
-118 lines · 6 KB
+120 lines · 6 KB
 
 _No section banners._
 
 ## `rooms/semaphore/semaphore.js`
 
-4938 lines · 264 KB
+4565 lines · 244 KB
 
 ```
 Brokerage Semaphore                   semaphore.js:1
 state                                 semaphore.js:5
 how much an arena is worth            semaphore.js:25
-a type's colour                       semaphore.js:84
-the ui, whole                         semaphore.js:298
-date semantics                        semaphore.js:380
-filtering                             semaphore.js:415
-search                                semaphore.js:485
-render: board                         semaphore.js:502
-the board's two orders                semaphore.js:625
-the general tool                      semaphore.js:658
-the width of the names                semaphore.js:767
-render: freezer                       semaphore.js:799
-dispatches                            semaphore.js:828
-coming up                             semaphore.js:1238
-drawer                                semaphore.js:1516
-read view: one stream, in time order  semaphore.js:1618
-edit view                             semaphore.js:1742
-actions                               semaphore.js:1870
-standing                              semaphore.js:1898
-one ladder, four rungs                semaphore.js:1930
-the line on top of a card             semaphore.js:2199
-leads                                 semaphore.js:2376
-the ruit                              semaphore.js:2474
-the score                             semaphore.js:2528
-one lead card, in both rooms          semaphore.js:2588
-the colour dot                        semaphore.js:2616
-a type's colour dot                   semaphore.js:2627
-one face                              semaphore.js:3095
-one rhythm for the wall               semaphore.js:3102
-leads: one board, three sections      semaphore.js:3341
-the rotation: a strip for every type  semaphore.js:3416
-leads, lent to the Ledger's board     semaphore.js:3777
-modals                                semaphore.js:3904
-asking, and saying                    semaphore.js:3907
-the types, managed                    semaphore.js:3951
-dragging in the list of types         semaphore.js:4008
-tooltip                               semaphore.js:4169
-events                                semaphore.js:4201
-typing, and the forms it goes into    semaphore.js:4527
-escape, and closing by clicking away  semaphore.js:4712
-putting links in your own order       semaphore.js:4755
+a type's colour                       semaphore.js:86
+the ui, whole                         semaphore.js:302
+venues                                semaphore.js:351
+date semantics                        semaphore.js:541
+filtering                             semaphore.js:576
+search                                semaphore.js:646
+render: board                         semaphore.js:661
+the board's two orders                semaphore.js:788
+the arena's tools                     semaphore.js:825
+the width of the names                semaphore.js:921
+render: freezer                       semaphore.js:953
+dispatches                            semaphore.js:982
+venues, on screen                     semaphore.js:1375
+the visit question                    semaphore.js:1521
+the Now page: a strip of time         semaphore.js:1577
+a venue, opened                       semaphore.js:1687
+drawer                                semaphore.js:1886
+read view: one stream, in time order  semaphore.js:1990
+edit view                             semaphore.js:2114
+actions                               semaphore.js:2259
+a call's run                          semaphore.js:2361
+leads                                 semaphore.js:2432
+the ruit                              semaphore.js:2535
+the score                             semaphore.js:2589
+one lead card, in both rooms          semaphore.js:2649
+the colour dot                        semaphore.js:2677
+a type's colour dot                   semaphore.js:2688
+leads: one board, three sections      semaphore.js:3010
+leads, lent to the Ledger's board     semaphore.js:3389
+modals                                semaphore.js:3520
+asking, and saying                    semaphore.js:3523
+the types, managed                    semaphore.js:3567
+dragging in the list of types         semaphore.js:3624
+tooltip                               semaphore.js:3785
+events                                semaphore.js:3820
+venues                                semaphore.js:3964
+typing, and the forms it goes into    semaphore.js:4132
+escape, and closing by clicking away  semaphore.js:4350
+putting links in your own order       semaphore.js:4386
 ```
 
 ## `rooms/semaphore/semaphore.css`
 
-1737 lines · 130 KB
+1518 lines · 114 KB
 
 ```
-Brokerage Semaphore                               semaphore.css:1
-header                                            semaphore.css:62
-radar                                             semaphore.css:84
-swatches (grade glyph language)                   semaphore.css:85
-search                                            semaphore.css:95
-board                                             semaphore.css:101
-namew is the column of names                      semaphore.css:103
-the sheet                                         semaphore.css:260
-faint was #8C8474, which cleared nothing          semaphore.css:271
-shared card                                       semaphore.css:294
-brokerage wall                                    semaphore.css:307
-the rotation: a strip for every type (paintWall)  semaphore.css:419
-a card                                            semaphore.css:444
-the line on top of a card (cardLineHTML)          semaphore.css:520
-leads                                             semaphore.css:652
-the three sections                                semaphore.css:664
-the leads view                                    semaphore.css:685
-Editing in the card                               semaphore.css:760
-the lead itself                                   semaphore.css:802
-one lead card, in both rooms                      semaphore.css:920
-freezer                                           semaphore.css:1152
-arena panel                                       semaphore.css:1186
-dispatches                                        semaphore.css:1369
-coming up                                         semaphore.css:1421
-modals                                            semaphore.css:1636
-the types, managed (renderTypes                   semaphore.css:1659
-the calendar                                      semaphore.css:1702
-tooltip                                           semaphore.css:1729
+Brokerage Semaphore                       semaphore.css:1
+header                                    semaphore.css:62
+radar                                     semaphore.css:84
+swatches (grade glyph language)           semaphore.css:85
+search                                    semaphore.css:95
+board                                     semaphore.css:101
+namew is the column of names              semaphore.css:103
+the sheet                                 semaphore.css:253
+faint was #8C8474, which cleared nothing  semaphore.css:264
+shared card                               semaphore.css:287
+brokerage wall                            semaphore.css:300
+leads                                     semaphore.css:423
+the three sections                        semaphore.css:435
+the leads view                            semaphore.css:456
+Editing in the card                       semaphore.css:531
+the lead itself                           semaphore.css:573
+one lead card, in both rooms              semaphore.css:691
+freezer                                   semaphore.css:875
+arena panel                               semaphore.css:909
+dispatches                                semaphore.css:1092
+venues: the Now page                      semaphore.css:1144
+the visit question                        semaphore.css:1243
+a venue, in the panel                     semaphore.css:1273
+modals                                    semaphore.css:1417
+the types, managed (renderTypes           semaphore.css:1440
+the calendar                              semaphore.css:1483
+tooltip                                   semaphore.css:1510
 ```
 
 ## `rooms/callboard/callboard.view.js`
@@ -649,4 +648,4 @@ Generated data. Never open, never edit, never upload.
 
 ---
 
-**37434 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.
+**36844 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.

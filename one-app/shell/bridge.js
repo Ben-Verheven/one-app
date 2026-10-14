@@ -386,7 +386,7 @@
   function showArena(aid) {
     var api = Hub.api('semaphore');
     if (!Hub.pane('semaphore') || !api.openArena) {
-      Hub.note('The Semaphore did not start — see the console'); return;
+      Hub.note('The Marketplace did not start — see the console'); return;
     }
     lendArena();
     try { api.openArena(aid); }
@@ -455,10 +455,10 @@
      the width shell.css reserves for it: adding a room here means moving
      the two numbers named at #oa-ring. */
 
-  var ROOMS = [{"id": "ledger", "label": "Proposal Ledger", "sub": "proposals in flight"}, {"id": "semaphore", "label": "Brokerage Semaphore", "sub": "brokerage watch"}, {"id": "callboard", "label": "Call Board", "sub": "Horizon Europe 2026\u201327"}, {"id": "atlas", "label": "Researcher Atlas", "sub": "researcher atlas"}, {"id": "notes", "label": "Notes", "sub": "a shelf that files itself"}];
+  var ROOMS = [{"id": "ledger", "label": "Proposal Ledger", "sub": "proposals in flight"}, {"id": "semaphore", "label": "Marketplace", "sub": "venues, visits and leads"}, {"id": "callboard", "label": "Call Board", "sub": "Horizon Europe 2026\u201327"}, {"id": "atlas", "label": "Researcher Atlas", "sub": "researcher atlas"}, {"id": "notes", "label": "Notes", "sub": "a shelf that files itself"}];
   /* what each room calls itself in the bar now */
   var TITLES = {
-    ledger: 'Proposal Ledger', semaphore: 'Brokerage Semaphore',
+    ledger: 'Proposal Ledger', semaphore: 'Marketplace',
     callboard: 'Call Board', atlas: 'Researcher Atlas', notes: 'Notes'
   };
   /* per room: the element that carries the bar, and the wordmark to hide
@@ -1298,7 +1298,7 @@
     })();
   }
 
-  roomCloud({ room: 'semaphore', name: 'Semaphore', row: 'semaphore',
+  roomCloud({ room: 'semaphore', name: 'Marketplace', row: 'semaphore',
               key: 'semaphore.v1', things: 'arenas', ui: ['ui'], merge: true,
               pane: 'pane-semaphore', chip: 'semcloud' });
 
@@ -1891,7 +1891,7 @@
   Hub.on('leads:excel', function (o) {
     var data;
     try { data = read(); } catch (e) { console.error(e); }
-    if (!data) { Hub.note('The leads could not be read — is the Semaphore running?'); return; }
+    if (!data) { Hub.note('The leads could not be read — is the Marketplace running?'); return; }
     var seen = null;
     try { seen = JSON.parse(localStorage.getItem(SEEN) || 'null'); } catch (e) {}
     var out;
