@@ -264,7 +264,7 @@ not of the exchange `-sum` names decides nothing: the room takes the cloud's
 copy as the others do.
 
 **Two scheduled agents read the web at night and write only to inboxes of
-their own** — `semaphore_inbox` (programmes' pages: new calls, dates,
+their own** (the Semaphore's until 2026-10-14, see the next paragraph) — `semaphore_inbox` (programmes' pages: new calls, dates,
 brokerage events) and `atlas_inbox` (researchers' TU/e, Pure and own pages:
 left, arrived, new position, new self-description, newcomers in a group).
 Neither holds the app's key. Each reaches Supabase through a gatekeeper
@@ -293,6 +293,21 @@ write, shows a visit after it. A card waiting for a date asks by itself the
 day before it wakes: the gatekeeper works that out from the wait and the
 log, and writes nothing, so no ring lights for it. Where each agent is told what to do is its
 scheduled task; the SQL and the functions are in `supabase/`.
+
+**The Semaphore's agent is no longer a nightly round** (since 2026-10-14):
+its three scheduled tasks are switched off, and one task, **Semaphore agent
+(on demand)**, has no schedule and runs when Mark fires it — from a Claude
+session told what to check, which passes the request as the firing's text,
+or with Run now, which does the old round (the asked arenas and about three
+more). It no longer only suggests: the gatekeeper's `board` gives it the
+whole board but the leads, and `edit` lets it add, change and delete dates,
+an event's website, a card's links and brokerage links, the general tool and
+the two texts straight on the board, which the room then takes in as it
+takes Pocket's. What `edit` has no op for it cannot do: delete an arena,
+change an arena's name, type, tags, weight or freezer, the types, the leads,
+Mark's `memo` or his stamps. A new arena is still a Dispatches finding.
+What it changed is told only in its own report, and every write leaves a
+copy in `app_state_history`.
 
 A second table, **`app_state_history`**, keeps a copy of every upload —
 `row_id`, the blob, a count and `saved_at` — the newest twenty of each

@@ -14,7 +14,18 @@
 //              address current, or offer one where there is none
 //   suggest    add rows to semaphore_inbox
 //   checked    record which arenas it has looked at
-// It never sees the app's key, so it cannot change the board even by mistake.
+// and, since 2026-10-14, when Mark turned the agent from a nightly round into
+// one he asks on demand and wanted it to do the work rather than leave it in
+// Dispatches:
+//   board      read the whole Semaphore board but the leads, which stay his
+//   edit       add, change and delete dates (calls and brokerage events, with
+//              their websites), the links on a card and its brokerage links,
+//              the general tool, and the About and Brokerage texts, straight
+//              on the board. It cannot delete an arena, touch an arena's
+//              name, type, tags or weight, the types, the leads, Mark's own
+//              notes on events or his stamps: an op for any of those does not
+//              exist. A new arena is still only a suggestion.
+// It never sees the app's key; what it may change is what `edit` spells out.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -251,6 +262,173 @@ async function checked(items: any[], run: string) {
   return json({ logged: rows.length });
 }
 
+// The whole board as the app keeps it, less what is Mark's alone: the leads
+// and where the room was looking (`ui`).
+async function board() {
+  const { data: row, error } = await db
+    .from("app_state").select("data,updated_at").eq("id", "semaphore").single();
+  if (error) return json({ error: error.message }, 500);
+  const s = (row?.data ?? {}) as any;
+  return json({
+    board_updated_at: row?.updated_at,
+    types: s.types ?? [],
+    arenas: (s.arenas ?? []).map(({ leads: _l, ...a }: any) => a),
+  });
+}
+
+// The same spelling of an address the app compares by (linkKey in
+// semaphore.js), so a link already on a card is not added a second time.
+const linkKey = (u: unknown) =>
+  String(u ?? "").trim().toLowerCase().replace(/^https?:\/\//, "")
+    .replace(/^www\./, "").replace(/[#?].*$/, "").replace(/\/+$/, "");
+const GRANS = ["day", "month", "quarter", "half", "year", "range", "none"];
+const ROLES = ["announcement", "publication", "deadline"];
+
+// A date as the app's own editor would leave it (migrate in semaphore.js):
+// both ends set, in order; fixed only for an exact day or span; a call named
+// and given a role. `memo`, Mark's own note on an event, and the stamps are
+// never written here, so a changed date keeps them.
+function shapeDate(d: any, f: any): string | null {
+  if ("kind" in f) d.kind = f.kind === "call" ? "call" : "brokerage";
+  for (const k of ["label", "call", "note"]) if (k in f) d[k] = S(f[k], 600) ?? "";
+  if ("role" in f) d.role = oneOf(f.role, ROLES) ?? "";
+  if ("gran" in f) d.gran = oneOf(f.gran, GRANS);
+  if ("start" in f) d.start = D(f.start);
+  if ("end" in f) d.end = D(f.end);
+  if ("grade" in f) d.grade = f.grade === "fixed" ? "fixed" : "uncertain";
+  if ("url" in f) {
+    if (f.url && !http(f.url)) return "url must start with http:// or https://";
+    d.url = http(f.url) ?? "";
+  }
+  if (!d.gran) return "gran must be one of " + GRANS.join(", ");
+  if (d.gran !== "none" && !d.start) return "start must be YYYY-MM-DD";
+  if (d.gran === "none") { d.start = null; d.end = null; }
+  if (d.start && !d.end) d.end = d.start;
+  if (d.start && d.end < d.start) [d.start, d.end] = [d.end, d.start];
+  if (!(d.gran === "day" || d.gran === "range")) d.grade = "uncertain";
+  d.grade ??= "uncertain";
+  if (d.kind === "call") {
+    if (!d.call) return "a call date needs call (the call's name)";
+    if (!ROLES.includes(d.role)) return "a call date needs role: " + ROLES.join(", ");
+  } else d.role = "";
+  return null;
+}
+
+// One op on one arena of a board read a moment ago. Returns what it did, or
+// why not; the board is changed in place only when it succeeds.
+function applyOp(s: any, op: any): any {
+  const a = (s.arenas ?? []).find((x: any) => x.id === op?.arena_id);
+  if (!a) return { error: "arena_id is not on the board" };
+  a.dates ??= [];
+  a.links ??= [];
+  a.brokerage ??= { notes: "", links: [] };
+  a.brokerage.links ??= [];
+  const list = op.list === "brokerage" ? a.brokerage.links : a.links;
+  const anyLink = (id: unknown) =>
+    a.links.find((l: any) => l.id === id) ?? a.brokerage.links.find((l: any) => l.id === id);
+  switch (op.op) {
+    case "add_date": {
+      const d: any = { id: crypto.randomUUID(), kind: "brokerage", label: "", call: "", role: "", note: "", url: "" };
+      const why = shapeDate(d, op.date ?? {});
+      if (why) return { error: why };
+      a.dates.push(d);
+      return { ok: true, date_id: d.id };
+    }
+    case "update_date": {
+      const d = a.dates.find((x: any) => x.id === op.date_id);
+      if (!d) return { error: "date_id is not on that arena" };
+      const copy = { ...d };
+      const why = shapeDate(copy, op.set ?? {});
+      if (why) return { error: why };
+      Object.assign(d, copy);
+      return { ok: true };
+    }
+    case "delete_date": {
+      if (!a.dates.some((x: any) => x.id === op.date_id)) return { error: "date_id is not on that arena" };
+      a.dates = a.dates.filter((x: any) => x.id !== op.date_id);
+      // a card waiting for this date waits for nothing now (reconcile in the app)
+      if (a.hold?.dateId === op.date_id) a.hold = null;
+      return { ok: true };
+    }
+    case "add_link": {
+      const url = http(op.url);
+      if (!url) return { error: "url must start with http:// or https://" };
+      const k = linkKey(url);
+      if (a.links.concat(a.brokerage.links).some((l: any) => linkKey(l.url) === k)) {
+        return { error: "that address is already on the arena" };
+      }
+      const l = { id: crypto.randomUUID(), label: S(op.label, 200) ?? "", url };
+      list.push(l);
+      return { ok: true, link_id: l.id };
+    }
+    case "update_link": {
+      const l = anyLink(op.link_id);
+      if (!l) return { error: "link_id is not on that arena" };
+      if ("url" in op) {
+        const url = http(op.url);
+        if (!url) return { error: "url must start with http:// or https://" };
+        l.url = url;
+      }
+      if ("label" in op) l.label = S(op.label, 200) ?? "";
+      return { ok: true };
+    }
+    case "delete_link": {
+      if (!anyLink(op.link_id)) return { error: "link_id is not on that arena" };
+      a.links = a.links.filter((l: any) => l.id !== op.link_id);
+      a.brokerage.links = a.brokerage.links.filter((l: any) => l.id !== op.link_id);
+      if (a.toolId === op.link_id) a.toolId = null;
+      return { ok: true };
+    }
+    case "set_tool": {
+      if (op.link_id == null) { a.toolId = null; return { ok: true }; }
+      if (!a.brokerage.links.some((l: any) => l.id === op.link_id)) {
+        return { error: "the general tool must be one of the arena's brokerage links" };
+      }
+      a.toolId = op.link_id;
+      return { ok: true };
+    }
+    case "set_text": {
+      const v = op.value == null ? "" : String(op.value).trim();
+      if (v.length > 2000) return { error: "a text may be at most 2000 characters" };
+      if (op.text === "about") a.notes = v;
+      else if (op.text === "brokerage") a.brokerage.notes = v;
+      else return { error: "text must be about or brokerage" };
+      return { ok: true };
+    }
+    default:
+      return { error: "op must be add_date, update_date, delete_date, add_link, update_link, delete_link, set_tool or set_text" };
+  }
+}
+
+// The ops are applied to a fresh read of the board and written back only if
+// nobody wrote it in between (the desk, Pocket); otherwise they are applied
+// again to the newer board. The app then takes the change as it takes
+// Pocket's, piece by piece. Every write leaves a copy in app_state_history,
+// as the app's own uploads do, so a bad run can be undone from the Ledger's
+// cloud panel.
+async function edit(ops: any[]) {
+  if (!Array.isArray(ops) || !ops.length) return json({ error: "items must be a non-empty list" }, 400);
+  if (ops.length > 40) return json({ error: "at most 40 per call" }, 400);
+  for (let attempt = 0; attempt < 4; attempt++) {
+    const { data: row, error } = await db
+      .from("app_state").select("data,updated_at").eq("id", "semaphore").single();
+    if (error) return json({ error: error.message }, 500);
+    const s = structuredClone(row.data ?? {}) as any;
+    const results = ops.map((op) => ({ op: op?.op, arena_id: op?.arena_id, ...applyOp(s, op) }));
+    if (!results.some((r: any) => r.ok)) return json({ results });
+    const now = new Date().toISOString();
+    const { data: done, error: werr } = await db
+      .from("app_state").update({ data: s, updated_at: now })
+      .eq("id", "semaphore").eq("updated_at", row.updated_at).select("id");
+    if (werr) return json({ error: werr.message }, 500);
+    if (!done?.length) continue;
+    await db.from("app_state_history")
+      .insert({ row_id: "semaphore", data: s, n: (s.arenas ?? []).length, saved_at: now });
+    return json({ results, board_updated_at: now });
+  }
+  return json({ error: "the board kept changing under the edit; try again" }, 409);
+}
+
 Deno.serve(async (req) => {
   const token = Deno.env.get("AGENT_TOKEN");
   if (!token || req.headers.get("x-agent-token") !== token) {
@@ -264,6 +442,8 @@ Deno.serve(async (req) => {
     case "watchlist": return await watchlist();
     case "suggest":   return await suggest(body.items, run);
     case "checked":   return await checked(body.items, run);
-    default:          return json({ error: "action must be watchlist, suggest or checked" }, 400);
+    case "board":     return await board();
+    case "edit":      return await edit(body.items);
+    default:          return json({ error: "action must be watchlist, board, suggest, checked or edit" }, 400);
   }
 });
