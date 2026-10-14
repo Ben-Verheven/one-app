@@ -8,7 +8,10 @@
 //              not looked at it since. Each arena's two
 //              texts, About and Brokerage, are in it since 2026-10-10, so the
 //              nightly agent can offer a short rewrite of either that keeps
-//              what is still true in them
+//              what is still true in them. Each arena's general tool, the
+//              one brokerage link Mark marked to go through now and then, is
+//              in it since 2026-10-14 (`tool`), so the agent can keep its
+//              address current, or offer one where there is none
 //   suggest    add rows to semaphore_inbox
 //   checked    record which arenas it has looked at
 // It never sees the app's key, so it cannot change the board even by mistake.
@@ -58,6 +61,10 @@ async function watchlist() {
     brokerage_links: (a.brokerage?.links ?? []).map(link),
     arena_info: a.notes ?? "",
     brokerage_info: a.brokerage?.notes ?? "",
+    tool: (() => {
+      const t = a.toolId && (a.brokerage?.links ?? []).find((l: any) => l.id === a.toolId);
+      return t ? link(t) : null;
+    })(),
     dates: (a.dates ?? []).map((d: any) => ({
       id: d.id, kind: d.kind, label: d.label ?? "", call: d.call ?? "",
       role: d.role ?? "", gran: d.gran, start: d.start, end: d.end,
@@ -139,7 +146,7 @@ async function suggest(items: any[], run: string) {
   const rows: any[] = [];
   const rejected: any[] = [];
   for (const it of items) {
-    const kind = oneOf(it.kind, ["date", "link", "arena", "info"]);
+    const kind = oneOf(it.kind, ["date", "link", "arena", "info", "tool"]);
     const source_url = http(it.source_url);
     const arena_name = S(it.arena_name, 200);
     const arena_id = kind === "arena" ? null : S(it.arena_id, 100);
@@ -171,8 +178,11 @@ async function suggest(items: any[], run: string) {
       if (!(r.gran === "day" || r.gran === "range")) r.grade = "uncertain";
       r.grade ??= "uncertain";
     }
-    if (kind === "link" && !r.url) {
-      rejected.push({ item: it, why: "a link needs url" });
+    // A tool finding (2026-10-14) names the arena's general tool: for an
+    // arena without one, the tool to mark; for one with a tool, its new
+    // address, which Accept puts on the same link.
+    if ((kind === "link" || kind === "tool") && !r.url) {
+      rejected.push({ item: it, why: "a link or a tool needs url" });
       continue;
     }
     // An info finding is a whole new text for one of the arena's two texts,

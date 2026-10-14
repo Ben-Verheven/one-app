@@ -881,6 +881,14 @@ function findText(r){
     return 'New <b>'+infoName(r)+'</b> text — '+esc(r.note||'')+
       '<span class="dpwas dpold">'+(old?'was: '+esc(old):'was empty')+'</span>';
   }
+  /* a general tool says which tool it would take the place of, since on an
+     arena that has one the finding is a new address for it (see takeFind) */
+  if(r.kind==='tool'){
+    const cur=a&&generalTool(a);
+    return 'General tool — <b>'+esc(r.label||findHost(r.url))+'</b>'+
+      (!cur?' for the Board':linkKey(cur.url)===linkKey(r.url)?'<span class="dpwas dpold">already the tool</span>':
+        '<span class="dpwas dpold">was: '+esc(linkName(cur))+' · '+esc(findHost(cur.url))+'</span>');
+  }
   const dt=findDate(r);
   const when='<span class="dpwhen">'+esc(dispDate(dt))+'</span>';
   /* a correction says what it replaces, because the old date is the thing you
@@ -896,7 +904,7 @@ function findText(r){
   return 'Brokerage — <b>'+esc(dt.label||'Event')+'</b> '+when+was;
 }
 function findSwatch(r){
-  if(r.kind==='arena'||r.kind==='link'||r.kind==='info')return '<i class="sw sw-uncertain"></i>';
+  if(r.kind==='arena'||r.kind==='link'||r.kind==='info'||r.kind==='tool')return '<i class="sw sw-uncertain"></i>';
   const dt=findDate(r);
   if(dt.kind==='call')return '<i class="sw sw-call"></i>';
   return '<i class="sw sw-'+dt.grade+'"></i>';
@@ -911,8 +919,9 @@ function findRow(r){
         esc(findHost(r.source_url))+'</a>'+
       /* the event's own page, when the agent found one apart from where it read
          the date — this is the link Accept puts among the brokerage links */
-      (r.kind==='date'&&r.url&&linkKey(r.url)!==linkKey(r.source_url)?
-        '<a class="dpsrc" href="'+esc(r.url)+'" target="_blank" rel="noopener" title="The event\u2019s own page">'+
+      ((r.kind==='date'||r.kind==='tool')&&r.url&&linkKey(r.url)!==linkKey(r.source_url)?
+        '<a class="dpsrc" href="'+esc(r.url)+'" target="_blank" rel="noopener" title="'+
+        (r.kind==='tool'?'The tool itself':'The event\u2019s own page')+'">'+
         esc(findHost(r.url))+'</a>':'')+
     '</span>'+
     '<span class="dpa">'+
@@ -969,7 +978,7 @@ function renderDispatch(){
   if(!finds.rows.length){
     el.innerHTML=head+'<p class="dpnote">Each night the agent looks through about three arenas, and any '+
       'you have asked it to, for brokerage events (new ones, and changes to the ones on the board) and '+
-      'partner-search tools, and offers a short rewrite of their About and Brokerage texts where those are '+
+      'partner-search tools, keeps each arena\u2019s general tool up to date, and offers a short rewrite of their About and Brokerage texts where those are '+
       'wrong, out of date or missing something important. Once a week it looks for call dates, new and '+
       'changed, and programmes you are not watching yet. Whatever it finds waits here.</p>';
     return;
@@ -1037,6 +1046,23 @@ function takeFind(r){
     else a.notes=t;
     save();renderAll();
     return 'New '+infoName(r)+' text on '+a.name+'.';
+  }
+  /* An arena's general tool, found by the nightly agent (Mark, 2026-10-14).
+     An arena without one gets it: the brokerage link already at that address,
+     else a new one, becomes the tool. The agent offers one to an arena that
+     has a tool only when that tool's address has moved, so Accept puts the
+     new address on the same link, which keeps its place among the links. */
+  if(r.kind==='tool'){
+    if(!r.url)return 'That finding had no address, so nothing changed.';
+    a.brokerage=a.brokerage||{notes:'',links:[]};
+    const cur=generalTool(a),k=linkKey(r.url);
+    const had=a.brokerage.links.find(l=>linkKey(l.url)===k);
+    if(had&&had===cur)return 'That is already the general tool of '+a.name+'.';
+    if(had)a.toolId=had.id;
+    else if(cur){cur.url=r.url;if(r.label)cur.label=r.label;cur.foundAt=now;}
+    else{const lk={id:uid(),label:r.label||'',url:r.url,foundAt:now};a.brokerage.links.push(lk);a.toolId=lk.id;}
+    save();renderAll();
+    return (cur&&!had?'New address for the general tool of ':'General tool set on ')+a.name+'.';
   }
   if(r.kind==='link'){
     const ev=siteFor(r);

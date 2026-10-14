@@ -9,7 +9,7 @@ create table if not exists semaphore_inbox (
   id               bigserial primary key,
   created_at       timestamptz not null default now(),
   run              text not null check (run in ('daily','weekly')),
-  kind             text not null check (kind in ('date','link','arena','info')),
+  kind             text not null check (kind in ('date','link','arena','info','tool')),
   arena_id         text,              -- null when kind = 'arena' (a new arena)
   arena_name       text not null,
   date_kind        text check (date_kind in ('brokerage','call')),
@@ -33,12 +33,13 @@ create table if not exists semaphore_inbox (
 
 -- An "info" finding (2026-10-10) is a short new text to replace an arena's
 -- About text (date_kind 'call') or its Brokerage text (date_kind
--- 'brokerage'), carried in note. A table made before then still holds the three-kind
--- check, so it is swapped here; these two lines alone are what an existing
--- database needs.
+-- 'brokerage'), carried in note. A "tool" finding (2026-10-14) is an arena's
+-- general tool, its address in url. A table made before either still holds
+-- an older check, so it is swapped here; these two lines alone are what an
+-- existing database needs.
 alter table semaphore_inbox drop constraint if exists semaphore_inbox_kind_check;
 alter table semaphore_inbox add constraint semaphore_inbox_kind_check
-  check (kind in ('date','link','arena','info'));
+  check (kind in ('date','link','arena','info','tool'));
 
 create index if not exists semaphore_inbox_status_idx
   on semaphore_inbox (status, created_at desc);
