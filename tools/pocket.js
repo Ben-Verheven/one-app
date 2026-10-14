@@ -8,7 +8,7 @@
    walk through the tabs. This is that script, kept, so the check costs one
    command and the session's time goes on the change instead.
 
-   The board is the desk's own example set, pressed in the Semaphore room
+   The board is the desk's own example set, pressed in the Marketplace room
    exactly as seed.js presses it, so it cannot drift from what the desk
    writes. Mark's export never enters the repository, so it cannot be used
    here; a change to the data model still needs the contract check in
@@ -38,11 +38,11 @@ function fakeCloud(page, rows, said) {
 }
 
 /* What each view holds once drawn: the length of its words. Every tab
-   says something even when empty ("No brokerage dates"), so a number alone
+   says something even when empty ("Nothing here yet"), so a number alone
    proves nothing; it is read against the same tab over an empty cloud. */
 async function views(page, shoot) {
   const out = {};
-  for (const tab of ['rot', 'dates', 'leads']) {
+  for (const tab of ['now', 'leads']) {
     await page.click('#tabs button[data-tab="' + tab + '"]');
     await page.waitForTimeout(150);
     out[tab] = await page.evaluate(t =>
@@ -111,7 +111,7 @@ async function run(browser, name, rows, login, shoot) {
   for (const [tab, n] of Object.entries(full.views || {}))
     if (tab === 'people' ? !n : !(n > ((none.views || {})[tab] || 0)))
       wrong.push('full board: ' + tab + ' drew no more than the empty cloud');
-  if (!/no Semaphore row/.test(none.stamp || '')) wrong.push('no row: the stamp said "' + none.stamp + '"');
+  if (!/no Marketplace row/.test(none.stamp || '')) wrong.push('no row: the stamp said "' + none.stamp + '"');
   if (!fresh.asksLogin) wrong.push('never logged in: the login sheet did not open');
 
   console.log('pocket: ' + arenas + ' arenas; drawn ' + JSON.stringify(full.views));

@@ -252,7 +252,7 @@ its own. A device that has never synced under the two keys decides once by
 the old `-ts` stamp.
 
 **The Marketplace's two copies are put together instead** (since 2026-10-11),
-because Pocket writes the same board from the phone: a card stamped there
+because Pocket writes the same board from the phone: a visit stamped there
 while the desk held an unsent change used to set that change aside. The
 room keeps a fourth key, `-base`, a fingerprint of what the cloud said at
 the last exchange — a hash of every piece, not a third copy of the board —

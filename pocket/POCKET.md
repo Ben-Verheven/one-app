@@ -1,18 +1,22 @@
 # Pocket — how to change it
 
-`pocket/index.html` is the phone companion of One App's **Semaphore room only** — made to open in an
-idle minute instead of the news. Since 2026-10-07 it is dressed and laid out like the desk's
-Semaphore (the Cards view of 2026-10-06). Three tabs, Rotation, Coming up and Leads (Pinned went on
-2026-10-12, here and on the desk):
+`pocket/index.html` is the phone companion of One App's **Marketplace room only** (the Semaphore
+until 2026-10-14) — made to open in an idle minute instead of the news. It is dressed like the desk's
+room. Two tabs, Now and Leads (the Rotation and Coming up went on 2026-10-14, when the room was
+rebuilt around venues; PROJECT.md says what a venue is):
 
-- **Rotation** — the desk's rotation since 2026-10-11 (`typeRows`): a row for every arena type, in
-  the desk's order of types, each headed by a band in the type's colour, and every card's head filled with it too; in each row the cards, all one size, in
-  standing order, swiped sideways, with a card stamped today towards the far end and, past those, a
-  card asleep until a date of its own, whose foot says so in short ("Waiting for … · 1 Jan"). A card
-  whose date has come within reach stands in a row of its own over all the types, *Back from waiting*
-  (`wokeRow`), which opens the walk; stamping it ends the wait and sends it back to its row. Walked one card at a
-  time with *Look around* → Next / Stamp & next, which takes the types in turn: every type's first
-  card, then every type's second. Arenas with no brokerage material are ghosts under their row.
+- **Now** — the desk's Now on a phone (`drawNow`): one line of words saying how many venues are due,
+  then every venue on the same strip of time, today marked (`vStrip`, the desk's `NOW_AHEAD`).
+  Events near enough to show, then a folded **Later** for those beyond the strip or undated, then the
+  **tools**, which are always open. A venue that is over goes to **Limbo**, the folded box of fog at
+  the top (`.limbox`), as on the desk. Each row carries the stamp, a disc holding the days since the
+  last visit and reddening towards the day it is due (`vDisc`), and *Go ↗* to the venue's own site.
+  The stamp records today's visit and asks what it gave: nothing new, something (a line, optional) or
+  a lead (`askVisit`); pressed again the same day, *Take it back*. Coming back to Pocket after *Go*
+  asks the same in a bar over the tabs (`showAsk`, on `visibilitychange`). *A lead* opens the lead
+  form, filed under one of the arenas the venue serves and remembering the venue (`leadFromVenue`).
+  A row opens the venue's sheet (`openVenue`): its life, its visits, the arenas it serves, its other
+  pages and Mark's note (`memo`).
 - **Leads** — every open lead in Spotted / Contacted / Talking, as the desk's Leads arrangement;
   Contacted split by its two paths; each lead shows the desk's diamond ("ruit"). In a lead's sheet
   the diamond is pressed to move it (the desk's own `leadPath`), and links/emails are added there,
@@ -21,30 +25,14 @@ Semaphore (the Cards view of 2026-10-06). Three tabs, Rotation, Coming up and Le
   nowhere, or they declined (`outcome`); a project is then made in the Ledger, at the desk.
   A lead wears its arena type's colour (`leadTone`, from the desk's `arenaTone`).
   *+ New lead* at the top adds one, asking first which arena it belongs to (frozen arenas left
-  out); an arena's sheet has its own *+ Lead*. Both ask the same questions (`leadForm`).
+  out, the rest type by type in the desk's order); an arena's sheet has its own *+ Lead*. All ask the
+  same questions (`leadForm`).
 
-Every card carries the desk's two small controls: the ring (ask the nightly agent, `askAt`)
-and the stamp (✓, which also marks the agent's findings seen). An arena's sheet
-spells out the ring and adds the desk's *Wait for…* (`hold`), which lists the arena's coming
-dates to sleep until (since 2026-10-10). A brokerage link
-on a card carries its site's stamp, with the days since, and no host (since 2026-10-12). The sheet's pencil ✎ edits the arena's name, its
-About and Brokerage notes and both lists of links, saved together (since 2026-10-11). What stays on
-the desk: making and deleting arenas, an arena's type, tags and weight, dates (but for what Coming up
-does to brokerage events), types (their order and colour too), the freezer, and the agent's Dispatches.
-- **Coming up** — the desk's Coming up since 2026-10-11 (`eventRow`): every arena's dates on one
-  line, brokerage only and with no count over it (since 2026-10-12), and *+ Brokerage event* (`newEvent`, the desk's form). A row opens its
-  arena, whose name stands in a box of its type's colour; no row counts the days to go, only "on now"
-  (2026-10-12). A brokerage event carries the desk's controls: the stamp, a white disc holding the days
-  since and reddening over a fortnight, one stamp to a
-  site (`stampSite`, so a link of the same site on a card is stamped with it, from either side; the site is `siteKey`'s); the
-  event's own website (`url`), or *+ add website* (`addSite`, offering the arena's links, the likeliest
-  first by `eventLink`); ▾, which unfolds the arena's strip of time from its card under the row, the event itself marked on it; and
-  ✕, which removes the event from the whole app after asking (`askDrop`), and with it the cards' links to its site (`eventCardLinks`). The event's own note (`memo`, since 2026-10-12): a book under the date where it has one, which opens it under the row, tapped there to change it; where it has none, the diamond is tapped, turns into a book and opens the sheet to write one (`noteSheet`, `setEventMemo`). A brokerage event tapped on
-  a card, its diamond or the phase line naming it, is shown here (`jumpEvent`), as on the desk.
-  A brokerage event that is over goes to **Limbo**, one folded box of fog at the top (`.limbox`, spooky since 2026-10-12), and stays there until
-  Mark removes it, where ✕ does not ask, as on the desk. A
-  call is read only and leaves two weeks after. The tab carries no number (removed 2026-10-08 at
-  Mark's request).
+An arena opens from a venue's sheet or a lead: its About and Brokerage notes and links, its venues,
+leads and dates. The sheet's pencil ✎ edits the arena's name, its About and Brokerage notes and both
+lists of links, saved together (since 2026-10-11). What stays on the desk: making, changing and
+deleting venues and arenas, an arena's type, tags and weight, dates, types (their order and colour
+too), the freezer, and the agent's Dispatches.
 
 People (the Atlas list) has no tab: it opens from the ⌕ button and from a lead's match.
 The Ledger and its todos are not in Pocket. Single file, no build. Pages serves it at
@@ -69,26 +57,28 @@ stay on his PC, in the OneDrive folder `Pocket-app-source-cowork`.
 re-extract the maths) but a Pocket change never touches it.
 
 ## Anatomy of pocket/index.html
-- `<style>` — the desk's Semaphore tokens on `:root` (`--paper`, `--ink`, `--key2`, the meaning
+- `<style>` — the desk's Marketplace tokens on `:root` (`--paper`, `--ink`, `--key2`, the meaning
   hues `--brok`, `--r-ann/pub/dl`, `--today`, the lead colours `--lead/--lquiet/--ltrack`). The
   sheet (`#sheet .panel`) restates them for light bone, as the desk's drawer does.
-  Class names follow the desk where the thing is the same: `.wcard .wch .wname`, `.wline .wph .wpw`,
-  `.wstrip .wsb .wsd .wsnow .wsx`, `.wlk .wlink`, `.wprow`, `.lrun .lflank .lead .lruit`.
+  Class names follow the desk where the thing is the same: `.vrow .vtrack .vbar .vmeet .vdia .vtick
+  .vnow .vpulse .vstamp .vgo`, `.wlink`, `.lrun .lflank .lead .lruit`.
 - `<script id="atlas-index">` — People data (one huge JSON line, ~320 KB). Never print it; `grep -v` / `cut` it away.
 - Script 1 — **desk code, copied verbatim** out of `one-app/rooms/semaphore/semaphore.js`
-  (`standing()`, `rotationSplit`, `callRuns`, `isFresh`, `STAGES`, `leadKind`, the types' tones
-  `TONES`/`settleTones`/`arenaTone`, `migrate`, `let S`…). Do not edit; re-extract (see below).
+  (`absorbVenues`, a venue's life and rhythm `vWin`/`vState`/`vEvery`/`vDue`, `isFresh`, `STAGES`,
+  `leadKind`, the types' tones `TONES`/`settleTones`/`arenaTone`, `migrate`, `let S`…). Do not edit; re-extract (see below).
 - Script 2 — Pocket itself (`var`, ES5 style): `BUILT_IN`, the project's url and anon key, taken
   when the phone holds no `pocket.cfg` (since 2026-10-10, so a new phone asks only for the email
   and password; the url and key fields under `#s-conn` show only for another project) → the login (`logIn`, `token`, `renew`, `askLogin`;
   since 2026-10-09 the cloud answers only a logged-in Mark, so every request carries the session's
   token, renewed one at a time — Supabase ends a session whose renewal is used twice) → `rest()` → `pull()` (row `semaphore` only) →
   `commit()` → lead mutations (`setDone`, `setDate`, `setPath`, `addUpdate`, `editItem`, `addLead`,
-  `addLeadLink`, `dropLeadLink`, `setScore`) and arena/link mutations (`stampArena`, `askAgent`, `holdArena`,
-  `editArena` + `linkOps`, `stampLink` and `stampSite`, `addEvent`, `setEventUrl`, `dropEvent`); every undo puts back a snapshot (`keep`/`putBack`) → board (`liveList`, which settles the types' tones as the desk does, `scoreOf`, `typeRows`) → views (`drawRot` + `wallCard` +
-  `cardLine`, `drawLeads`/`leadItems` + `leadRow` + `ruit`,
-  `drawDates`/`comingUp` + `eventRow`) → sheets (`openArena` with the round, `openLead`, `newLead`, `openPerson`,
-  `newEvent`, `addSite`, `askDrop`).
+  `addLeadLink`, `dropLeadLink`, `setScore`), the arena edit (`editArena` + `linkOps`) and the venue
+  writes (`visitVenue`, `answerVenue`, `setVenueMemo`, each through `onVenue`, which runs the desk's
+  `absorbVenues` on the copy it changes); every undo puts back a snapshot (`keep`/`putBack`) → board
+  (`liveList`, which settles the types' tones and absorbs venues as the desk does; `venueList`) →
+  views (`drawNow` + `venueRow` + `vStrip`, `drawLeads`/`leadItems` + `leadRow` + `ruit`) → sheets
+  (`openVenue`, `askVisit`, `leadFromVenue`, `openArena`, `openLead`, `newLead`, `openPerson`) and the
+  bar back from a site (`showAsk`).
   `fitScreen` gives the home screen the room the insets no longer say (why: the viewport meta); ⚙ shows what it measured.
 - Both scripts share one global scope: a new top-level name must not collide with script 1
   (`shortDate` exists → Pocket uses `briefDate`; `openLeads` exists → `leadItems`).
@@ -98,13 +88,13 @@ Done with a small Node script using the TypeScript parser (`npm root -g`/typescr
 `semaphore.js`, take the body of `Hub.mount('semaphore', function(…){…})`, and copy each top-level
 declaration named below **plus every top-level declaration it refers to**, in source order:
 
-`uid todayISO STAGES STAGE_NAME stageOf WEIGHTS weightOf ROLES reconcile S dispDate arena linkName
-SWEEP_CYCLE SWEEP_SHORT eventNote openLeads standing linkHost callRuns isFresh shortDate shortDay
-daysBetween leadKind KIND_NAME KIND_RANK RUNG leadName dtLabel esc rotationSplit
-hasBrokerage leadPath TONES toneHex settleTones typeOf arenaTone`
+`uid MONTHS DAY T todayISO STAGES STAGE_NAME stageOf OUTCOMES WEIGHTS weightOf ROLES settleTones
+typeOf arenaTone NOW_BACK NOW_AHEAD VGOT absorbVenues S dispDate venue venueArenas venuesOf liveVenue
+isSpot vWin vState vSince vEvery vDue vYieldSay vDateSay arena linkName shortDate openLeads leadName
+isFresh linkHost leadPath KIND_RANK KIND_NAME leadKind callRuns dtLabel esc`
 
 Then check: no `document`/`$(`/`Hub.` in the result, no name clashes with script 2, `node --check`.
-Last done 2026-10-11 from that day's desk (653 lines); `TONES` and `TONE_SPREAD` taken again 2026-10-12.
+Last done 2026-10-14, from the desk of the Marketplace's venues.
 
 ## Rules
 1. Display-layer changes by default. Data structures, script 1, scoring and the write path change only when asked.
@@ -126,11 +116,10 @@ Last done 2026-10-11 from that day's desk (653 lines); `TONES` and `TONE_SPREAD`
    reads/writes and WRITES.md first, and write the new contract back to that folder, never here.
 3. Make the edit with a script that asserts its anchor exists once.
 4. Verify: `node tools/pocket.js [folder]` logs in against a fake cloud holding the desk's own
-   example board, and fails unless all four tabs and People draw with no console error, the empty
+   example board, and fails unless both tabs and People draw with no console error, the empty
    cloud says so, and a phone that never logged in is asked to; with a folder it leaves a
    screenshot of each tab there. A change to a write needs one more step it does not take: one
-   write per touched mutation produces the WRITES.md shape (diff the blob before/after each POST),
-   and Stamp & next moves on. A change to the data model is checked against the export (step 2).
+   write per touched mutation produces the WRITES.md shape (diff the blob before/after each POST). A change to the data model is checked against the export (step 2).
 5. Commit and push as CLAUDE.md says. Pages has it a minute later, but the home-screen app can keep
    its old copy for up to ten minutes (2026-10-10); then closing and reopening Pocket fetches it.
    The status-bar meta is read only when the icon is added, so a change to it means deleting the
