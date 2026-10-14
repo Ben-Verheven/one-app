@@ -660,12 +660,15 @@ let sortOpen=false;
    or partner search that has no date of its own and is simply gone through
    now and then (Mark, 2026-10-14). It is chosen in the arena's panel, by the
    diamond beside the link (`toolId` on the arena), and stands on the Board
-   right after the arena's name, drawn as a brokerage event is: a diamond.
-   A press marks it gone through today, and the diamond then carries the days
-   since, white turning to the brokerage red over a fortnight as Coming up's
-   stamps do. The stamp is the link's own (toggleStamp), so it is the same
-   stamp the rotation cards show for that site, and a same-day press takes
-   it back. */
+   at the right of the name column, against its drag line, drawn as a
+   brokerage event is: a diamond. A press opens the tool's site and marks it
+   gone through today, since going there is what the mark records (Mark,
+   2026-10-14); the diamond then carries the days since, white turning to the
+   brokerage red over a fortnight as Coming up's stamps do. The stamp is the
+   link's own, so it is the same stamp the rotation cards show for that site.
+   A second press the same day only opens the site: when the press meant
+   "toggle", opening the tool twice took the mark back. A mistaken mark is
+   undone from the rotation card's stamp. */
 function generalTool(a){
   return a.toolId?((a.brokerage&&a.brokerage.links)||[]).find(l=>l.id===a.toolId)||null:null;
 }
@@ -673,7 +676,8 @@ function toolMarkHTML(a){
   const lk=generalTool(a);
   if(!lk)return '';
   const st=stampSay(stampOf(lk)),n=st.d===null?null:Math.max(0,st.d);
-  const tip=linkName(lk)+' \u2014 '+(st.on?st.stTip:st.ageTip+' \u2014 click once you have been through it');
+  const tip=linkName(lk)+' \u2014 '+(st.on?'Gone through today \u2014 click to open it':
+    st.ageTip+' \u2014 click to open it and mark it gone through');
   return '<button class="toolmk'+(n===null?'':' dated')+'" data-act="toolStamp" data-id="'+a.id+'" '+
     (n===null?'':'style="--age:'+Math.round(Math.min(n,14)/14*100)+'%" ')+
     'title="'+esc(tip)+'" aria-label="'+esc(tip)+'"><span>'+(n===null?'':n>99?'99+':n)+'</span></button>';
@@ -692,7 +696,7 @@ function boardRow(a,bg){
   /* The column beside the names that said Open / Opens / Between went on
      2026-10-11 (Mark): the calendar beside the name says it already. */
   return '<div class="row"><div class="cell name">'+
-    '<button class="nm'+weightClass(a)+'" data-act="openArena" data-id="'+a.id+'">'+esc(a.name)+'</button>'+toolMarkHTML(a)+due+loomBtn+
+    '<button class="nm'+weightClass(a)+'" data-act="openArena" data-id="'+a.id+'">'+esc(a.name)+'</button>'+due+loomBtn+toolMarkHTML(a)+
     '</div>'+
     '<div class="lane" style="background-image:'+bg+'" data-aid="'+a.id+'">'+laneHTML(a)+'</div></div>';
 }
@@ -4347,7 +4351,9 @@ document.addEventListener('click',e=>{
       if(a.toolId===lk.id)delete a.toolId;else a.toolId=lk.id;
       relinked();break;}
     case 'toolStamp':{const lk=a&&generalTool(a);if(!lk)break;
-      toggleStamp(lk);relinked();break;}
+      if(lk.url)window.open(lk.url,'_blank','noopener');
+      if(stampOf(lk)!==todayISO()){toggleStamp(lk);relinked();}
+      break;}
     /* Quick, but not one slip from gone: the first press turns the cross into
        the word, a second within three seconds removes the link. The button is
        changed in place rather than redrawn, so nothing else on the wall moves

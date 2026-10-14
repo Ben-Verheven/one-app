@@ -132,12 +132,14 @@
   opacity:0;transition:opacity .14s}
 #pane-semaphore .namegrip:hover::after,#pane-semaphore .namegrip.on::after{opacity:.55}
 @media (hover:none){#pane-semaphore .namegrip::after{opacity:.18}}
-/* The general tool (see "the general tool" in the script): a diamond after
-   the name, the brokerage event's shape. Never marked off, it is the
+/* The general tool (see "the general tool" in the script): a diamond at the
+   right of the name column, against the drag line, so the diamonds stand in
+   one column down the board whatever the length of the names; the brokerage
+   event's shape. Never marked off, it is the
    outline alone; marked, it fills white and reddens to the brokerage red
    over a fortnight, with the days since standing upright inside it in the
    paper's dark. */
-#pane-semaphore .toolmk{position:relative;flex:0 0 22px;width:22px;height:22px;padding:0;border:none;background:none;cursor:pointer}
+#pane-semaphore .toolmk{position:relative;flex:0 0 22px;margin-left:auto;width:22px;height:22px;padding:0;border:none;background:none;cursor:pointer}
 #pane-semaphore .toolmk::before{content:"";position:absolute;left:4px;top:4px;width:14px;height:14px;box-sizing:border-box;
   transform:rotate(45deg);border-radius:2px;border:1.5px solid var(--brok)}
 #pane-semaphore .toolmk.dated::before{border:none;background:color-mix(in srgb,var(--brok) var(--age),#FFFFFF)}
