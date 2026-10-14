@@ -146,7 +146,7 @@ async function suggest(items: any[], run: string) {
   const rows: any[] = [];
   const rejected: any[] = [];
   for (const it of items) {
-    const kind = oneOf(it.kind, ["date", "link", "arena", "info", "tool"]);
+    const kind = oneOf(it.kind, ["date", "link", "arena", "info", "tool", "remove"]);
     const source_url = http(it.source_url);
     const arena_name = S(it.arena_name, 200);
     const arena_id = kind === "arena" ? null : S(it.arena_id, 100);
@@ -202,14 +202,22 @@ async function suggest(items: any[], run: string) {
       }
       r.note = text;
     }
+    // A remove finding (2026-10-14) asks for a date on the board to go, with
+    // nothing in its place: replaces_date_id names it, note says why.
+    if (kind === "remove" && (!r.replaces_date_id || !r.note)) {
+      rejected.push({ item: it, why: "a remove needs replaces_date_id (the date to remove) and note (why)" });
+      continue;
+    }
     const parts = [
       r.kind, r.arena_id ?? r.arena_name.toLowerCase(), r.date_kind, r.label, r.call,
       r.role, r.gran, r.start_date, r.end_date, r.grade, r.url,
     ];
-    // Only an info finding adds its text to the fingerprint: two of them for
-    // the same arena differ in nothing else, and adding a field to every kind
+    // Only an info finding adds its text to the fingerprint, and a remove the
+    // date it names: two of them for the same arena differ in nothing else,
+    // and adding a field to every kind
     // would change the old rows' fingerprints and let them be offered again.
     if (kind === "info") parts.push(r.note);
+    if (kind === "remove") parts.push(r.replaces_date_id);
     r.fingerprint = parts
       .map((x) => (x ?? "").toString().trim().toLowerCase()).join("|");
     rows.push(r);

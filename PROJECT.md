@@ -281,7 +281,8 @@ the drawer alike — until that arena is next swept. The nightly round brings
 brokerage events as dates with their own page, corrections to the ones
 already on the board, links to partner-search tools, an arena's general
 tool (one for an arena that has none; for one that has, only a new address
-when it has moved, which Accept puts on the same link), and short rewrites of
+when it has moved, which Accept puts on the same link), the removal of a
+date a page shows to be wrong with nothing to replace it, and short rewrites of
 an arena's About or Brokerage text, which Accept puts in place of the old
 text; the weekly one brings call dates, new ones and corrections to those
 already on the board, brokerage events too, and new arenas. A card can **ask** the nightly round to

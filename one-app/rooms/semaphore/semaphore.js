@@ -883,6 +883,13 @@ function findText(r){
   }
   /* a general tool says which tool it would take the place of, since on an
      arena that has one the finding is a new address for it (see takeFind) */
+  /* a removal names the date as the board holds it now, and why */
+  if(r.kind==='remove'){
+    const old=a&&(a.dates||[]).find(d=>d.id===r.replaces_date_id);
+    if(!old)return 'Remove a date — <span class="dpwas">no longer on the board</span>';
+    return 'Remove — <b>'+esc(dtLabel(old))+'</b> <span class="dpwhen">'+esc(dispDate(old))+'</span>'+
+      (r.note?' <span class="dpwas dpold">'+esc(r.note)+'</span>':'');
+  }
   if(r.kind==='tool'){
     const cur=a&&generalTool(a);
     return 'General tool — <b>'+esc(r.label||findHost(r.url))+'</b>'+
@@ -904,7 +911,7 @@ function findText(r){
   return 'Brokerage — <b>'+esc(dt.label||'Event')+'</b> '+when+was;
 }
 function findSwatch(r){
-  if(r.kind==='arena'||r.kind==='link'||r.kind==='info'||r.kind==='tool')return '<i class="sw sw-uncertain"></i>';
+  if(r.kind==='arena'||r.kind==='link'||r.kind==='info'||r.kind==='tool'||r.kind==='remove')return '<i class="sw sw-uncertain"></i>';
   const dt=findDate(r);
   if(dt.kind==='call')return '<i class="sw sw-call"></i>';
   return '<i class="sw sw-'+dt.grade+'"></i>';
@@ -978,7 +985,7 @@ function renderDispatch(){
   if(!finds.rows.length){
     el.innerHTML=head+'<p class="dpnote">Each night the agent looks through about three arenas, and any '+
       'you have asked it to, for brokerage events (new ones, and changes to the ones on the board) and '+
-      'partner-search tools, keeps each arena\u2019s general tool up to date, and offers a short rewrite of their About and Brokerage texts where those are '+
+      'partner-search tools, keeps each arena\u2019s general tool up to date, offers to remove a date found to be wrong, and offers a short rewrite of their About and Brokerage texts where those are '+
       'wrong, out of date or missing something important. Once a week it looks for call dates, new and '+
       'changed, and programmes you are not watching yet. Whatever it finds waits here.</p>';
     return;
@@ -1052,6 +1059,18 @@ function takeFind(r){
      else a new one, becomes the tool. The agent offers one to an arena that
      has a tool only when that tool's address has moved, so Accept puts the
      new address on the same link, which keeps its place among the links. */
+  /* A date an agent found to be wrong with nothing to put in its place — a
+     guess the real call has overtaken, a second copy of one date (Mark,
+     2026-10-14). Until this there was no way to say so, and a correction
+     would only have made a second copy. Accept deletes it as the panel's
+     ✕ does, so a wait on it ends with it. */
+  if(r.kind==='remove'){
+    const dt=(a.dates||[]).find(d=>d.id===r.replaces_date_id);
+    if(!dt)return 'That date is no longer on '+a.name+'.';
+    a.dates=a.dates.filter(d=>d!==dt);reconcile(a);
+    save();renderAll();
+    return 'Date removed from '+a.name+'.';
+  }
   if(r.kind==='tool'){
     if(!r.url)return 'That finding had no address, so nothing changed.';
     a.brokerage=a.brokerage||{notes:'',links:[]};
