@@ -122,7 +122,8 @@ Hub.api('callboard')       → { topics(), openReader(), closeReader() }
 Hub.api('semaphore')       → { state(), save(), renderAll(),
                                applyState(obj), leads(),
                                leadVerb(aid, lid, op, val), arenas(),
-                               leadAdd(aid, v), openArena(aid), escape() }
+                               leadAdd(aid, v), allLeads(),
+                               openArena(aid), escape() }
 Hub.api('atlas')           → { openDossier(), G, state(), applyState(obj) }
 Hub.api('notes')           → { state(), applyState(obj) }
 Hub.api('semaphore-inbox') → { ready(), list(cb), decide(id, status, cb) }
@@ -139,6 +140,10 @@ bridge can push that room to the cloud. And one from the Ledger,
 **`cloud:session`** (`true` or `false`), when a login starts or ends. And
 **`semaphore:project`**, with a name and links, when a lead is completed as
 having become a project, in the Semaphore or on the Ledger's lead card.
+And **`leads:excel`**, from the Excel button on the Semaphore's Leads, which
+the bridge answers by writing every lead (`allLeads()`) and every todo the
+Ledger has closed into one .xlsx file — the same file again each time where
+the browser can keep hold of one; the bridge's own comment says how.
 
 What the bridge actually does: turns any researcher's name, written
 anywhere in any room, into a link that opens the Atlas dossier over the
@@ -186,6 +191,7 @@ only the cloud joins them.
 | `semaphore.v1` (+`-ts`, `-seen`, `-dirty`, `-sum`, `-base`) | Semaphore's board |
 | `notes.v1` (+`-ts`, `-seen`, `-dirty`, `-sum`) | the Notes room: notes, book order, which of the two ways in, the tag ties, the colours chosen for tags, and what is pinned in which book |
 | `hub.room` | which room to open on |
+| `leads-excel-v1` | fingerprints of what the last weekly Excel held, so the next one can mark what is new; the file it wrote is kept as a handle in IndexedDB, `one-app-excel` |
 | `hub.storage.*` | the Atlas's own edits, and their `-ts`, `-seen`, `-dirty`, `-sum` |
 
 **A room joins the two doors out — cloud and Export — the same way:** it

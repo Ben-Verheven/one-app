@@ -1304,6 +1304,13 @@
 #pane-ledger .lead-band-k{flex-shrink:0;width:52px;font-family:var(--font);font-size:9px;
   letter-spacing:0.12em;text-transform:uppercase;color:#bca070}
 #pane-ledger .lead-links{flex:1;min-width:0;display:flex;flex-wrap:wrap;gap:4px 14px}
+/* the coordinator over the contact, each led by its role in the gutter's own
+   small capitals so the two are never read as one name */
+#pane-ledger .lead-who,#pane-ledger .lead-ed-who{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+#pane-ledger .lead-who-r{display:flex;align-items:baseline;gap:10px;font-family:var(--body);font-size:13.5px;color:var(--text)}
+#pane-ledger .lead-who-r i{flex:0 0 96px;font-family:var(--font);font-size:9px;
+  font-style:normal;letter-spacing:0.12em;text-transform:uppercase;color:#bca070}
+#pane-ledger .lead-who-r>span{flex:1;min-width:0}
 #pane-ledger .lead-link-wrap{display:inline-flex;align-items:baseline;gap:3px}
 #pane-ledger .lead-link{font-family:var(--body);font-size:13.5px;color:var(--gold2);
   text-decoration:underline;text-decoration-color:rgba(219,184,86,0.4);text-underline-offset:3px}
@@ -1339,6 +1346,7 @@
 #pane-ledger .lead-ed-links{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
 #pane-ledger .lead-ed-row{display:flex;align-items:center;gap:6px}
 #pane-ledger .lead-ed-row .lead-in{flex:1 1 0;font-family:var(--body);font-size:13px}
+#pane-ledger .lead-ed-who .lead-in{flex:1;font-family:var(--body);font-size:13px}
 #pane-ledger .lead-ed-ups .lead-ed-up{flex:1 1 auto;font-size:13px;line-height:1.45}
 #pane-ledger .lead-ed-row.gone{opacity:0.4}
 /* Complete asks how the lead ended (Mark, 2026-10-11): while `lead-ending` is

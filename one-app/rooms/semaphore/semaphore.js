@@ -2287,6 +2287,10 @@ function leadFormHTML(a){
     pick+
     box('project','','What is the project?')+
     box('match','','Who could be a good match?')+
+    /* who is behind the project and who to write to there, asked for on
+       2026-10-14 so the weekly Excel can say it beside each lead */
+    box('coordinator','','Coordinator \u2014 the organisation that started it, optional')+
+    box('contact','','Main contact person \u2014 optional')+
     /* the link a lead is found with gets a name as well, as every other link
        on a lead can, and a lead is often found with more than one — the
        call, the project, a person — so another row is a press away (Mark,
@@ -2600,7 +2604,19 @@ function leadRowHTML(a,l,hit,say){
      with one empty pair at the foot for a new one; every update is its own
      line of text. A cross marks a line to go and Save takes it out, so
      nothing is lost by a press until the edit is kept. */
-  const body=editing
+  /* Who is behind the project and who to write to there, over the links:
+     facts about the lead, where the links are the ways to it. A lead with
+     neither shows no band until it is edited. */
+  const who=editing
+    ? leadSec('who','<div class="lwho">'+
+        '<div class="lwr"><i>coordinator</i>'+box('coordinator',l.coordinator,'The organisation that started it','lwin')+'</div>'+
+        '<div class="lwr"><i>contact</i>'+box('contact',l.contact,'Main contact person','lwin')+'</div></div>')
+    : (l.coordinator||l.contact)
+    ? leadSec('who','<div class="lwho">'+
+        (l.coordinator?'<p class="lwr"><i>coordinator</i><span>'+esc(l.coordinator)+'</span></p>':'')+
+        (l.contact?'<p class="lwr"><i>contact</i><span>'+esc(l.contact)+'</span></p>':'')+'</div>')
+    : '';
+  const body=who+(editing
     ? leadSec('links','<div class="llinks ledlinks">'+
         (l.links||[]).map(k=>'<div class="ledrow" data-k="'+k.id+'">'+
           '<input class="ledin" name="url" value="'+esc(k.url||'')+'" placeholder="https://… or name@…" aria-label="Link or email address" autocomplete="off">'+
@@ -2631,7 +2647,7 @@ function leadRowHTML(a,l,hit,say){
                 (more?'fewer':(ups.length-UPD_SHOWN)+' earlier')+'</button>'
             : '')+
         '</div>'
-      : '');
+      : ''));
   const tone=leadToneOf(a);
   return '<article class="lead k-'+st+(say?' wide':'')+(due?' due':'')+(done?' done':'')+(hit?' hit':'')+
       (open?' open':'')+(editing?' editing':'')+(tone?' toned':'')+
@@ -2678,6 +2694,7 @@ function leadEditAll(l,v){
   const project=String(v.project||'').trim(),match=String(v.match||'').trim();
   if(!project&&!match&&!(l.links||[]).length)return false;
   l.project=project;l.match=match;
+  leadWhoSet(l,v);
   if(typeof v.due==='string')l.due=v.due||null;
   if(Array.isArray(v.links)){
     const keep=[];
@@ -2702,14 +2719,29 @@ function leadEditAll(l,v){
   }
   return true;
 }
+/* The coordinator (the organisation that started the project) and the main
+   contact person, both plain words and both optional (Mark, 2026-10-14). A
+   field left out of `v` is left alone, so a caller that knows nothing of
+   them — an older Pocket — cannot wipe them; an emptied one takes the key
+   off, so a lead that never had them stays as it was. */
+function leadWhoSet(l,v){
+  ['coordinator','contact'].forEach(k=>{
+    if(typeof v[k]!=='string')return;
+    const t=v[k].trim();
+    if(t)l[k]=t;else delete l[k];
+  });
+}
 /* Reads an edited card back out of the page, for leadEditAll. */
 function leadEditRead(card){
-  const val=(el,n)=>{const f=el.querySelector('[name='+n+']');return f?f.value:'';};
+  const val=(el,n)=>{const f=el&&el.querySelector('[name='+n+']');return f?f.value:'';};
   const due=card.querySelector('input[name=due]');
+  const who=card.querySelector('.lwho');
   return {
     due:due?due.value:undefined,
     project:val(card.querySelector('.ltx'),'project'),
     match:val(card.querySelector('.ltx'),'match'),
+    coordinator:who?val(who,'coordinator'):undefined,
+    contact:who?val(who,'contact'):undefined,
     links:[...card.querySelectorAll('.ledlinks .ledrow')].map(r=>({id:r.dataset.k,
       url:val(r,'url'),label:val(r,'label'),gone:r.classList.contains('gone')})),
     updates:[...card.querySelectorAll('.ledups .ledrow')].map(r=>({i:+r.dataset.u,
@@ -3207,6 +3239,12 @@ function paintWall(){
       (all.length?'<span class="wsay"><b>'+all.length+'</b> lead'+(all.length===1?'':'s')+
         ' across <b>'+arenas+'</b> arena'+(arenas===1?'':'s')+
         (owed?', <b>'+owed+'</b> owed today':'')+'.</span>':'')+
+      /* The weekly Excel of every lead and every closed todo (Mark,
+         2026-10-14). It holds the Ledger's todos as well, so the bridge
+         writes it; this room only asks. */
+      '<button class="btn leadxl" data-act="leadsExcel" title="Write every lead, open and closed, with its '+
+        'updates, and every closed todo into one Excel file \u2014 the same file again each time, where the '+
+        'browser allows it">Excel</button>'+
       '<button class="btn leadnew'+(adding?' on':'')+'" data-act="leadAddBoard" aria-expanded="'+adding+'">+ Lead</button>'+
       '</div>'+(adding?leadFormHTML(null):'');
     if(all.length){
@@ -3638,11 +3676,33 @@ function leadsForBoard(){
   liveArenas().forEach(a=>openLeads(a).forEach(l=>out.push({
     aid:a.id,arena:a.name,tone:arenaTone(a),type:(typeOf(a)||{}).name||'',
     id:l.id,name:leadName(l),project:l.project||'',
-    match:l.match||'',stage:stageOf(l),due:l.due||null,
+    match:l.match||'',coordinator:l.coordinator||'',contact:l.contact||'',
+    stage:stageOf(l),due:l.due||null,
     toResearchers:!!l.toResearchers,toLead:!!l.toLead,score:l.score||0,
     links:(l.links||[]).map(k=>({id:k.id,url:k.url||'',label:k.label||'',name:linkName(k)})),
     updates:(l.updates||[]).map((u,i)=>({i,when:updWhen(u),at:u.at||'',text:u.text||''}))
   })));
+  return out;
+}
+/* Every lead there is, open and closed, frozen arenas' too, read out in
+   words for the weekly Excel (Mark, 2026-10-14) — the bridge writes the
+   file, since it holds the Ledger's closed todos as well. "Where" is the
+   step in this room's own words, Contacted saying which of its two paths;
+   a closed lead keeps the step it had reached and says how it ended. */
+function leadsForExcel(){
+  const out=[];
+  S.arenas.forEach(a=>(a.leads||[]).forEach(l=>{
+    const st=stageOf(l);
+    out.push({id:l.id,aid:a.id,arena:a.name,type:(typeOf(a)||{}).name||'',frozen:!!a.frozenAt,
+      name:leadName(l),project:l.project||'',match:l.match||'',
+      coordinator:l.coordinator||'',contact:l.contact||'',
+      stage:st,kind:st==='contacted'?leadKind(l):'',
+      where:st==='contacted'?'Contacted \u2014 '+KIND_NAME[leadKind(l)]:st==='talking'?'Talking':'Spotted',
+      score:l.score||0,due:l.due||null,doneAt:l.doneAt||null,
+      ended:l.doneAt?(isOutcome(l.outcome)?OUTCOMES[l.outcome].name:'Closed'):'',
+      links:(l.links||[]).map(k=>({name:linkName(k),url:String(k.url||'').replace(/^mailto:/i,'')})),
+      updates:(l.updates||[]).map(u=>({at:u.at||'',when:updWhen(u),text:u.text||''}))});
+  }));
   return out;
 }
 /* The arenas a new lead can be filed under, and the filing itself — the
@@ -3661,8 +3721,11 @@ function arenasForBoard(){
 /* A bare address with an @ in it is a person to write to; anything else
    without a scheme is a site. */
 function leadLinkUrl(url){
-  return /^[^\s@\/]+@[^\s@\/]+\.[^\s@\/]+$/.test(url)?'mailto:'+url
-    :(/^(https?:|mailto:|file:)/i.test(url)?url:'https://'+url);
+  /* the scheme is asked about first: "mailto:x@y.z" is itself a bare
+     address to the second test, and every Save on an edited card once put
+     another "mailto:" in front of it */
+  return /^(https?:|mailto:|file:)/i.test(url)?url
+    :(/^[^\s@\/]+@[^\s@\/]+\.[^\s@\/]+$/.test(url)?'mailto:'+url:'https://'+url);
 }
 function leadAdd(aid,v){
   const a=arena(aid);if(!a)return null;
@@ -3672,6 +3735,7 @@ function leadAdd(aid,v){
   if(!project&&!match&&!links.length)return null;
   const l={id:uid(),project,match,links:links.map(k=>({id:uid(),label:k.label,url:leadLinkUrl(k.url)})),
     stage:'spotted',toResearchers:false,toLead:false,due:(v&&v.due)||null,doneAt:null,updates:[]};
+  leadWhoSet(l,v||{});
   if(!Array.isArray(a.leads))a.leads=[];
   a.leads.push(l);
   restack(a.id);
@@ -4082,6 +4146,9 @@ document.addEventListener('click',e=>{
         if(f)f.focus({preventScroll:true});}
       break;}
     case 'leadCancel':{closeComposers();repaint();renderDrawer();break;}
+    case 'leadsExcel':{
+      /* ⌥ (Alt) with the press asks where to keep the file afresh */
+      if(typeof Hub!=='undefined'&&Hub.emit)Hub.emit('leads:excel',{fresh:!!e.altKey});break;}
     /* another link row, added in place: a redraw would cost what is typed */
     case 'leadLinkRow':{
       b.insertAdjacentHTML('beforebegin',leadFormLinkHTML());
@@ -4394,7 +4461,8 @@ document.addEventListener('submit',e=>{
     const links=[...df.querySelectorAll('.lnrow')].map(r=>({
       url:r.querySelector('[name=url]').value,label:r.querySelector('[name=label]').value}));
     closeComposers();
-    const lid=leadAdd(a.id,{project:df.elements.project.value,match:df.elements.match.value,links});
+    const lid=leadAdd(a.id,{project:df.elements.project.value,match:df.elements.match.value,
+      coordinator:df.elements.coordinator.value,contact:df.elements.contact.value,links});
     /* on Leads the new lead stands open, so it is seen where it landed */
     if(!df.dataset.la&&lid){leadLastArena=a.id;leadOpen.add(lid);}
     if(!lid||!df.dataset.la){repaint();renderDrawer();}
@@ -4713,6 +4781,8 @@ try{
     leadVerb:   function(aid,lid,op,val){ return leadVerb(aid,lid,op,val); },
     arenas:     function(){ return arenasForBoard(); },
     leadAdd:    function(aid,v){ return leadAdd(aid,v); },
+    /* every lead, closed ones too, for the weekly Excel the bridge writes */
+    allLeads:   function(){ return leadsForExcel(); },
     openArena:  function(aid){ if(arena(aid))openDrawer(aid); },
     /* Escape, for when the drawer is lent to another room and this room's
        own key handler is not the one listening: the innermost thing first,

@@ -8922,6 +8922,12 @@ var Leads=(function(){
       return '<input type="text" class="lead-in '+cls+'" value="'+esc(v||'')+'" placeholder="'+ph+'" '
         +'aria-label="'+ph+'" autocomplete="off"'+(extra||'')+'>';};
     var edit=''
+      +'<div class="lead-ed lead-band"><span class="lead-band-k">Who</span><span class="lead-ed-who">'
+        +'<span class="lead-who-r"><i>Coordinator</i>'
+          +inp('lead-ed-co',l.coordinator,'The organisation that started it',' id="lec-'+lid+'"')+'</span>'
+        +'<span class="lead-who-r"><i>Contact</i>'
+          +inp('lead-ed-ct',l.contact,'Main contact person',' id="let-'+lid+'"')+'</span>'
+      +'</span></div>'
       +'<div class="lead-ed lead-band"><span class="lead-band-k">Links</span><span class="lead-ed-links">'
         +l.links.map(function(x){
           return '<span class="lead-ed-row" data-k="'+esc(x.id)+'">'
@@ -8942,6 +8948,14 @@ var Leads=(function(){
       +'<div class="lead-ed lead-ed-bar"><span class="sp"></span>'
         +'<button class="todo-btn todo-btn-quiet" onclick="PL.leadCancelEdit(\''+k+'\',event)">Cancel</button>'
         +'<button class="todo-btn todo-btn-primary" onclick="PL.leadSaveEdit(\''+k+'\',event)">Save</button></div>';
+    /* Who is behind the project and who to write to there (Mark,
+       2026-10-14), over the links as in the Semaphore: facts about the lead,
+       where the links are the ways to it. No band for a lead with neither. */
+    var who=(l.coordinator||l.contact)
+      ?'<div class="lead-band"><span class="lead-band-k">Who</span><span class="lead-who">'
+        +(l.coordinator?'<span class="lead-who-r"><i>Coordinator</i><span>'+esc(l.coordinator)+'</span></span>':'')
+        +(l.contact?'<span class="lead-who-r"><i>Contact</i><span>'+esc(l.contact)+'</span></span>':'')
+      +'</span></div>':'';
     var links=l.links.length
       ?'<div class="lead-band"><span class="lead-band-k">Links</span><span class="lead-links">'
         +l.links.map(function(x){
@@ -9004,7 +9018,7 @@ var Leads=(function(){
       +scoreHTML(l,key)
       +dateLabel
       +'</div>'
-      +'<div class="todo-expand">'+actions+ending+edit+links+addLink+addNote+ups+'</div>'
+      +'<div class="todo-expand">'+actions+ending+edit+who+links+addLink+addNote+ups+'</div>'
       +'</div>';
   }
   /* Contacted is two paths, and Mark asked on 2026-10-06 for the step to be
@@ -9072,11 +9086,11 @@ var Leads=(function(){
   function startDraft(){
     var as=arenas();
     var keepA=as.some(function(a){return a.id===lastArena;})?lastArena:null;
-    draft={aid:keepA,due:'',project:'',match:'',links:[{url:'',label:''}]};
+    draft={aid:keepA,due:'',project:'',match:'',coordinator:'',contact:'',links:[{url:'',label:''}]};
   }
   function readDraft(){
     if(!draft)return;
-    ['project','match'].forEach(function(k){
+    ['project','match','coordinator','contact'].forEach(function(k){
       var el=byId('lnew-'+k);if(el)draft[k]=el.value;});
     draft.links.forEach(function(k,i){
       var u=byId('lnew-url-'+i),n=byId('lnew-label-'+i);
@@ -9113,6 +9127,12 @@ var Leads=(function(){
         +'<textarea class="add-substamp-input" id="lnew-match" rows="2" '
           +'placeholder="Who could be a good match? — optional" aria-label="Who could be a good match?">'
           +esc(draft.match)+'</textarea>'
+        +'<textarea class="add-substamp-input" id="lnew-coordinator" rows="1" '
+          +'placeholder="Coordinator — the organisation that started it, optional" aria-label="Coordinator">'
+          +esc(draft.coordinator)+'</textarea>'
+        +'<textarea class="add-substamp-input" id="lnew-contact" rows="1" '
+          +'placeholder="Main contact person — optional" aria-label="Main contact person">'
+          +esc(draft.contact)+'</textarea>'
         /* each link with its name beside it, as a link added to a lead later
            can have one, and as many as the lead was found with (Mark,
            2026-10-06) */
@@ -9177,7 +9197,8 @@ var Leads=(function(){
        with the new-lead card still open unless the slice moves first. So
        it moves first: to the lead just made, open, the way a dot opens it. */
     var lid=null;
-    try{lid=sock.add(d.aid,{project:d.project,match:d.match,links:d.links,due:d.due||null});}
+    try{lid=sock.add(d.aid,{project:d.project,match:d.match,coordinator:d.coordinator,contact:d.contact,
+      links:d.links,due:d.due||null});}
     catch(e){console.error(e);}
     if(!lid){draft=d;toast('The lead could not be added — is the Semaphore’s board readable?');return;}
     Board.showLead(d.aid+'|'+lid);
@@ -9272,7 +9293,9 @@ var Leads=(function(){
     var l=find(key);if(!l)return;
     var p=byId('lep-'+l.id),m=byId('lem-'+l.id),c=cardOf(key);
     if(!p||!m||!c)return;
+    var co=byId('lec-'+l.id),ct=byId('let-'+l.id);
     var v={project:p.value,match:m.value,
+      coordinator:co?co.value:undefined,contact:ct?ct.value:undefined,
       due:c.hasAttribute('data-due')?c.getAttribute('data-due'):undefined,
       links:qa('.lead-ed-links .lead-ed-row',c).map(function(r){
         return {id:r.getAttribute('data-k'),url:q('.lead-ed-url',r).value,

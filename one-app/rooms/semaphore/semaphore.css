@@ -669,6 +669,8 @@
    the board's: what is typed in it is a couple of sentences */
 #pane-semaphore .whead.lhead{max-width:1144px}
 #pane-semaphore .whead .leadnew{margin-left:auto;align-self:center}
+#pane-semaphore .whead .leadxl{margin-left:auto;align-self:center}
+#pane-semaphore .whead .leadxl+.leadnew{margin-left:8px}
 #pane-semaphore .leadform.leadboard{max-width:640px;margin:-6px 0 18px}
 #pane-semaphore .leadform select{flex:1 1 100%;min-width:0;border:1px solid var(--line);border-radius:var(--radius);
   background:var(--surface);color:var(--ink);padding:6px 8px;font-family:var(--body);font-size:13px}
@@ -742,6 +744,19 @@
 #pane-semaphore .lead .ledin{flex:1 1 0;font:12.5px var(--body)}
 #pane-semaphore .lead .ledlinks{margin-left:0}
 #pane-semaphore .lead .ledup{flex:1 1 auto;font:12.5px/1.45 var(--body)}
+/* Who is behind the project and who to write to there: each fact led by its
+   role in the gutter's own small capitals, so the two cannot be read as one
+   name; while editing, each is a field of its own under the other. */
+#pane-semaphore .lead .lwho{display:flex;flex-direction:column;gap:2px}
+#pane-semaphore .lead .lwr{display:flex;align-items:baseline;gap:8px;margin:0;padding-top:2px;
+  font:12.5px/1.4 var(--body);color:var(--muted)}
+#pane-semaphore .lead .lwr i{flex:0 0 96px;font:600 8.5px var(--sans);
+  font-style:normal;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
+#pane-semaphore .lead .lwr>span{flex:1 1 auto;min-width:0}
+#pane-semaphore .lead .lwin{display:block;flex:1 1 auto;width:100%;min-width:0;box-sizing:border-box;margin:0;
+  padding:1px 5px;border:1px dashed var(--line);border-radius:4px;background:var(--sink);
+  color:var(--ink);resize:none;overflow:hidden;font:12.5px/1.45 var(--body)}
+#pane-semaphore .lead .lwin:focus{outline:none;border-style:solid;border-color:var(--line2)}
 #pane-semaphore .lead .ledrow .lx{opacity:1}
 #pane-semaphore .lead .ledrow.gone{opacity:.4}
 #pane-semaphore .lead .ledrow.gone input,#pane-semaphore .lead .ledrow.gone textarea{text-decoration:line-through}

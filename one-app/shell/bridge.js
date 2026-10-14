@@ -1441,6 +1441,401 @@
 })();
 
 
+/* ── the weekly Excel: every lead, and every closed todo ─────────────────
+   Mark asked on 2026-10-14 for one Excel file he can bring up to date once a
+   week: every lead on its own row — arena, project, coordinator, contact,
+   where the contact has got to, its links and its updates — and beside them
+   every todo closed in the Ledger. The leads are the Semaphore's and the
+   todos the Ledger's, so it is written here, where both may be asked.
+
+   Writing the file again is the update. Where the browser lets a page keep
+   hold of a file (Chrome and Edge on the desk), the first press asks where
+   to save it and every later press writes over that same file, so it stays
+   one file in one place — in OneDrive, if that is where it was put. Elsewhere
+   (Safari, the iPad) each press downloads a fresh copy under the same name.
+   ⌥ (Alt) with the press asks for the place again.
+
+   What has changed since the last export is marked rather than kept apart:
+   a lead that is new or has changed, an update and a closed todo that the
+   last file did not hold, are filled pale yellow and say "new" or "changed"
+   in the first column. The fingerprints that tell are kept on this device
+   (`leads-excel-v1`), only once the file has been written.
+
+   No library: an .xlsx is a zip of a few XML files, and the zip is written
+   here without compression, which Excel reads as readily. A library from a
+   CDN would not load from a copy on disk without a network. */
+(function () {
+  'use strict';
+  if (typeof Hub === 'undefined' || !Hub.on) return;
+
+  var NAME = 'Leads and closed todos.xlsx';
+  var SEEN = 'leads-excel-v1';
+  var MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  function iso(d) {
+    return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+  }
+  function isDay(s) { return typeof s === 'string' && /^\d{4}-\d{2}-\d{2}/.test(s); }
+  function sayDay(s) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s || '');
+    return m ? (+m[3]) + ' ' + MON[+m[2] - 1] + ' ' + m[1] : '';
+  }
+  /* FNV-1a over a string: enough to tell whether a lead has changed */
+  function sum(s) {
+    var h = 0x811c9dc5;
+    for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193); }
+    return (h >>> 0).toString(36);
+  }
+
+  /* ── the zip ── */
+  var CRC = (function () {
+    var t = [];
+    for (var n = 0; n < 256; n++) {
+      var c = n;
+      for (var k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+      t[n] = c >>> 0;
+    }
+    return t;
+  })();
+  function crc32(b) {
+    var c = 0xffffffff;
+    for (var i = 0; i < b.length; i++) c = CRC[(c ^ b[i]) & 0xff] ^ (c >>> 8);
+    return (c ^ 0xffffffff) >>> 0;
+  }
+  function zip(files) {
+    var enc = new TextEncoder(), parts = [], dir = [], at = 0;
+    function head(sig, n) { var v = new DataView(new ArrayBuffer(n)); v.setUint32(0, sig, true); return v; }
+    files.forEach(function (f) {
+      var name = enc.encode(f.name), data = enc.encode(f.text), crc = crc32(data);
+      var h = head(0x04034b50, 30);
+      h.setUint16(4, 20, true); h.setUint16(6, 0x0800, true); h.setUint16(8, 0, true);
+      h.setUint16(10, 0, true); h.setUint16(12, 0x21, true);
+      h.setUint32(14, crc, true); h.setUint32(18, data.length, true); h.setUint32(22, data.length, true);
+      h.setUint16(26, name.length, true); h.setUint16(28, 0, true);
+      parts.push(new Uint8Array(h.buffer), name, data);
+      var d = head(0x02014b50, 46);
+      d.setUint16(4, 20, true); d.setUint16(6, 20, true); d.setUint16(8, 0x0800, true);
+      d.setUint16(10, 0, true); d.setUint16(12, 0, true); d.setUint16(14, 0x21, true);
+      d.setUint32(16, crc, true); d.setUint32(20, data.length, true); d.setUint32(24, data.length, true);
+      d.setUint16(28, name.length, true); d.setUint32(42, at, true);
+      dir.push(new Uint8Array(d.buffer), name);
+      at += 30 + name.length + data.length;
+    });
+    var size = dir.reduce(function (n, p) { return n + p.length; }, 0);
+    var e = head(0x06054b50, 22);
+    e.setUint16(8, files.length, true); e.setUint16(10, files.length, true);
+    e.setUint32(12, size, true); e.setUint32(16, at, true);
+    return new Blob(parts.concat(dir, [new Uint8Array(e.buffer)]),
+      { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  }
+
+  /* ── the workbook ──
+     Styles by number, each in a plain and a yellow ("new") version, the
+     yellow one always the next number up. */
+  var ST = { head: 1, text: 2, date: 4, num: 6, title: 8 };
+  var STYLES = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+    '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
+    '<numFmts count="1"><numFmt numFmtId="164" formatCode="d mmm yyyy"/></numFmts>' +
+    '<fonts count="3"><font><sz val="11"/><name val="Calibri"/></font>' +
+      '<font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font>' +
+      '<font><b/><sz val="13"/><name val="Calibri"/></font></fonts>' +
+    '<fills count="4"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill>' +
+      '<fill><patternFill patternType="solid"><fgColor rgb="FF5B4A2E"/><bgColor indexed="64"/></patternFill></fill>' +
+      '<fill><patternFill patternType="solid"><fgColor rgb="FFFFF2B3"/><bgColor indexed="64"/></patternFill></fill></fills>' +
+    '<borders count="2"><border/><border><bottom style="thin"><color rgb="FFD9D2C3"/></bottom></border></borders>' +
+    '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>' +
+    '<cellXfs count="9">' +
+      '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>' +
+      '<xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1" applyAlignment="1"><alignment vertical="center"/></xf>' +
+      '<xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf>' +
+      '<xf numFmtId="0" fontId="0" fillId="3" borderId="1" xfId="0" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf>' +
+      '<xf numFmtId="164" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1" applyAlignment="1"><alignment vertical="top" horizontal="left"/></xf>' +
+      '<xf numFmtId="164" fontId="0" fillId="3" borderId="1" xfId="0" applyNumberFormat="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="top" horizontal="left"/></xf>' +
+      '<xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1" applyAlignment="1"><alignment vertical="top" horizontal="center"/></xf>' +
+      '<xf numFmtId="0" fontId="0" fillId="3" borderId="1" xfId="0" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="top" horizontal="center"/></xf>' +
+      '<xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1"/>' +
+    '</cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>';
+
+  /* Text Excel can hold: no control characters, and no more than a cell takes */
+  function xt(s) {
+    s = String(s == null ? '' : s).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F￾￿]/g, '');
+    if (s.length > 32000) s = s.slice(0, 32000) + '…';
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+  function col(i) { var s = ''; i++; while (i) { var m = (i - 1) % 26; s = String.fromCharCode(65 + m) + s; i = (i - m - 1) / 26; } return s; }
+  function serial(day) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(day);
+    return (Date.UTC(+m[1], +m[2] - 1, +m[3]) - Date.UTC(1899, 11, 30)) / 864e5;
+  }
+  /* One cell: a day is a real date, so the sheet sorts and filters by it */
+  function cell(ref, v, kind, hl) {
+    if (v === '' || v == null || (kind === 'num' && !v)) return hl ? '<c r="' + ref + '" s="' + (ST.text + 1) + '"/>' : '';
+    if (kind === 'date' && isDay(v)) return '<c r="' + ref + '" s="' + (ST.date + (hl ? 1 : 0)) + '"><v>' + serial(v) + '</v></c>';
+    if (kind === 'num') return '<c r="' + ref + '" s="' + (ST.num + (hl ? 1 : 0)) + '"><v>' + (+v) + '</v></c>';
+    return '<c r="' + ref + '" t="inlineStr" s="' + (ST.text + (hl ? 1 : 0)) + '"><is><t xml:space="preserve">' + xt(v) + '</t></is></c>';
+  }
+  /* A sheet of one table: a header row frozen at the top with a filter on
+     it, and a row per record, filled yellow where `hl` says it is new. */
+  function sheet(cols, rows) {
+    var last = col(cols.length - 1), n = rows.length + 1;
+    var x = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
+      '<sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>' +
+      '<sheetFormatPr defaultRowHeight="15"/><cols>' +
+      cols.map(function (c, i) { return '<col min="' + (i + 1) + '" max="' + (i + 1) + '" width="' + c.w + '" customWidth="1"/>'; }).join('') +
+      '</cols><sheetData><row r="1" ht="22" customHeight="1">' +
+      cols.map(function (c, i) { return '<c r="' + col(i) + '1" t="inlineStr" s="' + ST.head + '"><is><t>' + xt(c.h) + '</t></is></c>'; }).join('') +
+      '</row>';
+    rows.forEach(function (r, ri) {
+      x += '<row r="' + (ri + 2) + '">' + cols.map(function (c, i) {
+        return cell(col(i) + (ri + 2), r.v[i], c.k, r.hl);
+      }).join('') + '</row>';
+    });
+    return x + '</sheetData><autoFilter ref="A1:' + last + n + '"/>' +
+      '<pageMargins left="0.5" right="0.5" top="0.6" bottom="0.6" header="0.3" footer="0.3"/></worksheet>';
+  }
+  /* The front sheet: what the file is, when it was written, what yellow means */
+  function about(lines) {
+    var x = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
+      '<cols><col min="1" max="1" width="30" customWidth="1"/><col min="2" max="2" width="70" customWidth="1"/></cols><sheetData>';
+    lines.forEach(function (l, i) {
+      var r = i + 1;
+      x += '<row r="' + r + '">' +
+        (l[0] ? '<c r="A' + r + '" t="inlineStr" s="' + (i ? 0 : ST.title) + '"><is><t xml:space="preserve">' + xt(l[0]) + '</t></is></c>' : '') +
+        (l[1] ? '<c r="B' + r + '" t="inlineStr" s="' + (l[2] ? ST.text + 1 : 0) + '"><is><t xml:space="preserve">' + xt(l[1]) + '</t></is></c>' : '') +
+        '</row>';
+    });
+    return x + '</sheetData></worksheet>';
+  }
+  function book(sheets) {
+    var M = 'http://schemas.openxmlformats.org/', R = M + 'officeDocument/2006/relationships';
+    var files = [
+      { name: '[Content_Types].xml', text: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+        '<Types xmlns="' + M + 'package/2006/content-types">' +
+        '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>' +
+        '<Default Extension="xml" ContentType="application/xml"/>' +
+        '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>' +
+        '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>' +
+        sheets.map(function (s, i) {
+          return '<Override PartName="/xl/worksheets/sheet' + (i + 1) + '.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>';
+        }).join('') + '</Types>' },
+      { name: '_rels/.rels', text: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+        '<Relationships xmlns="' + M + 'package/2006/relationships">' +
+        '<Relationship Id="rId1" Type="' + R + '/officeDocument" Target="xl/workbook.xml"/></Relationships>' },
+      { name: 'xl/workbook.xml', text: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+        '<workbook xmlns="' + M + 'spreadsheetml/2006/main" xmlns:r="' + R + '"><sheets>' +
+        sheets.map(function (s, i) { return '<sheet name="' + xt(s.name) + '" sheetId="' + (i + 1) + '" r:id="rId' + (i + 1) + '"/>'; }).join('') +
+        '</sheets><definedNames>' +
+        sheets.map(function (s, i) {
+          return s.filter ? '<definedName name="_xlnm._FilterDatabase" localSheetId="' + i + '" hidden="1">\'' +
+            xt(s.name) + '\'!' + s.filter + '</definedName>' : '';
+        }).join('') + '</definedNames></workbook>' },
+      { name: 'xl/_rels/workbook.xml.rels', text: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+        '<Relationships xmlns="' + M + 'package/2006/relationships">' +
+        sheets.map(function (s, i) {
+          return '<Relationship Id="rId' + (i + 1) + '" Type="' + R + '/worksheet" Target="worksheets/sheet' + (i + 1) + '.xml"/>';
+        }).join('') +
+        '<Relationship Id="rId' + (sheets.length + 1) + '" Type="' + R + '/styles" Target="styles.xml"/></Relationships>' },
+      { name: 'xl/styles.xml', text: STYLES }
+    ];
+    sheets.forEach(function (s, i) { files.push({ name: 'xl/worksheets/sheet' + (i + 1) + '.xml', text: s.xml }); });
+    return zip(files);
+  }
+  function table(name, cols, rows) {
+    return { name: name, xml: sheet(cols, rows), filter: '$A$1:$' + col(cols.length - 1) + '$' + (rows.length + 1) };
+  }
+
+  /* ── what goes in it ── */
+  function read() {
+    var S = Hub.api('semaphore'), L = Hub.api('ledger');
+    var leads = (S && S.allLeads) ? S.allLeads() : null;
+    if (!leads) return null;
+    var todos = [];
+    var projects = (L && L.projects) ? L.projects() : {}, calls = (L && L.calls) ? L.calls() : {};
+    Object.keys(projects || {}).forEach(function (pid) {
+      var p = projects[pid], c = p && p.callId && calls[p.callId];
+      (p && p.todos || []).forEach(function (t) {
+        if (!t || !t.done) return;
+        todos.push({ id: t.id, doneAt: isDay(t.doneAt) ? t.doneAt.slice(0, 10) : '',
+          project: p.name || '', call: (c && c.name) || '', text: t.text || '',
+          deadline: t.deadline || t.dueDate || '',
+          updates: (t.subStamps || []).map(function (u) { return (u.stamp ? u.stamp + ' — ' : '') + (u.text || ''); }).reverse().join('\n'),
+          checklist: (t.checklist || []).map(function (ci) { return (ci.done ? '✓ ' : '○ ') + (ci.text || ''); }).join('\n') });
+      });
+    });
+    return { leads: leads, todos: todos };
+  }
+  /* Furthest along first, as a report is read: Talking, then Contacted with
+     both paths over one, then Spotted, each by its day; then the closed
+     leads, the latest closed first. */
+  var RANK = { talking: 0, contacted: 1, spotted: 4 }, KRANK = { both: 0, researchers: 1, lead: 2 };
+  function rank(l) { return l.doneAt ? 9 : RANK[l.stage] + (l.stage === 'contacted' ? KRANK[l.kind] || 0 : 0); }
+  function order(a, b) {
+    var d = rank(a) - rank(b); if (d) return d;
+    if (a.doneAt || b.doneAt) return (b.doneAt || '').localeCompare(a.doneAt || '');
+    if (!!a.due !== !!b.due) return a.due ? -1 : 1;
+    if (a.due !== b.due) return a.due < b.due ? -1 : 1;
+    return a.name.localeCompare(b.name);
+  }
+  function upKey(l, u) { return l.aid + '|' + l.id + '|' + sum((u.at || u.when) + '|' + u.text); }
+
+  function build(data, seen) {
+    var today = iso(new Date()), was = seen || null;
+    var next = { at: today, leads: {}, ups: {}, todos: {} };
+    var leads = data.leads.slice().sort(order);
+    var leadRows = [], upRows = [], nNew = 0;
+    leads.forEach(function (l) {
+      var fp = sum(JSON.stringify(l));
+      /* by arena and lead together: a lead copied with its arena keeps its id */
+      var key = l.aid + '|' + l.id;
+      next.leads[key] = fp;
+      var mark = !was ? '' : !was.leads[key] ? 'new' : was.leads[key] !== fp ? 'changed' : '';
+      if (mark) nNew++;
+      var ups = l.updates.slice().reverse();
+      ups.forEach(function (u) {
+        var k = upKey(l, u); next.ups[k] = 1;
+        var fresh = !!was && !was.ups[k];
+        upRows.push({ hl: fresh, at: u.at, v: [fresh ? 'new' : '', isDay(u.at) ? u.at : u.when, l.arena, l.name, u.text] });
+      });
+      leadRows.push({ hl: !!mark, v: [mark, l.arena, l.type, l.project || l.name, l.coordinator, l.contact, l.match,
+        l.doneAt ? 'Closed — ' + l.where.toLowerCase() : l.where, l.score || '', l.doneAt ? '' : (l.due || ''),
+        l.doneAt || '', l.ended,
+        l.links.map(function (k) { return k.url && k.url !== k.name ? k.name + ' — ' + k.url : k.name; }).join('\n'),
+        ups.map(function (u) { return (isDay(u.at) ? sayDay(u.at) : u.when) + ' — ' + u.text; }).join('\n'),
+        ups.length && isDay(ups[0].at) ? ups[0].at : (ups.length ? ups[0].when : '')] });
+    });
+    upRows.sort(function (a, b) { return (b.at || '').localeCompare(a.at || ''); });
+    var todos = data.todos.slice().sort(function (a, b) {
+      if (!!a.doneAt !== !!b.doneAt) return a.doneAt ? -1 : 1;
+      return (b.doneAt || '').localeCompare(a.doneAt || '');
+    });
+    var nTodo = 0;
+    var todoRows = todos.map(function (t) {
+      next.todos[t.id] = 1;
+      var fresh = !!was && !was.todos[t.id];
+      if (fresh) nTodo++;
+      return { hl: fresh, v: [fresh ? 'new' : '', t.doneAt, t.project, t.call, t.text, t.deadline, t.updates, t.checklist] };
+    });
+    var open = data.leads.filter(function (l) { return !l.doneAt; }).length;
+    var front = [
+      ['Leads and closed todos', ''],
+      ['', ''],
+      ['Written', sayDay(today)],
+      ['Previous export', was ? sayDay(was.at) : 'none — this is the first, so nothing is marked new'],
+      ['Leads', open + ' open, ' + (data.leads.length - open) + ' closed'],
+      ['Closed todos', String(todos.length)],
+      ['', ''],
+      ['Since the previous export', was ? nNew + ' lead' + (nNew === 1 ? '' : 's') + ' new or changed, ' +
+        nTodo + ' todo' + (nTodo === 1 ? '' : 's') + ' newly closed' : ''],
+      ['', 'Rows in yellow are new or changed since the previous export.', true],
+      ['', ''],
+      ['', 'Written by One App. Each export replaces the whole file, so changes made in it are overwritten next time.']
+    ];
+    var wb = book([
+      { name: 'About', xml: about(front) },
+      table('Leads', [
+        { h: 'Since last', w: 10 }, { h: 'Arena', w: 22 }, { h: 'Type', w: 14 }, { h: 'Project', w: 34 },
+        { h: 'Coordinator', w: 24 }, { h: 'Main contact', w: 22 }, { h: 'Match', w: 30 },
+        { h: 'Where we are', w: 30 }, { h: 'Score', w: 7, k: 'num' }, { h: 'Next date', w: 13, k: 'date' },
+        { h: 'Closed on', w: 13, k: 'date' }, { h: 'How it ended', w: 17 }, { h: 'Links', w: 40 },
+        { h: 'Updates, newest first', w: 60 }, { h: 'Last update', w: 13, k: 'date' }], leadRows),
+      table('Lead updates', [
+        { h: 'Since last', w: 10 }, { h: 'Date', w: 13, k: 'date' }, { h: 'Arena', w: 22 },
+        { h: 'Lead', w: 34 }, { h: 'Update', w: 80 }], upRows),
+      table('Closed todos', [
+        { h: 'Since last', w: 10 }, { h: 'Closed on', w: 13, k: 'date' }, { h: 'Project', w: 30 },
+        { h: 'Call', w: 18 }, { h: 'Todo', w: 50 }, { h: 'Deadline', w: 13, k: 'date' },
+        { h: 'Updates', w: 50 }, { h: 'Checklist', w: 40 }], todoRows)
+    ]);
+    return { blob: wb, next: next };
+  }
+
+  /* ── where it goes ──
+     The file a page may write again is a handle the browser hands over once
+     and lets be kept in IndexedDB (localStorage takes only text). */
+  function db(fn) {
+    try {
+      var rq = indexedDB.open('one-app-excel', 1);
+      rq.onupgradeneeded = function () { rq.result.createObjectStore('h'); };
+      rq.onsuccess = function () { fn(rq.result); };
+      rq.onerror = function () { fn(null); };
+    } catch (e) { fn(null); }
+  }
+  function getHandle(cb) {
+    db(function (d) {
+      if (!d) return cb(null);
+      try {
+        var g = d.transaction('h').objectStore('h').get('file');
+        g.onsuccess = function () { cb(g.result || null); };
+        g.onerror = function () { cb(null); };
+      } catch (e) { cb(null); }
+    });
+  }
+  function putHandle(h) {
+    db(function (d) {
+      if (!d) return;
+      try { d.transaction('h', 'readwrite').objectStore('h').put(h, 'file'); } catch (e) {}
+    });
+  }
+  function download(blob) {
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = NAME;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 1500);
+  }
+  function write(h, blob) {
+    return h.createWritable().then(function (w) {
+      return w.write(blob).then(function () { return w.close(); });
+    });
+  }
+  function pick() {
+    return window.showSaveFilePicker({ suggestedName: NAME, types: [{ description: 'Excel workbook',
+      accept: { 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'] } }] })
+      .then(function (h) { putHandle(h); return h; });
+  }
+  function done(out, where) {
+    try { localStorage.setItem(SEEN, JSON.stringify(out.next)); } catch (e) {}
+    Hub.note(where);
+  }
+
+  Hub.on('leads:excel', function (o) {
+    var data;
+    try { data = read(); } catch (e) { console.error(e); }
+    if (!data) { Hub.note('The leads could not be read — is the Semaphore running?'); return; }
+    var seen = null;
+    try { seen = JSON.parse(localStorage.getItem(SEEN) || 'null'); } catch (e) {}
+    var out;
+    try { out = build(data, seen && seen.leads ? seen : null); }
+    catch (e) { console.error(e); Hub.note('The Excel could not be written — see the console'); return; }
+    if (typeof window.showSaveFilePicker !== 'function') {
+      download(out.blob); done(out, 'Excel downloaded as “' + NAME + '”'); return;
+    }
+    var fresh = o && o.fresh;
+    getHandle(function (h) {
+      var go = (h && !fresh)
+        ? h.requestPermission({ mode: 'readwrite' }).then(function (p) {
+            if (p !== 'granted') throw new Error('not allowed');
+            return write(h, out.blob).then(function () { return h; });
+          }).catch(function (e) {
+            /* moved, renamed or deleted since: ask where it is to go now */
+            if (e && e.name === 'NotFoundError') return pick().then(function (n) { return write(n, out.blob).then(function () { return n; }); });
+            throw e;
+          })
+        : pick().then(function (n) { return write(n, out.blob).then(function () { return n; }); });
+      go.then(function (n) { done(out, 'Excel updated — “' + n.name + '”'); })
+        .catch(function (e) {
+          if (e && e.name === 'AbortError') return;
+          console.error(e);
+          /* Excel on Windows holds an open file shut to everyone else */
+          Hub.note(e && e.name === 'NoModificationAllowedError'
+            ? 'The Excel is open somewhere — close it and press again'
+            : 'The Excel could not be written there — Alt-click (⌥-click) Excel to choose another place');
+        });
+    });
+  });
+})();
+
 /* ── on the iPad, links open in DuckDuckGo ────────────────────────────
    Mark's browser on the iPad is DuckDuckGo, and he asked on 2026-10-10 for
    the app's links to open there. A home-screen web app does not follow the
