@@ -505,7 +505,7 @@ _No section banners._
 
 ## `rooms/atlas/atlas.js`
 
-2518 lines · 122 KB
+2525 lines · 123 KB
 
 ```
 Researcher Atlas                                          atlas.js:1
@@ -530,13 +530,13 @@ search mode                                               atlas.js:1097
 BROWSE — the department as it organizes itself            atlas.js:1376
 NEWS — what the scheduled people-agent found on the web   atlas.js:1471
 DOSSIER — one researcher                                  atlas.js:1663
-MAP & WALK — one canvas, two readings                     atlas.js:2020
-canvas                                                    atlas.js:2093
-concentric walk                                           atlas.js:2128
-canvas interaction                                        atlas.js:2257
-walk rail                                                 atlas.js:2318
-SHELL — tabs, edit toggle, about, init.                   atlas.js:2396
-exposed to the hub                                        atlas.js:2478
+MAP & WALK — one canvas, two readings                     atlas.js:2027
+canvas                                                    atlas.js:2100
+concentric walk                                           atlas.js:2135
+canvas interaction                                        atlas.js:2264
+walk rail                                                 atlas.js:2325
+SHELL — tabs, edit toggle, about, init.                   atlas.js:2403
+exposed to the hub                                        atlas.js:2485
 ```
 
 ## `rooms/atlas/atlas.css`
@@ -655,4 +655,4 @@ Generated data. Never open, never edit, never upload.
 
 ---
 
-**37571 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.
+**37578 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.

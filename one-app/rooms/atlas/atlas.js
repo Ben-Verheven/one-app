@@ -2005,8 +2005,12 @@ function closeDossier() { State.descEdit = null; $("#dossier").classList.remove(
    and not to any element: it shows the description's keyword button while
    a few words of it are selected, and hides it otherwise. Edge punctuation
    is trimmed off, so dragging over "learning." offers "learning"; more
-   than six words is a sentence rather than a keyword and offers nothing. */
-document.addEventListener("selectionchange", () => {
+   than six words is a sentence rather than a keyword and offers nothing.
+   The release of the mouse or of a key that ends a selection is heard on
+   the room as well: selectionchange comes only to the document, whose
+   events are gated on this room showing (hub.js), and the dossier is also
+   lent over the other rooms. */
+function selKeyword() {
   const box = document.getElementById("dselkw");
   if (!box) return;
   const sel = window.getSelection(), prose = box.previousElementSibling;
@@ -2015,7 +2019,10 @@ document.addEventListener("selectionchange", () => {
   const ok = !!v && v.split(" ").length <= 6;
   box.hidden = !ok;
   if (ok) { const bn = box.firstElementChild; bn.dataset.v = v; bn.textContent = `+ keyword “${v}”`; }
-});
+}
+document.addEventListener("selectionchange", selKeyword);
+document.body.addEventListener("mouseup", selKeyword);
+document.body.addEventListener("keyup", selKeyword);
 
 // ===========================================================================
 // MAP & WALK — one canvas, two readings.  The map is the whole department on

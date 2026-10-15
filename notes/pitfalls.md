@@ -343,9 +343,9 @@ Marketplace's drawer over the Ledger: dragging a venue's window end moved
 nothing and the release landed at the next press in the Marketplace,
 writing a wrong date; ⌘↩ in a lead form did nothing. How to apply:
 anything a lent panel does is heard on the element (with pointer capture
-for a drag) or on `document.body`, which is the pane and is not gated.
-Still open: the Atlas's "+ keyword" from selected words does not appear
-in a lent dossier, because `selectionchange` fires on the document only.
+for a drag) or on `document.body`, which is the pane and is not gated;
+`selectionchange` comes only to the document, so the Atlas also listens
+for the mouse or key release that ends a selection.
 
 **A CSS mask takes the clicks of what it hides.** The fade at a venue
 window's open end is a `mask-image` on the band, and the grip at that end,
