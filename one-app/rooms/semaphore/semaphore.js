@@ -785,44 +785,57 @@ function venueLabel(v,indent){
   return '<span class="vbl"'+(indent?' style="padding-left:'+Math.round(indent)+'px"':'')+'>'+
     (v.place==='new'?'<b class="newtag">new</b>':'')+esc(nm)+'</span>';
 }
-function laneHTML(a){
+/* The venues of one row packed into tracks: a band where it touches
+   nothing, its name inside or after it; a thin quiet line for one already in
+   Venues (`quietOk`), which needs no room for a name and packs tighter; the
+   undated as chips from today's line. Returns the markup and the height. */
+function venueTracks(vs,quietOk){
   let h='';
   const now=T(todayISO());
   const px=t=>X(t)/100*laneW;
-  /* the venues: windows packed into tracks, then the undated as chips */
-  const tracks=[],chips=[];
-  const items=[];
-  for(const v of venuesOf(a)){
+  const items=[],chips=[];
+  for(const v of vs){
     const w=vWin(v);
     if(!w){chips.push(v);continue;}
-    const from=w.from===null?T0:Math.max(T0,w.from),to=w.to===null?T1:Math.min(T1,w.to+DAY);
+    const from=w.from===null?T0:Math.max(T0,w.from);
+    const to=w.to===null?Math.min(T1,Math.max(now,w.from===null?now:w.from)+OPEN_RUN*DAY):Math.min(T1,w.to+DAY);
     if(to<T0||from>T1)continue;
-    const L=px(from),R=px(to),lp=labelPx(v);
+    const L=px(from),R=px(to),run=w.to===null?16:0;
+    if(quietOk&&v.place==='venues'){items.push({v,L,R,run,quiet:true,end:R+run});continue;}
+    const lp=labelPx(v);
     /* a name inside the band starts clear of its first diamond */
     const at=w.ms!==null&&px(w.ms)<R?Math.max(L,px(w.ms+DAY)+8):L;
     const inside=R-at>=lp+8;
-    items.push({v,L,R,inside,indent:at-L,end:inside?R:Math.min(laneW,R+lp+6)});
+    items.push({v,L,R,run,inside,indent:at-L,end:(inside?R:Math.min(laneW,R+lp+6))+run});
   }
   items.sort((x,y)=>x.L-y.L||x.end-y.end);
+  const tracks=[];
   for(const it of items){
-    let k=0;while(k<tracks.length&&tracks[k]+6>it.L)k++;
-    tracks[k]=it.end;it.k=k;
+    let k=0;while(k<tracks.length&&tracks[k].end+6>it.L)k++;
+    tracks[k]={end:it.end,full:(tracks[k]&&tracks[k].full)||!it.quiet};it.k=k;
   }
-  const top=k=>5+k*TRACK_H+6;
+  const tops=[];let y=5;
+  tracks.forEach((t,k)=>{const th=t.full?TRACK_H:12;tops[k]=y+th/2;y+=th;});
   for(const it of items){
-    const lab=venueLabel(it.v);
-    h+=bandHTML(it.v,T0,T1,top(it.k),it.inside?venueLabel(it.v,it.indent+6):'');
-    if(!it.inside)h+='<span class="vbl out st-'+it.v.place+'" style="top:'+top(it.k)+'px;left:'+(it.R/laneW*100).toFixed(2)+'%">'+lab+'</span>';
+    const top=Math.round(tops[it.k]);
+    h+=bandHTML(it.v,T0,T1,top,it.inside?venueLabel(it.v,it.indent+6):'',it.quiet);
+    if(!it.quiet&&!it.inside)h+='<span class="vbl out st-'+it.v.place+'" style="top:'+top+'px;left:calc('+(it.R/laneW*100).toFixed(2)+'% + '+it.run+'px)">'+venueLabel(it.v)+'</span>';
   }
   if(chips.length){
-    const k=tracks.length;let x=Math.max(0,px(now)+6);
+    const top=Math.round(y+TRACK_H/2);let x=Math.max(0,px(now)+6);
     for(const v of chips){
-      h+='<button class="vchip st-'+v.place+'" style="top:'+top(k)+'px;left:'+(x/laneW*100).toFixed(2)+'%" data-act="openVenue" data-v="'+v.id+'" data-tipv="'+v.id+'">'+
+      h+='<button class="vchip st-'+v.place+'" style="top:'+top+'px;left:'+(x/laneW*100).toFixed(2)+'%" data-act="openVenue" data-v="'+v.id+'" data-tipv="'+v.id+'">'+
         venueLabel(v)+'<i>not dated</i></button>';
       x+=labelPx(v)+70;
     }
-    tracks.push(x);
+    y+=TRACK_H;
   }
+  return {h,height:y};
+}
+function laneHTML(a,vs){
+  const now=T(todayISO());
+  const vt=venueTracks(vs,true);
+  let h=vt.h;
   /* the calls, under the venues. Where two bars overlap, a bar takes the
      lowest level whose previous occupant has already cleared, with daylight
      between them, three levels at most. The floor never moves, so the
@@ -858,7 +871,7 @@ function laneHTML(a){
     }
   }
   if(now>=T0&&now<=T1)h+='<div class="now" style="left:'+X(now)+'%"></div>';
-  return {h,height:Math.max(36,(tracks.length?5+tracks.length*TRACK_H:4)+callH+4)};
+  return {h,height:Math.max(36,Math.max(vt.height,4)+callH+4)};
 }
 /* ───────── the board's two orders ─────────
    Mark chooses between two, from the heading over the column beside the
@@ -909,15 +922,48 @@ function boardRow(a,bg){
   const looms=a.dates.filter(d=>!d.start);
   const loomBtn=looms.length?
     '<button class="loom" data-act="openArena" data-id="'+a.id+'" data-tipl="1"><i class="sw sw-uncertain"></i>'+looms.length+'</button>':'';
-  const fresh=venuesOf(a).some(v=>v.place==='new');
-  const lane=laneHTML(a);
+  const all=venuesOf(a),shared=all.filter(isShared),own=all.filter(v=>!isShared(v));
+  const fresh=own.some(v=>v.place==='new');
+  const lane=laneHTML(a,own);
+  const shTag=shared.length?'<span class="shtag" title="Also served by, under Shared venues at the top: '+esc(shared.map(v=>v.name).join(', '))+'">+'+shared.length+' shared</span>':'';
   /* The column beside the names that said Open / Opens / Between went on
      2026-10-11 (Mark): the calendar beside the name says it already. */
   return '<div class="row"><div class="cell name">'+
     '<button class="nm'+weightClass(a)+'" data-act="openArena" data-id="'+a.id+'">'+esc(a.name)+'</button>'+
-    (fresh?'<i class="newdot" title="Something new from the agent on this row"></i>':'')+loomBtn+
+    (fresh?'<i class="newdot" title="Something new from the agent on this row"></i>':'')+loomBtn+shTag+
     '</div>'+
     '<div class="lane" style="height:'+lane.height+'px;background-image:'+bg+'" data-aid="'+a.id+'" data-t0="'+T0+'" data-t1="'+T1+'">'+lane.h+'</div></div>';
+}
+/* ───────── the shared venues ─────────
+   A venue serving two arenas or more stands once, in a group of its own at
+   the top of the board, the arenas it serves under its name in their types'
+   colours as Venues shows them; an arena's row keeps its own venues and
+   says "+2 shared" after its name (Mark, 2026-10-15). Drawn on every row it
+   served, one partner search stood seven times over the partnerships, as
+   loud each time, and nothing said the seven were one. Here it is a full
+   band in the colour of where it stands, since the row is its alone. An
+   arena in the freezer does not count. */
+function isShared(v){return v.arenas.filter(id=>{const a=arena(id);return a&&!a.frozenAt;}).length>1;}
+function sharedRows(bg){
+  const vs=visibleVenues().filter(isShared);
+  if(!vs.length)return '';
+  const by=v=>{const w=vWin(v);return w&&w.from!==null?w.from:w?-1e15:1e15;};
+  vs.sort((x,y)=>by(x)-by(y)||x.name.localeCompare(y.name));
+  const col=!!S.ui.collapsed.shared,fresh=vs.some(v=>v.place==='new');
+  const now=T(todayISO());
+  let h='<div class="grp shgrp'+(col?' collapsed':'')+'"><div class="ghead"><div class="gc">'+
+    '<button class="caret" data-act="toggleGroup" data-id="shared" aria-label="Collapse group">'+(col?'\u25B8':'\u25BE')+'</button>'+
+    '<span class="gname">Shared venues</span><span class="gcount">'+vs.length+'</span>'+
+    (fresh?'<i class="newdot" title="Something new from the agent here"></i>':'')+'</div></div>';
+  if(!col)for(const v of vs){
+    const vt=venueTracks([v],false);
+    h+='<div class="row shrow"><div class="cell name">'+
+      '<span class="shnm">'+vGlyph(v)+'<button class="nm" data-act="openVenue" data-v="'+v.id+'" title="'+esc(v.name)+'">'+esc(v.name)+'</button>'+
+        (v.place==='new'?'<i class="newdot"></i>':'')+'</span>'+vArenaChips(v)+'</div>'+
+      '<div class="lane" style="height:'+Math.max(46,vt.height)+'px;background-image:'+bg+'" data-t0="'+T0+'" data-t1="'+T1+'">'+vt.h+
+        (now>=T0&&now<=T1?'<div class="now" style="left:'+X(now)+'%"></div>':'')+'</div></div>';
+  }
+  return h+'</div>';
 }
 /* ───────── the tray ─────────
    Everything the agent finds lands on the board first, and stays marked new
@@ -999,12 +1045,12 @@ function renderBoard(){keepPlace(()=>{
         Object.keys(BOARD_SORTS).map(k=>'<button class="'+(k===S.ui.boardSort?'sel':'')+'" data-act="boardSortSet" data-v="'+k+'" '+
           'role="option" aria-selected="'+(k===S.ui.boardSort)+'"><b>'+BOARD_SORTS[k].name+'</b><span>'+BOARD_SORTS[k].long+'</span></button>').join('')+
       '</span>':'')+'</div>'+
-    '<div class="axis" style="background:'+bg+'">'+axisHTML()+'</div></div>';
+    '<div class="axis" style="background:'+bg+'">'+axisHTML()+'</div></div>'+sharedRows(bg);
   for(const ty of S.types){
     const group=vis.filter(a=>a.typeId===ty.id).sort(boardOrder());
     if(!group.length)continue;
     const col=!!S.ui.collapsed[ty.id];
-    const nNew=col?group.filter(a=>venuesOf(a).some(v=>v.place==='new')).length:0;
+    const nNew=col?group.filter(a=>venuesOf(a).some(v=>v.place==='new'&&!isShared(v))).length:0;
     h+='<div class="grp'+(col?' collapsed':'')+'" style="--tone:'+esc(toneHex(ty.color))+'">'+
        '<div class="ghead"><div class="gc">'+
        '<button class="caret" data-act="toggleGroup" data-id="'+ty.id+'" aria-label="Collapse group">'+(col?'▸':'▾')+'</button>'+
@@ -1782,24 +1828,34 @@ window.addEventListener('focus',cameBack);
    brokerage red in Venues, the new hue while new, bone while kept), a
    dashed edge while it is a season's guess, its two ends to drag, and its
    event days as diamonds over it. `t0`/`t1` are the strip's ends, `top` the
-   middle of the band in pixels, or null for the middle of the strip. */
+   middle of the band in pixels, or null for the middle of the strip.
+
+   A window with no end runs on six weeks past today and fades out there
+   with an arrow, rather than to the strip's edge: drawn to the edge, every
+   standing partner search was a thick bar across the whole board (Mark,
+   2026-10-15). Its end can still be dragged to give it a real one. A
+   `quiet` band is one already in Venues, drawn on the board as a thin line
+   with its diamonds and no name, so what still waits for Mark stands out
+   (the same evening). */
+const OPEN_RUN=42;          /* days an open-ended window is drawn past today */
 const PLACE_RGB={new:'185,227,90',board:'150,140,122',venues:'239,91,76',gone:'125,116,102'};
-function bandHTML(v,t0,t1,top,label){
+function bandHTML(v,t0,t1,top,label,quiet){
   const w=vWin(v);if(!w)return '';
   const P=t=>(t-t0)/(t1-t0)*100,C=x=>Math.max(0,Math.min(100,x));
   const now=T(todayISO());
-  const from=w.from===null?t0:Math.max(t0,w.from),to=w.to===null?t1:Math.min(t1,w.to+DAY);
+  const from=w.from===null?t0:Math.max(t0,w.from),to=w.to===null?Math.min(t1,Math.max(now,w.from===null?now:w.from)+OPEN_RUN*DAY):Math.min(t1,w.to+DAY);
   if(to<t0||from>t1)return '';
   const L=C(P(from)),R=C(P(to)),past=w.to!==null&&w.to+DAY<now;
   const y=top===null?'':'top:'+top+'px;';
   const rgb=past?PLACE_RGB.gone:PLACE_RGB[v.place];
   const data=' data-act="openVenue" data-v="'+v.id+'" data-tipv="'+v.id+'"';
-  let h='<div class="vband st-'+v.place+(past?' past':'')+(w.season?' season':'')+(w.from===null?' openl':'')+(w.to===null?' openr':'')+
+  let h='<div class="vband st-'+v.place+(quiet?' quiet':'')+(past?' past':'')+(w.season?' season':'')+(w.from===null?' openl':'')+(w.to===null?' openr':'')+
     '" style="'+y+'left:'+L.toFixed(2)+'%;width:'+Math.max(R-L,.5).toFixed(2)+'%;background:'+heatBG(v,from,to,rgb)+'"'+data+
     ' role="button" tabindex="0" aria-label="'+esc(v.name)+', '+esc(vDateSay(v))+'">'+
     '<i class="vh l" data-v="'+v.id+'" data-end="opens" title="Drag to set when it opens — double-click to undo"></i>'+
     '<i class="vh r" data-v="'+v.id+'" data-end="closes" title="Drag to set when it closes — double-click to undo"></i>'+
-    (label||'')+'</div>';
+    (quiet?'':label||'')+'</div>';
+  if(w.to===null&&R<99)h+='<span class="vrun" style="'+y+'left:'+R.toFixed(2)+'%" aria-hidden="true">→</span>';
   if(w.ms!==null){
     if(w.me>w.ms){const a=C(P(w.ms)),b=C(P(w.me+DAY));
       h+='<i class="vmeet'+(past?' past':'')+'" style="'+y+'left:'+a.toFixed(2)+'%;width:'+Math.max(b-a,.4).toFixed(2)+'%"'+data+'></i>';}

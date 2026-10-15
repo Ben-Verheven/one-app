@@ -421,8 +421,9 @@ kept the name, so nothing stored had to move.
 | one arena type's group on the board, its heading | `.grp`, its heading `.ghead` |
 | the types, managed — opened by Types: a type's line and its grip, its arenas one per row, its colour dot, the copy that follows a drag | `#typesModal` › `#tylist` › `.tyblock` (`.tyline` › `.tygrip`, `.tyarenas` › `.tyrow`); `.lcolwrap.tycol`; `.tyghost` |
 | the tray over the board: what is new, a row each with → Venues, Keep and Remove; what is kept, folded; new arenas waiting in Dispatches | `.tray` › `.thead`, `.trows` › `.trow` |
-| one arena's row, and its dot when it holds something new | `.row` = `.cell.name` + `.lane`; `.newdot` |
-| on a lane: a venue's window (as above), one not dated yet, a call's bar, today | `.vband`, `.vchip`, `.mk.cl.rb`, `.now` |
+| one arena's row, its dot when it holds something new, and how many shared venues serve it | `.row` = `.cell.name` + `.lane`; `.newdot`; `.shtag` |
+| the shared venues, a group over the types: a venue serving two arenas or more, once, the arenas under its name | `.shgrp` › `.row.shrow` (`.shnm`, `.vchips`) |
+| on a lane: a venue's window (as above), thin when it is already in Venues, the arrow where a window with no end fades out, one not dated yet, a call's bar, today | `.vband`, `.vband.quiet`, `.vrun`, `.vchip`, `.mk.cl.rb`, `.now` |
 | the drawer, holding an arena or a venue; an arena's venues in it; a link's cross, and the press that makes a brokerage link a venue; where a venue stands, with its three buttons; a venue's ask to the agent | `#card` and its `.scrim`; `.avlist` › `.avrow`; `.ldel`, `.lmake`; `.vplace`; `.vagent` |
 
 **The Call Board** — the cluster row is the bar, `#hdr` › `.tabs`; the
