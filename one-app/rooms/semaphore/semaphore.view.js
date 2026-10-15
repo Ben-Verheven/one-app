@@ -11,11 +11,13 @@ Hub.markup('semaphore', `
     <h1><i class="markglyph"></i>Marketplace</h1>
   </div>
   <div class="grow"></div>
-  <!-- Now and Board (2026-10-14). Now is every venue on one strip of
-       time, what is due marked on today's line; it took the place of the
-       Rotation and Coming up. -->
+  <!-- Venues and Board (2026-10-15). Everything lands on the Board first,
+       where what is new waits to be moved to Venues, kept or removed;
+       Venues holds what Mark moved there, in Arising, Active and Dying,
+       each on one strip of time. Venues was the Now page until then, and
+       is still "now" in the code. -->
   <div class="viewseg" id="viewseg">
-    <button data-act="setView" data-v="now">Now</button>
+    <button data-act="setView" data-v="now">Venues</button>
     <button data-act="setView" data-v="board">Board</button>
   </div>
   <!-- Leads is not a way of looking at the arenas but the work they turned

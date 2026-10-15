@@ -327,7 +327,7 @@ button.ln:active{background:rgba(216,205,184,.06)}
 .vgl{flex:0 0 auto;display:inline-block;width:10px;height:10px}
 .vgl.ev{background:var(--brok);transform:rotate(45deg)}
 .vgl.ev.unc{background:none;border:1.5px dashed var(--brok)}
-.vgl.tool{border:1.6px solid var(--key2);border-radius:3px;background:radial-gradient(circle,var(--key2) 0 2.4px,transparent 2.6px)}
+.vgl.win{width:14px;height:7px;border-radius:4px;background:linear-gradient(90deg,rgba(239,91,76,.35),var(--brok),rgba(239,91,76,.35))}
 .vstamp{flex:0 0 34px;width:34px;height:34px;border-radius:50%;border:1px solid var(--line2);display:flex;
   align-items:center;justify-content:center;font:500 12px/1 var(--mono);color:var(--muted)}
 .vstamp.dated{border:none;background:color-mix(in srgb,var(--brok) var(--age),#FFFFFF);color:#191713}
@@ -341,11 +341,13 @@ button.ln:active{background:rgba(216,205,184,.06)}
 .vtrack{position:relative;height:26px;margin:2px 0 0}
 .vtrack::before{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:var(--grid)}
 .vtrack>*{position:absolute}
-.vbar{top:50%;height:8px;margin-top:-4px;border-radius:4px;background:color-mix(in srgb,var(--brok) 38%,var(--paper));
-  border:1px solid color-mix(in srgb,var(--brok) 62%,var(--paper))}
-.vbar.unc{background:none;border:1.5px dashed color-mix(in srgb,var(--brok) 72%,var(--paper))}
-.vbar.tool{left:0;right:0;height:2px;margin-top:-1px;border:none;border-radius:0;
-  background:repeating-linear-gradient(90deg,var(--key) 0 7px,transparent 7px 12px)}
+/* a venue's window, shaded by how much goes on in it (the desk's heatBG),
+   dashed while it is a season's guess, faded at an end that is open */
+.vbar{top:50%;height:10px;margin-top:-5px;border-radius:4px;border:1px solid rgba(239,91,76,.62)}
+.vbar.season{border-style:dashed}
+.vbar.past{border-color:var(--line)}
+.vbar.openl{border-left:0;-webkit-mask-image:linear-gradient(90deg,transparent,#000 24px);mask-image:linear-gradient(90deg,transparent,#000 24px)}
+.vbar.openr{border-right:0;-webkit-mask-image:linear-gradient(270deg,transparent,#000 24px);mask-image:linear-gradient(270deg,transparent,#000 24px)}
 .vmeet{top:50%;height:10px;margin-top:-5px;border-radius:3px;background:var(--brok)}
 .vdia{top:50%;width:11px;height:11px;margin:-5.5px 0 0 -5.5px;background:var(--brok);transform:rotate(45deg);box-shadow:0 0 0 2px var(--paper)}
 .vdia.unc{background:var(--paper);border:1.5px dashed var(--brok)}
@@ -358,9 +360,12 @@ button.ln:active{background:rgba(216,205,184,.06)}
 .vtrack.over{height:auto}
 .vtrack.over::before{display:none}
 .vtrack.over .vsay{position:static;margin:0 0 0 19px}
+/* not dated yet, a heading under the dated ones */
 .vlater{display:block;width:calc(100% - 32px);margin:18px 16px 4px;padding:9px 0;text-align:left;
-  border-top:1px solid var(--line);border-bottom:1px solid var(--grid);color:var(--key2)}
-.vlater b{font:12px var(--mono);font-weight:400;letter-spacing:0;color:var(--ink)}
+  border-top:1px solid var(--line);color:var(--key2)}
+/* Limbo, a tab of its own under the three: its fog, folded to one line */
+.limbox.tab .culimbo{min-height:44px}
+.limbox.tab.open{border-color:rgba(170,215,205,.5)}
 .limbox .vrow{border-bottom-color:var(--lg-line)}
 .limbox .vnm,.limbox .vsay{color:var(--lg-ink)}
 /* the question: three answers, in a sheet under a stamp or in the bar over
@@ -705,7 +710,7 @@ input[type="search"]:focus{outline:none;border-color:var(--key)}
    rhythm (vWin, vState, vEvery, vDue), the types' colours, its lead
    steps and everything they lean on are copied verbatim — picked by
    name, with whatever they depend on, out of the room's source (last
-   re-extracted 2026-10-14, from that day's desk). When the arithmetic
+   re-extracted 2026-10-15, from that day's desk). When the arithmetic
    changes on the desk, re-extract; never edit here. A second
    implementation that turns a date into a venue under another id would
    put two copies of it on the board.
@@ -849,7 +854,7 @@ const NAME_MIN=140,NAME_MAX=560;
 function blank(){
   return {v:1,types:defaultTypes(),arenas:[],venues:[],
     ui:{q:'',collapsed:{},view:'now',
-        boardSort:'date',nameW:null,freezerOpen:false}};
+        boardSort:'date',nameW:null,freezerOpen:false,nowTab:'active',keptOpen:false}};
 }
 /* An arena remembers which of its own dates it is waiting for. That goes stale
    the moment the dates change, so this puts it straight — a wait ends when the
@@ -1021,6 +1026,12 @@ function migrate(s){
     ui.boardSort = u.boardSort==='mine' ? 'mine' : 'date';
     ui.nameW = Number.isFinite(u.nameW) ? Math.min(NAME_MAX,Math.max(NAME_MIN,Math.round(u.nameW))) : null;
     ui.freezerOpen = u.freezerOpen===true;
+    /* which of Venues' tabs is showing (Mark, 2026-10-15): the three
+       sections or Limbo; the Events and Tools of the Now page before land
+       on Active */
+    ui.nowTab = ['arising','active','dying','over'].includes(u.nowTab) ? u.nowTab : 'active';
+    /* whether the board's tray lists what is kept on the board as well */
+    ui.keptOpen = u.keptOpen===true;
     s.ui=ui;
   }
   const first=new Map();
@@ -1050,24 +1061,48 @@ function migrate(s){
    than the link (siteKey), and removing an event took its links off every
    card, both because the venue was the real thing all along.
 
-   A venue is an event or a tool. An event has a life: coming, open (its
-   marketplace, where profiles and project ideas pile up), its meeting days,
-   open a while after, then over. A tool is always open. A venue serves one
-   arena or several, and is listed once. It has a rhythm, how often it wants
-   a visit, and a record of the visits, each one answering "anything?": a
-   leads that start from it say so (`venueId`), so a venue can show what it
-   has given.
+   A venue is any place of that kind, active for a while (Mark, 2026-10-15:
+   "drop the distinction between tools and events, they are all just
+   venues"). It has a window of activity, `opens` to `closes`, which he sets
+   by dragging its two ends on the board or on Venues, and it may have event
+   days (`gran`/`start`/`end`/`grade`), the meeting days activity clusters
+   round, drawn as diamonds inside the window. A venue serves one arena or
+   several, and is listed once. It has a rhythm, how often it wants a visit,
+   and a record of the visits, each one answering "anything?": leads that
+   start from it say so (`venueId`), so a venue can show what it has given.
+
+   Where it stands is `place` (Mark, 2026-10-15). Everything lands on the
+   board first: what the agent finds is `new`, glowing there until he does
+   something with it; he moves it to Venues (`venues`), keeps it on the
+   board to think about (`board`), or removes it (`gone`). A removed venue
+   stays in the list as a stub with its name, site and arenas, hidden
+   everywhere, so the agent can see it was turned down and does not bring
+   it back; a stub is dropped after a year and a bit. A venue in Venues is
+   still drawn on the board.
 
    It is kept in `S.venues`, beside the arenas, and a visit's id is its day,
    so the same visit made on the desk and the iPad is one visit when the two
    copies are put together. */
-const RHYTHM={open:4,meeting:2,after:7,tool:21};
+const RHYTHM={meeting:2,active:4,dying:7,standing:21};
    /* days between visits, by where a venue stands */
 const SPOT_MAX=14;
-          /* a span up to two weeks is meeting days; longer is an open stretch or a guess at a season */
+          /* event days run at most two weeks; a longer exact span is the window itself */
+const LEAD_IN=21,TAIL=14;
+   /* the window event days are given until Mark drags it: three weeks before, two after */
+const DYING_MAX=21;
+         /* a window with no event days in it is dying for its last three weeks, or last third */
 const NOW_BACK=28,NOW_AHEAD=84;
-   /* the Now page's strip: four weeks back, twelve ahead (Mark chose the strip of time) */
+   /* the Venues page's strip: four weeks back, twelve ahead (Mark chose the strip of time) */
 const VGOT={nothing:'nothing new',something:'something',lead:'a lead'};
+const PLACES=['new','board','venues','gone'];
+const GONE_KEEP=400;
+        /* days a removed venue's stub is kept for the agent to see */
+/* Every venue on the board when places began went to Venues, where Mark had
+   them. One that arrives later without a place came from the agent through
+   a gatekeeper that does not know of places yet, which marks what it adds
+   with `foundAt`, so a venue found after this moment is new on the board.
+   The same rule on every device, so two copies agree without asking. */
+const PLACES_SINCE='2026-10-15T19:00:00Z';
 /* A short fixed name for a site, so the venue a tool link becomes has the
    same id on every device that turns it into one: two devices each making
    it with an id of its own would have put two copies of it on the board
@@ -1080,7 +1115,19 @@ function hashKey(s){
 const ISO_DAY=/^\d{4}-\d{2}-\d{2}$/;
 function tidyVenue(v){
   if(!v.id)v.id=uid();
-  v.kind=v.kind==='tool'?'tool':'event';
+  /* A tool was always open; as a venue it is one whose window opened when it
+     was first visited or found, and has no end yet. `kind` stays on every
+     venue, always 'event', because the gatekeeper's copy of this function
+     and an older Pocket wipe a tool's window on every write they make. */
+  if(v.kind==='tool'){
+    const first=(Array.isArray(v.visits)?v.visits:[]).map(x=>x&&(x.at||x.id)).filter(x=>ISO_DAY.test(x||'')).sort()[0];
+    const found=typeof v.foundAt==='string'?v.foundAt.slice(0,10):'';
+    if(!ISO_DAY.test(v.opens||''))v.opens=first||(ISO_DAY.test(found)?found:todayISO());
+    v.gran='none';
+  }
+  v.kind='event';
+  if(!PLACES.includes(v.place))v.place=typeof v.foundAt==='string'&&v.foundAt>=PLACES_SINCE?'new':'venues';
+  if(v.place==='gone'){if(!ISO_DAY.test(v.goneAt||''))v.goneAt=todayISO();}else delete v.goneAt;
   v.name=String(v.name==null?'':v.name).trim()||'Unnamed venue';
   v.url=typeof v.url==='string'?v.url.trim():'';
   v.arenas=[...new Set((Array.isArray(v.arenas)?v.arenas:[]).filter(x=>typeof x==='string'&&x))];
@@ -1096,18 +1143,18 @@ function tidyVenue(v){
     if(typeof x.leadId==='string'&&x.leadId)o.leadId=x.leadId;
     return o;
   }).filter(x=>!seen.has(x.at)&&seen.add(x.at)).sort((x,y)=>x.at.localeCompare(y.at));
-  if(v.kind==='event'){
-    if(!['day','month','quarter','half','year','range','none'].includes(v.gran))
-      v.gran=v.start?((v.end&&v.start!==v.end)?'range':'day'):'none';
-    if(!v.start||v.gran==='none'){v.start=null;v.end=null;if(v.gran!=='none')v.gran='none';}
-    if(v.start&&!v.end)v.end=v.start;
-    if(v.start&&v.end<v.start){const e=v.end;v.end=v.start;v.start=e;}
-    if(v.grade!=='fixed'||!gradeOptions(v.gran).includes('fixed'))v.grade=v.grade==='fixed'&&gradeOptions(v.gran).includes('fixed')?'fixed':'uncertain';
-  }else{delete v.gran;delete v.start;delete v.end;delete v.grade;delete v.opens;delete v.closes;}
-  ['opens','closes'].forEach(k=>{if(k in v&&!ISO_DAY.test(v[k]||''))v[k]=null;});
+  if(!['day','month','quarter','half','year','range','none'].includes(v.gran))
+    v.gran=v.start?((v.end&&v.start!==v.end)?'range':'day'):'none';
+  if(!v.start||v.gran==='none'){v.start=null;v.end=null;if(v.gran!=='none')v.gran='none';}
+  if(v.start&&!v.end)v.end=v.start;
+  if(v.start&&v.end<v.start){const e=v.end;v.end=v.start;v.start=e;}
+  v.grade=v.grade==='fixed'&&gradeOptions(v.gran).includes('fixed')?'fixed':'uncertain';
+  ['opens','closes'].forEach(k=>{if(!ISO_DAY.test(v[k]||''))v[k]=null;});
+  if(v.opens&&v.closes&&v.closes<v.opens){const c=v.closes;v.closes=v.opens;v.opens=c;}
   if(!(v.every>=1&&v.every<=365))delete v.every;else v.every=Math.round(v.every);
   if(typeof v.note!=='string')v.note='';
   if(typeof v.memo==='string'&&!v.memo.trim())delete v.memo;
+  if(typeof v.doubt!=='string'||!v.doubt.trim())delete v.doubt;
   return v;
 }
 function joinVenue(v,aid){if(aid&&!v.arenas.includes(aid))v.arenas.push(aid);}
@@ -1171,6 +1218,8 @@ function absorbVenues(s){
     bk.links=keep;
     delete a.toolId;
   }
+  const now=T(todayISO());
+  s.venues=s.venues.filter(v=>v.place!=='gone'||now-T(v.goneAt)<=GONE_KEEP*DAY);
   return s;
 }
 /* One site, for the stamp (Mark, 2026-10-12): a stamp stands on every link
@@ -1240,58 +1289,115 @@ function linkKey(u){
 }
 function venue(id){return (S.venues||[]).find(v=>v.id===id)||null;}
 function venueArenas(v){return v.arenas.map(arena).filter(Boolean);}
-function venuesOf(a){return (S.venues||[]).filter(v=>v.arenas.includes(a.id));}
+/* every venue an arena is served by, wherever it stands but removed */
+function venuesOf(a){return (S.venues||[]).filter(v=>v.place!=='gone'&&v.arenas.includes(a.id));}
 /* A venue all of whose arenas are in the freezer is in the freezer with
    them; one serving no arena at all is still in sight, so it can be given one. */
-function liveVenue(v){const as=venueArenas(v);return !as.length||as.some(a=>!a.frozenAt);}
-/* An event's own date is its meeting days when it is a day or a span of up
-   to two weeks; anything longer, or a month or a season, is the stretch it
-   is open in, or a guess at one. */
+function liveVenue(v){const as=venueArenas(v);return v.place!=='gone'&&(!as.length||as.some(a=>!a.frozenAt));}
+const inVenues=v=>v.place==='venues';
+/* A venue's event days are its meeting days when they are a day or a span
+   of up to two weeks. A longer exact span is the stretch its marketplace is
+   open, and stands as its window; a month, a quarter or a year is a guess
+   at a season. */
 function isSpot(v){
-  if(v.kind!=='event'||!v.start)return false;
+  if(!v.start)return false;
   return v.gran==='day'||(v.gran==='range'&&T(v.end)-T(v.start)<=SPOT_MAX*DAY);
 }
-/* from and to: the whole stretch the venue is open in; ms and me: its
-   meeting days, when it has any. A season is an event known only to a
-   month, a quarter or a year, with no open stretch given: a guess at when
-   it will be, not a marketplace that is open all that while, so it asks
-   for no visits until its days are known. A span given exactly, however
-   long, is the stretch a marketplace is open (a b2match sign-up running
-   two months, say). */
+/* The window: from and to, either of which may be open (null), and the
+   meeting days inside it, ms and me, when it has any. Mark sets the two ends
+   (`opens`, `closes`) by dragging them; until he does, meeting days are
+   given three weeks before and two after, a long exact span is its own
+   window, and a season is its own stretch, marked as the guess it is. A
+   venue with no days and no ends at all has no window: it is not dated yet.
+   `set` says which ends are his. */
 function vWin(v){
-  if(v.kind!=='event')return null;
-  const ms=v.start?T(v.start):null,me=v.start?T(v.end||v.start):null;
-  const o=v.opens?T(v.opens):ms,c=v.closes?T(v.closes):me;
-  if(o===null||c===null)return null;
   const spot=isSpot(v);
-  const season=!spot&&v.gran!=='range'&&!v.opens&&!v.closes;
-  return {from:Math.min(o,ms===null?o:ms),to:Math.max(c,me===null?c:me),ms:spot?ms:null,me:spot?me:null,season};
+  const ms=spot?T(v.start):null,me=spot?T(v.end||v.start):null;
+  let from=v.opens?T(v.opens):null,to=v.closes?T(v.closes):null;
+  const set={from:from!==null,to:to!==null};
+  let season=false;
+  if(spot){
+    if(from===null)from=ms-LEAD_IN*DAY;
+    if(to===null)to=me+TAIL*DAY;
+    from=Math.min(from,ms);to=Math.max(to,me);
+  }else if(v.start){
+    season=!(v.gran==='range'&&v.grade==='fixed');
+    if(from===null)from=T(v.start);
+    if(to===null)to=T(v.end||v.start);
+  }
+  if(from===null&&to===null)return null;
+  return {from,to,ms,me,season:season&&!set.from&&!set.to,set,unc:v.start?v.grade!=='fixed':false};
 }
+/* Where a venue stands today, finely: undated, arising (its window still
+   ahead, or its season not yet dated), meeting (on its event days), active,
+   dying (past its event days, or in the last stretch of a window that has
+   none), over. The three sections of Venues are the three middle phases
+   (vPhase); over is Limbo. */
 function vState(v){
-  if(v.kind==='tool')return 'tool';
   const w=vWin(v);if(!w)return 'undated';
   const now=T(todayISO());
-  if(now<w.from)return 'coming';
-  if(now>w.to)return 'over';
-  if(w.season)return 'season';
-  if(w.ms!==null&&now>=w.ms&&now<=w.me)return 'meeting';
-  if(w.ms!==null&&now>w.me)return 'after';
-  return 'open';
+  if(w.to!==null&&now>w.to)return 'over';
+  if(w.season||(w.from!==null&&now<w.from))return 'arising';
+  if(w.ms!==null)return now<w.ms?'active':now<=w.me?'meeting':'dying';
+  if(w.to!==null){
+    const tail=Math.min(DYING_MAX*DAY,w.from!==null?(w.to-w.from)/3:DYING_MAX*DAY);
+    return now>=w.to-tail?'dying':'active';
+  }
+  return 'active';
+}
+const PHASE={undated:'arising',arising:'arising',meeting:'active',active:'active',dying:'dying',over:'over'};
+function vPhase(v){return PHASE[vState(v)];}
+/* How much is going on at a venue at one moment, from 0 to 1: rising
+   through the window to its event days, full on them, falling away after;
+   flat where there are none, fading through the last stretch. It is the
+   shading of a window, and the order of Active, so the venue where most is
+   happening stands first. */
+function vHeat(v,t){
+  const w=vWin(v);if(!w)return 0;
+  if((w.from!==null&&t<w.from)||(w.to!==null&&t>w.to+DAY))return 0;
+  if(w.ms!==null){
+    if(t<w.ms)return .3+.7*(t-w.from)/Math.max(DAY,w.ms-w.from);
+    if(t<=w.me+DAY)return 1;
+    return Math.max(.15,1-.85*(t-w.me-DAY)/Math.max(DAY,w.to-w.me));
+  }
+  if(w.season)return .35;
+  if(w.to!==null){
+    const tail=Math.min(DYING_MAX*DAY,w.from!==null?(w.to-w.from)/3:DYING_MAX*DAY);
+    if(t>w.to-tail)return Math.max(.15,.6-.45*(t-(w.to-tail))/Math.max(DAY,tail));
+  }
+  return .6;
+}
+/* the shading of a window drawn from x0 to x1 (times), as a gradient in
+   the colour `rgb` (three numbers), the heat at each stop as its strength */
+function heatBG(v,x0,x1,rgb){
+  const w=vWin(v);if(!w||x1<=x0)return '';
+  const pts=[x0,x1];
+  [w.from,w.ms,w.me!==null?w.me+DAY:null,w.to].forEach(t=>{if(t!==null&&t>x0&&t<x1)pts.push(t);});
+  if(w.to!==null&&w.ms===null&&!w.season){
+    const tail=Math.min(DYING_MAX*DAY,w.from!==null?(w.to-w.from)/3:DYING_MAX*DAY);
+    if(w.to-tail>x0&&w.to-tail<x1)pts.push(w.to-tail);
+  }
+  pts.sort((a,b)=>a-b);
+  return 'linear-gradient(90deg,'+pts.map(t=>'rgba('+rgb+','+(.1+.6*vHeat(v,Math.min(t,x1-1))).toFixed(2)+') '+
+    ((t-x0)/(x1-x0)*100).toFixed(1)+'%').join(',')+')';
 }
 function lastVisit(v){const n=v.visits.length;return n?v.visits[n-1]:null;}
 function vSince(v){const x=lastVisit(v);return x?daysBetween(T(x.at),T(todayISO())):null;}
-/* How often a venue wants a visit. Where it stands sets the base: an open
-   marketplace every four days, its meeting days every other day, a week
-   after them, a standing tool every three weeks; one that is coming, over
-   or undated wants none. The weight of the arenas it serves scales it, as
-   the weight used to scale an arena's turn in the rotation: a venue serving
-   a central arena comes round more often. What the visits gave scales it
-   last: something found in either of the last two brings it round sooner,
-   three answered visits in a row with nothing new send it further off. A
-   rhythm Mark sets himself (`every`) stands as he set it. */
+/* How often a venue wants a visit. Where it stands sets the base: on its
+   event days every other day, active every four days, dying once a week, a
+   window with no event days and no end every three weeks; one arising, over
+   or undated wants none, nor does one not yet in Venues. The weight of the
+   arenas it serves scales it: a venue serving a central arena comes round
+   more often. What the visits gave scales it last: something found in
+   either of the last two brings it round sooner, three answered visits in
+   a row with nothing new send it further off. A rhythm Mark sets himself
+   (`every`) stands as he set it. */
 function vEvery(v){
   if(v.every)return v.every;
-  const base=RHYTHM[vState(v)];if(!base)return null;
+  if(!inVenues(v))return null;
+  const st=vState(v),w=vWin(v);
+  const base=st==='active'&&w&&w.ms===null&&w.to===null?RHYTHM.standing:RHYTHM[st];
+  if(!base)return null;
   const as=venueArenas(v).filter(a=>!a.frozenAt);
   let e=base*(as.length?Math.min(...as.map(a=>WEIGHTS[weightOf(a)].turn)):1);
   const said=v.visits.filter(x=>x.got);
@@ -1320,22 +1426,27 @@ function vYieldSay(v){
   if(!y.n&&!y.leads)return 'not visited yet';
   return y.n+' visit'+(y.n===1?'':'s')+(y.found?' · '+y.found+' found':'')+(y.leads?' · '+y.leads+' lead'+(y.leads===1?'':'s'):'');
 }
+const tDay=t=>shortDay(new Date(t).toISOString().slice(0,10));
 function vDateSay(v){
-  if(v.kind==='tool')return 'always open';
   const st=vState(v),w=vWin(v);
-  const day=t=>shortDay(new Date(t).toISOString().slice(0,10));
   const meets=v.start?(v.grade==='fixed'?'':'≈ ')+shortDate(v):'';
   switch(st){
-    case 'undated':return 'date not known yet';
-    case 'season':return 'expected '+meets+', not dated yet';
-    case 'coming':return v.opens&&T(v.opens)>T(todayISO())?'opens '+day(T(v.opens)):
-      w.season?'expected '+meets:isSpot(v)?'meets '+meets:'opens '+day(w.from);
-    case 'meeting':return 'meeting now';
-    case 'open':return w.ms!==null?'open · meets '+meets:'open · closes '+day(w.to);
-    case 'after':return 'still open · closes '+day(w.to);
-    default:return 'over · '+meets;
+    case 'undated':return 'not dated yet';
+    case 'arising':return w.season?'expected '+meets:'opens '+tDay(w.from)+(w.ms!==null?' · meets '+meets:'');
+    case 'meeting':return 'meeting now · until '+tDay(w.to);
+    case 'active':return w.ms!==null?'meets '+meets:w.to!==null?'until '+tDay(w.to):'open, no end set';
+    case 'dying':return (w.ms!==null?'met '+meets+' · ':'')+'closes '+tDay(w.to);
+    default:return 'closed '+tDay(w.to)+(w.ms!==null?' · met '+meets:'');
   }
 }
+/* ── a venue's window, drawn ──
+   The same band on the board's lanes and on the Venues strip: the window
+   shaded by its heat in the colour of where the venue stands (the
+   brokerage red in Venues, the new hue while new, bone while kept), a
+   dashed edge while it is a season's guess, its two ends to drag, and its
+   event days as diamonds over it. `t0`/`t1` are the strip's ends, `top` the
+   middle of the band in pixels, or null for the middle of the strip. */
+const PLACE_RGB={new:'185,227,90',board:'216,205,184',venues:'239,91,76',gone:'125,116,102'};
                /* how much history a row shows before it offers the rest */
 function arena(id){return S.arenas.find(a=>a.id===id);}
 /* ---- read view: one stream, in time order ---- */
@@ -2001,11 +2112,13 @@ function setVenueMemo(v, text){
     onVenue(v.id, function(x){ putBack(x, was); }));
 }
 
-/* the venues in sight: every one serving an arena that is not frozen, or none */
+/* the venues in sight: those Mark moved to Venues at the desk, serving an
+   arena that is not frozen, or none; what is still on the desk's board,
+   new or kept, waits there for him and is not shown here */
 function venueList(){
   liveList();
   var Sm = data.semaphore;
-  return ((Sm && Sm.venues) || []).filter(function(v){ return v && liveVenue(v); });
+  return ((Sm && Sm.venues) || []).filter(function(v){ return v && liveVenue(v) && inVenues(v); });
 }
 /* the strip, as the desk's Now page draws it, four weeks back and twelve
    ahead; built as markup from escaped values only */
@@ -2014,23 +2127,22 @@ function vStrip(v){
   function P(t){ return ((t - t0)/(t1 - t0)*100); }
   function C(x){ return Math.max(0, Math.min(100, x)); }
   var h = '';
-  if (v.kind === 'tool') h += '<i class="vbar tool"></i>';
-  else {
-    var w = vWin(v);
-    /* the date itself is said under the strip; here only which way it lies */
-    if (w && w.from > t1) h += '<span class="vbeyond">→</span>';
-    else if (w){
-      var spot = w.ms !== null, unc = v.grade !== 'fixed';
-      if (!spot || w.from < w.ms || w.to > w.me){
-        var L = C(P(w.from)), R = C(P(w.to + DAY));
-        h += '<i class="vbar' + (unc && !spot ? ' unc' : '') + '" style="left:' + L.toFixed(2) + '%;width:' + Math.max(R - L, .8).toFixed(2) + '%"></i>';
-      }
-      if (spot){
-        if (w.me > w.ms){ var L2 = C(P(w.ms)), R2 = C(P(w.me + DAY));
-          h += '<i class="vmeet" style="left:' + L2.toFixed(2) + '%;width:' + Math.max(R2 - L2, .8).toFixed(2) + '%"></i>'; }
-        var x = P(w.ms + DAY/2);
-        if (x >= 0 && x <= 100) h += '<i class="vdia' + (unc ? ' unc' : '') + '" style="left:' + x.toFixed(2) + '%"></i>';
-      }
+  var w = vWin(v);
+  /* the date itself is said under the strip; here only which way it lies */
+  if (w && w.from !== null && w.from > t1) h += '<span class="vbeyond">→</span>';
+  else if (w){
+    var from = w.from === null ? t0 : Math.max(t0, w.from), to = w.to === null ? t1 : Math.min(t1, w.to + DAY);
+    var past = w.to !== null && w.to + DAY < now;
+    if (to >= t0 && from <= t1){
+      var L = C(P(from)), R = C(P(to));
+      h += '<i class="vbar' + (w.season ? ' season' : '') + (past ? ' past' : '') + (w.from === null ? ' openl' : '') + (w.to === null ? ' openr' : '') +
+        '" style="left:' + L.toFixed(2) + '%;width:' + Math.max(R - L, .8).toFixed(2) + '%;background:' + heatBG(v, from, to, past ? PLACE_RGB.gone : PLACE_RGB.venues) + '"></i>';
+    }
+    if (w.ms !== null){
+      if (w.me > w.ms){ var L2 = C(P(w.ms)), R2 = C(P(w.me + DAY));
+        h += '<i class="vmeet" style="left:' + L2.toFixed(2) + '%;width:' + Math.max(R2 - L2, .8).toFixed(2) + '%"></i>'; }
+      var x = P(w.ms + DAY/2);
+      if (x >= 0 && x <= 100) h += '<i class="vdia' + (w.unc ? ' unc' : '') + '" style="left:' + x.toFixed(2) + '%"></i>';
     }
   }
   (v.visits || []).forEach(function(y){ var t = T(y.at);
@@ -2040,7 +2152,7 @@ function vStrip(v){
   return h;
 }
 function vGlyph(v){
-  return el('i', 'vgl ' + (v.kind === 'tool' ? 'tool' : 'ev' + (v.grade === 'fixed' ? '' : ' unc')));
+  return el('i', 'vgl ' + (v.start ? 'ev' + (v.grade === 'fixed' ? '' : ' unc') : 'win'));
 }
 /* the disc: the days since the last visit, reddening towards the day the
    venue is due; the empty ring and its tick for one never visited */
@@ -2096,15 +2208,20 @@ function venueRow(v, over){
   return r;
 }
 
-/* ── the Now tab: the desk's strip of time, a row to a venue ────────── */
-var nowLater = false, nowLimbo = false;
-/* Events and tools on two tabs, as on the desk since 2026-10-15 (Mark asked
-   for Pocket to follow): the tools stood under every event and Later, a long
-   thumb away. The tab chosen is kept on the phone, under pocket.* as all of
-   Pocket's own keys are. */
-var NOWTAB = 'pocket.nowTab', nowTab = 'events';
-try { if (localStorage.getItem(NOWTAB) === 'tools') nowTab = 'tools'; } catch(e){}
+/* ── the Now tab: the desk's Venues, a row to a venue ────────── */
+/* Arising, Active and Dying on three tabs, and Limbo under them, as on the
+   desk since 2026-10-15 (the Events and Tools tabs before): each venue in
+   the section of its life it stands in today (the desk's vPhase). The tab
+   chosen is kept on the phone, under pocket.* as all of Pocket's own keys
+   are; the old events and tools land on Active. */
+var NOWTAB = 'pocket.nowTab', nowTab = 'active';
+try { var nt = localStorage.getItem(NOWTAB); if (['arising','active','dying','over'].indexOf(nt) >= 0) nowTab = nt; } catch(e){}
 var GHOST = '<svg class="culgh" viewBox="0 0 16 18" width="16" height="18" aria-hidden="true"><path d="M8 1.5C4.7 1.5 2.5 4 2.5 7.2V16l1.8-1.4L6.1 16 8 14.6 9.9 16l1.8-1.4L13.5 16V7.2C13.5 4 11.3 1.5 8 1.5z" fill="currentColor"/><ellipse cx="6" cy="7.6" rx="1.05" ry="1.45" fill="#15171A"/><ellipse cx="10" cy="7.6" rx="1.05" ry="1.45" fill="#15171A"/></svg>';
+function setNowTab(k){
+  nowTab = k;
+  try { localStorage.setItem(NOWTAB, nowTab); } catch(e){}
+  drawNow();
+}
 function drawNow(){
   var host = $('#v-now');
   host.textContent = '';
@@ -2114,59 +2231,55 @@ function drawNow(){
   var due = vs.filter(vDue);
   badge('now', due.length);
   if (!vs.length){
-    host.appendChild(empty('No venue yet', 'A venue is an event or a partner search you visit. Add them at the desk.'));
+    host.appendChild(empty('No venue yet', 'A venue is a place to find projects in the making. Move them to Venues at the desk.'));
     return;
   }
   var now = T(todayISO()), t1 = now + NOW_AHEAD*DAY;
-  function from(v){ var w = vWin(v); return w ? w.from : Infinity; }
+  function from(v){ var w = vWin(v); return w && w.from !== null ? w.from : Infinity; }
+  function to(v){ var w = vWin(v); return w && w.to !== null ? w.to : Infinity; }
   function byName(x, y){ return String(x.name).localeCompare(String(y.name)); }
-  var over = vs.filter(function(v){ return vState(v) === 'over'; });
-  var evs = vs.filter(function(v){ return v.kind === 'event' && vState(v) !== 'over'; });
-  var near = evs.filter(function(v){ var w = vWin(v); return w && w.from <= t1; })
-    .sort(function(x, y){ return from(x) - from(y) || byName(x, y); });
-  var later = evs.filter(function(v){ return near.indexOf(v) < 0; })
-    .sort(function(x, y){ return from(x) - from(y) || byName(x, y); });
-  var tools = vs.filter(function(v){ return v.kind === 'tool'; }).sort(function(x, y){
-    var sx = vSince(x), sy = vSince(y);
-    return (vDue(y) - vDue(x)) || ((sy === null ? 999 : sy) - (sx === null ? 999 : sx)) || byName(x, y); });
+  var by = { arising:[], active:[], dying:[], over:[] };
+  vs.forEach(function(v){ by[vPhase(v)].push(v); });
+  by.arising.sort(function(x, y){ return from(x) - from(y) || byName(x, y); });
+  by.active.sort(function(x, y){ return vHeat(y, now) - vHeat(x, now) || vDue(y) - vDue(x) || byName(x, y); });
+  by.dying.sort(function(x, y){ return to(x) - to(y) || byName(x, y); });
+  by.over.sort(function(x, y){ return to(y) - to(x) || byName(x, y); });
 
-  var evAll = evs.concat(over), tab = nowTab === 'tools' ? 'tools' : 'events';
+  var tab = by[nowTab] ? nowTab : 'active';
   var tabs = el('div', 'vtabs');
-  [['events', 'Events', evAll], ['tools', 'Tools', tools]].forEach(function(x){
-    var n = x[2].filter(vDue).length;
+  [['arising', 'Arising'], ['active', 'Active'], ['dying', 'Dying']].forEach(function(x){
+    var xs = by[x[0]], n = xs.filter(vDue).length;
     var b = el('button', 'cap' + (tab === x[0] ? ' on' : ''), x[1] + ' ');
-    b.appendChild(el('b', '', String(x[2].length)));
+    b.appendChild(el('b', '', String(xs.length)));
     if (n) b.appendChild(el('i', '', n + ' due'));
     b.setAttribute('aria-pressed', String(tab === x[0]));
-    b.addEventListener('click', function(){
-      nowTab = x[0];
-      try { localStorage.setItem(NOWTAB, nowTab); } catch(e){}
-      drawNow();
-    });
+    b.addEventListener('click', function(){ setNowTab(x[0]); });
     tabs.appendChild(b);
   });
   host.appendChild(tabs);
 
-  var shown = (tab === 'tools' ? tools : evAll).filter(vDue).length;
+  /* Limbo, apart from the three: what is over, until it is let go at the desk */
+  if (by.over.length){
+    var lb = el('div', 'limbox tab' + (tab === 'over' ? ' open' : ''));
+    var lh = el('button', 'culimbo');
+    lh.innerHTML = '<span class="culfog" aria-hidden="true"></span>' + GHOST +
+      '<span class="cap">Limbo</span><b>' + by.over.length + '</b>' + (by.over.length === 1 ? 'venue is over' : 'venues are over') +
+      '<span class="lw">' + (tab === 'over' ? 'Hide' : 'Show') + '</span>';
+    lh.addEventListener('click', function(){ setNowTab(tab === 'over' ? 'active' : 'over'); });
+    lb.appendChild(lh);
+    if (tab === 'over') by.over.forEach(function(v){ lb.appendChild(venueRow(v, true)); });
+    host.appendChild(lb);
+    if (tab === 'over') return;
+  }
+
+  var shown = by[tab], dueHere = shown.filter(vDue).length;
   var hd = el('div', 'whead');
-  if (shown){
-    hd.appendChild(el('b', '', String(shown)));
-    hd.appendChild(document.createTextNode(shown === 1 ? (tab === 'tools' ? ' tool is' : ' event is') + ' due for a visit.'
-      : (tab === 'tools' ? ' tools are' : ' events are') + ' due for a visit.'));
+  if (dueHere){
+    hd.appendChild(el('b', '', String(dueHere)));
+    hd.appendChild(document.createTextNode(dueHere === 1 ? ' venue here is due for a visit.' : ' venues here are due for a visit.'));
   } else hd.textContent = 'Nothing here is due for a visit.';
   host.appendChild(hd);
 
-  if (tab === 'events' && over.length){
-    var lb = el('div', 'limbox' + (nowLimbo ? ' open' : ''));
-    var lh = el('button', 'culimbo');
-    lh.innerHTML = '<span class="culfog" aria-hidden="true"></span>' + GHOST +
-      '<span class="cap">Limbo</span><b>' + over.length + '</b>' + (over.length === 1 ? 'venue is over' : 'venues are over') +
-      '<span class="lw">' + (nowLimbo ? 'Hide' : 'Show') + '</span>';
-    lh.addEventListener('click', function(){ nowLimbo = !nowLimbo; drawNow(); });
-    lb.appendChild(lh);
-    if (nowLimbo) over.forEach(function(v){ lb.appendChild(venueRow(v, true)); });
-    host.appendChild(lb);
-  }
   /* the months the strips run through, once over them all */
   var ax = el('div', 'vaxis');
   var d0 = new Date(now - NOW_BACK*DAY); d0.setDate(1); d0.setMonth(d0.getMonth() + 1);
@@ -2180,20 +2293,14 @@ function drawNow(){
   ax.appendChild(nw);
   host.appendChild(ax);
 
-  if (tab === 'tools'){
-    if (tools.length) tools.forEach(function(v){ host.appendChild(venueRow(v)); });
-    else host.appendChild(empty('No tool yet', 'A tool is a partner search that is always open. Add them at the desk.'));
-    return;
-  }
-  near.forEach(function(v){ host.appendChild(venueRow(v)); });
-  if (!near.length && !later.length && !over.length)
-    host.appendChild(empty('No event yet', 'Add brokerage events at the desk.'));
-  if (later.length){
-    var lt = el('button', 'vlater cap', (nowLater ? '▾ ' : '▸ ') + 'Later ');
-    lt.appendChild(el('b', '', String(later.length)));
-    lt.addEventListener('click', function(){ nowLater = !nowLater; drawNow(); });
-    host.appendChild(lt);
-    if (nowLater) later.forEach(function(v){ host.appendChild(venueRow(v)); });
+  var dated = shown.filter(function(v){ return vWin(v); }), undated = shown.filter(function(v){ return !vWin(v); });
+  dated.forEach(function(v){ host.appendChild(venueRow(v)); });
+  if (!shown.length) host.appendChild(empty('Nothing ' + tab, tab === 'arising' ? 'No venue whose window is still ahead.'
+    : tab === 'active' ? 'A venue is active from its opening through its event days.'
+    : 'A venue dies after its event days, or in the last weeks of its window.'));
+  if (undated.length){
+    host.appendChild(el('p', 'vlater cap', 'Not dated yet'));
+    undated.forEach(function(v){ host.appendChild(venueRow(v)); });
   }
 }
 
@@ -2285,19 +2392,22 @@ function leadFromVenue(v){
 function openVenue(v){
   v = venue(v.id) || v;
   sheet(function(b, bar){
-    b.appendChild(el('p', 'vkind cap', (v.kind === 'tool' ? 'Tool' : 'Event') + ' venue' + (v.url ? '  ·  ' + linkHost({ url:v.url }) : '')));
+    b.appendChild(el('p', 'vkind cap', 'Venue' + (v.url ? '  ·  ' + linkHost({ url:v.url }) : '')));
     b.appendChild(el('h2', '', plainOf(v.name)));
     var d = vSince(v);
     b.appendChild(el('p', 'sub', vDateSay(v) + '  ·  ' + (d === null ? 'not visited yet' : d <= 0 ? 'visited today' : 'last visit ' + d + ' days ago') +
       (vEvery(v) ? '  ·  every ' + vEvery(v) + ' d' : '')));
     if (v.doubt) b.appendChild(el('p', 'vdoubtp', 'The agent is not sure this still matters. ' + plainOf(v.doubt)));
-    if (v.kind === 'event' && v.start){
+    /* its window and event days; the window is dragged at the desk */
+    var w = vWin(v);
+    if (w || v.start){
       var life = el('div', 'vlifep');
-      life.appendChild(el('p', '', (isSpot(v) ? 'Meeting days ' : 'Open ') + (v.grade === 'fixed' ? '' : '≈ ') + dispDate(v)));
-      if (v.opens) life.appendChild(el('p', '', 'Marketplace opens ' + longDate(v.opens)));
-      if (v.closes) life.appendChild(el('p', '', 'Marketplace closes ' + longDate(v.closes)));
+      function day(t){ return longDate(new Date(t).toISOString().slice(0, 10)); }
+      if (w) life.appendChild(el('p', '', w.from === null ? 'Open from before it was found' : 'Opens ' + day(w.from)));
+      if (v.start) life.appendChild(el('p', '', 'Event days ' + (v.grade === 'fixed' ? '' : '≈ ') + dispDate(v)));
+      if (w) life.appendChild(el('p', '', w.to === null ? 'No end set' : 'Closes ' + day(w.to)));
       if (v.note) life.appendChild(el('p', 'none', plainOf(v.note)));
-      section(b, 'Its life', life);
+      section(b, 'Its window — ' + vDateSay(v), life);
     }
     var vl = el('div', 'vvlist');
     var visits = (v.visits || []).slice().reverse();

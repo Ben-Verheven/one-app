@@ -5,13 +5,14 @@ until 2026-10-14) — made to open in an idle minute instead of the news. It is 
 room. Two tabs, Now and Leads (the Rotation and Coming up went on 2026-10-14, when the room was
 rebuilt around venues; PROJECT.md says what a venue is):
 
-- **Now** — the desk's Now on a phone (`drawNow`): one line of words saying how many venues are due,
-  then every venue on the same strip of time, today marked (`vStrip`, the desk's `NOW_AHEAD`).
-  Two tabs at its head, **Events** and **Tools**, as on the desk (since 2026-10-15), each with its
-  count and how many are due; the tab chosen is kept on the phone (`pocket.nowTab`). Events: those
-  near enough to show, then a folded **Later** for those beyond the strip or undated; a venue that is
-  over goes to **Limbo**, the folded box of fog at the top (`.limbox`), as on the desk. Tools: the
-  partner searches that are always open. Each row carries the stamp, a disc holding the days since the
+- **Now** — the desk's Venues on a phone (`drawNow`): only the venues Mark moved to Venues at the
+  desk (`inVenues`; what is new or kept on the desk's board waits there), every one on the same strip
+  of time, its window shaded by how much goes on (the desk's `heatBG`), its event days as diamonds,
+  today marked (`vStrip`, the desk's `NOW_AHEAD`). Three tabs at its head, **Arising**, **Active** and
+  **Dying**, as on the desk (since 2026-10-15; Events and Tools before), each with its count and how
+  many are due, and under them **Limbo**, the folded box of fog (`.limbox`), opened as a tab of its
+  own; the tab chosen is kept on the phone (`pocket.nowTab`). A row's section is the desk's
+  `vPhase`; a window is dragged only at the desk. Each row carries the stamp, a disc holding the days since the
   last visit and reddening towards the day it is due (`vDisc`), and *Go ↗* to the venue's own site.
   The stamp records today's visit and asks what it gave: nothing new, something (a line, optional) or
   a lead (`askVisit`); pressed again the same day, *Take it back*. Coming back to Pocket after *Go*
@@ -92,11 +93,12 @@ declaration named below **plus every top-level declaration it refers to**, in so
 
 `uid MONTHS DAY T todayISO STAGES STAGE_NAME stageOf OUTCOMES WEIGHTS weightOf ROLES settleTones
 typeOf arenaTone NOW_BACK NOW_AHEAD VGOT absorbVenues S dispDate venue venueArenas venuesOf liveVenue
-isSpot vWin vState vSince vEvery vDue vYieldSay vDateSay arena linkName shortDate openLeads leadName
-isFresh linkHost leadPath KIND_RANK KIND_NAME leadKind callRuns dtLabel esc`
+inVenues isSpot vWin vState vPhase vHeat heatBG PLACE_RGB vSince vEvery vDue vYieldSay vDateSay arena
+linkName shortDate openLeads leadName isFresh linkHost leadPath KIND_RANK KIND_NAME leadKind callRuns
+dtLabel esc`
 
 Then check: no `document`/`$(`/`Hub.` in the result, no name clashes with script 2, `node --check`.
-Last done 2026-10-14, from the desk of the Marketplace's venues.
+Last done 2026-10-15, from the desk of the Marketplace's board, places and windows.
 
 ## Rules
 1. Display-layer changes by default. Data structures, script 1, scoring and the write path change only when asked.

@@ -265,8 +265,14 @@ copy as the others do.
 
 **A venue has the same id on every device that makes it**, because the
 Marketplace makes them itself (since 2026-10-14). Its board keeps
-`venues` beside `arenas` and `types`: the events and partner-search tools
-Mark visits, each serving one arena or several. Pocket, an older copy of
+`venues` beside `arenas` and `types`: the places where projects in the
+making can be found — a brokerage event's marketplace, a partner search —
+each serving one arena or several. Since 2026-10-15 a venue has no kind:
+each is a window of activity (`opens`, `closes`) with event days inside it
+or none, and a `place`: `new` on the board, kept on the `board`, in
+`venues`, or `gone`, a stub the agent reads so it does not bring back
+what Mark removed. `kind` stays on every venue, always `event`, only
+because an older gatekeeper and an older Pocket wipe a tool's window. Pocket, an older copy of
 the desk and an agent's finding can all still put a brokerage date or
 link on an arena, so every read of the board turns those into venues
 (`absorbVenues`), and two devices doing it apart would have put two
@@ -291,39 +297,42 @@ whatever an accepted finding puts on an arena carries `foundAt` and is
 marked new in the arena's panel until the panel is next shut; a brokerage
 event or a tool it brings becomes a venue, as on every read. Where each
 agent is told what to do is its scheduled task; the SQL and the functions
-are in `supabase/`.
+are in `supabase/`. The gatekeepers there are pasted into Supabase by
+hand, so the copy in the repository can be ahead of the one running; the
+Marketplace's is written so that the older one still does no harm.
 
 **The Marketplace has one agent, on demand and at night** (since
-2026-10-14): its three old nightly tasks are deleted, and one task,
-**Marketplace agent**, runs by itself every night at about 01:00 his time
-(since 2026-10-15), a scan that reaches every active arena once a week and
-every frozen one about once a month, and when Mark asks a Claude session
-for something. That session starts a session of its own with the task's
-instruction and his request at its end: a firing with the request as its
-text runs the instruction alone first, and twice the request that came
-after was refused as untrusted. Fired by hand with nothing to do, the
-agent waits. What it looks for is projects being formed and their
-leaders, partners second. Where it cannot settle whether a venue still
-matters it keeps it and says why in a few words (`doubt`, written through
-the gatekeeper's `update_venue`), which the app shows as a ? until Mark
-presses Keep it. Its rules for keeping and deleting a venue are
-in the task's instruction, and [semaphore-decisions](notes/semaphore-decisions.md)
-says why. Ask agent on a venue's panel
-puts a moment on it (`askAt`) that the scan takes first, and the app takes
-the ask off once the agent's log shows a look at that venue after it. It
-is put to work on anything in the Marketplace, and does the work rather
-than suggesting it: the gatekeeper's `board` gives it the whole board but
-the leads, venues and all, and `edit` lets it add, correct, re-date and let
-go venues, add an arena or a page to one, add, change and delete call
-dates, and change the arenas' links and two texts, straight on the board,
-which the room then takes in as it takes Pocket's. The gatekeeper reads
-the board through a copy of the room's own `absorbVenues`, so what it
-writes is in the venues' shape with the venues' own ids. What `edit` has
-no op for it cannot do: delete an arena, change an arena's name, type,
-tags, weight or freezer, the types, the leads, or a venue's `memo`, visits
-or rhythm. A new arena is still a Dispatches finding. What it changed is
-told only in its own report, and every write leaves a copy in
-`app_state_history`.
+2026-10-14): one task, **Marketplace agent**, runs by itself every night at
+about 01:00 his time, a scan that reaches every active arena once a week
+and every frozen one about once a month, and when Mark asks a Claude
+session for something. That session starts a session of its own with the
+task's instruction and his request at its end: a firing with the request
+as its text runs the instruction alone first, and twice the request that
+came after was refused as untrusted. Fired by hand with nothing to do, the
+agent waits. **Its job is to put things on the board** (since 2026-10-15):
+call dates as published, which simply stand there, and venues — brokerage
+events and partner searches where projects in the making and their
+leaders can be found — which land as `new` and glow there until Mark
+moves each to Venues, keeps it on the board, or removes it. It keeps what
+is on the board correct, but where a venue stands is his: it deletes only
+a venue still new, its own find gone wrong, and never one he removed
+(the gatekeeper refuses both). Where it cannot settle something about a
+venue it says why in a few words (`doubt`), which the app shows as a ?
+until Mark presses Keep it. Its rules are in the task's instruction, and
+[semaphore-decisions](notes/semaphore-decisions.md) says why. Ask agent
+on a venue's panel puts a moment on it (`askAt`) that the scan takes
+first, and the app takes the ask off once the agent's log shows a look at
+that venue after it. The gatekeeper's `board` gives it the whole board but
+the leads, venues and all, and `edit` lets it add and correct venues, add
+an arena or a page to one, add, change and delete call dates, and change
+the arenas' links and two texts, straight on the board, which the room
+then takes in as it takes Pocket's. The gatekeeper reads the board through
+a copy of the room's own `absorbVenues`, so what it writes is in the
+venues' shape with the venues' own ids. What `edit` has no op for it
+cannot do: delete an arena, change an arena's name, type, tags, weight or
+freezer, the types, the leads, or a venue's `place`, `memo`, visits or
+rhythm. A new arena is still a Dispatches finding. What it changed is told
+in its own report, and every write leaves a copy in `app_state_history`.
 
 A second table, **`app_state_history`**, keeps a copy of every upload —
 `row_id`, the blob, a count and `saved_at` — the newest twenty of each
@@ -402,18 +411,18 @@ kept the name, so nothing stored had to move.
 | on screen | in the code |
 |---|---|
 | the room's scroller — the page itself does not scroll | `#semscroll` |
-| the header: the view switcher (Now · Board), Leads beside it, Search, Types, + Venue, + Arena, Dispatches and the cloud chip | `header.top`; `#viewseg`, `#leadsBtn`, `#searchBtn` and its box `#search`, `#dispatchBtn`, `#semcloud` |
-| Now, the Board, Leads (on the wall), Dispatches, the freezer | `#now`, `#board`, `#wall`, `#dispatch`, `#freezer` |
-| Now: its two tabs, events and tools; the axis over them, sticky; one venue's row, its name and the arenas it serves, its strip, its stamp and Go | `.vtabs` › `.vtab`; `.vaxis`; `.vrow` = `.vname` (`.vnmrow` › `.vnm` and the agent's doubt `.vdoubt`, `.vchips`) + `.vtrack` + `.vend` (`.vstamp`, `.vgo`) |
-| on a venue's strip: the open stretch, the meeting days, a tool's line, the visits, today, due | `.vbar`, `.vmeet` and `.vdia`, `.vbar.tool`, `.vtick`, `.vnow`, `.vpulse` |
-| Later, folded; Limbo — its fog, its ghost — and the venues in it when open | `.vlater`; `.culimbo` › `.culb` (`.culfog`, `.culgh`, `.culc`) |
+| the header: the view switcher (Venues · Board), Leads beside it, Search, Types, + Venue, + Arena, Dispatches and the cloud chip | `header.top`; `#viewseg`, `#leadsBtn`, `#searchBtn` and its box `#search`, `#dispatchBtn`, `#semcloud` |
+| Venues (the Now page until 2026-10-15), the Board, Leads (on the wall), Dispatches, the freezer | `#now`, `#board`, `#wall`, `#dispatch`, `#freezer` |
+| Venues: its three tabs, Arising · Active · Dying, and Limbo's apart; the axis over them, sticky; one venue's row, its name and the arenas it serves, its strip, its stamp and Go | `.vtabs` › `.vtab`, `.culimbo.vlimbotab`; `.vaxis`; `.vrow` = `.vname` (`.vnmrow` › `.vnm` and the agent's doubt `.vdoubt`, `.vchips`) + `.vtrack` + `.vend` (`.vstamp`, `.vgo`) |
+| a venue's window, on the board's lanes, on Venues and in its panel: the band, its two ends to drag, its name, the event days, the visits, today, due | `.vband` (`.st-new`, `.st-board`, `.st-venues`), `.vh`, `.vbl`, `.vmeet` and `.vdia`, `.vtick`, `.vnow`, `.vpulse` |
 | the visit question, under a stamp and at the foot of the room | `.vask.pop`; `#vbar` › `.vask.bar` |
 | the month axis over the board, sticky, and the heading that names and chooses the order (My order / By date) | `.axisrow` = `.corner.sorter` (`.whsort`, its menu `.whmenu`) + `.axis`; a month is `.mcell` |
 | one arena type's group on the board, its heading | `.grp`, its heading `.ghead` |
 | the types, managed — opened by Types: a type's line and its grip, its arenas one per row, its colour dot, the copy that follows a drag | `#typesModal` › `#tylist` › `.tyblock` (`.tyline` › `.tygrip`, `.tyarenas` › `.tyrow`); `.lcolwrap.tycol`; `.tyghost` |
-| one arena's row, and its tools' diamond against the names' edge | `.row` = `.cell.name` + `.lane`; `.toolmk` |
-| a date on a lane | `.mk` — `.bk` a venue (`.bk-fixed`, `.bk-unc`, `.bk-band`, its open stretch `.bk-win`), `.cl.rb` a call's bar, `.now` today |
-| the drawer, holding an arena or a venue; an arena's venues in it; a link's cross, and the press that makes a brokerage link a venue; a venue's ask to the agent; the agent's doubt on it, with Keep it | `#card` and its `.scrim`; `.avlist` › `.avrow`; `.ldel`, `.lmake`; `.vagent`; `.vdoubtbox` |
+| the tray over the board: what is new, a row each with → Venues, Keep and Remove; what is kept, folded; new arenas waiting in Dispatches | `.tray` › `.thead`, `.trows` › `.trow` |
+| one arena's row, and its dot when it holds something new | `.row` = `.cell.name` + `.lane`; `.newdot` |
+| on a lane: a venue's window (as above), one not dated yet, a call's bar, today | `.vband`, `.vchip`, `.mk.cl.rb`, `.now` |
+| the drawer, holding an arena or a venue; an arena's venues in it; a link's cross, and the press that makes a brokerage link a venue; where a venue stands, with its three buttons; a venue's ask to the agent; the agent's doubt on it, with Keep it | `#card` and its `.scrim`; `.avlist` › `.avrow`; `.ldel`, `.lmake`; `.vplace`; `.vagent`; `.vdoubtbox` |
 
 **The Call Board** — the cluster row is the bar, `#hdr` › `.tabs`; the
 controls under it are `.hd-controls` and `#ovbar`; the chronological chart
@@ -598,7 +607,7 @@ build-step split mechanical if it is ever wanted; it is not wanted yet,
 and the indexes have taken most of the reason for wanting it away.
 
 **`semaphore.js` is still one file, logic and DOM together.** The venue
-maths — `vWin()`, `vState()`, `vEvery()` and what they lean on — sits in
+maths — `vWin()`, `vState()`, `vPhase()`, `vEvery()` and what they lean on — sits in
 the venues section beside the rendering, and the call runs the board
 draws (`callRuns()`) elsewhere again. Pocket carries a copy
 of it, taken by hand (`pocket/POCKET.md`). If Pocket ever wants to read

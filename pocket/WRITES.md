@@ -43,9 +43,10 @@ Every change is undoable from the toast; undo puts back exactly the fields it to
 **Every write absorbs first.** Before a change is applied, to the phone's copy and to the cloud's,
 the desk's own `absorbVenues` (script 1) turns what an older desk left on the arenas — brokerage
 dates, the general tool `toolId`, stamped brokerage links — into venues, under the ids the desk
-gives them, so the blob Pocket writes is in the venue shape whatever wrote the row last. Venues
-themselves (making, changing, removing one, its arenas and pages) are written only at the desk and
-by the agent. The contract's export predates venues (2026-10-14); they are written in the desk's
+gives them, so the blob Pocket writes is in the venue shape whatever wrote the row last: since
+2026-10-15 that also gives every venue its `place` and turns an old tool into a window that opened
+on its first visit. Venues themselves (making, changing, removing one, where it stands, its window,
+its arenas and pages) are written only at the desk and by the agent. The contract's export predates venues (2026-10-14); they are written in the desk's
 shape above.
 
 ## Never written by Pocket
@@ -56,5 +57,5 @@ the arena's own `color` before it is no longer written either), and the agent's 
 ## Stored only on the phone
 `pocket.cfg` (URL + key + the email last used, written at the first login; until then
 Pocket uses `BUILT_IN`), `pocket.auth` (the login session, since
-2026-10-09), `pocket.cache` (last Marketplace copy), nothing else (`pocket.datesAll` and `pocket.pinsBy`, left behind by the Coming up filter and Pinned, both gone 2026-10-12, are read by nothing).
+2026-10-09), `pocket.cache` (last Marketplace copy), `pocket.nowTab` (which of Now's tabs is open), nothing else (`pocket.datesAll` and `pocket.pinsBy`, left behind by the Coming up filter and Pinned, both gone 2026-10-12, are read by nothing).
 Nothing of these goes to the cloud. Log out removes `pocket.auth` and `pocket.cache`.

@@ -158,7 +158,7 @@ const NAME_MIN=140,NAME_MAX=560;
 function blank(){
   return {v:1,types:defaultTypes(),arenas:[],venues:[],
     ui:{q:'',collapsed:{},view:'now',
-        boardSort:'date',nameW:null,freezerOpen:false,nowTab:'events'}};
+        boardSort:'date',nameW:null,freezerOpen:false,nowTab:'active',keptOpen:false}};
 }
 /* An arena remembers which of its own dates it is waiting for. That goes stale
    the moment the dates change, so this puts it straight — a wait ends when the
@@ -330,8 +330,12 @@ function migrate(s){
     ui.boardSort = u.boardSort==='mine' ? 'mine' : 'date';
     ui.nameW = Number.isFinite(u.nameW) ? Math.min(NAME_MAX,Math.max(NAME_MIN,Math.round(u.nameW))) : null;
     ui.freezerOpen = u.freezerOpen===true;
-    /* which of Now's two tabs is showing, events or tools (Mark, 2026-10-15) */
-    ui.nowTab = u.nowTab==='tools' ? 'tools' : 'events';
+    /* which of Venues' tabs is showing (Mark, 2026-10-15): the three
+       sections or Limbo; the Events and Tools of the Now page before land
+       on Active */
+    ui.nowTab = ['arising','active','dying','over'].includes(u.nowTab) ? u.nowTab : 'active';
+    /* whether the board's tray lists what is kept on the board as well */
+    ui.keptOpen = u.keptOpen===true;
     s.ui=ui;
   }
   const first=new Map();
@@ -361,21 +365,42 @@ function migrate(s){
    than the link (siteKey), and removing an event took its links off every
    card, both because the venue was the real thing all along.
 
-   A venue is an event or a tool. An event has a life: coming, open (its
-   marketplace, where profiles and project ideas pile up), its meeting days,
-   open a while after, then over. A tool is always open. A venue serves one
-   arena or several, and is listed once. It has a rhythm, how often it wants
-   a visit, and a record of the visits, each one answering "anything?": a
-   leads that start from it say so (`venueId`), so a venue can show what it
-   has given.
+   A venue is any place of that kind, active for a while (Mark, 2026-10-15:
+   "drop the distinction between tools and events, they are all just
+   venues"). It has a window of activity, `opens` to `closes`, which he sets
+   by dragging its two ends on the board or on Venues, and it may have event
+   days (`gran`/`start`/`end`/`grade`), the meeting days activity clusters
+   round, drawn as diamonds inside the window. A venue serves one arena or
+   several, and is listed once. It has a rhythm, how often it wants a visit,
+   and a record of the visits, each one answering "anything?": leads that
+   start from it say so (`venueId`), so a venue can show what it has given.
+
+   Where it stands is `place` (Mark, 2026-10-15). Everything lands on the
+   board first: what the agent finds is `new`, glowing there until he does
+   something with it; he moves it to Venues (`venues`), keeps it on the
+   board to think about (`board`), or removes it (`gone`). A removed venue
+   stays in the list as a stub with its name, site and arenas, hidden
+   everywhere, so the agent can see it was turned down and does not bring
+   it back; a stub is dropped after a year and a bit. A venue in Venues is
+   still drawn on the board.
 
    It is kept in `S.venues`, beside the arenas, and a visit's id is its day,
    so the same visit made on the desk and the iPad is one visit when the two
    copies are put together. */
-const RHYTHM={open:4,meeting:2,after:7,tool:21};   /* days between visits, by where a venue stands */
-const SPOT_MAX=14;          /* a span up to two weeks is meeting days; longer is an open stretch or a guess at a season */
-const NOW_BACK=28,NOW_AHEAD=84;   /* the Now page's strip: four weeks back, twelve ahead (Mark chose the strip of time) */
+const RHYTHM={meeting:2,active:4,dying:7,standing:21};   /* days between visits, by where a venue stands */
+const SPOT_MAX=14;          /* event days run at most two weeks; a longer exact span is the window itself */
+const LEAD_IN=21,TAIL=14;   /* the window event days are given until Mark drags it: three weeks before, two after */
+const DYING_MAX=21;         /* a window with no event days in it is dying for its last three weeks, or last third */
+const NOW_BACK=28,NOW_AHEAD=84;   /* the Venues page's strip: four weeks back, twelve ahead (Mark chose the strip of time) */
 const VGOT={nothing:'nothing new',something:'something',lead:'a lead'};
+const PLACES=['new','board','venues','gone'];
+const GONE_KEEP=400;        /* days a removed venue's stub is kept for the agent to see */
+/* Every venue on the board when places began went to Venues, where Mark had
+   them. One that arrives later without a place came from the agent through
+   a gatekeeper that does not know of places yet, which marks what it adds
+   with `foundAt`, so a venue found after this moment is new on the board.
+   The same rule on every device, so two copies agree without asking. */
+const PLACES_SINCE='2026-10-15T19:00:00Z';
 
 /* A short fixed name for a site, so the venue a tool link becomes has the
    same id on every device that turns it into one: two devices each making
@@ -389,7 +414,19 @@ function hashKey(s){
 const ISO_DAY=/^\d{4}-\d{2}-\d{2}$/;
 function tidyVenue(v){
   if(!v.id)v.id=uid();
-  v.kind=v.kind==='tool'?'tool':'event';
+  /* A tool was always open; as a venue it is one whose window opened when it
+     was first visited or found, and has no end yet. `kind` stays on every
+     venue, always 'event', because the gatekeeper's copy of this function
+     and an older Pocket wipe a tool's window on every write they make. */
+  if(v.kind==='tool'){
+    const first=(Array.isArray(v.visits)?v.visits:[]).map(x=>x&&(x.at||x.id)).filter(x=>ISO_DAY.test(x||'')).sort()[0];
+    const found=typeof v.foundAt==='string'?v.foundAt.slice(0,10):'';
+    if(!ISO_DAY.test(v.opens||''))v.opens=first||(ISO_DAY.test(found)?found:todayISO());
+    v.gran='none';
+  }
+  v.kind='event';
+  if(!PLACES.includes(v.place))v.place=typeof v.foundAt==='string'&&v.foundAt>=PLACES_SINCE?'new':'venues';
+  if(v.place==='gone'){if(!ISO_DAY.test(v.goneAt||''))v.goneAt=todayISO();}else delete v.goneAt;
   v.name=String(v.name==null?'':v.name).trim()||'Unnamed venue';
   v.url=typeof v.url==='string'?v.url.trim():'';
   v.arenas=[...new Set((Array.isArray(v.arenas)?v.arenas:[]).filter(x=>typeof x==='string'&&x))];
@@ -405,15 +442,14 @@ function tidyVenue(v){
     if(typeof x.leadId==='string'&&x.leadId)o.leadId=x.leadId;
     return o;
   }).filter(x=>!seen.has(x.at)&&seen.add(x.at)).sort((x,y)=>x.at.localeCompare(y.at));
-  if(v.kind==='event'){
-    if(!['day','month','quarter','half','year','range','none'].includes(v.gran))
-      v.gran=v.start?((v.end&&v.start!==v.end)?'range':'day'):'none';
-    if(!v.start||v.gran==='none'){v.start=null;v.end=null;if(v.gran!=='none')v.gran='none';}
-    if(v.start&&!v.end)v.end=v.start;
-    if(v.start&&v.end<v.start){const e=v.end;v.end=v.start;v.start=e;}
-    if(v.grade!=='fixed'||!gradeOptions(v.gran).includes('fixed'))v.grade=v.grade==='fixed'&&gradeOptions(v.gran).includes('fixed')?'fixed':'uncertain';
-  }else{delete v.gran;delete v.start;delete v.end;delete v.grade;delete v.opens;delete v.closes;}
-  ['opens','closes'].forEach(k=>{if(k in v&&!ISO_DAY.test(v[k]||''))v[k]=null;});
+  if(!['day','month','quarter','half','year','range','none'].includes(v.gran))
+    v.gran=v.start?((v.end&&v.start!==v.end)?'range':'day'):'none';
+  if(!v.start||v.gran==='none'){v.start=null;v.end=null;if(v.gran!=='none')v.gran='none';}
+  if(v.start&&!v.end)v.end=v.start;
+  if(v.start&&v.end<v.start){const e=v.end;v.end=v.start;v.start=e;}
+  v.grade=v.grade==='fixed'&&gradeOptions(v.gran).includes('fixed')?'fixed':'uncertain';
+  ['opens','closes'].forEach(k=>{if(!ISO_DAY.test(v[k]||''))v[k]=null;});
+  if(v.opens&&v.closes&&v.closes<v.opens){const c=v.closes;v.closes=v.opens;v.opens=c;}
   if(!(v.every>=1&&v.every<=365))delete v.every;else v.every=Math.round(v.every);
   if(typeof v.note!=='string')v.note='';
   if(typeof v.memo==='string'&&!v.memo.trim())delete v.memo;
@@ -481,6 +517,8 @@ function absorbVenues(s){
     bk.links=keep;
     delete a.toolId;
   }
+  const now=T(todayISO());
+  s.venues=s.venues.filter(v=>v.place!=='gone'||now-T(v.goneAt)<=GONE_KEEP*DAY);
   return s;
 }
 /* One site, for the stamp (Mark, 2026-10-12): a stamp stands on every link
@@ -718,48 +756,78 @@ function callSpans(a){
 }
 /* Every marker this arena puts into its lane, for the window on screen.
 
-   Brokerage is drawn first and largest, because it is what the room is for:
-   a diamond for a day, a band for a span. Calls are drawn the way the cards
-   draw them (see callRuns): one bar from publication to deadline under the
-   brokerage marks, the stages of one call as one bar with a notch, and calls
-   with the same dates as one bar. They used to be a hairline between two
-   ticks, so an arena with three calls was three stacked hairlines and six
-   ticks, and every uncertain date was a soft blur on top (Mark, 2026-10-07:
-   overhaul the board "in a similar style" to the cards).
+   The venues are drawn first and largest, because they are what the room is
+   for: each its window, shaded by how much goes on in it, its event days as
+   diamonds, its name inside the band or after it, in the colour of where it
+   stands — new, kept on the board, or in Venues (see "a venue's window,
+   drawn"). Each venue has a track of its own wherever it would touch
+   another, its name included, so nothing on a row overlaps and a row
+   grows a track rather than piling one mark on another (Mark, 2026-10-15:
+   "make sure the board does not get cluttered"). A venue not dated yet is a
+   small chip, the chips side by side from today's line.
 
-   Uncertain is a dashed outline here as everywhere else in the room. It was
-   a haze on the board and a dash on the cards for an evening, and Mark chose
-   the dash for both: a blurred 4px bar only looks out of focus.
+   Calls are drawn the way the cards drew them (see callRuns): one bar from
+   publication to deadline under the venues, the stages of one call as one
+   bar with a notch, and calls with the same dates as one bar. Uncertain is
+   a dashed outline here as everywhere else in the room: a blurred 4px bar
+   only looks out of focus (Mark, 2026-10-07).
 
-   Whatever is over is grey — a closed call, a brokerage day gone by — so the
+   Whatever is over is grey — a closed call, a window gone by — so the
    colour on a row is what still lies ahead of it. */
+const TRACK_H=19,LABEL_CH=6.3;     /* a venue's track, and the width of one letter of its name, in pixels */
+let laneW=1000;                    /* the lanes' width in pixels, measured as the board is drawn */
+const labelPx=v=>Math.min(v.name.length,38)*LABEL_CH+(v.place==='new'?34:0)+12;
+function venueLabel(v,indent){
+  const nm=v.name.length>38?v.name.slice(0,37)+'…':v.name;
+  return '<span class="vbl"'+(indent?' style="padding-left:'+Math.round(indent)+'px"':'')+'>'+
+    (v.place==='new'?'<b class="newtag">new</b>':'')+esc(nm)+'</span>';
+}
 function laneHTML(a){
   let h='';
   const now=T(todayISO());
-  /* The venues the arena is served by, since the Marketplace (2026-10-14):
-     an event's meeting days as its brokerage date was drawn, and the
-     marketplace's open stretch either side, where it has one, as a soft
-     band under them. A press opens the venue. */
+  const px=t=>X(t)/100*laneW;
+  /* the venues: windows packed into tracks, then the undated as chips */
+  const tracks=[],chips=[];
+  const items=[];
   for(const v of venuesOf(a)){
-    const w=vWin(v);if(!w)continue;
-    if(w.to+DAY<T0||w.from>T1)continue;
-    const unc=v.grade!=='fixed';
-    const data=' data-act="openVenue" data-v="'+v.id+'" data-tipv="'+v.id+'" tabindex="0" role="button" aria-label="'+esc(v.name)+'"';
-    const band=(s,e,cls,lbl)=>{const L=Math.max(0,X(s)),R=Math.min(100,X(e)),W=R-L;
-      return '<div class="mk bk '+cls+(e<=now?' past':'')+'" style="left:'+L+'%;width:'+Math.max(W,.3)+'%"'+data+'>'+
-        (lbl&&W>7?'<span class="bl">'+esc(v.name)+'</span>':'')+'</div>';};
-    if(w.ms===null){h+=band(w.from,w.to+DAY,'bk-band'+(unc?' unc':''),true);continue;}
-    if(w.from<w.ms||w.to>w.me)h+=band(w.from,w.to+DAY,'bk-win',false);
-    if(v.gran==='day'||w.me===w.ms)
-      h+='<div class="mk bk '+(unc?'bk-unc':'bk-fixed')+(w.me+DAY<=now?' past':'')+'" style="left:'+X(w.ms+DAY/2)+'%"'+data+'></div>';
-    else h+=band(w.ms,w.me+DAY,'bk-band'+(unc?' unc':''),false);
+    const w=vWin(v);
+    if(!w){chips.push(v);continue;}
+    const from=w.from===null?T0:Math.max(T0,w.from),to=w.to===null?T1:Math.min(T1,w.to+DAY);
+    if(to<T0||from>T1)continue;
+    const L=px(from),R=px(to),lp=labelPx(v);
+    /* a name inside the band starts clear of its first diamond */
+    const at=w.ms!==null&&px(w.ms)<R?Math.max(L,px(w.ms+DAY)+8):L;
+    const inside=R-at>=lp+8;
+    items.push({v,L,R,inside,indent:at-L,end:inside?R:Math.min(laneW,R+lp+6)});
   }
-  /* Where two bars overlap, a bar takes the lowest level whose previous
-     occupant has already cleared, with daylight between them, three levels
-     at most. The floor never moves, so the earliest call in every lane sits
-     on one baseline across the whole board. A call with no publication
-     recorded comes in faded from three weeks before its deadline; one with
-     no deadline runs out faded five weeks past its publication. */
+  items.sort((x,y)=>x.L-y.L||x.end-y.end);
+  for(const it of items){
+    let k=0;while(k<tracks.length&&tracks[k]+6>it.L)k++;
+    tracks[k]=it.end;it.k=k;
+  }
+  const top=k=>5+k*TRACK_H+6;
+  for(const it of items){
+    const lab=venueLabel(it.v);
+    h+=bandHTML(it.v,T0,T1,top(it.k),it.inside?venueLabel(it.v,it.indent+6):'');
+    if(!it.inside)h+='<span class="vbl out st-'+it.v.place+'" style="top:'+top(it.k)+'px;left:'+(it.R/laneW*100).toFixed(2)+'%">'+lab+'</span>';
+  }
+  if(chips.length){
+    const k=tracks.length;let x=Math.max(0,px(now)+6);
+    for(const v of chips){
+      h+='<button class="vchip st-'+v.place+'" style="top:'+top(k)+'px;left:'+(x/laneW*100).toFixed(2)+'%" data-act="openVenue" data-v="'+v.id+'" data-tipv="'+v.id+'">'+
+        venueLabel(v)+'<i>not dated</i></button>';
+      x+=labelPx(v)+70;
+    }
+    tracks.push(x);
+  }
+  /* the calls, under the venues. Where two bars overlap, a bar takes the
+     lowest level whose previous occupant has already cleared, with daylight
+     between them, three levels at most. The floor never moves, so the
+     earliest call in every lane sits on one baseline across the whole
+     board. A call with no publication recorded comes in faded from three
+     weeks before its deadline; one with no deadline runs out faded five
+     weeks past its publication. */
+  let callH=0;
   {
     const gap=(T1-T0)*.015,freeAt=[],placed=[];
     const items=callRuns(a).all
@@ -774,6 +842,7 @@ function laneHTML(a){
       placed.push({it,lv:Math.min(lv,2)});
     }
     const Y=[[5],[5],[4,11],[3,9,15]][Math.min(freeAt.length,3)]||[5];
+    callH=placed.length?Y[Y.length-1]+8:0;
     for(const{it,lv}of placed){
       const r=it.r,L=Math.max(0,X(it.s)),R=Math.min(100,X(it.e)),W=Math.max(R-L,.3);
       const notch=r.dls.slice(0,-1).map(d=>{const x=X(T(d.start));
@@ -786,7 +855,7 @@ function laneHTML(a){
     }
   }
   if(now>=T0&&now<=T1)h+='<div class="now" style="left:'+X(now)+'%"></div>';
-  return h;
+  return {h,height:Math.max(36,(tracks.length?5+tracks.length*TRACK_H:4)+callH+4)};
 }
 /* ───────── the board's two orders ─────────
    Mark chooses between two, from the heading over the column beside the
@@ -794,7 +863,7 @@ function laneHTML(a){
    MINE   his own order of the arenas within a type, set by dragging in the
           list of types, kept on each arena as `bkPos`.
    DATE   whatever comes first: the soonest deadline, call opening or
-          brokerage event still to come, so the arena with the nearest
+          venue's event days still to come, so the arena with the nearest
           thing to act on stands at the top. A brokerage entry spanning more
           than about six weeks is a season pencilled in, not an event, and
           does not count. An arena with nothing coming goes
@@ -823,39 +892,65 @@ function dateOrder(x,y){
 }
 const boardOrder=()=>S.ui.boardSort==='mine'?mineOrder:dateOrder;
 const BOARD_SORTS={mine:{name:'My order',long:'Your own order, as set in Types'},
-                   date:{name:'By date',long:'Soonest first: the nearest deadline, call opening or brokerage event'}};
+                   date:{name:'By date',long:'Soonest first: the nearest deadline, call opening or event days'}};
 let sortOpen=false;
-/* ───────── the arena's tools ─────────
-   An arena had one general tool, a brokerage link marked to be gone through
-   now and then, standing as a diamond at the right of the name column
-   against its drag line (Mark, 2026-10-14). The tools are venues now and an
-   arena can have several, so the diamond stands for the one that has waited
-   longest, carries the days since its last visit, reddening towards the day
-   it is due as the Now page's stamps do, and a press opens its site, as Go
-   does, so that coming back asks what it gave. */
-function arenaTools(a){return venuesOf(a).filter(v=>v.kind==='tool');}
-function toolMarkHTML(a){
-  const ts=arenaTools(a);
-  if(!ts.length)return '';
-  const t=ts.slice().sort((x,y)=>(vSince(y)===null?1e9:vSince(y))-(vSince(x)===null?1e9:vSince(x)))[0];
-  const d=vSince(t),n=d===null?null:Math.max(0,d),e=vEvery(t)||14;
-  const tip=t.name+(ts.length>1?' (and '+(ts.length-1)+' more tool'+(ts.length>2?'s':'')+')':'')+' \u2014 '+
-    (d===null?'not visited yet':d<=0?'visited today':'last visit '+(d===1?'yesterday':d+' days ago'))+' \u2014 click to go';
-  return '<button class="toolmk'+(n===null?'':' dated')+'" data-act="toolGo" data-v="'+t.id+'" '+
-    (n===null?'':'style="--age:'+Math.round(Math.min(n/e,1)*100)+'%" ')+
-    'title="'+esc(tip)+'" aria-label="'+esc(tip)+'"><span>'+(n===null?'':n>99?'99+':n)+'</span></button>';
-}
-/* The board stays a picture of the calendar. */
+/* An arena's venues without event days, for the old findings Dispatches may
+   still hold that offered an arena its general tool (see takeFind); the
+   diamond the tools stood as against the names went when tools became
+   venues with windows of their own (2026-10-15). */
+function arenaTools(a){return venuesOf(a).filter(v=>!v.start);}
+/* The board stays a picture of the calendar. A dot after an arena's name
+   says it holds something new, so a folded group or a long row still shows
+   where the agent has been. */
 function boardRow(a,bg){
   const looms=a.dates.filter(d=>!d.start);
   const loomBtn=looms.length?
     '<button class="loom" data-act="openArena" data-id="'+a.id+'" data-tipl="1"><i class="sw sw-uncertain"></i>'+looms.length+'</button>':'';
+  const fresh=venuesOf(a).some(v=>v.place==='new');
+  const lane=laneHTML(a);
   /* The column beside the names that said Open / Opens / Between went on
      2026-10-11 (Mark): the calendar beside the name says it already. */
   return '<div class="row"><div class="cell name">'+
-    '<button class="nm'+weightClass(a)+'" data-act="openArena" data-id="'+a.id+'">'+esc(a.name)+'</button>'+loomBtn+toolMarkHTML(a)+
+    '<button class="nm'+weightClass(a)+'" data-act="openArena" data-id="'+a.id+'">'+esc(a.name)+'</button>'+
+    (fresh?'<i class="newdot" title="Something new from the agent on this row"></i>':'')+loomBtn+
     '</div>'+
-    '<div class="lane" style="background-image:'+bg+'" data-aid="'+a.id+'">'+laneHTML(a)+'</div></div>';
+    '<div class="lane" style="height:'+lane.height+'px;background-image:'+bg+'" data-aid="'+a.id+'" data-t0="'+T0+'" data-t1="'+T1+'">'+lane.h+'</div></div>';
+}
+/* ───────── the tray ─────────
+   Everything the agent finds lands on the board first, and stays marked new
+   until Mark does something with it (2026-10-15). Over the board stands a
+   tray listing what is new, each with the three things to do with it, so
+   none is missed in a long board; it goes when there is nothing new. Under
+   it, folded, what he kept on the board to think about. A new arena the
+   agent suggests still waits in Dispatches, and the tray points there. */
+function trayRow(v){
+  const as=venueArenas(v).map(a=>a.name).join(', ');
+  return '<div class="trow st-'+v.place+'">'+vGlyph(v)+
+    '<button class="tnm" data-act="openVenue" data-v="'+v.id+'" title="Open '+esc(v.name)+'">'+esc(v.name)+'</button>'+
+    '<span class="tar" title="'+esc(as)+'">'+esc(as||'no arena')+'</span>'+
+    '<span class="twhen">'+esc(vDateSay(v))+'</span>'+
+    '<span class="tact">'+(v.url?'<a class="tgo" href="'+esc(v.url)+'" target="_blank" rel="noopener" title="'+esc(v.url)+'">site ↗</a>':'')+
+      '<button class="btn primary" data-act="vPlace" data-v="'+v.id+'" data-p="venues" title="Move it to Venues">→ Venues</button>'+
+      (v.place==='new'?'<button class="btn" data-act="vPlace" data-v="'+v.id+'" data-p="board" title="Leave it on the board to think about">Keep</button>':'')+
+      '<button class="btn ghost" data-act="vRemove" data-v="'+v.id+'" title="Off the board; the agent will not bring it back">Remove</button></span></div>';
+}
+function trayHTML(){
+  const all=visibleVenues();
+  const fresh=all.filter(v=>v.place==='new'),kept=all.filter(v=>v.place==='board');
+  const arenasNew=finds.state==='ready'?finds.rows.filter(r=>r.kind==='arena').length:0;
+  if(!fresh.length&&!kept.length&&!arenasNew)return '';
+  const by=v=>{const w=vWin(v);return w&&w.from!==null?w.from:9e15;};
+  const order=(x,y)=>by(x)-by(y)||x.name.localeCompare(y.name);
+  const open=!!S.ui.keptOpen;
+  return '<div class="tray'+(fresh.length?' fresh':'')+'">'+
+    (fresh.length?'<p class="thead"><i class="tglow"></i>New on the board<b>'+fresh.length+'</b>'+
+      '<span>found by the agent — move each to Venues, keep it here to think about, or remove it</span></p>'+
+      '<div class="trows">'+fresh.sort(order).map(trayRow).join('')+'</div>':'')+
+    (kept.length?'<button class="thead tkept" data-act="trayKept" aria-expanded="'+open+'"><span aria-hidden="true">'+(open?'▾':'▸')+'</span>'+
+      'Kept on the board<b>'+kept.length+'</b><span>to think about</span></button>'+
+      (open?'<div class="trows">'+kept.sort(order).map(trayRow).join('')+'</div>':''):'')+
+    (arenasNew?'<button class="thead tarena" data-act="setView" data-v="dispatch">New arenas suggested<b>'+arenasNew+'</b><span>waiting in Dispatches →</span></button>':'')+
+  '</div>';
 }
 function renderBoard(){keepPlace(()=>{
   winTimes();
@@ -863,7 +958,7 @@ function renderBoard(){keepPlace(()=>{
   const board=$('#board');
   if(loadError){
     board.innerHTML='<div class="empty"><p>The saved board could not be read.</p>'+
-      '<p class="hint" style="margin-top:6px">Nothing has been changed and nothing is being saved \u2014 '+
+      '<p class="hint" style="margin-top:6px">Nothing has been changed and nothing is being saved — '+
       'what was stored is still in this browser, untouched.<br>'+
       'Reload to try again, or import your most recent export.<br><br>'+
       esc(String(loadError&&loadError.message||loadError))+'</p></div>';
@@ -885,14 +980,18 @@ function renderBoard(){keepPlace(()=>{
       '<p class="hint" style="margin-top:6px">'+hint+'</p></div>';
     return;
   }
+  /* the lanes' width, for packing the venues' names: the board less its
+     padding, the names and the group's indent */
+  const bw=board.clientWidth||(window.innerWidth-60);
+  laneW=Math.max(300,bw-44-13-(S.ui.nameW||236));
   /* The heading over the names names the order the groups are in, and opens
      the choice of the two (Mark, 2026-10-11). It stood over a status column,
      saying "Where", which named neither the column nor what pressing it
      did; the column went the same day, and the choice came over here. */
   const so=BOARD_SORTS[S.ui.boardSort];
-  let h='<div class="axisrow"><div class="corner sorter">Arena<button class="whsort'+(sortOpen?' on':'')+'" data-act="boardSort" '+
+  let h=trayHTML()+'<div class="axisrow"><div class="corner sorter">Arena<button class="whsort'+(sortOpen?' on':'')+'" data-act="boardSort" '+
       'aria-haspopup="listbox" aria-expanded="'+sortOpen+'" title="Order of the arenas in each type: '+esc(so.long)+'">'+so.name+
-      '<i aria-hidden="true">\u25BE</i></button>'+
+      '<i aria-hidden="true">▾</i></button>'+
       (sortOpen?'<span class="whmenu" role="listbox" aria-label="Order of the arenas">'+
         Object.keys(BOARD_SORTS).map(k=>'<button class="'+(k===S.ui.boardSort?'sel':'')+'" data-act="boardSortSet" data-v="'+k+'" '+
           'role="option" aria-selected="'+(k===S.ui.boardSort)+'"><b>'+BOARD_SORTS[k].name+'</b><span>'+BOARD_SORTS[k].long+'</span></button>').join('')+
@@ -902,10 +1001,12 @@ function renderBoard(){keepPlace(()=>{
     const group=vis.filter(a=>a.typeId===ty.id).sort(boardOrder());
     if(!group.length)continue;
     const col=!!S.ui.collapsed[ty.id];
+    const nNew=col?group.filter(a=>venuesOf(a).some(v=>v.place==='new')).length:0;
     h+='<div class="grp'+(col?' collapsed':'')+'" style="--tone:'+esc(toneHex(ty.color))+'">'+
        '<div class="ghead"><div class="gc">'+
-       '<button class="caret" data-act="toggleGroup" data-id="'+ty.id+'" aria-label="Collapse group">'+(col?'\u25B8':'\u25BE')+'</button>'+
-       '<span class="gname">'+esc(ty.name)+'</span><span class="gcount">'+group.length+'</span></div></div>';
+       '<button class="caret" data-act="toggleGroup" data-id="'+ty.id+'" aria-label="Collapse group">'+(col?'▸':'▾')+'</button>'+
+       '<span class="gname">'+esc(ty.name)+'</span><span class="gcount">'+group.length+'</span>'+
+       (nNew?'<i class="newdot" title="'+nNew+' arena'+(nNew===1?'':'s')+' here with something new"></i>':'')+'</div></div>';
     if(col){h+='</div>';continue;}
     for(const a of group)h+=boardRow(a,bg);
     h+='</div>';
@@ -917,9 +1018,11 @@ function renderBoard(){keepPlace(()=>{
     for(const a of orphans)h+=boardRow(a,bg);
     h+='</div>';
   }
-  /* the edge of the column of names, the whole board's height, to drag
-     (see "the width of the names") */
-  board.innerHTML=h+'<div class="namegrip" title="Drag to widen or narrow the arenas\u2019 names" aria-hidden="true"></div>';
+  /* the edge of the column of names, from the axis down, to drag (see "the
+     width of the names") */
+  board.innerHTML=h+'<div class="namegrip" title="Drag to widen or narrow the arenas’ names" aria-hidden="true"></div>';
+  const ax=board.querySelector('.axisrow'),g=board.querySelector('.namegrip');
+  if(ax&&g)g.style.top=ax.offsetTop+'px';
 });}
 /* ───────── the width of the names ─────────
    Mark asked on 2026-10-14 to drag the board so more of each arena's name
@@ -1007,6 +1110,7 @@ function loadFinds(){
     if(err){finds.state='error';finds.error=err;finds.rows=[];}
     else{finds.state='ready';finds.rows=rows;}
     renderDispatch();applyView();
+    if(S.ui.view==='board')renderBoard();     /* the tray points to new arenas */
   });
 }
 
@@ -1379,68 +1483,128 @@ function acceptAllFinds(){
 const LIMBO_GHOST='<svg class="culgh" viewBox="0 0 16 18" width="16" height="18" aria-hidden="true"><path d="M8 1.5C4.7 1.5 2.5 4 2.5 7.2V16l1.8-1.4L6.1 16 8 14.6 9.9 16l1.8-1.4L13.5 16V7.2C13.5 4 11.3 1.5 8 1.5z" fill="currentColor"/><ellipse cx="6" cy="7.6" rx="1.05" ry="1.45" fill="#15171A"/><ellipse cx="10" cy="7.6" rx="1.05" ry="1.45" fill="#15171A"/><ellipse cx="8" cy="11" rx=".9" ry="1.1" fill="#15171A"/></svg>';
 function venue(id){return (S.venues||[]).find(v=>v.id===id)||null;}
 function venueArenas(v){return v.arenas.map(arena).filter(Boolean);}
-function venuesOf(a){return (S.venues||[]).filter(v=>v.arenas.includes(a.id));}
+/* every venue an arena is served by, wherever it stands but removed */
+function venuesOf(a){return (S.venues||[]).filter(v=>v.place!=='gone'&&v.arenas.includes(a.id));}
 /* A venue all of whose arenas are in the freezer is in the freezer with
    them; one serving no arena at all is still in sight, so it can be given one. */
-function liveVenue(v){const as=venueArenas(v);return !as.length||as.some(a=>!a.frozenAt);}
+function liveVenue(v){const as=venueArenas(v);return v.place!=='gone'&&(!as.length||as.some(a=>!a.frozenAt));}
 function venueHay(v){
   return [v.name,v.url,v.note||'',v.memo||'']
     .concat(v.pages.map(p=>(p.label||'')+' '+p.url),v.visits.map(x=>x.text||''),venueArenas(v).map(a=>a.name))
     .join('\n').toLowerCase();
 }
+/* what the search leaves of the venues, wherever they stand; the Venues
+   page takes the ones in Venues from it, the board all of them */
 function visibleVenues(){
   const ql=S.ui.q.trim().toLowerCase();
   const vis=new Set(visibleArenas().map(a=>a.id));
   return (S.venues||[]).filter(v=>liveVenue(v)&&(!ql||venueHay(v).includes(ql)||v.arenas.some(id=>vis.has(id))));
 }
-/* An event's own date is its meeting days when it is a day or a span of up
-   to two weeks; anything longer, or a month or a season, is the stretch it
-   is open in, or a guess at one. */
+const inVenues=v=>v.place==='venues';
+const onTrial=v=>v.place==='new'||v.place==='board';
+/* A venue's event days are its meeting days when they are a day or a span
+   of up to two weeks. A longer exact span is the stretch its marketplace is
+   open, and stands as its window; a month, a quarter or a year is a guess
+   at a season. */
 function isSpot(v){
-  if(v.kind!=='event'||!v.start)return false;
+  if(!v.start)return false;
   return v.gran==='day'||(v.gran==='range'&&T(v.end)-T(v.start)<=SPOT_MAX*DAY);
 }
-/* from and to: the whole stretch the venue is open in; ms and me: its
-   meeting days, when it has any. A season is an event known only to a
-   month, a quarter or a year, with no open stretch given: a guess at when
-   it will be, not a marketplace that is open all that while, so it asks
-   for no visits until its days are known. A span given exactly, however
-   long, is the stretch a marketplace is open (a b2match sign-up running
-   two months, say). */
+/* The window: from and to, either of which may be open (null), and the
+   meeting days inside it, ms and me, when it has any. Mark sets the two ends
+   (`opens`, `closes`) by dragging them; until he does, meeting days are
+   given three weeks before and two after, a long exact span is its own
+   window, and a season is its own stretch, marked as the guess it is. A
+   venue with no days and no ends at all has no window: it is not dated yet.
+   `set` says which ends are his. */
 function vWin(v){
-  if(v.kind!=='event')return null;
-  const ms=v.start?T(v.start):null,me=v.start?T(v.end||v.start):null;
-  const o=v.opens?T(v.opens):ms,c=v.closes?T(v.closes):me;
-  if(o===null||c===null)return null;
   const spot=isSpot(v);
-  const season=!spot&&v.gran!=='range'&&!v.opens&&!v.closes;
-  return {from:Math.min(o,ms===null?o:ms),to:Math.max(c,me===null?c:me),ms:spot?ms:null,me:spot?me:null,season};
+  const ms=spot?T(v.start):null,me=spot?T(v.end||v.start):null;
+  let from=v.opens?T(v.opens):null,to=v.closes?T(v.closes):null;
+  const set={from:from!==null,to:to!==null};
+  let season=false;
+  if(spot){
+    if(from===null)from=ms-LEAD_IN*DAY;
+    if(to===null)to=me+TAIL*DAY;
+    from=Math.min(from,ms);to=Math.max(to,me);
+  }else if(v.start){
+    season=!(v.gran==='range'&&v.grade==='fixed');
+    if(from===null)from=T(v.start);
+    if(to===null)to=T(v.end||v.start);
+  }
+  if(from===null&&to===null)return null;
+  return {from,to,ms,me,season:season&&!set.from&&!set.to,set,unc:v.start?v.grade!=='fixed':false};
 }
+/* Where a venue stands today, finely: undated, arising (its window still
+   ahead, or its season not yet dated), meeting (on its event days), active,
+   dying (past its event days, or in the last stretch of a window that has
+   none), over. The three sections of Venues are the three middle phases
+   (vPhase); over is Limbo. */
 function vState(v){
-  if(v.kind==='tool')return 'tool';
   const w=vWin(v);if(!w)return 'undated';
   const now=T(todayISO());
-  if(now<w.from)return 'coming';
-  if(now>w.to)return 'over';
-  if(w.season)return 'season';
-  if(w.ms!==null&&now>=w.ms&&now<=w.me)return 'meeting';
-  if(w.ms!==null&&now>w.me)return 'after';
-  return 'open';
+  if(w.to!==null&&now>w.to)return 'over';
+  if(w.season||(w.from!==null&&now<w.from))return 'arising';
+  if(w.ms!==null)return now<w.ms?'active':now<=w.me?'meeting':'dying';
+  if(w.to!==null){
+    const tail=Math.min(DYING_MAX*DAY,w.from!==null?(w.to-w.from)/3:DYING_MAX*DAY);
+    return now>=w.to-tail?'dying':'active';
+  }
+  return 'active';
+}
+const PHASE={undated:'arising',arising:'arising',meeting:'active',active:'active',dying:'dying',over:'over'};
+function vPhase(v){return PHASE[vState(v)];}
+/* How much is going on at a venue at one moment, from 0 to 1: rising
+   through the window to its event days, full on them, falling away after;
+   flat where there are none, fading through the last stretch. It is the
+   shading of a window, and the order of Active, so the venue where most is
+   happening stands first. */
+function vHeat(v,t){
+  const w=vWin(v);if(!w)return 0;
+  if((w.from!==null&&t<w.from)||(w.to!==null&&t>w.to+DAY))return 0;
+  if(w.ms!==null){
+    if(t<w.ms)return .3+.7*(t-w.from)/Math.max(DAY,w.ms-w.from);
+    if(t<=w.me+DAY)return 1;
+    return Math.max(.15,1-.85*(t-w.me-DAY)/Math.max(DAY,w.to-w.me));
+  }
+  if(w.season)return .35;
+  if(w.to!==null){
+    const tail=Math.min(DYING_MAX*DAY,w.from!==null?(w.to-w.from)/3:DYING_MAX*DAY);
+    if(t>w.to-tail)return Math.max(.15,.6-.45*(t-(w.to-tail))/Math.max(DAY,tail));
+  }
+  return .6;
+}
+/* the shading of a window drawn from x0 to x1 (times), as a gradient in
+   the colour `rgb` (three numbers), the heat at each stop as its strength */
+function heatBG(v,x0,x1,rgb){
+  const w=vWin(v);if(!w||x1<=x0)return '';
+  const pts=[x0,x1];
+  [w.from,w.ms,w.me!==null?w.me+DAY:null,w.to].forEach(t=>{if(t!==null&&t>x0&&t<x1)pts.push(t);});
+  if(w.to!==null&&w.ms===null&&!w.season){
+    const tail=Math.min(DYING_MAX*DAY,w.from!==null?(w.to-w.from)/3:DYING_MAX*DAY);
+    if(w.to-tail>x0&&w.to-tail<x1)pts.push(w.to-tail);
+  }
+  pts.sort((a,b)=>a-b);
+  return 'linear-gradient(90deg,'+pts.map(t=>'rgba('+rgb+','+(.1+.6*vHeat(v,Math.min(t,x1-1))).toFixed(2)+') '+
+    ((t-x0)/(x1-x0)*100).toFixed(1)+'%').join(',')+')';
 }
 function lastVisit(v){const n=v.visits.length;return n?v.visits[n-1]:null;}
 function vSince(v){const x=lastVisit(v);return x?daysBetween(T(x.at),T(todayISO())):null;}
-/* How often a venue wants a visit. Where it stands sets the base: an open
-   marketplace every four days, its meeting days every other day, a week
-   after them, a standing tool every three weeks; one that is coming, over
-   or undated wants none. The weight of the arenas it serves scales it, as
-   the weight used to scale an arena's turn in the rotation: a venue serving
-   a central arena comes round more often. What the visits gave scales it
-   last: something found in either of the last two brings it round sooner,
-   three answered visits in a row with nothing new send it further off. A
-   rhythm Mark sets himself (`every`) stands as he set it. */
+/* How often a venue wants a visit. Where it stands sets the base: on its
+   event days every other day, active every four days, dying once a week, a
+   window with no event days and no end every three weeks; one arising, over
+   or undated wants none, nor does one not yet in Venues. The weight of the
+   arenas it serves scales it: a venue serving a central arena comes round
+   more often. What the visits gave scales it last: something found in
+   either of the last two brings it round sooner, three answered visits in
+   a row with nothing new send it further off. A rhythm Mark sets himself
+   (`every`) stands as he set it. */
 function vEvery(v){
   if(v.every)return v.every;
-  const base=RHYTHM[vState(v)];if(!base)return null;
+  if(!inVenues(v))return null;
+  const st=vState(v),w=vWin(v);
+  const base=st==='active'&&w&&w.ms===null&&w.to===null?RHYTHM.standing:RHYTHM[st];
+  if(!base)return null;
   const as=venueArenas(v).filter(a=>!a.frozenAt);
   let e=base*(as.length?Math.min(...as.map(a=>WEIGHTS[weightOf(a)].turn)):1);
   const said=v.visits.filter(x=>x.got);
@@ -1470,25 +1634,28 @@ function vYieldSay(v){
   return y.n+' visit'+(y.n===1?'':'s')+(y.found?' · '+y.found+' found':'')+(y.leads?' · '+y.leads+' lead'+(y.leads===1?'':'s'):'');
 }
 function vHost(v){return v.url?linkName({url:v.url}):'';}
+const tDay=t=>shortDay(new Date(t).toISOString().slice(0,10));
 function vDateSay(v){
-  if(v.kind==='tool')return 'always open';
   const st=vState(v),w=vWin(v);
-  const day=t=>shortDay(new Date(t).toISOString().slice(0,10));
   const meets=v.start?(v.grade==='fixed'?'':'≈ ')+shortDate(v):'';
   switch(st){
-    case 'undated':return 'date not known yet';
-    case 'season':return 'expected '+meets+', not dated yet';
-    case 'coming':return v.opens&&T(v.opens)>T(todayISO())?'opens '+day(T(v.opens)):
-      w.season?'expected '+meets:isSpot(v)?'meets '+meets:'opens '+day(w.from);
-    case 'meeting':return 'meeting now';
-    case 'open':return w.ms!==null?'open · meets '+meets:'open · closes '+day(w.to);
-    case 'after':return 'still open · closes '+day(w.to);
-    default:return 'over · '+meets;
+    case 'undated':return 'not dated yet';
+    case 'arising':return w.season?'expected '+meets:'opens '+tDay(w.from)+(w.ms!==null?' · meets '+meets:'');
+    case 'meeting':return 'meeting now · until '+tDay(w.to);
+    case 'active':return w.ms!==null?'meets '+meets:w.to!==null?'until '+tDay(w.to):'open, no end set';
+    case 'dying':return (w.ms!==null?'met '+meets+' · ':'')+'closes '+tDay(w.to);
+    default:return 'closed '+tDay(w.to)+(w.ms!==null?' · met '+meets:'');
   }
 }
+/* Where it stands, in the board's words: new, kept, or in Venues and in
+   which section of it */
+const PLACE_SAY={new:'New on the board',board:'Kept on the board',venues:'In Venues',gone:'Removed'};
+const PHASE_SAY={arising:'Arising',active:'Active',dying:'Dying',over:'Limbo'};
+function vPlaceSay(v){return PLACE_SAY[v.place]+(inVenues(v)?' · '+PHASE_SAY[vPhase(v)]:'');}
+/* a venue's mark: a diamond where it has event days, dashed while they are
+   a guess; a rounded bar, the shape of a window, where it has none */
 function vGlyph(v){
-  return v.kind==='tool'?'<i class="vgl tool" aria-hidden="true"></i>':
-    '<i class="vgl ev'+(v.grade==='fixed'?'':' unc')+'" aria-hidden="true"></i>';
+  return v.start?'<i class="vgl ev'+(v.grade==='fixed'?'':' unc')+'" aria-hidden="true"></i>':'<i class="vgl win" aria-hidden="true"></i>';
 }
 /* the arenas a venue serves, each in its type's colour */
 function vArenaChips(v,max){
@@ -1530,8 +1697,8 @@ function vGoHTML(v){
 /* The agent's doubt (Mark, 2026-10-15): a venue the agent could not show to
    bear on a coming call, nor show to be over, is kept rather than let go,
    with a few words saying why (`doubt`). It wears a small ? beside its name
-   on Now, and its panel says the doubt with Keep it, which takes the mark
-   off; Let it go stays where it was. */
+   on Venues, and its panel says the doubt with Keep it, which takes the mark
+   off; Remove stays where it was. */
 function vDoubtMark(v){
   return v.doubt?'<i class="vdoubt" title="The agent is not sure this still matters: '+esc(v.doubt)+'">?</i>':'';
 }
@@ -1618,50 +1785,133 @@ function cameBack(){
 document.addEventListener('visibilitychange',cameBack);
 window.addEventListener('focus',cameBack);
 
-/* ── the Now page: a strip of time ──
-   Every venue as a bar across four weeks back and twelve ahead, the
-   marketplace's open stretch a soft band, its meeting days a diamond, a
-   tool a dashed line that never ends, and today the gold line through all
-   of them (Mark chose this over one list in bands and three columns,
-   2026-10-14). A venue that is due wears a red ring on today's line. The
-   visits are the small ticks under each bar. What lies further ahead than
-   the strip, or has no date yet, is folded away under Later; what is over
-   waits in Limbo, as it did on Coming up, until it is let go. */
-let nowLater=false,nowLimbo=false;
+/* ── a venue's window, drawn ──
+   The same band on the board's lanes and on the Venues strip: the window
+   shaded by its heat in the colour of where the venue stands (the
+   brokerage red in Venues, the new hue while new, bone while kept), a
+   dashed edge while it is a season's guess, its two ends to drag, and its
+   event days as diamonds over it. `t0`/`t1` are the strip's ends, `top` the
+   middle of the band in pixels, or null for the middle of the strip. */
+const PLACE_RGB={new:'185,227,90',board:'150,140,122',venues:'239,91,76',gone:'125,116,102'};
+function bandHTML(v,t0,t1,top,label){
+  const w=vWin(v);if(!w)return '';
+  const P=t=>(t-t0)/(t1-t0)*100,C=x=>Math.max(0,Math.min(100,x));
+  const now=T(todayISO());
+  const from=w.from===null?t0:Math.max(t0,w.from),to=w.to===null?t1:Math.min(t1,w.to+DAY);
+  if(to<t0||from>t1)return '';
+  const L=C(P(from)),R=C(P(to)),past=w.to!==null&&w.to+DAY<now;
+  const y=top===null?'':'top:'+top+'px;';
+  const rgb=past?PLACE_RGB.gone:PLACE_RGB[v.place];
+  const data=' data-act="openVenue" data-v="'+v.id+'" data-tipv="'+v.id+'"';
+  let h='<div class="vband st-'+v.place+(past?' past':'')+(w.season?' season':'')+(w.from===null?' openl':'')+(w.to===null?' openr':'')+
+    '" style="'+y+'left:'+L.toFixed(2)+'%;width:'+Math.max(R-L,.5).toFixed(2)+'%;background:'+heatBG(v,from,to,rgb)+'"'+data+
+    ' role="button" tabindex="0" aria-label="'+esc(v.name)+', '+esc(vDateSay(v))+'">'+
+    '<i class="vh l" data-v="'+v.id+'" data-end="opens" title="Drag to set when it opens — double-click to undo"></i>'+
+    '<i class="vh r" data-v="'+v.id+'" data-end="closes" title="Drag to set when it closes — double-click to undo"></i>'+
+    (label||'')+'</div>';
+  if(w.ms!==null){
+    if(w.me>w.ms){const a=C(P(w.ms)),b=C(P(w.me+DAY));
+      h+='<i class="vmeet'+(past?' past':'')+'" style="'+y+'left:'+a.toFixed(2)+'%;width:'+Math.max(b-a,.4).toFixed(2)+'%"'+data+'></i>';}
+    const x=P(w.ms+DAY/2);
+    if(x>=0&&x<=100)h+='<i class="vdia st-'+v.place+(w.unc?' unc':'')+(past?' past':'')+'" style="'+y+'left:'+x.toFixed(2)+'%"'+data+'></i>';
+  }
+  return h;
+}
+/* ── dragging a window's ends ──
+   Mark sets how long a venue is active by its two ends (2026-10-15), on the
+   board and on Venues alike, which are one record and so stay in step. The
+   end follows the pointer by the day, held by the event days (a window
+   cannot open after them or close before them) and by the other end; the
+   day it would take is said beside the pointer, and letting go keeps it. A
+   double-click on an end gives it back to its default. The press that
+   follows the drag is swallowed, so letting go does not open the venue. */
+let wDrag=null,wSwallow=0;
+document.addEventListener('pointerdown',e=>{
+  const hd=e.target.closest&&e.target.closest('.vh');
+  if(!hd||e.button!==0)return;
+  const v=venue(hd.dataset.v),strip=hd.closest('[data-t0]'),band=hd.parentElement;
+  if(!v||!strip||!band)return;
+  e.preventDefault();e.stopPropagation();
+  const r=strip.getBoundingClientRect(),w=vWin(v);
+  wDrag={v,band,end:hd.dataset.end,r,t0:+strip.dataset.t0,t1:+strip.dataset.t1,w,day:null,
+    L:parseFloat(band.style.left),R:parseFloat(band.style.left)+parseFloat(band.style.width)};
+  band.classList.add('dragging');
+  try{hd.setPointerCapture(e.pointerId);}catch(x){}
+},true);
+document.addEventListener('pointermove',e=>{
+  if(!wDrag)return;
+  const d=wDrag,w=d.w;
+  let t=d.t0+(e.clientX-d.r.left)/d.r.width*(d.t1-d.t0);
+  if(d.end==='opens'){
+    let hi=w.ms!==null?w.ms:(w.to!==null?w.to-DAY:Infinity);
+    t=Math.min(t,hi);
+  }else{
+    let lo=w.me!==null?w.me:(w.from!==null?w.from+DAY:-Infinity);
+    t=Math.max(t,lo);
+  }
+  const day=new Date(t+DAY/2);day.setHours(12,0,0,0);
+  const iso=day.getFullYear()+'-'+pad(day.getMonth()+1)+'-'+pad(day.getDate());
+  d.day=iso;
+  const x=Math.max(0,Math.min(100,(T(iso)+(d.end==='closes'?DAY:0)-d.t0)/(d.t1-d.t0)*100));
+  if(d.end==='opens')d.L=x;else d.R=x;
+  d.band.style.left=Math.min(d.L,d.R).toFixed(2)+'%';
+  d.band.style.width=Math.max(Math.abs(d.R-d.L),.5).toFixed(2)+'%';
+  tip.textContent=(d.end==='opens'?'Opens ':'Closes ')+fmtDay(iso);
+  tip.style.display='block';tip.style.left=(e.clientX+14)+'px';tip.style.top=(e.clientY+16)+'px';
+});
+document.addEventListener('pointerup',()=>{
+  if(!wDrag)return;
+  const d=wDrag;wDrag=null;tip.style.display='none';
+  d.band.classList.remove('dragging');
+  wSwallow=Date.now();
+  if(!d.day)return;
+  d.v[d.end]=d.day;tidyVenue(d.v);
+  save();renderAll();
+});
+document.addEventListener('click',e=>{
+  if(Date.now()-wSwallow<400&&e.target.closest&&e.target.closest('.vband,.vh')){e.preventDefault();e.stopPropagation();}
+},true);
+document.addEventListener('dblclick',e=>{
+  const hd=e.target.closest&&e.target.closest('.vh');if(!hd)return;
+  const v=venue(hd.dataset.v);if(!v)return;
+  v[hd.dataset.end]=null;
+  /* a window with no event days has no default to go back to at its
+     opening, so there an end is only ever moved */
+  if(!v.start&&!v.opens&&!v.closes)v.opens=todayISO();
+  save();renderAll();
+});
+
+/* ── Venues: three sections and Limbo ──
+   What Mark has moved to Venues, in three tabs by where each stands today:
+   Arising (its window still ahead, or not dated yet), Active (open, up to
+   and through its event days), Dying (past them, or in the last stretch of
+   a window without any), with Limbo set apart for what is over (Mark,
+   2026-10-15; the Now page with its Events and Tools tabs before). Each tab
+   says how many it holds and how many of them are due, so a due venue is
+   not missed from another tab. Every venue is a row on one strip of time,
+   four weeks back and twelve ahead: its window shaded by its heat, its
+   event days as diamonds, the visits as ticks under it, today the gold
+   line, and a red ring on today's line when it is due. Active is in order
+   of heat, so where most is going on stands first. */
 function nowSpan(){const now=T(todayISO());return {now,t0:now-NOW_BACK*DAY,t1:now+NOW_AHEAD*DAY};}
 function vTrackHTML(v,sp){
   const{now,t0,t1}=sp;
   const P=t=>((t-t0)/(t1-t0)*100);
   const C=x=>Math.max(0,Math.min(100,x));
   let h='';
-  const tip=' data-tipv="'+v.id+'"';
-  if(v.kind==='tool')h+='<i class="vbar tool"'+tip+'></i>';
+  const w=vWin(v);
+  if(!w)h+='<span class="vbeyond" data-tipv="'+v.id+'">not dated yet — set it in its panel</span>';
+  else if(w.from!==null&&w.from>t1)h+='<span class="vbeyond" data-tipv="'+v.id+'">'+esc(vDateSay(v))+' →</span>';
   else{
-    const w=vWin(v);
-    if(w&&w.from>t1)h+='<span class="vbeyond"'+tip+'>'+esc(vDateSay(v))+' →</span>';
-    else if(w){
-      const spot=w.ms!==null;
-      const unc=v.grade!=='fixed';
-      /* the open stretch, where there is more of it than the meeting days */
-      if(!spot||w.from<w.ms||w.to>w.me){
-        const L=C(P(w.from)),R=C(P(w.to+DAY));
-        h+='<i class="vbar'+(unc&&!spot?' unc':'')+'" style="left:'+L.toFixed(2)+'%;width:'+Math.max(R-L,.6).toFixed(2)+'%"'+tip+'></i>';
-      }
-      if(spot){
-        if(w.me>w.ms){const L=C(P(w.ms)),R=C(P(w.me+DAY));
-          h+='<i class="vmeet" style="left:'+L.toFixed(2)+'%;width:'+Math.max(R-L,.6).toFixed(2)+'%"'+tip+'></i>';}
-        const x=P(w.ms+DAY/2);
-        if(x>=0&&x<=100)h+='<i class="vdia'+(unc?' unc':'')+'" style="left:'+x.toFixed(2)+'%"'+tip+'></i>';
-      }
-      const lx=spot?P(w.me+DAY):P(w.to+DAY);
-      if(lx<92&&lx>-1)h+='<span class="vlab" style="left:'+C(lx).toFixed(2)+'%">'+esc(spot||w.season?(unc?'≈ ':'')+shortDate(v):'closes '+shortDay(new Date(w.to).toISOString().slice(0,10)))+'</span>';
-    }
+    h+=bandHTML(v,t0,t1,null,'');
+    const lx=w.to===null?101:P(w.to+DAY);
+    if(lx<90&&lx>-1)h+='<span class="vlab" style="left:'+C(lx).toFixed(2)+'%">'+esc(w.ms!==null?(w.unc?'≈ ':'')+shortDate(v):'closes '+tDay(w.to))+'</span>';
   }
   for(const x of v.visits){const t=T(x.at);if(t>=t0&&t<=t1)
     h+='<i class="vtick'+(x.got&&x.got!=='nothing'?' found':'')+'" style="left:'+P(t+DAY/2).toFixed(2)+'%" title="'+esc(shortDay(x.at)+(x.got?' — '+VGOT[x.got]:''))+'"></i>';}
   h+='<i class="vnow" style="left:'+P(now+DAY/2).toFixed(2)+'%"></i>';
   if(vDue(v))h+='<i class="vpulse" style="left:'+P(now+DAY/2).toFixed(2)+'%" title="Due for a visit"></i>';
-  return '<div class="vtrack" data-act="openVenue" data-v="'+v.id+'">'+h+'</div>';
+  return '<div class="vtrack" data-act="openVenue" data-v="'+v.id+'" data-t0="'+t0+'" data-t1="'+t1+'">'+h+'</div>';
 }
 function nowRow(v,sp,over){
   const due=vDue(v);
@@ -1669,7 +1919,7 @@ function nowRow(v,sp,over){
     '<div class="vname">'+vGlyph(v)+
       '<span class="vnt"><span class="vnmrow"><button class="vnm" data-act="openVenue" data-v="'+v.id+'" title="'+esc(v.name)+'">'+esc(v.name)+'</button>'+vDoubtMark(v)+'</span>'+
         vArenaChips(v,2)+'</span></div>'+
-    (over?'<div class="vtrack over"><span class="vlab" style="left:0">'+esc(vDateSay(v))+'</span></div>':vTrackHTML(v,sp))+
+    vTrackHTML(v,sp)+
     '<div class="vend">'+(over?'':vStampHTML(v))+vGoHTML(v)+
       (over?'<button class="cudel" data-act="vDrop" data-v="'+v.id+'" data-limbo="1" title="Let it go — off the board" aria-label="Let '+esc(v.name)+' go">✕</button>':'')+
     '</div></div>';
@@ -1695,121 +1945,130 @@ function nowEmptyHTML(){
       '<button class="btn" data-act="addArena">+ Arena</button>'+
       '<button class="btn" data-act="seed">Load example set</button></div></div>';
   const q=S.ui.q.trim();
-  return '<div class="empty"><p>'+(q?'No venue matches the search.':'No venue yet.')+'</p>'+
-    '<p class="hint" style="margin-top:6px">'+(q?'Clear it, or try a shorter word.':'Press + Venue for an event or a partner-search tool you visit.')+'</p></div>';
+  return '<div class="empty"><p>'+(q?'No venue matches the search.':'No venue in Venues yet.')+'</p>'+
+    '<p class="hint" style="margin-top:6px">'+(q?'Clear it, or try a shorter word.':'Move one here from the board with → Venues, or press + Venue.')+'</p></div>';
+}
+const NOW_TABS={arising:{name:'Arising',none:'Nothing arising: no venue in Venues whose window is still ahead.'},
+  active:{name:'Active',none:'Nothing active. A venue is active from its window’s opening through its event days.'},
+  dying:{name:'Dying',none:'Nothing dying. A venue dies after its event days, or in the last weeks of its window.'},
+  over:{name:'Limbo',none:''}};
+function nowSections(){
+  const all=visibleVenues().filter(inVenues);
+  const by={arising:[],active:[],dying:[],over:[]};
+  for(const v of all)by[vPhase(v)].push(v);
+  const now=T(todayISO()),name=(x,y)=>x.name.localeCompare(y.name);
+  const from=v=>{const w=vWin(v);return w&&w.from!==null?w.from:Infinity;};
+  const to=v=>{const w=vWin(v);return w&&w.to!==null?w.to:Infinity;};
+  by.arising.sort((x,y)=>from(x)-from(y)||name(x,y));
+  by.active.sort((x,y)=>vHeat(y,now)-vHeat(x,now)||vDue(y)-vDue(x)||name(x,y));
+  by.dying.sort((x,y)=>to(x)-to(y)||name(x,y));
+  by.over.sort((x,y)=>to(y)-to(x)||name(x,y));
+  return {all,by};
 }
 function renderNow(){keepPlace(()=>{
   const el=$('#now');if(!el)return;
   const sp=nowSpan();
-  const all=visibleVenues();
+  const{all,by}=nowSections();
   if(!all.length){el.innerHTML=nowEmptyHTML();return;}
-  const by=v=>{const w=vWin(v);return w?w.from:Infinity;};
-  const name=(x,y)=>x.name.localeCompare(y.name);
-  const over=all.filter(v=>vState(v)==='over').sort((x,y)=>by(y)-by(x)||name(x,y));
-  const events=all.filter(v=>v.kind==='event'&&vState(v)!=='over');
-  const near=events.filter(v=>{const w=vWin(v);return w&&w.from<=sp.t1;}).sort((x,y)=>by(x)-by(y)||name(x,y));
-  const later=events.filter(v=>!near.includes(v)).sort((x,y)=>by(x)-by(y)||name(x,y));
-  const tools=all.filter(v=>v.kind==='tool').sort((x,y)=>(vDue(y)-vDue(x))||((vSince(y)??999)-(vSince(x)??999))||name(x,y));
-  /* Events and tools on two tabs rather than one under the other (Mark,
-     2026-10-15): the tools stood under every event, Later and all, and were
-     reached only by scrolling past them. Limbo is the events' own, since
-     only an event is ever over. Each tab says how many it holds and how
-     many of them are due, so a due tool is not missed from the events tab. */
-  const tab=S.ui.nowTab==='tools'?'tools':'events';
-  const evAll=events.concat(over),tabDue=xs=>xs.filter(vDue).length;
-  const tabHTML=(k,label,xs)=>{const d=tabDue(xs);
-    return '<button class="vtab'+(tab===k?' on':'')+'" data-act="nowTab" data-t="'+k+'" aria-pressed="'+(tab===k)+'">'+label+
+  const tab=NOW_TABS[S.ui.nowTab]?S.ui.nowTab:'active';
+  const tabDue=xs=>xs.filter(vDue).length;
+  const tabHTML=k=>{const xs=by[k],d=tabDue(xs);
+    return '<button class="vtab t-'+k+(tab===k?' on':'')+'" data-act="nowTab" data-t="'+k+'" aria-pressed="'+(tab===k)+'">'+NOW_TABS[k].name+
       '<b>'+xs.length+'</b>'+(d?'<i class="vtabdue" title="'+d+' due for a visit">'+d+' due</i>':'')+'</button>';};
-  const shown=tab==='tools'?tools:evAll;
-  const due=tabDue(shown);
-  let h='<div class="vhead"><div class="vtabs" role="group" aria-label="Events or tools">'+
-      tabHTML('events','Events',evAll)+tabHTML('tools','Tools',tools)+'</div>'+
-    '<span class="wsay">'+(due?'<b>'+due+'</b> '+(due===1?(tab==='tools'?'tool is':'event is'):(tab==='tools'?'tools are':'events are'))+' due for a visit.':'Nothing here is due for a visit.')+'</span>'+
-    '<span class="vkey">'+(tab==='tools'?'<i class="vgl tool"></i>tool':'<i class="vgl ev"></i>meeting days<i class="vkbar"></i>open')+'<i class="vkp"></i>due</span></div>';
-  if(tab==='tools'){
-    h+='<div class="vaxis"><span class="vaxl">Tool</span><div class="vaxt">'+nowAxisHTML(sp)+'</div><span></span></div>';
-    h+=tools.length?'<div class="vrows">'+tools.map(v=>nowRow(v,sp)).join('')+'</div>':
-      '<p class="vnone vtabnone">No tool yet. Press + Venue and choose Tool for a partner search you visit.</p>';
-    el.innerHTML=h;return;
-  }
-  if(over.length)h+='<div class="culimbo'+(nowLimbo?' open':'')+'"><button class="culb" data-act="vLimbo" aria-expanded="'+nowLimbo+'">'+
-      '<span class="culfog" aria-hidden="true"></span>'+LIMBO_GHOST+
-      '<span class="culc">Limbo</span><b>'+over.length+'</b> '+(over.length===1?'venue is over':'venues are over')+
-      '<span class="culw">'+(nowLimbo?'Hide':'Show')+'</span></button>'+
-    (nowLimbo?'<p class="culh">Each waits here until you let it go with ✕.</p><div class="vrows">'+over.map(v=>nowRow(v,sp,true)).join('')+'</div>':'')+'</div>';
-  h+='<div class="vaxis"><span class="vaxl">Venue</span><div class="vaxt">'+nowAxisHTML(sp)+'</div><span></span></div>';
-  if(near.length)h+='<div class="vrows">'+near.map(v=>nowRow(v,sp)).join('')+'</div>';
-  else if(!later.length&&!over.length)h+='<p class="vnone vtabnone">No event yet. Press + Venue for a brokerage event you mean to go to.</p>';
-  if(later.length)h+='<button class="vlater'+(nowLater?' on':'')+'" data-act="vLater" aria-expanded="'+nowLater+'">'+
-      '<span aria-hidden="true">'+(nowLater?'▾':'▸')+'</span>Later<b>'+later.length+'</b>'+
-      '<i>further ahead than twelve weeks, or not dated yet</i></button>'+
-    (nowLater?'<div class="vrows">'+later.map(v=>nowRow(v,sp)).join('')+'</div>':'');
+  const shown=by[tab],due=tabDue(shown);
+  let h='<div class="vhead"><div class="vtabs" role="group" aria-label="Where the venues stand">'+
+      tabHTML('arising')+tabHTML('active')+tabHTML('dying')+'</div>'+
+    /* Limbo stands apart from the three, in its fog: what is over is not
+       a stage of the work but what is left of it */
+    '<button class="culimbo vlimbotab'+(tab==='over'?' on':'')+'" data-act="nowTab" data-t="over" aria-pressed="'+(tab==='over')+'">'+
+      '<span class="culfog" aria-hidden="true"></span>'+LIMBO_GHOST+'<span class="culc">Limbo</span><b>'+by.over.length+'</b></button>'+
+    '<span class="wsay">'+(tab==='over'?(by.over.length?'Over, each waiting until you let it go with ✕ — or drag its end on to bring it back.':'Nothing in Limbo.'):
+      due?'<b>'+due+'</b> '+(due===1?'venue here is':'venues here are')+' due for a visit.':'Nothing here is due for a visit.')+'</span>'+
+    '<span class="vkey"><i class="vgl ev"></i>event days<i class="vkbar"></i>window, by how much goes on<i class="vkp"></i>due</span></div>';
+  h+='<div class="vaxis"><span class="vaxl">'+NOW_TABS[tab].name+'</span><div class="vaxt">'+nowAxisHTML(sp)+'</div><span></span></div>';
+  if(!shown.length){h+=tab==='over'?'':'<p class="vnone vtabnone">'+NOW_TABS[tab].none+'</p>';el.innerHTML=h;return;}
+  const dated=shown.filter(v=>vWin(v)),undated=shown.filter(v=>!vWin(v));
+  h+='<div class="vrows'+(tab==='over'?' limbo':'')+'">'+dated.map(v=>nowRow(v,sp,tab==='over')).join('')+'</div>';
+  if(undated.length)h+='<p class="vsec">Not dated yet</p><div class="vrows">'+undated.map(v=>nowRow(v,sp)).join('')+'</div>';
   el.innerHTML=h;
 });}
 
 /* ── a venue, opened ──
-   Its panel takes the arena's place in the drawer: the life, the rhythm,
-   every visit, the leads it gave, the arenas it serves, its other pages
-   and Mark's own note. Pencil edits what it is and when. */
+   Its panel takes the arena's place in the drawer: where it stands, and
+   for one still on the board the three things to do with it; its window,
+   the rhythm, every visit, the leads it gave, the arenas it serves, its
+   other pages and Mark's own note. Edit changes what it is and when. */
 const VENUE_LEAD='venue-lead';     /* leadEdit.a while a lead is being started from a venue's panel */
 let vNoteT=null;
+/* the window on a strip of its own, a week either side, with today */
 function vLifeHTML(v){
   const w=vWin(v);
   if(!w)return '';
-  const now=T(todayISO()),t0=Math.min(w.from,now)-7*DAY,t1=Math.max(w.to,now)+7*DAY;
+  const now=T(todayISO());
+  const a=w.from===null?Math.min(now,w.to)-42*DAY:w.from,b=w.to===null?Math.max(now,w.from)+42*DAY:w.to;
+  const t0=Math.min(a,now)-7*DAY,t1=Math.max(b,now)+7*DAY;
   const P=t=>((t-t0)/(t1-t0)*100).toFixed(2);
-  const day=t=>shortDay(new Date(t).toISOString().slice(0,10));
-  const spot=w.ms!==null;
-  let h='<div class="vlife"><i class="vax"></i>';
-  if(!spot||w.from<w.ms||w.to>w.me)h+='<i class="vbar'+(v.grade!=='fixed'&&!spot?' unc':'')+'" style="left:'+P(w.from)+'%;width:'+(P(w.to+DAY)-P(w.from))+'%"></i>';
-  if(spot){h+='<i class="vdia'+(v.grade==='fixed'?'':' unc')+'" style="left:'+P(w.ms+DAY/2)+'%"></i>'+
-    '<span class="vlt up" style="left:'+P(w.ms+DAY/2)+'%">meets '+esc(shortDate(v))+'</span>';}
-  if(v.opens||!spot)h+='<span class="vlt" style="left:'+P(w.from)+'%">opens<br>'+day(w.from)+'</span>';
-  if(v.closes||!spot)h+='<span class="vlt" style="left:'+P(w.to)+'%">closes<br>'+day(w.to)+'</span>';
+  let h='<div class="vlife" data-t0="'+t0+'" data-t1="'+t1+'"><i class="vax"></i>'+bandHTML(v,t0,t1,null,'');
+  if(w.ms!==null)h+='<span class="vlt up" style="left:'+P(w.ms+DAY/2)+'%">meets '+esc(shortDate(v))+'</span>';
+  if(w.from!==null)h+='<span class="vlt" style="left:'+P(w.from)+'%">opens<br>'+tDay(w.from)+'</span>';
+  if(w.to!==null)h+='<span class="vlt" style="left:'+P(w.to+DAY)+'%">closes<br>'+tDay(w.to)+'</span>';
   h+='<i class="vnow" style="left:'+P(now+DAY/2)+'%"></i><span class="vlt up now" style="left:'+P(now+DAY/2)+'%">today</span>';
   return h+'</div>';
 }
 function vEveryHTML(v){
   const auto=v.every?null:vEvery(v);
   const opts=[0,1,2,3,4,5,7,10,14,21,30,45,60];
+  const why=!inVenues(v)?'it is not in Venues':({arising:'it is arising',over:'it is over',undated:'it has no date'}[vState(v)]||'it rests');
   return '<select class="vevery" data-vevery="'+v.id+'" aria-label="How often to visit">'+
     opts.map(n=>'<option value="'+n+'"'+((v.every||0)===n?' selected':'')+'>'+
-      (n?'every '+n+' day'+(n===1?'':'s'):(auto?'by itself — now every '+auto+' day'+(auto===1?'':'s'):'by itself — none while '+({coming:'it is coming',over:'it is over',undated:'it has no date',season:'its days are not known'}[vState(v)]||'it rests')))+
+      (n?'every '+n+' day'+(n===1?'':'s'):(auto?'by itself — now every '+auto+' day'+(auto===1?'':'s'):'by itself — none while '+why))+
     '</option>').join('')+'</select>';
 }
-/* An event's dates in words: meeting days with the stretch either side, an
-   exact span it is open, or a season it is expected in. */
+/* The window and the event days in words, and whose each end is: Mark's,
+   or the one given round the event days until he moves it. */
 function vFactsHTML(v){
-  const when=v.start?esc((v.grade==='fixed'?'':'\u2248 ')+dispDate(v)):'<i>no date yet</i>';
-  const row=(k,x)=>'<dt>'+k+'</dt><dd>'+x+'</dd>';
-  if(!v.start||isSpot(v))
-    return row('opens',v.opens?esc(fmtDay(v.opens)):'<i>not given \u2014 open from its meeting days</i>')+
-      row('meeting days',when)+
-      row('closes',v.closes?esc(fmtDay(v.closes)):'<i>not given \u2014 closes with its meeting days</i>');
   const w=vWin(v);
-  return (v.opens?row('opens',esc(fmtDay(v.opens))):'')+
-    row(w&&w.season?'expected':'open',when)+
-    (v.closes?row('closes',esc(fmtDay(v.closes))):'');
+  const row=(k,x)=>'<dt>'+k+'</dt><dd>'+x+'</dd>';
+  const end=(k,t,set)=>row(k,t===null?'<i>no end set</i>':esc(fmtDay(new Date(t).toISOString().slice(0,10)))+
+    (set?'':' <i>'+(w.season?'— the season, a guess':'— round the event days, until you drag it')+'</i>'));
+  return (w?end('opens',w.from,w.set.from):row('window','<i>not set — Edit, or give it event days</i>'))+
+    row('event days',v.start?esc((v.grade==='fixed'?'':'≈ ')+dispDate(v)):'<i>none</i>')+
+    (w?end('closes',w.to,w.set.to):'');
+}
+/* What to do with a venue still on the board (Mark, 2026-10-15): move it
+   to Venues, keep it on the board to think about, or remove it. In Venues
+   it can go back to the board. */
+function vPlaceHTML(v){
+  const found=v.foundAt?' <i>found by the agent '+esc(shortDay(v.foundAt.slice(0,10)))+'</i>':'';
+  if(onTrial(v))return '<div class="vplace st-'+v.place+'"><span><b>'+PLACE_SAY[v.place]+'</b>'+found+'</span>'+
+    '<button class="btn primary" data-act="vPlace" data-v="'+v.id+'" data-p="venues" title="Move it to Venues, where it comes round for visits">→ Venues</button>'+
+    (v.place==='new'?'<button class="btn" data-act="vPlace" data-v="'+v.id+'" data-p="board" title="Leave it on the board to think about">Keep on board</button>':'')+
+    '<button class="btn ghost" data-act="vRemove" data-v="'+v.id+'" title="Off the board; the agent will not bring it back">Remove</button></div>';
+  return '<div class="vplace st-venues"><span><b>'+esc(vPlaceSay(v))+'</b></span>'+
+    '<button class="btn ghost" data-act="vPlace" data-v="'+v.id+'" data-p="board" title="Take it out of Venues; it stays on the board">Back to the board</button></div>';
 }
 function venueReadHTML(v){
-  const kind=v.kind==='tool'?'Tool':'Event';
   const d=vSince(v);
   const visits=v.visits.slice().reverse();
   const leads=vLeads(v);
   const addable=liveArenas().filter(a=>!v.arenas.includes(a.id)).sort((x,y)=>x.name.localeCompare(y.name));
   const adding=leadEdit.a===VENUE_LEAD;
+  const w=vWin(v);
   return '<div class="cbody vpanel">'+
     '<div class="chead vchead">'+
       '<button class="x" data-act="closeDrawer" aria-label="Close">✕</button>'+
-      '<p class="vkind">'+kind+' venue'+(vHost(v)?' · '+esc(vHost(v)):'')+'</p>'+
+      '<p class="vkind">Venue'+(vHost(v)?' · '+esc(vHost(v)):'')+'</p>'+
       '<h2 id="aname">'+esc(v.name)+'</h2>'+
       '<div class="vchrow">'+vGoHTML(v)+vStampHTML(v)+vAgentHTML(v)+
         '<span class="vlast">'+(d===null?'not visited yet':'last visit '+(d<=0?'today':d===1?'yesterday':d+' days ago'))+
           (vEvery(v)?' · every '+vEvery(v)+' d':'')+'</span></div>'+
-    '</div>'+vDoubtHTML(v)+
-    (v.kind==='event'?'<section class="vps"><p class="vph">Its life <i>'+esc(vDateSay(v))+'</i></p>'+vLifeHTML(v)+
-      '<dl class="vdl">'+vFactsHTML(v)+(v.note?'<dt>basis</dt><dd>'+esc(v.note)+'</dd>':'')+
-      '</dl></section>':'')+
+    '</div>'+vPlaceHTML(v)+vDoubtHTML(v)+
+    '<section class="vps"><p class="vph">Its window <i>'+esc(vDateSay(v))+'</i>'+
+      (v.opens||v.closes?'<button class="vreset" data-act="vWinReset" data-v="'+v.id+'" title="Give both ends back to their default">reset</button>':'')+'</p>'+
+      vLifeHTML(v)+
+      '<dl class="vdl">'+vFactsHTML(v)+(v.note?'<dt>basis</dt><dd>'+esc(v.note)+'</dd>':'')+'</dl>'+
+      (w?'<p class="fhint">Drag either end of the band, here, on the board or on Venues, to say how long it is active.</p>':'')+
+    '</section>'+
     '<section class="vps"><p class="vph">Rhythm</p>'+vEveryHTML(v)+'</section>'+
     '<section class="vps"><p class="vph">Visits <i>'+esc(vYieldSay(v))+'</i></p>'+
       (visits.length?visits.map(x=>{
@@ -1846,40 +2105,33 @@ function venueReadHTML(v){
   '<div class="cfoot">'+
     '<button class="btn" data-act="vEdit" data-v="'+v.id+'">Edit</button>'+
     '<span class="sp"></span>'+
-    '<button class="btn ghost" data-act="vDrop" data-v="'+v.id+'" title="Take it off the board altogether">Let it go</button>'+
+    '<button class="btn ghost" data-act="vRemove" data-v="'+v.id+'" title="Off the board altogether; the agent will not bring it back">Remove</button>'+
   '</div>';
 }
-/* The form a venue is made and changed in. An event's meeting days are
-   written the way an arena's dates are, with the same reading of how well
-   they are known; the open stretch either side is two optional days. */
+/* The form a venue is made and changed in. Its event days are written the
+   way an arena's dates are, with the same reading of how well they are
+   known; its window is two optional days, which dragging sets as well. */
 function venueFormHTML(v,aid){
-  const ev=!v||v.kind==='event';
-  const g=v&&v.kind==='event'?v.gran:'day';
-  const dt=v&&v.kind==='event'&&v.start?v:null;
-  const grade=v&&v.kind==='event'?v.grade:gradeDefault(g);
-  const grans=[['day','Exact day'],['range','Exact span'],['month','A month'],['quarter','A quarter'],
-               ['half','A half-year'],['year','A year'],['none','No date yet']]
+  const g=v?v.gran:'none';
+  const dt=v&&v.start?v:null;
+  const grade=v?v.grade:gradeDefault(g);
+  const grans=[['none','No event days'],['day','Exact day'],['range','Exact span'],['month','A month'],['quarter','A quarter'],
+               ['half','A half-year'],['year','A year']]
     .map(([x,n])=>'<option value="'+x+'"'+(x===g?' selected':'')+'>'+n+'</option>').join('');
   const arenas=liveArenas().slice().sort((x,y)=>x.name.localeCompare(y.name));
   return '<form class="dform vform" data-v="'+(v?v.id:'new')+'">'+
-    '<input type="hidden" name="kind" value="'+(ev?'event':'tool')+'">'+
-    '<div class="fld"><label>Kind</label><div class="seg">'+
-      '<button type="button" class="seg-b'+(ev?' on':'')+'" data-act="vKind" data-k="event">Event</button>'+
-      '<button type="button" class="seg-b'+(ev?'':' on')+'" data-act="vKind" data-k="tool">Tool</button></div>'+
-      '<p class="fhint">'+(ev?'A marketplace around meeting days.':'A partner search that is always open.')+'</p></div>'+
+    '<input type="hidden" name="kind" value="event">'+
     (v?'':'<div class="fld"><label>Serves</label><select name="arena"><option value="">Choose an arena</option>'+
       arenas.map(a=>'<option value="'+a.id+'"'+(a.id===aid?' selected':'')+'>'+esc(a.name)+'</option>').join('')+'</select></div>')+
     '<div class="fld"><label>Name</label><input name="label" value="'+esc(v?v.name:'')+'" placeholder="e.g. Cluster 4 brokerage day, Brussels" autocomplete="off"></div>'+
     '<div class="fld"><label>Website</label><input name="url" value="'+esc(v?v.url:'')+'" placeholder="Its own page" autocomplete="off"></div>'+
-    '<div class="vevf"'+(ev?'':' hidden')+'>'+
-      '<div class="fld"><label>Meeting days — how well known</label><select name="gran">'+grans+'</select></div>'+
-      '<div class="fld"><label>When</label><span class="granIn">'+granInputsHTML(g,dt)+'</span></div>'+
-      '<div class="fld gradefld"><label>Certainty</label>'+gradeSegHTML(g,grade)+'</div>'+
-      '<div class="f2"><div class="fld"><label>Opens</label><input type="text" inputmode="none" readonly data-cal data-cal-none name="opens" placeholder="Optional" value="'+esc(v&&v.opens||'')+'"></div>'+
-      '<div class="fld"><label>Closes</label><input type="text" inputmode="none" readonly data-cal data-cal-none name="closes" placeholder="Optional" value="'+esc(v&&v.closes||'')+'"></div></div>'+
-      '<p class="fhint">When its marketplace opens before the meeting days and closes after them. Leave both empty and it is open on its meeting days only.</p>'+
-      '<div class="fld"><label>Basis</label><input name="note" value="'+esc(v&&v.note||'')+'" placeholder="Where the date comes from — optional" autocomplete="off"></div>'+
-    '</div>'+
+    '<div class="f2"><div class="fld"><label>Opens</label><input type="text" inputmode="none" readonly data-cal data-cal-none name="opens" placeholder="Optional" value="'+esc(v&&v.opens||'')+'"></div>'+
+    '<div class="fld"><label>Closes</label><input type="text" inputmode="none" readonly data-cal data-cal-none name="closes" placeholder="Optional" value="'+esc(v&&v.closes||'')+'"></div></div>'+
+    '<p class="fhint">How long it is active. Left empty, it opens three weeks before its event days and closes two weeks after; a new venue with no event days opens today.</p>'+
+    '<div class="fld"><label>Event days — how well known</label><select name="gran">'+grans+'</select></div>'+
+    '<div class="fld"><label>When</label><span class="granIn">'+granInputsHTML(g,dt)+'</span></div>'+
+    '<div class="fld gradefld"><label>Certainty</label>'+gradeSegHTML(g,grade)+'</div>'+
+    '<div class="fld"><label>Basis</label><input name="note" value="'+esc(v&&v.note||'')+'" placeholder="Where the dates come from — optional" autocomplete="off"></div>'+
     '<div class="fbtns"><button type="button" class="btn" data-act="vEditCancel">Cancel</button>'+
       '<button type="submit" class="btn primary">'+(v?'Save':'Add venue')+'</button></div>'+
   '</form>';
@@ -1888,24 +2140,21 @@ function venueEditHTML(v,aid){
   return '<div class="cbody vpanel"><div class="chead">'+
       '<button class="x" data-act="closeDrawer" aria-label="Close">✕</button>'+
       '<h2 id="aname">'+(v?esc(v.name):'New venue')+'</h2>'+
-      '<p class="meta">'+(v?'Editing':'An event or a tool you visit')+'</p></div>'+
+      '<p class="meta">'+(v?'Editing':'A place you go to find projects in the making — it goes straight to Venues')+'</p></div>'+
     venueFormHTML(v,aid)+'</div>';
 }
 /* What the form says, or null when the date is incomplete (readDateForm
-   says so). An event with no date yet is still a venue: it waits under
-   Later until its day is known. */
+   says so). A venue with no event days and no window is still a venue: it
+   waits under Arising, not dated yet. */
 function readVenueForm(f){
-  const kind=f.elements.kind.value==='tool'?'tool':'event';
   const url=f.elements.url.value.trim();
-  const o={kind,name:f.elements.label.value.trim(),url:url?leadLinkUrl(url):''};
-  if(kind==='event'){
-    f.elements.kind.value='brokerage';
-    const d=readDateForm(f);
-    f.elements.kind.value='event';
-    if(!d)return null;
-    Object.assign(o,{gran:d.gran,start:d.start,end:d.end,grade:d.grade,note:d.note,
-      opens:f.elements.opens.value||null,closes:f.elements.closes.value||null});
-  }
+  const o={kind:'event',name:f.elements.label.value.trim(),url:url?leadLinkUrl(url):''};
+  f.elements.kind.value='brokerage';
+  const d=readDateForm(f);
+  f.elements.kind.value='event';
+  if(!d)return null;
+  Object.assign(o,{gran:d.gran,start:d.start,end:d.end,grade:d.grade,note:d.note,
+    opens:f.elements.opens.value||null,closes:f.elements.closes.value||null});
   return o;
 }
 function openVenue(id){
@@ -1921,29 +2170,33 @@ function newVenue(aid){
   renderDrawer();
   const f=$('#card .vform input[name=label]');if(f)f.focus({preventScroll:true});
 }
-/* Letting a venue go takes it off the whole board. A lead started from it
-   keeps its own record and only forgets where it came from. */
+/* Removing a venue takes it off the whole board, but leaves a stub with
+   its name, site and arenas, so the agent sees it was turned down and does
+   not put it back (see "venues"). A lead started from it keeps its own
+   record and only forgets where it came from. */
 function dropVenue(id){
-  S.venues=(S.venues||[]).filter(v=>v.id!==id);
+  const v=venue(id);if(!v)return;
+  for(const k of Object.keys(v))if(!['id','kind','name','url','arenas','gran','start','end','grade','foundAt'].includes(k))delete v[k];
+  v.place='gone';v.goneAt=todayISO();v.visits=[];v.pages=[];v.note='';
   for(const a of S.arenas)for(const l of a.leads||[])if(l.venueId===id)delete l.venueId;
   if(drawer.vid===id)drawer.vid=null;
   if(vPop===id)vPop=null;
   if(vAsking===id){vAsking=null;renderAsk();}
   save();renderAll();
 }
-/* The venues an arena is served by, in its panel: where it stands, the
+/* The venues an arena is served by, in its panel: where each stands, the
    stamp and Go, and a new one for it. */
 function arenaVenuesHTML(a){
   const vs=venuesOf(a);
-  const by=v=>{const w=vWin(v);return v.kind==='tool'?2e15:w?w.from:1e15;};
+  const by=v=>{const w=vWin(v);return w&&w.from!==null?w.from:1e15;};
   const rows=vs.slice().sort((x,y)=>by(x)-by(y)||x.name.localeCompare(y.name)).map(v=>
-    '<div class="avrow'+(vState(v)==='over'?' over':'')+(vDue(v)?' due':'')+'">'+vGlyph(v)+
+    '<div class="avrow st-'+v.place+(vState(v)==='over'?' over':'')+(vDue(v)?' due':'')+'">'+vGlyph(v)+
       '<span class="avt"><button class="vnm" data-act="openVenue" data-v="'+v.id+'">'+esc(v.name)+'</button>'+
-        '<i>'+esc(vDateSay(v))+'</i></span>'+
-      '<span class="vend">'+vStampHTML(v)+vGoHTML(v)+'</span></div>').join('');
+        '<i>'+(onTrial(v)?'<b class="avplace">'+(v.place==='new'?'new':'on the board')+'</b> · ':'')+esc(vDateSay(v))+'</i></span>'+
+      '<span class="vend">'+(inVenues(v)?vStampHTML(v):'')+vGoHTML(v)+'</span></div>').join('');
   return '<section class="card pcard brok"><div class="chd"><span class="ctitle">Venues</span>'+
       '<button class="ib cact" data-act="vNew" data-id="'+a.id+'" title="A new venue for '+esc(a.name)+'">+</button></div>'+
-    (rows?'<div class="avlist">'+rows+'</div>':'<div class="cbd"><p class="ptext vnone">No venue yet — an event or a partner search it is served by.</p></div>')+
+    (rows?'<div class="avlist">'+rows+'</div>':'<div class="cbd"><p class="ptext vnone">No venue yet — a place it is served by, where projects in the making can be found.</p></div>')+
   '</section>';
 }
 
@@ -2097,7 +2350,7 @@ function streamHTML(a){
   const dated=[],undated=[];
   /* the events the arena is served by stand in its stream as its brokerage
      dates did, in time order among the calls */
-  const evs=venuesOf(a).filter(v=>v.kind==='event').map(v=>({id:v.id,kind:'brokerage',label:v.name,
+  const evs=venuesOf(a).filter(v=>v.start).map(v=>({id:v.id,kind:'brokerage',label:v.name,
     gran:v.gran,start:v.start,end:v.end,grade:v.grade,note:v.note,url:v.url}));
   a.dates.concat(evs).forEach(dt=>{
     if(!dt.start)undated.push(dt);
@@ -2400,7 +2653,7 @@ function wallLinkRows(a,list,scope){
        where it comes round and is visited (2026-10-14); it was the arena's
        general tool, marked here by a diamond, until then */
     const make=scope==='brokerage'&&lk.url&&!/^mailto:/i.test(lk.url)
-      ? '<button class="lmake" data-act="vMake"'+ref+' title="Make this a venue \u2014 a place you visit, which comes round on Now" '+
+      ? '<button class="lmake" data-act="vMake"'+ref+' title="Make this a venue \u2014 a place you visit, straight into Venues" '+
           'aria-label="Make a venue of '+nm+'">\u2192 venue</button>'
       : '';
     return '<div class="wlrow" data-lk="'+esc(lk.id||'')+'">'+body+
@@ -3155,12 +3408,19 @@ function applyView(){
   $('#now').hidden=v!=='now';
   document.querySelectorAll('#viewseg button, #leadsBtn, #dispatchBtn').forEach(b=>
     b.classList.toggle('on',b.dataset.v===v));
-  /* how many venues are due for a visit, on the Now tab */
+  /* how many venues are due for a visit, on the Venues tab, and how many
+     are new on the board, on the Board's, in the new hue */
   const tab=document.querySelector('#viewseg button[data-v=now]');
   if(tab){
     const n=visibleVenues().filter(vDue).length;
     tab.querySelector('.tabn')?.remove();
     if(n)tab.insertAdjacentHTML('beforeend','<span class="tabn">'+n+'</span>');
+  }
+  const btab=document.querySelector('#viewseg button[data-v=board]');
+  if(btab){
+    const n=visibleVenues().filter(v=>v.place==='new').length;
+    btab.querySelector('.tabn')?.remove();
+    if(n)btab.insertAdjacentHTML('beforeend','<span class="tabn newn" title="'+n+' new on the board">'+n+'</span>');
   }
   /* The findings are read from the cloud, so this count is what was last read
      and not a promise about what is there now — which is why the tab says
@@ -3441,12 +3701,19 @@ function seed(){
       C('Call 8','publication','half','uncertain',{y:2027,h:1})],
       {notes:'',links:[{id:uid(),label:'Xecs partner search',url:'https://xecs.eu'}]})
   );
-  /* a tool and a marketplace, so the Now page has one of each to show */
+  /* a venue with no event days and one with them, so Venues has both to show */
   const tz=S.arenas.find(a=>a.name==='2ZERO'&&!a.toolId);
   if(tz&&tz.brokerage.links[0])tz.toolId=tz.brokerage.links[0].id;
   migrate(S);          /* the example set goes in in the same shape as anything else */
   const po=(S.venues||[]).find(v=>/^PO Days/.test(v.name));
   if(po&&po.start){po.opens=po.start.slice(0,8)+'01';po.closes=po.start.slice(0,8)+'28';}
+  /* and one of each place on the board, so the tray has something to show:
+     a find of the agent's still new, another kept to think about */
+  const found=new Date().toISOString();
+  const cm=(S.venues||[]).find(v=>/^Cities Mission/.test(v.name));
+  if(cm){cm.place='new';cm.foundAt=found;}
+  const ec=(S.venues||[]).find(v=>/^EC info days/.test(v.name));
+  if(ec)ec.place='board';
   save();renderAll();
 }
 
@@ -3854,7 +4121,7 @@ document.addEventListener('mouseover',e=>{
   let txt='';
   const a=arena(el.dataset.a||el.dataset.id);
   const v=el.dataset.tipv&&venue(el.dataset.tipv);
-  if(v)txt=v.name+'\n'+vDateSay(v)+(v.kind==='event'&&v.start&&vState(v)!=='undated'?' \u2014 '+(v.grade==='fixed'?'':'\u2248 ')+dispDate(v):'')+
+  if(v)txt=v.name+'\n'+vPlaceSay(v)+' \u2014 '+vDateSay(v)+(v.start?'\nevent days '+(v.grade==='fixed'?'':'\u2248 ')+dispDate(v):'')+
     '\n'+vYieldSay(v)+(vEvery(v)?' \u00B7 every '+vEvery(v)+' d':'');
   /* a bar on a card's strip can stand for several calls at once, so it
      brings its own words rather than one date's */
@@ -3991,6 +4258,7 @@ document.addEventListener('click',e=>{
     case 'thaw':{const ar=arena(id);if(!ar)break;
       ar.frozenAt=null;save();renderAll();break;}
     case 'toggleFreezer':S.ui.freezerOpen=!S.ui.freezerOpen;save();renderFreezer();break;
+    case 'trayKept':S.ui.keptOpen=!S.ui.keptOpen;save();renderBoard();break;
     /* Quick, but not one slip from gone: the first press turns the cross into
        the word, a second within three seconds removes the link. The button is
        changed in place rather than redrawn, so nothing else on the wall moves
@@ -4011,7 +4279,7 @@ document.addEventListener('click',e=>{
       /* the findings are asked for when you come to look at them, and again
          every time you come back: a list read an hour ago is a list another
          machine may have answered since */
-      if(S.ui.view==='dispatch')loadFinds();
+      if(S.ui.view==='dispatch'||S.ui.view==='board')loadFinds();
       break;}
     case 'findRefresh':loadFinds();break;
     case 'findAll':{
@@ -4029,9 +4297,6 @@ document.addEventListener('click',e=>{
     case 'openVenue':if(venue(b.dataset.v))openVenue(b.dataset.v);break;
     /* the link opens the site by itself; the app only remembers the press */
     case 'vGo':vBack={id:b.dataset.v,at:Date.now()};vAsking=null;renderAsk();break;
-    case 'toolGo':{const v=venue(b.dataset.v);if(!v)break;
-      if(!v.url){openVenue(v.id);break;}
-      window.open(v.url,'_blank','noopener');vBack={id:v.id,at:Date.now()};break;}
     /* The stamp records today's visit and opens the question under it;
        pressed again it shuts the question, the visit kept. */
     case 'vStamp':{const v=venue(b.dataset.v);if(!v)break;
@@ -4058,19 +4323,38 @@ document.addEventListener('click',e=>{
       v.visits=v.visits.filter(x=>x.at!==todayISO());
       vPop=null;save();repaint();renderDrawer();applyView();break;}
     case 'vAskOff':vAsking=null;renderAsk();break;
-    case 'vLater':nowLater=!nowLater;renderNow();break;
-    case 'nowTab':S.ui.nowTab=b.dataset.t==='tools'?'tools':'events';save();renderNow();break;
-    case 'vLimbo':nowLimbo=!nowLimbo;renderNow();break;
+    case 'nowTab':S.ui.nowTab=NOW_TABS[b.dataset.t]?b.dataset.t:'active';save();renderNow();break;
+    /* Where a venue stands (see "venues"): to Venues, kept on the board, or
+       back to the board from Venues. Moving one to Venues shows the tab it
+       landed in, so it is seen where it went. */
+    case 'vPlace':{const v=venue(b.dataset.v);if(!v||!['board','venues'].includes(b.dataset.p))break;
+      v.place=b.dataset.p;
+      if(v.place==='venues'){const ph=vPhase(v);S.ui.nowTab=ph;}
+      save();renderAll();break;}
+    case 'vWinReset':{const v=venue(b.dataset.v);if(!v)break;
+      v.opens=null;v.closes=null;
+      if(!v.start)v.opens=todayISO();
+      save();renderAll();break;}
     /* In Limbo every venue is there to be let go, and asking each time would
-       make clearing it a question per row, as on Coming up; anywhere else a
-       stray press must not lose one. */
-    case 'vDrop':{const v=venue(b.dataset.v);if(!v)break;
-      if(b.dataset.limbo){dropVenue(v.id);break;}
+       make clearing it a question per row, as on Coming up; a new one on the
+       board is a press to turn down, as Dispatches' Dismiss was. Anywhere
+       else a stray press must not lose one with its visits. */
+    case 'vDrop':{const v=venue(b.dataset.v);if(v)dropVenue(v.id);break;}
+    case 'vRemove':{const v=venue(b.dataset.v);if(!v)break;
+      /* a new find with nothing of his on it goes at a second press, as a
+         link's cross does: the first turns the word into the question */
+      if(v.place==='new'&&!v.visits.length){
+        if(!b.classList.contains('armed')){
+          b.classList.add('armed');b.textContent='Sure?';
+          setTimeout(()=>{if(b.isConnected){b.classList.remove('armed');b.textContent='Remove';}},3000);
+          break;
+        }
+        dropVenue(v.id);break;}
       const nl=vLeads(v).length;
-      Ask.ask('Let '+v.name+' go?',
-        'It goes off the whole board, with its '+v.visits.length+' visit'+(v.visits.length===1?'':'s')+
-        (v.pages.length?' and its other pages':'')+'.'+(nl?' The '+(nl===1?'lead':nl+' leads')+' started from it '+(nl===1?'stays':'stay')+', and only '+(nl===1?'forgets':'forget')+' where '+(nl===1?'it':'they')+' came from.':''),
-        'Let it go',()=>{closeDrawer();dropVenue(v.id);});
+      Ask.ask('Remove '+v.name+'?',
+        'It goes off the whole board'+(v.visits.length?', with its '+v.visits.length+' visit'+(v.visits.length===1?'':'s'):'')+
+        (v.pages.length?' and its other pages':'')+', and the agent will not bring it back.'+(nl?' The '+(nl===1?'lead':nl+' leads')+' started from it '+(nl===1?'stays':'stay')+', and only '+(nl===1?'forgets':'forget')+' where '+(nl===1?'it':'they')+' came from.':''),
+        'Remove',()=>{closeDrawer();dropVenue(v.id);});
       break;}
     case 'vNew':newVenue(id||null);break;
     case 'vEdit':{const v=venue(b.dataset.v);if(!v)break;
@@ -4082,14 +4366,6 @@ document.addEventListener('click',e=>{
       if(drawer.vnew){const aid=drawer.vnew.aid;drawer.vnew=null;drawer.editing=false;
         if(aid)openDrawer(aid);else closeDrawer();break;}
       drawer.editing=false;renderDrawer();break;}
-    case 'vKind':{const f=b.closest('.vform');if(!f)break;
-      const ev=b.dataset.k==='event';
-      f.elements.kind.value=ev?'event':'tool';
-      f.querySelectorAll('[data-act=vKind]').forEach(x=>x.classList.toggle('on',x===b));
-      const ef=f.querySelector('.vevf');if(ef)ef.hidden=!ev;
-      const hint=b.closest('.fld').querySelector('.fhint');
-      if(hint)hint.textContent=ev?'A marketplace around meeting days.':'A partner search that is always open.';
-      break;}
     case 'vArenaDel':{const v=venue(b.dataset.v);if(!v)break;
       v.arenas=v.arenas.filter(x=>x!==id);save();renderAll();break;}
     case 'vPageDel':{const v=venue(b.dataset.v);if(!v)break;
@@ -4098,13 +4374,14 @@ document.addEventListener('click',e=>{
       v.visits=v.visits.filter(x=>x.at!==b.dataset.at);save();renderAll();break;}
     case 'vLeadNew':{const v=venue(b.dataset.v);if(!v)break;
       closeComposers();leadEdit={a:VENUE_LEAD,l:'new'};renderDrawer();focusLead();break;}
-    /* A brokerage link in an arena's panel made a venue: a tool by default,
-       since an event wants its days, which the venue's own edit then asks. */
+    /* A brokerage link in an arena's panel made a venue, in Venues since it
+       is Mark's own doing, open from today until he gives it days or an end. */
     case 'vMake':{const lk=linkOf(a,'brokerage',b.dataset.l);if(!lk||!lk.url)break;
       const k=siteKey(lk.url);
       let v=(S.venues||[]).find(x=>x.url&&siteKey(x.url)===k);
-      if(!v){v=tidyVenue({id:venue('vt'+hashKey(k))?uid():'vt'+hashKey(k),kind:'tool',name:lk.label||linkHost(lk)||k,
-        url:lk.url,arenas:[a.id],note:'',visits:[],pages:[]});S.venues.push(v);}
+      if(!v){v=tidyVenue({id:venue('vt'+hashKey(k))?uid():'vt'+hashKey(k),name:lk.label||linkHost(lk)||k,
+        url:lk.url,arenas:[a.id],note:'',visits:[],pages:[],opens:todayISO(),place:'venues'});S.venues.push(v);}
+      else if(v.place==='gone'){v.place='venues';if(!v.start&&!v.opens)v.opens=todayISO();tidyVenue(v);}
       joinVenue(v,a.id);
       absorbVenues(S);       /* every other link to the same site joins it */
       save();renderAll();openVenue(v.id);break;}
@@ -4282,14 +4559,14 @@ document.addEventListener('submit',e=>{
       const a=arena(vf.elements.arena&&vf.elements.arena.value);
       if(!o.name&&!o.url){Ask.tell('Name it','Give the venue a name or its website.');return;}
       const v=tidyVenue(Object.assign({id:uid(),arenas:a?[a.id]:[],visits:[],pages:[],note:''},o,
-        {name:o.name||linkName({url:o.url})}));
+        {name:o.name||linkName({url:o.url}),place:'venues'}));
+      if(!v.start&&!v.opens&&!v.closes)v.opens=todayISO();
       S.venues.push(v);
       drawer.vnew=null;save();renderAll();openVenue(v.id);
       return;
     }
     const v=venue(vf.dataset.v);if(!v)return;
-    const keep={id:v.id,arenas:v.arenas,visits:v.visits,pages:v.pages,memo:v.memo,every:v.every,foundAt:v.foundAt};
-    if(o.kind==='tool'){delete v.gran;delete v.start;delete v.end;delete v.grade;delete v.opens;delete v.closes;}
+    const keep={id:v.id,arenas:v.arenas,visits:v.visits,pages:v.pages,memo:v.memo,every:v.every,foundAt:v.foundAt,place:v.place};
     Object.assign(v,o,keep,{name:o.name||v.name});
     tidyVenue(v);
     drawer.editing=false;save();renderAll();
@@ -4585,7 +4862,7 @@ renderAll();
    every room and the Supabase library after that. So a board that opens on
    this view asks for its findings a moment later rather than at mount, when
    there would be nothing to ask. */
-if(S.ui.view==='dispatch')setTimeout(loadFinds,800);
+if(S.ui.view==='dispatch'||S.ui.view==='board')setTimeout(loadFinds,800);
 
 
 try{

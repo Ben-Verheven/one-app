@@ -9,12 +9,15 @@
 //   watchlist  the same, trimmed, with when the agent last looked at each
 //              arena and venue, and the suggestions it made lately
 //   edit       change the board itself: add, correct and delete call dates;
-//              add, correct, re-date and let go venues, the arenas they
+//              put new venues on the board, marked new until Mark deals
+//              with them, and correct and re-date venues, the arenas they
 //              serve and their other pages; the arenas' links and their two
-//              texts. It cannot delete an arena, touch an arena's name,
-//              type, tags or weight, the types, the leads, Mark's own notes
-//              (`memo`) or his visits and rhythm: an op for any of those
-//              does not exist.
+//              texts. Where a venue stands (`place`) is Mark's: the agent
+//              can delete only a venue still new, its own find, and cannot
+//              touch one he removed. It cannot delete an arena, touch an
+//              arena's name, type, tags or weight, the types, the leads,
+//              Mark's own notes (`memo`) or his visits and rhythm: an op
+//              for any of those does not exist.
 //   suggest    add rows to semaphore_inbox: a new arena waits there for Mark
 //   checked    record which arenas and venues it has looked at
 // The board is the Semaphore's until 2026-10-14, when it became the
@@ -23,6 +26,10 @@
 // link; every read turns those into venues with the very ids the app gives
 // them (absorbVenues, a copy of the app's own), so the agent and the app
 // never make two copies of one venue.
+// Since 2026-10-15 a venue has no kind: every one is a window of activity
+// (`opens`, `closes`) with event days inside it or none, and `kind` stays
+// "event" on all of them only so that an older copy of this function, which
+// wiped a tool's window, wipes nothing.
 // It never sees the app's key; what it may change is what `edit` spells out.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
@@ -70,10 +77,22 @@ function hashKey(s: string): string {
 }
 const ISO_DAY = /^\d{4}-\d{2}-\d{2}$/;
 const GOT = ["nothing", "something", "lead"];
+const PLACES = ["new", "board", "venues", "gone"];
+const PLACES_SINCE = "2026-10-15T19:00:00Z";
+const GONE_KEEP = 400;
+const todayISO = () => new Date().toISOString().slice(0, 10);
 const fixedOk = (g: string) => g === "day" || g === "range";
 function tidyVenue(v: any): any {
   if (!v.id) v.id = crypto.randomUUID();
-  v.kind = v.kind === "tool" ? "tool" : "event";
+  if (v.kind === "tool") {
+    const first = (Array.isArray(v.visits) ? v.visits : []).map((x: any) => x && (x.at || x.id)).filter((x: any) => ISO_DAY.test(x || "")).sort()[0];
+    const found = typeof v.foundAt === "string" ? v.foundAt.slice(0, 10) : "";
+    if (!ISO_DAY.test(v.opens || "")) v.opens = first || (ISO_DAY.test(found) ? found : todayISO());
+    v.gran = "none";
+  }
+  v.kind = "event";
+  if (!PLACES.includes(v.place)) v.place = typeof v.foundAt === "string" && v.foundAt >= PLACES_SINCE ? "new" : "venues";
+  if (v.place === "gone") { if (!ISO_DAY.test(v.goneAt || "")) v.goneAt = todayISO(); } else delete v.goneAt;
   v.name = String(v.name ?? "").trim() || "Unnamed venue";
   v.url = typeof v.url === "string" ? v.url.trim() : "";
   v.arenas = [...new Set((Array.isArray(v.arenas) ? v.arenas : []).filter((x: any) => typeof x === "string" && x))];
@@ -88,14 +107,13 @@ function tidyVenue(v: any): any {
     if (typeof x.leadId === "string" && x.leadId) o.leadId = x.leadId;
     return o;
   }).filter((x: any) => !seen.has(x.at) && seen.add(x.at)).sort((x: any, y: any) => x.at.localeCompare(y.at));
-  if (v.kind === "event") {
-    if (!GRANS.includes(v.gran)) v.gran = v.start ? ((v.end && v.start !== v.end) ? "range" : "day") : "none";
-    if (!v.start || v.gran === "none") { v.start = null; v.end = null; if (v.gran !== "none") v.gran = "none"; }
-    if (v.start && !v.end) v.end = v.start;
-    if (v.start && v.end < v.start) { const e = v.end; v.end = v.start; v.start = e; }
-    v.grade = v.grade === "fixed" && fixedOk(v.gran) ? "fixed" : "uncertain";
-  } else { delete v.gran; delete v.start; delete v.end; delete v.grade; delete v.opens; delete v.closes; }
-  for (const k of ["opens", "closes"]) if (k in v && !ISO_DAY.test(v[k] || "")) v[k] = null;
+  if (!GRANS.includes(v.gran)) v.gran = v.start ? ((v.end && v.start !== v.end) ? "range" : "day") : "none";
+  if (!v.start || v.gran === "none") { v.start = null; v.end = null; if (v.gran !== "none") v.gran = "none"; }
+  if (v.start && !v.end) v.end = v.start;
+  if (v.start && v.end < v.start) { const e = v.end; v.end = v.start; v.start = e; }
+  v.grade = v.grade === "fixed" && fixedOk(v.gran) ? "fixed" : "uncertain";
+  for (const k of ["opens", "closes"]) if (!ISO_DAY.test(v[k] || "")) v[k] = null;
+  if (v.opens && v.closes && v.closes < v.opens) { const c = v.closes; v.closes = v.opens; v.opens = c; }
   if (!(v.every >= 1 && v.every <= 365)) delete v.every; else v.every = Math.round(v.every);
   if (typeof v.note !== "string") v.note = "";
   if (typeof v.memo === "string" && !v.memo.trim()) delete v.memo;
@@ -154,6 +172,8 @@ function absorbVenues(s: any): any {
     bk.links = keep;
     delete a.toolId;
   }
+  const now = Date.parse(todayISO());
+  s.venues = s.venues.filter((v: any) => v.place !== "gone" || now - Date.parse(v.goneAt) <= GONE_KEEP * 86400000);
   return s;
 }
 
@@ -196,10 +216,10 @@ async function watchlist() {
   // A venue's visits are Mark's: only the day of the last one is passed on,
   // so the agent can tell a venue he goes to from one he never opens.
   const venues = (s.venues ?? []).map((v: any) => ({
-    id: v.id, kind: v.kind, name: v.name, url: v.url,
+    id: v.id, place: v.place, name: v.name, url: v.url,
     arenas: v.arenas, arena_names: v.arenas.map((id: string) => name[id]).filter(Boolean),
     gran: v.gran ?? null, start: v.start ?? null, end: v.end ?? null, grade: v.grade ?? null,
-    opens: v.opens ?? null, closes: v.closes ?? null, note: v.note ?? "",
+    opens: v.opens ?? null, closes: v.closes ?? null, note: v.note ?? "", doubt: v.doubt ?? "",
     pages: (v.pages ?? []).map(link),
     last_visit: v.visits.length ? v.visits[v.visits.length - 1].at : null,
     agent_checked_at: last["venue:" + v.id] ?? null,
@@ -386,19 +406,15 @@ function shapeDate(d: any, f: any): string | null {
 }
 
 // A venue's facts as the app's own form would leave them: a name, a site,
-// the kind, and for an event its meeting days read as a date is read, with
-// the stretch its marketplace is open in either side. Mark's note, his
-// visits and his rhythm are never written here, so a changed venue keeps
-// them.
+// its event days read as a date is read, and its window of activity, the
+// stretch its marketplace or tool is open. Mark's note, his visits, his
+// rhythm and where the venue stands are never written here, so a changed
+// venue keeps them.
 function shapeVenue(v: any, f: any): string | null {
   if ("name" in f) v.name = S(f.name, 300) ?? "";
   if ("url" in f) {
     if (f.url && !http(f.url)) return "url must start with http:// or https://";
     v.url = http(f.url) ?? "";
-  }
-  if ("kind" in f) {
-    if (f.kind !== "event" && f.kind !== "tool") return "kind must be event or tool";
-    v.kind = f.kind;
   }
   if ("note" in f) v.note = S(f.note, 600) ?? "";
   // The agent's doubt (Mark, 2026-10-15): when it cannot tell whether a
@@ -409,21 +425,19 @@ function shapeVenue(v: any, f: any): string | null {
     const d = S(f.doubt, 200);
     if (d) v.doubt = d; else delete v.doubt;
   }
-  if (v.kind === "event") {
-    if ("gran" in f) v.gran = oneOf(f.gran, GRANS);
-    if ("start" in f) v.start = D(f.start);
-    if ("end" in f) v.end = D(f.end);
-    if ("grade" in f) v.grade = f.grade === "fixed" ? "fixed" : "uncertain";
-    for (const k of ["opens", "closes"]) {
-      if (!(k in f)) continue;
-      if (f[k] != null && f[k] !== "" && !D(f[k])) return k + " must be YYYY-MM-DD or null";
-      v[k] = D(f[k]);
-    }
-    v.gran ??= v.start ? "day" : "none";
-    if (!GRANS.includes(v.gran)) return "gran must be one of " + GRANS.join(", ");
-    if (v.gran !== "none" && !v.start) return "start must be YYYY-MM-DD";
-    if (v.opens && v.closes && v.closes < v.opens) return "closes is before opens";
+  if ("gran" in f) v.gran = oneOf(f.gran, GRANS);
+  if ("start" in f) v.start = D(f.start);
+  if ("end" in f) v.end = D(f.end);
+  if ("grade" in f) v.grade = f.grade === "fixed" ? "fixed" : "uncertain";
+  for (const k of ["opens", "closes"]) {
+    if (!(k in f)) continue;
+    if (f[k] != null && f[k] !== "" && !D(f[k])) return k + " must be YYYY-MM-DD or null";
+    v[k] = D(f[k]);
   }
+  v.gran ??= v.start ? "day" : "none";
+  if (!GRANS.includes(v.gran)) return "gran must be one of " + GRANS.join(", ");
+  if (v.gran !== "none" && !v.start) return "start must be YYYY-MM-DD";
+  if (v.opens && v.closes && v.closes < v.opens) return "closes is before opens";
   if (!v.name && !v.url) return "a venue needs a name or a url";
   if (!v.name) v.name = hostOf(v.url);
   return null;
@@ -441,19 +455,23 @@ function venueOp(s: any, op: any): any {
     const f = op.venue ?? {};
     const arenas = (Array.isArray(f.arenas) ? f.arenas : []).filter(arenaOk);
     if (!arenas.length) return { error: "venue.arenas must name at least one arena_id on the board" };
-    const v: any = { kind: f.kind === "tool" ? "tool" : "event", name: "", url: "", arenas,
-      visits: [], pages: [], note: "", foundAt: now };
+    // Everything the agent finds lands on the board as new (Mark,
+    // 2026-10-15); a venue with no event days and no window opens today.
+    const v: any = { kind: "event", name: "", url: "", arenas,
+      visits: [], pages: [], note: "", foundAt: now, place: "new" };
     const why = shapeVenue(v, f);
     if (why) return { error: why };
+    if (!v.start && !v.opens && !v.closes) v.opens = todayISO();
     const dup = siteTaken(s, v.url);
+    if (dup?.place === "gone") return { error: "Mark removed that site (" + dup.name + ") on " + dup.goneAt + "; do not bring it back" };
     if (dup) return { error: "that site is already a venue: " + dup.id + " (" + dup.name + "); use add_venue_arena or update_venue" };
-    const tid = v.kind === "tool" && v.url ? "vt" + hashKey(siteKey(v.url)) : null;
-    v.id = tid && !(s.venues ?? []).some((x: any) => x.id === tid) ? tid : crypto.randomUUID();
+    v.id = crypto.randomUUID();
     s.venues.push(tidyVenue(v));
     return { ok: true, venue_id: v.id };
   }
   const v = (s.venues ?? []).find((x: any) => x.id === op.venue_id);
   if (!v) return { error: "venue_id is not on the board" };
+  if (v.place === "gone") return { error: "Mark removed that venue; leave it as it is" };
   switch (op.op) {
     case "update_venue": {
       const copy = structuredClone(v);
@@ -466,9 +484,10 @@ function venueOp(s: any, op: any): any {
       if (!("doubt" in copy)) delete v.doubt;
       return { ok: true };
     }
-    // Letting a venue go, as the app's own "Let it go": off the board, and a
-    // lead started from it only forgets where it came from.
+    // Only a venue still new, the agent's own find that turned out wrong,
+    // goes; what Mark has kept or moved to Venues is his to remove.
     case "delete_venue": {
+      if (v.place !== "new") return { error: "only a venue still new on the board can be deleted; set its doubt instead and Mark decides" };
       s.venues = s.venues.filter((x: any) => x !== v);
       for (const a of s.arenas ?? []) for (const l of a.leads ?? []) if (l.venueId === v.id) delete l.venueId;
       return { ok: true };
@@ -574,7 +593,7 @@ function applyOp(s: any, op: any): any {
     }
     // The general tool became a tool venue (2026-10-14).
     case "set_tool":
-      return { error: "an arena's tools are venues now: add_venue with kind \"tool\", or add_venue_arena to a tool already on the board" };
+      return { error: "an arena's tools are venues now: add_venue with its window (opens, closes) and no event days, or add_venue_arena to one already on the board" };
     case "set_text": {
       const v = op.value == null ? "" : String(op.value).trim();
       if (v.length > 2000) return { error: "a text may be at most 2000 characters" };

@@ -15,6 +15,9 @@
   --call:#8A8BF0;
   --r-ann:#4FBFD6; --r-pub:#8A8BF0; --r-dl:#E469C4;
   --today:#F0B429;
+  /* what the agent found and Mark has not yet dealt with: a lime of its own,
+     apart from every hue that means something else here (2026-10-15) */
+  --new:#B9E35A; --new-ink:#D9F59A; --new-soft:rgba(185,227,90,.14); --new-line:rgba(185,227,90,.42);
   /* the agent's findings speak in the publication's own indigo; a follow-up
      you set yourself in the todo green. */
   --notice:#8A8BF0; --notice-ink:#C2C3FF; --notice-line:rgba(138,139,240,.26);
@@ -68,6 +71,13 @@
   border-radius:1.5px;box-shadow:0 0 12px rgba(239,91,76,.42)}
 #pane-semaphore .top .grow{flex:1}
 #pane-semaphore .top .actions{display:flex;gap:8px;align-items:center}
+/* An iPad held flat is 1024 wide, and the bar held every control across it
+   with nothing to spare until Now became Venues and the Board took a count
+   of what is new (2026-10-15); the gaps give back what the words took, so
+   the bar still fits rather than scrolling sideways. */
+@media (max-width:1180px){
+  #pane-semaphore header.top{gap:10px}
+  #pane-semaphore .top .actions{gap:5px}}
 #pane-semaphore .btn{display:inline-flex;align-items:center;justify-content:center;min-height:31px;
   padding:5px 13px;border-radius:var(--radius);
   font-family:var(--sans);font-size:11px;letter-spacing:.09em;
@@ -132,19 +142,6 @@
   opacity:0;transition:opacity .14s}
 #pane-semaphore .namegrip:hover::after,#pane-semaphore .namegrip.on::after{opacity:.55}
 @media (hover:none){#pane-semaphore .namegrip::after{opacity:.18}}
-/* An arena's tools (see "the arena's tools" in the script): a diamond at the
-   right of the name column, against the drag line, so the diamonds stand in
-   one column down the board whatever the length of the names; the brokerage
-   event's shape. Never visited, it is the outline alone; visited, it fills
-   white and reddens to the brokerage red as the tool comes due, with the
-   days since standing upright inside it in the paper's dark. */
-#pane-semaphore .toolmk{position:relative;flex:0 0 22px;margin-left:auto;width:22px;height:22px;padding:0;border:none;background:none;cursor:pointer}
-#pane-semaphore .toolmk::before{content:"";position:absolute;left:4px;top:4px;width:14px;height:14px;box-sizing:border-box;
-  transform:rotate(45deg);border-radius:2px;border:1.5px solid var(--brok)}
-#pane-semaphore .toolmk.dated::before{border:none;background:color-mix(in srgb,var(--brok) var(--age),#FFFFFF)}
-#pane-semaphore .toolmk span{position:relative;display:block;text-align:center;font:600 9.5px/22px var(--mono);
-  color:var(--paper);letter-spacing:-.04em}
-#pane-semaphore .toolmk:hover::before{box-shadow:0 0 0 2px var(--key)}
 /* The group's head is filled with its type's colour, struck into the ground
    as the wall's row heads are (see "the rotation: a strip for every type"),
    with the group's rule down the left in the same colour, so a type reads as
@@ -164,7 +161,7 @@
 #pane-semaphore .ghead .gcount{font:10px var(--mono);color:var(--key2)}
 #pane-semaphore .row{border-bottom:1px solid var(--grid)}
 #pane-semaphore .row:hover{background:rgba(216,205,184,.045)}
-#pane-semaphore .cell.name{display:flex;align-items:center;gap:8px;min-width:0;padding:0 8px 0 4px;height:36px}
+#pane-semaphore .cell.name{display:flex;align-items:center;gap:8px;min-width:0;padding:0 8px 0 4px;height:36px;align-self:start}
 #pane-semaphore .cell.name .nm{background:none;border:none;text-align:left;font-family:var(--body);font-size:14px;
                white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:2px 0;cursor:pointer}
 #pane-semaphore .cell.name .nm:hover{color:var(--key2);text-decoration:underline;text-underline-offset:4px;text-decoration-color:var(--line2)}
@@ -201,7 +198,7 @@
 #pane-semaphore .whmenu b::before{content:'';display:inline-block;width:14px}
 #pane-semaphore .whmenu .sel b::before{content:'\2713'}
 #pane-semaphore .whmenu span{display:block;margin:2px 0 0 14px;font:italic 12.5px/1.35 var(--body);color:var(--muted)}
-#pane-semaphore .lane{position:relative;height:36px;overflow:hidden}
+#pane-semaphore .lane{position:relative;min-height:36px;overflow:hidden}
 #pane-semaphore .lane .now{position:absolute;top:0;bottom:0;width:1.5px;background:var(--today);opacity:.7;transform:translateX(-50%);pointer-events:none}
 /* markers */
 #pane-semaphore .mk{position:absolute;cursor:pointer}
@@ -214,30 +211,6 @@
    is the same halo, in the same terms. */
 #pane-semaphore .mk::before{content:'';position:absolute;inset:-8px -6px;border-radius:6px}
 #pane-semaphore .rb::before{inset:-6px 0}
-#pane-semaphore .bk{z-index:3}
-/* Brokerage, a size down from what it was (Mark, 2026-10-07: "a bit
-   smaller") now that it shares the row with call bars, and a little above
-   the middle of the row so the bars run underneath it. */
-#pane-semaphore .bk-fixed{top:40%;width:12px;height:12px;background:var(--brok);transform:translate(-50%,-50%) rotate(45deg);border-radius:2px}
-#pane-semaphore .bk-unc{top:40%;width:11px;height:11px;transform:translate(-50%,-50%) rotate(45deg);border-radius:2px;
-         border:1.5px dashed var(--brok);background:var(--paper)}
-#pane-semaphore .bk-band{top:40%;height:12px;transform:translateY(-50%);min-width:9px;border-radius:3px;
-         background:var(--brok-soft);border-left:2px solid var(--brok);border-right:2px solid var(--brok);
-         display:flex;align-items:center;overflow:hidden}
-#pane-semaphore .bk-band .bl{font-family:var(--body);font-size:10.5px;line-height:1;color:var(--bl-ink,#FFDCD3);padding:0 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;position:relative}
-#pane-semaphore .bk-band.unc{background:none;border:1.5px dashed var(--brok)}
-/* a marketplace's open stretch round its meeting days, under them */
-#pane-semaphore .bk-win{top:40%;height:6px;transform:translateY(-50%);min-width:6px;border-radius:3px;
-         background:color-mix(in srgb,var(--brok) 34%,var(--paper))}
-#pane-semaphore .bk-win.past{background:var(--grid)}
-#pane-semaphore .bk-band.unc .bl{color:var(--brok-deep)}
-/* Gone by: grey, so the colour on a row is what is still to come. The grey is
-   the room's line colour rather than --faint, which is a warm khaki and, as a
-   solid bar beside the today line, read as a second gold. */
-#pane-semaphore .bk-fixed.past{background:var(--line2)}
-#pane-semaphore .bk-unc.past{border-color:var(--line2)}
-#pane-semaphore .bk-band.past{background:var(--grid);border-color:var(--line2)}
-#pane-semaphore .bk-band.past .bl{color:var(--muted)}
 /* a call: one bar from publication to deadline (laneHTML) */
 #pane-semaphore .cl{z-index:2}
 #pane-semaphore .rb{height:4px;min-width:3px;border-radius:2px;background:linear-gradient(90deg,var(--r-pub),var(--r-dl))}
@@ -276,6 +249,7 @@
   --today:#9A6A00;
   --notice:#4646B8; --notice-ink:#33338F; --notice-line:rgba(70,70,184,.24);
   --todo:#3F7A31; --todo-ink:#2C5A21; --todo-bg:rgba(63,122,49,.10); --todo-line:rgba(63,122,49,.26);
+  --new:#6C8E1C; --new-ink:#43590E; --new-soft:rgba(140,190,40,.16); --new-line:rgba(108,142,28,.5);
   --hi:rgba(154,106,0,.16); --hi2:rgba(154,106,0,.45);
   --focus:#282420;
   --shadow:0 16px 40px rgba(0,0,0,.45),0 2px 8px rgba(0,0,0,.3);
@@ -357,6 +331,7 @@
 #pane-semaphore .lkform .ib{font-size:12px}
 #pane-semaphore .tabn{margin-left:7px;font:9.5px var(--mono);padding:1px 5px;border-radius:99px;
   background:rgba(42,38,32,.16);color:var(--ink)}
+#pane-semaphore .tabn.newn{background:var(--new);color:#191713}
 /* where did it land? a ring that fades, so a stamped card is never lost */
 @keyframes pane-semaphore-settle{from{box-shadow:0 0 0 3px var(--hi2),0 0 22px var(--hi2)}
                   to{box-shadow:0 0 0 3px rgba(0,0,0,0),0 0 22px rgba(0,0,0,0)}}
@@ -1141,20 +1116,110 @@
 #pane-semaphore .dpnote{padding:14px 22px;font-family:var(--body);font-size:13.5px;color:var(--muted)}
 #pane-semaphore .dpnote b{font-weight:400;color:var(--ink)}
 #pane-semaphore .dperr{color:var(--brok-deep)}
-/* ---------- venues: the Now page ----------
+/* ---------- a venue's window ----------
+   The one band a venue is drawn as, on the board's lanes and on Venues
+   alike (bandHTML): its window, shaded by how much goes on in it, in the
+   colour of where it stands, which the script writes as the band's own
+   gradient. Its edge says the same colour plainly; dashed while it is a
+   season's guess; faded at an end that is open. The two grips at its ends
+   show under the pointer, and always a little where there is no hover. */
+#pane-semaphore .vband{position:absolute;top:50%;height:12px;transform:translateY(-50%);min-width:6px;border-radius:4px;
+  border:1px solid rgba(239,91,76,.62);cursor:pointer;z-index:2;display:flex;align-items:center;overflow:visible}
+#pane-semaphore .vband.st-new{border-color:var(--new-line);box-shadow:0 0 0 1px rgba(185,227,90,.18),0 0 10px rgba(185,227,90,.28)}
+#pane-semaphore .vband.st-board{border-color:rgba(216,205,184,.45)}
+#pane-semaphore .vband.season{border-style:dashed}
+#pane-semaphore .vband.past{border-color:var(--line);box-shadow:none}
+#pane-semaphore .vband.openl{border-left:none;border-radius:0 4px 4px 0;
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 30px);mask-image:linear-gradient(90deg,transparent,#000 30px)}
+#pane-semaphore .vband.openr{border-right:none;border-radius:4px 0 0 4px;
+  -webkit-mask-image:linear-gradient(270deg,transparent,#000 30px);mask-image:linear-gradient(270deg,transparent,#000 30px)}
+#pane-semaphore .vband.openl.openr{-webkit-mask-image:linear-gradient(90deg,transparent,#000 30px,#000 calc(100% - 30px),transparent);
+  mask-image:linear-gradient(90deg,transparent,#000 30px,#000 calc(100% - 30px),transparent)}
+#pane-semaphore .vband:hover{filter:brightness(1.18)}
+#pane-semaphore .vband.dragging{filter:brightness(1.3);z-index:9}
+@media (prefers-reduced-motion:no-preference){
+  #pane-semaphore .vband.st-new{animation:vNewGlow 2.8s ease-in-out infinite}}
+@keyframes vNewGlow{0%,100%{box-shadow:0 0 0 1px rgba(185,227,90,.15),0 0 6px rgba(185,227,90,.2)}
+  50%{box-shadow:0 0 0 1px rgba(185,227,90,.35),0 0 14px rgba(185,227,90,.42)}}
+#pane-semaphore .vh{position:absolute;top:-4px;bottom:-4px;width:12px;z-index:5;cursor:ew-resize;touch-action:none}
+#pane-semaphore .vh.l{left:-7px}
+#pane-semaphore .vh.r{right:-7px}
+#pane-semaphore .vh::after{content:"";position:absolute;left:4px;top:1px;bottom:1px;width:4px;border-radius:2px;
+  background:var(--ink);box-shadow:0 0 0 1px rgba(0,0,0,.5);opacity:0;transition:opacity .14s}
+#pane-semaphore .vband:hover .vh::after,#pane-semaphore .vband.dragging .vh::after{opacity:.85}
+@media (hover:none){#pane-semaphore .vh::after{opacity:.35}}
+#pane-semaphore .vband.openl .vh.l,#pane-semaphore .vband.openr .vh.r{display:none}
+/* its name, inside the band where it fits and after it where it does not;
+   the ink of where it stands, full enough to read on the band's own shading */
+#pane-semaphore .vbl{display:block;padding:0 6px;font:11px/12px var(--body);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  color:#FFE3DC;text-shadow:0 1px 2px rgba(0,0,0,.6);pointer-events:none}
+#pane-semaphore .st-new .vbl,#pane-semaphore .vbl.out.st-new .vbl{color:var(--new-ink)}
+#pane-semaphore .st-board .vbl{color:var(--ink)}
+#pane-semaphore .vbl.out.st-board .vbl{color:var(--key2)}
+#pane-semaphore .vband.past .vbl{color:var(--muted)}
+#pane-semaphore #card .vband{border-color:rgba(194,56,44,.7)}
+#pane-semaphore #card .vband.st-new{border-color:var(--new-line);box-shadow:none;animation:none}
+#pane-semaphore #card .vband.st-board{border-color:var(--line2)}
+#pane-semaphore #card .vdia{box-shadow:0 0 0 2px #EFE8DA}
+#pane-semaphore .vbl.out{position:absolute;transform:translateY(-50%);margin-left:4px;padding:0;z-index:2}
+#pane-semaphore .newtag{display:inline-block;margin-right:5px;padding:0 4px;border-radius:3px;background:var(--new);color:#191713;
+  font:600 8px/11px var(--sans);letter-spacing:.12em;text-transform:uppercase;text-shadow:none;vertical-align:1px}
+/* a venue not dated yet, on the board: a chip from today's line */
+#pane-semaphore .vchip{position:absolute;transform:translateY(-50%);display:inline-flex;align-items:center;gap:6px;height:17px;padding:0 7px 0 2px;
+  border:1px dashed rgba(239,91,76,.6);border-radius:4px;z-index:2;white-space:nowrap}
+#pane-semaphore .vchip.st-new{border-color:var(--new-line);background:var(--new-soft)}
+#pane-semaphore .vchip.st-board{border-color:rgba(216,205,184,.4)}
+#pane-semaphore .vchip i{font:italic 11px var(--body);color:var(--muted)}
+#pane-semaphore .vchip:hover{background:rgba(216,205,184,.08)}
+/* something new on a row, or in a folded group */
+#pane-semaphore .newdot{flex:none;display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--new);
+  box-shadow:0 0 6px rgba(185,227,90,.6)}
+#pane-semaphore .ghead .newdot{margin-left:4px}
+/* ---------- the tray ----------
+   Over the board: what the agent found that is still new, each with the
+   three things to do with it, and, folded, what is kept on the board. */
+#pane-semaphore .tray{margin:16px 0 6px;padding:4px 14px 8px;border:1px solid var(--line);border-radius:var(--radius-lg);background:var(--strip)}
+#pane-semaphore .tray.fresh{border-color:var(--new-line);background:linear-gradient(180deg,rgba(185,227,90,.06),rgba(185,227,90,.02))}
+#pane-semaphore .tray:not(.fresh) .thead.tkept{border-top:none}
+#pane-semaphore .thead{display:flex;align-items:baseline;gap:9px;width:100%;padding:9px 0 6px;text-align:left;
+  font:600 9.5px var(--sans);letter-spacing:.18em;text-transform:uppercase;color:var(--new-ink)}
+#pane-semaphore .thead b{font:11.5px var(--mono);font-weight:400;letter-spacing:0;color:var(--ink)}
+#pane-semaphore .thead span{font:italic 12.5px var(--body);letter-spacing:0;text-transform:none;color:var(--muted)}
+#pane-semaphore .thead .tglow{align-self:center;width:8px;height:8px;border-radius:50%;background:var(--new);box-shadow:0 0 8px rgba(185,227,90,.7)}
+#pane-semaphore .thead.tkept,#pane-semaphore .thead.tarena{border-top:1px solid var(--grid);color:var(--key2)}
+#pane-semaphore .thead.tkept:hover,#pane-semaphore .thead.tarena:hover{color:var(--ink)}
+#pane-semaphore .thead.tarena{color:var(--notice-ink)}
+#pane-semaphore .trow{display:grid;grid-template-columns:16px minmax(180px,1.5fr) minmax(120px,1fr) minmax(150px,.9fr) auto;
+  align-items:center;gap:12px;min-height:38px;padding:3px 0;border-top:1px solid var(--grid)}
+#pane-semaphore .trows>.trow:first-child{border-top:none}
+#pane-semaphore .tnm{min-width:0;text-align:left;font:14.5px/1.3 var(--body);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#pane-semaphore .trow.st-new .tnm{color:#F4FFE0}
+#pane-semaphore .tnm:hover{text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--line2)}
+#pane-semaphore .tar{min-width:0;font:italic 12.5px var(--body);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#pane-semaphore .twhen{font:11px var(--mono);color:var(--key2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#pane-semaphore .tact{display:flex;align-items:center;justify-content:flex-end;gap:6px}
+#pane-semaphore .tact .btn{height:26px;padding:0 10px;font-size:11px}
+#pane-semaphore .tact .btn.armed,#pane-semaphore .vplace .btn.armed{color:var(--brok-deep);border-color:var(--brok)}
+#pane-semaphore .tgo{margin-right:4px;font:11.5px var(--mono);color:var(--key2);text-decoration:none;white-space:nowrap}
+#pane-semaphore .tgo:hover{color:var(--ink);text-decoration:underline}
+#pane-semaphore .trow .vgl.ev{background:var(--new)}
+#pane-semaphore .trow.st-board .vgl.ev{background:var(--key2)}
+#pane-semaphore .trow .vgl.ev.unc{background:none;border-color:var(--new)}
+/* ---------- Venues: three sections and Limbo ----------
    Every venue on one strip of time (Mark chose the strip, 2026-10-14): the
    name and the arenas it serves on the left, the strip in the middle, the
    stamp and Go at the right, each in a column of its own down the page, so
    the stamps can be read down for what has waited longest. The strip runs
    four weeks back and twelve ahead, the same scale on every row and on the
-   axis over them, which stays at the top as the board's does. */
+   axis over them, which stays at the top as the board's does. Arising,
+   Active and Dying are tabs; Limbo is a tab apart, in its fog. */
 #pane-semaphore #now{padding:0 22px 90px}
 #pane-semaphore .vhead{display:flex;align-items:baseline;gap:18px;flex-wrap:wrap;padding:18px 0 8px}
 /* the key, in the marks themselves */
 #pane-semaphore .vkey{margin-left:auto;display:flex;align-items:center;gap:6px;font:italic 12.5px var(--body);color:var(--muted)}
 #pane-semaphore .vkey>i{margin-left:10px}
-#pane-semaphore .vkey .vkbar{width:22px;height:7px;border-radius:4px;background:color-mix(in srgb,var(--brok) 38%,var(--paper));
-  border:1px solid color-mix(in srgb,var(--brok) 62%,var(--paper))}
+#pane-semaphore .vkey .vkbar{width:34px;height:9px;border-radius:4px;border:1px solid rgba(239,91,76,.55);
+  background:linear-gradient(90deg,rgba(239,91,76,.2),rgba(239,91,76,.7) 65%,rgba(239,91,76,.25))}
 #pane-semaphore .vkey .vkp{width:11px;height:11px;border-radius:50%;border:2px solid var(--brok)}
 #pane-semaphore .vaxis,#pane-semaphore .vrow{display:grid;grid-template-columns:minmax(220px,330px) minmax(0,1fr) 168px;column-gap:16px}
 #pane-semaphore .vaxis{position:sticky;top:0;z-index:6;align-items:end;background:var(--paper);border-bottom:1px solid var(--line2)}
@@ -1164,7 +1229,7 @@
 #pane-semaphore .vaxt .vwk{position:absolute;bottom:0;width:1px;height:6px;background:var(--line)}
 #pane-semaphore .vaxt .vnowc{position:absolute;bottom:-1px;width:0;height:0;transform:translateX(-50%);
   border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:6px solid var(--today)}
-/* Now's two tabs, events and tools (2026-10-15) */
+/* Venues' three tabs, Arising, Active and Dying (2026-10-15) */
 #pane-semaphore .vtabs{display:flex;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;align-self:center}
 #pane-semaphore .vtab{display:inline-flex;align-items:baseline;gap:7px;padding:6px 15px;border:none;border-right:1px solid var(--line);background:none;
   font:10.5px var(--sans);letter-spacing:.13em;text-transform:uppercase;color:var(--muted);cursor:pointer}
@@ -1172,6 +1237,21 @@
 #pane-semaphore .vtab:hover{color:var(--key2)}
 #pane-semaphore .vtab.on{background:rgba(216,205,184,.17);color:var(--ink)}
 #pane-semaphore .vtab b{font:11px var(--mono);letter-spacing:0;color:var(--muted)}
+/* a mark of where in a venue's life each tab is: rising, full, falling */
+#pane-semaphore .vtab::before{content:"";align-self:center;width:14px;height:8px;border-radius:2px}
+#pane-semaphore .vtab.t-arising::before{background:linear-gradient(90deg,rgba(239,91,76,.1),rgba(239,91,76,.55))}
+#pane-semaphore .vtab.t-active::before{background:var(--brok)}
+#pane-semaphore .vtab.t-dying::before{background:linear-gradient(90deg,rgba(239,91,76,.55),rgba(239,91,76,.1))}
+/* Limbo's own tab, apart from the three: the fog of the box it was */
+#pane-semaphore .culimbo.vlimbotab{display:flex;align-items:center;gap:9px;margin:0;height:33px;padding:0 14px;align-self:center;
+  font:italic 13px var(--body);color:var(--lg-quiet);isolation:isolate;cursor:pointer}
+#pane-semaphore .culimbo.vlimbotab::after{display:none}
+#pane-semaphore .culimbo.vlimbotab .culc{font-size:10.5px;letter-spacing:.3em}
+#pane-semaphore .culimbo.vlimbotab b{font:11px var(--mono);font-weight:400;color:#A6E9CF}
+#pane-semaphore .culimbo.vlimbotab.on{border-color:rgba(170,215,205,.55);box-shadow:inset 0 0 18px rgba(150,190,200,.16),0 0 0 1px rgba(170,215,205,.25)}
+#pane-semaphore .culimbo.vlimbotab:hover .culgh{color:#F2FFF9}
+#pane-semaphore .vrows.limbo{--lg-line:rgba(170,215,205,.22)}
+#pane-semaphore .vrows.limbo .vnm{color:#C9DDD6}
 #pane-semaphore .vtabdue{font:italic 11.5px var(--body);letter-spacing:0;text-transform:none;color:var(--notice-ink)}
 #pane-semaphore .vtabnone{margin:16px 2px}
 #pane-semaphore .vsec{margin:18px 0 2px;font:600 9.5px var(--sans);letter-spacing:.18em;text-transform:uppercase;color:var(--key2)}
@@ -1187,26 +1267,26 @@
 #pane-semaphore .vchips{display:flex;align-items:center;gap:5px;max-width:100%;overflow:hidden}
 #pane-semaphore .vchips .cuat{flex:0 1 auto;min-width:0;font:italic 12px/1.3 var(--body);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #pane-semaphore .vmore{flex:0 0 auto;font:11px var(--mono);color:var(--muted)}
-/* the two marks a venue is: an event's diamond, dashed while its date is a
-   guess, and a tool's square with a filled centre, the shape of a window
-   that is always open */
+/* the two marks a venue is: a diamond where it has event days, dashed
+   while they are a guess, and a rounded bar, the shape of a window, where
+   it has none */
 #pane-semaphore .vgl{flex:0 0 auto;display:inline-block;width:10px;height:10px}
 #pane-semaphore .vgl.ev{background:var(--brok);transform:rotate(45deg)}
 #pane-semaphore .vgl.ev.unc{background:none;border:1.5px dashed var(--brok)}
-#pane-semaphore .vgl.tool{border:1.6px solid var(--key2);border-radius:3px;
-  background:radial-gradient(circle,var(--key2) 0 2.4px,transparent 2.6px)}
+#pane-semaphore .vgl.win{width:14px;height:7px;border-radius:4px;background:linear-gradient(90deg,rgba(239,91,76,.35),var(--brok),rgba(239,91,76,.35))}
 #pane-semaphore .vtrack{position:relative;height:44px;cursor:pointer}
 #pane-semaphore .vtrack::before{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:var(--grid)}
 #pane-semaphore .vtrack>*{position:absolute}
-#pane-semaphore .vbar{top:50%;height:9px;margin-top:-4.5px;border-radius:5px;
-  background:color-mix(in srgb,var(--brok) 38%,var(--paper));border:1px solid color-mix(in srgb,var(--brok) 62%,var(--paper))}
-#pane-semaphore .vbar.unc{background:none;border:1.5px dashed color-mix(in srgb,var(--brok) 72%,var(--paper))}
-#pane-semaphore .vbar.tool{left:0;right:0;height:2px;margin-top:-1px;border:none;border-radius:0;
-  background:repeating-linear-gradient(90deg,var(--key) 0 7px,transparent 7px 12px)}
-#pane-semaphore .vmeet{top:50%;height:11px;margin-top:-5.5px;border-radius:3px;background:var(--brok)}
-#pane-semaphore .vdia{top:50%;width:12px;height:12px;margin:-6px 0 0 -6px;background:var(--brok);transform:rotate(45deg);
-  box-shadow:0 0 0 2px var(--paper)}
+#pane-semaphore .vmeet{top:50%;height:12px;margin-top:-6px;border-radius:3px;background:var(--brok);cursor:pointer;z-index:3}
+#pane-semaphore .vmeet.past{background:var(--line2)}
+#pane-semaphore .vdia{position:absolute;top:50%;width:12px;height:12px;margin:-6px 0 0 -6px;background:var(--brok);transform:rotate(45deg);
+  box-shadow:0 0 0 2px var(--paper);cursor:pointer;z-index:4}
 #pane-semaphore .vdia.unc{background:var(--paper);border:1.5px dashed var(--brok)}
+#pane-semaphore .vdia.st-new{background:var(--new)}
+#pane-semaphore .vdia.st-new.unc{background:var(--paper);border-color:var(--new)}
+#pane-semaphore .vdia.st-board{background:var(--key2)}
+#pane-semaphore .vdia.st-board.unc{background:var(--paper);border-color:var(--key2)}
+#pane-semaphore .vdia.past{background:var(--line2);border-color:var(--line2)}
 #pane-semaphore .vlab{top:50%;transform:translateY(-50%);margin-left:9px;padding:0 3px;font:10.5px var(--mono);
   color:var(--muted);white-space:nowrap;background:var(--paper);pointer-events:none}
 #pane-semaphore .vtrack.over .vlab{margin-left:0;font-style:italic}
@@ -1239,17 +1319,6 @@
 #pane-semaphore .vstamp:hover{transform:none;box-shadow:0 0 0 2px var(--key)}
 #pane-semaphore .vrow.over .vnm{color:var(--muted)}
 #pane-semaphore .vrow.over .vgl{opacity:1;filter:grayscale(1)}
-#pane-semaphore .culimbo .vrows{padding:0 14px 6px 16px}
-#pane-semaphore .culimbo .vrow{border-bottom-color:var(--lg-line)}
-#pane-semaphore .culimbo .vnm,#pane-semaphore .culimbo .vtrack.over .vlab{color:var(--lg-ink);background:none}
-#pane-semaphore .culimbo .culh{margin-left:16px}
-/* Later: what lies past the strip, or has no date yet, folded into one line */
-#pane-semaphore .vlater{display:flex;align-items:baseline;gap:9px;width:100%;margin-top:16px;padding:9px 2px;
-  border-top:1px solid var(--line);border-bottom:1px solid var(--grid);text-align:left;
-  font:600 9.5px var(--sans);letter-spacing:.18em;text-transform:uppercase;color:var(--key2)}
-#pane-semaphore .vlater b{font:11.5px var(--mono);font-weight:400;letter-spacing:0;color:var(--ink)}
-#pane-semaphore .vlater i{font:italic 12.5px var(--body);letter-spacing:0;text-transform:none;color:var(--muted)}
-#pane-semaphore .vlater:hover{color:var(--ink)}
 /* ---------- the visit question ----------
    Under the stamp when it is pressed, and at the foot of the room when Mark
    comes back from a venue's site: three answers and a way out. Dark on the
@@ -1306,8 +1375,7 @@
 #pane-semaphore .vlife{position:relative;height:62px;margin:6px 6px 2px}
 #pane-semaphore .vlife>*{position:absolute}
 #pane-semaphore .vlife .vax{left:0;right:0;top:28px;height:1px;background:var(--line)}
-#pane-semaphore .vlife .vbar{top:28px}
-#pane-semaphore .vlife .vdia{top:28px;box-shadow:0 0 0 2px #EFE8DA}
+#pane-semaphore .vlife .vband,#pane-semaphore .vlife .vdia,#pane-semaphore .vlife .vmeet{top:28px}
 #pane-semaphore .vlife .vnow{top:16px;bottom:16px}
 #pane-semaphore .vlt{top:38px;transform:translateX(-50%);font:10.5px/1.25 var(--mono);color:var(--muted);text-align:center;white-space:nowrap}
 #pane-semaphore .vlt.up{top:0}
@@ -1316,6 +1384,21 @@
 #pane-semaphore .vdl dt{font:11px var(--mono);color:var(--muted);padding-top:2px}
 #pane-semaphore .vdl dd{margin:0;color:var(--ink)}
 #pane-semaphore .vdl dd i{color:var(--faint)}
+#pane-semaphore .vreset{margin-left:auto;font:italic 12px var(--body);letter-spacing:0;text-transform:none;color:var(--muted);
+  text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}
+#pane-semaphore .vreset:hover{color:var(--ink)}
+/* where a venue stands, at the head of its panel: on the board, the three
+   things to do with it; in Venues, its section and the way back */
+#pane-semaphore .vplace{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:14px 0 4px;padding:10px 12px;border-radius:var(--radius);
+  border:1px solid var(--line);font:13px/1.4 var(--body);color:var(--muted)}
+#pane-semaphore .vplace>span{flex:1 1 100%}
+#pane-semaphore .vplace b{font:600 9.5px var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--ink);margin-right:6px}
+#pane-semaphore .vplace.st-new{border-color:var(--new-line);background:var(--new-soft)}
+#pane-semaphore .vplace.st-new b{color:var(--new-ink)}
+#pane-semaphore .vplace.st-venues{flex-wrap:nowrap}
+#pane-semaphore .vplace.st-venues>span{flex:1 1 auto}
+#pane-semaphore .avplace{font:600 8.5px var(--sans);font-style:normal;letter-spacing:.12em;text-transform:uppercase;color:var(--new-ink)}
+#pane-semaphore .avrow.st-board .avplace{color:var(--key2)}
 #pane-semaphore .vevery{width:100%;height:32px;padding:0 8px;border:1px solid var(--line);border-radius:var(--radius);
   background:var(--field);font:13.5px var(--body);color:var(--ink)}
 #pane-semaphore .vvis{display:grid;grid-template-columns:56px 92px minmax(0,1fr) 20px;gap:8px;align-items:baseline;
@@ -1376,25 +1459,22 @@
 #pane-semaphore .cudel{width:26px;height:26px;border-radius:var(--radius);font-size:11px;color:var(--faint);
   transition:color .14s,background-color .14s}
 #pane-semaphore .cudel:hover{color:var(--brok-deep);background:var(--brok-soft)}
-/* Limbo: the venues that are over, kept until each is let go, folded into
-   one line over the strip. Its cross is always in sight, since
-   taking them off is what Limbo is for. */
+/* Limbo: the venues that are over, kept until each is let go, on a tab of
+   their own apart from the three sections (see "Venues: three sections and
+   Limbo"). Its cross is always in sight, since taking them off is what
+   Limbo is for. */
 /* Spooky (Mark, 2026-10-12): a cold, misty ground with fog drifting across
    it, a ghost bobbing at its left, and the word itself a pale spectral green
    that glows and now and then flickers. The colours are set as colours, not
    as opacity: the word is 11:1 on the darkest part of the mist, the quiet
-   line 7:1. Unfolded, the same mist holds the events, so they read as being
-   in Limbo rather than under it. */
+   line 7:1. Since 2026-10-15 the mist is Limbo's tab, the box it was having
+   gone with the Now page. */
 #pane-semaphore .culimbo{--lg-ink:#D6EDE4;--lg-glow:rgba(150,235,200,.5);--lg-quiet:#A9B9BD;--lg-line:rgba(170,215,205,.22);
   position:relative;margin:4px 0 14px;border:1px solid var(--lg-line);border-radius:var(--radius-lg);overflow:hidden;
   background:radial-gradient(120% 140% at 0% 0%,rgba(120,150,170,.16),transparent 60%),
     radial-gradient(90% 120% at 100% 100%,rgba(110,90,150,.18),transparent 65%),
     linear-gradient(180deg,#16191C,#121417);
   box-shadow:inset 0 0 34px rgba(150,190,200,.07),0 0 0 1px rgba(0,0,0,.3)}
-#pane-semaphore .culb{position:relative;display:flex;align-items:center;gap:10px;width:100%;min-height:46px;padding:0 60px 0 16px;
-  text-align:left;font:italic 14px/1.3 var(--body);color:var(--lg-quiet);overflow:hidden;isolation:isolate}
-#pane-semaphore .culb:hover{background:rgba(170,215,205,.05)}
-#pane-semaphore .culb:hover .culgh{color:#F2FFF9}
 /* the fog: two banks of mist at different speeds, under the words */
 #pane-semaphore .culfog{position:absolute;inset:-40% -50%;z-index:-1;pointer-events:none;
   background:radial-gradient(28% 55% at 20% 55%,rgba(190,215,220,.2),transparent 70%),
@@ -1416,11 +1496,6 @@
   animation:culBob 3.6s ease-in-out infinite;transition:color .2s}
 #pane-semaphore .culc{font:600 12px/1 var(--serif);font-style:normal;letter-spacing:.42em;text-transform:uppercase;
   color:var(--lg-ink);text-shadow:0 0 6px var(--lg-glow),0 0 16px rgba(150,235,200,.25);animation:culFlicker 7s linear infinite}
-#pane-semaphore .culb b{font:11.5px var(--mono);font-weight:400;color:#A6E9CF;text-shadow:0 0 6px rgba(150,235,200,.35)}
-#pane-semaphore .culw{margin-left:auto;font:600 9px/1 var(--sans);font-style:normal;letter-spacing:.2em;
-  text-transform:uppercase;color:var(--lg-ink)}
-#pane-semaphore .culh{margin:2px 0 4px;font:italic 13px/1.4 var(--body);color:var(--lg-quiet)}
-#pane-semaphore .culimbo.open .culb{border-bottom:1px solid var(--lg-line)}
 @keyframes culDrift{from{transform:translateX(-6%)}to{transform:translateX(6%)}}
 @keyframes culBob{0%,100%{transform:translateY(1px)}50%{transform:translateY(-2px)}}
 @keyframes culWisp{0%{transform:translate(0,6px);opacity:0}25%,70%{opacity:1}100%{transform:translate(-30px,-14px);opacity:0}}
