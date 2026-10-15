@@ -217,8 +217,12 @@
 #pane-semaphore .rb.unc{height:5px;background:none;border:1px dashed var(--r-pub);border-right:2px solid var(--r-dl)}
 #pane-semaphore .rb.past{background:var(--line2)}
 #pane-semaphore .rb.unc.past{background:none;border-color:var(--line2)}
-#pane-semaphore .rb i{position:absolute;top:-3px;bottom:-3px;width:2px;margin-left:-1px;border-radius:1px;background:var(--r-dl)}
-#pane-semaphore .rb.past i{background:var(--muted)}
+/* an earlier deadline on the bar, a pre-proposal or a first stage: a tick
+   standing clear of the bar, ringed in the ground, so it reads as a date of
+   its own and not a flaw in the gradient */
+#pane-semaphore .rbn{position:absolute;z-index:3;height:12px;width:3px;margin-left:-1.5px;border-radius:1px;background:var(--r-dl);
+  box-shadow:0 0 0 1.5px var(--paper);cursor:pointer}
+#pane-semaphore .rbn.past{background:var(--muted)}
 #pane-semaphore .rb.lead-in{-webkit-mask-image:linear-gradient(90deg,transparent,#000 22px);mask-image:linear-gradient(90deg,transparent,#000 22px)}
 #pane-semaphore .rb.run-on{-webkit-mask-image:linear-gradient(270deg,transparent,#000 22px);mask-image:linear-gradient(270deg,transparent,#000 22px)}
 #pane-semaphore .empty{padding:60px 0;text-align:center;color:var(--muted);font-size:15px}

@@ -843,13 +843,15 @@ function laneHTML(a,vs){
      between them, three levels at most. The floor never moves, so the
      earliest call in every lane sits on one baseline across the whole
      board. A call with no publication recorded comes in faded from three
-     weeks before its deadline; one with no deadline runs out faded five
-     weeks past its publication. */
+     weeks before its first deadline, so every stage of it lies on the bar
+     as a notch: from the last, BiodivFuture's pre-proposal deadline in
+     November fell off the board and only April's showed (2026-10-15). One
+     with no deadline runs out faded five weeks past its publication. */
   let callH=0;
   {
     const gap=(T1-T0)*.015,freeAt=[],placed=[];
     const items=callRuns(a).all
-      .map(r=>({r,s:r.open?T(r.open.start):T(r.close.start)-21*DAY,
+      .map(r=>({r,s:r.open?T(r.open.start):T((r.dls[0]||r.close).start)-21*DAY,
                   e:r.close?T(r.close.end||r.close.start)+DAY:T(r.open.start)+35*DAY}))
       .filter(x=>x.e>=T0&&x.s<=T1)
       .sort((x,y)=>x.s-y.s||x.e-y.e);
@@ -863,13 +865,16 @@ function laneHTML(a,vs){
     callH=placed.length?Y[Y.length-1]+8:0;
     for(const{it,lv}of placed){
       const r=it.r,L=Math.max(0,X(it.s)),R=Math.min(100,X(it.e)),W=Math.max(R-L,.3);
-      const notch=r.dls.slice(0,-1).map(d=>{const x=X(T(d.start));
-        return x>=L&&x<=R?'<i style="left:'+((x-L)/W*100).toFixed(1)+'%"></i>':'';}).join('');
+      /* the earlier deadlines stand beside the bar, not in it: a faded end
+         is a mask, and a mask cuts whatever is inside the bar to its height */
+      const notch=r.dls.slice(0,-1).map(d=>{const x=X(T(d.start)+DAY/2);
+        return x>=L&&x<=R?'<i class="rbn'+(T(d.end||d.start)<now?' past':'')+'" style="left:'+x.toFixed(2)+'%;bottom:'+(Y[lv]-4)+'px" '+
+          'data-act="openDate" data-a="'+a.id+'" data-d="'+d.id+'" title="'+esc(dtLabel(d)+' \u2014 '+dispDate(d))+'"></i>':'';}).join('');
       const at=r.next||r.close||r.open;
       const cls=(r.state==='closed'?' past':'')+(r.unc?' unc':'')+(r.open?'':' lead-in')+(r.close?'':' run-on');
       h+='<div class="mk cl rb'+cls+'" style="left:'+L.toFixed(2)+'%;width:'+W.toFixed(2)+'%;bottom:'+Y[lv]+'px" '+
          'data-act="openDate" data-a="'+a.id+'" data-d="'+at.id+'" data-tipt="'+esc(runTip(r))+'" '+
-         'tabindex="0" role="button" aria-label="'+esc(dtLabel(at)+', '+dispDate(at))+'">'+notch+'</div>';
+         'tabindex="0" role="button" aria-label="'+esc(dtLabel(at)+', '+dispDate(at))+'"></div>'+notch;
     }
   }
   if(now>=T0&&now<=T1)h+='<div class="now" style="left:'+X(now)+'%"></div>';
