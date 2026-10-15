@@ -293,11 +293,13 @@ event or a tool it brings becomes a venue, as on every read. Where each
 agent is told what to do is its scheduled task; the SQL and the functions
 are in `supabase/`.
 
-**The Marketplace has one agent, and it works on demand** (since
-2026-10-14): its three nightly tasks are deleted, and one task,
-**Marketplace agent (on demand)**, has no schedule and runs when Mark
-fires it — from a Claude session told what to do, which passes the request
-as the firing's text, or with Run now, which does a round of its own. It
+**The Marketplace has one agent, on demand and at night** (since
+2026-10-14): its three old nightly tasks are deleted, and one task,
+**Marketplace agent**, runs when Mark fires it — from a Claude session
+told what to do, which passes the request as the firing's text — and,
+since 2026-10-15, by itself every night at about 01:00 his time, a scan
+that reaches every active arena once a week and every frozen one about
+once a month (Run now does the same scan). It
 is put to work on anything in the Marketplace, and does the work rather
 than suggesting it: the gatekeeper's `board` gives it the whole board but
 the leads, venues and all, and `edit` lets it add, correct, re-date and let
