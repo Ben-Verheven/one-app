@@ -1079,10 +1079,10 @@ the two lists at the foot of this file is where those names gather.
 .lhead         semaphore.css:432 x8               semaphore.js:3382 x2
 .limbo         semaphore.css:1266 x2              semaphore.js:2115
 .lk            semaphore.css:1019 x5              semaphore.js:2671
-.lkdragging    semaphore.css:380 x2               semaphore.js:4998 x3
+.lkdragging    semaphore.css:380 x2               semaphore.js:5004 x3
 .lkform        semaphore.css:314 x6               semaphore.js:2955 x3
 .lkind         semaphore.css:449 x5               semaphore.js:3177
-.lkup          semaphore.css:376 x5               semaphore.js:4999 x3
+.lkup          semaphore.css:376 x5               semaphore.js:5005 x3
 .lla           semaphore.css:596 x8               semaphore.js:3051 x2
 .llinks        semaphore.css:594                  semaphore.js:3337 x2
 .llist         semaphore.css:415                  semaphore.js:3527
@@ -1566,7 +1566,7 @@ the two lists at the foot of this file is where those names gather.
 ```
 #nt-search       notes.css:37                       notes.js:1414 x5   notes.view.js:15
 #nt-taginput     notes.css:834 x3                   notes.js:3070 x6
-.armed           notes.css:852 x4                   semaphore.js:4478 x6   notes.js:3038 x3
+.armed           notes.css:852 x4                   semaphore.js:4481 x6   notes.js:3038 x3
 .dragging        notes.css:143 x18                  ledger.js:674 x10   semaphore.js:1961 x2   atlas.js:2269 x2
 .nt-arrange      notes.css:487 x6                   notes.js:1214
 .nt-arrange-say  notes.css:499                      notes.js:1228

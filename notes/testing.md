@@ -45,4 +45,18 @@ path, check its class list for `open` before clicking the row at all, and
 prefer reading or acting on specific buttons by selector over a click
 aimed at the row's centre.
 
+**A crawler that presses everything finds what no scenario thinks of**
+(2026-10-15). A throwaway Playwright script over a seeded browser: in
+each room, every element on screen that is a button, a field or wears
+`cursor:pointer`, and that `elementFromPoint` says is really on top,
+pressed in random order a few hundred times, typing a hostile string
+(`<b>x</b> & "q" ${1}`) into fields and pressing Escape now and then;
+`pageerror`s are collected against the control pressed. It found the
+Marketplace calendar's crash within a hundred presses, where the smoke
+and every screenshot passed. Afterwards, a `<b>` holding just `x`
+anywhere in a pane means typed text reached the page as markup. The
+first version, which pressed only `button`s and took the first one each
+time, found nothing: most controls here are delegated, and a modal left
+open covers the rest.
+
 See also [check-the-app-first](check-the-app-first.md).

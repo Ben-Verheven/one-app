@@ -4349,7 +4349,10 @@ document.addEventListener('mouseover',e=>{
   if(!txt){tip.style.display='none';return;}
   tip.textContent=txt;tip.style.display='block';
 });
-document.addEventListener('mousemove',e=>{
+/* On the room itself, not the document: the document's is gated on this
+   room showing (hub.js), and over the Ledger, where the drawer is lent,
+   the tip stood wherever it first appeared. */
+document.body.addEventListener('mousemove',e=>{
   if(tip.style.display==='none')return;
   const w=tip.offsetWidth,h=tip.offsetHeight;
   let x=e.clientX+14,y=e.clientY+16;
@@ -4704,7 +4707,10 @@ document.addEventListener('input',e=>{
   const t=e.target;
   if(t&&t.classList&&t.classList.contains('grow'))growBox(t);
 },true);
-document.addEventListener('keydown',e=>{
+/* ⌘↩ keeps what is being written, heard on the room for the reason the
+   tip's mousemove is: a lead begun in the drawer lent over the Ledger is
+   written there too. */
+document.body.addEventListener('keydown',e=>{
   const t=e.target;
   if(t&&t.tagName==='TEXTAREA'&&t.classList.contains('grow')&&e.key==='Enter'&&(e.metaKey||e.ctrlKey)){
     e.preventDefault();

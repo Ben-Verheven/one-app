@@ -367,7 +367,7 @@ _No section banners._
 
 ## `rooms/semaphore/semaphore.js`
 
-5134 lines · 277 KB
+5140 lines · 278 KB
 
 ```
 Brokerage Semaphore                   semaphore.js:1
@@ -412,11 +412,11 @@ asking, and saying                    semaphore.js:4069
 the types, managed                    semaphore.js:4110
 dragging in the list of types         semaphore.js:4167
 tooltip                               semaphore.js:4328
-events                                semaphore.js:4363
-venues                                semaphore.js:4506
-typing, and the forms it goes into    semaphore.js:4702
-escape, and closing by clicking away  semaphore.js:4920
-putting links in your own order       semaphore.js:4955
+events                                semaphore.js:4366
+venues                                semaphore.js:4509
+typing, and the forms it goes into    semaphore.js:4705
+escape, and closing by clicking away  semaphore.js:4926
+putting links in your own order       semaphore.js:4961
 ```
 
 ## `rooms/semaphore/semaphore.css`
@@ -655,4 +655,4 @@ Generated data. Never open, never edit, never upload.
 
 ---
 
-**37528 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.
+**37534 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.
