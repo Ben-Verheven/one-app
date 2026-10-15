@@ -47,18 +47,12 @@ create index if not exists semaphore_inbox_status_idx
 
 alter table semaphore_inbox enable row level security;
 
-drop policy if exists "app reads inbox" on semaphore_inbox;
-create policy "app reads inbox" on semaphore_inbox
-  for select using (true);
-drop policy if exists "app decides inbox" on semaphore_inbox;
-create policy "app decides inbox" on semaphore_inbox
-  for update using (true) with check (true);
-
--- The app's key may change only the two "decided" columns, and may not
--- add or delete rows.
-revoke insert, update, delete on semaphore_inbox from anon, authenticated;
-grant select on semaphore_inbox to anon, authenticated;
-grant update (status, decided_at) on semaphore_inbox to anon, authenticated;
+-- Who may read and answer it is not said here but in 5-lock-to-owner.sql:
+-- Mark's login reads the rows and changes only the two "decided" columns.
+-- This file once granted both to the bare key, and pasting it again for a
+-- new kind of finding after the lock (2026-10-09) would have opened the
+-- inbox to anyone holding the key, which is public. On a new project, run
+-- 5-lock-to-owner.sql after this; it is safe to repeat.
 
 -- Which arena the agent looked at, and when. This is the agent's own
 -- rotation clock, kept apart from the board's sweep, which is Mark's.
@@ -75,11 +69,8 @@ create table if not exists semaphore_agent_log (
 create index if not exists semaphore_agent_log_arena_idx
   on semaphore_agent_log (arena_id, checked_at desc);
 alter table semaphore_agent_log enable row level security;
-revoke all on semaphore_agent_log from anon, authenticated;
 
--- The app may READ the log (not write it), so the "ask the agent" ring on a
--- card can go out once the agent has looked at that arena. Added 2026-10-06.
-drop policy if exists "app reads log" on semaphore_agent_log;
-create policy "app reads log" on semaphore_agent_log
-  for select using (true);
-grant select on semaphore_agent_log to anon, authenticated;
+-- The app may READ the log (not write it), so an "Ask agent" on a venue or
+-- an arena goes out once the agent has looked at it. Added 2026-10-06; the
+-- read is granted to Mark's login by 5-lock-to-owner.sql, for the reason
+-- given over the inbox.

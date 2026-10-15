@@ -42,13 +42,10 @@ create table if not exists atlas_inbox (
 );
 create index if not exists atlas_inbox_status_idx on atlas_inbox (status, created_at desc);
 alter table atlas_inbox enable row level security;
-drop policy if exists "app reads atlas inbox" on atlas_inbox;
-create policy "app reads atlas inbox" on atlas_inbox for select using (true);
-drop policy if exists "app decides atlas inbox" on atlas_inbox;
-create policy "app decides atlas inbox" on atlas_inbox for update using (true) with check (true);
-revoke insert, update, delete on atlas_inbox from anon, authenticated;
-grant select on atlas_inbox to anon, authenticated;
-grant update (status, decided_at) on atlas_inbox to anon, authenticated;
+-- Who may read and answer it is set by 5-lock-to-owner.sql, and only there:
+-- this file is pasted again whenever the roster is rebuilt, and when it
+-- granted the inbox to the bare key that paste would have undone the lock.
+-- On a new project, run 5-lock-to-owner.sql after this.
 
 -- Whom, or which group, the agent looked at and when, and the pages it
 -- found them on, so the next round goes straight to them. The agent's own

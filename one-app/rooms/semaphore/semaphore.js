@@ -2561,7 +2561,7 @@ function streamHTML(a){
 function freshSaid(a){
   const n=freshItems(a).length;
   return n?'<i class="wfresh" title="'+n+' thing'+(n===1?'':'s')+' the nightly agent found, marked new below '+
-    '\u2014 sweeping this arena marks '+(n===1?'it':'them')+' seen, here and on the card">'+n+' new</i>':'';
+    '\u2014 closing this panel marks '+(n===1?'it':'them')+' seen">'+n+' new</i>':'';
 }
 /* The panel's band of leads. It carried the arena's sweep, the ring that
    asked the nightly agent and the wait as well, until the rotation of
@@ -2588,7 +2588,7 @@ function readHTML(a){
   const frozen=a.frozenAt
     ?'<div class="frozenbar"><i class="frost"></i>'+
        '<span class="frtx">In the freezer since '+esc(shortDay(a.frozenAt))+
-         ' \u2014 kept off the board, and its venues off Now, unless they serve another arena too.'+parked+'</span>'+
+         ' \u2014 kept off the board, and its venues off Venues, unless they serve another arena too.'+parked+'</span>'+
        '<button class="btn" data-act="thaw" data-id="'+a.id+'">Thaw</button></div>'
     :'';
   return '<div class="cbody">'+
@@ -2606,7 +2606,7 @@ function readHTML(a){
     '<div class="cfoot">'+
       '<button class="btn" data-act="editCard">Edit</button>'+
       (a.frozenAt?'':'<button class="btn ghost" data-act="freeze" data-id="'+a.id+'" '+
-        'title="Keep this arena off the board, and its venues off Now">Freeze</button>')+
+        'title="Keep this arena off the board, and its venues off Venues">Freeze</button>')+
       '<span class="sp"></span>'+
       '<button class="btn" data-act="startAdd" data-what="date">+ Date</button>'+
       '<button class="btn" data-act="startAdd" data-what="link">+ Link</button>'+
@@ -2802,11 +2802,10 @@ function leadName(l){return l.project||(l.links[0]?linkName(l.links[0]):'')||'Un
 
 /* What the nightly agents brought, and whether you have looked since. A date
    or a link that comes in through Dispatches carries `foundAt`, the moment it
-   was accepted, and reads as new until the arena is next swept — a sweep is
-   already the act that means "I have been through this one", so it needs no
-   second button to say so. The card and the panel ask this of the same
-   record, which is what keeps the two in step: sweep from either and the mark
-   goes from both. Before this an accepted finding simply joined the arena
+   was accepted, and reads as new until the arena's panel is next shut
+   (closeDrawer; it was the arena's sweep until the sweep went with the
+   rotation), so it needs no button of its own. Before this an accepted
+   finding simply joined the arena
    and looked exactly like something typed by hand, so a morning's Accept all
    left nothing to say what had changed. */
 function isFresh(a,x){return !!(x&&x.foundAt)&&(!a.seenAt||x.foundAt>a.seenAt);}
@@ -2816,7 +2815,7 @@ function freshItems(a){
 }
 function foundTitle(x){
   return 'Found by the nightly agent'+(x.foundAt?' — accepted '+shortDay(x.foundAt.slice(0,10)):'')+
-    '. New until you next sweep this arena.';
+    '. New until you next close this panel.';
 }
 function freshTag(a,x){
   return isFresh(a,x)?'<i class="wfresh" title="'+esc(foundTitle(x))+'">new</i>':'';
@@ -3530,11 +3529,11 @@ function paintWall(){
       (all.length?'<span class="wsay"><b>'+all.length+'</b> lead'+(all.length===1?'':'s')+
         ' across <b>'+arenas+'</b> arena'+(arenas===1?'':'s')+
         (owed?', <b>'+owed+'</b> owed today':'')+'.</span>':'')+
-      /* The weekly Excel of every lead and every closed todo (Mark,
-         2026-10-14). It holds the Ledger's todos as well, so the bridge
+      /* The weekly Excel of every lead (Mark, 2026-10-14). A file written
+         for reading elsewhere is a door out of the app, so the bridge
          writes it; this room only asks. */
       '<button class="btn leadxl" data-act="leadsExcel" title="Write every lead, open and closed, with its '+
-        'updates, and every closed todo into one Excel file \u2014 the same file again each time, where the '+
+        'updates, into one Excel file \u2014 the same file again each time, where the '+
         'browser allows it">Excel</button>'+
       '<button class="btn leadnew'+(adding?' on':'')+'" data-act="leadAddBoard" aria-expanded="'+adding+'">+ Lead</button>'+
       '</div>'+(adding?leadFormHTML(null):'');
@@ -3697,7 +3696,7 @@ const Cal=(()=>{
     }
     pop.innerHTML=
       '<div class="calhdr"><button type="button" class="btn calnav" data-calnav="-1" aria-label="Previous month">\u2039</button>'+
-      '<span class="caltitle">'+LONG_MONTHS[m]+' '+y+'</span>'+
+      '<span class="caltitle">'+LONG_MON[m]+' '+y+'</span>'+
       '<button type="button" class="btn calnav" data-calnav="1" aria-label="Next month">\u203a</button></div>'+
       '<div class="calwk">'+['Mo','Tu','We','Th','Fr','Sa','Su'].map(w=>'<span>'+w+'</span>').join('')+'</div>'+
       '<div class="calgrid">'+cells.map(c=>{
@@ -3990,7 +3989,7 @@ function leadAdd(aid,v){
   if(v&&v.venueId&&venue(v.venueId))l.venueId=v.venueId;
   if(!Array.isArray(a.leads))a.leads=[];
   a.leads.push(l);
-  restack(a.id);
+  restack();
   return l.id;
 }
 function leadVerb(aid,lid,op,val){
@@ -4028,7 +4027,7 @@ function leadVerb(aid,lid,op,val){
     case 'linkDel':l.links=(l.links||[]).filter(k=>k.id!==val);break;
     default:return false;
   }
-  restack(a.id);
+  restack();
   if(op==='done'&&l.doneAt&&l.outcome==='project')leadToProject(a,l);
   return true;
 }
@@ -4056,10 +4055,7 @@ const Ask=(function(){
   }
   function put(title,body,yesLabel,cb,isTell){
     const m=box();
-    if(!m){                        /* markup gone: never silently do the thing */
-      if(!isTell&&typeof cb==='function')return;
-      return;
-    }
+    if(!m)return;                  /* markup gone: never silently do the thing */
     restore=document.activeElement;
     $('#askTitle').textContent=title;
     $('#askBody').textContent=body;
@@ -4385,7 +4381,7 @@ document.addEventListener('click',e=>{
       const l=(ar.leads||[]).find(x=>x.id===b.dataset.l);if(!l)break;
       const card=b.closest('.lead');if(!card)break;
       if(!leadEditAll(l,leadEditRead(card))){Ask.tell('Nothing left','A lead needs at least a project, a match or a link.');break;}
-      closeComposers();restack(ar.id);break;}
+      closeComposers();restack();break;}
     /* marks a link or an update to go when the edit is saved, and back */
     case 'leadEditDrop':{const r=b.closest('.ledrow');if(r)r.classList.toggle('gone');break;}
     /* One way to move a lead on: press a dot of its ruit. There is no second
@@ -4398,13 +4394,13 @@ document.addEventListener('click',e=>{
        away. */
     case 'leadDone':{const ar=arena(id);if(!ar)break;
       const l=(ar.leads||[]).find(x=>x.id===b.dataset.l);if(!l)break;
-      if(l.doneAt){l.doneAt=null;delete l.outcome;restack(ar.id);break;}
+      if(l.doneAt){l.doneAt=null;delete l.outcome;restack();break;}
       closeComposers();endAsk={a:ar.id,l:l.id};leadOpen.add(l.id);
       repaint();renderDrawer();break;}
     case 'leadEnd':{const ar=arena(id);if(!ar)break;
       const l=(ar.leads||[]).find(x=>x.id===b.dataset.l);if(!l||l.doneAt)break;
       if(!endLead(l,b.dataset.v))break;
-      restack(ar.id);
+      restack();
       if(l.outcome==='project')leadToProject(ar,l);
       break;}
     case 'leadEndCancel':{closeComposers();repaint();renderDrawer();break;}
@@ -4596,6 +4592,10 @@ document.addEventListener('click',e=>{
       if(n){Ask.tell('Still in use',
         n+' arena'+(n===1?' still uses':'s still use')+' this type. Give '+
         (n===1?'it':'them')+' another type, or merge this one into another, and it can go.');break;}
+      /* The last type stays: a new arena, typed or accepted from Dispatches,
+         is filed under the first type there is, and with none + Arena threw
+         and an accepted finding was lost after the cloud had marked it taken. */
+      if(S.types.length<2){Ask.tell('The last type','A board keeps at least one type. Rename this one instead.');break;}
       S.types=S.types.filter(t=>t.id!==id);save();renderTypes();renderAll();break;}
     case 'addDate':drawer.editing=true;drawer.edit='new';renderDrawer();
       {const f=$('#card .dform');if(f){f.scrollIntoView({block:'center'});
@@ -4720,7 +4720,7 @@ document.addEventListener('submit',e=>{
       if(!Array.isArray(l.updates))l.updates=[];
       l.updates.push({at:todayISO(),text});
     }
-    closeComposers();restack(a.id);
+    closeComposers();restack();
     return;
   }
   const df=e.target.closest('.leadform');
@@ -4816,7 +4816,7 @@ document.addEventListener('change',e=>{
     const a=arena(el.dataset.lda);if(!a)return;
     const l=(a.leads||[]).find(x=>x.id===el.dataset.ldl);if(!l)return;
     l.due=el.value||null;
-    restack(a.id);return;
+    restack();return;
   }
   /* link rows */
   if(el.dataset.lk&&drawer.id){
@@ -4911,7 +4911,7 @@ document.addEventListener('keydown',e=>{
   if(drawer.vnew){drawer.vnew=null;closeDrawer();return;}    /* a venue being made */
   if(drawer.edit){drawer.edit=null;renderDrawer();return;}   /* a date form */
   if(drawer.editing){drawer.editing=false;renderDrawer();return;}  /* the edit face */
-  if(drawer.id)closeDrawer();                                /* the panel itself */
+  if(drawer.id||drawer.vid)closeDrawer();                    /* the panel itself, an arena's or a venue's */
 });
 document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{
   if(e.target!==m)return;

@@ -21,9 +21,12 @@
       if (tag) G = JSON.parse(tag.textContent);
     } catch (e) { console.error('Bridge: could not read the atlas', e); }
   }
-  if (!G || !G.researchers) return;
-
-  var R = G.researchers;
+  /* Without the Atlas there are no names to link, and that is all that
+     goes: everything below the linkifying — the ring, the title, the lent
+     panels, the three room syncs and the inboxes — used to sit behind a
+     return here, so one broken Atlas left a page with no way to another
+     room and two rooms that never reached the cloud. */
+  var R = (G && G.researchers) || [];
 
   /* ── who the atlas knows, and what they might be called ───────────── */
 
@@ -71,7 +74,6 @@
   });
 
   var variants = Object.keys(byVariant).sort(function (a, b) { return b.length - a.length; });
-  if (!variants.length) return;
 
   function esc(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
 
@@ -201,7 +203,9 @@
   /* The Call Board is left out on purpose: it holds several megabytes of
      Commission prose and no TU/e names, so scanning it would cost a lot
      and find nothing. */
-  ['ledger', 'semaphore'].forEach(watch);
+  /* no names, no watching: an empty alternation matches the empty string
+     everywhere, and the scan would never move past it */
+  if (variants.length) ['ledger', 'semaphore'].forEach(watch);
 
   /* ── the Atlas's dossier, lent to the other rooms ─────────────────── */
 
@@ -1398,7 +1402,7 @@
     /* Which arenas the agent has looked at since a given moment, out of the
        log it keeps of its own rounds. The Semaphore reads it to put out an
        "ask the agent" once the agent has been. The log is readable only once
-       the policy in `supabase/1-semaphore-inbox.sql` has been run; until
+       the rules in `supabase/5-lock-to-owner.sql` have been run; until
        then this answers with the error and the asks simply stand. */
     function visits(since, cb) {
       var c = open();
@@ -1638,7 +1642,6 @@
      draws no band. */
   function sheet(S, cols, sections, mark, tab) {
     var x = '', links = [], merges = [], r = 0, last = col(cols.length - 1);
-    var groupsAt = [];
     function c(i, row, s, inner, t) {
       return '<c r="' + col(i) + row + '" s="' + s + '"' + (t ? ' t="' + t + '"' : '') + '>' + (inner || '') + '</c>';
     }

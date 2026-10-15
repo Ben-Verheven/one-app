@@ -26,33 +26,33 @@ rooms                                                hub.js:296
 
 ## `shell/bridge.js`
 
-1982 lines · 94 KB
+1985 lines · 94 KB
 
 ```
 Bridge — what the five rooms say to each other.             bridge.js:1
-who the atlas knows, and what they might be called          bridge.js:28
-linkifying                                                  bridge.js:87
-the Atlas's dossier, lent to the other rooms                bridge.js:206
-the Call Board's reader, lent the same way                  bridge.js:275
-the topic a project was written for                         bridge.js:335
-Semaphore's arena drawer, lent the same way                 bridge.js:355
-Semaphore's leads, on the Ledger's board                    bridge.js:406
-the ring                                                    bridge.js:446
-the name                                                    bridge.js:561
-the page change                                             bridge.js:615
-the rooms that keep their own state, on the Ledger's cloud  bridge.js:651
-which copy wins                                             bridge.js:733
-what the room says about itself                             bridge.js:788
-putting two copies together                                 bridge.js:981
-the agents' inboxes: what the scheduled agents found        bridge.js:1318
-open where we left off                                      bridge.js:1433
-the weekly Excel: every lead, open and closed               bridge.js:1444
-the zip                                                     bridge.js:1501
-the styles                                                  bridge.js:1555
-the look                                                    bridge.js:1594
-what goes in it                                             bridge.js:1800
-where it goes                                               bridge.js:1843
-on the iPad, links open in DuckDuckGo                       bridge.js:1928
+who the atlas knows, and what they might be called          bridge.js:31
+linkifying                                                  bridge.js:89
+the Atlas's dossier, lent to the other rooms                bridge.js:210
+the Call Board's reader, lent the same way                  bridge.js:279
+the topic a project was written for                         bridge.js:339
+Semaphore's arena drawer, lent the same way                 bridge.js:359
+Semaphore's leads, on the Ledger's board                    bridge.js:410
+the ring                                                    bridge.js:450
+the name                                                    bridge.js:565
+the page change                                             bridge.js:619
+the rooms that keep their own state, on the Ledger's cloud  bridge.js:655
+which copy wins                                             bridge.js:737
+what the room says about itself                             bridge.js:792
+putting two copies together                                 bridge.js:985
+the agents' inboxes: what the scheduled agents found        bridge.js:1322
+open where we left off                                      bridge.js:1437
+the weekly Excel: every lead, open and closed               bridge.js:1448
+the zip                                                     bridge.js:1505
+the styles                                                  bridge.js:1559
+the look                                                    bridge.js:1598
+what goes in it                                             bridge.js:1803
+where it goes                                               bridge.js:1846
+on the iPad, links open in DuckDuckGo                       bridge.js:1931
 ```
 
 ## `shell/boot.js`
@@ -398,22 +398,22 @@ drawer                                semaphore.js:2386
 read view: one stream, in time order  semaphore.js:2490
 edit view                             semaphore.js:2615
 actions                               semaphore.js:2761
-a call's run                          semaphore.js:2863
-leads                                 semaphore.js:2934
-the ruit                              semaphore.js:3037
-the score                             semaphore.js:3091
-one lead card, in both rooms          semaphore.js:3151
-the colour dot                        semaphore.js:3179
-a type's colour dot                   semaphore.js:3190
-leads: one board, three sections      semaphore.js:3512
-leads, lent to the Ledger's board     semaphore.js:3905
-modals                                semaphore.js:4036
-asking, and saying                    semaphore.js:4039
-the types, managed                    semaphore.js:4083
-dragging in the list of types         semaphore.js:4140
-tooltip                               semaphore.js:4301
-events                                semaphore.js:4336
-venues                                semaphore.js:4479
+a call's run                          semaphore.js:2862
+leads                                 semaphore.js:2933
+the ruit                              semaphore.js:3036
+the score                             semaphore.js:3090
+one lead card, in both rooms          semaphore.js:3150
+the colour dot                        semaphore.js:3178
+a type's colour dot                   semaphore.js:3189
+leads: one board, three sections      semaphore.js:3511
+leads, lent to the Ledger's board     semaphore.js:3904
+modals                                semaphore.js:4035
+asking, and saying                    semaphore.js:4038
+the types, managed                    semaphore.js:4079
+dragging in the list of types         semaphore.js:4136
+tooltip                               semaphore.js:4297
+events                                semaphore.js:4332
+venues                                semaphore.js:4475
 typing, and the forms it goes into    semaphore.js:4671
 escape, and closing by clicking away  semaphore.js:4889
 putting links in your own order       semaphore.js:4924
@@ -655,4 +655,4 @@ Generated data. Never open, never edit, never upload.
 
 ---
 
-**37519 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.
+**37522 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.
