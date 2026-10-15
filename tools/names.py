@@ -279,7 +279,9 @@ QUOTED   = re.compile(r"'([^'\n]*)'|\"([^\"\n]*)\"")
 # for. Before they existed, "painted, never written" listed forty-five
 # names of which eleven were dead and thirty-four were live families, and a
 # list that wrong is a list nobody dares act on.
-GLUE_HEAD = re.compile(r"""(['"])\s*([A-Za-z][\w-]*)\1\s*\+""")
+# The head may close a class list, `'g g-' + pid`: only its last word is
+# the half being built, and `.g-ledger` read as dead paint until that was seen.
+GLUE_HEAD = re.compile(r"""(['"])\s*(?:[\w-]+\s+)*([A-Za-z][\w-]*)\1\s*\+""")
 GLUE_TAIL = re.compile(r"""\+\s*(['"])(-?[\w-]+)\1""")
 
 # A class list is names and spaces and nothing else.

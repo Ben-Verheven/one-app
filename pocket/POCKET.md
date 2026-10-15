@@ -85,7 +85,7 @@ re-extract the maths) but a Pocket change never touches it.
   `absorbVenues` on the copy it changes); every undo puts back a snapshot (`keep`/`putBack`) → board
   (`liveList`, which settles the types' tones and absorbs venues as the desk does; `venueList`) →
   views (`drawNow` + `venueRow` + `vStrip`, `drawLeads`/`leadItems` + `leadRow` + `ruit`) → sheets
-  (`openVenue`, `askVisit`, `leadFromVenue`, `openArena`, `openLead`, `newLead`, `openPerson`) and the
+  (`openVenue`, `leadFromVenue`, `openArena`, `openLead`, `newLead`, `openPerson`) and the
   bar back from a site (`showAsk`).
   `fitScreen` gives the home screen the room the insets no longer say (why: the viewport meta); ⚙ shows what it measured.
 - Both scripts share one global scope: a new top-level name must not collide with script 1

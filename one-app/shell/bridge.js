@@ -12,15 +12,8 @@
   'use strict';
 
   /* The Atlas parses its 2.1MB blob at boot and hands the result over, so
-     this does not parse it a second time. The fallback only runs if that
-     ever stops being exposed. */
+     this does not parse it a second time. */
   var G = Hub.api('atlas').G || null;
-  if (!G) {
-    try {
-      var tag = document.querySelector('#pane-atlas #G');
-      if (tag) G = JSON.parse(tag.textContent);
-    } catch (e) { console.error('Bridge: could not read the atlas', e); }
-  }
   /* Without the Atlas there are no names to link, and that is all that
      goes: everything below the linkifying — the ring, the title, the lent
      panels, the three room syncs and the inboxes — used to sit behind a

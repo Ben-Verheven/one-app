@@ -247,7 +247,6 @@
   --grid:rgba(42,38,32,.13); --line:rgba(42,38,32,.22); --line2:rgba(42,38,32,.36);
   --slab:linear-gradient(180deg,rgba(255,255,255,.7),rgba(42,38,32,.05));
   --brok:#C2382C; --brok-deep:#8E241B; --brok-soft:rgba(194,56,44,.16);
-  --bl-ink:#7E1F17;
   --call:#4646B8;
   --r-ann:#137F9B; --r-pub:#4646B8; --r-dl:#A32E87;
   --today:#9A6A00;
@@ -303,17 +302,6 @@
 #pane-semaphore .whead{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;margin-bottom:18px}
 #pane-semaphore .wsay{font-family:var(--body);font-size:12.5px;font-style:italic;color:var(--faint)}
 #pane-semaphore .wsay b{font-style:normal;font-weight:400;color:var(--notice-ink)}
-/* The sweep stamp, always in sight on a card (Mark, 2026-10-11): it used to
-   say nothing about itself until the card was hovered, which on the iPad
-   meant a first press only to find it. */
-#pane-semaphore .stamp{flex:0 0 20px;width:20px;height:20px;border:1px solid var(--line2);border-radius:50%;
-  color:var(--muted);font-size:10px;line-height:1;display:flex;align-items:center;justify-content:center;
-  transition:opacity .16s,color .16s,background-color .16s,border-color .16s,transform .16s}
-#pane-semaphore .stamp:hover{border-color:var(--key);color:var(--ink);transform:scale(1.08)}
-/* a card swept today keeps a quiet mark, so today's work stays legible */
-#pane-semaphore .stamp.on{opacity:.72;background:var(--key);border-color:var(--key);color:#F1EBDD}
-/* with its day count it widens into a pill, the tick and the days side by side */
-#pane-semaphore .stamp.dated{flex:0 0 auto;width:auto;min-width:20px;padding:0 6px 0 5px;gap:3px;border-radius:99px}
 /* Asking the agent (askHTML): a ring in the agents' own indigo, hidden until
    the card is reached for, and lit — a filled centre with a glow
    — for as long as the ask stands, so a wall can be read for what is waiting
@@ -336,9 +324,6 @@
 #pane-semaphore .tabn{margin-left:7px;font:9.5px var(--mono);padding:1px 5px;border-radius:99px;
   background:rgba(42,38,32,.16);color:var(--ink)}
 #pane-semaphore .tabn.newn{background:var(--new);color:#191713}
-/* where did it land? a ring that fades, so a stamped card is never lost */
-@keyframes pane-semaphore-settle{from{box-shadow:0 0 0 3px var(--hi2),0 0 22px var(--hi2)}
-                  to{box-shadow:0 0 0 3px rgba(0,0,0,0),0 0 22px rgba(0,0,0,0)}}
 /* the name's own cell in the head, which leaves the controls their room */
 #pane-semaphore .wbody{padding:6px}
 /* the links, as a part of their own (wallCard) */
@@ -355,10 +340,6 @@
 #pane-semaphore .wlrow:hover .wlc>button,#pane-semaphore .wlrow:focus-within .wlc>button,
 #pane-semaphore .wlc>.armed{opacity:1}
 @media (hover:none){#pane-semaphore .wlc>button{opacity:1}}
-/* A card link's stamp stands at the far end of its row, under the card's
-   own, and always in sight, as that one is (Mark, 2026-10-12). */
-#pane-semaphore .wlc>.stamp:not(.on){opacity:1}
-#pane-semaphore .wlc>.stamp{margin-left:4px}
 #pane-semaphore .ldel{height:26px;min-width:24px;display:flex;align-items:center;justify-content:center;
         border-radius:var(--radius);color:var(--faint);font-size:10.5px;
         transition:opacity .14s,background-color .14s,color .14s}
@@ -953,7 +934,6 @@
 #pane-semaphore .rotbar .swept{display:flex;align-items:center;gap:9px;padding:7px 12px;
   font-family:var(--body);font-size:12.5px;color:var(--faint)}
 #pane-semaphore .rotbar .swept .sp{flex:1}
-#pane-semaphore #card .stamp{opacity:1}
 #pane-semaphore .rule{height:1px;background:var(--line);margin:20px -26px 6px}
 /* the stream: everything this arena has, in time order */
 #pane-semaphore .stream{position:relative}

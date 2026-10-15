@@ -26,33 +26,33 @@ rooms                                                hub.js:296
 
 ## `shell/bridge.js`
 
-1985 lines · 94 KB
+1978 lines · 94 KB
 
 ```
 Bridge — what the five rooms say to each other.             bridge.js:1
-who the atlas knows, and what they might be called          bridge.js:31
-linkifying                                                  bridge.js:89
-the Atlas's dossier, lent to the other rooms                bridge.js:210
-the Call Board's reader, lent the same way                  bridge.js:279
-the topic a project was written for                         bridge.js:339
-Semaphore's arena drawer, lent the same way                 bridge.js:359
-Semaphore's leads, on the Ledger's board                    bridge.js:410
-the ring                                                    bridge.js:450
-the name                                                    bridge.js:565
-the page change                                             bridge.js:619
-the rooms that keep their own state, on the Ledger's cloud  bridge.js:655
-which copy wins                                             bridge.js:737
-what the room says about itself                             bridge.js:792
-putting two copies together                                 bridge.js:985
-the agents' inboxes: what the scheduled agents found        bridge.js:1322
-open where we left off                                      bridge.js:1437
-the weekly Excel: every lead, open and closed               bridge.js:1448
-the zip                                                     bridge.js:1505
-the styles                                                  bridge.js:1559
-the look                                                    bridge.js:1598
-what goes in it                                             bridge.js:1803
-where it goes                                               bridge.js:1846
-on the iPad, links open in DuckDuckGo                       bridge.js:1931
+who the atlas knows, and what they might be called          bridge.js:24
+linkifying                                                  bridge.js:82
+the Atlas's dossier, lent to the other rooms                bridge.js:203
+the Call Board's reader, lent the same way                  bridge.js:272
+the topic a project was written for                         bridge.js:332
+Semaphore's arena drawer, lent the same way                 bridge.js:352
+Semaphore's leads, on the Ledger's board                    bridge.js:403
+the ring                                                    bridge.js:443
+the name                                                    bridge.js:558
+the page change                                             bridge.js:612
+the rooms that keep their own state, on the Ledger's cloud  bridge.js:648
+which copy wins                                             bridge.js:730
+what the room says about itself                             bridge.js:785
+putting two copies together                                 bridge.js:978
+the agents' inboxes: what the scheduled agents found        bridge.js:1315
+open where we left off                                      bridge.js:1430
+the weekly Excel: every lead, open and closed               bridge.js:1441
+the zip                                                     bridge.js:1498
+the styles                                                  bridge.js:1552
+the look                                                    bridge.js:1591
+what goes in it                                             bridge.js:1796
+where it goes                                               bridge.js:1839
+on the iPad, links open in DuckDuckGo                       bridge.js:1924
 ```
 
 ## `shell/boot.js`
@@ -65,7 +65,7 @@ Boot check  boot.js:1
 
 ## `shell/shell.css`
 
-771 lines · 40 KB
+770 lines · 40 KB
 
 ```
 Shell — the chrome that holds the five rooms.              shell.css:1
@@ -82,10 +82,10 @@ faint was #9D8458                                          shell.css:411
 The ribbon.                                                shell.css:439
 one bar: one height, one control face                      shell.css:455
 the ribbon's ink, said louder than each room says its own  shell.css:521
-Semaphore: already the shape of the thing                  shell.css:593
-the Ledger                                                 shell.css:606
-the Atlas: a 21px italic wordmark                          shell.css:648
-the Call Board: the cluster row is the bar                 shell.css:670
+Semaphore: already the shape of the thing                  shell.css:592
+the Ledger                                                 shell.css:605
+the Atlas: a 21px italic wordmark                          shell.css:647
+the Call Board: the cluster row is the bar                 shell.css:669
 ```
 
 ## `rooms/ledger/ledger.view.js`
@@ -421,7 +421,7 @@ putting links in your own order       semaphore.js:4924
 
 ## `rooms/semaphore/semaphore.css`
 
-1653 lines · 125 KB
+1633 lines · 124 KB
 
 ```
 Brokerage Semaphore                       semaphore.css:1
@@ -433,26 +433,26 @@ board                                     semaphore.css:111
 namew is the column of names              semaphore.css:113
 the sheet                                 semaphore.css:230
 faint was #8C8474, which cleared nothing  semaphore.css:241
-shared card                               semaphore.css:265
-brokerage wall                            semaphore.css:278
-leads                                     semaphore.css:402
-the three sections                        semaphore.css:414
-the leads view                            semaphore.css:435
-Editing in the card                       semaphore.css:510
-the lead itself                           semaphore.css:552
-one lead card, in both rooms              semaphore.css:670
-freezer                                   semaphore.css:854
-arena panel                               semaphore.css:888
-dispatches                                semaphore.css:1071
-a venue's window                          semaphore.css:1123
-the tray                                  semaphore.css:1212
-Venues: three sections and Limbo          semaphore.css:1242
-the visit question                        semaphore.css:1360
-a venue, in the panel                     semaphore.css:1387
-modals                                    semaphore.css:1552
-the types, managed (renderTypes           semaphore.css:1575
-the calendar                              semaphore.css:1618
-tooltip                                   semaphore.css:1645
+shared card                               semaphore.css:264
+brokerage wall                            semaphore.css:277
+leads                                     semaphore.css:383
+the three sections                        semaphore.css:395
+the leads view                            semaphore.css:416
+Editing in the card                       semaphore.css:491
+the lead itself                           semaphore.css:533
+one lead card, in both rooms              semaphore.css:651
+freezer                                   semaphore.css:835
+arena panel                               semaphore.css:869
+dispatches                                semaphore.css:1051
+a venue's window                          semaphore.css:1103
+the tray                                  semaphore.css:1192
+Venues: three sections and Limbo          semaphore.css:1222
+the visit question                        semaphore.css:1340
+a venue, in the panel                     semaphore.css:1367
+modals                                    semaphore.css:1532
+the types, managed (renderTypes           semaphore.css:1555
+the calendar                              semaphore.css:1598
+tooltip                                   semaphore.css:1625
 ```
 
 ## `rooms/callboard/callboard.view.js`
@@ -655,4 +655,4 @@ Generated data. Never open, never edit, never upload.
 
 ---
 
-**37522 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.
+**37494 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.
