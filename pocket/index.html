@@ -318,10 +318,6 @@ button.ln:active{background:rgba(216,205,184,.06)}
 .vrow:active{background:rgba(216,205,184,.05)}
 .vhd{display:flex;align-items:center;gap:9px;min-height:36px}
 .vnm{flex:1;min-width:0;font:16px/1.3 var(--body);color:var(--ink)}
-.vdoubt{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;margin-left:7px;border-radius:50%;
-  border:1px solid var(--notice-ink);color:var(--notice-ink);font:600 10px/1 var(--sans);font-style:normal;vertical-align:2px}
-#sheet .vdoubtp{margin:0 0 14px;padding:10px 12px;border-radius:var(--radius);border:1px solid var(--notice-ink);
-  color:var(--notice-ink);font:14px/1.4 var(--body)}
 .vrow.due .vnm{color:#FFF7EC}
 .vrow.over .vnm{color:var(--muted)}
 .vgl{flex:0 0 auto;display:inline-block;width:10px;height:10px}
@@ -1154,7 +1150,10 @@ function tidyVenue(v){
   if(!(v.every>=1&&v.every<=365))delete v.every;else v.every=Math.round(v.every);
   if(typeof v.note!=='string')v.note='';
   if(typeof v.memo==='string'&&!v.memo.trim())delete v.memo;
-  if(typeof v.doubt!=='string'||!v.doubt.trim())delete v.doubt;
+  /* The agent's doubt, a ? on a venue it was unsure of, went the evening it
+     came (Mark, 2026-10-15): everything it finds now waits on the board for
+     him to judge, so there is nothing left for it to be unsure on his behalf. */
+  delete v.doubt;
   return v;
 }
 function joinVenue(v,aid){if(aid&&!v.arenas.includes(aid))v.arenas.push(aid);}
@@ -1446,7 +1445,7 @@ function vDateSay(v){
    dashed edge while it is a season's guess, its two ends to drag, and its
    event days as diamonds over it. `t0`/`t1` are the strip's ends, `top` the
    middle of the band in pixels, or null for the middle of the strip. */
-const PLACE_RGB={new:'185,227,90',board:'216,205,184',venues:'239,91,76',gone:'125,116,102'};
+const PLACE_RGB={new:'185,227,90',board:'150,140,122',venues:'239,91,76',gone:'125,116,102'};
                /* how much history a row shows before it offers the rest */
 function arena(id){return S.arenas.find(a=>a.id===id);}
 /* ---- read view: one stream, in time order ---- */
@@ -2191,9 +2190,6 @@ function venueRow(v, over){
   var hd = el('div', 'vhd');
   hd.appendChild(vGlyph(v));
   var nm = el('span', 'vnm', plainOf(v.name));
-  /* the agent's doubt, as on the desk: a small ? by the name; the reason is in
-     the sheet, and Keep it, which answers it, stays at the desk */
-  if (v.doubt) nm.appendChild(el('i', 'vdoubt', '?'));
   hd.appendChild(nm);
   if (!over) hd.appendChild(vDisc(v, function(){ askVisit(v); }));
   var go = vGo(v); if (go) hd.appendChild(go);
@@ -2397,7 +2393,6 @@ function openVenue(v){
     var d = vSince(v);
     b.appendChild(el('p', 'sub', vDateSay(v) + '  ·  ' + (d === null ? 'not visited yet' : d <= 0 ? 'visited today' : 'last visit ' + d + ' days ago') +
       (vEvery(v) ? '  ·  every ' + vEvery(v) + ' d' : '')));
-    if (v.doubt) b.appendChild(el('p', 'vdoubtp', 'The agent is not sure this still matters. ' + plainOf(v.doubt)));
     /* its window and event days; the window is dragged at the desk */
     var w = vWin(v);
     if (w || v.start){

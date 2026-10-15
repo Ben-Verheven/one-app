@@ -316,9 +316,10 @@ leaders can be found — which land as `new` and glow there until Mark
 moves each to Venues, keeps it on the board, or removes it. It keeps what
 is on the board correct, but where a venue stands is his: it deletes only
 a venue still new, its own find gone wrong, and never one he removed
-(the gatekeeper refuses both). Where it cannot settle something about a
-venue it says why in a few words (`doubt`), which the app shows as a ?
-until Mark presses Keep it. Its rules are in the task's instruction, and
+(the gatekeeper refuses both). Since Mark judges everything it brings, it
+leans to completeness: anything with matchmaking goes on the board, a
+month-only date as a dashed guess, a few misfires accepted. Its rules are
+in the task's instruction, and
 [semaphore-decisions](notes/semaphore-decisions.md) says why. Ask agent
 on a venue's panel puts a moment on it (`askAt`) that the scan takes
 first, and the app takes the ask off once the agent's log shows a look at
@@ -413,7 +414,7 @@ kept the name, so nothing stored had to move.
 | the room's scroller — the page itself does not scroll | `#semscroll` |
 | the header: the view switcher (Venues · Board), Leads beside it, Search, Types, + Venue, + Arena, Dispatches and the cloud chip | `header.top`; `#viewseg`, `#leadsBtn`, `#searchBtn` and its box `#search`, `#dispatchBtn`, `#semcloud` |
 | Venues (the Now page until 2026-10-15), the Board, Leads (on the wall), Dispatches, the freezer | `#now`, `#board`, `#wall`, `#dispatch`, `#freezer` |
-| Venues: its three tabs, Arising · Active · Dying, and Limbo's apart; the axis over them, sticky; one venue's row, its name and the arenas it serves, its strip, its stamp and Go | `.vtabs` › `.vtab`, `.culimbo.vlimbotab`; `.vaxis`; `.vrow` = `.vname` (`.vnmrow` › `.vnm` and the agent's doubt `.vdoubt`, `.vchips`) + `.vtrack` + `.vend` (`.vstamp`, `.vgo`) |
+| Venues: its three tabs, Arising · Active · Dying, and Limbo's apart; the axis over them, sticky; one venue's row, its name and the arenas it serves, its strip, its stamp and Go | `.vtabs` › `.vtab`, `.culimbo.vlimbotab`; `.vaxis`; `.vrow` = `.vname` (`.vnmrow` › `.vnm`, `.vchips`) + `.vtrack` + `.vend` (`.vstamp`, `.vgo`) |
 | a venue's window, on the board's lanes, on Venues and in its panel: the band, its two ends to drag, its name, the event days, the visits, today, due | `.vband` (`.st-new`, `.st-board`, `.st-venues`), `.vh`, `.vbl`, `.vmeet` and `.vdia`, `.vtick`, `.vnow`, `.vpulse` |
 | the visit question, under a stamp and at the foot of the room | `.vask.pop`; `#vbar` › `.vask.bar` |
 | the month axis over the board, sticky, and the heading that names and chooses the order (My order / By date) | `.axisrow` = `.corner.sorter` (`.whsort`, its menu `.whmenu`) + `.axis`; a month is `.mcell` |
@@ -422,7 +423,7 @@ kept the name, so nothing stored had to move.
 | the tray over the board: what is new, a row each with → Venues, Keep and Remove; what is kept, folded; new arenas waiting in Dispatches | `.tray` › `.thead`, `.trows` › `.trow` |
 | one arena's row, and its dot when it holds something new | `.row` = `.cell.name` + `.lane`; `.newdot` |
 | on a lane: a venue's window (as above), one not dated yet, a call's bar, today | `.vband`, `.vchip`, `.mk.cl.rb`, `.now` |
-| the drawer, holding an arena or a venue; an arena's venues in it; a link's cross, and the press that makes a brokerage link a venue; where a venue stands, with its three buttons; a venue's ask to the agent; the agent's doubt on it, with Keep it | `#card` and its `.scrim`; `.avlist` › `.avrow`; `.ldel`, `.lmake`; `.vplace`; `.vagent`; `.vdoubtbox` |
+| the drawer, holding an arena or a venue; an arena's venues in it; a link's cross, and the press that makes a brokerage link a venue; where a venue stands, with its three buttons; a venue's ask to the agent | `#card` and its `.scrim`; `.avlist` › `.avrow`; `.ldel`, `.lmake`; `.vplace`; `.vagent` |
 
 **The Call Board** — the cluster row is the bar, `#hdr` › `.tabs`; the
 controls under it are `.hd-controls` and `#ovbar`; the chronological chart

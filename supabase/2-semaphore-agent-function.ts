@@ -117,7 +117,7 @@ function tidyVenue(v: any): any {
   if (!(v.every >= 1 && v.every <= 365)) delete v.every; else v.every = Math.round(v.every);
   if (typeof v.note !== "string") v.note = "";
   if (typeof v.memo === "string" && !v.memo.trim()) delete v.memo;
-  if (typeof v.doubt !== "string" || !v.doubt.trim()) delete v.doubt;
+  delete v.doubt; // the agent's ? on a venue went the evening it came (2026-10-15)
   return v;
 }
 function takeStamps(v: any, x: any) {
@@ -219,7 +219,7 @@ async function watchlist() {
     id: v.id, place: v.place, name: v.name, url: v.url,
     arenas: v.arenas, arena_names: v.arenas.map((id: string) => name[id]).filter(Boolean),
     gran: v.gran ?? null, start: v.start ?? null, end: v.end ?? null, grade: v.grade ?? null,
-    opens: v.opens ?? null, closes: v.closes ?? null, note: v.note ?? "", doubt: v.doubt ?? "",
+    opens: v.opens ?? null, closes: v.closes ?? null, note: v.note ?? "",
     pages: (v.pages ?? []).map(link),
     last_visit: v.visits.length ? v.visits[v.visits.length - 1].at : null,
     agent_checked_at: last["venue:" + v.id] ?? null,
@@ -417,14 +417,6 @@ function shapeVenue(v: any, f: any): string | null {
     v.url = http(f.url) ?? "";
   }
   if ("note" in f) v.note = S(f.note, 600) ?? "";
-  // The agent's doubt (Mark, 2026-10-15): when it cannot tell whether a
-  // venue still bears on a coming call, it keeps the venue and says why in a
-  // few words; the app marks the venue with it until Mark answers. An empty
-  // doubt takes the mark off.
-  if ("doubt" in f) {
-    const d = S(f.doubt, 200);
-    if (d) v.doubt = d; else delete v.doubt;
-  }
   if ("gran" in f) v.gran = oneOf(f.gran, GRANS);
   if ("start" in f) v.start = D(f.start);
   if ("end" in f) v.end = D(f.end);
@@ -480,14 +472,12 @@ function venueOp(s: any, op: any): any {
       const dup = copy.url && copy.url !== v.url ? siteTaken(s, copy.url, v.id) : null;
       if (dup) return { error: "that site is already a venue: " + dup.id + " (" + dup.name + ")" };
       Object.assign(v, tidyVenue(copy));
-      // Object.assign only adds: a doubt taken off the copy must go here too
-      if (!("doubt" in copy)) delete v.doubt;
       return { ok: true };
     }
     // Only a venue still new, the agent's own find that turned out wrong,
     // goes; what Mark has kept or moved to Venues is his to remove.
     case "delete_venue": {
-      if (v.place !== "new") return { error: "only a venue still new on the board can be deleted; set its doubt instead and Mark decides" };
+      if (v.place !== "new") return { error: "only a venue still new on the board can be deleted; Mark decides on the rest" };
       s.venues = s.venues.filter((x: any) => x !== v);
       for (const a of s.arenas ?? []) for (const l of a.leads ?? []) if (l.venueId === v.id) delete l.venueId;
       return { ok: true };

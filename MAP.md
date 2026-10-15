@@ -367,7 +367,7 @@ _No section banners._
 
 ## `rooms/semaphore/semaphore.js`
 
-4912 lines · 264 KB
+4901 lines · 264 KB
 
 ```
 Brokerage Semaphore                   semaphore.js:1
@@ -376,50 +376,50 @@ how much an arena is worth            semaphore.js:25
 a type's colour                       semaphore.js:86
 the ui, whole                         semaphore.js:302
 venues                                semaphore.js:357
-date semantics                        semaphore.js:582
-filtering                             semaphore.js:617
-search                                semaphore.js:687
-render: board                         semaphore.js:702
-the board's two orders                semaphore.js:860
-the tray                              semaphore.js:919
-the width of the names                semaphore.js:1027
-render: freezer                       semaphore.js:1059
-dispatches                            semaphore.js:1088
-venues, on screen                     semaphore.js:1482
-asking the agent about one venue      semaphore.js:1690
-the visit question                    semaphore.js:1732
-a venue's window, drawn               semaphore.js:1788
-dragging a window's ends              semaphore.js:1820
-Venues: three sections and Limbo      semaphore.js:1884
-a venue, opened                       semaphore.js:1996
-drawer                                semaphore.js:2203
-read view: one stream, in time order  semaphore.js:2307
-edit view                             semaphore.js:2431
-actions                               semaphore.js:2576
-a call's run                          semaphore.js:2678
-leads                                 semaphore.js:2749
-the ruit                              semaphore.js:2852
-the score                             semaphore.js:2906
-one lead card, in both rooms          semaphore.js:2966
-the colour dot                        semaphore.js:2994
-a type's colour dot                   semaphore.js:3005
-leads: one board, three sections      semaphore.js:3327
-leads, lent to the Ledger's board     semaphore.js:3720
-modals                                semaphore.js:3851
-asking, and saying                    semaphore.js:3854
-the types, managed                    semaphore.js:3898
-dragging in the list of types         semaphore.js:3955
-tooltip                               semaphore.js:4116
-events                                semaphore.js:4151
-venues                                semaphore.js:4296
-typing, and the forms it goes into    semaphore.js:4479
-escape, and closing by clicking away  semaphore.js:4697
-putting links in your own order       semaphore.js:4733
+date semantics                        semaphore.js:585
+filtering                             semaphore.js:620
+search                                semaphore.js:690
+render: board                         semaphore.js:705
+the board's two orders                semaphore.js:863
+the tray                              semaphore.js:922
+the width of the names                semaphore.js:1030
+render: freezer                       semaphore.js:1062
+dispatches                            semaphore.js:1091
+venues, on screen                     semaphore.js:1485
+asking the agent about one venue      semaphore.js:1693
+the visit question                    semaphore.js:1723
+a venue's window, drawn               semaphore.js:1779
+dragging a window's ends              semaphore.js:1811
+Venues: three sections and Limbo      semaphore.js:1875
+a venue, opened                       semaphore.js:1987
+drawer                                semaphore.js:2194
+read view: one stream, in time order  semaphore.js:2298
+edit view                             semaphore.js:2422
+actions                               semaphore.js:2567
+a call's run                          semaphore.js:2669
+leads                                 semaphore.js:2740
+the ruit                              semaphore.js:2843
+the score                             semaphore.js:2897
+one lead card, in both rooms          semaphore.js:2957
+the colour dot                        semaphore.js:2985
+a type's colour dot                   semaphore.js:2996
+leads: one board, three sections      semaphore.js:3318
+leads, lent to the Ledger's board     semaphore.js:3711
+modals                                semaphore.js:3842
+asking, and saying                    semaphore.js:3845
+the types, managed                    semaphore.js:3889
+dragging in the list of types         semaphore.js:3946
+tooltip                               semaphore.js:4107
+events                                semaphore.js:4142
+venues                                semaphore.js:4287
+typing, and the forms it goes into    semaphore.js:4468
+escape, and closing by clicking away  semaphore.js:4686
+putting links in your own order       semaphore.js:4722
 ```
 
 ## `rooms/semaphore/semaphore.css`
 
-1618 lines · 122 KB
+1610 lines · 122 KB
 
 ```
 Brokerage Semaphore                       semaphore.css:1
@@ -447,10 +447,10 @@ the tray                                  semaphore.css:1178
 Venues: three sections and Limbo          semaphore.css:1208
 the visit question                        semaphore.css:1322
 a venue, in the panel                     semaphore.css:1352
-modals                                    semaphore.css:1517
-the types, managed (renderTypes           semaphore.css:1540
-the calendar                              semaphore.css:1583
-tooltip                                   semaphore.css:1610
+modals                                    semaphore.css:1509
+the types, managed (renderTypes           semaphore.css:1532
+the calendar                              semaphore.css:1575
+tooltip                                   semaphore.css:1602
 ```
 
 ## `rooms/callboard/callboard.view.js`
@@ -653,4 +653,4 @@ Generated data. Never open, never edit, never upload.
 
 ---
 
-**37293 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.
+**37274 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.
