@@ -43,7 +43,7 @@
   --r-ann:#4FBFD6; --r-pub:#8A8BF0; --r-dl:#E469C4;
   --today:#F0B429;
   --notice:#8A8BF0; --notice-ink:#C2C3FF; --notice-line:rgba(138,139,240,.26);
-  --todo:#8CC47C; --todo-ink:#BBE0AF; --todo-line:rgba(140,196,124,.26);
+  --todo:#8CC47C; --todo-ink:#BBE0AF; --todo-line:rgba(140,196,124,.26); --todo-bg:rgba(140,196,124,.10);
   --strip:rgba(216,205,184,.06); --sink:rgba(10,9,7,.24);
   --surface:linear-gradient(150deg,rgba(44,39,33,.92),rgba(35,31,26,.92));
   --lead:#b98676; --lquiet:#bca070; --ltrack:rgba(205,176,105,.34); --ldotbg:#191713;
@@ -324,11 +324,10 @@ button.ln:active{background:rgba(216,205,184,.06)}
 .vgl.ev{background:var(--brok);transform:rotate(45deg)}
 .vgl.ev.unc{background:none;border:1.5px dashed var(--brok)}
 .vgl.win{width:14px;height:7px;border-radius:4px;background:linear-gradient(90deg,rgba(239,91,76,.35),var(--brok),rgba(239,91,76,.35))}
-.vstamp{flex:0 0 34px;width:34px;height:34px;border-radius:50%;border:1px solid var(--line2);display:flex;
-  align-items:center;justify-content:center;font:500 12px/1 var(--mono);color:var(--muted)}
-.vstamp.dated{border:none;background:color-mix(in srgb,var(--brok) var(--age),#FFFFFF);color:#191713}
 .vgo{flex:0 0 auto;display:inline-flex;align-items:center;height:34px;padding:0 12px;border-radius:var(--radius);
   border:1px solid var(--line2);font:13px var(--mono);color:var(--key2);text-decoration:none}
+/* Go tapped today: the visit is recorded, and the button says so */
+.vgo.done{border-color:var(--todo-line);background:var(--todo-bg);color:var(--todo-ink)}
 .vchips{display:flex;flex-wrap:wrap;gap:5px;margin:2px 0 4px 19px}
 .vchip{padding:1px 8px 2px 7px;font:italic 12.5px/1.3 var(--body);color:var(--ink);
   background:color-mix(in srgb,var(--tone,#7D7466) 30%,var(--paper));border-left:3px solid var(--tone,var(--line2));
@@ -2156,24 +2155,22 @@ function vStrip(v){
 function vGlyph(v){
   return el('i', 'vgl ' + (v.start ? 'ev' + (v.grade === 'fixed' ? '' : ' unc') : 'win'));
 }
-/* the disc: the days since the last visit, reddening towards the day the
-   venue is due; the empty ring and its tick for one never visited */
-function vDisc(v, act){
-  var d = vSince(v), e = vEvery(v) || 14;
-  var b = el('button', 'vstamp' + (d === null ? '' : ' dated'), d === null ? '✓' : String(d > 99 ? '99+' : Math.max(0, d)));
-  if (d !== null) b.style.setProperty('--age', Math.round(Math.min(Math.max(d, 0)/e, 1)*100) + '%');
-  b.setAttribute('aria-label', d === null ? 'Not visited yet — tap once you have been'
-    : d <= 0 ? 'Visited today — tap to say what it gave' : 'Last visit ' + d + ' days ago — tap once you have been again');
-  b.addEventListener('click', function(e){ e.stopPropagation(); act(); });
-  return b;
-}
-/* Go: the venue's own site; coming back to Pocket asks what it gave */
+/* Go: the venue's own site, and the visit, as on the desk since 2026-10-15
+   (the stamp, a disc tapped after going, went then). Today's visit is
+   recorded as it is tapped, a tick on the strip, and it reads Visited for
+   the rest of the day; coming back to Pocket asks what it gave. */
 var vBack = null;
+function visitedToday(v){ return ((venue(v.id) || v).visits || []).some(function(x){ return x.at === isoToday(); }); }
 function vGo(v, cls){
   if (!v.url) return null;
-  var a = el('a', cls || 'vgo', 'Go ↗');
+  var done = visitedToday(v);
+  var a = el('a', (cls || 'vgo') + (done ? ' done' : ''), done ? 'Visited ↗' : 'Go ↗');
   a.href = v.url; a.target = '_blank'; a.rel = 'noopener';
-  a.addEventListener('click', function(e){ e.stopPropagation(); vBack = { id:v.id, at:Date.now() }; });
+  a.addEventListener('click', function(e){
+    e.stopPropagation();
+    if (!visitedToday(v)) visitVenue(v);
+    vBack = { id:v.id, at:Date.now() };
+  });
   return a;
 }
 function chips(v, max){
@@ -2194,7 +2191,6 @@ function venueRow(v, over){
   hd.appendChild(vGlyph(v));
   var nm = el('span', 'vnm', plainOf(v.name));
   hd.appendChild(nm);
-  if (!over) hd.appendChild(vDisc(v, function(){ askVisit(v); }));
   var go = vGo(v); if (go) hd.appendChild(go);
   r.appendChild(hd);
   r.appendChild(chips(v, 2));
@@ -2239,10 +2235,20 @@ function drawNow(){
   function byName(x, y){ return String(x.name).localeCompare(String(y.name)); }
   var by = { arising:[], active:[], dying:[], over:[] };
   vs.forEach(function(v){ by[vPhase(v)].push(v); });
-  by.arising.sort(function(x, y){ return from(x) - from(y) || byName(x, y); });
-  by.active.sort(function(x, y){ return vHeat(y, now) - vHeat(x, now) || vDue(y) - vDue(x) || byName(x, y); });
-  by.dying.sort(function(x, y){ return to(x) - to(y) || byName(x, y); });
-  by.over.sort(function(x, y){ return to(y) - to(x) || byName(x, y); });
+  /* the desk's order, fixed by what a venue is and never by a visit: those
+     serving two arenas or more first, then each type's own in the desk's
+     order of types, each by the start of its window */
+  var types = (data.semaphore.types || []).map(function(t){ return t.id; });
+  function block(v){
+    var as = venueArenas(v).filter(function(a){ return !a.frozenAt; });
+    if (as.length > 1) return -1;
+    if (!as.length) return types.length + 1;
+    var i = types.indexOf(as[0].typeId);
+    return i < 0 ? types.length : i;
+  }
+  function start(v){ var w = vWin(v); return !w ? Infinity : w.from === null ? -Infinity : w.from; }
+  Object.keys(by).forEach(function(k){ by[k].sort(function(x, y){
+    return block(x) - block(y) || (start(x) === start(y) ? 0 : start(x) < start(y) ? -1 : 1) || byName(x, y); }); });
 
   var tab = by[nowTab] ? nowTab : 'active';
   var tabs = el('div', 'vtabs');
@@ -2303,22 +2309,8 @@ function drawNow(){
   }
 }
 
-/* The question, as on the desk: under the stamp in a sheet of its own on
-   the phone, and in the bar over the tabs when Mark comes back to Pocket
-   after Go. Pressing the stamp records today's visit first. */
-function askVisit(v){
-  var t = isoToday();
-  if (!(v.visits || []).some(function(x){ return x.at === t; })) visitVenue(v);
-  sheet(function(b, bar){
-    b.appendChild(el('h2', '', plainOf(v.name)));
-    b.appendChild(el('p', 'sub', 'Visited today — anything?'));
-    b.appendChild(answersFor(v, false));
-    var back = el('button', '', 'Take it back');
-    back.addEventListener('click', function(){ shut(); visitVenue(v); });
-    bar.appendChild(back);
-    closeBtn(bar);
-  });
-}
+/* The question, as on the desk: in the bar over the tabs when Mark comes
+   back to Pocket after Go, which has recorded the visit already. */
 function answersFor(v, inBar){
   var w = el('div', 'vans' + (inBar ? ' bar' : ''));
   var today = (venue(v.id) || v).visits.filter(function(x){ return x.at === isoToday(); })[0];
@@ -2349,6 +2341,10 @@ function showAsk(v){
   var no = el('button', 'vno', 'Not now');
   no.addEventListener('click', hideAsk);
   bar.appendChild(no);
+  /* a Go tapped by mistake is not a visit */
+  var back = el('button', 'vno', 'Not a visit');
+  back.addEventListener('click', function(){ hideAsk(); if (visitedToday(v)) visitVenue(v); });
+  bar.appendChild(back);
   bar.classList.add('up');
 }
 function hideAsk(){ $('#vbar').classList.remove('up'); }
@@ -2439,9 +2435,12 @@ function openVenue(v){
     nb.appendChild(ns);
 
     var go = vGo(v, 'key'); if (go) bar.appendChild(go);
-    var st = el('button', '', 'Stamp — anything?');
-    st.addEventListener('click', function(){ askVisit(v); });
-    bar.appendChild(st);
+    else if (!visitedToday(v)){
+      /* a venue with no site is visited by hand */
+      var st = el('button', '', 'Visited today');
+      st.addEventListener('click', function(){ shut(); visitVenue(v); });
+      bar.appendChild(st);
+    }
     closeBtn(bar);
   });
 }

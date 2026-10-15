@@ -978,7 +978,7 @@ function trayRow(v){
     '<button class="tnm" data-act="openVenue" data-v="'+v.id+'" title="Open '+esc(v.name)+'">'+esc(v.name)+'</button>'+
     '<span class="tar" title="'+esc(as)+'">'+esc(as||'no arena')+'</span>'+
     '<span class="twhen">'+esc(vDateSay(v))+'</span>'+
-    '<span class="tact">'+(v.url?'<a class="tgo" href="'+esc(v.url)+'" target="_blank" rel="noopener" title="'+esc(v.url)+'">site ↗</a>':'')+
+    '<span class="tact">'+(v.url?'<a class="tgo" href="'+esc(v.url)+'" target="_blank" rel="noopener" data-act="vGo" data-v="'+v.id+'" title="'+esc(v.url)+'">site ↗</a>':'')+
       '<button class="btn primary" data-act="vPlace" data-v="'+v.id+'" data-p="venues" title="Move it to Venues">→ Venues</button>'+
       (v.place==='new'?'<button class="btn" data-act="vPlace" data-v="'+v.id+'" data-p="board" title="Leave it on the board to think about">Keep</button>':'')+
       '<button class="btn ghost" data-act="vRemove" data-v="'+v.id+'" title="Off the board; the agent will not bring it back">Remove</button></span></div>';
@@ -1606,8 +1606,7 @@ function vPhase(v){return PHASE[vState(v)];}
 /* How much is going on at a venue at one moment, from 0 to 1: rising
    through the window to its event days, full on them, falling away after;
    flat where there are none, fading through the last stretch. It is the
-   shading of a window, and the order of Active, so the venue where most is
-   happening stands first. */
+   shading of a window. */
 function vHeat(v,t){
   const w=vWin(v);if(!w)return 0;
   if((w.from!==null&&t<w.from)||(w.to!==null&&t>w.to+DAY))return 0;
@@ -1716,24 +1715,17 @@ function vArenaChips(v,max){
     (as.length>shown.length?'<span class="vmore" title="'+esc(as.slice(shown.length).map(a=>a.name).join(', '))+'">+'+(as.length-shown.length)+'</span>':'')+
     (as.length?'':'<span class="vmore">no arena</span>')+'</span>';
 }
-/* The stamp: the days since the last visit inside a disc that reddens
-   towards the day the venue is due, so a column of them reads for what has
-   waited longest; a venue never visited keeps the empty ring and its tick.
-   Pressing it records today's visit and asks what it gave. */
-function vStampHTML(v){
-  const d=vSince(v),e=vEvery(v)||14;
-  const age=d===null?0:Math.round(Math.min(Math.max(d,0)/e,1)*100);
-  const tip=d===null?'Not visited yet — press once you have been':
-    (d<=0?'Visited today — press to say what it gave, or take it back':'Last visit '+(d===1?'yesterday':d+' days ago')+' — press once you have been again');
-  return '<span class="vsw"><button class="stamp vstamp'+(d===null?'':' custamp')+'" data-act="vStamp" data-v="'+v.id+'" '+
-    (d===null?'':'style="--age:'+age+'%" ')+'title="'+tip+'" aria-label="'+tip+'">'+(d===null?'✓':d>99?'99+':Math.max(0,d))+'</button>'+
-    (vPop===v.id?vAskHTML(v,'pop'):'')+'</span>';
-}
-/* Go opens the venue's own site, and the app remembers it, so that coming
-   back asks what it gave (see "the visit question"). */
+/* Go opens the venue's own site and is the visit (Mark, 2026-10-15): the
+   day is recorded as it is pressed, a tick on the venue's strip, and the
+   button says Visited for the rest of that day, still opening the site.
+   Coming back asks what it gave (see "the visit question"). The stamp, a
+   disc pressed by hand after going, went that day: every visit began with
+   Go anyway. A venue with no site is visited from its panel. */
 function vGoHTML(v){
+  const done=v.visits.some(x=>x.at===todayISO());
   return v.url
-    ?'<a class="vgo" href="'+esc(v.url)+'" target="_blank" rel="noopener" data-act="vGo" data-v="'+v.id+'" title="'+esc(v.url)+'">Go ↗</a>'
+    ?'<a class="vgo'+(done?' done':'')+'" href="'+esc(v.url)+'" target="_blank" rel="noopener" data-act="vGo" data-v="'+v.id+'" title="'+
+      esc((done?'Visited today \u2014 opens ':'Opens and counts as a visit \u2014 ')+v.url)+'">'+(done?'Visited ↗':'Go ↗')+'</a>'
     :'<button class="vgo none" data-act="vEdit" data-v="'+v.id+'" title="No website yet — add one">+ site</button>';
 }
 /* ── asking the agent about one venue ──
@@ -1768,27 +1760,25 @@ function refreshAsks(){
 
 /* ── the visit question ──
    One question after a visit, three answers: nothing new, something (with a
-   line if he likes), or a lead. It is asked in a small box under the stamp
-   when the stamp is pressed, and in a bar at the foot of the room when he
-   comes back to the app after pressing Go (Mark chose both, 2026-10-14).
-   "Not now" on the bar records nothing: a Go pressed by mistake is not a
-   visit. */
-let vPop=null;                /* the venue whose stamp's box is open */
+   line if he likes), or a lead, asked in a bar at the foot of the room when
+   he comes back to the app after Go (2026-10-14). Go has recorded the visit
+   already, so "Not now" keeps it unanswered, and "Not a visit" takes back a
+   Go pressed by mistake. */
 let vBack=null;               /* {id,at}: the venue Go was last pressed for, until he is back */
 let vAsking=null;             /* the venue the bar at the foot is asking about */
 function vAskHTML(v,where){
   const today=v.visits.find(x=>x.at===todayISO());
   const got=today&&today.got;
   const on=k=>got===k?' on':'';
-  const q=where==='bar'?'Back from <b>'+esc(v.name)+'</b>. Anything there?':'Visited today — anything?';
+  const q='Back from <b>'+esc(v.name)+'</b>. Anything there?';
   return '<div class="vask '+where+'" data-v="'+v.id+'" role="group" aria-label="What the visit gave">'+
     '<span class="vq">'+q+'</span>'+
     '<button class="va'+on('nothing')+'" data-act="vAns" data-v="'+v.id+'" data-g="nothing">Nothing new</button>'+
     '<span class="vsome"><button class="va s'+on('something')+'" data-act="vAns" data-v="'+v.id+'" data-g="something">Something…</button>'+
       '<input class="vtx" type="text" placeholder="What, in a line — optional" value="'+esc(today&&today.text||'')+'" aria-label="What you saw"></span>'+
     '<button class="va l'+on('lead')+'" data-act="vAns" data-v="'+v.id+'" data-g="lead">A lead</button>'+
-    (where==='bar'?'<button class="vx" data-act="vAskOff">Not now</button>':
-      (today?'<button class="vx" data-act="vUnstamp" data-v="'+v.id+'">Take it back</button>':''))+
+    '<button class="vx" data-act="vAskOff">Not now</button>'+
+    (today?'<button class="vx" data-act="vUnstamp" data-v="'+v.id+'">Not a visit</button>':'')+
   '</div>';
 }
 function visitToday(v){
@@ -1938,8 +1928,14 @@ document.addEventListener('dblclick',e=>{
    not missed from another tab. Every venue is a row on one strip of time,
    four weeks back and twelve ahead: its window shaded by its heat, its
    event days as diamonds, the visits as ticks under it, today the gold
-   line, and a red ring on today's line when it is due. Active is in order
-   of heat, so where most is going on stands first. */
+   line, and a red ring on today's line when it is due.
+
+   The order is fixed by what a venue is, never by what was done to it
+   (Mark, 2026-10-15: "don't change the order upon checking"): the venues
+   serving two arenas or more first, as one block, as on the board; then
+   each type's own, in his order of types; inside each, by the start of the
+   window, those open from before the strip first and the undated last. No
+   headings: the arena tags' colours say the type. */
 function nowSpan(){const now=T(todayISO());return {now,t0:now-NOW_BACK*DAY,t1:now+NOW_AHEAD*DAY};}
 function vTrackHTML(v,sp){
   const{now,t0,t1}=sp;
@@ -1962,12 +1958,12 @@ function vTrackHTML(v,sp){
 }
 function nowRow(v,sp,over){
   const due=vDue(v);
-  return '<div class="vrow'+(due?' due':'')+(over?' over':'')+(vPop===v.id?' popped':'')+'" data-vid="'+v.id+'">'+
+  return '<div class="vrow'+(due?' due':'')+(over?' over':'')+'" data-vid="'+v.id+'">'+
     '<div class="vname">'+vGlyph(v)+
       '<span class="vnt"><span class="vnmrow"><button class="vnm" data-act="openVenue" data-v="'+v.id+'" title="'+esc(v.name)+'">'+esc(v.name)+'</button></span>'+
         vArenaChips(v,2)+'</span></div>'+
     vTrackHTML(v,sp)+
-    '<div class="vend">'+(over?'':vStampHTML(v))+vGoHTML(v)+
+    '<div class="vend">'+vGoHTML(v)+
       (over?'<button class="cudel" data-act="vDrop" data-v="'+v.id+'" data-limbo="1" title="Let it go — off the board" aria-label="Let '+esc(v.name)+' go">✕</button>':'')+
     '</div></div>';
 }
@@ -2003,13 +1999,13 @@ function nowSections(){
   const all=visibleVenues().filter(inVenues);
   const by={arising:[],active:[],dying:[],over:[]};
   for(const v of all)by[vPhase(v)].push(v);
-  const now=T(todayISO()),name=(x,y)=>x.name.localeCompare(y.name);
-  const from=v=>{const w=vWin(v);return w&&w.from!==null?w.from:Infinity;};
-  const to=v=>{const w=vWin(v);return w&&w.to!==null?w.to:Infinity;};
-  by.arising.sort((x,y)=>from(x)-from(y)||name(x,y));
-  by.active.sort((x,y)=>vHeat(y,now)-vHeat(x,now)||vDue(y)-vDue(x)||name(x,y));
-  by.dying.sort((x,y)=>to(x)-to(y)||name(x,y));
-  by.over.sort((x,y)=>to(y)-to(x)||name(x,y));
+  const tyAt=new Map(S.types.map((t,i)=>[t.id,i]));
+  const block=v=>{if(isShared(v))return -1;
+    const as=venueArenas(v).filter(a=>!a.frozenAt);
+    return as.length?Math.min(...as.map(a=>tyAt.has(a.typeId)?tyAt.get(a.typeId):S.types.length)):S.types.length+1;};
+  const from=v=>{const w=vWin(v);return !w?Infinity:w.from===null?-Infinity:w.from;};
+  const order=(x,y)=>block(x)-block(y)||(from(x)===from(y)?0:from(x)<from(y)?-1:1)||x.name.localeCompare(y.name);
+  for(const k in by)by[k].sort(order);
   return {all,by};
 }
 function renderNow(){keepPlace(()=>{
@@ -2106,7 +2102,7 @@ function venueReadHTML(v){
       '<button class="x" data-act="closeDrawer" aria-label="Close">✕</button>'+
       '<p class="vkind">Venue'+(vHost(v)?' · '+esc(vHost(v)):'')+'</p>'+
       '<h2 id="aname">'+esc(v.name)+'</h2>'+
-      '<div class="vchrow">'+vGoHTML(v)+vStampHTML(v)+vAgentHTML(v)+
+      '<div class="vchrow">'+vGoHTML(v)+(v.url?'':'<button class="vgo none" data-act="vVisit" data-v="'+v.id+'" title="Record today\u2019s visit">Visited today</button>')+vAgentHTML(v)+
         '<span class="vlast">'+(d===null?'not visited yet':'last visit '+(d<=0?'today':d===1?'yesterday':d+' days ago'))+
           (vEvery(v)?' · every '+vEvery(v)+' d':'')+'</span></div>'+
     '</div>'+vPlaceHTML(v)+
@@ -2121,10 +2117,10 @@ function venueReadHTML(v){
       (visits.length?visits.map(x=>{
         const ld=x.leadId&&leads.find(y=>y.l.id===x.leadId);
         return '<div class="vvis"><span class="vvd">'+esc(shortDay(x.at))+'</span>'+
-          '<span class="vgot '+(x.got||'none')+'">'+(x.got?VGOT[x.got]:'stamped')+'</span>'+
+          '<span class="vgot '+(x.got||'none')+'">'+(x.got?VGOT[x.got]:'visited')+'</span>'+
           '<span class="vvt">'+(ld?'→ <button class="vld" data-act="openArena" data-id="'+ld.a.id+'">'+esc(leadName(ld.l))+'</button>':esc(x.text||''))+'</span>'+
           '<button class="lx" data-act="vVisitDel" data-v="'+v.id+'" data-at="'+x.at+'" title="Take this visit out" aria-label="Remove visit">✕</button></div>';
-      }).join(''):'<p class="vnone">None yet. Press the stamp once you have been.</p>')+
+      }).join(''):'<p class="vnone">None yet. Go records each one.</p>')+
     '</section>'+
     '<section class="vps"><p class="vph">Leads from here</p>'+
       (leads.length?leads.map(({a,l})=>'<p class="vlead"><button data-act="openArena" data-id="'+a.id+'">'+esc(leadName(l))+'</button>'+
@@ -2227,12 +2223,11 @@ function dropVenue(id){
   v.place='gone';v.goneAt=todayISO();v.visits=[];v.pages=[];v.note='';
   for(const a of S.arenas)for(const l of a.leads||[])if(l.venueId===id)delete l.venueId;
   if(drawer.vid===id)drawer.vid=null;
-  if(vPop===id)vPop=null;
   if(vAsking===id){vAsking=null;renderAsk();}
   save();renderAll();
 }
 /* The venues an arena is served by, in its panel: where each stands, the
-   stamp and Go, and a new one for it. */
+   Go, and a new one for it. */
 function arenaVenuesHTML(a){
   const vs=venuesOf(a);
   const by=v=>{const w=vWin(v);return w&&w.from!==null?w.from:1e15;};
@@ -2240,7 +2235,7 @@ function arenaVenuesHTML(a){
     '<div class="avrow st-'+v.place+(vState(v)==='over'?' over':'')+(vDue(v)?' due':'')+'">'+vGlyph(v)+
       '<span class="avt"><button class="vnm" data-act="openVenue" data-v="'+v.id+'">'+esc(v.name)+'</button>'+
         '<i>'+(onTrial(v)?'<b class="avplace">'+(v.place==='new'?'new':'on the board')+'</b> · ':'')+esc(vDateSay(v))+'</i></span>'+
-      '<span class="vend">'+(inVenues(v)?vStampHTML(v):'')+vGoHTML(v)+'</span></div>').join('');
+      '<span class="vend">'+vGoHTML(v)+'</span></div>').join('');
   return '<section class="card pcard brok"><div class="chd"><span class="ctitle">Venues</span>'+
       '<button class="ib cact" data-act="vNew" data-id="'+a.id+'" title="A new venue for '+esc(a.name)+'">+</button></div>'+
     (rows?'<div class="avlist">'+rows+'</div>':'<div class="cbd"><p class="ptext vnone">No venue yet — a place it is served by, where projects in the making can be found.</p></div>')+
@@ -4201,8 +4196,6 @@ document.addEventListener('click',e=>{
      unless the press is on a dot, which opens that one instead */
   if(colOpen&&!e.target.closest('.lcolpop,[data-act=typeColMenu]')){colOpen=null;typesShown();return;}
   if(sortOpen&&!e.target.closest('.whmenu,[data-act=boardSort]')){sortOpen=false;renderBoard();return;}
-  if(vPop&&!e.target.closest('.vask,[data-act=vStamp]')){vPop=null;repaint();renderDrawer();
-    if(!e.target.closest('[data-act]'))return;}
   const b=e.target.closest('[data-act]');
   if(!b)return;
   const act=b.dataset.act,id=b.dataset.id,a=arena(b.dataset.a||id);
@@ -4321,7 +4314,6 @@ document.addEventListener('click',e=>{
       relinked();break;}
     case 'setView':{const v=b.dataset.v;
       S.ui.view=['now','leads','dispatch'].includes(v)?v:'board';
-      vPop=null;
       save();renderAll();
       /* the findings are asked for when you come to look at them, and again
          every time you come back: a list read an hour ago is a list another
@@ -4342,21 +4334,20 @@ document.addEventListener('click',e=>{
     case 'findDrop':answerFind(b.dataset.f,false);break;
     /* ── venues ── */
     case 'openVenue':if(venue(b.dataset.v))openVenue(b.dataset.v);break;
-    /* the link opens the site by itself; the app only remembers the press */
-    case 'vGo':vBack={id:b.dataset.v,at:Date.now()};vAsking=null;renderAsk();break;
-    /* The stamp records today's visit and opens the question under it;
-       pressed again it shuts the question, the visit kept. */
-    case 'vStamp':{const v=venue(b.dataset.v);if(!v)break;
-      if(vPop===v.id){vPop=null;}
-      else{visitToday(v);vPop=v.id;if(vAsking===v.id){vAsking=null;renderAsk();}save();}
-      repaint();renderDrawer();applyView();
-      const tx=document.querySelector('.vask.pop .vtx');if(tx&&vPop)tx.focus({preventScroll:true});
-      break;}
+    /* The link opens the site by itself; the press is the visit. The room
+       is drawn again a moment later, so the link the browser is following
+       is still there while it follows it. */
+    case 'vGo':{const v=venue(b.dataset.v);if(!v)break;
+      visitToday(v);save();
+      vBack={id:v.id,at:Date.now()};vAsking=null;renderAsk();
+      setTimeout(()=>{repaint();renderDrawer();applyView();},0);break;}
+    case 'vVisit':{const v=venue(b.dataset.v);if(!v)break;
+      visitToday(v);save();repaint();renderDrawer();applyView();break;}
     case 'vAns':{const v=venue(b.dataset.v);if(!v)break;
       const box=b.closest('.vask'),tx=box&&box.querySelector('.vtx');
       const got=b.dataset.g;
       vAnswer(v,got,tx?tx.value:'');
-      vPop=null;if(vAsking===v.id)vAsking=null;
+      if(vAsking===v.id)vAsking=null;
       save();renderAsk();
       if(got==='lead'){openVenue(v.id);leadEdit={a:VENUE_LEAD,l:'new'};renderDrawer();focusLead();}
       else{repaint();renderDrawer();}
@@ -4366,7 +4357,8 @@ document.addEventListener('click',e=>{
       save();renderDrawer();break;}
     case 'vUnstamp':{const v=venue(b.dataset.v);if(!v)break;
       v.visits=v.visits.filter(x=>x.at!==todayISO());
-      vPop=null;save();repaint();renderDrawer();applyView();break;}
+      if(vAsking===v.id){vAsking=null;renderAsk();}
+      save();repaint();renderDrawer();applyView();break;}
     case 'vAskOff':vAsking=null;renderAsk();break;
     case 'nowTab':S.ui.nowTab=NOW_TABS[b.dataset.t]?b.dataset.t:'active';save();renderNow();break;
     /* Where a venue stands (see "venues"): to Venues, kept on the board, or
@@ -4758,7 +4750,6 @@ document.addEventListener('keydown',e=>{
   if(sortOpen){sortOpen=false;renderBoard();return;}         /* the board's order */
   if(Ask.isOpen()){Ask.shut();return;}                       /* the question */
   if(document.querySelector('.modal.open')){closeModals();return;}   /* a sheet */
-  if(vPop){vPop=null;repaint();renderDrawer();return;}       /* a stamp's question */
   if(lkEdit.a||leadEdit.a||noteEdit.a){            /* a composer */
     closeComposers();repaint();renderDrawer();return;
   }
@@ -4793,7 +4784,7 @@ const LK_HOLD=380,LK_SLOP=5;
 const LK_MS=(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)?0:160;
 document.addEventListener('pointerdown',e=>{
   if(e.button!==0||lkDrag)return;
-  /* the cross and the stamp are pressed, never dragged */
+  /* the cross and the press that makes a venue are pressed, never dragged */
   if(e.target.closest&&e.target.closest('.wlc'))return;
   const row=e.target.closest&&e.target.closest('.wlrow[data-lk]');
   const list=row&&row.parentElement;

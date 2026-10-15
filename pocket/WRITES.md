@@ -35,7 +35,7 @@ Every change is undoable from the toast; undo puts back exactly the fields it to
 | arena edit | `name`, `notes`, `brokerage.notes` | the name trimmed, `'Unnamed arena'` for none; notes trimmed | ✓ only the fields changed; `brokerage` made `{notes:'',links:[]}` when absent |
 | arena links | `links[]`, `brokerage.links[]` | `{id, label, url}`; a changed address without a scheme gets `https://` | ✓ add, change label/url, remove — each by id on the cloud's copy, so a link's `stampedAt` and `foundAt` stay; an address with @ → `mailto:` (the desk's brokerage form) |
 | lead score | `score` | `1`…`5`; the key deleted for no score | ✓ |
-| venue visit | `venues[].visits[]` | `{id, at}`, both today's day, kept in order of `at`; a second press the same day takes it out | ✓ the stamp (`visitVenue`); undo puts the list back |
+| venue visit | `venues[].visits[]` | `{id, at}`, both today's day, kept in order of `at`; a second press the same day takes it out | ✓ Go (`visitVenue`), or *Not a visit* to take it back; undo puts the list back |
 | venue answer | `visits[].got`, `text`, `leadId` | `got` `nothing`│`something`│`lead` (the desk's `VGOT`); `text` only with `something`, a line, the key deleted otherwise; `leadId` the lead made from it | ✓ (`answerVenue`, the visit made first if there is none); `leadId` written by `addLead` |
 | venue note | `venues[].memo` | Mark's own note, trailing space trimmed; the key deleted when emptied. Not the venue's `note` | ✓ (`setVenueMemo`) |
 | lead from a venue | lead `venueId` | the venue's id, beside the lead's other fields | ✓ |

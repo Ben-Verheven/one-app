@@ -1222,9 +1222,8 @@
 #pane-semaphore .trow .vgl.ev.unc{background:none;border-color:var(--new)}
 /* ---------- Venues: three sections and Limbo ----------
    Every venue on one strip of time (Mark chose the strip, 2026-10-14): the
-   name and the arenas it serves on the left, the strip in the middle, the
-   stamp and Go at the right, each in a column of its own down the page, so
-   the stamps can be read down for what has waited longest. The strip runs
+   name and the arenas it serves on the left, the strip in the middle with
+   a tick for every visit, and Go at the right, which is the visit. The strip runs
    four weeks back and twelve ahead, the same scale on every row and on the
    axis over them, which stays at the top as the board's does. Arising,
    Active and Dying are tabs; Limbo is a tab apart, in its fog. */
@@ -1272,7 +1271,6 @@
 #pane-semaphore .vsec{margin:18px 0 2px;font:600 9.5px var(--sans);letter-spacing:.18em;text-transform:uppercase;color:var(--key2)}
 #pane-semaphore .vrow{position:relative;align-items:center;min-height:52px;padding:4px 0;border-bottom:1px solid var(--grid)}
 #pane-semaphore .vrows>.vrow:last-child{border-bottom:none}
-#pane-semaphore .vrow.popped{z-index:8}
 #pane-semaphore .vname{display:flex;align-items:center;gap:11px;min-width:0}
 #pane-semaphore .vnt{display:flex;flex-direction:column;align-items:flex-start;gap:3px;min-width:0}
 #pane-semaphore .vnm{max-width:100%;text-align:left;font:15px/1.3 var(--body);color:var(--ink);
@@ -1323,25 +1321,16 @@
   transition:border-color .14s,background-color .14s,color .14s}
 #pane-semaphore .vgo:hover{border-color:var(--key);background:rgba(216,205,184,.1);color:var(--ink)}
 #pane-semaphore .vgo.none{border-style:dashed;background:none;color:var(--muted);font:italic 12.5px var(--body)}
-#pane-semaphore .vsw{position:relative;display:inline-flex}
-/* The stamp is the Coming up disc: white, reddening to the brokerage red as
-   the venue comes due; the number in the paper's own dark, 4.8:1 on the full
-   red and more on everything lighter. Until the first visit it is the empty
-   ring with its tick. */
-#pane-semaphore .vstamp{flex:0 0 26px;width:26px;height:26px;opacity:1}
-#pane-semaphore .vstamp.custamp{border:none;background:color-mix(in srgb,var(--brok) var(--age),#FFFFFF);
-  color:#191713;font:500 11.5px/1 var(--mono)}
-#pane-semaphore .vstamp:hover{transform:none;box-shadow:0 0 0 2px var(--key)}
+/* Go, pressed today: the visit is recorded, and the button says so in the
+   green a visit that found something wears */
+#pane-semaphore .vgo.done{border-color:var(--todo-line);background:var(--todo-bg);color:var(--todo-ink)}
 #pane-semaphore .vrow.over .vnm{color:var(--muted)}
 #pane-semaphore .vrow.over .vgl{opacity:1;filter:grayscale(1)}
 /* ---------- the visit question ----------
-   Under the stamp when it is pressed, and at the foot of the room when Mark
-   comes back from a venue's site: three answers and a way out. Dark on the
-   board and light in the panel, as everything there. */
+   At the foot of the room when Mark comes back from a venue's site: three
+   answers and two ways out. */
 #pane-semaphore .vask{display:flex;flex-direction:column;gap:6px;padding:11px;border-radius:11px;
   background:#2C2721;border:1px solid var(--line2);box-shadow:0 16px 34px rgba(0,0,0,.5),0 2px 8px rgba(0,0,0,.35)}
-#pane-semaphore .vask.pop{position:absolute;right:-4px;top:calc(100% + 8px);z-index:22;width:270px}
-#pane-semaphore #card .vask.pop{background:#FBF7EE;box-shadow:0 14px 30px rgba(42,38,32,.28)}
 #pane-semaphore .vq{padding:1px 2px 4px;font:600 9.5px var(--sans);letter-spacing:.15em;text-transform:uppercase;color:var(--muted)}
 #pane-semaphore .vask .va{height:32px;padding:0 11px;border-radius:var(--radius);border:1px solid var(--line);text-align:left;
   font:13.5px var(--body);color:var(--ink);background:var(--slab);transition:border-color .14s,background-color .14s}

@@ -414,9 +414,9 @@ kept the name, so nothing stored had to move.
 | the room's scroller — the page itself does not scroll | `#semscroll` |
 | the header: the view switcher (Venues · Board), Leads beside it, Search, Types, + Venue, + Arena, Dispatches and the cloud chip | `header.top`; `#viewseg`, `#leadsBtn`, `#searchBtn` and its box `#search`, `#dispatchBtn`, `#semcloud` |
 | Venues (the Now page until 2026-10-15), the Board, Leads (on the wall), Dispatches, the freezer | `#now`, `#board`, `#wall`, `#dispatch`, `#freezer` |
-| Venues: its three tabs, Arising · Active · Dying, and Limbo's apart; the axis over them, sticky; one venue's row, its name and the arenas it serves, its strip, its stamp and Go | `.vtabs` › `.vtab`, `.culimbo.vlimbotab`; `.vaxis`; `.vrow` = `.vname` (`.vnmrow` › `.vnm`, `.vchips`) + `.vtrack` + `.vend` (`.vstamp`, `.vgo`) |
+| Venues: its three tabs, Arising · Active · Dying, and Limbo's apart; the axis over them, sticky; one venue's row, its name and the arenas it serves, its strip, and Go, which is the visit (Visited once pressed today) | `.vtabs` › `.vtab`, `.culimbo.vlimbotab`; `.vaxis`; `.vrow` = `.vname` (`.vnmrow` › `.vnm`, `.vchips`) + `.vtrack` + `.vend` (`.vgo`, `.vgo.done`) |
 | a venue's window, on the board's lanes, on Venues and in its panel: the band, its two ends to drag, its name, the event days, the visits, today, due | `.vband` (`.st-new`, `.st-board`, `.st-venues`), `.vh`, `.vbl`, `.vmeet` and `.vdia`, `.vtick`, `.vnow`, `.vpulse` |
-| the visit question, under a stamp and at the foot of the room | `.vask.pop`; `#vbar` › `.vask.bar` |
+| the visit question, at the foot of the room after Go | `#vbar` › `.vask.bar` |
 | the month axis over the board, sticky, and the heading that names and chooses the order (My order / By date) | `.axisrow` = `.corner.sorter` (`.whsort`, its menu `.whmenu`) + `.axis`; a month is `.mcell` |
 | one arena type's group on the board, its heading | `.grp`, its heading `.ghead` |
 | the types, managed — opened by Types: a type's line and its grip, its arenas one per row, its colour dot, the copy that follows a drag | `#typesModal` › `#tylist` › `.tyblock` (`.tyline` › `.tygrip`, `.tyarenas` › `.tyrow`); `.lcolwrap.tycol`; `.tyghost` |
