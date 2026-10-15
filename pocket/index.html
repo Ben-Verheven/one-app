@@ -357,6 +357,11 @@ button.ln:active{background:rgba(216,205,184,.06)}
 .vtrack.over::before{display:none}
 .vtrack.over .vsay{position:static;margin:0 0 0 19px}
 /* not dated yet, a heading under the dated ones */
+/* a group on Now: Shared, then each type, a thin band in its colour */
+.vgrp{display:flex;align-items:center;gap:8px;min-height:26px;margin:14px 12px 2px;padding:0 10px 0 13px;border-radius:0 var(--radius) var(--radius) 0;
+  background:color-mix(in srgb,var(--tone,#7D7466) 26%,var(--paper));box-shadow:inset 3px 0 0 var(--tone,var(--line2));
+  font:600 10px var(--sans);letter-spacing:.18em;text-transform:uppercase;color:var(--ink)}
+.vgrp b{font:11px var(--mono);font-weight:400;letter-spacing:0;color:var(--key2)}
 .vlater{display:block;width:calc(100% - 32px);margin:18px 16px 4px;padding:9px 0;text-align:left;
   border-top:1px solid var(--line);color:var(--key2)}
 /* Limbo, a tab of its own under the three: its fog, folded to one line */
@@ -2237,8 +2242,10 @@ function drawNow(){
   vs.forEach(function(v){ by[vPhase(v)].push(v); });
   /* the desk's order, fixed by what a venue is and never by a visit: those
      serving two arenas or more first, then each type's own in the desk's
-     order of types, each by the start of its window */
-  var types = (data.semaphore.types || []).map(function(t){ return t.id; });
+     order of types, each by the start of its window; each group under a
+     thin band in its type's colour, as on the desk */
+  var tys = data.semaphore.types || [];
+  var types = tys.map(function(t){ return t.id; });
   function block(v){
     var as = venueArenas(v).filter(function(a){ return !a.frozenAt; });
     if (as.length > 1) return -1;
@@ -2249,6 +2256,23 @@ function drawNow(){
   function start(v){ var w = vWin(v); return !w ? Infinity : w.from === null ? -Infinity : w.from; }
   Object.keys(by).forEach(function(k){ by[k].sort(function(x, y){
     return block(x) - block(y) || (start(x) === start(y) ? 0 : start(x) < start(y) ? -1 : 1) || byName(x, y); }); });
+  function rowsInto(parent, list, over){
+    var last = null;
+    list.forEach(function(v){
+      var k = block(v);
+      if (k !== last){
+        last = k;
+        var t = k >= 0 && k < tys.length ? tys[k] : null;
+        var n = list.filter(function(x){ return block(x) === k; }).length;
+        var g = el('div', 'vgrp', k === -1 ? 'Shared ' : t ? plainOf(t.name) + ' ' : k === tys.length ? 'Untyped ' : 'No arena ');
+        g.appendChild(el('b', '', String(n)));
+        var tone = k === -1 ? '#9c7334' : t ? toneHex(t.color) : '';
+        if (tone) g.style.setProperty('--tone', tone);
+        parent.appendChild(g);
+      }
+      parent.appendChild(venueRow(v, over));
+    });
+  }
 
   var tab = by[nowTab] ? nowTab : 'active';
   var tabs = el('div', 'vtabs');
@@ -2272,7 +2296,7 @@ function drawNow(){
       '<span class="lw">' + (tab === 'over' ? 'Hide' : 'Show') + '</span>';
     lh.addEventListener('click', function(){ setNowTab(tab === 'over' ? 'active' : 'over'); });
     lb.appendChild(lh);
-    if (tab === 'over') by.over.forEach(function(v){ lb.appendChild(venueRow(v, true)); });
+    if (tab === 'over') rowsInto(lb, by.over, true);
     host.appendChild(lb);
     if (tab === 'over') return;
   }
@@ -2299,13 +2323,13 @@ function drawNow(){
   host.appendChild(ax);
 
   var dated = shown.filter(function(v){ return vWin(v); }), undated = shown.filter(function(v){ return !vWin(v); });
-  dated.forEach(function(v){ host.appendChild(venueRow(v)); });
+  rowsInto(host, dated, false);
   if (!shown.length) host.appendChild(empty('Nothing ' + tab, tab === 'arising' ? 'No venue whose window is still ahead.'
     : tab === 'active' ? 'A venue is active from its opening through its event days.'
     : 'A venue dies after its event days, or in the last weeks of its window.'));
   if (undated.length){
     host.appendChild(el('p', 'vlater cap', 'Not dated yet'));
-    undated.forEach(function(v){ host.appendChild(venueRow(v)); });
+    rowsInto(host, undated, false);
   }
 }
 

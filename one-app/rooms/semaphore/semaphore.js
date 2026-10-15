@@ -1971,8 +1971,10 @@ document.addEventListener('dblclick',e=>{
    (Mark, 2026-10-15: "don't change the order upon checking"): the venues
    serving two arenas or more first, as one block, as on the board; then
    each type's own, in his order of types; inside each, by the start of the
-   window, those open from before the strip first and the undated last. No
-   headings: the arena tags' colours say the type. */
+   window, those open from before the strip first and the undated last.
+   Each group stands under a thin band in its type's colour, as the board's
+   groups do, the shared ones under Shared (Mark asked for the order without
+   headings first, and for the headings the same evening, 2026-10-15). */
 function nowSpan(){const now=T(todayISO());return {now,t0:now-NOW_BACK*DAY,t1:now+NOW_AHEAD*DAY};}
 function vTrackHTML(v,sp){
   const{now,t0,t1}=sp;
@@ -2032,16 +2034,39 @@ const NOW_TABS={arising:{name:'Arising',none:'Nothing arising: no venue in Venue
   active:{name:'Active',none:'Nothing active. A venue is active from its window’s opening through its event days.'},
   dying:{name:'Dying',none:'Nothing dying. A venue dies after its event days, or in the last weeks of its window.'},
   over:{name:'Limbo',none:''}};
+/* the group a venue stands in on Venues: -1 shared, else the place of its
+   arena's type in his order, then those of no known type, then those
+   serving no arena */
+function vBlock(v){
+  if(isShared(v))return -1;
+  const as=venueArenas(v).filter(a=>!a.frozenAt);
+  if(!as.length)return S.types.length+1;
+  const i=S.types.findIndex(t=>t.id===as[0].typeId);
+  return i<0?S.types.length:i;
+}
+function blockHead(k,n){
+  const t=k>=0&&k<S.types.length?S.types[k]:null;
+  const name=k===-1?'Shared':t?t.name:k===S.types.length?'Untyped':'No arena';
+  const tone=k===-1?'#9c7334':t?toneHex(t.color):'';
+  return '<div class="vgrp"'+(tone?' style="--tone:'+esc(tone)+'"':'')+'><span>'+esc(name)+'</span><b>'+n+'</b></div>';
+}
+/* rows under the heading of each group they fall in, in the order given */
+function blockRows(list,sp,over){
+  let h='',i=0;
+  while(i<list.length){
+    const k=vBlock(list[i]);let j=i;
+    while(j<list.length&&vBlock(list[j])===k)j++;
+    h+=blockHead(k,j-i)+'<div class="vrows'+(over?' limbo':'')+'">'+list.slice(i,j).map(v=>nowRow(v,sp,over)).join('')+'</div>';
+    i=j;
+  }
+  return h;
+}
 function nowSections(){
   const all=visibleVenues().filter(inVenues);
   const by={arising:[],active:[],dying:[],over:[]};
   for(const v of all)by[vPhase(v)].push(v);
-  const tyAt=new Map(S.types.map((t,i)=>[t.id,i]));
-  const block=v=>{if(isShared(v))return -1;
-    const as=venueArenas(v).filter(a=>!a.frozenAt);
-    return as.length?Math.min(...as.map(a=>tyAt.has(a.typeId)?tyAt.get(a.typeId):S.types.length)):S.types.length+1;};
   const from=v=>{const w=vWin(v);return !w?Infinity:w.from===null?-Infinity:w.from;};
-  const order=(x,y)=>block(x)-block(y)||(from(x)===from(y)?0:from(x)<from(y)?-1:1)||x.name.localeCompare(y.name);
+  const order=(x,y)=>vBlock(x)-vBlock(y)||(from(x)===from(y)?0:from(x)<from(y)?-1:1)||x.name.localeCompare(y.name);
   for(const k in by)by[k].sort(order);
   return {all,by};
 }
@@ -2068,8 +2093,8 @@ function renderNow(){keepPlace(()=>{
   h+='<div class="vaxis"><span class="vaxl">'+NOW_TABS[tab].name+'</span><div class="vaxt">'+nowAxisHTML(sp)+'</div><span></span></div>';
   if(!shown.length){h+=tab==='over'?'':'<p class="vnone vtabnone">'+NOW_TABS[tab].none+'</p>';el.innerHTML=h;return;}
   const dated=shown.filter(v=>vWin(v)),undated=shown.filter(v=>!vWin(v));
-  h+='<div class="vrows'+(tab==='over'?' limbo':'')+'">'+dated.map(v=>nowRow(v,sp,tab==='over')).join('')+'</div>';
-  if(undated.length)h+='<p class="vsec">Not dated yet</p><div class="vrows">'+undated.map(v=>nowRow(v,sp)).join('')+'</div>';
+  h+=blockRows(dated,sp,tab==='over');
+  if(undated.length)h+='<p class="vsec">Not dated yet</p>'+blockRows(undated,sp,false);
   el.innerHTML=h;
 });}
 

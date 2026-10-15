@@ -13,7 +13,8 @@ rebuilt around venues; PROJECT.md says what a venue is):
   many are due, and under them **Limbo**, the folded box of fog (`.limbox`), opened as a tab of its
   own; the tab chosen is kept on the phone (`pocket.nowTab`). A row's section is the desk's
   `vPhase`; a window is dragged only at the desk. The rows stand in the desk's order, which a visit
-  never changes: shared venues first, then each type's own, each by the start of its window. Each row
+  never changes: shared venues first, then each type's own, each by the start of its window, each
+  group under a thin band in its type's colour (`.vgrp`). Each row
   carries *Go ↗* to the venue's own site, and tapping it is the visit (since 2026-10-15; the stamp
   went): today's visit is recorded (`visitVenue`), a tick on the strip, and the button reads
   *Visited ↗* for the rest of the day. Coming back to Pocket after *Go* asks what it gave in a bar over

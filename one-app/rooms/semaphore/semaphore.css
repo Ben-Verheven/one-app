@@ -1287,6 +1287,12 @@
 #pane-semaphore .vrows.limbo .vnm{color:#C9DDD6}
 #pane-semaphore .vtabdue{font:italic 11.5px var(--body);letter-spacing:0;text-transform:none;color:var(--notice-ink)}
 #pane-semaphore .vtabnone{margin:16px 2px}
+/* a group on Venues: Shared, then each type, a thin band in its colour as
+   the board's group heads are */
+#pane-semaphore .vgrp{display:flex;align-items:center;gap:8px;height:22px;margin:14px 0 2px;padding:0 9px 0 12px;
+  border-radius:0 var(--radius) var(--radius) 0;background:color-mix(in srgb,var(--tone,#7D7466) 26%,var(--paper));
+  box-shadow:inset 3px 0 0 var(--tone,var(--line2));font:600 9.5px var(--sans);letter-spacing:.18em;text-transform:uppercase;color:var(--ink)}
+#pane-semaphore .vgrp b{font:10px var(--mono);font-weight:400;letter-spacing:0;color:var(--key2)}
 #pane-semaphore .vsec{margin:18px 0 2px;font:600 9.5px var(--sans);letter-spacing:.18em;text-transform:uppercase;color:var(--key2)}
 #pane-semaphore .vrow{position:relative;align-items:center;min-height:52px;padding:4px 0;border-bottom:1px solid var(--grid)}
 #pane-semaphore .vrows>.vrow:last-child{border-bottom:none}
