@@ -2032,9 +2032,12 @@ function plainOf(html){
   if (html == null) return '';
   var s = String(html);
   if (s.indexOf('<') < 0 && s.indexOf('&') < 0) return s;
-  var d = document.createElement('div');
+  /* Read in a template, whose content is inert: in a plain div, even one
+     never put on the page, an <img onerror> in a name runs, and a venue's
+     name can come from a web page the agent read. */
+  var d = document.createElement('template');
   d.innerHTML = s;
-  return (d.textContent || '').replace(/\s+/g, ' ').trim();
+  return (d.content.textContent || '').replace(/\s+/g, ' ').trim();
 }
 function linkLabel(k){
   if (!k) return '';

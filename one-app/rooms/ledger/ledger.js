@@ -79,10 +79,11 @@ function hexA(hex,a){
   return 'rgba('+parseInt(h.slice(0,2),16)+','+parseInt(h.slice(2,4),16)+','+parseInt(h.slice(4,6),16)+','+a+')';
 }
 /* Plain text out of stored rich HTML — used by previews, tooltips and the
-   search index. */
+   search index. Read in a template, whose content is inert: a div parses
+   an <img onerror> in the text and runs it, page or no page. */
 function plain(html){
-  var d=document.createElement('div');d.innerHTML=html==null?'':String(html);
-  return (d.textContent||'').replace(/\s+/g,' ').trim();
+  var d=document.createElement('template');d.innerHTML=html==null?'':String(html);
+  return (d.content.textContent||'').replace(/\s+/g,' ').trim();
 }
 function trunc(s,n){s=s||'';return s.length>n?s.slice(0,n-1)+'\u2026':s;}
 

@@ -42,8 +42,10 @@ function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2
 function el(id){return document.getElementById(id);}
 function debounce(fn,ms){var t;return function(){var a=arguments;clearTimeout(t);
   t=setTimeout(function(){fn.apply(null,a);},ms);};}
-function toText(html){var d=document.createElement('div');d.innerHTML=html||'';
-  return d.textContent||'';}
+/* in a template, inert, as sanitizeRich reads markup: a div runs an
+   <img onerror> it is handed even off the page */
+function toText(html){var d=document.createElement('template');d.innerHTML=html||'';
+  return d.content.textContent||'';}
 var MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 var MONF=['January','February','March','April','May','June','July','August',
   'September','October','November','December'];
