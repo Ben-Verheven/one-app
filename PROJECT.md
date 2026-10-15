@@ -395,7 +395,7 @@ kept the name, so nothing stored had to move.
 | the room's scroller — the page itself does not scroll | `#semscroll` |
 | the header: the view switcher (Now · Board), Leads beside it, Search, Types, + Venue, + Arena, Dispatches and the cloud chip | `header.top`; `#viewseg`, `#leadsBtn`, `#searchBtn` and its box `#search`, `#dispatchBtn`, `#semcloud` |
 | Now, the Board, Leads (on the wall), Dispatches, the freezer | `#now`, `#board`, `#wall`, `#dispatch`, `#freezer` |
-| Now: the axis over it, sticky; one venue's row, its name and the arenas it serves, its strip, its stamp and Go | `.vaxis`; `.vrow` = `.vname` (`.vnm`, `.vchips`) + `.vtrack` + `.vend` (`.vstamp`, `.vgo`) |
+| Now: its two tabs, events and tools; the axis over them, sticky; one venue's row, its name and the arenas it serves, its strip, its stamp and Go | `.vtabs` › `.vtab`; `.vaxis`; `.vrow` = `.vname` (`.vnm`, `.vchips`) + `.vtrack` + `.vend` (`.vstamp`, `.vgo`) |
 | on a venue's strip: the open stretch, the meeting days, a tool's line, the visits, today, due | `.vbar`, `.vmeet` and `.vdia`, `.vbar.tool`, `.vtick`, `.vnow`, `.vpulse` |
 | Later, folded; Limbo — its fog, its ghost — and the venues in it when open | `.vlater`; `.culimbo` › `.culb` (`.culfog`, `.culgh`, `.culc`) |
 | the visit question, under a stamp and at the foot of the room | `.vask.pop`; `#vbar` › `.vask.bar` |

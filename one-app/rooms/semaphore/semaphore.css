@@ -1164,6 +1164,16 @@
 #pane-semaphore .vaxt .vwk{position:absolute;bottom:0;width:1px;height:6px;background:var(--line)}
 #pane-semaphore .vaxt .vnowc{position:absolute;bottom:-1px;width:0;height:0;transform:translateX(-50%);
   border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:6px solid var(--today)}
+/* Now's two tabs, events and tools (2026-10-15) */
+#pane-semaphore .vtabs{display:flex;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;align-self:center}
+#pane-semaphore .vtab{display:inline-flex;align-items:baseline;gap:7px;padding:6px 15px;border:none;border-right:1px solid var(--line);background:none;
+  font:10.5px var(--sans);letter-spacing:.13em;text-transform:uppercase;color:var(--muted);cursor:pointer}
+#pane-semaphore .vtab:last-child{border-right:none}
+#pane-semaphore .vtab:hover{color:var(--key2)}
+#pane-semaphore .vtab.on{background:rgba(216,205,184,.17);color:var(--ink)}
+#pane-semaphore .vtab b{font:11px var(--mono);letter-spacing:0;color:var(--muted)}
+#pane-semaphore .vtabdue{font:italic 11.5px var(--body);letter-spacing:0;text-transform:none;color:var(--notice-ink)}
+#pane-semaphore .vtabnone{margin:16px 2px}
 #pane-semaphore .vsec{margin:18px 0 2px;font:600 9.5px var(--sans);letter-spacing:.18em;text-transform:uppercase;color:var(--key2)}
 #pane-semaphore .vrow{position:relative;align-items:center;min-height:52px;padding:4px 0;border-bottom:1px solid var(--grid)}
 #pane-semaphore .vrows>.vrow:last-child{border-bottom:none}

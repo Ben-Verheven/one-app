@@ -158,7 +158,7 @@ const NAME_MIN=140,NAME_MAX=560;
 function blank(){
   return {v:1,types:defaultTypes(),arenas:[],venues:[],
     ui:{q:'',collapsed:{},view:'now',
-        boardSort:'date',nameW:null,freezerOpen:false}};
+        boardSort:'date',nameW:null,freezerOpen:false,nowTab:'events'}};
 }
 /* An arena remembers which of its own dates it is waiting for. That goes stale
    the moment the dates change, so this puts it straight — a wait ends when the
@@ -330,6 +330,8 @@ function migrate(s){
     ui.boardSort = u.boardSort==='mine' ? 'mine' : 'date';
     ui.nameW = Number.isFinite(u.nameW) ? Math.min(NAME_MAX,Math.max(NAME_MIN,Math.round(u.nameW))) : null;
     ui.freezerOpen = u.freezerOpen===true;
+    /* which of Now's two tabs is showing, events or tools (Mark, 2026-10-15) */
+    ui.nowTab = u.nowTab==='tools' ? 'tools' : 'events';
     s.ui=ui;
   }
   const first=new Map();
@@ -1695,21 +1697,40 @@ function renderNow(){keepPlace(()=>{
   const near=events.filter(v=>{const w=vWin(v);return w&&w.from<=sp.t1;}).sort((x,y)=>by(x)-by(y)||name(x,y));
   const later=events.filter(v=>!near.includes(v)).sort((x,y)=>by(x)-by(y)||name(x,y));
   const tools=all.filter(v=>v.kind==='tool').sort((x,y)=>(vDue(y)-vDue(x))||((vSince(y)??999)-(vSince(x)??999))||name(x,y));
-  const due=all.filter(vDue).length;
-  let h='<div class="vhead"><span class="wsay">'+(due?'<b>'+due+'</b> '+(due===1?'venue is':'venues are')+' due for a visit.':'Nothing is due for a visit.')+'</span>'+
-    '<span class="vkey"><i class="vgl ev"></i>meeting days<i class="vkbar"></i>open<i class="vgl tool"></i>tool<i class="vkp"></i>due</span></div>';
+  /* Events and tools on two tabs rather than one under the other (Mark,
+     2026-10-15): the tools stood under every event, Later and all, and were
+     reached only by scrolling past them. Limbo is the events' own, since
+     only an event is ever over. Each tab says how many it holds and how
+     many of them are due, so a due tool is not missed from the events tab. */
+  const tab=S.ui.nowTab==='tools'?'tools':'events';
+  const evAll=events.concat(over),tabDue=xs=>xs.filter(vDue).length;
+  const tabHTML=(k,label,xs)=>{const d=tabDue(xs);
+    return '<button class="vtab'+(tab===k?' on':'')+'" data-act="nowTab" data-t="'+k+'" aria-pressed="'+(tab===k)+'">'+label+
+      '<b>'+xs.length+'</b>'+(d?'<i class="vtabdue" title="'+d+' due for a visit">'+d+' due</i>':'')+'</button>';};
+  const shown=tab==='tools'?tools:evAll;
+  const due=tabDue(shown);
+  let h='<div class="vhead"><div class="vtabs" role="group" aria-label="Events or tools">'+
+      tabHTML('events','Events',evAll)+tabHTML('tools','Tools',tools)+'</div>'+
+    '<span class="wsay">'+(due?'<b>'+due+'</b> '+(due===1?(tab==='tools'?'tool is':'event is'):(tab==='tools'?'tools are':'events are'))+' due for a visit.':'Nothing here is due for a visit.')+'</span>'+
+    '<span class="vkey">'+(tab==='tools'?'<i class="vgl tool"></i>tool':'<i class="vgl ev"></i>meeting days<i class="vkbar"></i>open')+'<i class="vkp"></i>due</span></div>';
+  if(tab==='tools'){
+    h+='<div class="vaxis"><span class="vaxl">Tool</span><div class="vaxt">'+nowAxisHTML(sp)+'</div><span></span></div>';
+    h+=tools.length?'<div class="vrows">'+tools.map(v=>nowRow(v,sp)).join('')+'</div>':
+      '<p class="vnone vtabnone">No tool yet. Press + Venue and choose Tool for a partner search you visit.</p>';
+    el.innerHTML=h;return;
+  }
   if(over.length)h+='<div class="culimbo'+(nowLimbo?' open':'')+'"><button class="culb" data-act="vLimbo" aria-expanded="'+nowLimbo+'">'+
       '<span class="culfog" aria-hidden="true"></span>'+LIMBO_GHOST+
       '<span class="culc">Limbo</span><b>'+over.length+'</b> '+(over.length===1?'venue is over':'venues are over')+
       '<span class="culw">'+(nowLimbo?'Hide':'Show')+'</span></button>'+
     (nowLimbo?'<p class="culh">Each waits here until you let it go with ✕.</p><div class="vrows">'+over.map(v=>nowRow(v,sp,true)).join('')+'</div>':'')+'</div>';
   h+='<div class="vaxis"><span class="vaxl">Venue</span><div class="vaxt">'+nowAxisHTML(sp)+'</div><span></span></div>';
-  if(near.length)h+='<p class="vsec">Events</p><div class="vrows">'+near.map(v=>nowRow(v,sp)).join('')+'</div>';
+  if(near.length)h+='<div class="vrows">'+near.map(v=>nowRow(v,sp)).join('')+'</div>';
+  else if(!later.length&&!over.length)h+='<p class="vnone vtabnone">No event yet. Press + Venue for a brokerage event you mean to go to.</p>';
   if(later.length)h+='<button class="vlater'+(nowLater?' on':'')+'" data-act="vLater" aria-expanded="'+nowLater+'">'+
       '<span aria-hidden="true">'+(nowLater?'▾':'▸')+'</span>Later<b>'+later.length+'</b>'+
       '<i>further ahead than twelve weeks, or not dated yet</i></button>'+
     (nowLater?'<div class="vrows">'+later.map(v=>nowRow(v,sp)).join('')+'</div>':'');
-  if(tools.length)h+='<p class="vsec">Tools</p><div class="vrows">'+tools.map(v=>nowRow(v,sp)).join('')+'</div>';
   el.innerHTML=h;
 });}
 
@@ -4023,6 +4044,7 @@ document.addEventListener('click',e=>{
       vPop=null;save();repaint();renderDrawer();applyView();break;}
     case 'vAskOff':vAsking=null;renderAsk();break;
     case 'vLater':nowLater=!nowLater;renderNow();break;
+    case 'nowTab':S.ui.nowTab=b.dataset.t==='tools'?'tools':'events';save();renderNow();break;
     case 'vLimbo':nowLimbo=!nowLimbo;renderNow();break;
     /* In Limbo every venue is there to be let go, and asking each time would
        make clearing it a question per row, as on Coming up; anywhere else a
