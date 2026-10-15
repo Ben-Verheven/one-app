@@ -299,7 +299,9 @@ are in `supabase/`.
 told what to do, which passes the request as the firing's text — and,
 since 2026-10-15, by itself every night at about 01:00 his time, a scan
 that reaches every active arena once a week and every frozen one about
-once a month (Run now does the same scan). It
+once a month (Run now does the same scan). Ask agent on a venue's panel
+puts a moment on it (`askAt`) that the scan takes first, and the app takes
+the ask off once the agent's log shows a look at that venue after it. It
 is put to work on anything in the Marketplace, and does the work rather
 than suggesting it: the gatekeeper's `board` gives it the whole board but
 the leads, venues and all, and `edit` lets it add, correct, re-date and let
@@ -402,7 +404,7 @@ kept the name, so nothing stored had to move.
 | the types, managed — opened by Types: a type's line and its grip, its arenas one per row, its colour dot, the copy that follows a drag | `#typesModal` › `#tylist` › `.tyblock` (`.tyline` › `.tygrip`, `.tyarenas` › `.tyrow`); `.lcolwrap.tycol`; `.tyghost` |
 | one arena's row, and its tools' diamond against the names' edge | `.row` = `.cell.name` + `.lane`; `.toolmk` |
 | a date on a lane | `.mk` — `.bk` a venue (`.bk-fixed`, `.bk-unc`, `.bk-band`, its open stretch `.bk-win`), `.cl.rb` a call's bar, `.now` today |
-| the drawer, holding an arena or a venue; an arena's venues in it; a link's cross, and the press that makes a brokerage link a venue | `#card` and its `.scrim`; `.avlist` › `.avrow`; `.ldel`, `.lmake` |
+| the drawer, holding an arena or a venue; an arena's venues in it; a link's cross, and the press that makes a brokerage link a venue; a venue's ask to the agent | `#card` and its `.scrim`; `.avlist` › `.avrow`; `.ldel`, `.lmake`; `.vagent` |
 
 **The Call Board** — the cluster row is the bar, `#hdr` › `.tabs`; the
 controls under it are `.hd-controls` and `#ovbar`; the chronological chart

@@ -1517,6 +1517,35 @@ function vGoHTML(v){
     ?'<a class="vgo" href="'+esc(v.url)+'" target="_blank" rel="noopener" data-act="vGo" data-v="'+v.id+'" title="'+esc(v.url)+'">Go ↗</a>'
     :'<button class="vgo none" data-act="vEdit" data-v="'+v.id+'" title="No website yet — add one">+ site</button>';
 }
+/* ── asking the agent about one venue ──
+   Mark asked on 2026-10-15 for a mark he can set on a venue so the agent
+   looks at that one at least. The ask is a moment on the venue (`askAt`);
+   the agent's nightly scan takes a venue whose ask is later than its own
+   last look at it first, and once the log the agent keeps of its rounds
+   (the `venue:` rows of `semaphore_agent_log`) shows a look after the ask,
+   the ask is taken off here, so the button goes quiet by itself. */
+function vAgentHTML(v){
+  const on=!!v.askAt;
+  const tip=on?'The agent looks at this venue on its next night run — press to take the ask back':
+    'Ask the agent to look at this venue on its next night run';
+  return '<button class="vagent'+(on?' on':'')+'" data-act="vAgent" data-v="'+v.id+'" title="'+tip+'" aria-pressed="'+on+'">'+
+    (on?'Agent asked':'Ask agent')+'</button>';
+}
+function refreshAsks(){
+  const asked=(S.venues||[]).filter(v=>v.askAt);
+  const api=(typeof Hub!=='undefined'&&Hub.api)?Hub.api('semaphore-inbox'):null;
+  if(!asked.length||!api||!api.ready()||!api.visits)return;
+  const since=asked.map(v=>v.askAt).sort()[0];
+  api.visits(since,(rows,err)=>{
+    if(err||!rows)return;
+    let done=false;
+    for(const r of rows){
+      const v=String(r.arena_id||'').startsWith('venue:')&&venue(r.arena_id.slice(6));
+      if(v&&v.askAt&&Date.parse(r.checked_at)>=Date.parse(v.askAt)){delete v.askAt;done=true;}
+    }
+    if(done){save();renderAll();renderDrawer();}
+  });
+}
 
 /* ── the visit question ──
    One question after a visit, three answers: nothing new, something (with a
@@ -1740,7 +1769,7 @@ function venueReadHTML(v){
       '<button class="x" data-act="closeDrawer" aria-label="Close">✕</button>'+
       '<p class="vkind">'+kind+' venue'+(vHost(v)?' · '+esc(vHost(v)):'')+'</p>'+
       '<h2 id="aname">'+esc(v.name)+'</h2>'+
-      '<div class="vchrow">'+vGoHTML(v)+vStampHTML(v)+
+      '<div class="vchrow">'+vGoHTML(v)+vStampHTML(v)+vAgentHTML(v)+
         '<span class="vlast">'+(d===null?'not visited yet':'last visit '+(d<=0?'today':d===1?'yesterday':d+' days ago'))+
           (vEvery(v)?' · every '+vEvery(v)+' d':'')+'</span></div>'+
     '</div>'+
@@ -1849,6 +1878,7 @@ function openVenue(id){
   closeComposers();
   drawer.id=null;drawer.vid=id;drawer.vnew=null;drawer.edit=null;drawer.hi=null;drawer.editing=false;drawer.scope=null;
   renderDrawer();
+  refreshAsks();
   $('#card').focus({preventScroll:true});
 }
 function newVenue(aid){
@@ -3985,6 +4015,9 @@ document.addEventListener('click',e=>{
       if(got==='lead'){openVenue(v.id);leadEdit={a:VENUE_LEAD,l:'new'};renderDrawer();focusLead();}
       else{repaint();renderDrawer();}
       applyView();break;}
+    case 'vAgent':{const v=venue(b.dataset.v);if(!v)break;
+      if(v.askAt)delete v.askAt;else v.askAt=new Date().toISOString();
+      save();renderDrawer();break;}
     case 'vUnstamp':{const v=venue(b.dataset.v);if(!v)break;
       v.visits=v.visits.filter(x=>x.at!==todayISO());
       vPop=null;save();repaint();renderDrawer();applyView();break;}
