@@ -295,11 +295,17 @@ are in `supabase/`.
 
 **The Marketplace has one agent, on demand and at night** (since
 2026-10-14): its three old nightly tasks are deleted, and one task,
-**Marketplace agent**, runs when Mark fires it — from a Claude session
-told what to do, which passes the request as the firing's text — and,
-since 2026-10-15, by itself every night at about 01:00 his time, a scan
-that reaches every active arena once a week and every frozen one about
-once a month (Run now does the same scan). Ask agent on a venue's panel
+**Marketplace agent**, runs by itself every night at about 01:00 his time
+(since 2026-10-15), a scan that reaches every active arena once a week and
+every frozen one about once a month, and when Mark asks a Claude session
+for something. That session starts a session of its own with the task's
+instruction and his request at its end: a firing with the request as its
+text runs the instruction alone first, and twice the request that came
+after was refused as untrusted. Fired by hand with nothing to do, the
+agent waits. What it looks for is projects being formed and their
+leaders, partners second; its rules for keeping and deleting a venue are
+in the task's instruction, and [semaphore-decisions](notes/semaphore-decisions.md)
+says why. Ask agent on a venue's panel
 puts a moment on it (`askAt`) that the scan takes first, and the app takes
 the ask off once the agent's log shows a look at that venue after it. It
 is put to work on anything in the Marketplace, and does the work rather
