@@ -1923,11 +1923,35 @@ function bandHTML(v,t0,t1,top,label,quiet){
    cannot open after them or close before them) and by the other end; the
    day it would take is said beside the pointer, and letting go keeps it. A
    double-click on an end gives it back to its default. The press that
-   follows the drag is swallowed, so letting go does not open the venue. */
+   follows the drag is swallowed, so letting go does not open the venue.
+
+   The move and the release are heard on the end itself, which holds the
+   pointer, rather than on the document: the document's are gated on this
+   room being the one showing (hub.js), and a venue's panel is also lent
+   over the Ledger. There the drag moved nothing, and the release it never
+   heard came at the next one in this room, which wrote whatever day the
+   pointer was over then. */
 let wDrag=null,wSwallow=0;
+/* The end under the pointer, found by where it is as well as by what was
+   hit. An open end fades out through a mask on the band, and a mask takes
+   the clicks of what it hides with it: the end of a window with no end,
+   the one the comment above says can be dragged to give it one, could not
+   be pressed at all. */
+function vhAt(e){
+  const hit=e.target.closest&&e.target.closest('.vh');
+  if(hit)return hit;
+  const strip=e.target.closest&&e.target.closest('[data-t0]');
+  if(!strip)return null;
+  for(const h of strip.querySelectorAll('.vh')){
+    const r=h.getBoundingClientRect();
+    if(e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom)return h;
+  }
+  return null;
+}
 document.addEventListener('pointerdown',e=>{
-  const hd=e.target.closest&&e.target.closest('.vh');
-  if(!hd||e.button!==0)return;
+  if(e.button!==0)return;
+  const hd=vhAt(e);
+  if(!hd)return;
   const v=venue(hd.dataset.v),strip=hd.closest('[data-t0]'),band=hd.parentElement;
   if(!v||!strip||!band)return;
   e.preventDefault();e.stopPropagation();
@@ -1936,8 +1960,11 @@ document.addEventListener('pointerdown',e=>{
     L:parseFloat(band.style.left),R:parseFloat(band.style.left)+parseFloat(band.style.width)};
   band.classList.add('dragging');
   try{hd.setPointerCapture(e.pointerId);}catch(x){}
+  hd.addEventListener('pointermove',wMove);
+  hd.addEventListener('pointerup',wUp);
+  hd.addEventListener('pointercancel',wUp);
 },true);
-document.addEventListener('pointermove',e=>{
+function wMove(e){
   if(!wDrag)return;
   const d=wDrag,w=d.w;
   let t=d.t0+(e.clientX-d.r.left)/d.r.width*(d.t1-d.t0);
@@ -1957,21 +1984,25 @@ document.addEventListener('pointermove',e=>{
   d.band.style.width=Math.max(Math.abs(d.R-d.L),.5).toFixed(2)+'%';
   tip.textContent=(d.end==='opens'?'Opens ':'Closes ')+fmtDay(iso);
   tip.style.display='block';tip.style.left=(e.clientX+14)+'px';tip.style.top=(e.clientY+16)+'px';
-});
-document.addEventListener('pointerup',()=>{
+}
+function wUp(e){
+  const hd=e.currentTarget;
+  hd.removeEventListener('pointermove',wMove);
+  hd.removeEventListener('pointerup',wUp);
+  hd.removeEventListener('pointercancel',wUp);
   if(!wDrag)return;
   const d=wDrag;wDrag=null;tip.style.display='none';
   d.band.classList.remove('dragging');
   wSwallow=Date.now();
-  if(!d.day)return;
+  if(!d.day||e.type==='pointercancel')return;
   d.v[d.end]=d.day;tidyVenue(d.v);
   save();renderAll();
-});
+}
 document.addEventListener('click',e=>{
-  if(Date.now()-wSwallow<400&&e.target.closest&&e.target.closest('.vband,.vh')){e.preventDefault();e.stopPropagation();}
+  if(Date.now()-wSwallow<400&&e.target.closest&&e.target.closest('.vband,.vh,[data-t0]')){e.preventDefault();e.stopPropagation();}
 },true);
 document.addEventListener('dblclick',e=>{
-  const hd=e.target.closest&&e.target.closest('.vh');if(!hd)return;
+  const hd=vhAt(e);if(!hd)return;
   const v=venue(hd.dataset.v);if(!v)return;
   v[hd.dataset.end]=null;
   /* a window with no event days has no default to go back to at its
