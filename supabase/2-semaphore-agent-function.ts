@@ -99,6 +99,7 @@ function tidyVenue(v: any): any {
   if (!(v.every >= 1 && v.every <= 365)) delete v.every; else v.every = Math.round(v.every);
   if (typeof v.note !== "string") v.note = "";
   if (typeof v.memo === "string" && !v.memo.trim()) delete v.memo;
+  if (typeof v.doubt !== "string" || !v.doubt.trim()) delete v.doubt;
   return v;
 }
 function takeStamps(v: any, x: any) {
@@ -400,6 +401,14 @@ function shapeVenue(v: any, f: any): string | null {
     v.kind = f.kind;
   }
   if ("note" in f) v.note = S(f.note, 600) ?? "";
+  // The agent's doubt (Mark, 2026-10-15): when it cannot tell whether a
+  // venue still bears on a coming call, it keeps the venue and says why in a
+  // few words; the app marks the venue with it until Mark answers. An empty
+  // doubt takes the mark off.
+  if ("doubt" in f) {
+    const d = S(f.doubt, 200);
+    if (d) v.doubt = d; else delete v.doubt;
+  }
   if (v.kind === "event") {
     if ("gran" in f) v.gran = oneOf(f.gran, GRANS);
     if ("start" in f) v.start = D(f.start);
@@ -453,6 +462,8 @@ function venueOp(s: any, op: any): any {
       const dup = copy.url && copy.url !== v.url ? siteTaken(s, copy.url, v.id) : null;
       if (dup) return { error: "that site is already a venue: " + dup.id + " (" + dup.name + ")" };
       Object.assign(v, tidyVenue(copy));
+      // Object.assign only adds: a doubt taken off the copy must go here too
+      if (!("doubt" in copy)) delete v.doubt;
       return { ok: true };
     }
     // Letting a venue go, as the app's own "Let it go": off the board, and a

@@ -303,7 +303,10 @@ instruction and his request at its end: a firing with the request as its
 text runs the instruction alone first, and twice the request that came
 after was refused as untrusted. Fired by hand with nothing to do, the
 agent waits. What it looks for is projects being formed and their
-leaders, partners second; its rules for keeping and deleting a venue are
+leaders, partners second. Where it cannot settle whether a venue still
+matters it keeps it and says why in a few words (`doubt`, written through
+the gatekeeper's `update_venue`), which the app shows as a ? until Mark
+presses Keep it. Its rules for keeping and deleting a venue are
 in the task's instruction, and [semaphore-decisions](notes/semaphore-decisions.md)
 says why. Ask agent on a venue's panel
 puts a moment on it (`askAt`) that the scan takes first, and the app takes
@@ -401,7 +404,7 @@ kept the name, so nothing stored had to move.
 | the room's scroller — the page itself does not scroll | `#semscroll` |
 | the header: the view switcher (Now · Board), Leads beside it, Search, Types, + Venue, + Arena, Dispatches and the cloud chip | `header.top`; `#viewseg`, `#leadsBtn`, `#searchBtn` and its box `#search`, `#dispatchBtn`, `#semcloud` |
 | Now, the Board, Leads (on the wall), Dispatches, the freezer | `#now`, `#board`, `#wall`, `#dispatch`, `#freezer` |
-| Now: its two tabs, events and tools; the axis over them, sticky; one venue's row, its name and the arenas it serves, its strip, its stamp and Go | `.vtabs` › `.vtab`; `.vaxis`; `.vrow` = `.vname` (`.vnm`, `.vchips`) + `.vtrack` + `.vend` (`.vstamp`, `.vgo`) |
+| Now: its two tabs, events and tools; the axis over them, sticky; one venue's row, its name and the arenas it serves, its strip, its stamp and Go | `.vtabs` › `.vtab`; `.vaxis`; `.vrow` = `.vname` (`.vnmrow` › `.vnm` and the agent's doubt `.vdoubt`, `.vchips`) + `.vtrack` + `.vend` (`.vstamp`, `.vgo`) |
 | on a venue's strip: the open stretch, the meeting days, a tool's line, the visits, today, due | `.vbar`, `.vmeet` and `.vdia`, `.vbar.tool`, `.vtick`, `.vnow`, `.vpulse` |
 | Later, folded; Limbo — its fog, its ghost — and the venues in it when open | `.vlater`; `.culimbo` › `.culb` (`.culfog`, `.culgh`, `.culc`) |
 | the visit question, under a stamp and at the foot of the room | `.vask.pop`; `#vbar` › `.vask.bar` |
@@ -410,7 +413,7 @@ kept the name, so nothing stored had to move.
 | the types, managed — opened by Types: a type's line and its grip, its arenas one per row, its colour dot, the copy that follows a drag | `#typesModal` › `#tylist` › `.tyblock` (`.tyline` › `.tygrip`, `.tyarenas` › `.tyrow`); `.lcolwrap.tycol`; `.tyghost` |
 | one arena's row, and its tools' diamond against the names' edge | `.row` = `.cell.name` + `.lane`; `.toolmk` |
 | a date on a lane | `.mk` — `.bk` a venue (`.bk-fixed`, `.bk-unc`, `.bk-band`, its open stretch `.bk-win`), `.cl.rb` a call's bar, `.now` today |
-| the drawer, holding an arena or a venue; an arena's venues in it; a link's cross, and the press that makes a brokerage link a venue; a venue's ask to the agent | `#card` and its `.scrim`; `.avlist` › `.avrow`; `.ldel`, `.lmake`; `.vagent` |
+| the drawer, holding an arena or a venue; an arena's venues in it; a link's cross, and the press that makes a brokerage link a venue; a venue's ask to the agent; the agent's doubt on it, with Keep it | `#card` and its `.scrim`; `.avlist` › `.avrow`; `.ldel`, `.lmake`; `.vagent`; `.vdoubtbox` |
 
 **The Call Board** — the cluster row is the bar, `#hdr` › `.tabs`; the
 controls under it are `.hd-controls` and `#ovbar`; the chronological chart

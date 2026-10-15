@@ -417,6 +417,7 @@ function tidyVenue(v){
   if(!(v.every>=1&&v.every<=365))delete v.every;else v.every=Math.round(v.every);
   if(typeof v.note!=='string')v.note='';
   if(typeof v.memo==='string'&&!v.memo.trim())delete v.memo;
+  if(typeof v.doubt!=='string'||!v.doubt.trim())delete v.doubt;
   return v;
 }
 function joinVenue(v,aid){if(aid&&!v.arenas.includes(aid))v.arenas.push(aid);}
@@ -1526,6 +1527,18 @@ function vGoHTML(v){
    last look at it first, and once the log the agent keeps of its rounds
    (the `venue:` rows of `semaphore_agent_log`) shows a look after the ask,
    the ask is taken off here, so the button goes quiet by itself. */
+/* The agent's doubt (Mark, 2026-10-15): a venue the agent could not show to
+   bear on a coming call, nor show to be over, is kept rather than let go,
+   with a few words saying why (`doubt`). It wears a small ? beside its name
+   on Now, and its panel says the doubt with Keep it, which takes the mark
+   off; Let it go stays where it was. */
+function vDoubtMark(v){
+  return v.doubt?'<i class="vdoubt" title="The agent is not sure this still matters: '+esc(v.doubt)+'">?</i>':'';
+}
+function vDoubtHTML(v){
+  return v.doubt?'<div class="vdoubtbox"><span><b>The agent is not sure this still matters.</b> '+esc(v.doubt)+'</span>'+
+    '<button class="btn" data-act="vDoubtOk" data-v="'+v.id+'" title="Take the mark off and keep the venue">Keep it</button></div>':'';
+}
 function vAgentHTML(v){
   const on=!!v.askAt;
   const tip=on?'The agent looks at this venue on its next night run — press to take the ask back':
@@ -1654,7 +1667,7 @@ function nowRow(v,sp,over){
   const due=vDue(v);
   return '<div class="vrow'+(due?' due':'')+(over?' over':'')+(vPop===v.id?' popped':'')+'" data-vid="'+v.id+'">'+
     '<div class="vname">'+vGlyph(v)+
-      '<span class="vnt"><button class="vnm" data-act="openVenue" data-v="'+v.id+'" title="'+esc(v.name)+'">'+esc(v.name)+'</button>'+
+      '<span class="vnt"><span class="vnmrow"><button class="vnm" data-act="openVenue" data-v="'+v.id+'" title="'+esc(v.name)+'">'+esc(v.name)+'</button>'+vDoubtMark(v)+'</span>'+
         vArenaChips(v,2)+'</span></div>'+
     (over?'<div class="vtrack over"><span class="vlab" style="left:0">'+esc(vDateSay(v))+'</span></div>':vTrackHTML(v,sp))+
     '<div class="vend">'+(over?'':vStampHTML(v))+vGoHTML(v)+
@@ -1793,7 +1806,7 @@ function venueReadHTML(v){
       '<div class="vchrow">'+vGoHTML(v)+vStampHTML(v)+vAgentHTML(v)+
         '<span class="vlast">'+(d===null?'not visited yet':'last visit '+(d<=0?'today':d===1?'yesterday':d+' days ago'))+
           (vEvery(v)?' · every '+vEvery(v)+' d':'')+'</span></div>'+
-    '</div>'+
+    '</div>'+vDoubtHTML(v)+
     (v.kind==='event'?'<section class="vps"><p class="vph">Its life <i>'+esc(vDateSay(v))+'</i></p>'+vLifeHTML(v)+
       '<dl class="vdl">'+vFactsHTML(v)+(v.note?'<dt>basis</dt><dd>'+esc(v.note)+'</dd>':'')+
       '</dl></section>':'')+
@@ -4036,6 +4049,8 @@ document.addEventListener('click',e=>{
       if(got==='lead'){openVenue(v.id);leadEdit={a:VENUE_LEAD,l:'new'};renderDrawer();focusLead();}
       else{repaint();renderDrawer();}
       applyView();break;}
+    case 'vDoubtOk':{const v=venue(b.dataset.v);if(!v)break;
+      delete v.doubt;save();renderAll();renderDrawer();break;}
     case 'vAgent':{const v=venue(b.dataset.v);if(!v)break;
       if(v.askAt)delete v.askAt;else v.askAt=new Date().toISOString();
       save();renderDrawer();break;}
