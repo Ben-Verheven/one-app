@@ -306,6 +306,14 @@ button.ln:active{background:rgba(216,205,184,.06)}
 .vaxis .vnowc{position:absolute;bottom:-1px;width:0;height:0;transform:translateX(-50%);
   border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:6px solid var(--today)}
 .vsec{margin:18px 16px 4px;color:var(--key2)}
+/* Now's two tabs, events and tools */
+.vtabs{display:flex;margin:14px 16px 0;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+.vtabs button{flex:1;min-height:44px;padding:0 8px;border-right:1px solid var(--line);color:var(--muted);
+  display:flex;align-items:center;justify-content:center;gap:6px}
+.vtabs button:last-child{border-right:0}
+.vtabs button.on{background:rgba(216,205,184,.17);color:var(--ink)}
+.vtabs b{font:11px var(--mono);letter-spacing:0;color:var(--muted)}
+.vtabs i{font:italic 12px var(--body);letter-spacing:0;text-transform:none;color:var(--notice-ink)}
 .vrow{display:block;margin:0 12px;padding:10px 4px 8px;border-bottom:1px solid var(--grid)}
 .vrow:active{background:rgba(216,205,184,.05)}
 .vhd{display:flex;align-items:center;gap:9px;min-height:36px}
@@ -2082,6 +2090,12 @@ function venueRow(v, over){
 
 /* ── the Now tab: the desk's strip of time, a row to a venue ────────── */
 var nowLater = false, nowLimbo = false;
+/* Events and tools on two tabs, as on the desk since 2026-10-15 (Mark asked
+   for Pocket to follow): the tools stood under every event and Later, a long
+   thumb away. The tab chosen is kept on the phone, under pocket.* as all of
+   Pocket's own keys are. */
+var NOWTAB = 'pocket.nowTab', nowTab = 'events';
+try { if (localStorage.getItem(NOWTAB) === 'tools') nowTab = 'tools'; } catch(e){}
 var GHOST = '<svg class="culgh" viewBox="0 0 16 18" width="16" height="18" aria-hidden="true"><path d="M8 1.5C4.7 1.5 2.5 4 2.5 7.2V16l1.8-1.4L6.1 16 8 14.6 9.9 16l1.8-1.4L13.5 16V7.2C13.5 4 11.3 1.5 8 1.5z" fill="currentColor"/><ellipse cx="6" cy="7.6" rx="1.05" ry="1.45" fill="#15171A"/><ellipse cx="10" cy="7.6" rx="1.05" ry="1.45" fill="#15171A"/></svg>';
 function drawNow(){
   var host = $('#v-now');
@@ -2108,14 +2122,33 @@ function drawNow(){
     var sx = vSince(x), sy = vSince(y);
     return (vDue(y) - vDue(x)) || ((sy === null ? 999 : sy) - (sx === null ? 999 : sx)) || byName(x, y); });
 
+  var evAll = evs.concat(over), tab = nowTab === 'tools' ? 'tools' : 'events';
+  var tabs = el('div', 'vtabs');
+  [['events', 'Events', evAll], ['tools', 'Tools', tools]].forEach(function(x){
+    var n = x[2].filter(vDue).length;
+    var b = el('button', 'cap' + (tab === x[0] ? ' on' : ''), x[1] + ' ');
+    b.appendChild(el('b', '', String(x[2].length)));
+    if (n) b.appendChild(el('i', '', n + ' due'));
+    b.setAttribute('aria-pressed', String(tab === x[0]));
+    b.addEventListener('click', function(){
+      nowTab = x[0];
+      try { localStorage.setItem(NOWTAB, nowTab); } catch(e){}
+      drawNow();
+    });
+    tabs.appendChild(b);
+  });
+  host.appendChild(tabs);
+
+  var shown = (tab === 'tools' ? tools : evAll).filter(vDue).length;
   var hd = el('div', 'whead');
-  if (due.length){
-    hd.appendChild(el('b', '', String(due.length)));
-    hd.appendChild(document.createTextNode(due.length === 1 ? ' venue is due for a visit.' : ' venues are due for a visit.'));
-  } else hd.textContent = 'Nothing is due for a visit.';
+  if (shown){
+    hd.appendChild(el('b', '', String(shown)));
+    hd.appendChild(document.createTextNode(shown === 1 ? (tab === 'tools' ? ' tool is' : ' event is') + ' due for a visit.'
+      : (tab === 'tools' ? ' tools are' : ' events are') + ' due for a visit.'));
+  } else hd.textContent = 'Nothing here is due for a visit.';
   host.appendChild(hd);
 
-  if (over.length){
+  if (tab === 'events' && over.length){
     var lb = el('div', 'limbox' + (nowLimbo ? ' open' : ''));
     var lh = el('button', 'culimbo');
     lh.innerHTML = '<span class="culfog" aria-hidden="true"></span>' + GHOST +
@@ -2139,20 +2172,20 @@ function drawNow(){
   ax.appendChild(nw);
   host.appendChild(ax);
 
-  if (near.length){
-    host.appendChild(el('div', 'vsec cap', 'Events'));
-    near.forEach(function(v){ host.appendChild(venueRow(v)); });
+  if (tab === 'tools'){
+    if (tools.length) tools.forEach(function(v){ host.appendChild(venueRow(v)); });
+    else host.appendChild(empty('No tool yet', 'A tool is a partner search that is always open. Add them at the desk.'));
+    return;
   }
+  near.forEach(function(v){ host.appendChild(venueRow(v)); });
+  if (!near.length && !later.length && !over.length)
+    host.appendChild(empty('No event yet', 'Add brokerage events at the desk.'));
   if (later.length){
     var lt = el('button', 'vlater cap', (nowLater ? '▾ ' : '▸ ') + 'Later ');
     lt.appendChild(el('b', '', String(later.length)));
     lt.addEventListener('click', function(){ nowLater = !nowLater; drawNow(); });
     host.appendChild(lt);
     if (nowLater) later.forEach(function(v){ host.appendChild(venueRow(v)); });
-  }
-  if (tools.length){
-    host.appendChild(el('div', 'vsec cap', 'Tools'));
-    tools.forEach(function(v){ host.appendChild(venueRow(v)); });
   }
 }
 

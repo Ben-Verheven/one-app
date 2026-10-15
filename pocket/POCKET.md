@@ -7,9 +7,11 @@ rebuilt around venues; PROJECT.md says what a venue is):
 
 - **Now** — the desk's Now on a phone (`drawNow`): one line of words saying how many venues are due,
   then every venue on the same strip of time, today marked (`vStrip`, the desk's `NOW_AHEAD`).
-  Events near enough to show, then a folded **Later** for those beyond the strip or undated, then the
-  **tools**, which are always open. A venue that is over goes to **Limbo**, the folded box of fog at
-  the top (`.limbox`), as on the desk. Each row carries the stamp, a disc holding the days since the
+  Two tabs at its head, **Events** and **Tools**, as on the desk (since 2026-10-15), each with its
+  count and how many are due; the tab chosen is kept on the phone (`pocket.nowTab`). Events: those
+  near enough to show, then a folded **Later** for those beyond the strip or undated; a venue that is
+  over goes to **Limbo**, the folded box of fog at the top (`.limbox`), as on the desk. Tools: the
+  partner searches that are always open. Each row carries the stamp, a disc holding the days since the
   last visit and reddening towards the day it is due (`vDisc`), and *Go ↗* to the venue's own site.
   The stamp records today's visit and asks what it gave: nothing new, something (a line, optional) or
   a lead (`askVisit`); pressed again the same day, *Take it back*. Coming back to Pocket after *Go*
