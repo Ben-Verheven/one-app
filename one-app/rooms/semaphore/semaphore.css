@@ -1311,6 +1311,12 @@
 #pane-semaphore .vgl{flex:0 0 auto;display:inline-block;width:10px;height:10px}
 #pane-semaphore .vgl.ev{background:var(--brok);transform:rotate(45deg)}
 #pane-semaphore .vgl.ev.unc{background:none;border:1.5px dashed var(--brok)}
+/* on Venues the mark is the grip a row is dragged by, a finger's reach
+   round it, and a dragged row lifts off the page */
+#pane-semaphore #now .vrow .vgl{position:relative;cursor:grab;touch-action:none}
+#pane-semaphore #now .vrow .vgl::before{content:'';position:absolute;inset:-12px -9px}
+#pane-semaphore #now .vrow.vdragging{z-index:9;background:var(--panel);box-shadow:0 10px 26px rgba(0,0,0,.45);border-radius:var(--radius)}
+#pane-semaphore #now .vrow.vdragging .vgl{cursor:grabbing}
 #pane-semaphore .vgl.win{width:14px;height:7px;border-radius:4px;background:linear-gradient(90deg,rgba(239,91,76,.35),var(--brok),rgba(239,91,76,.35))}
 #pane-semaphore .vtrack{position:relative;height:44px;cursor:pointer}
 #pane-semaphore .vtrack::before{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:var(--grid)}

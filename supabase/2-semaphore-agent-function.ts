@@ -118,6 +118,7 @@ function tidyVenue(v: any): any {
   if (typeof v.note !== "string") v.note = "";
   if (typeof v.memo === "string" && !v.memo.trim()) delete v.memo;
   if (!["arising", "active", "dying", "over"].includes(v.phase)) delete v.phase; // Mark's section by hand
+  if (!Number.isFinite(v.vpos)) delete v.vpos; // Mark's own place for it on Venues
   delete v.doubt; // the agent's ? on a venue went the evening it came (2026-10-15)
   return v;
 }

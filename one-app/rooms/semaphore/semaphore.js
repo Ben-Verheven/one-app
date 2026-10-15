@@ -455,6 +455,9 @@ function tidyVenue(v){
   if(!(v.every>=1&&v.every<=365))delete v.every;else v.every=Math.round(v.every);
   if(typeof v.note!=='string')v.note='';
   if(typeof v.memo==='string'&&!v.memo.trim())delete v.memo;
+  /* his own place for it within its group on Venues (see "dragging a
+     venue into place") */
+  if(!Number.isFinite(v.vpos))delete v.vpos;
   /* the section of Venues Mark put it in by hand, if he did (see vPhase) */
   if(!['arising','active','dying','over'].includes(v.phase))delete v.phase;
   /* The agent's doubt, a ? on a venue it was unsure of, went the evening it
@@ -1749,7 +1752,8 @@ function vPlaceSay(v){return PLACE_SAY[v.place]+(inVenues(v)?' · '+PHASE_SAY[vP
 /* a venue's mark: a diamond where it has event days, dashed while they are
    a guess; a rounded bar, the shape of a window, where it has none */
 function vGlyph(v){
-  return v.start?'<i class="vgl ev'+(v.grade==='fixed'?'':' unc')+'" aria-hidden="true"></i>':'<i class="vgl win" aria-hidden="true"></i>';
+  return v.start?'<i class="vgl ev'+(v.grade==='fixed'?'':' unc')+'" title="Drag to put it in your own place within its group" aria-hidden="true"></i>':
+    '<i class="vgl win" title="Drag to put it in your own place within its group" aria-hidden="true"></i>';
 }
 /* the arenas a venue serves, each in its type's colour */
 function vArenaChips(v,max){
@@ -2082,15 +2086,61 @@ function blockRows(list,sp,over){
   }
   return h;
 }
+/* the order on Venues: the group, then his own place in it where he has
+   dragged one (`vpos`), then the start of the window */
+function venueOrder(x,y){
+  const from=v=>{const w=vWin(v);return !w?Infinity:w.from===null?-Infinity:w.from;};
+  const pos=v=>Number.isFinite(v.vpos)?v.vpos:Infinity;
+  return vBlock(x)-vBlock(y)||(pos(x)===pos(y)?0:pos(x)<pos(y)?-1:1)||
+    (from(x)===from(y)?0:from(x)<from(y)?-1:1)||x.name.localeCompare(y.name);
+}
 function nowSections(){
   const all=visibleVenues().filter(inVenues);
   const by={arising:[],active:[],dying:[],over:[]};
   for(const v of all)by[vPhase(v)].push(v);
-  const from=v=>{const w=vWin(v);return !w?Infinity:w.from===null?-Infinity:w.from;};
-  const order=(x,y)=>vBlock(x)-vBlock(y)||(from(x)===from(y)?0:from(x)<from(y)?-1:1)||x.name.localeCompare(y.name);
-  for(const k in by)by[k].sort(order);
+  for(const k in by)by[k].sort(venueOrder);
   return {all,by};
 }
+/* ── dragging a venue into place ──
+   Mark puts the venues of a group in his own order by dragging one by its
+   mark at the left of its row (2026-10-15). The rows of the group change
+   places under the pointer; letting go keeps the order, for the whole
+   group across the four tabs: the venue goes in just before the one that
+   now follows it on screen, or just after the one before it, and every
+   venue of the group is numbered afresh (`vpos`). One never dragged
+   stands after those that were, by the start of its window. */
+let vDrag=null;
+document.addEventListener('pointerdown',e=>{
+  const g=e.target.closest&&e.target.closest('#now .vrow .vgl');
+  if(!g||e.button!==0)return;
+  const row=g.closest('.vrow'),list=row&&row.parentElement;
+  if(!list||list.children.length<2)return;
+  e.preventDefault();
+  vDrag={row,list,moved:false};
+  row.classList.add('vdragging');
+  try{g.setPointerCapture(e.pointerId);}catch(x){}
+});
+document.addEventListener('pointermove',e=>{
+  if(!vDrag)return;
+  const{row,list}=vDrag;
+  const next=[...list.children].find(r=>r!==row&&e.clientY<r.getBoundingClientRect().top+r.offsetHeight/2)||null;
+  if(next!==row.nextElementSibling||(!next&&row!==list.lastElementChild)){list.insertBefore(row,next);vDrag.moved=true;}
+});
+document.addEventListener('pointerup',()=>{
+  if(!vDrag)return;
+  const{row,list,moved}=vDrag;vDrag=null;
+  row.classList.remove('vdragging');
+  if(!moved)return;
+  const ids=[...list.children].map(r=>r.dataset.vid),v=venue(row.dataset.vid);
+  if(!v)return;
+  const i=ids.indexOf(v.id),k=vBlock(v);
+  const group=(S.venues||[]).filter(x=>inVenues(x)&&liveVenue(x)&&vBlock(x)===k&&x!==v).sort(venueOrder);
+  const after=ids[i+1]&&group.findIndex(x=>x.id===ids[i+1]);
+  const before=ids[i-1]&&group.findIndex(x=>x.id===ids[i-1]);
+  group.splice(after>=0&&ids[i+1]?after:before>=0&&ids[i-1]?before+1:group.length,0,v);
+  group.forEach((x,n)=>{x.vpos=n;});
+  save();renderNow();
+});
 function renderNow(){keepPlace(()=>{
   const el=$('#now');if(!el)return;
   const sp=nowSpan();

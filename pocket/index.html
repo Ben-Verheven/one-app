@@ -1157,6 +1157,9 @@ function tidyVenue(v){
   if(!(v.every>=1&&v.every<=365))delete v.every;else v.every=Math.round(v.every);
   if(typeof v.note!=='string')v.note='';
   if(typeof v.memo==='string'&&!v.memo.trim())delete v.memo;
+  /* his own place for it within its group on Venues (see "dragging a
+     venue into place") */
+  if(!Number.isFinite(v.vpos))delete v.vpos;
   /* the section of Venues Mark put it in by hand, if he did (see vPhase) */
   if(!['arising','active','dying','over'].includes(v.phase))delete v.phase;
   /* The agent's doubt, a ? on a venue it was unsure of, went the evening it
@@ -2258,8 +2261,11 @@ function drawNow(){
     return i < 0 ? types.length : i;
   }
   function start(v){ var w = vWin(v); return !w ? Infinity : w.from === null ? -Infinity : w.from; }
+  /* his own place within the group, dragged at the desk, comes before the dates */
+  function pos(v){ return isFinite(v.vpos) ? v.vpos : Infinity; }
   Object.keys(by).forEach(function(k){ by[k].sort(function(x, y){
-    return block(x) - block(y) || (start(x) === start(y) ? 0 : start(x) < start(y) ? -1 : 1) || byName(x, y); }); });
+    return block(x) - block(y) || (pos(x) === pos(y) ? 0 : pos(x) < pos(y) ? -1 : 1) ||
+      (start(x) === start(y) ? 0 : start(x) < start(y) ? -1 : 1) || byName(x, y); }); });
   function rowsInto(parent, list, over){
     var last = null;
     list.forEach(function(v){
