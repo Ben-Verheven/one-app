@@ -855,7 +855,7 @@ const NAME_MIN=140,NAME_MAX=560;
 function blank(){
   return {v:1,types:defaultTypes(),arenas:[],venues:[],
     ui:{q:'',collapsed:{},view:'now',
-        boardSort:'date',nameW:null,freezerOpen:false,nowTab:'active',keptOpen:false}};
+        boardSort:'date',nameW:null,freezerOpen:false,nowTab:'active',keptOpen:false,shOpen:{}}};
 }
 /* An arena remembers which of its own dates it is waiting for. That goes stale
    the moment the dates change, so this puts it straight — a wait ends when the
@@ -1033,6 +1033,8 @@ function migrate(s){
     ui.nowTab = ['arising','active','dying','over'].includes(u.nowTab) ? u.nowTab : 'active';
     /* whether the board's tray lists what is kept on the board as well */
     ui.keptOpen = u.keptOpen===true;
+    /* which shared venues on the board are unfolded to show their arenas */
+    ui.shOpen = map(u.shOpen) || {};
     s.ui=ui;
   }
   const first=new Map();
@@ -1155,6 +1157,8 @@ function tidyVenue(v){
   if(!(v.every>=1&&v.every<=365))delete v.every;else v.every=Math.round(v.every);
   if(typeof v.note!=='string')v.note='';
   if(typeof v.memo==='string'&&!v.memo.trim())delete v.memo;
+  /* the section of Venues Mark put it in by hand, if he did (see vPhase) */
+  if(!['arising','active','dying','over'].includes(v.phase))delete v.phase;
   /* The agent's doubt, a ? on a venue it was unsure of, went the evening it
      came (Mark, 2026-10-15): everything it finds now waits on the board for
      him to judge, so there is nothing left for it to be unsure on his behalf. */
@@ -1350,12 +1354,16 @@ function vState(v){
   return 'active';
 }
 const PHASE={undated:'arising',arising:'arising',meeting:'active',active:'active',dying:'dying',over:'over'};
-function vPhase(v){return PHASE[vState(v)];}
+/* The section a venue stands in. Mark can put one in another section by
+   hand from its panel (2026-10-15), and there it stays (`phase`) until he
+   gives it back to its dates; its window and its words keep saying what
+   the dates say. */
+function vPhaseByDates(v){return PHASE[vState(v)];}
+function vPhase(v){return v.phase||vPhaseByDates(v);}
 /* How much is going on at a venue at one moment, from 0 to 1: rising
    through the window to its event days, full on them, falling away after;
    flat where there are none, fading through the last stretch. It is the
-   shading of a window, and the order of Active, so the venue where most is
-   happening stands first. */
+   shading of a window. */
 function vHeat(v,t){
   const w=vWin(v);if(!w)return 0;
   if((w.from!==null&&t<w.from)||(w.to!==null&&t>w.to+DAY))return 0;
@@ -1399,7 +1407,9 @@ function vSince(v){const x=lastVisit(v);return x?daysBetween(T(x.at),T(todayISO(
 function vEvery(v){
   if(v.every)return v.every;
   if(!inVenues(v))return null;
-  const st=vState(v),w=vWin(v);
+  /* a section set by hand sets the rhythm too: none in Arising or Limbo */
+  const nat=vState(v),w=vWin(v);
+  const st=!v.phase||v.phase===PHASE[nat]?nat:v.phase==='over'?'over':v.phase==='arising'?'arising':v.phase;
   const base=st==='active'&&w&&w.ms===null&&w.to===null?RHYTHM.standing:RHYTHM[st];
   if(!base)return null;
   const as=venueArenas(v).filter(a=>!a.frozenAt);
@@ -1443,13 +1453,7 @@ function vDateSay(v){
     default:return 'closed '+tDay(w.to)+(w.ms!==null?' · met '+meets:'');
   }
 }
-/* ── a venue's window, drawn ──
-   The same band on the board's lanes and on the Venues strip: the window
-   shaded by its heat in the colour of where the venue stands (the
-   brokerage red in Venues, the new hue while new, bone while kept), a
-   dashed edge while it is a season's guess, its two ends to drag, and its
-   event days as diamonds over it. `t0`/`t1` are the strip's ends, `top` the
-   middle of the band in pixels, or null for the middle of the strip. */
+          /* days an open-ended window is drawn past today */
 const PLACE_RGB={new:'185,227,90',board:'150,140,122',venues:'239,91,76',gone:'125,116,102'};
                /* how much history a row shows before it offers the rest */
 function arena(id){return S.arenas.find(a=>a.id===id);}

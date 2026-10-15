@@ -117,6 +117,7 @@ function tidyVenue(v: any): any {
   if (!(v.every >= 1 && v.every <= 365)) delete v.every; else v.every = Math.round(v.every);
   if (typeof v.note !== "string") v.note = "";
   if (typeof v.memo === "string" && !v.memo.trim()) delete v.memo;
+  if (!["arising", "active", "dying", "over"].includes(v.phase)) delete v.phase; // Mark's section by hand
   delete v.doubt; // the agent's ? on a venue went the evening it came (2026-10-15)
   return v;
 }

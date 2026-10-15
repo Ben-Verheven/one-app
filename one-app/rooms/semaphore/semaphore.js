@@ -455,6 +455,8 @@ function tidyVenue(v){
   if(!(v.every>=1&&v.every<=365))delete v.every;else v.every=Math.round(v.every);
   if(typeof v.note!=='string')v.note='';
   if(typeof v.memo==='string'&&!v.memo.trim())delete v.memo;
+  /* the section of Venues Mark put it in by hand, if he did (see vPhase) */
+  if(!['arising','active','dying','over'].includes(v.phase))delete v.phase;
   /* The agent's doubt, a ? on a venue it was unsure of, went the evening it
      came (Mark, 2026-10-15): everything it finds now waits on the board for
      him to judge, so there is nothing left for it to be unsure on his behalf. */
@@ -1639,7 +1641,12 @@ function vState(v){
   return 'active';
 }
 const PHASE={undated:'arising',arising:'arising',meeting:'active',active:'active',dying:'dying',over:'over'};
-function vPhase(v){return PHASE[vState(v)];}
+/* The section a venue stands in. Mark can put one in another section by
+   hand from its panel (2026-10-15), and there it stays (`phase`) until he
+   gives it back to its dates; its window and its words keep saying what
+   the dates say. */
+function vPhaseByDates(v){return PHASE[vState(v)];}
+function vPhase(v){return v.phase||vPhaseByDates(v);}
 /* How much is going on at a venue at one moment, from 0 to 1: rising
    through the window to its event days, full on them, falling away after;
    flat where there are none, fading through the last stretch. It is the
@@ -1687,7 +1694,9 @@ function vSince(v){const x=lastVisit(v);return x?daysBetween(T(x.at),T(todayISO(
 function vEvery(v){
   if(v.every)return v.every;
   if(!inVenues(v))return null;
-  const st=vState(v),w=vWin(v);
+  /* a section set by hand sets the rhythm too: none in Arising or Limbo */
+  const nat=vState(v),w=vWin(v);
+  const st=!v.phase||v.phase===PHASE[nat]?nat:v.phase==='over'?'over':v.phase==='arising'?'arising':v.phase;
   const base=st==='active'&&w&&w.ms===null&&w.to===null?RHYTHM.standing:RHYTHM[st];
   if(!base)return null;
   const as=venueArenas(v).filter(a=>!a.frozenAt);
@@ -2099,7 +2108,7 @@ function renderNow(){keepPlace(()=>{
        a stage of the work but what is left of it */
     '<button class="culimbo vlimbotab'+(tab==='over'?' on':'')+'" data-act="nowTab" data-t="over" aria-pressed="'+(tab==='over')+'">'+
       '<span class="culfog" aria-hidden="true"></span>'+LIMBO_GHOST+'<span class="culc">Limbo</span><b>'+by.over.length+'</b></button>'+
-    '<span class="wsay">'+(tab==='over'?(by.over.length?'Over, each waiting until you let it go with ✕ — or drag its end on to bring it back.':'Nothing in Limbo.'):
+    '<span class="wsay">'+(tab==='over'?(by.over.length?'Over, each waiting until you let it go with ✕ \u2014 or drag its end on, or put it in another section from its panel.':'Nothing in Limbo.'):
       due?'<b>'+due+'</b> '+(due===1?'venue here is':'venues here are')+' due for a visit.':'Nothing here is due for a visit.')+'</span>'+
     '<span class="vkey"><i class="vgl ev"></i>event days<i class="vkbar"></i>window, by how much goes on<i class="vkp"></i>due</span></div>';
   h+='<div class="vaxis"><span class="vaxl">'+NOW_TABS[tab].name+'</span><div class="vaxt">'+nowAxisHTML(sp)+'</div><span></span></div>';
@@ -2161,7 +2170,15 @@ function vPlaceHTML(v){
     '<button class="btn primary" data-act="vPlace" data-v="'+v.id+'" data-p="venues" title="Move it to Venues, where it comes round for visits">→ Venues</button>'+
     (v.place==='new'?'<button class="btn" data-act="vPlace" data-v="'+v.id+'" data-p="board" title="Leave it on the board to think about">Keep on board</button>':'')+
     '<button class="btn ghost" data-act="vRemove" data-v="'+v.id+'" title="Off the board; the agent will not bring it back">Remove</button></div>';
-  return '<div class="vplace st-venues"><span><b>'+esc(vPlaceSay(v))+'</b></span>'+
+  /* in Venues: the section it stands in, any of which can be chosen by
+     hand, and the way back to the board */
+  const ph=vPhase(v),nat=vPhaseByDates(v);
+  return '<div class="vplace st-venues"><span><b>In Venues</b>'+
+      (v.phase&&v.phase!==nat?'<i>put here by you; its dates say '+PHASE_SAY[nat]+'</i>':'')+'</span>'+
+    '<span class="vphseg" role="group" aria-label="Section in Venues">'+['arising','active','dying','over'].map(k=>
+      '<button class="'+(k===ph?'on':'')+'" data-act="vPhase" data-v="'+v.id+'" data-ph="'+k+'" aria-pressed="'+(k===ph)+'" title="'+
+        (k===nat?'Where its dates put it':'Put it in '+PHASE_SAY[k]+' by hand')+'">'+PHASE_SAY[k]+'</button>').join('')+'</span>'+
+    (v.phase?'<button class="vreset" data-act="vPhase" data-v="'+v.id+'" data-ph="" title="Let its dates decide again">by its dates</button>':'')+
     '<button class="btn ghost" data-act="vPlace" data-v="'+v.id+'" data-p="board" title="Take it out of Venues; it stays on the board">Back to the board</button></div>';
 }
 function venueReadHTML(v){
@@ -4446,7 +4463,15 @@ document.addEventListener('click',e=>{
        landed in, so it is seen where it went. */
     case 'vPlace':{const v=venue(b.dataset.v);if(!v||!['board','venues'].includes(b.dataset.p))break;
       v.place=b.dataset.p;
+      if(v.place==='board')delete v.phase;
       if(v.place==='venues'){const ph=vPhase(v);S.ui.nowTab=ph;}
+      save();renderAll();break;}
+    /* a section chosen by hand; the one its dates give, or "by its dates",
+       hands it back to them. The tab follows it, so it is seen where it went. */
+    case 'vPhase':{const v=venue(b.dataset.v);if(!v)break;
+      const k=b.dataset.ph;
+      if(!k||k===vPhaseByDates(v))delete v.phase;else v.phase=k;
+      S.ui.nowTab=vPhase(v);
       save();renderAll();break;}
     case 'vWinReset':{const v=venue(b.dataset.v);if(!v)break;
       v.opens=null;v.closes=null;
