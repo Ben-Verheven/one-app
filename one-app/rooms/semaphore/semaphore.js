@@ -158,7 +158,7 @@ const NAME_MIN=140,NAME_MAX=560;
 function blank(){
   return {v:1,types:defaultTypes(),arenas:[],venues:[],
     ui:{q:'',collapsed:{},view:'now',
-        boardSort:'date',nameW:null,freezerOpen:false,nowTab:'active',keptOpen:false}};
+        boardSort:'date',nameW:null,freezerOpen:false,nowTab:'active',keptOpen:false,shOpen:{}}};
 }
 /* An arena remembers which of its own dates it is waiting for. That goes stale
    the moment the dates change, so this puts it straight — a wait ends when the
@@ -336,6 +336,8 @@ function migrate(s){
     ui.nowTab = ['arising','active','dying','over'].includes(u.nowTab) ? u.nowTab : 'active';
     /* whether the board's tray lists what is kept on the board as well */
     ui.keptOpen = u.keptOpen===true;
+    /* which shared venues on the board are unfolded to show their arenas */
+    ui.shOpen = map(u.shOpen) || {};
     s.ui=ui;
   }
   const first=new Map();
@@ -944,24 +946,54 @@ function boardRow(a,bg){
    band in the colour of where it stands, since the row is its alone. An
    arena in the freezer does not count. */
 function isShared(v){return v.arenas.filter(id=>{const a=arena(id);return a&&!a.frozenAt;}).length>1;}
+/* Each shared venue is one line, folded (Mark, 2026-10-15): its name, how
+   many arenas it serves, and its window drawn as on the arena rows, thin
+   once it is in Venues. Unfolded by its caret, the arenas stand under it
+   one to a line, each with its own calls drawn as on its own row, held to
+   the venue by a rule down the left and the venue's window shaded faintly
+   behind them, its event days a line through them, so a call can be read
+   against the event. The tags under the name, two to a line, did not
+   line up with anything. */
 function sharedRows(bg){
   const vs=visibleVenues().filter(isShared);
   if(!vs.length)return '';
   const by=v=>{const w=vWin(v);return w&&w.from!==null?w.from:w?-1e15:1e15;};
   vs.sort((x,y)=>by(x)-by(y)||x.name.localeCompare(y.name));
   const col=!!S.ui.collapsed.shared,fresh=vs.some(v=>v.place==='new');
-  const now=T(todayISO());
+  const now=T(todayISO()),nowLine=now>=T0&&now<=T1?'<div class="now" style="left:'+X(now)+'%"></div>':'';
+  const tyAt=new Map(S.types.map((t,i)=>[t.id,i]));
   let h='<div class="grp shgrp'+(col?' collapsed':'')+'"><div class="ghead"><div class="gc">'+
     '<button class="caret" data-act="toggleGroup" data-id="shared" aria-label="Collapse group">'+(col?'\u25B8':'\u25BE')+'</button>'+
     '<span class="gname">Shared venues</span><span class="gcount">'+vs.length+'</span>'+
     (fresh?'<i class="newdot" title="Something new from the agent here"></i>':'')+'</div></div>';
-  if(!col)for(const v of vs){
-    const vt=venueTracks([v],false);
-    h+='<div class="row shrow"><div class="cell name">'+
-      '<span class="shnm">'+vGlyph(v)+'<button class="nm" data-act="openVenue" data-v="'+v.id+'" title="'+esc(v.name)+'">'+esc(v.name)+'</button>'+
-        (v.place==='new'?'<i class="newdot"></i>':'')+'</span>'+vArenaChips(v)+'</div>'+
-      '<div class="lane" style="height:'+Math.max(46,vt.height)+'px;background-image:'+bg+'" data-t0="'+T0+'" data-t1="'+T1+'">'+vt.h+
-        (now>=T0&&now<=T1?'<div class="now" style="left:'+X(now)+'%"></div>':'')+'</div></div>';
+  if(col)return h+'</div>';
+  for(const v of vs){
+    const open=!!S.ui.shOpen[v.id];
+    const as=venueArenas(v).filter(a=>!a.frozenAt)
+      .sort((x,y)=>(tyAt.has(x.typeId)?tyAt.get(x.typeId):99)-(tyAt.has(y.typeId)?tyAt.get(y.typeId):99)||boardOrder()(x,y));
+    const vt=venueTracks([v],true);
+    h+='<div class="shblock'+(open?' open':'')+' st-'+v.place+'"><div class="row shrow"><div class="cell name">'+
+      '<button class="shcar" data-act="shOpen" data-v="'+v.id+'" aria-expanded="'+open+'" title="'+(open?'Fold the arenas away':'Show the arenas it serves, with their calls')+'">'+(open?'\u25BE':'\u25B8')+'</button>'+
+      vGlyph(v)+'<button class="nm" data-act="openVenue" data-v="'+v.id+'" title="'+esc(v.name)+'">'+esc(v.name)+'</button>'+
+      (v.place==='new'?'<i class="newdot"></i>':'')+
+      '<span class="shtag" title="'+esc(as.map(a=>a.name).join(', '))+'">'+as.length+' arenas</span></div>'+
+      '<div class="lane" style="height:'+Math.max(36,vt.height)+'px;background-image:'+bg+'" data-t0="'+T0+'" data-t1="'+T1+'">'+vt.h+nowLine+'</div></div>';
+    if(open){
+      const w=vWin(v);
+      let shade='';
+      if(w){
+        const a=w.from===null?T0:Math.max(T0,w.from),b=w.to===null?Math.min(T1,Math.max(now,w.from===null?now:w.from)+OPEN_RUN*DAY):Math.min(T1,w.to+DAY);
+        if(b>T0&&a<T1)shade='<i class="shwin" style="left:'+X(a).toFixed(2)+'%;width:'+(X(b)-X(a)).toFixed(2)+'%"></i>';
+        if(w.ms!==null)shade+='<i class="shday" style="left:'+X(w.ms+DAY/2).toFixed(2)+'%"></i>';
+      }
+      for(const a of as){
+        const ln=laneHTML(a,[]),tone=arenaTone(a);
+        h+='<div class="row shsub"><div class="cell name">'+
+          '<button class="cuat'+(tone?' toned':'')+'" data-act="openArena" data-id="'+a.id+'"'+(tone?' style="--tone:'+esc(tone)+'"':'')+' title="'+esc(a.name)+'">'+esc(a.name)+'</button></div>'+
+          '<div class="lane" style="height:'+ln.height+'px;background-image:'+bg+'" data-t0="'+T0+'" data-t1="'+T1+'">'+shade+ln.h+'</div></div>';
+      }
+    }
+    h+='</div>';
   }
   return h+'</div>';
 }
@@ -4299,6 +4331,7 @@ document.addEventListener('click',e=>{
       ar.frozenAt=null;save();renderAll();break;}
     case 'toggleFreezer':S.ui.freezerOpen=!S.ui.freezerOpen;save();renderFreezer();break;
     case 'trayKept':S.ui.keptOpen=!S.ui.keptOpen;save();renderBoard();break;
+    case 'shOpen':{const k=b.dataset.v;if(S.ui.shOpen[k])delete S.ui.shOpen[k];else S.ui.shOpen[k]=true;save();renderBoard();break;}
     /* Quick, but not one slip from gone: the first press turns the cross into
        the word, a second within three seconds removes the link. The button is
        changed in place rather than redrawn, so nothing else on the wall moves
