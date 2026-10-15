@@ -212,6 +212,7 @@ async function watchlist() {
       start: d.start, end: d.end, grade: d.grade, note: d.note ?? "",
     })),
     agent_checked_at: last[a.id] ?? null,
+    ask_at: a.askAt ?? null,
   }));
   // A venue's visits are Mark's: only the day of the last one is passed on,
   // so the agent can tell a venue he goes to from one he never opens.
@@ -223,6 +224,7 @@ async function watchlist() {
     pages: (v.pages ?? []).map(link),
     last_visit: v.visits.length ? v.visits[v.visits.length - 1].at : null,
     agent_checked_at: last["venue:" + v.id] ?? null,
+    ask_at: v.askAt ?? null,
   }));
 
   const { data: recent } = await db

@@ -1779,17 +1779,29 @@ function vAgentHTML(v){
   return '<button class="vagent'+(on?' on':'')+'" data-act="vAgent" data-v="'+v.id+'" title="'+tip+'" aria-pressed="'+on+'">'+
     (on?'Agent asked':'Ask agent')+'</button>';
 }
+/* An arena can be asked about the same way (Mark, 2026-10-15), from the
+   head of its panel: the agent then goes through its calls first — every
+   round, its exact published dates and stages — and its links, texts and
+   venues. The log names an arena by its own id. */
+function arenaAgentHTML(a){
+  const on=!!a.askAt;
+  const tip=on?'The agent looks at this arena on its next night run — press to take the ask back':
+    'Ask the agent to check this arena — its call dates, links and venues — on its next night run';
+  return '<button class="vagent'+(on?' on':'')+'" data-act="aAgent" data-id="'+a.id+'" title="'+tip+'" aria-pressed="'+on+'">'+
+    (on?'Agent asked':'Ask agent')+'</button>';
+}
 function refreshAsks(){
-  const asked=(S.venues||[]).filter(v=>v.askAt);
+  const asked=(S.venues||[]).filter(v=>v.askAt).concat(S.arenas.filter(a=>a.askAt));
   const api=(typeof Hub!=='undefined'&&Hub.api)?Hub.api('semaphore-inbox'):null;
   if(!asked.length||!api||!api.ready()||!api.visits)return;
-  const since=asked.map(v=>v.askAt).sort()[0];
+  const since=asked.map(x=>x.askAt).sort()[0];
   api.visits(since,(rows,err)=>{
     if(err||!rows)return;
     let done=false;
     for(const r of rows){
-      const v=String(r.arena_id||'').startsWith('venue:')&&venue(r.arena_id.slice(6));
-      if(v&&v.askAt&&Date.parse(r.checked_at)>=Date.parse(v.askAt)){delete v.askAt;done=true;}
+      const id=String(r.arena_id||'');
+      const x=id.startsWith('venue:')?venue(id.slice(6)):arena(id);
+      if(x&&x.askAt&&Date.parse(r.checked_at)>=Date.parse(x.askAt)){delete x.askAt;done=true;}
     }
     if(done){save();renderAll();renderDrawer();}
   });
@@ -2517,6 +2529,7 @@ function readHTML(a){
       '<button class="x" data-act="closeDrawer" aria-label="Close">\u2715</button>'+
       '<h2 id="aname">'+esc(a.name)+'</h2>'+
       '<p class="meta">'+esc(typeName(a.typeId))+(tags?'<i>\u00B7</i>'+tags:'')+'</p>'+
+      '<div class="vchrow">'+arenaAgentHTML(a)+'</div>'+
     '</div>'+
     frozen+
     '<div class="blocks">'+blocks+(a.frozenAt?'':rotBarHTML(a))+'</div>'+
@@ -2661,6 +2674,7 @@ function renderDrawer(){
 function openDrawer(id,dateId){
   drawer.id=id;drawer.vid=null;drawer.vnew=null;drawer.edit=null;drawer.hi=dateId||null;drawer.editing=false;drawer.scope=null;
   renderDrawer();
+  refreshAsks();
   /* the panel is fixed inside a box that scrolls; focusing it without this
      asks the browser to bring it into view, and the board jumps to the top */
   $('#card').focus({preventScroll:true});
@@ -4417,6 +4431,9 @@ document.addEventListener('click',e=>{
       applyView();break;}
     case 'vAgent':{const v=venue(b.dataset.v);if(!v)break;
       if(v.askAt)delete v.askAt;else v.askAt=new Date().toISOString();
+      save();renderDrawer();break;}
+    case 'aAgent':{const ar=arena(id);if(!ar)break;
+      if(ar.askAt)delete ar.askAt;else ar.askAt=new Date().toISOString();
       save();renderDrawer();break;}
     case 'vUnstamp':{const v=venue(b.dataset.v);if(!v)break;
       v.visits=v.visits.filter(x=>x.at!==todayISO());

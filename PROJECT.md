@@ -321,9 +321,10 @@ leans to completeness: anything with matchmaking goes on the board, a
 month-only date as a dashed guess, a few misfires accepted. Its rules are
 in the task's instruction, and
 [semaphore-decisions](notes/semaphore-decisions.md) says why. Ask agent
-on a venue's panel puts a moment on it (`askAt`) that the scan takes
+on a venue's panel, or at the head of an arena's (since 2026-10-15, for its
+call dates above all), puts a moment on it (`askAt`) that the scan takes
 first, and the app takes the ask off once the agent's log shows a look at
-that venue after it. The gatekeeper's `board` gives it the whole board but
+that venue or arena after it. The gatekeeper's `board` gives it the whole board but
 the leads, venues and all, and `edit` lets it add and correct venues, add
 an arena or a page to one, add, change and delete call dates, and change
 the arenas' links and two texts, straight on the board, which the room
