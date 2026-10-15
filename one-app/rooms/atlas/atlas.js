@@ -611,18 +611,32 @@ function toast(msg) {
 const Store = {
   KEY: "atlas-edits-v1",
   TS: "atlas-edits-v1-ts",
+  /* Edits stored but unreadable start the room empty and are never
+     written over: the first edit made afterwards used to replace every
+     one of them with itself. Only a whole set handed over (applyState —
+     the cloud, an import, a restore point) lifts the refusal, as it does
+     for the Marketplace's board and the notes. */
   async load() {
+    let r = null;
+    try { r = await window.storage.get(Store.KEY); }
+    catch (e) { return []; }   /* storage unavailable: nothing to protect */
+    if (!r || !r.value) return [];
     try {
-      const r = await window.storage.get(Store.KEY);
-      if (r && r.value) return JSON.parse(r.value).edits || [];
-    } catch (e) { /* first run or storage unavailable */ }
+      const d = JSON.parse(r.value);
+      if (d && Array.isArray(d.edits)) return d.edits;
+    } catch (e) { console.error("atlas: unreadable edits", e); }
+    Store.unread = true;
+    Hub.note("The Atlas could not read its saved edits — starting without them, and saving nothing. " +
+      "They are untouched until the cloud or an import brings them back.", 10000);
     return [];
   },
   async save(edits) {
+    if (Store.unread) return;
     try { await window.storage.set(Store.KEY, JSON.stringify({ v: 1, edits })); }
     catch (e) { Store.volatile = true; }
   },
   volatile: false,
+  unread: false,
 };
 
 // ---------- state ----------------------------------------------------------
@@ -663,6 +677,7 @@ const State = {
 // The stamp is an ISO date because that is what the sync weighs against
 // the cloud row's own updated_at.
 async function saveEdits() {
+  if (Store.unread) return;
   await Store.save(Core.getEdits());
   try { await window.storage.set(Store.TS, new Date().toISOString()); } catch (e) {}
   try { Hub.emit("atlas:saved"); } catch (e) {}
@@ -2493,6 +2508,7 @@ try{ Hub.expose('atlas',{
   applyState:  function(s){
     if(!s || !(s.edits instanceof Array)) return false;
     adopted = true;
+    Store.unread = false;
     Core.setEdits(s.edits);
     Store.save(s.edits);
     refresh();

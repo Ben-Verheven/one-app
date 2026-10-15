@@ -1704,6 +1704,12 @@ function journalBlob(){
 /* The one place the journal's top-level records are installed — four
    doors lead here. */
 function applyJournal(j){
+  /* A whole journal handed in is the recovery a refusal to save was
+     waiting for (see load). Left set, the cloud's copy taken over a
+     journal that would not read was drawn and never written, nothing
+     after it was saved or sent, and the next open read the same broken
+     text again. load() sets it again after its own empty journal. */
+  loadFailed=false;
   calls=j.calls||{};
   projects=j.projects||{};
   /* Backbones joined at schema 3 rather than at a bump of their own: a
@@ -2834,6 +2840,9 @@ function importData(input){
          then made you dismiss a second box to be told it had worked — so
          the report is a toast now, which is what this app reports on. */
       var merge=function(){
+        /* what is imported into a journal that would not read is the
+           journal now, and may be saved (see applyJournal) */
+        loadFailed=false;
         var remap={};
         Object.keys(inCalls).forEach(function(id){
           var inc=inCalls[id];

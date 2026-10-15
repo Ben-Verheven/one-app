@@ -88,10 +88,17 @@ function tagColor(key){
    rather than stripped, because rewriting a saved file to delete a key
    is a risk taken for tidiness alone. */
 var KEY='notes.v1';
+/* Set when something is stored under the key and it would not read. The
+   note below promised the old blob was untouched, and the first note
+   typed afterwards wrote the empty heap over it; now nothing is written
+   until a whole heap arrives through applyState — from the cloud, an
+   import or a restore point — as the Marketplace's board refuses too. */
+var unread=false;
 var store=load();
 function load(){
+  var raw=null;
   try{
-    var raw=localStorage.getItem(KEY);
+    raw=localStorage.getItem(KEY);
     if(raw){var s=JSON.parse(raw);
       if(s&&s.v===1&&s.notes instanceof Array){
         s.shelf=s.shelf||[];
@@ -101,9 +108,12 @@ function load(){
         s.pins=(s.pins&&typeof s.pins==='object')?s.pins:{};
         return s;
       }}
-  }catch(e){console.error('notes: unreadable store',e);
-    Hub.note('Notes could not read its saved data — starting empty. '
-      +'The old blob is untouched under notes.v1.',10000);}
+  }catch(e){console.error('notes: unreadable store',e);}
+  if(raw){
+    unread=true;
+    Hub.note('Notes could not read its saved data — starting empty, and saving nothing. '
+      +'The old blob is untouched under notes.v1 until the cloud or an import brings the notes back.',10000);
+  }
   return {v:1,notes:[],shelf:[],view:'shelf',ties:[],colors:{},pins:{}};
 }
 /* Structural saves — a tag added, a note made or deleted, the shelf
@@ -111,6 +121,7 @@ function load(){
    saves come through the debounce below and repaint nothing, so typing
    never fights a re-render. */
 function save(structural){
+  if(unread){if(structural){shelve();render();}return;}
   try{
     localStorage.setItem(KEY,JSON.stringify(store));
     /* An ISO date, because the bridge weighs this against the cloud row's
@@ -3246,6 +3257,7 @@ Hub.expose('notes',{
        in the new one, so the room comes back to the top of the shelf. */
     cur='*';curTemp=false;curPage=null;SQ='';panel={id:null,slot:null};
     arranging=false;editing=false;
+    unread=false;
     save(true);
     return true;
   }
