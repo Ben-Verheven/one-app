@@ -10,3 +10,4 @@
 - Within a site the list reads New, then Interesting, then Later, then the rest, each newest first (2026-10-16). Wants several entries picked at once and flagged together. Does not want long values hidden behind a "Show all"
 - Chose an all-light page over the Marketplace's dark ground and over a dark list with a light entry, compared on full-size mock-ups (2026-10-16). In an entry he wants the project description central: the long texts down the middle, project description first, every short fact in a narrow column beside them
 - Removed "All sites": he works one site at a time, and the page opens on the first site (2026-10-16)
+- Kept the arena names in the entry rows' type, over a bookish and a plain screen type shown beside it; what he disliked in the arena cards was the typewriter type of the counts under them (2026-10-16)
