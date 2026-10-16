@@ -276,11 +276,26 @@ input[type="search"]:focus{outline:none;border-color:var(--key)}
 #sheet .bar button.pw-l.on{border-color:#3A342B;background:#3A342B;color:#F6F1E6}
 #sheet .bar button.pw-b.on{color:var(--muted);background:rgba(42,38,32,.08);text-decoration:line-through}
 /* Mark's notes on a call, as long as he writes them */
-#sheet .pw-memo{display:block;width:100%;min-height:46vh;margin-top:14px;padding:12px 13px;resize:vertical;
+/* Mark's notes on a call, as long as he writes them, with the formatting
+   the desk lets him keep (bold, headings, lists, links, tables); on the
+   phone it is set with the iPhone's own B I U menu over a selection. */
+#sheet .pw-memo{position:relative;min-height:46vh;margin-top:14px;padding:12px 13px;
   border:1px solid var(--line);border-radius:var(--radius);background:var(--field);
-  font:16px/1.55 var(--body);color:var(--ink);-webkit-appearance:none}
+  font:16px/1.55 var(--body);color:var(--ink);overflow-wrap:anywhere;-webkit-user-select:text;user-select:text}
 #sheet .pw-memo:focus{outline:none;border-color:var(--key)}
-#sheet .pw-memo::placeholder{color:var(--faint);font-style:italic}
+#sheet .pw-memo.blank::before{content:attr(data-placeholder);position:absolute;top:12px;left:13px;right:13px;
+  color:var(--faint);font-style:italic;pointer-events:none}
+#sheet .pw-memo p{margin:0 0 .7em;font:inherit;white-space:normal}
+#sheet .pw-memo h3,#sheet .pw-memo h4{margin:1em 0 .35em;font:600 17px/1.4 var(--sans)}
+#sheet .pw-memo h4{font-size:15.5px}
+#sheet .pw-memo ul,#sheet .pw-memo ol{margin:0 0 .7em;padding-left:1.4em}
+#sheet .pw-memo > :first-child,#sheet .pw-memo li > p{margin-top:0}
+#sheet .pw-memo li > p{margin-bottom:.2em}
+#sheet .pw-memo blockquote{margin:0 0 .7em;padding-left:12px;border-left:2px solid var(--line2);color:var(--muted)}
+#sheet .pw-memo a{color:var(--notice-ink)}
+/* a table pasted at the desk is wider than a phone: it slides sideways */
+#sheet .pw-memo table{display:block;max-width:100%;overflow-x:auto;border-collapse:collapse;margin:0 0 .7em;font-size:14px}
+#sheet .pw-memo td,#sheet .pw-memo th{border:1px solid var(--line);padding:4px 8px;vertical-align:top;text-align:left}
 </style>
 </head>
 <body>
@@ -676,7 +691,7 @@ function pwDrawArenas(){
     });
     host.appendChild(b);
   });
-  var s = pwSite(pwView.site), doc = pwDocs(s.id), noted = !!(pwNotes[s.id] || '').trim();
+  var s = pwSite(pwView.site), doc = pwDocs(s.id), noted = !!pwNoteText(pwNotes[s.id]);
   call.className = 'pw-call';
   call.appendChild(el('span', 'pw-cn', s.call || ''));
   if (doc){
@@ -990,30 +1005,85 @@ function pwStoreMine(part, changes){
   pwQueue = run.then(null, function(){});
   return run;
 }
+/* What a note may hold: the desk page's cleanNote, copied as it stands
+   there (partner-watch/index.html, "What a note may hold"), so a note keeps
+   the same shape whichever side wrote it: rebuilt from a short list of
+   tags, the bold or italic Word and Google Docs write as a style turned
+   into the tag, and nothing of the page it was pasted from. A note written
+   before the notes took formatting is plain text. */
+var PW_NOTE_TAGS = { B:'b', STRONG:'b', I:'i', EM:'i', U:'u', S:'s', STRIKE:'s', DEL:'s', SUB:'sub', SUP:'sup',
+  P:'p', DIV:'p', BR:'br', UL:'ul', OL:'ol', LI:'li', H1:'h3', H2:'h3', H3:'h3', H4:'h4', H5:'h4', H6:'h4',
+  BLOCKQUOTE:'blockquote', A:'a', TABLE:'table', THEAD:'thead', TBODY:'tbody', TR:'tr', TD:'td', TH:'th' };
+var PW_NOTE_DROP = /^(SCRIPT|STYLE|META|LINK|TITLE|HEAD|IFRAME|OBJECT|EMBED|SVG|MATH|NOSCRIPT|TEMPLATE|IMG|PICTURE|VIDEO|AUDIO|CANVAS|BUTTON|INPUT|SELECT|TEXTAREA|FORM)$/;
+function pwEsc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]; }); }
+function pwCleanNote(html){
+  var t = document.createElement('template'); t.innerHTML = html || '';
+  function walk(node){
+    var out = '';
+    node.childNodes.forEach(function(n){
+      if (n.nodeType === 3){ out += pwEsc(n.nodeValue); return; }
+      if (n.nodeType !== 1 || PW_NOTE_DROP.test(n.tagName)) return;
+      var st = n.getAttribute('style') || '', tag = PW_NOTE_TAGS[n.tagName], inner = walk(n);
+      if (tag === 'b' && /font-weight\s*:\s*(normal|[1-5]00)\b/i.test(st)) tag = null;
+      if (tag !== 'b' && /font-weight\s*:\s*(bold|[6-9]00)\b/i.test(st)) inner = '<b>' + inner + '</b>';
+      if (tag !== 'i' && /font-style\s*:\s*italic/i.test(st)) inner = '<i>' + inner + '</i>';
+      if (tag !== 'u' && /text-decoration[^;]*underline/i.test(st)) inner = '<u>' + inner + '</u>';
+      if (tag === 'br') out += '<br>';
+      else if (tag === 'a'){
+        var href = n.getAttribute('href') || '';
+        out += /^(https?:|mailto:)/i.test(href) ? '<a href="' + pwEsc(href) + '" target="_blank" rel="noopener">' + inner + '</a>' : inner;
+      } else out += tag ? '<' + tag + '>' + inner + '</' + tag + '>' : inner;
+    });
+    return out;
+  }
+  return walk(t.content);
+}
+function pwParasHtml(t){ return String(t).split(/\n\s*\n/).map(function(p){ return '<p>' + pwEsc(p).replace(/\n/g, '<br>') + '</p>'; }).join(''); }
+function pwNoteHtml(v){ return /^\s*</.test(v || '') ? pwCleanNote(v) : (v ? pwParasHtml(v) : ''); }
+function pwNoteText(v){ var t = document.createElement('template'); t.innerHTML = pwNoteHtml(v); return t.content.textContent.trim(); }
 /* Mark's notes on a call: written in the sheet, and saved when the field
    is left — tapping beside the sheet, closing it or putting the phone
    away — so a sheet that closes never costs what was typed. */
 function pwOpenNotes(id){
-  var s = pwSite(id), doc = pwDocs(id), saved = pwNotes[id] || '';
+  /* Only what was typed is saved: a note merely read is left as it is in
+     the cloud, even a plain-text one the field shows as paragraphs. */
+  var s = pwSite(id), doc = pwDocs(id), dirty = false;
   function save(){
-    var text = ta.value;
-    if (text === saved) return;
-    saved = text;
+    if (!dirty) return;
+    dirty = false;
+    var text = pwCleanNote(ta.innerHTML);
+    /* a note emptied down to a bare paragraph is kept as no note at all */
+    if (!pwNoteText(text) && !/<(li|table)/.test(text)) text = '';
     pwNotes[id] = text;
     pwDrawArenas();
     var ch = {}; ch[id] = text;
     pwStoreMine('notes', ch).then(function(){ toast('Notes saved'); }, function(err){
-      saved = null;
+      dirty = true;
       toast('Your notes were not saved: ' + (err && err.message ? err.message : 'no answer') + '. They are still in the field.', null, true);
     });
   }
-  var ta = el('textarea', 'pw-memo');
+  var ta = el('div', 'pw-memo');
+  ta.contentEditable = 'true';
+  ta.spellcheck = true;
+  ta.setAttribute('role', 'textbox');
+  ta.setAttribute('aria-multiline', 'true');
+  ta.setAttribute('aria-label', 'Your notes on the call');
+  ta.dataset.placeholder = 'What matters in this call: the deadline, the budget, who may apply, what they want to fund…';
+  ta.addEventListener('focus', function(){ document.execCommand('defaultParagraphSeparator', false, 'p'); });
+  ta.addEventListener('input', function(){ dirty = true; ta.classList.toggle('blank', !ta.textContent.trim() && !ta.querySelector('li,table')); });
+  ta.addEventListener('paste', function(ev){
+    var cd = ev.clipboardData, html = cd && cd.getData('text/html'), text = cd && cd.getData('text/plain');
+    if (!html && !text) return;
+    ev.preventDefault();
+    dirty = true;
+    document.execCommand('insertHTML', false, html ? pwCleanNote(html) : pwParasHtml(text));
+  });
   sheet(function(b, bar){
     b.appendChild(el('span', 'pw-label', 'Your notes on the call'));
     b.appendChild(el('h2', '', s.name));
     if (s.call) b.appendChild(el('div', 'pw-dsub', s.call));
-    ta.value = pwNotes[id] || '';
-    ta.placeholder = 'What matters in this call: the deadline, the budget, who may apply, what they want to fund…';
+    ta.innerHTML = pwNoteHtml(pwNotes[id]);
+    ta.classList.toggle('blank', !ta.innerHTML);
     ta.addEventListener('blur', save);
     b.appendChild(ta);
     if (doc){

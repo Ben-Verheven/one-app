@@ -743,7 +743,8 @@ var noteTimer = null;
    Word and Google Docs write as a style on a span is turned into the tag.
    Google Docs wraps a whole paste in a <b> that is not bold, so a <b>
    whose style says normal is no bold at all. Stored notes are rebuilt the
-   same way before they are shown. */
+   same way before they are shown. The phone's page (pocket/index.html
+   here) holds a copy of this cleaning as pwCleanNote; change both. */
 var NOTE_TAGS = { B:'b', STRONG:'b', I:'i', EM:'i', U:'u', S:'s', STRIKE:'s', DEL:'s', SUB:'sub', SUP:'sup',
   P:'p', DIV:'p', BR:'br', UL:'ul', OL:'ol', LI:'li', H1:'h3', H2:'h3', H3:'h3', H4:'h4', H5:'h4', H6:'h4',
   BLOCKQUOTE:'blockquote', A:'a', TABLE:'table', THEAD:'thead', TBODY:'tbody', TR:'tr', TD:'td', TH:'th' };
