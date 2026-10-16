@@ -66,6 +66,21 @@ button{font:inherit;color:inherit}
 .cols.noting{grid-template-columns:240px minmax(0,1fr)}
 .cols.noting > .col + .col{display:none}
 @media (max-width:1280px){ .cols.noting{grid-template-columns:200px minmax(0,1fr)} }
+/* On the iPad the arenas took a fifth of the screen from the entry for a
+   choice made once a session (Mark, 2026-10-16), so the column folds to a
+   rail that brings it back. It starts folded where the pointer is a
+   finger and open at the desk; either way the fold is kept per device. */
+.cols.folded{grid-template-columns:44px 360px minmax(0,1fr)}
+.cols.folded.noting{grid-template-columns:44px minmax(0,1fr)}
+@media (max-width:1280px){ .cols.folded{grid-template-columns:44px 300px minmax(0,1fr)} }
+.cols.folded > .col:first-child > :not(.unfold){display:none}
+.unfold{display:none;flex:1;flex-direction:column;align-items:center;gap:10px;width:100%;padding:12px 0;border:0;background:none;color:var(--faint);cursor:pointer;
+  font:11.5px/16px var(--serif);letter-spacing:.08em;text-transform:uppercase}
+.unfold:hover{background:var(--hover);color:var(--key2)}
+.unfold span{writing-mode:vertical-rl}
+.cols.folded .unfold{display:flex}
+.colhead .fold{margin:-6px -8px -6px auto;border:0;background:none;padding:6px 8px;border-radius:5px;color:var(--key);cursor:pointer;display:flex}
+.colhead .fold:hover{color:var(--key2);background:var(--hover)}
 .col{border-right:1px solid var(--line);min-width:0;display:flex;flex-direction:column;min-height:0}
 .scroll{overflow-y:auto;min-height:0;flex:1}
 /* One line height for both heads, whatever their type: the list's count in
@@ -256,9 +271,10 @@ button{font:inherit;color:inherit}
 
 <div class="cols">
   <div class="col">
-    <div class="colhead" style="justify-content:flex-start">Arenas<button class="editlinks" data-editlinks="1" title="Change the scrolls' links" aria-label="Change the call documents links"></button></div>
+    <div class="colhead" style="justify-content:flex-start">Arenas<button class="editlinks" data-editlinks="1" title="Change the scrolls' links" aria-label="Change the call documents links"></button><button class="fold" data-fold="1" title="Fold the arenas away" aria-label="Fold the arenas away"></button></div>
     <div class="scroll" id="sites"></div>
     <div class="runbox" id="runbox"></div>
+    <button class="unfold" data-fold="0" title="Show the arenas" aria-label="Show the arenas"></button>
   </div>
   <div class="col">
     <div class="colhead"><span id="listhead"></span><span class="meta" id="listcount"></span></div>
@@ -337,10 +353,11 @@ function all(path){
 var sites = [], entries = [], lastRun = null, byId = {};
 var view = { site:null, kind:'all', state:'open', q:'', id:null, tab:'fields' };
 try { Object.assign(view, JSON.parse(localStorage.getItem(VIEW) || '{}'), { q:'' }); } catch(e){}
+if (typeof view.fold !== 'boolean') view.fold = matchMedia('(pointer:coarse)').matches;
 var detail = {};          // id → { fields, page_text, versions }
 var $ = function(s){ return document.querySelector(s); };
 function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]; }); }
-function saveView(){ try { localStorage.setItem(VIEW, JSON.stringify({ site:view.site, kind:view.kind, state:view.state, id:view.id, tab:view.tab })); } catch(e){} }
+function saveView(){ try { localStorage.setItem(VIEW, JSON.stringify({ site:view.site, kind:view.kind, state:view.state, id:view.id, tab:view.tab, fold:view.fold })); } catch(e){} }
 function day(iso){ if (!iso) return ''; var d = new Date(iso);
   return d.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' }); }
 function stamp(iso){ if (!iso) return ''; var d = new Date(iso);
@@ -472,6 +489,9 @@ function drawSites(){
   $('#sites').innerHTML = h;
   $('.editlinks').innerHTML = PENCIL;
   $('.editlinks').hidden = editingLinks;
+  $('.fold').innerHTML = svg(16, '<path d="M15 6l-6 6 6 6"/>');
+  $('.unfold').innerHTML = svg(16, '<path d="M9 6l6 6-6 6"/>') + '<span>Arenas</span>';
+  $('.cols').classList.toggle('folded', view.fold);
   if (editingLinks && !Object.keys(typed).length){ var first = $('[data-linkfor]'); if (first) first.focus(); }
   var waiting = entries.filter(function(e){ return !e.fetched_at && !e.removed_at; }).length;
   $('#runbox').innerHTML = (lastRun
@@ -838,13 +858,14 @@ function checkNow(btn){
 }
 
 document.addEventListener('click', function(ev){
-  var t = ev.target.closest('[data-pick],[data-bulk],[data-site],[data-id],[data-state],[data-kind],[data-tab],[data-verdict],[data-editlinks],[data-savelinks],[data-cancellinks],[data-callnote],#checkNow');
+  var t = ev.target.closest('[data-pick],[data-bulk],[data-site],[data-id],[data-state],[data-kind],[data-tab],[data-verdict],[data-editlinks],[data-savelinks],[data-cancellinks],[data-callnote],[data-fold],#checkNow');
   if (!t) return;
   if (t.id === 'checkNow') return checkNow(t);
   if (t.dataset.editlinks) return editLinks();
   if (t.dataset.savelinks) return saveLinks();
   if (t.dataset.cancellinks) return cancelLinks();
   if (t.dataset.callnote) return openNote(t.dataset.callnote);
+  if (t.dataset.fold){ view.fold = t.dataset.fold === '1'; saveView(); return drawSites(); }
   if (t.dataset.pick) pick(t.dataset.pick, ev.shiftKey);
   else if (t.dataset.bulk) bulk(t.dataset.bulk);
   else if (t.dataset.site){ view.site = t.dataset.site; view.note = null; sel.clear(); regroup(); saveView(); draw(); }
