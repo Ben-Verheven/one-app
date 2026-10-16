@@ -72,7 +72,17 @@ button{font:inherit;color:inherit}
 .chip{font:12px var(--serif);color:var(--muted);border:1px solid var(--line);border-radius:99px;padding:2px 9px;background:none;cursor:pointer}
 .chip.on{color:var(--ink);border-color:var(--line2);background:rgba(216,205,184,.1)}
 .sep{width:100%;height:0}
-.row{display:grid;grid-template-columns:8px minmax(0,1fr);gap:9px;padding:9px 14px;border:0;border-top:1px solid var(--grid);cursor:pointer;background:none;width:100%;text-align:left}
+.row{display:grid;grid-template-columns:18px 8px minmax(0,1fr);gap:9px;padding:9px 14px 9px 10px;border-top:1px solid var(--grid);cursor:pointer}
+.row.picked{background:rgba(240,180,41,.08)}
+.row.on.picked{background:rgba(240,180,41,.14)}
+.pick{width:16px;height:16px;margin-top:3px;border:1px solid var(--line2);border-radius:4px;background:none;padding:0;cursor:pointer;display:flex;align-items:center;justify-content:center;font:11px/1 var(--mono);color:var(--paper)}
+.pick:hover{border-color:var(--key2)}
+.row.picked .pick{background:var(--gold-ink);border-color:var(--gold-ink)}
+.group{padding:10px 14px 5px;font:11.5px var(--serif);letter-spacing:.08em;text-transform:uppercase;color:var(--faint);border-top:1px solid var(--line);display:flex;justify-content:space-between}
+.bulk{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px 14px;border-top:1px solid var(--line);background:var(--gold-soft);flex:none}
+.bulk b{font:500 13.5px var(--serif);margin-right:4px}
+.bulk .act{padding:3px 10px;font-size:12.5px}
+.linkbtn{background:none;border:0;color:var(--key2);font:12.5px var(--serif);padding:2px 4px;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 .row:hover{background:rgba(216,205,184,.05)}
 .row.on{background:rgba(216,205,184,.11)}
 .row.gone .t,.row.binned .t{color:var(--muted)}
@@ -109,9 +119,6 @@ button{font:inherit;color:inherit}
 .fields{display:grid;grid-template-columns:190px minmax(0,1fr);gap:9px 18px;font-size:14.5px;margin:16px 0 0}
 .fields dt{color:var(--muted);font-size:13px;padding-top:2px}
 .fields dd{margin:0;min-width:0;white-space:pre-wrap;overflow-wrap:anywhere}
-.long{max-height:8.2em;overflow:hidden}
-.long.open{max-height:none}
-.more{background:none;border:0;color:var(--key2);font:12.5px var(--serif);padding:2px 0;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 .orig{background:var(--field);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;font:13px/1.65 var(--mono);color:var(--key2);white-space:pre-wrap;overflow-wrap:anywhere;margin-top:14px}
 .note{margin-top:14px;font-size:13px;color:var(--faint)}
 .hist{margin-top:16px;display:grid;grid-template-columns:170px minmax(0,1fr);gap:8px 16px;font-size:14px}
@@ -160,6 +167,7 @@ button{font:inherit;color:inherit}
   <div class="col">
     <div class="colhead"><span id="listhead">All sites</span><span class="meta" id="listcount"></span></div>
     <div class="filters" id="filters"></div>
+    <div class="bulk" id="bulk" hidden></div>
     <div class="scroll" id="rows"></div>
   </div>
   <div class="scroll" id="detwrap"><div class="det" id="det"></div></div>
@@ -262,6 +270,8 @@ function load(){
           || (b.posted || '').localeCompare(a.posted || '')
           || (+b.ext_id - +a.ext_id);
     });
+    entries.forEach(function(e, i){ e._i = i; });
+    regroup();
     $('#banner').hidden = true;
     draw();
   }).catch(function(e){
@@ -288,7 +298,20 @@ function passes(e){
   }
   return true;
 }
-function shown(){ return entries.filter(passes); }
+/* Within a site: what is new on top, then Interesting, then Later, then
+   the rest (Mark, 2026-10-16), each newest first. The group is fixed when
+   the list is drawn afresh — on loading, or on choosing a site, a filter or
+   a kind — and not when an entry is opened or flagged: an entry that jumped
+   to another group under the cursor would make ↓ skip or repeat entries. */
+var GROUPS = ['New', 'Interesting', 'Later', 'Seen', 'Binned'];
+function groupOf(e){
+  return e.verdict === 'interesting' ? 1 : e.verdict === 'later' ? 2 : e.verdict === 'bin' ? 4 : !e.opened_at ? 0 : 3;
+}
+function regroup(){ entries.forEach(function(e){ e._g = groupOf(e); }); }
+function shown(){
+  return entries.filter(passes).sort(function(a, b){ return (a._g - b._g) || (a._i - b._i); });
+}
+function isNew(e){ return !e.opened_at && !e.verdict; }
 
 /* ── drawing ───────────────────────────────────────────────────────── */
 function kindTag(k){ return k === 'seeks' ? '<span class="kind seeks">Seeks partners</span>'
@@ -302,7 +325,7 @@ function stateTags(e){
 }
 function drawSites(){
   function counts(list){
-    var n = list.filter(function(e){ return !e.opened_at && e.verdict !== 'bin'; }).length;
+    var n = list.filter(isNew).length;
     var s = list.filter(function(e){ return e.kind === 'seeks' && e.verdict !== 'bin'; }).length;
     return '<span>' + list.length + ' entries</span>' + (n ? '<span class="n">' + n + ' new</span>' : '')
          + (s ? '<span class="s">' + s + ' seek partners</span>' : '');
@@ -344,18 +367,67 @@ function drawRows(){
   if (!list.length){ $('#rows').innerHTML = '<div class="empty">No entries match. Try All, Both kinds, or clear the search.</div>'; return; }
   /* Drawn in one go: eight hundred rows of plain markup is quicker than any
      scheme for drawing only the visible ones, and keeps Find in page working. */
+  var per = {}; list.forEach(function(e){ per[e._g] = (per[e._g] || 0) + 1; });
+  var last = -1;
   $('#rows').innerHTML = list.map(function(e){
     var sub = [e.org && e.contact ? e.contact : null, view.site === 'all' ? siteOf(e).name : null, e.country].filter(Boolean).join(' · ');
-    return '<button class="row' + (e.id === view.id ? ' on' : '') + (e.removed_at ? ' gone' : '') + (e.verdict === 'bin' ? ' binned' : '')
-      + '" data-id="' + esc(e.id) + '"><span class="dot ' + (e.opened_at ? 'seen' : 'new') + '"></span><span style="min-width:0">'
+    var head = e._g !== last ? '<div class="group"><span>' + GROUPS[e._g] + '</span><span>' + per[e._g] + '</span></div>' : '';
+    last = e._g;
+    var picked = sel.has(e.id);
+    /* A row is a div and not a button, because the tick box inside it is
+       a button of its own, and a button may not hold another. */
+    return head + '<div class="row' + (e.id === view.id ? ' on' : '') + (picked ? ' picked' : '') + (e.removed_at ? ' gone' : '') + (e.verdict === 'bin' ? ' binned' : '')
+      + '" data-id="' + esc(e.id) + '" role="button" tabindex="0">'
+      + '<button class="pick" data-pick="' + esc(e.id) + '" aria-pressed="' + picked + '" aria-label="Select">' + (picked ? '✓' : '') + '</button>'
+      + '<span class="dot ' + (isNew(e) ? 'new' : 'seen') + '"></span><span style="min-width:0">'
       + '<div class="t">' + esc(title(e)) + '</div><div class="o">' + esc(sub) + '</div>'
-      + '<div class="tags">' + kindTag(e.kind) + stateTags(e) + '</div></span></button>';
+      + '<div class="tags">' + kindTag(e.kind) + stateTags(e) + '</div></span></div>';
   }).join('');
+  drawBulk();
 }
-function longBlock(id, text){
-  var lines = String(text).split('\n').length;
-  if (text.length < 420 && lines < 6) return esc(text);
-  return '<div class="long" id="' + id + '">' + esc(text) + '</div><button class="more" data-long="' + id + '">Show all</button>';
+/* ── choosing several ────────────────────────────────────────────────
+   The tick box picks an entry; shift picks every entry between it and the
+   last one picked; Ctrl or ⌘ on a row picks it too. With anything picked,
+   the bar's buttons and the keys I L B answer all of them at once. */
+var sel = new Set(), anchor = null;
+function drawBulk(){
+  var b = $('#bulk');
+  if (!sel.size){ b.hidden = true; return; }
+  b.hidden = false;
+  b.innerHTML = '<b>' + sel.size + ' selected</b>'
+    + '<button class="act" data-bulk="interesting">Interesting</button>'
+    + '<button class="act" data-bulk="later">Later</button>'
+    + '<button class="act" data-bulk="bin">Bin</button>'
+    + '<button class="act" data-bulk="none">Unsort</button>'
+    + '<button class="act" data-bulk="read">Mark seen</button>'
+    + '<span class="grow"></span>'
+    + '<button class="linkbtn" data-bulk="all">Select all ' + shown().length + '</button>'
+    + '<button class="linkbtn" data-bulk="clear">Clear</button>';
+}
+function pick(id, range){
+  if (range && anchor){
+    var list = shown(), a = list.findIndex(function(e){ return e.id === anchor; }), b = list.findIndex(function(e){ return e.id === id; });
+    if (a >= 0 && b >= 0){
+      list.slice(Math.min(a, b), Math.max(a, b) + 1).forEach(function(e){ sel.add(e.id); });
+      drawRows(); return;
+    }
+  }
+  if (sel.has(id)) sel.delete(id); else sel.add(id);
+  anchor = id;
+  drawRows();
+}
+function bulk(what){
+  if (what === 'all'){ shown().forEach(function(e){ sel.add(e.id); }); drawRows(); return; }
+  if (what === 'clear'){ sel.clear(); drawRows(); return; }
+  var list = [...sel].map(function(id){ return byId[id]; }).filter(Boolean);
+  var now = new Date().toISOString();
+  var vals = what === 'read' ? { opened_at:now }
+           : what === 'none' ? { verdict:null, decided_at:null }
+           : { verdict:what, decided_at:now };
+  if (what === 'read') list = list.filter(function(e){ return !e.opened_at; });
+  patchMany(list, vals);
+  sel.clear();
+  drawSites(); drawRows(); drawDetail();
 }
 function diff(oldT, newT){
   var a = String(oldT || '').split('\n'), b = String(newT || '').split('\n');
@@ -389,9 +461,11 @@ function drawDetail(){
     h += '<p class="note">Loading the entry…</p>';
   } else if (view.tab === 'fields'){
     /* Every label and value the entry page has, in the page's own order and
-       words: nothing is sorted into boxes of ours, so nothing can fall out. */
+       words: nothing is sorted into boxes of ours, so nothing can fall out.
+       Long values are shown whole: Mark does not want them behind a
+       "Show all" (2026-10-16). */
     h += '<dl class="fields">' + (d.fields || []).map(function(f, i){
-      return '<dt>' + esc(f[0]) + '</dt><dd>' + (f[1] ? longBlock('f' + i, f[1]) : '<span style="color:var(--faint)">empty on the site</span>') + '</dd>'; }).join('') + '</dl>';
+      return '<dt>' + esc(f[0]) + '</dt><dd>' + (f[1] ? esc(f[1]) : '<span style="color:var(--faint)">empty on the site</span>') + '</dd>'; }).join('') + '</dl>';
   } else if (view.tab === 'orig'){
     h += '<div class="orig">' + esc(d.page_text || '') + '</div>'
       + '<p class="note">Copied ' + esc(stamp(e.fetched_at)) + ' from ' + esc(e.url) + '. A newer copy goes beside this one, never over it: older copies are under History.</p>';
@@ -418,6 +492,15 @@ function patch(e, vals){
     { method:'PATCH', body:vals, headers:{ Prefer:'return=minimal' } })
     .catch(function(err){ $('#banner').textContent = 'Not saved: ' + err.message; $('#banner').hidden = false; });
 }
+function patchMany(list, vals){
+  list.forEach(function(e){ Object.assign(e, vals); });
+  var ids = list.map(function(e){ return e.id; });
+  for (var i = 0; i < ids.length; i += 80){
+    var part = ids.slice(i, i + 80).map(function(id){ return encodeURIComponent('"' + id + '"'); }).join(',');
+    api('/rest/v1/partner_entries?id=in.(' + part + ')', { method:'PATCH', body:vals, headers:{ Prefer:'return=minimal' } })
+      .catch(function(err){ $('#banner').textContent = 'Not saved: ' + err.message; $('#banner').hidden = false; });
+  }
+}
 function openEntry(id){
   view.id = id; saveView();
   var e = byId[id];
@@ -435,9 +518,14 @@ function openEntry(id){
   }
 }
 function setVerdict(v){
+  if (sel.size) return bulk(v);
   var e = byId[view.id]; if (!e) return;
   var nv = e.verdict === v ? null : v;
+  /* A binned entry leaves the list at once, so the next one is opened in
+     its place; otherwise ↓ would start again from the top. */
+  var list = shown(), i = list.indexOf(e), next = nv === 'bin' && view.state !== 'bin' ? (list[i + 1] || list[i - 1]) : null;
   patch(e, { verdict:nv, decided_at:nv ? new Date().toISOString() : null });
+  if (next) return openEntry(next.id);
   drawSites(); drawRows(); drawDetail();
 }
 function checkNow(btn){
@@ -448,24 +536,25 @@ function checkNow(btn){
 }
 
 document.addEventListener('click', function(ev){
-  var t = ev.target.closest('[data-site],[data-id],[data-state],[data-kind],[data-tab],[data-verdict],[data-long],#checkNow');
+  var t = ev.target.closest('[data-pick],[data-bulk],[data-site],[data-id],[data-state],[data-kind],[data-tab],[data-verdict],#checkNow');
   if (!t) return;
   if (t.id === 'checkNow') return checkNow(t);
-  if (t.dataset.site){ view.site = t.dataset.site; saveView(); draw(); }
-  else if (t.dataset.id) openEntry(t.dataset.id);
-  else if (t.dataset.state){ view.state = t.dataset.state; saveView(); drawFilters(); drawRows(); }
-  else if (t.dataset.kind){ view.kind = t.dataset.kind; saveView(); drawFilters(); drawRows(); }
+  if (t.dataset.pick) pick(t.dataset.pick, ev.shiftKey);
+  else if (t.dataset.bulk) bulk(t.dataset.bulk);
+  else if (t.dataset.site){ view.site = t.dataset.site; sel.clear(); regroup(); saveView(); draw(); }
+  else if (t.dataset.id){ if (ev.ctrlKey || ev.metaKey || ev.shiftKey) pick(t.dataset.id, ev.shiftKey); else openEntry(t.dataset.id); }
+  else if (t.dataset.state){ view.state = t.dataset.state; sel.clear(); regroup(); saveView(); drawFilters(); drawRows(); }
+  else if (t.dataset.kind){ view.kind = t.dataset.kind; sel.clear(); regroup(); saveView(); drawFilters(); drawRows(); }
   else if (t.dataset.tab){ view.tab = t.dataset.tab; saveView(); drawDetail(); }
   else if (t.dataset.verdict) setVerdict(t.dataset.verdict);
-  else if (t.dataset.long){ var el = document.getElementById(t.dataset.long); el.classList.toggle('open');
-    t.textContent = el.classList.contains('open') ? 'Show less' : 'Show all'; }
 });
 document.addEventListener('change', function(ev){
   if (ev.target.id === 'why'){ var e = byId[view.id]; if (e) patch(e, { why:ev.target.value.trim() || null }); }
 });
 $('#search').addEventListener('input', function(){ view.q = this.value; drawRows(); });
-/* The keys: ↑ ↓ walk the list, I L B answer the open entry. Not while
-   typing, or a search for "Ireland" would flag three entries. */
+/* The keys: ↑ ↓ walk the list, I L B answer the open entry (or all the
+   picked ones), X picks the open entry, Esc lets go of the picked ones.
+   Not while typing, or a search for "Ireland" would flag three entries. */
 document.addEventListener('keydown', function(ev){
   if (ev.target.matches('input,textarea') || ev.metaKey || ev.ctrlKey || ev.altKey) return;
   var k = ev.key;
@@ -475,6 +564,12 @@ document.addEventListener('keydown', function(ev){
     if (n){ ev.preventDefault(); openEntry(n.id); }
   } else if (/^[ilb]$/i.test(k)){
     setVerdict({ i:'interesting', l:'later', b:'bin' }[k.toLowerCase()]);
+  } else if (/^x$/i.test(k) && view.id){
+    pick(view.id, ev.shiftKey);
+  } else if (k === 'Escape' && sel.size){
+    sel.clear(); drawRows();
+  } else if (k === 'Enter' && ev.target.dataset && ev.target.dataset.id){
+    openEntry(ev.target.dataset.id);
   }
 });
 

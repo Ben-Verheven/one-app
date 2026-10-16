@@ -61,12 +61,24 @@ ENT.yuml = "ÿ"; ENT.aelig = "æ"; ENT.eth = "ð"; ENT.thorn = "þ";
 const decode = (s) => s.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (m, e) =>
   e[0] === "#" ? String.fromCodePoint(e[1] === "x" || e[1] === "X" ? parseInt(e.slice(2), 16) : +e.slice(1))
   : (ENT[e] ?? ENT[e.toLowerCase()] ?? m));
+// A line break the writer typed (<br>) is kept apart from the end of a block
+// of the page's own layout: the first copier treated both alike and dropped
+// every empty line, which ran a long description's paragraphs together
+// (2026-10-16). Now a blank line the writer left stays one blank line, and
+// the line breaks of the page's source code count for nothing, as in a browser.
+const BR = "\u0001";
 const clean = (h) => decode(String(h)
   .replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/gi, "")
-  .replace(/<br\s*\/?>/gi, "\n")
+  .replace(/\s+/g, " ")
+  .replace(/<br\s*\/?>/gi, BR)
   .replace(/<\/(p|div|tr|li|h\d|label)>/gi, "\n")
   .replace(/<[^>]+>/g, " "))
-  .split("\n").map((l) => l.replace(/[ \t\u00a0]+/g, " ").trim()).filter(Boolean).join("\n");
+  .split("\n")
+  .map((block) => block.split(BR).map((l) => l.replace(/[ \t\u00a0]+/g, " ").trim()).join("\n").replace(/\n{3,}/g, "\n\n").trim())
+  .filter(Boolean).join("\n");
+// Two copies that differ only in spacing are the same entry: the change of
+// the cleaning above alone would otherwise have marked all of them changed.
+const flat = (t) => String(t ?? "").replace(/\s+/g, " ").trim();
 const one = (h) => clean(h).replace(/\n/g, " ");
 const hash = (s) => { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(16); };
 
@@ -239,13 +251,13 @@ async function readList(site, now) {
 async function copyEntry(e, platform, now) {
   const p = PARSERS[platform].detail(await get(e.url));
   if (!p.text) throw new Error("the entry page had no text");
-  const h = hash(p.text);
+  const h = hash(flat(p.text));
   const upd = {
     ...picked(p.fields), fields: p.fields, page_text: p.text, page_hash: h,
     fetched_at: now, needs_fetch: false, fetch_errors: 0,
   };
   let changed = false;
-  if (e.page_hash && e.page_hash !== h) {
+  if (e.page_text != null && flat(e.page_text) !== flat(p.text)) {
     // The copy it had goes into the history before the new one replaces it.
     const { error } = await db.from("partner_entry_versions").insert({
       entry_id: e.id, fields: e.fields, page_text: e.page_text, copied_at: e.fetched_at,
