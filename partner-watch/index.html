@@ -81,25 +81,27 @@ button{font:inherit;color:inherit}
 .site.on{background:var(--sel);border-left-color:var(--key2)}
 .site .nm{font:15px var(--serif)}
 .site .sub{font-size:12.5px;color:var(--muted)}
-/* The booklet: the call's documents, opened beside the page, and under it
-   the pencil that changes where it points. Both sit over the card rather
-   than in it, because a link inside the card's button is not allowed and
-   would not be clickable on its own. The pencil shows on the chosen arena
-   and under the pointer; on a touch screen there is no pointer to bring
-   it, so there it always shows. */
-.docs,.editlink{position:absolute;right:9px;display:flex;padding:4px;border:0;border-radius:5px;background:none;color:var(--key);cursor:pointer}
+/* The scroll opens the call's documents beside the page; the note under
+   it opens Mark's own notes on the call in the entry pane, its lines drawn
+   in once there is something written. Both sit over the card rather than
+   in it, because a link inside the card's button is not allowed and would
+   not be clickable on its own. */
+.docs,.cnote{position:absolute;right:9px;display:flex;padding:4px;border:0;border-radius:5px;background:none;color:var(--key);cursor:pointer}
 .docs{top:9px}
-.editlink{top:35px;opacity:0}
-.arena:hover .editlink,.arena.on .editlink,.editlink:focus-visible{opacity:1}
-@media (hover:none){ .editlink{opacity:1} }
-.docs:hover,.editlink:hover{color:var(--key2);background:var(--hover)}
-.arena.editing{padding:10px 12px 12px 14px;background:var(--sel)}
-.arena.editing .nm{font:15px var(--serif)}
-.arena.editing label{display:block;font-size:12.5px;color:var(--muted);margin:4px 0 5px}
-#docUrl{width:100%;background:var(--field);border:1px solid var(--line2);border-radius:var(--radius);color:var(--ink);font:13px var(--body);padding:5px 8px}
-.arena.editing .lbtns{display:flex;gap:6px;margin-top:7px}
-.arena.editing .lbtns .btn{padding:3px 10px;font-size:12.5px}
-.arena.editing .err{font-size:12px;color:var(--warn-ink);margin-top:5px}
+.cnote{top:35px}
+.cnote.on{color:var(--key2);background:var(--sel)}
+.docs:hover,.cnote:hover{color:var(--key2);background:var(--hover)}
+/* The pencil in the column's head turns every arena into its link field at
+   once, with one Save under them all (Mark, 2026-10-16). */
+.colhead .editlinks{border:0;background:none;padding:2px 4px;margin:-2px 0;border-radius:5px;color:var(--key);cursor:pointer;display:flex}
+.colhead .editlinks:hover{color:var(--key2);background:var(--hover)}
+.arena.editing{padding:9px 12px 11px 14px}
+.arena.editing .nm{font:15px var(--serif);margin-bottom:4px}
+.arena.editing input{width:100%;background:var(--field);border:1px solid var(--line2);border-radius:var(--radius);color:var(--ink);font:13px var(--body);padding:5px 8px}
+.arena.editing .err{font-size:12px;color:var(--warn-ink);margin-top:4px}
+.linkbar{padding:10px 14px 4px;font-size:12.5px;color:var(--muted)}
+.linkbar .lbtns{display:flex;gap:6px;margin-top:8px}
+.linkbar .btn{padding:3px 12px;font-size:12.5px}
 .site .err{font-size:12px;color:var(--warn-ink);margin-top:3px;overflow-wrap:anywhere}
 .runbox{margin:12px 14px 16px;padding:10px 12px;border:1px dashed var(--line2);border-radius:var(--radius);font-size:12.5px;color:var(--muted);flex:none}
 .runbox b{color:var(--ink);font-weight:500}
@@ -171,6 +173,14 @@ button{font:inherit;color:inherit}
 .dhead{display:flex;gap:14px;align-items:flex-start}
 .dtitle{font:400 23px/1.25 var(--serif);margin:6px 0 0;text-wrap:balance}
 .dsub{color:var(--muted);font-size:14px;margin-top:3px}
+/* Mark's notes on a call: a few paragraphs, so written and read at the
+   size of an entry's own description, on the sheet itself. */
+#callNote{display:block;width:100%;min-height:60vh;margin-top:18px;resize:vertical;background:var(--field);border:1px solid var(--line);border-radius:var(--radius);
+  color:var(--ink);font:16.5px/1.62 var(--body);padding:14px 16px;field-sizing:content}
+#callNote:focus{border-color:var(--line2);outline:none}
+#callNote::placeholder{color:var(--faint)}
+.notelabel{font:11.5px/16px var(--serif);letter-spacing:.08em;text-transform:uppercase;color:var(--faint);margin-top:4px}
+.notestate{font-size:12.5px;color:var(--faint);margin-top:6px;min-height:1.2em}
 .actions{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 4px;align-items:center}
 .act{background:none;border:1px solid var(--line2);color:var(--key2);font:13.5px var(--serif);padding:6px 13px;border-radius:var(--radius);cursor:pointer}
 .act kbd{font:11px var(--mono);color:var(--faint);margin-left:6px}
@@ -226,7 +236,7 @@ button{font:inherit;color:inherit}
 
 <div class="cols">
   <div class="col">
-    <div class="colhead">Arenas</div>
+    <div class="colhead" style="justify-content:flex-start">Arenas<button class="editlinks" data-editlinks="1" title="Change the scrolls' links" aria-label="Change the call documents links"></button></div>
     <div class="scroll" id="sites"></div>
     <div class="runbox" id="runbox"></div>
   </div>
@@ -324,10 +334,12 @@ function load(){
     api('/rest/v1/partner_sites?select=*&order=sort'),
     all('/rest/v1/partner_entries?select=' + COLS + '&order=first_seen.desc,id'),
     api('/rest/v1/partner_watch_log?select=*&order=ran_at.desc&limit=1'),
-    api('/rest/v1/app_state?id=eq.' + LINKS_ROW + '&select=data').catch(function(){ return []; })
+    api('/rest/v1/app_state?id=eq.' + MINE_ROW + '&select=data').catch(function(){ return []; })
   ]).then(function(r){
     sites = r[0]; entries = r[1]; lastRun = r[2][0] || null;
-    links = ((r[3][0] || {}).data || {}).docs || {};
+    var mine = (r[3][0] || {}).data || {};
+    links = mine.docs || {};
+    Object.keys(mine.notes || {}).forEach(function(k){ if (!(k in notes)) notes[k] = mine.notes[k]; });
     byId = {}; entries.forEach(function(e){ byId[e.id] = e; });
     /* Newest first: the night it arrived, then the site's own date where
        it gives one, then the site's own number, which both platforms count
@@ -392,48 +404,53 @@ function stateTags(e){
        + (e.changed_at && (!e.opened_at || e.changed_at > e.opened_at) ? '<span class="st chg">Changed</span>' : '')
        + (e.removed_at ? '<span class="st gone">Gone from site</span>' : '');
 }
-/* Where each arena's booklet points: the call text's own PDF to start
-   with, and whatever Mark puts there with the pencil after that. His links
-   are kept in the cloud, in app_state under their own row, because his
-   login may write that table and only reads partner_sites; so a link set
-   on one device is there on the others. An empty link is kept too: it
-   means no booklet, not the starting link back. */
+/* Where each arena's scroll points: the call text's own PDF to start
+   with, and whatever Mark puts there with the pencil after that. His links,
+   and his notes on each call, are kept in the cloud in app_state under a
+   row of their own, because his login may write that table and only reads
+   partner_sites; so what is set on one device is there on the others. An
+   empty link is kept too: it means no scroll, not the starting link back. */
 var DOCS = {
   sbep:       'https://www.bluepartnership.eu/sites/bluepartnership.eu/files/documents/2026-10/sbep_jtc_2026_4th_call_announcement_061026_0.pdf',
   water4all:  'https://www.water4all-partnership.eu/sites/default/files/2026-09/Call_Announcement_Water4All_JTC2026_20260908.pdf',
   biodiversa: 'https://www.biodiversa.eu/wp-content/uploads/2026/09/BiodivFuture_Doc1_Announcement-opportunity.pdf',
   forest:     'https://forest-partnership.eu/wp-content/uploads/2026/09/260915_FOREST_JC2026_Call_Announcement_FINAL-1.pdf'
 };
-var LINKS_ROW = 'partnerwatch', links = {}, editing = null;
+var MINE_ROW = 'partnerwatch', links = {}, notes = {}, editingLinks = false;
 function docsOf(id){ return Object.prototype.hasOwnProperty.call(links, id) ? links[id] : (DOCS[id] || ''); }
-var PENCIL = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" aria-hidden="true">'
-  + '<path d="M10.8 2.6l2.6 2.6-8 8-3.3.7.7-3.3z"/><path d="M9.4 4l2.6 2.6"/></svg>';
-var BOOKLET = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" aria-hidden="true">'
-  + '<path d="M8 3.8C6.5 2.7 4.3 2.4 1.8 2.8v9.6c2.5-.4 4.7-.1 6.2 1 1.5-1.1 3.7-1.4 6.2-1V2.8C11.7 2.4 9.5 2.7 8 3.8z"/><path d="M8 3.8v9.6"/></svg>';
+function svg(size, paths){ return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + paths + '</svg>'; }
+var PENCIL = svg(14, '<path d="M16.5 3.5l4 4L8 20l-5 1 1-5z"/><path d="M14.5 5.5l4 4"/>');
+var SCROLL = svg(17, '<path d="M15 12h-5"/><path d="M15 8h-5"/><path d="M19 17V5a2 2 0 0 0-2-2H4"/>'
+  + '<path d="M8 21h12a2 2 0 0 0 2-2v-1a1 1 0 0 0-1-1H11a1 1 0 0 0-1 1v1a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v2a1 1 0 0 0 1 1h3"/>');
+function noteIcon(full){ return svg(16, '<path d="M15 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9z"/><path d="M15 3v4a2 2 0 0 0 2 2h4"/>'
+  + (full ? '<path d="M7 13h10"/><path d="M7 17h6"/>' : '')); }
 function drawSites(){
   /* No "All sites": Mark works one site at a time (2026-10-16). */
-  var h = '', typed = $('#docUrl') ? $('#docUrl').value : null, err = $('#docErr') ? $('#docErr').textContent : '';
+  var h = '', typed = {}, errs = {};
+  document.querySelectorAll('[data-linkfor]').forEach(function(i){ typed[i.dataset.linkfor] = i.value; });
+  document.querySelectorAll('[data-errfor]').forEach(function(d){ errs[d.dataset.errfor] = d.textContent; });
   sites.forEach(function(s){
-    if (editing === s.id){
+    if (editingLinks){
       h += '<div class="arena editing"><div class="nm">' + esc(s.name) + '</div>'
-         + '<label for="docUrl">Link the booklet opens, such as the call text\'s PDF. Empty for no booklet.</label>'
-         + '<input id="docUrl" type="url" spellcheck="false" value="' + esc(typed != null ? typed : docsOf(s.id)) + '">'
-         + '<div class="lbtns"><button class="btn" data-savelink="' + esc(s.id) + '">Save</button><button class="btn" data-cancellink="1">Cancel</button></div>'
-         + '<div class="err" id="docErr">' + esc(err) + '</div></div>';
+         + '<input type="url" spellcheck="false" data-linkfor="' + esc(s.id) + '" aria-label="Call documents link of ' + esc(s.name) + '" value="' + esc(s.id in typed ? typed[s.id] : docsOf(s.id)) + '">'
+         + '<div class="err" data-errfor="' + esc(s.id) + '">' + esc(errs[s.id] || '') + '</div></div>';
       return;
     }
-    var on = view.site === s.id, doc = docsOf(s.id);
-    h += '<div class="arena' + (on ? ' on' : '') + '"><button class="site' + (on ? ' on' : '') + '" data-site="' + esc(s.id) + '">'
+    var doc = docsOf(s.id), hasNote = !!(notes[s.id] || '').trim();
+    h += '<div class="arena"><button class="site' + (view.site === s.id ? ' on' : '') + '" data-site="' + esc(s.id) + '">'
        + '<div class="nm">' + esc(s.name) + '</div><div class="sub">' + esc(s.call || '') + '</div>'
        + (s.last_error ? '<div class="err">Last read failed, ' + esc(stamp(s.last_error_at)) + ': ' + esc(s.last_error) + '</div>' : '')
        + '</button>'
-       + (doc ? '<a class="docs" href="' + esc(doc) + '" target="_blank" rel="noopener" title="Call documents" aria-label="Call documents of ' + esc(s.name) + '">' + BOOKLET + '</a>' : '')
-       + '<button class="editlink" data-editlink="' + esc(s.id) + '" title="Change the booklet\'s link" aria-label="Change the call documents link of ' + esc(s.name) + '">' + PENCIL + '</button>'
+       + (doc ? '<a class="docs" href="' + esc(doc) + '" target="_blank" rel="noopener" title="Call documents" aria-label="Call documents of ' + esc(s.name) + '">' + SCROLL + '</a>' : '')
+       + '<button class="cnote' + (view.note === s.id ? ' on' : '') + '" data-callnote="' + esc(s.id) + '" title="' + (hasNote ? 'Your notes on this call' : 'Write notes on this call') + '" aria-label="Notes on the call of ' + esc(s.name) + '">' + noteIcon(hasNote) + '</button>'
        + '</div>';
   });
+  if (editingLinks) h += '<div class="linkbar">The link each scroll opens, such as the call text\'s PDF. Empty for no scroll.'
+    + '<div class="lbtns"><button class="btn" data-savelinks="1">Save</button><button class="btn" data-cancellinks="1">Cancel</button></div></div>';
   $('#sites').innerHTML = h;
-  var input = $('#docUrl');
-  if (input && typed == null){ input.focus(); input.select(); }
+  $('.editlinks').innerHTML = PENCIL;
+  $('.editlinks').hidden = editingLinks;
+  if (editingLinks && !Object.keys(typed).length){ var first = $('[data-linkfor]'); if (first) first.focus(); }
   var waiting = entries.filter(function(e){ return !e.fetched_at && !e.removed_at; }).length;
   $('#runbox').innerHTML = (lastRun
       ? '<b>Last check ' + esc(stamp(lastRun.ran_at)) + '</b><br>' + lastRun.added + ' new · ' + lastRun.changed + ' changed · ' + lastRun.removed + ' gone'
@@ -469,7 +486,7 @@ function drawRows(){
     var picked = sel.has(e.id);
     /* A row is a div and not a button, because the tick box inside it is
        a button of its own, and a button may not hold another. */
-    return head + '<div class="row' + (e.id === view.id ? ' on' : '') + (picked ? ' picked' : '') + (e.removed_at ? ' gone' : '') + (e.verdict === 'bin' ? ' binned' : '')
+    return head + '<div class="row' + (e.id === view.id && !view.note ? ' on' : '') + (picked ? ' picked' : '') + (e.removed_at ? ' gone' : '') + (e.verdict === 'bin' ? ' binned' : '')
       + '" data-id="' + esc(e.id) + '" role="button" tabindex="0">'
       + '<button class="pick" data-pick="' + esc(e.id) + '" aria-pressed="' + picked + '" aria-label="Select">' + (picked ? '✓' : '') + '</button>'
       + '<span class="dot ' + (isNew(e) ? 'new' : 'seen') + '"></span><span style="min-width:0">'
@@ -571,6 +588,7 @@ function diff(oldT, newT){
   return out.length ? out.join('\n') : 'Only the spacing changed.';
 }
 function drawDetail(){
+  if (view.note) return drawNote();
   var e = byId[view.id];
   if (!e){ $('#det').innerHTML = entries.length ? '<div class="empty">Choose an entry on the left.</div>' : ''; return; }
   var s = siteOf(e), d = detail[e.id];
@@ -631,7 +649,7 @@ function patchMany(list, vals){
   }
 }
 function openEntry(id){
-  view.id = id; saveView();
+  view.id = id; view.note = null; saveView();
   var e = byId[id];
   if (e && !e.opened_at) patch(e, { opened_at:new Date().toISOString() });
   drawSites(); drawRows(); drawDetail();
@@ -657,20 +675,77 @@ function setVerdict(v){
   if (next) return openEntry(next.id);
   drawSites(); drawRows(); drawDetail();
 }
-function editLink(id){ editing = id; drawSites(); }
-function cancelLink(){ editing = null; drawSites(); }
-function saveLink(id){
-  var v = $('#docUrl').value.trim();
-  if (v && !/^https?:\/\/\S+$/i.test(v)){ $('#docErr').textContent = 'That is not a web link: it should start with https://'; return; }
-  var before = Object.assign({}, links);
-  links[id] = v; editing = null; drawSites();
-  api('/rest/v1/app_state', { method:'POST', body:[{ id:LINKS_ROW, data:{ docs:links }, updated_at:new Date().toISOString() }],
-    headers:{ Prefer:'resolution=merge-duplicates,return=representation' } })
-    .catch(function(err){
-      links = before; drawSites();
-      $('#banner').textContent = 'The link was not saved: ' + err.message; $('#banner').hidden = false;
+/* Writing to Mark's row: read it first and change only the part asked,
+   so a link saved here does not undo a note written on the other device
+   since this page was opened, and one write at a time, in order. */
+var mineQueue = Promise.resolve();
+function storeMine(part, changes){
+  var run = mineQueue.then(function(){
+    return api('/rest/v1/app_state?id=eq.' + MINE_ROW + '&select=data').then(function(rows){
+      var d = (rows[0] || {}).data || {};
+      d[part] = Object.assign({}, d[part] || {}, changes);
+      return api('/rest/v1/app_state', { method:'POST', body:[{ id:MINE_ROW, data:d, updated_at:new Date().toISOString() }],
+        headers:{ Prefer:'resolution=merge-duplicates,return=representation' } });
     });
+  });
+  mineQueue = run.catch(function(){});
+  return run;
 }
+function editLinks(){ editingLinks = true; drawSites(); }
+function cancelLinks(){ editingLinks = false; drawSites(); }
+function saveLinks(){
+  var changes = {}, bad = false;
+  document.querySelectorAll('[data-linkfor]').forEach(function(i){
+    var id = i.dataset.linkfor, v = i.value.trim(), err = document.querySelector('[data-errfor="' + id + '"]');
+    err.textContent = v && !/^https?:\/\/\S+$/i.test(v) ? 'Not a web link: it should start with https://' : '';
+    if (err.textContent) bad = true;
+    else if (v !== docsOf(id)) changes[id] = v;
+  });
+  if (bad) return;
+  var before = Object.assign({}, links);
+  Object.assign(links, changes); editingLinks = false; drawSites();
+  if (!Object.keys(changes).length) return;
+  storeMine('docs', changes).catch(function(err){
+    links = before; drawSites();
+    $('#banner').textContent = 'The links were not saved: ' + err.message; $('#banner').hidden = false;
+  });
+}
+/* The notes save themselves a second after the typing stops, and at once
+   when the field is left or the page is put away, so a closed lid does
+   not cost the last sentence. */
+var noteTimer = null;
+function openNote(id){ view.note = id; view.site = id; sel.clear(); regroup(); draw(); var t = $('#callNote'); if (t) t.focus(); }
+function drawNote(){
+  var s = sites.find(function(x){ return x.id === view.note; }) || { name:view.note }, doc = docsOf(view.note);
+  $('#det').innerHTML = '<div class="dhead"><div style="flex:1;min-width:0"><div class="notelabel">Your notes on the call</div>'
+    + '<h2 class="dtitle">' + esc(s.name) + '</h2><div class="dsub">' + esc(s.call || '') + '</div></div>'
+    + (doc ? '<a class="btn" style="text-decoration:none" href="' + esc(doc) + '" target="_blank" rel="noopener">Call documents ↗</a>' : '') + '</div>'
+    + '<textarea id="callNote" spellcheck="true" placeholder="What matters in this call: the deadline, the budget, who may apply, what they want to fund…">' + esc(notes[view.note] || '') + '</textarea>'
+    + '<div class="notestate" id="noteState"></div>';
+}
+function flushNote(){
+  if (!noteTimer) return;
+  clearTimeout(noteTimer.t); var id = noteTimer.id, text = notes[id]; noteTimer = null;
+  var ch = {}; ch[id] = text;
+  storeMine('notes', ch).then(function(){
+    var st = $('#noteState'); if (st && view.note === id && !noteTimer) st.textContent = 'Saved';
+  }, function(err){
+    var st = $('#noteState'); if (st) st.textContent = '';
+    $('#banner').textContent = 'Your note was not saved: ' + err.message + '. It is still on this page; type a letter to try again.'; $('#banner').hidden = false;
+  });
+}
+document.addEventListener('input', function(ev){
+  if (ev.target.id !== 'callNote') return;
+  var id = view.note, had = !!(notes[id] || '').trim();
+  notes[id] = ev.target.value;
+  if (had !== !!notes[id].trim()) drawSites();
+  if (noteTimer && noteTimer.id !== id) flushNote();
+  if (noteTimer) clearTimeout(noteTimer.t);
+  noteTimer = { id:id, t:setTimeout(flushNote, 1000) };
+  $('#noteState').textContent = 'Saving…';
+});
+document.addEventListener('focusout', function(ev){ if (ev.target.id === 'callNote') flushNote(); });
+document.addEventListener('visibilitychange', function(){ if (document.visibilityState === 'hidden') flushNote(); });
 function checkNow(btn){
   btn.disabled = true; btn.textContent = 'Checking… (up to two minutes)';
   api('/functions/v1/partner-copier', { method:'POST', body:{} })
@@ -679,15 +754,16 @@ function checkNow(btn){
 }
 
 document.addEventListener('click', function(ev){
-  var t = ev.target.closest('[data-pick],[data-bulk],[data-site],[data-id],[data-state],[data-kind],[data-tab],[data-verdict],[data-editlink],[data-savelink],[data-cancellink],#checkNow');
+  var t = ev.target.closest('[data-pick],[data-bulk],[data-site],[data-id],[data-state],[data-kind],[data-tab],[data-verdict],[data-editlinks],[data-savelinks],[data-cancellinks],[data-callnote],#checkNow');
   if (!t) return;
   if (t.id === 'checkNow') return checkNow(t);
-  if (t.dataset.editlink) return editLink(t.dataset.editlink);
-  if (t.dataset.savelink) return saveLink(t.dataset.savelink);
-  if (t.dataset.cancellink) return cancelLink();
+  if (t.dataset.editlinks) return editLinks();
+  if (t.dataset.savelinks) return saveLinks();
+  if (t.dataset.cancellinks) return cancelLinks();
+  if (t.dataset.callnote) return openNote(t.dataset.callnote);
   if (t.dataset.pick) pick(t.dataset.pick, ev.shiftKey);
   else if (t.dataset.bulk) bulk(t.dataset.bulk);
-  else if (t.dataset.site){ view.site = t.dataset.site; sel.clear(); regroup(); saveView(); draw(); }
+  else if (t.dataset.site){ view.site = t.dataset.site; view.note = null; sel.clear(); regroup(); saveView(); draw(); }
   else if (t.dataset.id){ if (ev.ctrlKey || ev.metaKey || ev.shiftKey) pick(t.dataset.id, ev.shiftKey); else openEntry(t.dataset.id); }
   else if (t.dataset.state){ view.state = t.dataset.state; sel.clear(); regroup(); saveView(); drawFilters(); drawRows(); }
   else if (t.dataset.kind){ view.kind = t.dataset.kind; sel.clear(); regroup(); saveView(); drawFilters(); drawRows(); }
@@ -702,13 +778,16 @@ $('#search').addEventListener('input', function(){ view.q = this.value; drawRows
    picked ones), X picks the open entry, Esc lets go of the picked ones.
    Not while typing, or a search for "Ireland" would flag three entries. */
 document.addEventListener('keydown', function(ev){
-  if (ev.target.id === 'docUrl'){
-    if (ev.key === 'Enter'){ ev.preventDefault(); saveLink(editing); }
-    else if (ev.key === 'Escape') cancelLink();
+  if (ev.target.dataset && ev.target.dataset.linkfor){
+    if (ev.key === 'Enter'){ ev.preventDefault(); saveLinks(); }
+    else if (ev.key === 'Escape') cancelLinks();
     return;
   }
   if (ev.target.matches('input,textarea') || ev.metaKey || ev.ctrlKey || ev.altKey) return;
   var k = ev.key;
+  /* With a call's notes open no entry is on screen, so the letters that
+     answer an entry would answer one Mark cannot see. */
+  if (view.note && /^[ilbx]$/i.test(k)) return;
   if (k === 'ArrowDown' || k === 'ArrowUp'){
     var list = shown(), i = list.findIndex(function(e){ return e.id === view.id; });
     var n = list[Math.max(0, Math.min(list.length - 1, i + (k === 'ArrowDown' ? 1 : -1)))];
