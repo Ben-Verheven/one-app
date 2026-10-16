@@ -29,6 +29,7 @@ Hub.markup('atlas', `
   </header>
   <div id="body">
     <aside id="rail"></aside>
+    <button id="railOpen" class="railopen" type="button" title="Show the settings" aria-label="Show the settings"></button>
     <div id="main"></div>
   </div>
 </div>

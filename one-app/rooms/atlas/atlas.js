@@ -950,9 +950,26 @@ function addLink(fromKey) {
 }
 
 // ---------- rail -----------------------------------------------------------
+/* The fold is this device's own choice, not the graph's, so it lives in the
+   browser rather than in the edits the cloud carries. */
+const RAILFOLD = "atlas-railfold";
+let railFolded = matchMedia("(pointer:coarse)").matches;
+try { const f = localStorage.getItem(RAILFOLD); if (f !== null) railFolded = f === "1"; } catch (e) {}
+const CHEV = d => `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${d}"/></svg>`;
+function setRailFold(f) {
+  railFolded = f;
+  try { localStorage.setItem(RAILFOLD, f ? "1" : "0"); } catch (e) {}
+  $("#body").classList.toggle("folded", f);
+  /* The map's canvas is sized from its column once, when drawn. */
+  if (State.mode === "walk") renderWalk();
+}
+$("#railOpen").innerHTML = CHEV("M9 6l6 6-6 6") + "<span>Settings</span>";
+$("#railOpen").onclick = () => setRailFold(false);
+$("#body").classList.toggle("folded", railFolded);
+
 function renderRail() {
   const rail = $("#rail");
-  let html = "";
+  let html = `<button class="railfold" id="railFold" type="button" title="Fold the settings away" aria-label="Fold the settings away">${CHEV("M15 6l-6 6 6 6")}</button>`;
   if (State.mode === "search") {
     const o = State.opts;
     html += `<div class="sect"><h3>Layer weights</h3>
@@ -1037,6 +1054,7 @@ function renderRail() {
   }
   html += `</div>`;
   rail.innerHTML = html;
+  $("#railFold").onclick = () => setRailFold(true);
 
   rail.querySelectorAll("input[data-w]").forEach(inp => inp.oninput = () => {
     State.opts.weights[+inp.dataset.w] = +inp.value;

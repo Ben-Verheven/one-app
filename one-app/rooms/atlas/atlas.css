@@ -61,6 +61,23 @@
   overflow-y:auto;scrollbar-gutter:stable;padding:18px 18px 40px}
 #pane-atlas #main{flex:1;min-width:0;overflow-y:auto;position:relative}
 #pane-atlas #main.nopad{overflow:hidden}
+/* On the iPad the rail took 340px from the results for settings that are
+   set once and left (Mark, 2026-10-17), so it folds to a strip that brings
+   it back, drawn as the arenas column folds in Project Watch. It starts
+   folded where the pointer is a finger and open at the desk; either way
+   the fold is kept per device. The chevron floats in the rail's own first
+   line because renderRail rewrites the rail whole, and the strip is a
+   sibling of the rail for the same reason. */
+#pane-atlas .railfold{float:right;margin:-7px -8px 0 6px;padding:6px 8px;border-radius:5px;
+  color:var(--faint);display:flex}
+#pane-atlas .railfold:hover{color:var(--ink);background:var(--wash)}
+#pane-atlas .railopen{display:none;flex:none;width:44px;flex-direction:column;align-items:center;gap:10px;
+  padding:14px 0;border-right:1px solid var(--line);background:var(--panel);color:var(--faint);
+  font:600 11px var(--sans);letter-spacing:.8px;text-transform:uppercase}
+#pane-atlas .railopen:hover{color:var(--ink);background:var(--wash)}
+#pane-atlas .railopen span{writing-mode:vertical-rl}
+#pane-atlas #body.folded #rail{display:none}
+#pane-atlas #body.folded .railopen{display:flex}
 
 /* ---------- narrow ----------
    The Atlas was written for a desk and said nothing about anything
@@ -81,6 +98,10 @@
   #pane-atlas #rail .sect{margin-bottom:16px}
   #pane-atlas #qbar{padding:16px 18px 10px}
   #pane-atlas #results{padding:0 18px 48px}
+  /* Folded, the strip is narrow enough to stay beside the results, so the
+     room keeps its desk shape and the results scroll in their own column. */
+  #pane-atlas #body.folded{flex-direction:row; overflow:hidden}
+  #pane-atlas #body.folded #main:not(.nopad){overflow-y:auto; flex:1}
 }
 /* ---------- shared bits ---------- */
 #pane-atlas .sect{margin-bottom:22px}
