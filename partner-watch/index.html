@@ -182,7 +182,7 @@ button{font:inherit;color:inherit}
     <div class="runbox" id="runbox"></div>
   </div>
   <div class="col">
-    <div class="colhead"><span id="listhead">All sites</span><span class="meta" id="listcount"></span></div>
+    <div class="colhead"><span id="listhead"></span><span class="meta" id="listcount"></span></div>
     <div class="filters" id="filters"></div>
     <div class="bulk" id="bulk" hidden></div>
     <div class="scroll" id="rows"></div>
@@ -256,7 +256,7 @@ function all(path){
 
 /* ── state ─────────────────────────────────────────────────────────── */
 var sites = [], entries = [], lastRun = null, byId = {};
-var view = { site:'all', kind:'all', state:'open', q:'', id:null, tab:'fields' };
+var view = { site:null, kind:'all', state:'open', q:'', id:null, tab:'fields' };
 try { Object.assign(view, JSON.parse(localStorage.getItem(VIEW) || '{}'), { q:'' }); } catch(e){}
 var detail = {};          // id → { fields, page_text, versions }
 var $ = function(s){ return document.querySelector(s); };
@@ -288,6 +288,7 @@ function load(){
           || (+b.ext_id - +a.ext_id);
     });
     entries.forEach(function(e, i){ e._i = i; });
+    if (!sites.some(function(s){ return s.id === view.site; })) view.site = sites.length ? sites[0].id : null;
     regroup();
     $('#banner').hidden = true;
     draw();
@@ -304,7 +305,7 @@ function load(){
 var STATES = [['open','All'],['unsorted','Unsorted'],['interesting','Interesting'],['later','Later'],['bin','Binned']];
 var KINDS = [['all','Both kinds'],['seeks','Seeks partners'],['offers','Offers expertise']];
 function passes(e){
-  if (view.site !== 'all' && e.site !== view.site) return false;
+  if (e.site !== view.site) return false;
   if (view.kind !== 'all' && e.kind !== view.kind) return false;
   if (view.state === 'open' && e.verdict === 'bin') return false;
   if (view.state === 'unsorted' && e.verdict) return false;
@@ -347,8 +348,8 @@ function drawSites(){
     return '<span>' + list.length + ' entries</span>' + (n ? '<span class="n">' + n + ' new</span>' : '')
          + (s ? '<span class="s">' + s + ' seek partners</span>' : '');
   }
-  var h = '<button class="site' + (view.site === 'all' ? ' on' : '') + '" data-site="all"><div class="nm">All sites</div>'
-        + '<div class="ct">' + counts(entries) + '</div></button>';
+  /* No "All sites": Mark works one site at a time (2026-10-16). */
+  var h = '';
   sites.forEach(function(s){
     var list = entries.filter(function(e){ return e.site === s.id; });
     h += '<button class="site' + (view.site === s.id ? ' on' : '') + '" data-site="' + esc(s.id) + '">'
@@ -373,8 +374,8 @@ function drawFilters(){
   $('#filters').innerHTML = chips(STATES, 'state') + '<span class="sep"></span>' + chips(KINDS, 'kind');
 }
 function drawRows(){
-  var s = view.site === 'all' ? null : sites.find(function(x){ return x.id === view.site; });
-  $('#listhead').textContent = s ? s.name : 'All sites';
+  var s = sites.find(function(x){ return x.id === view.site; });
+  $('#listhead').textContent = s ? s.name : '';
   var list = shown();
   $('#listcount').textContent = list.length + ' shown';
   if (!entries.length){
@@ -387,7 +388,7 @@ function drawRows(){
   var per = {}; list.forEach(function(e){ per[e._g] = (per[e._g] || 0) + 1; });
   var last = -1;
   $('#rows').innerHTML = list.map(function(e){
-    var sub = [e.org && e.contact ? e.contact : null, view.site === 'all' ? siteOf(e).name : null, e.country].filter(Boolean).join(' · ');
+    var sub = [e.org && e.contact ? e.contact : null, e.country].filter(Boolean).join(' · ');
     var head = e._g !== last ? '<div class="group"><span>' + GROUPS[e._g] + '</span><span>' + per[e._g] + '</span></div>' : '';
     last = e._g;
     var picked = sel.has(e.id);

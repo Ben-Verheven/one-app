@@ -9,3 +9,4 @@
 - Ideas Mark liked and kept for later: an Atlas match for what an entry seeks, a link to the Marketplace arena of its call, Make lead, pre-sorting from his past flags, a keyword alert, a mark when an entry names a TU/e group
 - Within a site the list reads New, then Interesting, then Later, then the rest, each newest first (2026-10-16). Wants several entries picked at once and flagged together. Does not want long values hidden behind a "Show all"
 - Chose an all-light page over the Marketplace's dark ground and over a dark list with a light entry, compared on full-size mock-ups (2026-10-16). In an entry he wants the project description central: the long texts down the middle, project description first, every short fact in a narrow column beside them
+- Removed "All sites": he works one site at a time, and the page opens on the first site (2026-10-16)
