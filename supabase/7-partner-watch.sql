@@ -14,8 +14,8 @@
 -- One row per partner-search page. `platform` says which of the copier's
 -- two readers fits the page: 'epss' for the proposals.etag.ee sites,
 -- 'ptj' for the PtJ "partnering" pages. A new site on either platform is
--- a new row here and nothing else; a site on a third platform needs a
--- reader of its own in the copier first.
+-- a new row here, and a link to its call documents in the page's DOCS; a
+-- site on a third platform needs a reader of its own in the copier first.
 create table if not exists partner_sites (
   id            text primary key,
   name          text not null,
