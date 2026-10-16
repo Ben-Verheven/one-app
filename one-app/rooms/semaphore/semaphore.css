@@ -597,21 +597,53 @@
 #pane-semaphore .lead .lsb{flex:1 1 auto;min-width:0}
 /* what the lead itself points at — its own band, so a lead with four links no
    longer reads as a lead with four of something unnamed */
-#pane-semaphore .lead .llinks{display:flex;flex-direction:column;gap:1px;margin-left:-6px}
+#pane-semaphore .lead .llinks{display:flex;flex-direction:column;gap:1px;margin:0 -6px}
 #pane-semaphore .llrow{display:flex;align-items:center;gap:2px;border-radius:6px}
-#pane-semaphore .lla{flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:8px;padding:2px 6px;
-  border-radius:6px;font-family:var(--body);font-size:12.5px;color:var(--muted);text-decoration:none;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .14s,background-color .14s}
-#pane-semaphore .lla i{flex:0 0 5px;width:5px;height:5px;border-radius:50%;background:var(--faint);
-  transition:background-color .14s}
-#pane-semaphore .lla:hover{color:var(--key2);background:var(--sink)}
-#pane-semaphore .lla:hover i{background:var(--key2)}
-#pane-semaphore .lla.dead{color:var(--faint)}
-/* a contact's address wears a small envelope where a link wears a dot, so a
-   person to write to is not taken for a page to open */
-#pane-semaphore .lla.mail i{flex:0 0 8px;width:8px;height:6px;border-radius:1px;background:none;
-  border:1px solid var(--faint)}
-#pane-semaphore .lla.mail:hover i{background:none;border-color:var(--key2)}
+#pane-semaphore .lla{flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:9px;min-height:30px;padding:0 6px;
+  border-radius:6px;font-family:var(--body);font-size:13px;color:var(--key2);text-decoration:none;
+  white-space:nowrap;transition:color .14s,background-color .14s}
+#pane-semaphore .lla:hover{color:var(--ink);background:var(--sink)}
+#pane-semaphore .lla.dead{color:var(--key)}
+#pane-semaphore .llnm{flex:0 0 auto;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+/* where it goes, quieter than what it is; --key and not --faint, because
+   faint on the box's sunk ground reads at about 4:1 at this size. Only it
+   gives up room: in the arena's narrow panel the two shrinking alike cut
+   "Call text (PDF)" to "Call text (P…", so the name keeps its width. */
+#pane-semaphore .llhost{flex:0 1 auto;min-width:0;margin-left:auto;padding-left:10px;
+  font:10.5px var(--mono);color:var(--key);overflow:hidden;text-overflow:ellipsis}
+/* ── who and the links, side by side ── (see leadPanesHTML). The two boxes
+   share the card's width wherever each can have 260px, and stack below that,
+   which is the arena's panel. */
+#pane-semaphore .lead .lpanes{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+  gap:10px;padding:7px 0 5px}
+#pane-semaphore .lead .lpane{min-width:0;padding:7px 10px 8px;border-radius:8px;background:var(--well);cursor:default}
+#pane-semaphore .lead .lph{display:flex;align-items:baseline;gap:7px;margin:0 0 3px;
+  font:600 8.5px var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--key)}
+#pane-semaphore .lead .lph b{font:400 10px var(--mono);letter-spacing:0;color:var(--key)}
+#pane-semaphore .lead .lki{flex:0 0 22px;width:22px;height:22px;display:inline-flex;align-items:center;
+  justify-content:center;border-radius:6px;background:var(--sink);color:var(--key)}
+#pane-semaphore .lead .lki svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:1.1;
+  stroke-linecap:round;stroke-linejoin:round}
+#pane-semaphore .lead .lwrow{display:flex;align-items:center;gap:9px;margin:0;min-height:30px;
+  font:13px/1.35 var(--body);color:var(--ink)}
+#pane-semaphore .lead .lwv{flex:1 1 auto;min-width:0;overflow-wrap:anywhere}
+#pane-semaphore .lead .lwrow i{flex:0 0 auto;font:600 8px var(--sans);font-style:normal;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--key)}
+/* the address under the person it belongs to, lined up with the name */
+#pane-semaphore .lead .lmrow{display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin:3px 0 0 31px}
+#pane-semaphore .lead .lmail{display:inline-flex;align-items:center;gap:5px;max-width:100%;min-height:30px;
+  box-sizing:border-box;padding:0 10px 0 3px;border:1px solid var(--line);border-radius:7px;
+  font:12.5px var(--body);color:var(--key2);text-decoration:none;
+  transition:color .14s,border-color .14s,background-color .14s}
+#pane-semaphore .lead .lmail>span:last-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#pane-semaphore .lead .lmail .lki{background:none;color:var(--key2)}
+#pane-semaphore .lead .lmail:hover{color:var(--ink);border-color:var(--line2);background:var(--sink)}
+#pane-semaphore .lead .lcopy{min-height:30px;padding:0 10px;border:1px solid transparent;border-radius:7px;
+  font:11px var(--sans);letter-spacing:.08em;color:var(--key);transition:color .14s,border-color .14s}
+#pane-semaphore .lead .lcopy:hover{color:var(--key2);border-color:var(--line)}
+#pane-semaphore .lead .lpane .lkform{margin-top:4px}
+/* a finger has no hover to find the cross with */
+@media (hover:none){#pane-semaphore .llrow .lx{opacity:1}}
 #pane-semaphore .lx{flex:0 0 auto;width:19px;height:19px;padding:0;border-radius:5px;color:var(--faint);
   font:10px/1 var(--sans);opacity:0;transition:opacity .14s,color .14s,background-color .14s}
 #pane-semaphore .llrow:hover .lx,#pane-semaphore .lurow:hover .lx,

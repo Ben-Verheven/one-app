@@ -1608,6 +1608,7 @@
       { g: 'lead', h: 'Project', w: 36, k: 'project', b: true },
       { g: 'lead', h: 'Coordinator', w: 22, k: 'coordinator' },
       { g: 'lead', h: 'Main contact', w: 20, k: 'contact' },
+      { g: 'lead', h: 'Email', w: 26, k: 'email' },
       { g: 'lead', h: 'Match', w: 30, k: 'match' },
       { g: 'step', h: 'Spotted', w: 9, k: 'ruit', dot: 'sp' },
       { g: 'step', h: 'Researchers', w: 11.5, k: 'ruit', dot: 'r' },
@@ -1716,6 +1717,10 @@
               ? day(i, r, S.get({ fill: g, line: RULE, font: { color: QUIET, sz: 10 }, date: true, h: 'left', indent: 1 }), ups[0].at || ups[0].when)
               : str(i, r, S.get({ fill: g, line: RULE }), '');
             case 'utext': return str(i, r, S.get(base), ups.length ? ups[0].text : '');
+            /* the contact's address, one press to write to from the sheet too */
+            case 'email': return l.email
+              ? link(i, r, S.get({ fill: g, line: RULE, font: { u: true, color: LINK }, indent: 1 }), { name: l.email, url: 'mailto:' + l.email }, 0)
+              : str(i, r, S.get({ fill: g, line: RULE }), '');
             default: return str(i, r, S.get(cl.b ? { fill: g, line: RULE, font: { b: true, color: INK }, indent: 1 } : base),
               cl.k === 'project' ? (l.project || l.name) : l[cl.k] || '');
           }

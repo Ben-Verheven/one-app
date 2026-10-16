@@ -1303,18 +1303,55 @@
   margin-top:11px;padding-top:11px;border-top:1px solid rgba(180,155,90,0.16)}
 #pane-ledger .lead-band-k{flex-shrink:0;width:52px;font-family:var(--font);font-size:9px;
   letter-spacing:0.12em;text-transform:uppercase;color:#bca070}
-#pane-ledger .lead-links{flex:1;min-width:0;display:flex;flex-wrap:wrap;gap:4px 14px}
-/* the coordinator over the contact, each led by its role in the gutter's own
-   small capitals so the two are never read as one name */
-#pane-ledger .lead-who,#pane-ledger .lead-ed-who{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+/* Who and the links, each in a sunk box of its own, side by side wherever
+   each can have 260px and one over the other below that (see the Leads
+   module). The band's own flex gives way to a grid here. Every small word
+   is the gutter's #bca070, read on the box's ground. */
+#pane-ledger .lead-band.lead-panes{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+  gap:10px;align-items:start}
+#pane-ledger .lead-pane{min-width:0;padding:8px 11px 9px;border-radius:8px;background:rgba(10,8,4,0.24);cursor:default}
+#pane-ledger .lead-pane-h{display:flex;align-items:baseline;gap:8px;margin:0 0 4px;font-family:var(--font);
+  font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:#bca070}
+#pane-ledger .lead-pane-h b{font-family:var(--body);font-weight:400;font-size:12px;letter-spacing:0}
+#pane-ledger .lead-ico{flex:0 0 22px;width:22px;height:22px;display:inline-flex;align-items:center;
+  justify-content:center;border-radius:6px;background:rgba(10,8,4,0.3);color:#bca070}
+#pane-ledger .lead-ico svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:1.1;
+  stroke-linecap:round;stroke-linejoin:round}
+#pane-ledger .lead-w-row{display:flex;align-items:center;gap:9px;margin:0;min-height:30px;
+  font-family:var(--body);font-size:14px;line-height:1.35;color:var(--text)}
+#pane-ledger .lead-w-v{flex:1;min-width:0;overflow-wrap:anywhere}
+#pane-ledger .lead-w-row i{flex:0 0 auto;font-family:var(--font);font-size:8.5px;font-style:normal;
+  letter-spacing:0.12em;text-transform:uppercase;color:#bca070}
+/* the address under the person it belongs to, lined up with the name */
+#pane-ledger .lead-mail-row{display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin:3px 0 0 31px}
+#pane-ledger .lead-mail{display:inline-flex;align-items:center;gap:5px;max-width:100%;min-height:30px;
+  box-sizing:border-box;padding:0 10px 0 3px;border:1px solid var(--border);border-radius:7px;
+  font-family:var(--body);font-size:13.5px;color:var(--gold2);text-decoration:none;
+  transition:border-color .14s,background-color .14s}
+#pane-ledger .lead-mail>span:last-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#pane-ledger .lead-mail .lead-ico{background:none;color:var(--gold2)}
+#pane-ledger .lead-mail:hover{border-color:var(--border2);background:rgba(201,168,76,0.08)}
+#pane-ledger .lead-copy{min-height:30px;padding:0 10px;border:1px solid transparent;border-radius:7px;background:none;
+  font-family:var(--font);font-size:9.5px;letter-spacing:0.1em;text-transform:uppercase;color:#bca070;cursor:pointer}
+#pane-ledger .lead-copy:hover{color:var(--gold2);border-color:var(--border)}
+#pane-ledger .lead-links{display:flex;flex-direction:column;gap:1px;margin:0 -6px}
+/* the coordinator over the contact in the edit, each led by its role in the
+   gutter's own small capitals so the two are never read as one name */
+#pane-ledger .lead-ed-who{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
 #pane-ledger .lead-who-r{display:flex;align-items:baseline;gap:10px;font-family:var(--body);font-size:13.5px;color:var(--text)}
 #pane-ledger .lead-who-r i{flex:0 0 96px;font-family:var(--font);font-size:9px;
   font-style:normal;letter-spacing:0.12em;text-transform:uppercase;color:#bca070}
 #pane-ledger .lead-who-r>span{flex:1;min-width:0}
-#pane-ledger .lead-link-wrap{display:inline-flex;align-items:baseline;gap:3px}
-#pane-ledger .lead-link{font-family:var(--body);font-size:13.5px;color:var(--gold2);
-  text-decoration:underline;text-decoration-color:rgba(219,184,86,0.4);text-underline-offset:3px}
-#pane-ledger .lead-link:hover{text-decoration-color:var(--gold2)}
+#pane-ledger .lead-link-wrap{display:flex;align-items:center;gap:2px}
+#pane-ledger .lead-link{flex:1;min-width:0;display:flex;align-items:center;gap:9px;min-height:30px;padding:0 6px;
+  border-radius:6px;font-family:var(--body);font-size:14px;color:var(--gold2);text-decoration:none;white-space:nowrap;
+  transition:background-color .14s}
+#pane-ledger a.lead-link:hover{background:rgba(201,168,76,0.08)}
+#pane-ledger .lead-link.dead{color:var(--text2)}
+#pane-ledger .lead-link-nm{flex:0 0 auto;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+/* only it gives up room, never the name, as in the Marketplace */
+#pane-ledger .lead-link-host{flex:0 1 auto;min-width:0;margin-left:auto;padding-left:10px;font-family:var(--body);
+  font-size:12px;font-style:italic;color:#bca070;overflow:hidden;text-overflow:ellipsis}
 #pane-ledger .add-substamp-row .lead-link-in{flex:1;min-width:0}
 /* Editing in place: each fact keeps its seat and its type, and its field is
    drawn there instead — a faint ground and a dashed edge are the only sign.

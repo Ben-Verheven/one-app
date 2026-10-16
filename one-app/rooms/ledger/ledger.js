@@ -8794,6 +8794,18 @@ var Leads=(function(){
      that came without one falls back on the old palette's sand. */
   function hexOf(l){return (l&&l.tone)||'#b5a690';}
   var STAGES=[['spotted','Spotted'],['contacted','Contacted'],['talking','Talking']];
+  /* The marks on the open card's two boxes, drawn in the stroke of the text
+     beside them; the Marketplace draws the same five to the same geometry. */
+  var LEAD_ICON=(function(){
+    var s=function(d){return '<svg viewBox="0 0 12 12">'+d+'</svg>';};
+    return {
+      org:s('<path d="M2 11V3.6L6 1.6l4 2V11M1 11h10M4.8 11V8.2h2.4V11"/>'),
+      person:s('<circle cx="6" cy="3.9" r="2.2"/><path d="M1.9 11c.6-2.4 2.1-3.6 4.1-3.6s3.5 1.2 4.1 3.6"/>'),
+      mail:s('<rect x="1.2" y="2.6" width="9.6" height="6.8" rx="1"/><path d="M1.6 3.2 6 6.6l4.4-3.4"/>'),
+      web:s('<path d="M4.6 2.6H2.4v7h7V7.4M6.6 1.6h3.8v3.8M10.4 1.6 5.6 6.4"/>'),
+      doc:s('<path d="M3 1.4h4l2.6 2.6v6.6H3zM7 1.4V4h2.6"/>')
+    };
+  })();
   /* A card the press was made on, kept open across the redraw that press
      causes. Only the one: a list redraws shut except for the card you are
      working in, which is how every other card in the room behaves. And only
@@ -8937,6 +8949,8 @@ var Leads=(function(){
           +inp('lead-ed-co',l.coordinator,'The organisation that started it',' id="lec-'+lid+'"')+'</span>'
         +'<span class="lead-who-r"><i>Contact</i>'
           +inp('lead-ed-ct',l.contact,'Main contact person',' id="let-'+lid+'"')+'</span>'
+        +'<span class="lead-who-r"><i>Email</i>'
+          +inp('lead-ed-em',l.email,'The contact’s email address',' id="lee-'+lid+'"')+'</span>'
       +'</span></div>'
       +'<div class="lead-ed lead-band"><span class="lead-band-k">Links</span><span class="lead-ed-links">'
         +l.links.map(function(x){
@@ -8959,26 +8973,46 @@ var Leads=(function(){
         +'<button class="todo-btn todo-btn-quiet" onclick="PL.leadCancelEdit(\''+k+'\',event)">Cancel</button>'
         +'<button class="todo-btn todo-btn-primary" onclick="PL.leadSaveEdit(\''+k+'\',event)">Save</button></div>';
     /* Who is behind the project and who to write to there (Mark,
-       2026-10-14), over the links as in the Semaphore: facts about the lead,
-       where the links are the ways to it. No band for a lead with neither. */
-    var who=(l.coordinator||l.contact)
-      ?'<div class="lead-band"><span class="lead-band-k">Who</span><span class="lead-who">'
-        +(l.coordinator?'<span class="lead-who-r"><i>Coordinator</i><span>'+esc(l.coordinator)+'</span></span>':'')
-        +(l.contact?'<span class="lead-who-r"><i>Contact</i><span>'+esc(l.contact)+'</span></span>':'')
-      +'</span></div>':'';
+       2026-10-14), and the ways to it, side by side, each in a box of its
+       own (2026-10-16): Mark chose this from three drawn, and the
+       Marketplace's card draws the same (see "who and the links, side by
+       side" there). The contact's address is one press to write to, with a
+       Copy beside it, and every link says what kind it is and where it
+       goes. No box for what a lead does not have. */
+    var mail=String(l.email||'').trim().replace(/^mailto:/i,'');
+    var wr=function(ico,v,k){
+      return '<p class="lead-w-row"><span class="lead-ico" aria-hidden="true">'+LEAD_ICON[ico]+'</span>'
+        +'<span class="lead-w-v">'+esc(v)+'</span><i>'+k+'</i></p>';};
+    var who=(l.coordinator||l.contact||mail)
+      ?'<div class="lead-pane"><p class="lead-pane-h">Who</p>'
+        +(l.coordinator?wr('org',l.coordinator,'Coordinator'):'')
+        +(l.contact?wr('person',l.contact,'Main contact'):'')
+        +(mail?'<p class="lead-mail-row"><a class="lead-mail" href="mailto:'+esc(mail)+'" '
+            +'title="'+esc('Write to '+(l.contact||mail))+'" onclick="event.stopPropagation()">'
+            +'<span class="lead-ico" aria-hidden="true">'+LEAD_ICON.mail+'</span><span>'+esc(mail)+'</span></a>'
+          +'<button type="button" class="lead-copy" data-v="'+esc(mail)+'" title="Copy the address" '
+            +'onclick="PL.leadCopyMail(this,event)">Copy</button></p>':'')
+      +'</div>':'';
     var links=l.links.length
-      ?'<div class="lead-band"><span class="lead-band-k">Links</span><span class="lead-links">'
+      ?'<div class="lead-pane"><p class="lead-pane-h">Links<b>'+l.links.length+'</b></p><span class="lead-links">'
         +l.links.map(function(x){
-          var nm=esc(x.name);
-          var a=x.url
-            ?'<a class="lead-link" href="'+esc(x.url)+'" target="_blank" rel="noopener" '
-              +'title="'+esc(x.url.replace(/^mailto:/i,''))+'" onclick="event.stopPropagation()">'+nm+'</a>'
-            :'<span class="lead-link">'+nm+'</span>';
+          var url=String(x.url||''),isMail=/^mailto:/i.test(url),host='';
+          if(isMail)host=url.slice(7);
+          else if(url){try{host=new URL(url).hostname.replace(/^www\./,'');}catch(e){host=url;}}
+          var kind=url&&isMail?'mail':/\.(pdf|docx?|pptx?|xlsx?)([?#]|$)/i.test(url)?'doc':'web';
+          var said='<span class="lead-ico" aria-hidden="true">'+LEAD_ICON[kind]+'</span>'
+            +'<span class="lead-link-nm">'+esc(x.name)+'</span>'
+            +(host&&host!==x.name?'<span class="lead-link-host">'+esc(host)+'</span>':'');
+          var a=url
+            ?'<a class="lead-link" href="'+esc(url)+'" target="_blank" rel="noopener" '
+              +'title="'+esc(isMail?'Write to '+host:url)+'" onclick="event.stopPropagation()">'+said+'</a>'
+            :'<span class="lead-link dead">'+said+'</span>';
           return '<span class="lead-link-wrap">'+a
             +'<button class="substamp-del" title="Take this link off" aria-label="Remove link" '
               +'onclick="PL.leadLinkDel(\''+k+'\',\''+jsq(x.id)+'\',event)">✕</button></span>';
         }).join('')
       +'</span></div>':'';
+    var panes=who||links?'<div class="lead-band lead-panes">'+who+links+'</div>':'';
     var addLink='<div class="add-substamp-wrap" id="llw-'+lid+'"><div class="add-substamp-row">'
       +'<input type="text" class="add-substamp-input lead-link-in" id="llu-'+lid+'" placeholder="https://… or name@…" '
         +'aria-label="Link or email address" autocomplete="off" '
@@ -9028,7 +9062,7 @@ var Leads=(function(){
       +scoreHTML(l,key)
       +dateLabel
       +'</div>'
-      +'<div class="todo-expand">'+actions+ending+edit+who+links+addLink+addNote+ups+'</div>'
+      +'<div class="todo-expand">'+actions+ending+edit+panes+addLink+addNote+ups+'</div>'
       +'</div>';
   }
   /* Contacted is two paths, and Mark asked on 2026-10-06 for the step to be
@@ -9097,11 +9131,11 @@ var Leads=(function(){
   function startDraft(){
     var as=arenas();
     var keepA=as.some(function(a){return a.id===lastArena;})?lastArena:null;
-    draft={aid:keepA,due:'',project:'',match:'',coordinator:'',contact:'',links:[{url:'',label:''}]};
+    draft={aid:keepA,due:'',project:'',match:'',coordinator:'',contact:'',email:'',links:[{url:'',label:''}]};
   }
   function readDraft(){
     if(!draft)return;
-    ['project','match','coordinator','contact'].forEach(function(k){
+    ['project','match','coordinator','contact','email'].forEach(function(k){
       var el=byId('lnew-'+k);if(el)draft[k]=el.value;});
     draft.links.forEach(function(k,i){
       var u=byId('lnew-url-'+i),n=byId('lnew-label-'+i);
@@ -9144,6 +9178,9 @@ var Leads=(function(){
         +'<textarea class="add-substamp-input" id="lnew-contact" rows="1" '
           +'placeholder="Main contact person — optional" aria-label="Main contact person">'
           +esc(draft.contact)+'</textarea>'
+        +'<textarea class="add-substamp-input" id="lnew-email" rows="1" '
+          +'placeholder="Their email address — optional" aria-label="The contact’s email address">'
+          +esc(draft.email)+'</textarea>'
         /* each link with its name beside it, as a link added to a lead later
            can have one, and as many as the lead was found with (Mark,
            2026-10-06) */
@@ -9209,7 +9246,7 @@ var Leads=(function(){
        it moves first: to the lead just made, open, the way a dot opens it. */
     var lid=null;
     try{lid=sock.add(d.aid,{project:d.project,match:d.match,coordinator:d.coordinator,contact:d.contact,
-      links:d.links,due:d.due||null});}
+      email:d.email,links:d.links,due:d.due||null});}
     catch(e){console.error(e);}
     if(!lid){draft=d;toast('The lead could not be added — is the Semaphore’s board readable?');return;}
     Board.showLead(d.aid+'|'+lid);
@@ -9304,9 +9341,9 @@ var Leads=(function(){
     var l=find(key);if(!l)return;
     var p=byId('lep-'+l.id),m=byId('lem-'+l.id),c=cardOf(key);
     if(!p||!m||!c)return;
-    var co=byId('lec-'+l.id),ct=byId('let-'+l.id);
+    var co=byId('lec-'+l.id),ct=byId('let-'+l.id),em=byId('lee-'+l.id);
     var v={project:p.value,match:m.value,
-      coordinator:co?co.value:undefined,contact:ct?ct.value:undefined,
+      coordinator:co?co.value:undefined,contact:ct?ct.value:undefined,email:em?em.value:undefined,
       due:c.hasAttribute('data-due')?c.getAttribute('data-due'):undefined,
       links:qa('.lead-ed-links .lead-ed-row',c).map(function(r){
         return {id:r.getAttribute('data-k'),url:q('.lead-ed-url',r).value,
@@ -9345,6 +9382,26 @@ var Leads=(function(){
     if(evt.key==='Enter'){evt.preventDefault();addLink(key,evt);}
   }
   function linkDel(key,kid,evt){stopEvt(evt);change(key,'linkDel',kid);}
+  /* The contact's address onto the clipboard, the button saying so in its
+     own place. The off-screen field first, as the mailing list's copy does,
+     because it works from file://; the asynchronous clipboard only if that
+     refuses. */
+  function copyMail(btn,evt){
+    stopEvt(evt);
+    var v=btn.getAttribute('data-v');if(!v)return;
+    var said=function(ok){
+      btn.textContent=ok?'Copied':'Not copied';
+      setTimeout(function(){btn.textContent='Copy';},1600);};
+    var ta=document.createElement('textarea');
+    ta.value=v;ta.setAttribute('readonly','');
+    ta.setAttribute('style','position:fixed;left:-9999px;top:0;opacity:0');
+    document.body.appendChild(ta);ta.select();
+    var ok=false;
+    try{ok=document.execCommand('copy');}catch(e){}
+    ta.parentNode.removeChild(ta);
+    if(ok||!(navigator.clipboard&&navigator.clipboard.writeText)){said(ok);return;}
+    navigator.clipboard.writeText(v).then(function(){said(true);},function(){said(false);});
+  }
 
   return {fill:fill,list:list,keyOf:keyOf,find:find,sorted:sorted,
     html:html,listHTML:listHTML,COLOR:COLOR,hexOf:hexOf,
@@ -9353,7 +9410,7 @@ var Leads=(function(){
     path:path,score:score,due:due,done:done,end:end,endCancel:endCancel,arena:arenaOf,openBox:openBox,
     beginEdit:beginEdit,cancelEdit:cancelEdit,saveEdit:saveEdit,editDrop:editDrop,
     addNote:addNote,noteKey:noteKey,noteDel:noteDel,
-    addLink:addLink,linkKey:linkKey,linkDel:linkDel,
+    addLink:addLink,linkKey:linkKey,linkDel:linkDel,copyMail:copyMail,
     hexOf:hexOf};
 })();
 
@@ -14153,7 +14210,7 @@ window.PL={
   leadOpenBox:Leads.openBox,leadBeginEdit:Leads.beginEdit,leadCancelEdit:Leads.cancelEdit,
   leadSaveEdit:Leads.saveEdit,leadEditDrop:Leads.editDrop,leadAddNote:Leads.addNote,leadNoteKey:Leads.noteKey,
   leadNoteDel:Leads.noteDel,leadAddLink:Leads.addLink,leadLinkKey:Leads.linkKey,
-  leadLinkDel:Leads.linkDel,
+  leadLinkDel:Leads.linkDel,leadCopyMail:Leads.copyMail,
   weeksMenu:Board.weeksMenu,setWeeks:Board.setWeeks,flip:Board.flip,
   toggleAgenda:Board.toggleAgenda,
 

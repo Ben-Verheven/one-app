@@ -3029,6 +3029,7 @@ function leadFormHTML(a,ven){
        2026-10-14 so the weekly Excel can say it beside each lead */
     box('coordinator','','Coordinator \u2014 the organisation that started it, optional')+
     box('contact','','Main contact person \u2014 optional')+
+    box('email','','Their email address \u2014 optional')+
     /* the link a lead is found with gets a name as well, as every other link
        on a lead can, and a lead is often found with more than one — the
        call, the project, a person — so another row is a press away (Mark,
@@ -3069,17 +3070,75 @@ function updWhen(u){
 }
 /* The lead's own links: its catch, not the arena's tools, so they are listed
    in their own smaller hand and each one can be taken off again. */
+/* Each says what kind it is and where it goes: a mark for a page, a letter or
+   a document, the name, and at the far end the host or the address in a
+   quieter hand \u2014 which a bare name hid until it was hovered. */
 function leadLinkRows(a,l,shut){
   return (l.links||[]).map(lk=>{
-    const nm=esc(linkName(lk));
-    const body=lk.url
-      ? '<a class="lla'+(/^mailto:/i.test(lk.url)?' mail':'')+'" draggable="false" href="'+esc(lk.url)+'" target="_blank" rel="noopener" '+
-          'title="'+esc(lk.url.replace(/^mailto:/i,''))+'"><i></i>'+nm+'</a>'
-      : '<span class="lla dead"><i></i>'+nm+'</span>';
+    const nm=esc(linkName(lk)),url=String(lk.url||''),mail=/^mailto:/i.test(url);
+    let host='';
+    if(mail)host=url.slice(7);
+    else if(url){try{host=new URL(url).hostname.replace(/^www\./,'');}catch(e){host=url;}}
+    const kind=mail?'mail':/\.(pdf|docx?|pptx?|xlsx?)([?#]|$)/i.test(url)?'doc':'web';
+    const ico='<span class="lki" aria-hidden="true">'+LEAD_ICON[url?kind:'web']+'</span>';
+    const said='<span class="llnm">'+nm+'</span>'+(host&&host!==linkName(lk)?'<span class="llhost">'+esc(host)+'</span>':'');
+    const body=url
+      ? '<a class="lla" draggable="false" href="'+esc(url)+'" target="_blank" rel="noopener" '+
+          'title="'+esc(mail?'Write to '+host:url)+'">'+ico+said+'</a>'
+      : '<span class="lla dead">'+ico+said+'</span>';
     const x=shut?'':'<button class="lx" data-act="leadLinkDel" data-id="'+a.id+'" data-l="'+l.id+'" '+
       'data-k="'+lk.id+'" title="Take this link off" aria-label="Remove link">\u2715</button>';
     return '<div class="llrow">'+body+x+'</div>';
   }).join('');
+}
+/* The marks on the two boxes, drawn in the stroke of the text beside them.
+   The Ledger draws the same five for the same lead, to the same geometry. */
+const LEAD_ICON=(()=>{
+  const s=d=>'<svg viewBox="0 0 12 12">'+d+'</svg>';
+  return {
+    org:s('<path d="M2 11V3.6L6 1.6l4 2V11M1 11h10M4.8 11V8.2h2.4V11"/>'),
+    person:s('<circle cx="6" cy="3.9" r="2.2"/><path d="M1.9 11c.6-2.4 2.1-3.6 4.1-3.6s3.5 1.2 4.1 3.6"/>'),
+    mail:s('<rect x="1.2" y="2.6" width="9.6" height="6.8" rx="1"/><path d="M1.6 3.2 6 6.6l4.4-3.4"/>'),
+    web:s('<path d="M4.6 2.6H2.4v7h7V7.4M6.6 1.6h3.8v3.8M10.4 1.6 5.6 6.4"/>'),
+    doc:s('<path d="M3 1.4h4l2.6 2.6v6.6H3zM7 1.4V4h2.6"/>')
+  };
+})();
+/* An address as it is kept: bare, never with the "mailto:" a link wears. */
+const leadMail=v=>String(v||'').trim().replace(/^mailto:/i,'').trim();
+function leadPanesHTML(a,l,shut,adding){
+  const mail=leadMail(l.email),n=(l.links||[]).length;
+  const row=(ico,v,k)=>'<p class="lwrow"><span class="lki" aria-hidden="true">'+LEAD_ICON[ico]+'</span>'+
+    '<span class="lwv">'+esc(v)+'</span><i>'+k+'</i></p>';
+  const who=l.coordinator||l.contact||mail
+    ? '<div class="lpane" data-act="leadStay"><p class="lph">Who</p>'+
+        (l.coordinator?row('org',l.coordinator,'Coordinator'):'')+
+        (l.contact?row('person',l.contact,'Main contact'):'')+
+        (mail?'<p class="lmrow"><a class="lmail" href="mailto:'+esc(mail)+'" draggable="false" '+
+            'title="Write to '+esc(l.contact||mail)+'"><span class="lki" aria-hidden="true">'+LEAD_ICON.mail+'</span>'+
+            '<span>'+esc(mail)+'</span></a>'+
+          '<button class="lcopy" data-act="copyMail" data-v="'+esc(mail)+'" title="Copy the address">Copy</button></p>':'')+
+      '</div>'
+    : '';
+  const links=n||adding
+    ? '<div class="lpane" data-act="leadStay"><p class="lph">Links'+(n?'<b>'+n+'</b>':'')+'</p>'+
+        (n?'<div class="llinks">'+leadLinkRows(a,l,shut)+'</div>':'')+
+        (adding?lkFormHTML(a,l.id):'')+
+      '</div>'
+    : '';
+  return who||links?'<div class="lpanes">'+who+links+'</div>':'';
+}
+/* Through a selected, off-screen field first, as the Ledger's mailing list
+   copies, because that works from file:// in every browser the app opens
+   in; the asynchronous clipboard only if it refuses. */
+function copyText(t,done){
+  const ta=document.createElement('textarea');
+  ta.value=t;ta.setAttribute('readonly','');
+  ta.setAttribute('style','position:fixed;left:-9999px;top:0;opacity:0');
+  document.body.appendChild(ta);ta.select();
+  let ok=false;try{ok=document.execCommand('copy');}catch(e){}
+  ta.remove();
+  if(ok||!(navigator.clipboard&&navigator.clipboard.writeText)){done(ok);return;}
+  navigator.clipboard.writeText(t).then(()=>done(true),()=>done(false));
 }
 /* Every band under the name is written the same way — a word in the label
    gutter, the thing itself in the column beside it — and each one is a section
@@ -3348,12 +3407,18 @@ function leadRowHTML(a,l,hit,say){
   const who=editing
     ? leadSec('who','<div class="lwho">'+
         '<div class="lwr"><i>coordinator</i>'+box('coordinator',l.coordinator,'The organisation that started it','lwin')+'</div>'+
-        '<div class="lwr"><i>contact</i>'+box('contact',l.contact,'Main contact person','lwin')+'</div></div>')
-    : (l.coordinator||l.contact)
-    ? leadSec('who','<div class="lwho">'+
-        (l.coordinator?'<p class="lwr"><i>coordinator</i><span>'+esc(l.coordinator)+'</span></p>':'')+
-        (l.contact?'<p class="lwr"><i>contact</i><span>'+esc(l.contact)+'</span></p>':'')+'</div>')
+        '<div class="lwr"><i>contact</i>'+box('contact',l.contact,'Main contact person','lwin')+'</div>'+
+        '<div class="lwr"><i>email</i>'+box('email',l.email,'The contact’s email address','lwin')+'</div></div>')
     : '';
+  /* ── who and the links, side by side ──
+     Mark chose this from three drawn (2026-10-16): who is behind the
+     project in one box, the ways to it in another, side by side wherever the
+     card is wide enough and one over the other in an arena's narrow panel.
+     They used to be two labelled bands down the left edge, which left the
+     right half of a wide card empty and gave the contact no address; a link
+     said neither what kind it was nor where it went. A press inside either
+     box keeps the card open, so an address can be selected. */
+  const panes=editing?'':leadPanesHTML(a,l,done,adding);
   /* the venue it was found at, which opens it */
   const fromV=l.venueId&&venue(l.venueId);
   const from=fromV&&!editing?leadSec('from','<button class="lfrom" data-act="openVenue" data-v="'+fromV.id+'" '+
@@ -3373,11 +3438,7 @@ function leadRowHTML(a,l,hit,say){
           box('text',u.text,'What happened','ledup')+
           '<button class="lx" data-act="leadEditDrop" title="Take this line out when saved" aria-label="Remove update">✕</button></div>').join('')+
       '</div>':'')
-    : ((l.links||[]).length||adding
-      ? leadSec('links',
-          ((l.links||[]).length?'<div class="llinks">'+leadLinkRows(a,l,done)+'</div>':'')+
-          (adding?lkFormHTML(a,l.id):''))
-      : '')+
+    : panes+
     (writing?'<div class="lnew">'+noteFormHTML(a,l)+'</div>':'')+
     (rows.length
       ? '<div class="lupd">'+rows.map(([u,i])=>
@@ -3462,14 +3523,15 @@ function leadEditAll(l,v){
   return true;
 }
 /* The coordinator (the organisation that started the project) and the main
-   contact person, both plain words and both optional (Mark, 2026-10-14). A
+   contact person, both plain words and both optional (Mark, 2026-10-14), and
+   the contact's email address, kept bare (2026-10-16). A
    field left out of `v` is left alone, so a caller that knows nothing of
    them — an older Pocket — cannot wipe them; an emptied one takes the key
    off, so a lead that never had them stays as it was. */
 function leadWhoSet(l,v){
-  ['coordinator','contact'].forEach(k=>{
+  ['coordinator','contact','email'].forEach(k=>{
     if(typeof v[k]!=='string')return;
-    const t=v[k].trim();
+    const t=k==='email'?leadMail(v[k]):v[k].trim();
     if(t)l[k]=t;else delete l[k];
   });
 }
@@ -3484,6 +3546,7 @@ function leadEditRead(card){
     match:val(card.querySelector('.ltx'),'match'),
     coordinator:who?val(who,'coordinator'):undefined,
     contact:who?val(who,'contact'):undefined,
+    email:who?val(who,'email'):undefined,
     links:[...card.querySelectorAll('.ledlinks .ledrow')].map(r=>({id:r.dataset.k,
       url:val(r,'url'),label:val(r,'label'),gone:r.classList.contains('gone')})),
     updates:[...card.querySelectorAll('.ledups .ledrow')].map(r=>({i:+r.dataset.u,
@@ -3983,7 +4046,7 @@ function leadsForBoard(){
   liveArenas().forEach(a=>openLeads(a).forEach(l=>out.push({
     aid:a.id,arena:a.name,tone:arenaTone(a),type:(typeOf(a)||{}).name||'',
     id:l.id,name:leadName(l),project:l.project||'',
-    match:l.match||'',coordinator:l.coordinator||'',contact:l.contact||'',
+    match:l.match||'',coordinator:l.coordinator||'',contact:l.contact||'',email:l.email||'',
     stage:stageOf(l),due:l.due||null,
     toResearchers:!!l.toResearchers,toLead:!!l.toLead,score:l.score||0,
     links:(l.links||[]).map(k=>({id:k.id,url:k.url||'',label:k.label||'',name:linkName(k)})),
@@ -4002,7 +4065,7 @@ function leadsForExcel(){
     const st=stageOf(l);
     out.push({id:l.id,aid:a.id,arena:a.name,type:(typeOf(a)||{}).name||'',tone:arenaTone(a),frozen:!!a.frozenAt,
       name:leadName(l),project:l.project||'',match:l.match||'',
-      coordinator:l.coordinator||'',contact:l.contact||'',
+      coordinator:l.coordinator||'',contact:l.contact||'',email:l.email||'',
       stage:st,kind:st==='contacted'?leadKind(l):'',toResearchers:!!l.toResearchers,toLead:!!l.toLead,
       where:st==='contacted'?'Contacted \u2014 '+KIND_NAME[leadKind(l)]:st==='talking'?'Talking':'Spotted',
       score:l.score||0,due:l.due||null,doneAt:l.doneAt||null,
@@ -4467,6 +4530,11 @@ document.addEventListener('click',e=>{
       if(l.outcome==='project')leadToProject(ar,l);
       break;}
     case 'leadEndCancel':{closeComposers();repaint();renderDrawer();break;}
+    /* the button says it worked, in place of a toast over the card */
+    case 'copyMail':{const v=b.dataset.v;if(!v)break;
+      copyText(v,ok=>{b.textContent=ok?'Copied':'Not copied';
+        setTimeout(()=>{b.textContent='Copy';},1600);});
+      break;}
     case 'leadLinkDel':{const ar=arena(id);if(!ar)break;
       const l=(ar.leads||[]).find(x=>x.id===b.dataset.l);if(!l)break;
       l.links=(l.links||[]).filter(k=>k.id!==b.dataset.k);
@@ -4801,7 +4869,8 @@ document.addEventListener('submit',e=>{
     closeComposers();
     const ven=df.dataset.venue&&venue(df.dataset.venue);
     const lid=leadAdd(a.id,{project:df.elements.project.value,match:df.elements.match.value,
-      coordinator:df.elements.coordinator.value,contact:df.elements.contact.value,links,venueId:ven?ven.id:null});
+      coordinator:df.elements.coordinator.value,contact:df.elements.contact.value,
+      email:df.elements.email.value,links,venueId:ven?ven.id:null});
     /* a lead started from a venue is today's visit's answer */
     if(ven&&lid){const x=vAnswer(ven,'lead');x.leadId=lid;leadLastArena=a.id;save();repaint();renderDrawer();return;}
     /* on Leads the new lead stands open, so it is seen where it landed */
