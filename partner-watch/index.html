@@ -1,0 +1,495 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Partner Watch</title>
+<!--
+  Partner Watch — the partner-search entries of the brokerage sites, copied
+  every night by the partner-copier function (supabase/8-…), browsed here:
+  site, list, entry. One file on its own while it is tried out; it is drawn
+  in the Marketplace room's colours and type so that it can move into the
+  One App later as a room or a Marketplace view without being redrawn.
+
+  It reads and writes only through the cloud, behind the same login as the
+  One App and Pocket, because the entries hold people's names and emails
+  and the repository is public.
+-->
+<style>
+:root{
+  color-scheme:dark;
+  /* The Marketplace's ground, lettering and chrome (semaphore.css), so a
+     later move into the One App changes nothing a reader can see. */
+  --paper:#191713; --panel:#231F1A; --field:rgba(10,9,7,.40);
+  --ink:#EDE7DC; --muted:#B3A897;
+  /* The Marketplace's --faint (#7D7466) is 3.9:1 on this ground; the small
+     dates and counts here are 12px, so it is struck a step lighter. */
+  --faint:#958B7A;
+  --key:#A99C86; --key2:#D8CDB8;
+  --grid:rgba(200,188,165,.13); --line:rgba(200,188,165,.24); --line2:rgba(200,188,165,.38);
+  --brok:#EF5B4C; --brok-ink:#FF9A8C; --brok-soft:rgba(239,91,76,.20);
+  --call:#8A8BF0; --call-ink:#C2C3FF; --call-soft:rgba(138,139,240,.16);
+  --new:#B9E35A; --new-ink:#D9F59A; --new-soft:rgba(185,227,90,.14); --new-line:rgba(185,227,90,.42);
+  --gold:#F0B429; --gold-ink:#F7D27A; --gold-soft:rgba(240,180,41,.14);
+  --warn-ink:#FFB4A8;
+  --serif:'Optima','Palatino Linotype','Book Antiqua',Georgia,serif;
+  --body:'Iowan Old Style','Palatino Linotype','Book Antiqua',Georgia,serif;
+  --mono:ui-monospace,'Cascadia Mono','SF Mono',Consolas,Menlo,monospace;
+  --radius:7px;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--paper);color:var(--ink);font:15px/1.5 var(--body);display:flex;flex-direction:column;min-width:900px}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--key2);outline-offset:1px}
+[hidden]{display:none!important}
+.bar{display:flex;align-items:center;gap:14px;padding:10px 18px;border-bottom:1px solid var(--line);background:var(--panel);flex:none}
+.bar h1{font:400 19px var(--serif);margin:0;letter-spacing:.02em}
+.grow{flex:1}
+.btn{background:none;border:1px solid var(--line2);color:var(--key2);font:13.5px var(--serif);padding:5px 12px;border-radius:var(--radius);cursor:pointer}
+.btn:hover{border-color:var(--key)}
+.btn:disabled{color:var(--faint);cursor:default}
+.meta{font:12px var(--mono);color:var(--faint)}
+#search{background:var(--field);border:1px solid var(--line);border-radius:var(--radius);color:var(--ink);font:14px var(--body);padding:5px 10px;width:260px}
+#search::placeholder{color:var(--faint)}
+.cols{flex:1;display:grid;grid-template-columns:240px 360px minmax(0,1fr);min-height:0}
+.col{border-right:1px solid var(--line);min-width:0;display:flex;flex-direction:column;min-height:0}
+.scroll{overflow-y:auto;min-height:0;flex:1}
+.colhead{padding:12px 14px 8px;font:11.5px var(--serif);letter-spacing:.08em;text-transform:uppercase;color:var(--faint);display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex:none}
+.site{display:block;width:100%;text-align:left;background:none;border:0;border-left:3px solid transparent;padding:9px 14px 9px 11px;cursor:pointer}
+.site:hover{background:rgba(216,205,184,.05)}
+.site.on{background:rgba(216,205,184,.09);border-left-color:var(--key2)}
+.site .nm{font:15px var(--serif)}
+.site .sub{font-size:12.5px;color:var(--muted)}
+.site .ct{display:flex;flex-wrap:wrap;gap:4px 9px;margin-top:3px;font:12px var(--mono);color:var(--faint)}
+.site .ct .n{color:var(--new-ink)}
+.site .ct .s{color:var(--brok-ink)}
+.site .err{font-size:12px;color:var(--warn-ink);margin-top:3px;overflow-wrap:anywhere}
+.runbox{margin:12px 14px 16px;padding:10px 12px;border:1px dashed var(--line2);border-radius:var(--radius);font-size:12.5px;color:var(--muted);flex:none}
+.runbox b{color:var(--ink);font-weight:500}
+.runbox .btn{margin-top:8px;width:100%}
+.filters{display:flex;flex-wrap:wrap;gap:6px;padding:0 14px 10px;flex:none}
+.chip{font:12px var(--serif);color:var(--muted);border:1px solid var(--line);border-radius:99px;padding:2px 9px;background:none;cursor:pointer}
+.chip.on{color:var(--ink);border-color:var(--line2);background:rgba(216,205,184,.1)}
+.sep{width:100%;height:0}
+.row{display:grid;grid-template-columns:8px minmax(0,1fr);gap:9px;padding:9px 14px;border:0;border-top:1px solid var(--grid);cursor:pointer;background:none;width:100%;text-align:left}
+.row:hover{background:rgba(216,205,184,.05)}
+.row.on{background:rgba(216,205,184,.11)}
+.row.gone .t,.row.binned .t{color:var(--muted)}
+.dot{width:8px;height:8px;border-radius:50%;margin-top:7px}
+.dot.new{background:var(--new)}
+.dot.seen{border:1px solid var(--line2)}
+.row .t{font:15px var(--serif);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .o{font-size:12.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tags{display:flex;gap:6px;margin-top:4px;flex-wrap:wrap;align-items:center}
+.kind{font:11.5px var(--serif);border-radius:4px;padding:1px 7px;white-space:nowrap}
+.kind.seeks{background:var(--brok-soft);color:var(--brok-ink)}
+.kind.offers{background:var(--call-soft);color:var(--call-ink)}
+.st{font:11.5px var(--serif);border-radius:4px;padding:1px 7px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.st.interesting{border-color:rgba(240,180,41,.5);color:var(--gold-ink);background:var(--gold-soft)}
+.st.chg{border-style:dashed;color:var(--key2)}
+.st.newtag{border-color:var(--new-line);color:var(--new-ink)}
+.st.gone{color:var(--warn-ink);border-color:rgba(255,180,168,.35)}
+.empty{padding:22px 16px;color:var(--muted);font-size:14px}
+.det{padding:18px 26px 40px;max-width:980px}
+.dhead{display:flex;gap:14px;align-items:flex-start}
+.dtitle{font:400 23px/1.25 var(--serif);margin:6px 0 0;text-wrap:balance}
+.dsub{color:var(--muted);font-size:14px;margin-top:3px}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 4px;align-items:center}
+.act{background:none;border:1px solid var(--line2);color:var(--key2);font:13.5px var(--serif);padding:6px 13px;border-radius:var(--radius);cursor:pointer}
+.act kbd{font:11px var(--mono);color:var(--faint);margin-left:6px}
+.act.interesting.on{border-color:var(--gold);color:var(--gold-ink);background:var(--gold-soft)}
+.act.later.on{border-color:var(--key2);color:var(--ink);background:rgba(216,205,184,.1)}
+.act.bin.on{color:var(--muted);background:rgba(216,205,184,.06);text-decoration:line-through}
+#why{flex:1;min-width:220px;background:var(--field);border:1px solid var(--line);border-radius:var(--radius);color:var(--ink);font:13.5px var(--body);padding:6px 10px}
+#why::placeholder{color:var(--faint)}
+.tabs{display:flex;gap:20px;border-bottom:1px solid var(--line);margin-top:16px}
+.tabs button{background:none;border:0;border-bottom:2px solid transparent;color:var(--muted);font:14px var(--serif);padding:6px 0;cursor:pointer;margin-bottom:-1px}
+.tabs button.on{color:var(--ink);border-bottom-color:var(--key2)}
+.fields{display:grid;grid-template-columns:190px minmax(0,1fr);gap:9px 18px;font-size:14.5px;margin:16px 0 0}
+.fields dt{color:var(--muted);font-size:13px;padding-top:2px}
+.fields dd{margin:0;min-width:0;white-space:pre-wrap;overflow-wrap:anywhere}
+.long{max-height:8.2em;overflow:hidden}
+.long.open{max-height:none}
+.more{background:none;border:0;color:var(--key2);font:12.5px var(--serif);padding:2px 0;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.orig{background:var(--field);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;font:13px/1.65 var(--mono);color:var(--key2);white-space:pre-wrap;overflow-wrap:anywhere;margin-top:14px}
+.note{margin-top:14px;font-size:13px;color:var(--faint)}
+.hist{margin-top:16px;display:grid;grid-template-columns:170px minmax(0,1fr);gap:8px 16px;font-size:14px}
+.hist .d{font:12.5px var(--mono);color:var(--faint);padding-top:2px}
+.diff{font:12.5px/1.6 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere;margin-top:6px}
+.diff .add{color:var(--new-ink);background:var(--new-soft)}
+.diff .del{color:var(--brok-ink);background:var(--brok-soft);text-decoration:line-through}
+.banner{padding:8px 18px;background:var(--brok-soft);color:var(--warn-ink);font-size:13.5px;flex:none}
+/* the login */
+#login{position:fixed;inset:0;background:var(--paper);display:flex;align-items:center;justify-content:center;z-index:5}
+#login form{width:340px;display:flex;flex-direction:column;gap:10px}
+#login h2{font:400 22px var(--serif);margin:0 0 4px}
+#login p{color:var(--muted);font-size:13.5px;margin:0 0 6px}
+#login input{background:var(--field);border:1px solid var(--line2);border-radius:var(--radius);color:var(--ink);font:15px var(--body);padding:8px 10px}
+#login .btn{padding:8px;font-size:15px}
+#login .err{color:var(--warn-ink);font-size:13px;min-height:1.2em}
+</style>
+</head>
+<body>
+
+<div id="login" hidden>
+  <form id="loginForm">
+    <h2>Partner Watch</h2>
+    <p>Log in with the same email and password as the One App.</p>
+    <input id="email" type="email" autocomplete="username" placeholder="Email" required>
+    <input id="pass" type="password" autocomplete="current-password" placeholder="Password" required>
+    <button class="btn" type="submit">Log in</button>
+    <div class="err" id="loginErr"></div>
+  </form>
+</div>
+
+<header class="bar">
+  <h1>Partner Watch</h1>
+  <span class="meta" id="total"></span>
+  <div class="grow"></div>
+  <input id="search" type="search" placeholder="Search names, organisations, keywords…" aria-label="Search">
+</header>
+<div class="banner" id="banner" hidden></div>
+
+<div class="cols">
+  <div class="col">
+    <div class="colhead">Sites</div>
+    <div class="scroll" id="sites"></div>
+    <div class="runbox" id="runbox"></div>
+  </div>
+  <div class="col">
+    <div class="colhead"><span id="listhead">All sites</span><span class="meta" id="listcount"></span></div>
+    <div class="filters" id="filters"></div>
+    <div class="scroll" id="rows"></div>
+  </div>
+  <div class="scroll" id="detwrap"><div class="det" id="det"></div></div>
+</div>
+
+<script>
+/* The cloud: the One App's own Supabase project. The key is the public one
+   (the same as Pocket's BUILT_IN); since the lock it opens nothing without
+   Mark's login, which is why it can stand in a public page. */
+var CLOUD = { url:'https://eaaggqydnjkufzajgpzh.supabase.co',
+  key:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVhYWdncXlkbmprdWZ6YWpncHpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2NzEwMjMsImV4cCI6MjA5OTI0NzAyM30.pRQPc-qZWV0wwPPnfQU0I_HzmZZ36xZYIXJQYfQG96g' };
+var AUTH = 'partnerwatch.auth', VIEW = 'partnerwatch.view';
+
+/* ── the login ─────────────────────────────────────────────────────────
+   Pocket's way (pocket/index.html, "the login"): log in once, keep the
+   session on this device, renew it a minute before it runs out, and only
+   one renewal at a time, because Supabase ends the whole session when the
+   same refresh token comes back twice. */
+var auth = null, renewing = null;
+try { auth = JSON.parse(localStorage.getItem(AUTH) || 'null'); } catch(e){}
+
+function authCall(path, body){
+  return fetch(CLOUD.url + '/auth/v1/' + path, {
+    method:'POST',
+    headers:{ apikey:CLOUD.key, 'Content-Type':'application/json', Authorization:'Bearer ' + CLOUD.key },
+    body: JSON.stringify(body)
+  }).then(function(r){ return r.json().catch(function(){ return {}; }).then(function(j){
+    if (!r.ok){ var e = new Error(j.error_description || j.msg || j.message || r.status); e.status = r.status; throw e; }
+    return j;
+  }); });
+}
+function keepAuth(j){
+  auth = { access:j.access_token, refresh:j.refresh_token,
+           until: j.expires_at ? j.expires_at * 1000 : Date.now() + (j.expires_in || 3600) * 1000 };
+  try { localStorage.setItem(AUTH, JSON.stringify(auth)); } catch(e){}
+}
+function dropAuth(){ auth = null; try { localStorage.removeItem(AUTH); } catch(e){} }
+function token(){
+  if (!auth || !auth.refresh) return Promise.reject(Object.assign(new Error('not logged in'), { status:401 }));
+  if (auth.until - Date.now() > 60000) return Promise.resolve(auth.access);
+  if (!renewing) renewing = authCall('token?grant_type=refresh_token', { refresh_token:auth.refresh })
+    .then(function(j){ keepAuth(j); renewing = null; return auth.access; },
+          function(e){ renewing = null; if (e.status === 400 || e.status === 401) dropAuth(); throw e; });
+  return renewing;
+}
+function api(path, opts){
+  opts = opts || {};
+  return token().then(function(t){
+    var h = Object.assign({ apikey:CLOUD.key, Authorization:'Bearer ' + t }, opts.headers || {});
+    if (opts.body) h['Content-Type'] = 'application/json';
+    return fetch(CLOUD.url + path, { method:opts.method || 'GET', headers:h,
+      body: opts.body ? JSON.stringify(opts.body) : undefined });
+  }).then(function(r){
+    if (r.status === 401){ dropAuth(); showLogin('Your session ended. Log in again.'); throw new Error('logged out'); }
+    if (!r.ok) return r.text().then(function(t){ throw new Error(r.status + ' ' + t.slice(0, 200)); });
+    return r.status === 204 ? null : r.json();
+  });
+}
+/* The database hands out a thousand rows per request at most; Water4All
+   alone is near three hundred and the four sites past eight hundred. */
+function all(path){
+  var out = [];
+  function page(from){
+    return api(path, { headers:{ Range: from + '-' + (from + 999), 'Range-Unit':'items' } })
+      .then(function(rows){ out = out.concat(rows); return rows.length < 1000 ? out : page(from + 1000); });
+  }
+  return page(0);
+}
+
+/* ── state ─────────────────────────────────────────────────────────── */
+var sites = [], entries = [], lastRun = null, byId = {};
+var view = { site:'all', kind:'all', state:'open', q:'', id:null, tab:'fields' };
+try { Object.assign(view, JSON.parse(localStorage.getItem(VIEW) || '{}'), { q:'' }); } catch(e){}
+var detail = {};          // id → { fields, page_text, versions }
+var $ = function(s){ return document.querySelector(s); };
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]; }); }
+function saveView(){ try { localStorage.setItem(VIEW, JSON.stringify({ site:view.site, kind:view.kind, state:view.state, id:view.id, tab:view.tab })); } catch(e){} }
+function day(iso){ if (!iso) return ''; var d = new Date(iso);
+  return d.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' }); }
+function stamp(iso){ if (!iso) return ''; var d = new Date(iso);
+  return d.toLocaleDateString('en-GB', { day:'numeric', month:'short' }) + ', ' + d.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' }); }
+function siteOf(e){ return sites.find(function(s){ return s.id === e.site; }) || { name:e.site }; }
+function title(e){ return e.org || e.contact || ('Entry ' + e.ext_id); }
+
+var COLS = 'id,site,ext_id,url,kind,contact,org,country,topic,keywords,posted,list_text,first_seen,fetched_at,changed_at,removed_at,opened_at,verdict,why,decided_at';
+function load(){
+  return Promise.all([
+    api('/rest/v1/partner_sites?select=*&order=sort'),
+    all('/rest/v1/partner_entries?select=' + COLS + '&order=first_seen.desc,id'),
+    api('/rest/v1/partner_watch_log?select=*&order=ran_at.desc&limit=1')
+  ]).then(function(r){
+    sites = r[0]; entries = r[1]; lastRun = r[2][0] || null;
+    byId = {}; entries.forEach(function(e){ byId[e.id] = e; });
+    /* Newest first: the night it arrived, then the site's own date where
+       it gives one, then the site's own number, which both platforms count
+       upwards — the first night brings every entry at once, and without
+       this the list would be in no useful order at all. */
+    entries.sort(function(a, b){
+      return (b.first_seen || '').slice(0, 10).localeCompare((a.first_seen || '').slice(0, 10))
+          || (b.posted || '').localeCompare(a.posted || '')
+          || (+b.ext_id - +a.ext_id);
+    });
+    $('#banner').hidden = true;
+    draw();
+  }).catch(function(e){
+    if (String(e.message) === 'logged out' || e.status === 401) return;
+    $('#banner').textContent = 'Could not reach the cloud: ' + e.message;
+    $('#banner').hidden = false;
+  });
+}
+
+/* ── the filters ─────────────────────────────────────────────────────
+   Binned entries stay out of every view but Binned: they are kept so the
+   copier never brings them back as new, not so they are seen again. */
+var STATES = [['open','All'],['unsorted','Unsorted'],['interesting','Interesting'],['later','Later'],['bin','Binned']];
+var KINDS = [['all','Both kinds'],['seeks','Seeks partners'],['offers','Offers expertise']];
+function passes(e){
+  if (view.site !== 'all' && e.site !== view.site) return false;
+  if (view.kind !== 'all' && e.kind !== view.kind) return false;
+  if (view.state === 'open' && e.verdict === 'bin') return false;
+  if (view.state === 'unsorted' && e.verdict) return false;
+  if (['interesting','later','bin'].indexOf(view.state) >= 0 && e.verdict !== view.state) return false;
+  if (view.q){
+    var hay = [e.contact, e.org, e.country, e.topic, e.keywords, e.list_text, e.why].join(' ').toLowerCase();
+    if (view.q.toLowerCase().split(/\s+/).some(function(w){ return w && hay.indexOf(w) < 0; })) return false;
+  }
+  return true;
+}
+function shown(){ return entries.filter(passes); }
+
+/* ── drawing ───────────────────────────────────────────────────────── */
+function kindTag(k){ return k === 'seeks' ? '<span class="kind seeks">Seeks partners</span>'
+  : k === 'offers' ? '<span class="kind offers">Offers expertise</span>' : ''; }
+function stateTags(e){
+  return (e.verdict === 'interesting' ? '<span class="st interesting">Interesting</span>'
+        : e.verdict === 'later' ? '<span class="st">Later</span>'
+        : e.verdict === 'bin' ? '<span class="st">Binned</span>' : '')
+       + (e.changed_at && (!e.opened_at || e.changed_at > e.opened_at) ? '<span class="st chg">Changed</span>' : '')
+       + (e.removed_at ? '<span class="st gone">Gone from site</span>' : '');
+}
+function drawSites(){
+  function counts(list){
+    var n = list.filter(function(e){ return !e.opened_at && e.verdict !== 'bin'; }).length;
+    var s = list.filter(function(e){ return e.kind === 'seeks' && e.verdict !== 'bin'; }).length;
+    return '<span>' + list.length + ' entries</span>' + (n ? '<span class="n">' + n + ' new</span>' : '')
+         + (s ? '<span class="s">' + s + ' seek partners</span>' : '');
+  }
+  var h = '<button class="site' + (view.site === 'all' ? ' on' : '') + '" data-site="all"><div class="nm">All sites</div>'
+        + '<div class="ct">' + counts(entries) + '</div></button>';
+  sites.forEach(function(s){
+    var list = entries.filter(function(e){ return e.site === s.id; });
+    h += '<button class="site' + (view.site === s.id ? ' on' : '') + '" data-site="' + esc(s.id) + '">'
+       + '<div class="nm">' + esc(s.name) + '</div><div class="sub">' + esc(s.call || '') + '</div>'
+       + '<div class="ct">' + counts(list) + '</div>'
+       + (s.last_error ? '<div class="err">Last read failed, ' + esc(stamp(s.last_error_at)) + ': ' + esc(s.last_error) + '</div>' : '')
+       + '</button>';
+  });
+  $('#sites').innerHTML = h;
+  var waiting = entries.filter(function(e){ return !e.fetched_at && !e.removed_at; }).length;
+  $('#runbox').innerHTML = (lastRun
+      ? '<b>Last check ' + esc(stamp(lastRun.ran_at)) + '</b><br>' + lastRun.added + ' new · ' + lastRun.changed + ' changed · ' + lastRun.removed + ' gone'
+        + (lastRun.errors ? '<br><span style="color:var(--warn-ink)">' + esc(lastRun.errors.split('\n')[0]) + '</span>' : '')
+      : '<b>Not checked yet</b><br>The copier runs every night.')
+    + (waiting ? '<br>' + waiting + ' entry pages still to copy' : '')
+    + '<button class="btn" id="checkNow">Check now</button>';
+  $('#total').textContent = entries.length ? entries.length + ' entries on ' + sites.length + ' sites' : '';
+}
+function drawFilters(){
+  function chips(list, key){ return list.map(function(c){
+    return '<button class="chip' + (view[key] === c[0] ? ' on' : '') + '" data-' + key + '="' + c[0] + '">' + c[1] + '</button>'; }).join(''); }
+  $('#filters').innerHTML = chips(STATES, 'state') + '<span class="sep"></span>' + chips(KINDS, 'kind');
+}
+function drawRows(){
+  var s = view.site === 'all' ? null : sites.find(function(x){ return x.id === view.site; });
+  $('#listhead').textContent = s ? s.name : 'All sites';
+  var list = shown();
+  $('#listcount').textContent = list.length + ' shown';
+  if (!entries.length){
+    $('#rows').innerHTML = '<div class="empty">Nothing copied yet. Press <b>Check now</b> to read the four sites; their entries appear here at once, and the full entry pages follow over the night.</div>';
+    return;
+  }
+  if (!list.length){ $('#rows').innerHTML = '<div class="empty">No entries match. Try All, Both kinds, or clear the search.</div>'; return; }
+  /* Drawn in one go: eight hundred rows of plain markup is quicker than any
+     scheme for drawing only the visible ones, and keeps Find in page working. */
+  $('#rows').innerHTML = list.map(function(e){
+    var sub = [e.org && e.contact ? e.contact : null, view.site === 'all' ? siteOf(e).name : null, e.country].filter(Boolean).join(' · ');
+    return '<button class="row' + (e.id === view.id ? ' on' : '') + (e.removed_at ? ' gone' : '') + (e.verdict === 'bin' ? ' binned' : '')
+      + '" data-id="' + esc(e.id) + '"><span class="dot ' + (e.opened_at ? 'seen' : 'new') + '"></span><span style="min-width:0">'
+      + '<div class="t">' + esc(title(e)) + '</div><div class="o">' + esc(sub) + '</div>'
+      + '<div class="tags">' + kindTag(e.kind) + stateTags(e) + '</div></span></button>';
+  }).join('');
+}
+function longBlock(id, text){
+  var lines = String(text).split('\n').length;
+  if (text.length < 420 && lines < 6) return esc(text);
+  return '<div class="long" id="' + id + '">' + esc(text) + '</div><button class="more" data-long="' + id + '">Show all</button>';
+}
+function diff(oldT, newT){
+  var a = String(oldT || '').split('\n'), b = String(newT || '').split('\n');
+  var inB = new Set(b), inA = new Set(a);
+  var out = a.filter(function(l){ return !inB.has(l); }).map(function(l){ return '<span class="del">' + esc(l) + '</span>'; })
+    .concat(b.filter(function(l){ return !inA.has(l); }).map(function(l){ return '<span class="add">' + esc(l) + '</span>'; }));
+  return out.length ? out.join('\n') : 'Only the spacing changed.';
+}
+function drawDetail(){
+  var e = byId[view.id];
+  if (!e){ $('#det').innerHTML = entries.length ? '<div class="empty">Choose an entry on the left.</div>' : ''; return; }
+  var s = siteOf(e), d = detail[e.id];
+  var meta = [s.name, e.country, e.posted ? 'posted ' + e.posted.slice(0, 10) : null, 'first seen ' + day(e.first_seen)].filter(Boolean).join(' · ');
+  var h = '<div class="dhead"><div style="flex:1;min-width:0"><div class="tags">' + kindTag(e.kind)
+    + (!e.opened_at ? '<span class="st newtag">New</span>' : '') + stateTags(e) + '<span class="meta">' + esc(meta) + '</span></div>'
+    + '<h2 class="dtitle">' + esc(title(e)) + '</h2>'
+    + '<div class="dsub">' + esc([e.org ? e.contact : null, e.topic].filter(Boolean).join(' · ')) + '</div></div>'
+    + '<a class="btn" style="text-decoration:none" href="' + esc(e.url) + '" target="_blank" rel="noopener">Open on site ↗</a></div>'
+    + '<div class="actions">'
+    + [['interesting','Interesting','I'],['later','Later','L'],['bin','Bin','B']].map(function(a){
+        return '<button class="act ' + a[0] + (e.verdict === a[0] ? ' on' : '') + '" data-verdict="' + a[0] + '">' + a[1] + '<kbd>' + a[2] + '</kbd></button>'; }).join('')
+    + '<input id="why" placeholder="Why? A line for your future self" value="' + esc(e.why || '') + '" aria-label="Why"></div>'
+    + (!e.fetched_at ? '' : '<div class="tabs"><button data-tab="fields" class="' + (view.tab === 'fields' ? 'on' : '') + '">From the site</button>'
+    + '<button data-tab="orig" class="' + (view.tab === 'orig' ? 'on' : '') + '">Original page</button>'
+    + '<button data-tab="hist" class="' + (view.tab === 'hist' ? 'on' : '') + '">History</button></div>');
+  if (!e.fetched_at){
+    h += '<dl class="fields"><dt>On the list</dt><dd>' + esc(e.list_text || '') + '</dd>'
+      + (e.keywords ? '<dt>Keywords</dt><dd>' + esc(e.keywords) + '</dd>' : '') + '</dl>'
+      + '<p class="note">Only the list line is in so far. The full entry page is copied at the next night\'s run.</p>';
+  } else if (!d){
+    h += '<p class="note">Loading the entry…</p>';
+  } else if (view.tab === 'fields'){
+    /* Every label and value the entry page has, in the page's own order and
+       words: nothing is sorted into boxes of ours, so nothing can fall out. */
+    h += '<dl class="fields">' + (d.fields || []).map(function(f, i){
+      return '<dt>' + esc(f[0]) + '</dt><dd>' + (f[1] ? longBlock('f' + i, f[1]) : '<span style="color:var(--faint)">empty on the site</span>') + '</dd>'; }).join('') + '</dl>';
+  } else if (view.tab === 'orig'){
+    h += '<div class="orig">' + esc(d.page_text || '') + '</div>'
+      + '<p class="note">Copied ' + esc(stamp(e.fetched_at)) + ' from ' + esc(e.url) + '. A newer copy goes beside this one, never over it: older copies are under History.</p>';
+  } else {
+    h += '<div class="hist"><span class="d">' + esc(stamp(e.first_seen)) + '</span><span>First seen on the list</span>'
+      + '<span class="d">' + esc(stamp(e.fetched_at)) + '</span><span>Last copied</span>';
+    (d.versions || []).forEach(function(v, i){
+      var newer = i === 0 ? d.page_text : d.versions[i - 1].page_text;
+      h += '<span class="d">' + esc(stamp(v.saved_at)) + '</span><span>Changed on the site. Taken out and added:<div class="diff">' + diff(v.page_text, newer) + '</div></span>';
+    });
+    if (e.removed_at) h += '<span class="d">' + esc(stamp(e.removed_at)) + '</span><span>Gone from the site\'s list. The copy here is kept.</span>';
+    if (e.opened_at) h += '<span class="d">' + esc(stamp(e.opened_at)) + '</span><span>Opened by you</span>';
+    h += '</div>';
+    if (!(d.versions || []).length) h += '<p class="note">No changes since it was first copied.</p>';
+  }
+  $('#det').innerHTML = h;
+}
+function draw(){ drawSites(); drawFilters(); drawRows(); drawDetail(); }
+
+/* ── acting ────────────────────────────────────────────────────────── */
+function patch(e, vals){
+  Object.assign(e, vals);
+  return api('/rest/v1/partner_entries?id=eq.' + encodeURIComponent(e.id),
+    { method:'PATCH', body:vals, headers:{ Prefer:'return=minimal' } })
+    .catch(function(err){ $('#banner').textContent = 'Not saved: ' + err.message; $('#banner').hidden = false; });
+}
+function openEntry(id){
+  view.id = id; saveView();
+  var e = byId[id];
+  if (e && !e.opened_at) patch(e, { opened_at:new Date().toISOString() });
+  drawSites(); drawRows(); drawDetail();
+  var row = document.querySelector('.row.on'); if (row) row.scrollIntoView({ block:'nearest' });
+  if (e && e.fetched_at && !detail[id]){
+    Promise.all([
+      api('/rest/v1/partner_entries?select=fields,page_text&id=eq.' + encodeURIComponent(id)),
+      api('/rest/v1/partner_entry_versions?select=page_text,saved_at,copied_at&order=saved_at.desc&entry_id=eq.' + encodeURIComponent(id))
+    ]).then(function(r){
+      detail[id] = { fields:(r[0][0] || {}).fields, page_text:(r[0][0] || {}).page_text, versions:r[1] };
+      if (view.id === id) drawDetail();
+    });
+  }
+}
+function setVerdict(v){
+  var e = byId[view.id]; if (!e) return;
+  var nv = e.verdict === v ? null : v;
+  patch(e, { verdict:nv, decided_at:nv ? new Date().toISOString() : null });
+  drawSites(); drawRows(); drawDetail();
+}
+function checkNow(btn){
+  btn.disabled = true; btn.textContent = 'Checking… (up to two minutes)';
+  api('/functions/v1/partner-copier', { method:'POST', body:{} })
+    .then(function(r){ if (r && r.error) throw new Error(r.error); return load(); })
+    .catch(function(err){ $('#banner').textContent = 'The check did not finish: ' + err.message; $('#banner').hidden = false; drawSites(); });
+}
+
+document.addEventListener('click', function(ev){
+  var t = ev.target.closest('[data-site],[data-id],[data-state],[data-kind],[data-tab],[data-verdict],[data-long],#checkNow');
+  if (!t) return;
+  if (t.id === 'checkNow') return checkNow(t);
+  if (t.dataset.site){ view.site = t.dataset.site; saveView(); draw(); }
+  else if (t.dataset.id) openEntry(t.dataset.id);
+  else if (t.dataset.state){ view.state = t.dataset.state; saveView(); drawFilters(); drawRows(); }
+  else if (t.dataset.kind){ view.kind = t.dataset.kind; saveView(); drawFilters(); drawRows(); }
+  else if (t.dataset.tab){ view.tab = t.dataset.tab; saveView(); drawDetail(); }
+  else if (t.dataset.verdict) setVerdict(t.dataset.verdict);
+  else if (t.dataset.long){ var el = document.getElementById(t.dataset.long); el.classList.toggle('open');
+    t.textContent = el.classList.contains('open') ? 'Show less' : 'Show all'; }
+});
+document.addEventListener('change', function(ev){
+  if (ev.target.id === 'why'){ var e = byId[view.id]; if (e) patch(e, { why:ev.target.value.trim() || null }); }
+});
+$('#search').addEventListener('input', function(){ view.q = this.value; drawRows(); });
+/* The keys: ↑ ↓ walk the list, I L B answer the open entry. Not while
+   typing, or a search for "Ireland" would flag three entries. */
+document.addEventListener('keydown', function(ev){
+  if (ev.target.matches('input,textarea') || ev.metaKey || ev.ctrlKey || ev.altKey) return;
+  var k = ev.key;
+  if (k === 'ArrowDown' || k === 'ArrowUp'){
+    var list = shown(), i = list.findIndex(function(e){ return e.id === view.id; });
+    var n = list[Math.max(0, Math.min(list.length - 1, i + (k === 'ArrowDown' ? 1 : -1)))];
+    if (n){ ev.preventDefault(); openEntry(n.id); }
+  } else if (/^[ilb]$/i.test(k)){
+    setVerdict({ i:'interesting', l:'later', b:'bin' }[k.toLowerCase()]);
+  }
+});
+
+function showLogin(msg){ $('#loginErr').textContent = msg || ''; $('#login').hidden = false; $('#email').focus(); }
+$('#loginForm').addEventListener('submit', function(ev){
+  ev.preventDefault();
+  $('#loginErr').textContent = '';
+  authCall('token?grant_type=password', { email:$('#email').value.trim(), password:$('#pass').value })
+    .then(function(j){ keepAuth(j); $('#pass').value = ''; $('#login').hidden = true; return load(); })
+    .then(function(){ if (view.id && byId[view.id]) openEntry(view.id); })
+    .catch(function(e){ $('#loginErr').textContent = e.message === 'Invalid login credentials' ? 'That email and password do not match.' : e.message; });
+});
+
+if (!auth) showLogin();
+else load().then(function(){ if (view.id && byId[view.id]) openEntry(view.id); });
+</script>
+</body>
+</html>
