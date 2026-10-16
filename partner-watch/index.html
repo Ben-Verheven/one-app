@@ -138,6 +138,7 @@ button{font:inherit;color:inherit}
 .sec.lead .txt{font-size:17px}
 .facts{border-left:1px solid var(--line);padding-left:18px;margin-top:20px;font-size:13.5px;min-width:0}
 .facts .f + .f{margin-top:12px}
+.facts .fbreak{border-top:1px solid var(--line);margin:16px 0}
 .facts .l{font:11px var(--serif);letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
 /* When the entry pane is narrow (a half-screen window, or an iPad), a
    side column would squeeze the text to a few words a line; there the
@@ -149,6 +150,7 @@ button{font:inherit;color:inherit}
   .facts{order:-1;border:1px solid var(--line);border-radius:var(--radius);background:var(--field);padding:12px 14px;
          display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px 18px}
   .facts .f + .f{margin-top:0}
+  .facts .fbreak{grid-column:1/-1;margin:2px 0}
 }
 .facts .v{white-space:pre-wrap;overflow-wrap:anywhere}
 .facts .v.none{color:var(--faint);font-style:italic}
@@ -493,23 +495,38 @@ function bulk(what){
    boxes of ours: every pair the site gives is shown, in the site's own
    words and, within each column, in the site's own order. Only a pair the
    page repeats word for word (EPSS prints "Looking for" twice) is shown once.
-   Long values are never cut short behind a "Show all": he turned that down. */
+   Long values are never cut short behind a "Show all": he turned that down.
+   The one exception to the site's order is the top of the facts column
+   (Mark, 2026-10-16): who it is comes first, in his words for it whatever
+   the site calls it, then a break, then the rest with the call topic first,
+   kept in the column even when it runs long. */
 var MIDDLE = /description|cooperation interest/i;
-function isLongField(f){ return MIDDLE.test(f[0]) || String(f[1] || '').length > 220 || /\n\s*\n/.test(f[1] || ''); }
+var WHO = [[/^(organisation name|name of organisation\/institution\/company)$/i, 'Name of organisation'],
+           [/^country$/i, 'Country'], [/^(name|contact name)$/i, 'Contact name'], [/^(email|email address)$/i, 'Email']];
+var TOPIC = /^(topics?|priority areas|disciplines)$/i;
+function isLongField(f){ return !TOPIC.test(f[0]) && (MIDDLE.test(f[0]) || String(f[1] || '').length > 220 || /\n\s*\n/.test(f[1] || '')); }
 function paras(t){ return String(t).split(/\n\s*\n/).map(function(p){ return '<p>' + esc(p).replace(/\n/g, '<br>') + '</p>'; }).join(''); }
 function entryBody(fields){
   var seen = {}, list = fields.filter(function(f){ var k = f[0] + '\u0000' + f[1]; if (seen[k]) return false; seen[k] = 1; return true; });
   var long = list.filter(isLongField), short = list.filter(function(f){ return !isLongField(f); });
   var first = /project description|cooperation interest/i;
   long.sort(function(a, b){ return (first.test(b[0]) ? 1 : 0) - (first.test(a[0]) ? 1 : 0); });
+  var who = [];
+  WHO.forEach(function(w){
+    var i = short.findIndex(function(f){ return w[0].test(f[0]); });
+    if (i >= 0) who.push([w[1], short.splice(i, 1)[0][1]]);
+  });
+  short = short.filter(function(f){ return TOPIC.test(f[0]); }).concat(short.filter(function(f){ return !TOPIC.test(f[0]); }));
   var empty = function(v){ return !v || /^[-–—\s]*$/.test(v); };
+  var fact = function(f){
+    return '<div class="f"><div class="l">' + esc(f[0].replace(/^Link to 'research gate' or equivalent$/i, 'Research profile')) + '</div>'
+         + '<div class="v' + (empty(f[1]) ? ' none' : '') + '">' + (empty(f[1]) ? 'empty on the site' : esc(f[1])) + '</div></div>'; };
   return '<div class="read"><div class="texts">'
     + (long.length ? long.map(function(f, i){
         return '<section class="sec' + (i === 0 ? ' lead' : '') + '"><h3>' + esc(f[0]) + '</h3><div class="txt">' + (f[1] ? paras(f[1]) : '<p class="none">empty on the site</p>') + '</div></section>'; }).join('')
       : '<p class="note">This entry has no long text; everything it says is in the column beside.</p>')
-    + '</div><aside class="facts">' + short.map(function(f){
-        return '<div class="f"><div class="l">' + esc(f[0].replace(/^Link to 'research gate' or equivalent$/i, 'Research profile')) + '</div>'
-             + '<div class="v' + (empty(f[1]) ? ' none' : '') + '">' + (empty(f[1]) ? 'empty on the site' : esc(f[1])) + '</div></div>'; }).join('')
+    + '</div><aside class="facts">' + who.map(fact).join('')
+    + (who.length && short.length ? '<div class="fbreak"></div>' : '') + short.map(fact).join('')
     + '</aside></div>';
 }
 function diff(oldT, newT){
