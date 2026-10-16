@@ -1,12 +1,12 @@
 Split out of [pitfalls](pitfalls.md) on 2026-08-28, because it had grown past
-being one bullet in it. Two things move in the Ledger and nothing else
-does: **the day's cards**, when a project is gathered out of a day, and
+being one bullet in it. Two things fly in the Ledger: **the day's cards**, when a project is gathered out of a day, and
 **the hover label's dots**, which fly out of the board marks they stand
 for. Both are first-last-invert-play, both are skipped whole under
 `prefers-reduced-motion`, and every line below cost a round trip with
 Mark, who reports all of it the same way — "flickering", "not smooth",
-"dragged". The last section is about the drawers and panels that slide,
-which are a different mechanism with one trap of their own.
+"dragged". The section after them is about the drawers and panels that slide,
+which are a different mechanism with one trap of their own, and the last
+about a lead card opening, in both rooms.
 
 **A rAF callback lands BEFORE the frame's own style pass, so a FLIP that
 writes the inverted transform and clears it one frame later animates
@@ -188,6 +188,19 @@ lane, mark and list card replayed its entrance each time. `renderHorizon`
 now pins the old height, restores the scroll at `auto`, and stands the
 entrances down (`hz-drawn`, `hz-same`) after the first draw / for the same
 slice. Anything new that redraws the board must go through it, not around it.
+
+**A lead card opens in place, growing with the scroll** (2026-10-16). Mark
+saw opening a lead as "blinking" in both rooms, for two different reasons.
+The Marketplace redrew the whole board to open one card, so every card was
+new and the one under the pointer lost its hover for a frame and faded it
+back in; the Ledger showed the card's new half at a stroke and then slid
+the room after it. Both now write the card's height and the scroller's
+`scrollTop` together, frame by frame, on easeInOutCubic over 320ms
+(`UNFOLD_MS`, once in each room), scrolling only as far as shows the whole
+card. Anything that opens a card in either room should go the same way
+rather than through a redraw. In the Ledger, `byId` searches inside the
+room and so cannot find `#pane-ledger` itself; reach it from the card with
+`closest`.
 
 See also [pitfalls](pitfalls.md), [project-card](project-card.md) and
 [testing](testing.md).

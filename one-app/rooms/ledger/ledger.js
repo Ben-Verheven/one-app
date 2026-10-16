@@ -8498,10 +8498,51 @@ var TodoCard=(function(){
       if(selTxt)return;
     }
     var wasOpen=el.classList.contains('open');
+    var lead=el.classList.contains('lead-card');
+    var h0=lead?el.getBoundingClientRect().height:0;
     el.classList.toggle('open');
     if(el.closest&&el.closest('#hz-detail'))
       Board.rememberTodoExpanded(el.classList.contains('open'));
-    scrollIntoView(el,wasOpen);
+    if(lead){el.style.height='';el.style.overflow='';unfold(el,wasOpen,h0);}
+    else scrollIntoView(el,wasOpen);
+  }
+  /* A lead opens the way it does in the Marketplace (Mark, 2026-10-16):
+     its new half appeared at a stroke, below the fold as often as not, and
+     the room then slid up after it — two movements, the first of them a
+     jump, which he saw as blinking. Now the card grows to its new height
+     while the room scrolls, on one curve and in the same frames, just far
+     enough to show the whole of it without pushing its head off the top.
+     The room is `scroll-behavior:smooth`, which turns every scrollTop
+     written here into a request of its own, so it is held at auto for the
+     tween (notes/animation.md). */
+  var UNFOLD_MS=320;
+  function unfold(el,wasOpen,h0){
+    var sc=el.closest('#pane-ledger');   // the room itself, which byId does not reach
+    if(!sc||reducedMotion()){scrollIntoView(el,wasOpen);return;}
+    var r=el.getBoundingClientRect(),h1=r.height;
+    var pad=34,view=sc.clientHeight,at=r.top-sc.getBoundingClientRect().top;
+    var shift=0;
+    if(at<pad)shift=at-pad;
+    else if(!wasOpen&&at+h1>view-pad)shift=Math.min(at+h1-(view-pad),at-pad);
+    var top0=sc.scrollTop,top1=Math.max(0,Math.min(top0+shift,sc.scrollHeight-view));
+    if(Math.abs(h1-h0)<1&&Math.abs(top1-top0)<1)return;
+    var run=(el._unfold||0)+1;el._unfold=run;   // a second press takes over
+    /* the room's own value, taken once: a press that takes over from
+       another would otherwise take the 'auto' set here for its own */
+    if(sc._sb===undefined)sc._sb=sc.style.scrollBehavior;
+    sc.style.scrollBehavior='auto';
+    el.style.height=h0+'px';el.style.overflow='hidden';
+    var ease=function(t){return t<0.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;};
+    var t0=performance.now();
+    function step(now){
+      if(el._unfold!==run)return;
+      var p=Math.min(1,(now-t0)/UNFOLD_MS),e=ease(p);
+      el.style.height=(h0+(h1-h0)*e)+'px';
+      if(top1!==top0)sc.scrollTop=top0+(top1-top0)*e;
+      if(p<1){requestAnimationFrame(step);return;}
+      el.style.height='';el.style.overflow='';sc.style.scrollBehavior=sc._sb;
+    }
+    requestAnimationFrame(step);
   }
 
   /* ── Updates ── */

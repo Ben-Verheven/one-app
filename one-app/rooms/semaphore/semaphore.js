@@ -3753,6 +3753,70 @@ function keepPlace(fn){
   if(sc.scrollTop!==top)sc.scrollTop=top;
   if(sc.scrollLeft!==left)sc.scrollLeft=left;
 }
+/* ── a lead opening in place ──
+   Opening or shutting a lead used to redraw the whole board and the arena's
+   panel round it. Every card came back as a new one, so the card under the
+   pointer lost its hover and took it again a frame later — its edge, its
+   name's underline and its day faded out and back in, which Mark saw as the
+   card blinking (2026-10-16) — and the card grew downwards at a stroke, its
+   new half often below the fold. Now only that lead is drawn again, inside
+   the cards already standing for it, so nothing else is touched and the
+   pointer never leaves anything. The card pressed grows to its new height
+   while the list scrolls, on the same curve and in the same frames, just far
+   enough to show the whole of it, never pushing its head off the top; shut,
+   it only scrolls back if its head had gone above the top. Writing height
+   and scroll together each frame, with the scroller's own smoothing held off
+   (see notes/animation.md), is what keeps the two moving as one thing. */
+const UNFOLD_MS=320;
+const easeInOut=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+function leadUnfold(lid,pressed){
+  /* this arena's card for the lead, on Leads and in the panel alike: a lead
+     copied with its arena keeps its id, and the copy is a card of its own */
+  const cards=[...document.querySelectorAll('#pane-semaphore article.lead[data-lid="'+CSS.escape(lid)+'"]'+
+    '[data-id="'+CSS.escape(pressed.dataset.id||'')+'"]')];
+  if(!cards.length){repaint();renderDrawer();return;}
+  const still=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+  cards.forEach(card=>{
+    const a=arena(card.dataset.id),l=a&&(a.leads||[]).find(x=>x.id===lid);
+    if(!l)return;
+    const h0=card.getBoundingClientRect().height;
+    const tp=document.createElement('template');
+    tp.innerHTML=leadRowHTML(a,l,card.classList.contains('hit'),card.classList.contains('wide'));
+    const fresh=tp.content.firstElementChild;
+    const run=(card._unfold||0)+1;card._unfold=run;   /* a second press takes over */
+    card.className=fresh.className;
+    card.setAttribute('style',fresh.getAttribute('style')||'');
+    card.innerHTML=fresh.innerHTML;
+    growAll(card);
+    if(card!==pressed)return;
+    const h1=card.getBoundingClientRect().height;
+    const sc=card.closest('.cbody')||document.getElementById('semscroll');
+    if(!sc)return;
+    const pad=18,view=sc.clientHeight;
+    const at=card.getBoundingClientRect().top-sc.getBoundingClientRect().top;
+    let shift=0;
+    if(at<pad)shift=at-pad;
+    else if(h1>h0&&at+h1>view-pad)shift=Math.min(at+h1-(view-pad),at-pad);
+    const top0=sc.scrollTop,top1=Math.max(0,Math.min(top0+shift,sc.scrollHeight-view));
+    if(still){sc.scrollTop=top1;return;}
+    if(Math.abs(h1-h0)<1&&Math.abs(top1-top0)<1)return;
+    /* the scroller's own value, taken once: a press that takes over from
+       another would otherwise take the 'auto' set here for its own */
+    if(sc._sb===undefined)sc._sb=sc.style.scrollBehavior;
+    sc.style.scrollBehavior='auto';
+    card.style.height=h0+'px';card.style.overflow='hidden';
+    const t0=performance.now();
+    const step=now=>{
+      if(card._unfold!==run)return;
+      const p=Math.min(1,(now-t0)/UNFOLD_MS),e=easeInOut(p);
+      card.style.height=(h0+(h1-h0)*e)+'px';
+      if(top1!==top0)sc.scrollTop=top0+(top1-top0)*e;
+      if(p<1){requestAnimationFrame(step);return;}
+      card.style.height='';card.style.overflow='';sc.style.scrollBehavior=sc._sb;
+    };
+    requestAnimationFrame(step);
+  });
+}
 function repaint(){
   if(S.ui.view==='now')renderNow();
   else if(S.ui.view==='leads')renderWall();
@@ -4483,7 +4547,7 @@ document.addEventListener('click',e=>{
       if(e.target.closest('a,input,textarea,select,label,form'))break;
       const k=b.dataset.l;if(!k)break;
       if(leadOpen.has(k))leadOpen.delete(k);else leadOpen.add(k);
-      repaint();renderDrawer();break;}
+      leadUnfold(k,b);break;}
     case 'leadAdd':{closeComposers();leadEdit={a:id,l:'new'};
       repaint();renderDrawer();focusLead();break;}
     case 'leadEdit':{closeComposers();leadEdit={a:id,l:b.dataset.l};leadOpen.add(b.dataset.l);
