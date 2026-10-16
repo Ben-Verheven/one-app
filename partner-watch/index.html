@@ -3,9 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Partner Watch</title>
+<title>Project Watch</title>
 <!--
-  Partner Watch — the partner-search entries of the brokerage sites, copied
+  Project Watch (Partner Watch until 2026-10-16) — the partner-search
+  entries of the brokerage sites, which Mark calls arenas, copied
   every night by the partner-copier function (supabase/8-…), browsed here:
   site, list, entry. One file on its own while it is tried out; it is drawn
   in the Marketplace room's colours and type so that it can move into the
@@ -158,7 +159,7 @@ button{font:inherit;color:inherit}
 
 <div id="login" hidden>
   <form id="loginForm">
-    <h2>Partner Watch</h2>
+    <h2>Project Watch</h2>
     <p>Log in with the same email and password as the One App.</p>
     <input id="email" type="email" autocomplete="username" placeholder="Email" required>
     <input id="pass" type="password" autocomplete="current-password" placeholder="Password" required>
@@ -168,7 +169,7 @@ button{font:inherit;color:inherit}
 </div>
 
 <header class="bar">
-  <h1>Partner Watch</h1>
+  <h1>Project Watch</h1>
   <span class="meta" id="total"></span>
   <div class="grow"></div>
   <input id="search" type="search" placeholder="Search names, organisations, keywords…" aria-label="Search">
@@ -177,7 +178,7 @@ button{font:inherit;color:inherit}
 
 <div class="cols">
   <div class="col">
-    <div class="colhead">Sites</div>
+    <div class="colhead">Arenas</div>
     <div class="scroll" id="sites"></div>
     <div class="runbox" id="runbox"></div>
   </div>
@@ -366,7 +367,7 @@ function drawSites(){
       : '<b>Not checked yet</b><br>The copier runs every night.')
     + (waiting ? '<br>' + waiting + ' entry pages still to copy' : '')
     + '<button class="btn" id="checkNow">Check now</button>';
-  $('#total').textContent = entries.length ? entries.length + ' entries on ' + sites.length + ' sites' : '';
+  $('#total').textContent = entries.length ? entries.length + ' entries on ' + sites.length + ' arenas' : '';
 }
 function drawFilters(){
   function chips(list, key){ return list.map(function(c){
@@ -379,7 +380,7 @@ function drawRows(){
   var list = shown();
   $('#listcount').textContent = list.length + ' shown';
   if (!entries.length){
-    $('#rows').innerHTML = '<div class="empty">Nothing copied yet. Press <b>Check now</b> to read the four sites; their entries appear here at once, and the full entry pages follow over the night.</div>';
+    $('#rows').innerHTML = '<div class="empty">Nothing copied yet. Press <b>Check now</b> to read the four arenas; their entries appear here at once, and the full entry pages follow over the night.</div>';
     return;
   }
   if (!list.length){ $('#rows').innerHTML = '<div class="empty">No entries match. Try All, Both kinds, or clear the search.</div>'; return; }
