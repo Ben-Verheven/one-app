@@ -216,7 +216,13 @@ button{font:inherit;color:inherit}
 #callNote td,#callNote th{border:1px solid var(--line);padding:4px 8px;vertical-align:top;text-align:left}
 .notelabel{font:11.5px/16px var(--serif);letter-spacing:.08em;text-transform:uppercase;color:var(--faint);margin-top:4px}
 .notestate{font-size:12.5px;color:var(--faint);margin-top:6px;min-height:1.2em}
-.actions{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 4px;align-items:center}
+/* The answers stay at the top of the pane while the entry scrolls under
+   them: Mark makes up his mind somewhere down a long description and had
+   to scroll back up to bin it (2026-10-16). The bar reaches over the
+   pane's side padding so the text does not show beside it, and draws its
+   rule only once something is under it. */
+.actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;position:sticky;top:0;z-index:2;background:var(--sheet);margin:8px -28px 0;padding:8px 28px}
+.actions.stuck{box-shadow:0 1px 0 var(--line)}
 .act{background:none;border:1px solid var(--line2);color:var(--key2);font:13.5px var(--serif);padding:6px 13px;border-radius:var(--radius);cursor:pointer}
 .act kbd{font:11px var(--mono);color:var(--faint);margin-left:6px}
 .act.interesting.on{border-color:var(--gold);color:var(--gold-ink);background:var(--gold-soft)}
@@ -672,6 +678,7 @@ function drawDetail(){
     if (!(d.versions || []).length) h += '<p class="note">No changes since it was first copied.</p>';
   }
   $('#det').innerHTML = h;
+  markStuck();
 }
 function draw(){ drawSites(); drawFilters(); drawRows(); drawDetail(); }
 
@@ -695,6 +702,10 @@ function openEntry(id){
   view.id = id; view.note = null; saveView();
   var e = byId[id];
   if (e && !e.opened_at) patch(e, { opened_at:new Date().toISOString() });
+  /* Each entry starts at its head: with the answers held at the top, Mark
+     bins from far down a description, and the next entry opened where the
+     last one was left, halfway through its text. */
+  $('#detwrap').scrollTop = 0;
   drawSites(); drawRows(); drawDetail();
   var row = document.querySelector('.row.on'); if (row) row.scrollIntoView({ block:'nearest' });
   if (e && e.fetched_at && !detail[id]){
@@ -878,6 +889,12 @@ document.addEventListener('click', function(ev){
 document.addEventListener('change', function(ev){
   if (ev.target.id === 'why'){ var e = byId[view.id]; if (e) patch(e, { why:ev.target.value.trim() || null }); }
 });
+/* Asked again after every drawing of the entry, because answering it
+   draws the bar afresh while the pane stays scrolled down. */
+function markStuck(){
+  var a = $('.actions'); if (a) a.classList.toggle('stuck', a.getBoundingClientRect().top <= $('#detwrap').getBoundingClientRect().top + 1);
+}
+$('#detwrap').addEventListener('scroll', markStuck);
 $('#search').addEventListener('input', function(){ view.q = this.value; drawRows(); });
 /* The keys: ↑ ↓ walk the list, I L B answer the open entry (or all the
    picked ones), X picks the open entry, Esc lets go of the picked ones.
