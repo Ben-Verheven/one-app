@@ -61,6 +61,11 @@ button{font:inherit;color:inherit}
    room that the entry's text ran a few words a line (2026-10-16); below
    1280 px they narrow, and the entry pane rearranges itself (see .read). */
 @media (max-width:1280px){ .cols{grid-template-columns:200px 300px minmax(0,1fr)} }
+/* With a call's notes open the entry list has nothing to say, so it goes
+   and the notes sit beside the arenas (Mark, 2026-10-16). */
+.cols.noting{grid-template-columns:240px minmax(0,1fr)}
+.cols.noting > .col + .col{display:none}
+@media (max-width:1280px){ .cols.noting{grid-template-columns:200px minmax(0,1fr)} }
 .col{border-right:1px solid var(--line);min-width:0;display:flex;flex-direction:column;min-height:0}
 .scroll{overflow-y:auto;min-height:0;flex:1}
 /* One line height for both heads, whatever their type: the list's count in
@@ -174,11 +179,26 @@ button{font:inherit;color:inherit}
 .dtitle{font:400 23px/1.25 var(--serif);margin:6px 0 0;text-wrap:balance}
 .dsub{color:var(--muted);font-size:14px;margin-top:3px}
 /* Mark's notes on a call: a few paragraphs, so written and read at the
-   size of an entry's own description, on the sheet itself. */
-#callNote{display:block;width:100%;min-height:60vh;margin-top:18px;resize:vertical;background:var(--field);border:1px solid var(--line);border-radius:var(--radius);
-  color:var(--ink);font:16.5px/1.62 var(--body);padding:14px 16px;field-sizing:content}
+   size of an entry's own description, held to a readable line now that
+   the pane runs the width of the page. Rich text, because he pastes from
+   the call documents and wants the bold and the lists to come along. */
+.notebar{display:flex;gap:4px;margin-top:18px;max-width:880px}
+.notebar button{background:none;border:1px solid var(--line);border-radius:5px;color:var(--key2);font:13.5px var(--serif);min-width:32px;padding:3px 8px;cursor:pointer}
+.notebar button:hover{border-color:var(--line2);background:var(--hover)}
+#callNote{position:relative;min-height:60vh;max-width:880px;margin-top:6px;background:var(--field);border:1px solid var(--line);border-radius:var(--radius);
+  color:var(--ink);font:16.5px/1.62 var(--body);padding:14px 18px;overflow-wrap:anywhere}
 #callNote:focus{border-color:var(--line2);outline:none}
-#callNote::placeholder{color:var(--faint)}
+#callNote.blank::before{content:attr(data-placeholder);position:absolute;top:14px;left:18px;right:18px;color:var(--faint);pointer-events:none}
+#callNote p{margin:0 0 .7em}
+#callNote h3,#callNote h4{font:600 17.5px/1.4 var(--serif);margin:1em 0 .35em}
+#callNote h4{font-size:16px}
+#callNote ul,#callNote ol{margin:0 0 .7em;padding-left:1.5em}
+#callNote > :first-child,#callNote li > p{margin-top:0}
+#callNote li > p{margin-bottom:.2em}
+#callNote blockquote{margin:0 0 .7em;padding-left:14px;border-left:2px solid var(--line2);color:var(--muted)}
+#callNote a{color:var(--call-ink)}
+#callNote table{border-collapse:collapse;margin:0 0 .7em;font-size:14.5px}
+#callNote td,#callNote th{border:1px solid var(--line);padding:4px 8px;vertical-align:top;text-align:left}
 .notelabel{font:11.5px/16px var(--serif);letter-spacing:.08em;text-transform:uppercase;color:var(--faint);margin-top:4px}
 .notestate{font-size:12.5px;color:var(--faint);margin-top:6px;min-height:1.2em}
 .actions{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 4px;align-items:center}
@@ -436,7 +456,7 @@ function drawSites(){
          + '<div class="err" data-errfor="' + esc(s.id) + '">' + esc(errs[s.id] || '') + '</div></div>';
       return;
     }
-    var doc = docsOf(s.id), hasNote = !!(notes[s.id] || '').trim();
+    var doc = docsOf(s.id), hasNote = !!noteText(notes[s.id]);
     h += '<div class="arena"><button class="site' + (view.site === s.id ? ' on' : '') + '" data-site="' + esc(s.id) + '">'
        + '<div class="nm">' + esc(s.name) + '</div><div class="sub">' + esc(s.call || '') + '</div>'
        + (s.last_error ? '<div class="err">Last read failed, ' + esc(stamp(s.last_error_at)) + ': ' + esc(s.last_error) + '</div>' : '')
@@ -588,6 +608,7 @@ function diff(oldT, newT){
   return out.length ? out.join('\n') : 'Only the spacing changed.';
 }
 function drawDetail(){
+  $('.cols').classList.toggle('noting', !!view.note);
   if (view.note) return drawNote();
   var e = byId[view.id];
   if (!e){ $('#det').innerHTML = entries.length ? '<div class="empty">Choose an entry on the left.</div>' : ''; return; }
@@ -714,15 +735,73 @@ function saveLinks(){
    when the field is left or the page is put away, so a closed lid does
    not cost the last sentence. */
 var noteTimer = null;
+/* What a note may hold: the shape of the text and nothing else. Pasted
+   HTML brings the page it came from (styles, scripts, fonts, colours), so
+   it is rebuilt from a short list of tags, and the bold or italic that
+   Word and Google Docs write as a style on a span is turned into the tag.
+   Google Docs wraps a whole paste in a <b> that is not bold, so a <b>
+   whose style says normal is no bold at all. Stored notes are rebuilt the
+   same way before they are shown. */
+var NOTE_TAGS = { B:'b', STRONG:'b', I:'i', EM:'i', U:'u', S:'s', STRIKE:'s', DEL:'s', SUB:'sub', SUP:'sup',
+  P:'p', DIV:'p', BR:'br', UL:'ul', OL:'ol', LI:'li', H1:'h3', H2:'h3', H3:'h3', H4:'h4', H5:'h4', H6:'h4',
+  BLOCKQUOTE:'blockquote', A:'a', TABLE:'table', THEAD:'thead', TBODY:'tbody', TR:'tr', TD:'td', TH:'th' };
+var NOTE_DROP = /^(SCRIPT|STYLE|META|LINK|TITLE|HEAD|IFRAME|OBJECT|EMBED|SVG|MATH|NOSCRIPT|TEMPLATE|IMG|PICTURE|VIDEO|AUDIO|CANVAS|BUTTON|INPUT|SELECT|TEXTAREA|FORM)$/;
+function cleanNote(html){
+  var t = document.createElement('template'); t.innerHTML = html || '';
+  function walk(node){
+    var out = '';
+    node.childNodes.forEach(function(n){
+      if (n.nodeType === 3){ out += esc(n.nodeValue); return; }
+      if (n.nodeType !== 1 || NOTE_DROP.test(n.tagName)) return;
+      var st = n.getAttribute('style') || '', tag = NOTE_TAGS[n.tagName], inner = walk(n);
+      if (tag === 'b' && /font-weight\s*:\s*(normal|[1-5]00)\b/i.test(st)) tag = null;
+      if (tag !== 'b' && /font-weight\s*:\s*(bold|[6-9]00)\b/i.test(st)) inner = '<b>' + inner + '</b>';
+      if (tag !== 'i' && /font-style\s*:\s*italic/i.test(st)) inner = '<i>' + inner + '</i>';
+      if (tag !== 'u' && /text-decoration[^;]*underline/i.test(st)) inner = '<u>' + inner + '</u>';
+      if (tag === 'br') out += '<br>';
+      else if (tag === 'a'){
+        var href = n.getAttribute('href') || '';
+        out += /^(https?:|mailto:)/i.test(href) ? '<a href="' + esc(href) + '" target="_blank" rel="noopener">' + inner + '</a>' : inner;
+      } else out += tag ? '<' + tag + '>' + inner + '</' + tag + '>' : inner;
+    });
+    return out;
+  }
+  return walk(t.content);
+}
+/* A note written before the notes took formatting is plain text. */
+function noteHtml(v){ return /^\s*</.test(v || '') ? cleanNote(v) : (v ? paras(v) : ''); }
+function noteText(v){ var t = document.createElement('template'); t.innerHTML = noteHtml(v); return t.content.textContent.trim(); }
 function openNote(id){ view.note = id; view.site = id; sel.clear(); regroup(); draw(); var t = $('#callNote'); if (t) t.focus(); }
 function drawNote(){
-  var s = sites.find(function(x){ return x.id === view.note; }) || { name:view.note }, doc = docsOf(view.note);
-  $('#det').innerHTML = '<div class="dhead"><div style="flex:1;min-width:0"><div class="notelabel">Your notes on the call</div>'
+  var s = sites.find(function(x){ return x.id === view.note; }) || { name:view.note }, doc = docsOf(view.note), html = noteHtml(notes[view.note]);
+  $('#det').innerHTML = '<div class="dhead" style="max-width:880px"><div style="flex:1;min-width:0"><div class="notelabel">Your notes on the call</div>'
     + '<h2 class="dtitle">' + esc(s.name) + '</h2><div class="dsub">' + esc(s.call || '') + '</div></div>'
-    + (doc ? '<a class="btn" style="text-decoration:none" href="' + esc(doc) + '" target="_blank" rel="noopener">Call documents ↗</a>' : '') + '</div>'
-    + '<textarea id="callNote" spellcheck="true" placeholder="What matters in this call: the deadline, the budget, who may apply, what they want to fund…">' + esc(notes[view.note] || '') + '</textarea>'
+    + (doc ? '<a class="btn" style="text-decoration:none" href="' + esc(doc) + '" target="_blank" rel="noopener">Call documents ↗</a>' : '')
+    + '<button class="btn" data-site="' + esc(view.note) + '">Back to the entries</button></div>'
+    + '<div class="notebar">' + [['bold','<b>B</b>','Bold'],['italic','<i>I</i>','Italic'],['underline','<u>U</u>','Underline'],['heading','Heading','Heading'],
+        ['insertUnorderedList','• List','Bulleted list'],['insertOrderedList','1. List','Numbered list'],['removeFormat','Plain','Remove the formatting of the selection']].map(function(b){
+        return '<button data-fmt="' + b[0] + '" title="' + b[2] + '">' + b[1] + '</button>'; }).join('') + '</div>'
+    + '<div id="callNote" contenteditable="true" spellcheck="true" role="textbox" aria-multiline="true" aria-label="Your notes on the call"'
+    + ' data-placeholder="What matters in this call: the deadline, the budget, who may apply, what they want to fund…" class="' + (html ? '' : 'blank') + '">' + html + '</div>'
     + '<div class="notestate" id="noteState"></div>';
 }
+/* The buttons act on the text where it is selected, so pressing one must
+   not take the focus (and with it the selection) out of the note. */
+document.addEventListener('mousedown', function(ev){
+  var b = ev.target.closest('[data-fmt]'); if (!b) return;
+  ev.preventDefault();
+  var f = b.dataset.fmt;
+  if (f === 'heading') document.execCommand('formatBlock', false, /^h[34]$/i.test(document.queryCommandValue('formatBlock')) ? 'p' : 'h3');
+  else document.execCommand(f, false, null);
+});
+document.addEventListener('focusin', function(ev){ if (ev.target.id === 'callNote') document.execCommand('defaultParagraphSeparator', false, 'p'); });
+document.addEventListener('paste', function(ev){
+  if (!ev.target.closest || !ev.target.closest('#callNote')) return;
+  var cd = ev.clipboardData, html = cd && cd.getData('text/html'), text = cd && cd.getData('text/plain');
+  if (!html && !text) return;
+  ev.preventDefault();
+  document.execCommand('insertHTML', false, html ? cleanNote(html) : paras(text));
+});
 function flushNote(){
   if (!noteTimer) return;
   clearTimeout(noteTimer.t); var id = noteTimer.id, text = notes[id]; noteTimer = null;
@@ -736,9 +815,11 @@ function flushNote(){
 }
 document.addEventListener('input', function(ev){
   if (ev.target.id !== 'callNote') return;
-  var id = view.note, had = !!(notes[id] || '').trim();
-  notes[id] = ev.target.value;
-  if (had !== !!notes[id].trim()) drawSites();
+  var id = view.note, had = !!noteText(notes[id]);
+  notes[id] = cleanNote(ev.target.innerHTML);
+  var has = !!noteText(notes[id]);
+  ev.target.classList.toggle('blank', !has && !/<(li|table)/.test(notes[id]));
+  if (had !== has) drawSites();
   if (noteTimer && noteTimer.id !== id) flushNote();
   if (noteTimer) clearTimeout(noteTimer.t);
   noteTimer = { id:id, t:setTimeout(flushNote, 1000) };
@@ -783,7 +864,7 @@ document.addEventListener('keydown', function(ev){
     else if (ev.key === 'Escape') cancelLinks();
     return;
   }
-  if (ev.target.matches('input,textarea') || ev.metaKey || ev.ctrlKey || ev.altKey) return;
+  if (ev.target.matches('input,textarea') || ev.target.isContentEditable || ev.metaKey || ev.ctrlKey || ev.altKey) return;
   var k = ev.key;
   /* With a call's notes open no entry is on screen, so the letters that
      answer an entry would answer one Mark cannot see. */

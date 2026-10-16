@@ -12,4 +12,4 @@
 - Removed "All sites": he works one site at a time, and the page opens on the first site (2026-10-16)
 - Kept the arena names in the entry rows' type, over a bookish and a plain screen type shown beside it; what he disliked in the arena cards was the typewriter type of the counts under them (2026-10-16)
 - Wants each arena's scroll (an old-school scroll, not a booklet) to open the call text's PDF directly, not the call's web page, and to change the links himself, all arenas at once from a pencil beside "Arenas" rather than one pencil per card (2026-10-16)
-- Keeps his own notes on each call, the most important facts of it and up to a few paragraphs, behind a note icon under the scroll; they open in the entry pane (2026-10-16)
+- Keeps his own notes on each call, the most important facts of it and up to a few paragraphs, behind a note icon under the scroll; they open beside the arenas in place of the entry list, and take formatting, because he pastes from the call documents and wants the bold and the lists kept (2026-10-16)
