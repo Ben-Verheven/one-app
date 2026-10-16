@@ -778,7 +778,8 @@ function callSpans(a){
 
    Calls are drawn the way the cards drew them (see callRuns): one bar from
    publication to deadline under the venues, the stages of one call as one
-   bar with a notch, and calls with the same dates as one bar. Uncertain is
+   bar with a notch, strong only up to the first deadline, and calls with
+   the same dates as one bar. Uncertain is
    a dashed outline here as everywhere else in the room: a blurred 4px bar
    only looks out of focus (Mark, 2026-10-07).
 
@@ -876,10 +877,31 @@ function laneHTML(a,vs){
         return x>=L&&x<=R?'<i class="rbn'+(T(d.end||d.start)<now?' past':'')+'" style="left:'+x.toFixed(2)+'%;bottom:'+(Y[lv]-4)+'px" '+
           'data-act="openDate" data-a="'+a.id+'" data-d="'+d.id+'" title="'+esc(dtLabel(d)+' \u2014 '+dispDate(d))+'"></i>':'';}).join('');
       const at=r.next||r.close||r.open;
+      const attrs='data-act="openDate" data-a="'+a.id+'" data-d="'+at.id+'" data-tipt="'+esc(runTip(r))+'" '+
+         'tabindex="0" role="button" aria-label="'+esc(dtLabel(at)+', '+dispDate(at))+'"';
+      /* A call in stages is full strength only from its publication to its
+         first deadline, the pre-proposal or first stage, and a thin line on
+         to the last: the weeks before the first deadline are when consortia
+         form and brokerage can still do something, and after it the work is
+         in the hands of whoever got through (Mark, 2026-10-16). The strong
+         part greys once that first deadline is past, as anything over does,
+         while the line to the full proposal keeps its colour until it too
+         is over. */
+      const d1=r.dls.length>1?r.dls[0]:null;
+      if(d1){
+        const t1=T(d1.end||d1.start),S=Math.min(100,Math.max(0,X(t1+DAY)));
+        if(S>L){
+          const cls=(t1<now?' past':'')+([r.open,d1].some(d=>d&&d.grade!=='fixed')?' unc':'')+(r.open?'':' lead-in');
+          h+='<div class="mk cl rb'+cls+'" style="left:'+L.toFixed(2)+'%;width:'+Math.max(S-L,.3).toFixed(2)+'%;bottom:'+Y[lv]+'px" '+attrs+'></div>';
+        }
+        if(R>S){
+          const cls=(r.state==='closed'?' past':'')+(r.close.grade!=='fixed'?' unc':'');
+          h+='<div class="mk cl rbt'+cls+'" style="left:'+S.toFixed(2)+'%;width:'+(R-S).toFixed(2)+'%;bottom:'+(Y[lv]+1)+'px" '+attrs+'></div>';
+        }
+        h+=notch;continue;
+      }
       const cls=(r.state==='closed'?' past':'')+(r.unc?' unc':'')+(r.open?'':' lead-in')+(r.close?'':' run-on');
-      h+='<div class="mk cl rb'+cls+'" style="left:'+L.toFixed(2)+'%;width:'+W.toFixed(2)+'%;bottom:'+Y[lv]+'px" '+
-         'data-act="openDate" data-a="'+a.id+'" data-d="'+at.id+'" data-tipt="'+esc(runTip(r))+'" '+
-         'tabindex="0" role="button" aria-label="'+esc(dtLabel(at)+', '+dispDate(at))+'"></div>'+notch;
+      h+='<div class="mk cl rb'+cls+'" style="left:'+L.toFixed(2)+'%;width:'+W.toFixed(2)+'%;bottom:'+Y[lv]+'px" '+attrs+'></div>'+notch;
     }
   }
   if(now>=T0&&now<=T1)h+='<div class="now" style="left:'+X(now)+'%"></div>';
@@ -2946,7 +2968,10 @@ function runTip(r){
   const span=(r.open?'Publication '+dispDate(r.open):'Publication not recorded')+
     (r.close?'  →  deadline '+dispDate(r.close):'  →  no deadline recorded');
   const stages=r.dls.length>1?'\n'+r.dls.length+' deadlines: '+r.dls.map(shortDate).join(', '):'';
-  return names.join('\n')+'\n'+span+stages+(r.unc?'\nUncertain':'');
+  /* the weeks that count for brokerage: publication to the first deadline */
+  const wk=r.open&&r.dls[0]?Math.round((T(r.dls[0].start)-T(r.open.start))/(7*DAY)):-1;
+  const brk=wk>=0?'\nFor brokerage: '+wk+(wk===1?' week':' weeks')+' to the first deadline':'';
+  return names.join('\n')+'\n'+span+stages+brk+(r.unc?'\nUncertain':'');
 }
 function linkHost(lk){
   try{return new URL(lk.url).hostname.replace(/^www\./,'');}catch(e){return '';}

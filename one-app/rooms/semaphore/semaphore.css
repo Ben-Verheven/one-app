@@ -217,6 +217,12 @@
 #pane-semaphore .rb.unc{height:5px;background:none;border:1px dashed var(--r-pub);border-right:2px solid var(--r-dl)}
 #pane-semaphore .rb.past{background:var(--line2)}
 #pane-semaphore .rb.unc.past{background:none;border-color:var(--line2)}
+/* a call in stages after its first deadline: a thin line on to the last
+   (laneHTML says why), dashed where that last deadline is uncertain */
+#pane-semaphore .rbt{height:0;border-top:2px solid var(--r-dl)}
+#pane-semaphore .rbt::before{inset:-7px 0}
+#pane-semaphore .rbt.unc{border-top-style:dashed}
+#pane-semaphore .rbt.past{border-top-color:var(--line2)}
 /* an earlier deadline on the bar, a pre-proposal or a first stage: a tick
    standing clear of the bar, ringed in the ground, so it reads as a date of
    its own and not a flaw in the gradient */
