@@ -1033,7 +1033,8 @@
 #pane-ledger .hz-lbl-txt{flex:1;min-width:0;color:var(--text2);
   white-space:normal;overflow-wrap:break-word;word-break:break-word}
 /* The real date of a mark parked in the first column from before the
-   window. The same #bca070 as the head's date, for the same 4.9:1. */
+   window, and under a lead its arena and step. The same #bca070 as the
+   head's date, for the same 4.9:1. */
 #pane-ledger .hz-lbl-late{display:block;font-family:var(--font);font-size:9px;
   letter-spacing:0.09em;text-transform:uppercase;color:#bca070;margin-top:1px}
 #pane-ledger .hz-lbl-more{font-family:var(--font);font-size:9px;letter-spacing:0.09em;

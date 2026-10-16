@@ -5534,8 +5534,9 @@ var Board=(function(){
 
      The dots are `hz-mark`s and are dragged to another day the way a todo's
      are; the drop moves the lead's day in the Semaphore (see dragEnd). The
-     hover label passes over the line — it reads todos — so each dot carries
-     its own title. Each dot is its arena type's colour (Mark, 2026-10-11), so a
+     hover label reads the line's cells as it reads a project's, its dots
+     flying out of these (see `leadCellHTML`), so a dot carries no title of
+     its own: the browser's tooltip came up over the label. Each dot is its arena type's colour (Mark, 2026-10-11), so a
      week of leads can be read by type without hovering; the lane's own
      edge stays the section's stone. */
   function leadsLaneHTML(startIso,days,compact,laneIdx){
@@ -5559,7 +5560,7 @@ var Board=(function(){
       return '<button class="hz-mark hz-lead-mark'+(o.l.due<today?' overdue-mark':'')
         +(k>1?' hz-clus':'')+'" style="'+markStyle(o.i,dayW,c,(k>1?c.d:0),hex)+'" '
         +'data-lead="'+esc(key)+'" data-col="'+hex+'" '
-        +'title="'+esc(o.l.name+' — '+o.l.arena+' — drag to another day')+'" aria-label="'+esc('Lead: '+o.l.name)+'" '
+        +'aria-label="'+esc('Lead: '+o.l.name)+'" '
         +'onclick="PL.leadMarkClick(this,event)"></button>';
     }).join('');
     var un=undated
@@ -5898,6 +5899,42 @@ var Board=(function(){
     }).join('')
     +(over?'<span class="hz-lbl-more">and '+over+' more</span>':'');
   }
+  /* The leads line's own rows, in the same three columns. Mark asked for
+     its dots to fly into a label the way a todo's do (2026-10-16), and they
+     said only their name in the browser's tooltip until then. The mark is
+     the lead's own dot in its type's colour; the middle column is the score
+     where a todo has its length, the one number a lead carries; and under
+     the name, quietly, the arena and the step it has got to, which is what
+     the tooltip said beside the name. A lead parked in the first column
+     says the day it was meant for, as a late todo does. */
+  function leadCellHTML(list,iso){
+    var shown=list.slice(0,HOVER_MAX),over=list.length-shown.length;
+    return shown.map(function(l){
+      var sub=[l.arena,l.stage?l.stage.charAt(0).toUpperCase()+l.stage.slice(1):'']
+        .filter(Boolean).join(' · ');
+      if(iso&&l.due<iso){
+        var wd=new Date(l.due+'T00:00:00');
+        sub+=(sub?' · ':'')+'due '+wd.getDate()+' '+MON3[wd.getMonth()];
+      }
+      return '<span class="hz-lbl-row">'
+        +'<span class="hz-lbl-dot" data-pid="" data-eid="'+esc(Leads.keyOf(l))+'" data-kind="lead" '
+          +'style="--c:'+safeColor(Leads.hexOf(l))+'"></span>'
+        +'<span class="hz-lbl-eff">'+(+l.score?(+l.score)+'/5':'\u2013')+'</span>'
+        +'<span class="hz-lbl-txt">'+esc(l.name)
+          +(sub?'<span class="hz-lbl-late">'+esc(sub)+'</span>':'')+'</span>'
+      +'</span>';
+    }).join('')
+    +(over?'<span class="hz-lbl-more">and '+over+' more</span>':'');
+  }
+  /* The leads drawn in one cell of the line: the ones on that day, and in
+     the window's first column the late ones parked there — the same rule
+     `leadsLaneHTML` places them by. Read in the order a list of leads is. */
+  function leadsInCell(iso,startIso){
+    var first=(iso===startIso);
+    return Leads.sorted(Leads.list().filter(function(l){
+      return l.due&&(l.due===iso||(first&&l.due<iso));
+    }));
+  }
   /* Everything of one project that touches one day: what is planned into
      it, and what is only due on it because a deadline lands there. The
      second sort is by effort, matching the day slice a click opens, so
@@ -5964,6 +6001,8 @@ var Board=(function(){
        middle of a hover. Reading the attributes back off the marks cannot
        be broken by their contents. */
     qa('.hz-mark,.hz-dl',host).forEach(function(m){
+      var lead=m.getAttribute('data-lead');
+      if(lead!==null){by['lead||'+lead]=m;return;}
       by[(m.classList.contains('hz-dl')?'dl':'due')+'|'
         +m.getAttribute('data-pid')+'|'+m.getAttribute('data-eid')]=m;
     });
@@ -6056,10 +6095,12 @@ var Board=(function(){
      is the part that survives being quick. */
   var FLY_MS=280,STAGGER=0.028;
   function flightMs(n){return FLY_MS+n*STAGGER*1000+80;}
+  /* No `pid` is the leads line, which belongs to no project. */
   function showCellHover(track,pid,iso,anchor){
-    var list=todosInCell(pid,iso,track.getAttribute('data-start'));
+    var start=track.getAttribute('data-start');
+    var list=pid?todosInCell(pid,iso,start):leadsInCell(iso,start);
     if(!list.length){hideHover();hoverCell=null;return;}
-    var key=pid+'|'+iso;
+    var key=(pid?'p:'+pid:'leads')+'|'+iso;
     var pop=hoverEl();
     /* Already up, and for this cell: leave it entirely alone. It used to
        fall through and re-place itself on every mousemove — and placing it
@@ -6082,11 +6123,11 @@ var Board=(function(){
          being one day out is easy and the date is worth confirming. */
       var d=new Date(iso+'T00:00:00');
       pop.innerHTML='<span class="hz-lbl-head">'
-          +'<span class="hz-lbl-where">'+esc(list[0].p.name)+'</span>'
+          +'<span class="hz-lbl-where">'+esc(pid?list[0].p.name:'Leads')+'</span>'
           +'<span class="hz-lbl-when">'+DAYS[d.getDay()].slice(0,3)+' '+d.getDate()
             +' '+MONTHS[d.getMonth()].slice(0,3)+'</span>'
         +'</span>'
-        +'<span class="hz-lbl-rows">'+cellHTML(list,iso)+'</span>';
+        +'<span class="hz-lbl-rows">'+(pid?cellHTML(list,iso):leadCellHTML(list,iso))+'</span>';
     }
     pop.style.display='flex';
     /* Where `fixed` actually starts from — the third and last place in
@@ -7127,6 +7168,11 @@ var Board=(function(){
       var track=ev.target.closest&&ev.target.closest('.hz-proj-track');
       if(!track||drag){if(!track)hideHover();return;}
       var row=track.closest('.hz-proj');
+      if(row&&row.classList.contains('hz-leads-row')){
+        var lc=cellAt(track,ev.clientX);
+        if(!lc){hideHover();return;}
+        showCellHover(track,null,lc.iso,lc);return;
+      }
       var pid=row&&(row.getAttribute('data-pid')
         ||(function(){var b=q('.hz-proj-open,[data-pid]',row);return b&&b.getAttribute('data-pid');})());
       /* The General lane is flat and names a call rather than a project,
