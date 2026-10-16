@@ -25,7 +25,7 @@ rebuilt around venues; PROJECT.md says what a venue is):
   form, filed under one of the arenas the venue serves and remembering the venue (`leadFromVenue`).
   A row opens the venue's sheet (`openVenue`): its life, its visits, the arenas it serves, its other
   pages and Mark's note (`memo`).
-- **Leads** — every open lead in Spotted / Contacted / Talking, as the desk's Leads arrangement;
+- **Leads** — every open lead in Talking / Contacted / Spotted, as the desk's Leads arrangement;
   Contacted split by its two paths; each lead shows the desk's diamond ("ruit"). In a lead's sheet
   the diamond is pressed to move it (the desk's own `leadPath`), and links/emails are added there,
   as is the desk's score, 1 to 5, which each row shows as the desk's numbered dot after its day.

@@ -1612,7 +1612,7 @@
       { g: 'step', h: 'Spotted', w: 9, k: 'ruit', dot: 'sp' },
       { g: 'step', h: 'Researchers', w: 11.5, k: 'ruit', dot: 'r' },
       { g: 'step', h: 'Lead', w: 9, k: 'ruit', dot: 'l' },
-      { g: 'step', h: 'Talking', w: 9, k: 'ruit', dot: 't' },
+      { g: 'step', h: 'Talking', w: 14, k: 'ruit', dot: 't' },
       { g: 'judge', h: 'Score', w: 7.5, k: 'score' }
     ];
     if (closed) c.push({ g: 'judge', h: 'Closed on', w: 12.5, k: 'doneAt' }, { g: 'judge', h: 'How it ended', w: 17, k: 'ended' });
@@ -1629,6 +1629,13 @@
     if (dot === 'r') return l.toResearchers;
     if (dot === 'l') return l.toLead;
     return l.stage === 'talking';
+  }
+  /* Who the conversation is with, in the Talking cell, read with its
+     heading: "Talking — to both". A dot there said only that a lead was
+     talking, and the two dots before it said who had been contacted, which
+     Mark had to read across into who he is now talking to (2026-10-16). */
+  function talkingTo(l) {
+    return l.toResearchers && l.toLead ? 'to both' : l.toResearchers ? 'to researchers' : 'to the lead';
   }
 
   /* One sheet. `sections` is a list of {title, leads}; a title of null
@@ -1692,9 +1699,10 @@
             case 'arena': return str(i, r, S.get({ fill: l.tone || '#cfc8bb', line: RULE, font: { b: true, color: INK }, indent: 1 }), l.arena);
             case 'type': return str(i, r, S.get({ fill: '#' + tint(l.tone || '#cfc8bb', 0.55), line: RULE, font: { color: INK, sz: 10 }, indent: 1 }), l.type);
             case 'ruit': {
-              var on = lit(l, cl.dot);
-              return str(i, r, S.get(on ? { fill: LIT, line: RULE, font: { b: true, color: '#FFFFFF' }, h: 'center' }
-                : { fill: g, line: RULE, font: { color: '#C9BFAE' }, h: 'center' }), on ? '●' : '○');
+              var on = lit(l, cl.dot), said = on && cl.dot === 't' ? talkingTo(l) : '';
+              return str(i, r, S.get(said ? { fill: LIT, line: RULE, font: { b: true, color: INK }, h: 'center' }
+                : on ? { fill: LIT, line: RULE, font: { b: true, color: '#FFFFFF' }, h: 'center' }
+                : { fill: g, line: RULE, font: { color: '#C9BFAE' }, h: 'center' }), said || (on ? '●' : '○'));
             }
             case 'score': return l.score
               ? c(i, r, S.get({ fill: SCORE[l.score], line: RULE, font: { b: true, color: INK }, h: 'center' }), '<v>' + l.score + '</v>')

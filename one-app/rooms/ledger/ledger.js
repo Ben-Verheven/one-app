@@ -8813,7 +8813,7 @@ var Leads=(function(){
   /* The board order inside a stage: soonest first, then the undated,
      then by name — the order Semaphore reads a section in. */
   function sorted(ls){
-    var rank={spotted:0,contacted:1,talking:2};
+    var rank={talking:0,contacted:1,spotted:2};
     return ls.slice().sort(function(a,b){
       var s=rank[a.stage]-rank[b.stage];if(s)return s;
       if(a.stage==='contacted'){s=KIND_RANK[kindOf(a)]-KIND_RANK[kindOf(b)];if(s)return s;}
@@ -9053,9 +9053,10 @@ var Leads=(function(){
       +ln(1,5,8,1.5,up)+ln(8,1.5,15,5,up)+ln(1,5,8,8.5,dn)+ln(8,8.5,15,5,dn)
       +'</svg><span>'+KIND_NAME[k]+'</span></div>';
   }
-  /* The list: braced by step, in Semaphore's own order — spotted, then
-     contacted, then talking — because that is how a list of leads is read
-     there, and the brace is the only place the step is written as a word. */
+  /* The list: braced by step, in the Marketplace's own order — talking,
+     then contacted, then spotted — because that is how a list of leads is
+     read there, and the brace is the only place the step is written as a
+     word. */
   function listHTML(ls){
     var groups=[];
     sorted(ls).forEach(function(l){

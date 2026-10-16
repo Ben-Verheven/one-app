@@ -2662,7 +2662,8 @@ function drawLeads(){
   hd.appendChild(document.createTextNode('.'));
   host.appendChild(hd);
 
-  STAGES.forEach(function(k){
+  /* furthest along first, Talking on top, as the desk's Leads (2026-10-16) */
+  STAGES.slice().reverse().forEach(function(k){
     var col = items.filter(function(it){ return it.stageKey === k; }).sort(byDay);
     if (!col.length) return;
     if (k === 'contacted') col.sort(function(x,y){

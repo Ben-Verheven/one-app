@@ -3608,8 +3608,12 @@ function paintWall(){
          nothing in it left out, as the Ledger leaves out a category with no
          todos. Every lead is the same shut row the Ledger draws — ruit, arena,
          what it is over who could fit it, the day — and opens in place. */
+      /* Furthest along first (Mark, 2026-10-16): Talking on top, over even
+         the both-ways Contacted, then Contacted, then Spotted last. It used
+         to run spotted-first, the order a lead moves in, which put the leads
+         with a conversation running at the bottom of the board. */
       h+='<div class="lruns">';
-      for(const k of STAGES){
+      for(const k of STAGES.slice().reverse()){
         const col=all.filter(({l})=>stageOf(l)===k).sort(byDay);
         if(!col.length)continue;
         /* Contacted runs by its two paths, as on the Ledger's list (Mark,
