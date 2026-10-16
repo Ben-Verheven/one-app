@@ -192,11 +192,13 @@ function buildLedger(){
     });
     dEl.appendChild(body); ledger.appendChild(dEl);
   });
+  elsewhereEl=document.createElement('div'); ledger.appendChild(elsewhereEl);
 }
 
 function toggleTopic(row,det,callId,color){
   const was=row.classList.contains('sel');
   topicEls.forEach(t=>{t.row.classList.remove('sel');t.det.classList.remove('open');});
+  closeElsewhere();
   P.state.selTopicCall=null;
   if(!was){row.classList.add('sel');row.style.setProperty('--selcol',color);det.classList.add('open');P.state.selTopicCall=callId;}
   paintTimeline();
@@ -281,9 +283,86 @@ function applyFilters(){
     const dc=dEl.querySelector('.dcount');
     dc.textContent=(st.sel.size||st.type||st.q)?`${a[0]} of ${dc.dataset.n}`:`${dc.dataset.n} topics`;
   });
+  const away=paintElsewhere(visible);
   /* Only while something narrows the list: unfiltered, "38 of 38 topics"
      repeated the count already on the cluster's tab. */
-  document.getElementById('count').textContent=(st.sel.size||st.type||st.q)?`${visible} of ${P.nTopics} topics`:'';
+  document.getElementById('count').textContent=(st.sel.size||st.type||st.q)
+    ?`${visible} of ${P.nTopics} topics`+(away?` · ${away} in other clusters`:''):'';
+}
+
+/* ── the other clusters, while a search is typed ──
+   The search used to stop at the edge of the open tab: a word typed on
+   one cluster said nothing about the topic that held it in another, and
+   finding it meant typing it again on every tab. The words are now one
+   search over every call in the work programme. The open cluster keeps
+   its own sheet; each other cluster's matches follow it under that
+   cluster's name, and the name opens the cluster with the same words
+   still in the box. The type chip narrows these too. Calls picked on the
+   chart do not, because those calls belong to the open cluster. */
+let elsewhereEl=null;
+function closeElsewhere(){
+  elsewhereEl.querySelectorAll('.tdetail.open').forEach(x=>x.classList.remove('open'));
+  elsewhereEl.querySelectorAll('.topic.sel').forEach(x=>x.classList.remove('sel'));
+}
+function paintElsewhere(visible){
+  const st=P.state; elsewhereEl.innerHTML=''; let n=0;
+  if(!st.q) return 0;
+  PAGES.forEach((p,i)=>{
+    if(p===P) return;
+    const hits=[];
+    p.destinations.forEach(d=>d.themes.forEach(th=>th.topics.forEach(tp=>{
+      const m=p.meta[tp.id];
+      if(st.type&&(m.type||'')!==st.type) return;
+      if((tp.id+' '+tp.title).toLowerCase().includes(st.q)||(FULLTEXT&&inFull(tp.id,st.q)))
+        hits.push({id:tp.id,title:tp.title,type:m.type||'',budget:m.budget,contrib:m.contrib,count:m.count,
+                   dest:d.name,call:p.callById[m.call]});
+    })));
+    if(!hits.length) return;
+    if(!n){const cap=document.createElement('div'); cap.className='theme-h'; cap.textContent='In the other clusters';
+      elsewhereEl.appendChild(cap);}
+    n+=hits.length;
+    const h=document.createElement('div'); h.className='dest-h'; h.tabIndex=0; h.setAttribute('role','button');
+    h.innerHTML=`<span class="dnum" style="opacity:1"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${p.clusterColor}"></span></span>
+      <span class="dname">${p.key} · ${p.label}</span><span class="dcount">${hits.length} of ${p.nTopics} topics</span>`;
+    h.title='Open '+p.full;
+    h.addEventListener('click',()=>selectPage(i));
+    h.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();selectPage(i);}});
+    elsewhereEl.appendChild(h);
+    hits.forEach(t=>{
+      const c=t.call;
+      const row=document.createElement('div'); row.className='topic'; row.tabIndex=0; row.setAttribute('role','button');
+      row.title=t.id+' — '+t.title+'  ·  '+t.dest;
+      row.innerHTML=`<span class="bar" style="background:${c.color}"></span>
+        <span class="cchip w" style="background:${c.color};color:${fg(c)}">${c.short}</span>
+        <span class="tbadge">${t.type||'—'}</span>
+        <span class="tid">${shortTopicId(t.id)}</span>
+        <span class="ttl">${t.title}</span>`;
+      const det=document.createElement('div'); det.className='tdetail';
+      det.innerHTML=`<table>
+        <tr><td>Topic</td><td class="full">${t.id}</td></tr>
+        <tr><td>Destination</td><td>${t.dest}</td></tr>
+        <tr><td>Call</td><td class="full">${c.id} <span style="color:var(--muted)">(${c.name})</span></td></tr>
+        <tr><td>Opens</td><td class="full">${dmy(c.opening)}</td></tr>
+        <tr><td>Deadline</td><td class="full">${c.twoStage? dmy(c.d1)+' (stage 1) → '+dmy(c.d2)+' (stage 2)' : dmy(c.d1)}</td></tr>
+        <tr><td>Topic budget</td><td>${t.budget? 'EUR '+t.budget+' million':'—'}</td></tr>
+        <tr><td>EU contribution</td><td>${t.contrib? t.contrib.replace(' to ',' – ')+' M€ per project':'—'}</td></tr>
+        <tr><td>Projects</td><td>${t.count? '~'+t.count+' expected':'—'}</td></tr></table>`;
+      det.appendChild(detailButtons(t, c));
+      const act=()=>{
+        const was=det.classList.contains('open');
+        topicEls.forEach(x=>{x.row.classList.remove('sel');x.det.classList.remove('open');});
+        if(P.state.selTopicCall){P.state.selTopicCall=null;paintTimeline();}
+        closeElsewhere();
+        if(!was){det.classList.add('open');row.classList.add('sel');row.style.setProperty('--selcol',c.color);}
+      };
+      row.addEventListener('click',act);
+      row.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();act();}});
+      elsewhereEl.appendChild(row); elsewhereEl.appendChild(det);
+    });
+  });
+  if(!n&&!visible){const e=document.createElement('div'); e.className='empty';
+    e.textContent='No topic in any cluster matches this search.'; elsewhereEl.appendChild(e);}
+  return n;
 }
 function paintTimeline(){
   const st=P.state;
@@ -849,11 +928,11 @@ ftEl.addEventListener('click',()=>{
 const qEl=document.getElementById('q'), qClr=document.getElementById('qclr');
 qEl.addEventListener('input',()=>{
   const v=qEl.value.trim().toLowerCase(); qClr.style.display=v?'block':'none';
-  if(MODE==='overview'){OV.q=v;buildOvLedger();} else {P.state.q=v;applyFilters();}
+  if(MODE==='overview'){OV.q=v;buildOvLedger();} else {PAGES.forEach(p=>p.state.q=v);applyFilters();}
 });
 qClr.addEventListener('click',()=>{
   qEl.value=''; qClr.style.display='none';
-  if(MODE==='overview'){OV.q='';buildOvLedger();} else {P.state.q='';applyFilters();}
+  if(MODE==='overview'){OV.q='';buildOvLedger();} else {PAGES.forEach(p=>p.state.q='');applyFilters();}
   qEl.focus();
 });
 document.addEventListener('keydown',e=>{
@@ -863,7 +942,7 @@ document.addEventListener('keydown',e=>{
     PAGES.forEach(p=>OV.clusters.add(p.key)); setPreset('6m'); renderOverview(); return;
   }
   if(e.key==='Escape'){
-    P.state.sel.clear(); P.state.selTopicCall=null; P.state.type=null; P.state.q='';
+    P.state.sel.clear(); P.state.selTopicCall=null; P.state.type=null; PAGES.forEach(p=>p.state.q='');
     qEl.value=''; qClr.style.display='none';
     tc.querySelectorAll('.tchip').forEach(x=>x.setAttribute('aria-pressed','false'));
     topicEls.forEach(t=>{t.row.classList.remove('sel');t.det.classList.remove('open');});

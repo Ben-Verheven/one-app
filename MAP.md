@@ -463,21 +463,22 @@ _No section banners._
 
 ## `rooms/callboard/callboard.js`
 
-912 lines · 48 KB
+991 lines · 53 KB
 
 ```
 Call Board                                      callboard.js:1
 the ink on a coloured chip                      callboard.js:58
 tabs                                            callboard.js:96
 render                                          callboard.js:120
-full topic text                                 callboard.js:335
-why the slide is started two frames late        callboard.js:435
-overview page                                   callboard.js:495
-the chronological chart, and dragging its ends  callboard.js:554
-the topic list under the chart                  callboard.js:669
-repainting what is already drawn                callboard.js:790
-controls                                        callboard.js:827
-what the other rooms may ask for                callboard.js:883
+the other clusters, while a search is typed     callboard.js:293
+full topic text                                 callboard.js:414
+why the slide is started two frames late        callboard.js:514
+overview page                                   callboard.js:574
+the chronological chart, and dragging its ends  callboard.js:633
+the topic list under the chart                  callboard.js:748
+repainting what is already drawn                callboard.js:869
+controls                                        callboard.js:906
+what the other rooms may ask for                callboard.js:962
 ```
 
 ## `rooms/callboard/callboard.css`
@@ -655,4 +656,4 @@ Generated data. Never open, never edit, never upload.
 
 ---
 
-**37609 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.
+**37688 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.
