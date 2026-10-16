@@ -81,11 +81,25 @@ button{font:inherit;color:inherit}
 .site.on{background:var(--sel);border-left-color:var(--key2)}
 .site .nm{font:15px var(--serif)}
 .site .sub{font-size:12.5px;color:var(--muted)}
-/* The booklet: the call's own page with its documents, opened beside the
-   page. It sits over the card rather than in it, because a link inside
-   the card's button is not allowed and would not be clickable on its own. */
-.docs{position:absolute;top:9px;right:9px;display:flex;padding:4px;border-radius:5px;color:var(--key)}
-.docs:hover{color:var(--key2);background:var(--hover)}
+/* The booklet: the call's documents, opened beside the page, and under it
+   the pencil that changes where it points. Both sit over the card rather
+   than in it, because a link inside the card's button is not allowed and
+   would not be clickable on its own. The pencil shows on the chosen arena
+   and under the pointer; on a touch screen there is no pointer to bring
+   it, so there it always shows. */
+.docs,.editlink{position:absolute;right:9px;display:flex;padding:4px;border:0;border-radius:5px;background:none;color:var(--key);cursor:pointer}
+.docs{top:9px}
+.editlink{top:35px;opacity:0}
+.arena:hover .editlink,.arena.on .editlink,.editlink:focus-visible{opacity:1}
+@media (hover:none){ .editlink{opacity:1} }
+.docs:hover,.editlink:hover{color:var(--key2);background:var(--hover)}
+.arena.editing{padding:10px 12px 12px 14px;background:var(--sel)}
+.arena.editing .nm{font:15px var(--serif)}
+.arena.editing label{display:block;font-size:12.5px;color:var(--muted);margin:4px 0 5px}
+#docUrl{width:100%;background:var(--field);border:1px solid var(--line2);border-radius:var(--radius);color:var(--ink);font:13px var(--body);padding:5px 8px}
+.arena.editing .lbtns{display:flex;gap:6px;margin-top:7px}
+.arena.editing .lbtns .btn{padding:3px 10px;font-size:12.5px}
+.arena.editing .err{font-size:12px;color:var(--warn-ink);margin-top:5px}
 .site .err{font-size:12px;color:var(--warn-ink);margin-top:3px;overflow-wrap:anywhere}
 .runbox{margin:12px 14px 16px;padding:10px 12px;border:1px dashed var(--line2);border-radius:var(--radius);font-size:12.5px;color:var(--muted);flex:none}
 .runbox b{color:var(--ink);font-weight:500}
@@ -309,9 +323,11 @@ function load(){
   return Promise.all([
     api('/rest/v1/partner_sites?select=*&order=sort'),
     all('/rest/v1/partner_entries?select=' + COLS + '&order=first_seen.desc,id'),
-    api('/rest/v1/partner_watch_log?select=*&order=ran_at.desc&limit=1')
+    api('/rest/v1/partner_watch_log?select=*&order=ran_at.desc&limit=1'),
+    api('/rest/v1/app_state?id=eq.' + LINKS_ROW + '&select=data').catch(function(){ return []; })
   ]).then(function(r){
     sites = r[0]; entries = r[1]; lastRun = r[2][0] || null;
+    links = ((r[3][0] || {}).data || {}).docs || {};
     byId = {}; entries.forEach(function(e){ byId[e.id] = e; });
     /* Newest first: the night it arrived, then the site's own date where
        it gives one, then the site's own number, which both platforms count
@@ -376,30 +392,48 @@ function stateTags(e){
        + (e.changed_at && (!e.opened_at || e.changed_at > e.opened_at) ? '<span class="st chg">Changed</span>' : '')
        + (e.removed_at ? '<span class="st gone">Gone from site</span>' : '');
 }
-/* Where each arena's call documents are: the call's own page on the
-   partnership's site, which holds the call text and its annexes. They live
-   here rather than in partner_sites because Mark's login only reads that
-   table, and a link changed here is live without a step in Supabase. */
+/* Where each arena's booklet points: the call text's own PDF to start
+   with, and whatever Mark puts there with the pencil after that. His links
+   are kept in the cloud, in app_state under their own row, because his
+   login may write that table and only reads partner_sites; so a link set
+   on one device is there on the others. An empty link is kept too: it
+   means no booklet, not the starting link back. */
 var DOCS = {
-  sbep:       'https://www.bluepartnership.eu/funding-opportunity/sustainable-blue-economy-partnerships-fourth-joint-transnational-call',
-  water4all:  'https://www.water4all-partnership.eu/joint-activities/water4all-2026-joint-transnational-call',
-  biodiversa: 'https://www.biodiversa.eu/2026/06/09/2026-2027-joint-call/',
-  forest:     'https://forest-partnership.eu/jointcall2026/'
+  sbep:       'https://www.bluepartnership.eu/sites/bluepartnership.eu/files/documents/2026-10/sbep_jtc_2026_4th_call_announcement_061026_0.pdf',
+  water4all:  'https://www.water4all-partnership.eu/sites/default/files/2026-09/Call_Announcement_Water4All_JTC2026_20260908.pdf',
+  biodiversa: 'https://www.biodiversa.eu/wp-content/uploads/2026/09/BiodivFuture_Doc1_Announcement-opportunity.pdf',
+  forest:     'https://forest-partnership.eu/wp-content/uploads/2026/09/260915_FOREST_JC2026_Call_Announcement_FINAL-1.pdf'
 };
+var LINKS_ROW = 'partnerwatch', links = {}, editing = null;
+function docsOf(id){ return Object.prototype.hasOwnProperty.call(links, id) ? links[id] : (DOCS[id] || ''); }
+var PENCIL = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" aria-hidden="true">'
+  + '<path d="M10.8 2.6l2.6 2.6-8 8-3.3.7.7-3.3z"/><path d="M9.4 4l2.6 2.6"/></svg>';
 var BOOKLET = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" aria-hidden="true">'
   + '<path d="M8 3.8C6.5 2.7 4.3 2.4 1.8 2.8v9.6c2.5-.4 4.7-.1 6.2 1 1.5-1.1 3.7-1.4 6.2-1V2.8C11.7 2.4 9.5 2.7 8 3.8z"/><path d="M8 3.8v9.6"/></svg>';
 function drawSites(){
   /* No "All sites": Mark works one site at a time (2026-10-16). */
-  var h = '';
+  var h = '', typed = $('#docUrl') ? $('#docUrl').value : null, err = $('#docErr') ? $('#docErr').textContent : '';
   sites.forEach(function(s){
-    h += '<div class="arena"><button class="site' + (view.site === s.id ? ' on' : '') + '" data-site="' + esc(s.id) + '">'
+    if (editing === s.id){
+      h += '<div class="arena editing"><div class="nm">' + esc(s.name) + '</div>'
+         + '<label for="docUrl">Link the booklet opens, such as the call text\'s PDF. Empty for no booklet.</label>'
+         + '<input id="docUrl" type="url" spellcheck="false" value="' + esc(typed != null ? typed : docsOf(s.id)) + '">'
+         + '<div class="lbtns"><button class="btn" data-savelink="' + esc(s.id) + '">Save</button><button class="btn" data-cancellink="1">Cancel</button></div>'
+         + '<div class="err" id="docErr">' + esc(err) + '</div></div>';
+      return;
+    }
+    var on = view.site === s.id, doc = docsOf(s.id);
+    h += '<div class="arena' + (on ? ' on' : '') + '"><button class="site' + (on ? ' on' : '') + '" data-site="' + esc(s.id) + '">'
        + '<div class="nm">' + esc(s.name) + '</div><div class="sub">' + esc(s.call || '') + '</div>'
        + (s.last_error ? '<div class="err">Last read failed, ' + esc(stamp(s.last_error_at)) + ': ' + esc(s.last_error) + '</div>' : '')
        + '</button>'
-       + (DOCS[s.id] ? '<a class="docs" href="' + esc(DOCS[s.id]) + '" target="_blank" rel="noopener" title="Call documents" aria-label="Call documents of ' + esc(s.name) + '">' + BOOKLET + '</a>' : '')
+       + (doc ? '<a class="docs" href="' + esc(doc) + '" target="_blank" rel="noopener" title="Call documents" aria-label="Call documents of ' + esc(s.name) + '">' + BOOKLET + '</a>' : '')
+       + '<button class="editlink" data-editlink="' + esc(s.id) + '" title="Change the booklet\'s link" aria-label="Change the call documents link of ' + esc(s.name) + '">' + PENCIL + '</button>'
        + '</div>';
   });
   $('#sites').innerHTML = h;
+  var input = $('#docUrl');
+  if (input && typed == null){ input.focus(); input.select(); }
   var waiting = entries.filter(function(e){ return !e.fetched_at && !e.removed_at; }).length;
   $('#runbox').innerHTML = (lastRun
       ? '<b>Last check ' + esc(stamp(lastRun.ran_at)) + '</b><br>' + lastRun.added + ' new · ' + lastRun.changed + ' changed · ' + lastRun.removed + ' gone'
@@ -623,6 +657,20 @@ function setVerdict(v){
   if (next) return openEntry(next.id);
   drawSites(); drawRows(); drawDetail();
 }
+function editLink(id){ editing = id; drawSites(); }
+function cancelLink(){ editing = null; drawSites(); }
+function saveLink(id){
+  var v = $('#docUrl').value.trim();
+  if (v && !/^https?:\/\/\S+$/i.test(v)){ $('#docErr').textContent = 'That is not a web link: it should start with https://'; return; }
+  var before = Object.assign({}, links);
+  links[id] = v; editing = null; drawSites();
+  api('/rest/v1/app_state', { method:'POST', body:[{ id:LINKS_ROW, data:{ docs:links }, updated_at:new Date().toISOString() }],
+    headers:{ Prefer:'resolution=merge-duplicates,return=representation' } })
+    .catch(function(err){
+      links = before; drawSites();
+      $('#banner').textContent = 'The link was not saved: ' + err.message; $('#banner').hidden = false;
+    });
+}
 function checkNow(btn){
   btn.disabled = true; btn.textContent = 'Checking… (up to two minutes)';
   api('/functions/v1/partner-copier', { method:'POST', body:{} })
@@ -631,9 +679,12 @@ function checkNow(btn){
 }
 
 document.addEventListener('click', function(ev){
-  var t = ev.target.closest('[data-pick],[data-bulk],[data-site],[data-id],[data-state],[data-kind],[data-tab],[data-verdict],#checkNow');
+  var t = ev.target.closest('[data-pick],[data-bulk],[data-site],[data-id],[data-state],[data-kind],[data-tab],[data-verdict],[data-editlink],[data-savelink],[data-cancellink],#checkNow');
   if (!t) return;
   if (t.id === 'checkNow') return checkNow(t);
+  if (t.dataset.editlink) return editLink(t.dataset.editlink);
+  if (t.dataset.savelink) return saveLink(t.dataset.savelink);
+  if (t.dataset.cancellink) return cancelLink();
   if (t.dataset.pick) pick(t.dataset.pick, ev.shiftKey);
   else if (t.dataset.bulk) bulk(t.dataset.bulk);
   else if (t.dataset.site){ view.site = t.dataset.site; sel.clear(); regroup(); saveView(); draw(); }
@@ -651,6 +702,11 @@ $('#search').addEventListener('input', function(){ view.q = this.value; drawRows
    picked ones), X picks the open entry, Esc lets go of the picked ones.
    Not while typing, or a search for "Ireland" would flag three entries. */
 document.addEventListener('keydown', function(ev){
+  if (ev.target.id === 'docUrl'){
+    if (ev.key === 'Enter'){ ev.preventDefault(); saveLink(editing); }
+    else if (ev.key === 'Escape') cancelLink();
+    return;
+  }
   if (ev.target.matches('input,textarea') || ev.metaKey || ev.ctrlKey || ev.altKey) return;
   var k = ev.key;
   if (k === 'ArrowDown' || k === 'ArrowUp'){

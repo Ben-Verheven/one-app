@@ -11,3 +11,4 @@
 - Chose an all-light page over the Marketplace's dark ground and over a dark list with a light entry, compared on full-size mock-ups (2026-10-16). In an entry he wants the project description central: the long texts down the middle, project description first, every short fact in a narrow column beside them
 - Removed "All sites": he works one site at a time, and the page opens on the first site (2026-10-16)
 - Kept the arena names in the entry rows' type, over a bookish and a plain screen type shown beside it; what he disliked in the arena cards was the typewriter type of the counts under them (2026-10-16)
+- Wants each arena's booklet to open the call text's PDF directly, not the call's web page, and to change the link himself on the page (2026-10-16)
