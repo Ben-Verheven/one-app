@@ -523,7 +523,7 @@ one-app/
     atlas-graph.js              the graph
     callboard-topics.js         clusters, destinations, topics, calls
     callboard-descriptions.js   the Commission's prose
-partner-watch/        Project Watch, a page of its own — see notes/partner-watch.md
+partner-watch/        Project Watch, a page of its own, and in pocket/ its phone version — see notes/partner-watch.md
 pocket/               Pocket — see pocket/POCKET.md
 supabase/             the database's SQL, the two agents' gatekeepers and Partner Watch's copier
 tools/                the scripts below

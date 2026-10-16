@@ -429,7 +429,9 @@ function stateTags(e){
    and his notes on each call, are kept in the cloud in app_state under a
    row of their own, because his login may write that table and only reads
    partner_sites; so what is set on one device is there on the others. An
-   empty link is kept too: it means no scroll, not the starting link back. */
+   empty link is kept too: it means no scroll, not the starting link back.
+   The phone's page (pocket/index.html here) holds a copy of these four as
+   PW_DOCS; a change to one is a change to both. */
 var DOCS = {
   sbep:       'https://www.bluepartnership.eu/sites/bluepartnership.eu/files/documents/2026-10/sbep_jtc_2026_4th_call_announcement_061026_0.pdf',
   water4all:  'https://www.water4all-partnership.eu/sites/default/files/2026-09/Call_Announcement_Water4All_JTC2026_20260908.pdf',

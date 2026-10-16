@@ -16,6 +16,7 @@ whole point of the design, and it is the only promise this file makes.
 | desk | `https://ben-verheven.github.io/one-app/` | bookmark it |
 | iPad | the same address, in Safari | Share → **Add to Home Screen** |
 | iPhone | `https://ben-verheven.github.io/one-app/pocket/` | Share → **Add to Home Screen** |
+| iPhone, Project Watch | `https://ben-verheven.github.io/one-app/partner-watch/pocket/` | the same |
 
 From the home screen, One App and Pocket open full screen, with their own
 icons and without Safari's bars.
