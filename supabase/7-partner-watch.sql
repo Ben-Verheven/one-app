@@ -15,7 +15,8 @@
 -- three readers fits the page: 'epss' for the proposals.etag.ee sites,
 -- 'ptj' for the PtJ "partnering" pages, 'b2match' for a b2match event's
 -- marketplace page (its link is the page itself, /e/<event>/components/<n>,
--- as the event's menu gives it). A new site on any of them is
+-- as the event's menu gives it, logged in if the event hides it from
+-- visitors). A new site on any of them is
 -- a new row here, and its scroll's link is set with the pencil above the
 -- arenas on the page; a site on a fourth platform needs a reader of its own in the copier
 -- first.
@@ -48,7 +49,9 @@ insert into partner_sites (id, name, call, list_url, platform, sort) values
   ('forest',     'Forest Pathways',          'FOREST joint call 2026',
    'https://submission-forest.ptj.de/partnering/list', 'ptj', 4),
   ('dut',        'Driving Urban Transitions', 'DUT Call 2026',
-   'https://www.b2match.com/e/dut-call-2026/components/69838', 'b2match', 5)
+   'https://www.b2match.com/e/dut-call-2026/components/69838', 'b2match', 5),
+  ('eppermed',   'EP PerMed',                'JTC 2027, cell and gene therapy',
+   'https://www.b2match.com/e/eppermed-partnering/components/49386', 'b2match', 6)
 on conflict (id) do nothing;
 
 -- ── 2. the entries ────────────────────────────────────────────────────
@@ -174,7 +177,7 @@ select cron.schedule('partner-watch-copier', '*/10 0-4 * * *', $job$
 $job$);
 
 -- ── 5. the check ──────────────────────────────────────────────────────
--- Five sites, the schedule, and rules on every table.
+-- Six sites, the schedule, and rules on every table.
 select (select count(*) from partner_sites)                              as sites,
        (select count(*) from cron.job where jobname = 'partner-watch-copier') as scheduled,
        (select bool_and(c.relrowsecurity) from pg_class c

@@ -21,6 +21,10 @@
 // Paste all of this into Supabase → Edge Functions → partner-copier → Code →
 // Deploy. Leave "Verify JWT" on: the schedule sends the public key, the page
 // sends Mark's session, and the password or the owner check does the rest.
+// For the b2match events that show their entries only to participants, add
+// two secrets under Edge Functions → Secrets: B2MATCH_EMAIL and
+// B2MATCH_PASSWORD, his b2match login. They live there and nowhere else:
+// this repository is public.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -149,19 +153,26 @@ function parsePtjDetail(html) {
 }
 // b2match (www.b2match.com/e/<event>) is a different kind of site: its
 // pages are drawn in the browser, and a list page carries only its first
-// twenty entries, so the list is asked of the site's own data service
-// instead, fifty at a time, which is what its page does when scrolled. It
-// answers without a login, as the pages do, for every event that shows its
-// marketplace to visitors; an event that shows it only to registered
-// participants (EP PerMed's, on 2026-10-17) answers "not found" here, and
-// would need Mark's own login. Tested on DUT Call 2026's 390 entries on
-// 2026-10-17. An entry page holds the same data in its source, which is
-// where the entry itself is copied from.
+// twenty entries, so the list and each entry are asked of the site's own
+// data service instead, the list fifty at a time, which is what its page
+// does when scrolled. Most events show their marketplace to anyone (DUT
+// Call 2026's 390 entries, 2026-10-17). Some show it only to registered
+// participants (EP PerMed's): there the service answers "not
+// authenticated" (or "not found"), and the copier then logs in as Mark, once a run, with the address and
+// password kept in the function's secrets B2MATCH_EMAIL and
+// B2MATCH_PASSWORD, and asks again. So a new b2match site, open or not, is
+// only a new row in partner_sites, as long as Mark is registered for it.
+// Tested on both events on 2026-10-17.
 const B2M_API = "https://www.b2match.com/b2md-api/v4/query";
+const B2M_ENTRY = `id title type updatedAt shortDescription description
+  author{... on Participant{organisationName location{city country{name}} user{firstName lastName jobPosition}}}
+  elements{widget{subtype} value{... on MarketplaceClassifierConnection{nodes{name}}}}`;
 const B2M_LIST = `query($e:String!,$p:URI!,$a:String){eventByEuidV2(euid:$e){... on Event{routeByPath(path:$p){__typename
-  ... on OpportunitiesRoute{opportunitiesV2(filters:{},page:{first:50,after:$a}){pageInfo{hasNextPage endCursor}
-  nodes{id title type shortDescription author{... on Participant{organisationName location{country{name}} user{firstName lastName}}}
-  elements{widget{subtype} value{... on MarketplaceClassifierConnection{nodes{name}}}}}}}}}}}`;
+  ... on OpportunitiesRoute{opportunitiesV2(filters:{},page:{first:50,after:$a}){pageInfo{hasNextPage endCursor} nodes{${B2M_ENTRY}}}}}}}}`;
+const B2M_ONE = `query($e:String!,$p:URI!){eventByEuidV2(euid:$e){... on Event{routeByPath(path:$p){__typename
+  ... on OpportunityRoute{opportunity{${B2M_ENTRY}}}}}}}`;
+const B2M_LOGIN = `mutation($i:ID!,$m:String!,$w:String!){login(input:{eventId:$i,email:$m,password:$w}){__typename
+  ... on LoginSuccessPayload{payload{token}} ... on LoginFailurePayload{reason{... on Reason{message}}}}}`;
 // The descriptions are written in Markdown, which the site turns into bold
 // and lists on screen; the marks themselves are taken out here, so the text
 // reads as the site shows it, and a link keeps its address beside its words.
@@ -180,47 +191,82 @@ const unmark = (t) => {
 // The number inside the site's id ("ParticipationOpportunity:244594"),
 // which counts upwards as entries are made, like the other platforms'.
 const b2mNumber = (id) => (atob(id).match(/(\d+)$/) || [])[1];
-const b2mKind = (kind, type) =>
-  /looking for partners|seeking partners/i.test(kind) || /request/i.test(type) ? "seeks"
-  : /looking to join|offer/i.test(kind) || /expertise|service|product/i.test(type) ? "offers" : null;
-const b2mGroups = (elements, name) => {
-  const out = [];
+// Seeks or offers, from the event's own words for it, which differ per
+// event and sit under Kind (DUT) or Stage (EP PerMed); one that says both
+// counts as seeking.
+const b2mKind = (g, type) => {
+  const said = `${g.Kind ?? ""} ${g.Stage ?? ""}`;
+  return /looking for (an? )?(additional )?partners?|seeking partners/i.test(said) || /request/i.test(type) ? "seeks"
+    : /looking to join|contribute .*with my expertise|offer/i.test(said) || /expertise|service|product/i.test(type) ? "offers" : null;
+};
+const b2mGroups = (elements) => {
+  const out = {};
   for (const el of elements ?? []) {
     const sub = String(el?.widget?.subtype ?? "").split("::").pop();
-    if (!/^(Kind|Topic|Stage|Call)$/.test(sub)) continue;
-    out.push([sub, (el.value?.nodes ?? []).map(name).filter(Boolean)]);
+    if (/^(Kind|Topic|Stage|Call)$/.test(sub)) out[sub] = (el.value?.nodes ?? []).map((c) => c?.name).filter(Boolean).join("; ");
   }
   return out;
 };
+async function b2mPost(query, variables, token) {
+  const r = await fetch(B2M_API, {
+    method: "POST",
+    headers: { "user-agent": UA, "content-type": "application/json", accept: "application/json",
+               ...(token ? { authorization: `Bearer ${token}` } : {}) },
+    body: JSON.stringify({ query, variables }),
+    signal: AbortSignal.timeout(30_000),
+  });
+  if (!r.ok) throw new Error(`${r.status} ${r.statusText} from ${B2M_API}`);
+  const d = await r.json();
+  if (d.errors?.length) throw new Error(d.errors[0].message);
+  return d.data;
+}
+// The login of this run, per event: null for an event that showed its
+// marketplace without one.
+const b2mTokens = new Map();
+async function b2mLogin(euid) {
+  const email = Deno.env.get("B2MATCH_EMAIL"), password = Deno.env.get("B2MATCH_PASSWORD");
+  if (!email || !password)
+    throw new Error("this marketplace is shown only to registered participants, and the copier has no b2match login (the secrets B2MATCH_EMAIL and B2MATCH_PASSWORD)");
+  const id = (await b2mPost(`query($e:String!){eventByEuidV2(euid:$e){... on Event{id}}}`, { e: euid }))?.eventByEuidV2?.id;
+  if (!id) throw new Error(`no b2match event called ${euid}`);
+  const r = (await b2mPost(B2M_LOGIN, { i: String(id), m: email, w: password }))?.login;
+  if (!r?.payload?.token) throw new Error(`the b2match login was refused: ${r?.reason?.message ?? "no reason given"}`);
+  b2mTokens.set(euid, r.payload.token);
+}
+// One route of an event, asked first as a visitor and, when the event hides
+// it from visitors, again logged in.
+async function b2mRoute(euid, query, variables) {
+  for (;;) {
+    const known = b2mTokens.has(euid), token = b2mTokens.get(euid);
+    const route = (await b2mPost(query, variables, token))?.eventByEuidV2?.routeByPath;
+    if (!/^(NotAuthenticated|NotFound)Route$/.test(route?.__typename)) return route;
+    if (token) throw new Error("not shown on b2match even logged in; is Mark registered for this event, and is the link right?");
+    if (known) throw new Error("not shown on b2match to visitors any more; it may need a login");
+    await b2mLogin(euid);
+  }
+}
+const b2mWhere = (url) => { const [, euid, ...rest] = new URL(url).pathname.split("/").filter(Boolean); return { euid, path: rest.join("/") }; };
 async function fetchB2mList(site) {
-  const u = new URL(site.list_url);
-  const [, euid, ...rest] = u.pathname.split("/").filter(Boolean);
+  const { euid, path } = b2mWhere(site.list_url), origin = new URL(site.list_url).origin;
   const out = [];
   for (let after = null, n = 0; ; n++) {
     if (n > 100) throw new Error("the list did not end after 5,000 entries");
-    const r = await fetch(B2M_API, {
-      method: "POST",
-      headers: { "user-agent": UA, "content-type": "application/json", accept: "application/json" },
-      body: JSON.stringify({ query: B2M_LIST, variables: { e: euid, p: rest.join("/"), a: after } }),
-      signal: AbortSignal.timeout(30_000),
-    });
-    if (!r.ok) throw new Error(`${r.status} ${r.statusText} from ${B2M_API}`);
-    const d = await r.json();
-    if (d.errors?.length) throw new Error(d.errors[0].message);
-    const route = d.data?.eventByEuidV2?.routeByPath;
-    if (!route?.opportunitiesV2)
-      throw new Error(route?.__typename === "NotFoundRoute" ? "the marketplace is not shown to visitors; it may need a login" : "list not found");
+    const route = await b2mRoute(euid, B2M_LIST, { e: euid, p: path, a: after });
+    // An open event is remembered as open, so its entries are never asked
+    // logged in.
+    if (!b2mTokens.has(euid)) b2mTokens.set(euid, null);
+    if (!route?.opportunitiesV2) throw new Error("list not found");
     const o = route.opportunitiesV2;
     for (const x of o.nodes) {
       const ext = b2mNumber(x.id);
       if (!ext) continue;
-      const g = Object.fromEntries(b2mGroups(x.elements, (c) => c?.name));
-      const who = x.author?.user ? `${x.author.user.firstName ?? ""} ${x.author.user.lastName ?? ""}`.trim() : "";
+      const g = b2mGroups(x.elements);
+      const who = `${x.author?.user?.firstName ?? ""} ${x.author?.user?.lastName ?? ""}`.trim();
       out.push({
-        ext_id: ext, url: `${u.origin}/e/${euid}/opportunities/${x.id}`, contact: who || null,
-        kind: b2mKind((g.Kind ?? []).join(" "), x.type), looking_raw: (g.Kind ?? []).join(" "),
+        ext_id: ext, url: `${origin}/e/${euid}/opportunities/${x.id}`, contact: who || null,
+        kind: b2mKind(g, x.type), looking_raw: g.Kind ?? "",
         country: x.author?.location?.country?.name ?? null, org: x.author?.organisationName || null,
-        topic: (g.Topic ?? []).join("; ") || null, keywords: null, posted: null,
+        topic: g.Topic || null, keywords: null, posted: null,
         list_text: [x.title, x.shortDescription].map(flat).filter(Boolean).join("\n"),
       });
     }
@@ -229,32 +275,24 @@ async function fetchB2mList(site) {
     await sleep(GAP_MS);
   }
 }
-function parseB2mDetail(html, url) {
-  const m = html.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/);
-  if (!m) throw new Error("entry content not found");
-  const a = JSON.parse(m[1])?.props?.pageProps?.__APOLLO_STATE__ ?? {};
-  const ref = (r) => (r && r.__ref ? a[r.__ref] : r);
-  // A country is named only in the event's language on this page, under a
-  // key that carries the event's name, never under plain `name`.
-  const named = (r) => { r = ref(r); return r ? r.name ?? Object.entries(r).find(([k]) => k.startsWith("translatedName"))?.[1] : null; };
-  const id = decodeURIComponent(String(url).split("/opportunities/")[1] ?? "").split(/[?#]/)[0];
-  const o = a[`Opportunity:${id}`];
+async function fetchB2mEntry(url) {
+  const { euid, path } = b2mWhere(url);
+  const o = (await b2mRoute(euid, B2M_ONE, { e: euid, p: path }))?.opportunity;
   if (!o || o.description == null) throw new Error("entry content not found");
-  const who = ref(o.author) ?? {}, user = ref(who.user) ?? {}, loc = who.location ?? {};
-  const g = Object.fromEntries(b2mGroups(o.elements, named));
+  const who = o.author ?? {}, user = who.user ?? {}, loc = who.location ?? {}, g = b2mGroups(o.elements);
   const fields = [
     ["Title", flat(o.title)],
-    ["Looking for", (g.Kind ?? []).join("; ")],
+    ["Looking for", g.Kind ?? ""],
     ["Short description", flat(o.shortDescription)],
     ["Description", unmark(o.description)],
-    ["Topic", (g.Topic ?? []).join("; ")],
-    ["Call", (g.Call ?? []).join("; ")],
-    ["Stage", (g.Stage ?? []).join("; ")],
+    ["Topic", g.Topic ?? ""],
+    ["Call", g.Call ?? ""],
+    ["Stage", g.Stage ?? ""],
     ["Contact name", `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim()],
     ["Job position", flat(user.jobPosition)],
     ["Organisation name", flat(who.organisationName)],
     ["City", flat(loc.city)],
-    ["Country", flat(named(loc.country))],
+    ["Country", flat(loc.country?.name)],
     ["Last updated on the site", String(o.updatedAt ?? "").replace("T", " ").slice(0, 16)],
   ];
   return { fields, text: fields.filter(([, v]) => v).map(([l, v]) => `${l}\n${v}`).join("\n\n") };
@@ -262,7 +300,7 @@ function parseB2mDetail(html, url) {
 const PARSERS = {
   epss: { list: parseEpssList, detail: parseEpssDetail },
   ptj: { list: parsePtjList, detail: parsePtjDetail },
-  b2match: { fetchList: fetchB2mList, detail: parseB2mDetail },
+  b2match: { fetchList: fetchB2mList, fetchEntry: fetchB2mEntry },
 };
 
 // ── the run ───────────────────────────────────────────────────────────
@@ -365,7 +403,8 @@ async function readList(site, now) {
 }
 
 async function copyEntry(e, platform, now) {
-  const p = PARSERS[platform].detail(await get(e.url), e.url);
+  const P = PARSERS[platform];
+  const p = P.fetchEntry ? await P.fetchEntry(e.url) : P.detail(await get(e.url));
   if (!p.text) throw new Error("the entry page had no text");
   const h = hash(flat(p.text));
   const upd = {
@@ -390,6 +429,7 @@ async function copyEntry(e, platform, now) {
 async function run(byMark) {
   const t0 = Date.now(), now = new Date().toISOString();
   const tally = { listed: 0, added: 0, fetched: 0, changed: 0, removed: 0, waiting: 0 };
+  b2mTokens.clear();
   const errors = [];
 
   const { data: sites, error } = await db.from("partner_sites").select("*").eq("active", true).order("sort");
