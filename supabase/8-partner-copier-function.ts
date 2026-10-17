@@ -167,8 +167,8 @@ const B2M_API = "https://www.b2match.com/b2md-api/v4/query";
 const B2M_ENTRY = `id title type updatedAt shortDescription description
   author{... on Participant{organisationName location{city country{name}} user{firstName lastName jobPosition}}}
   elements{widget{subtype} value{... on MarketplaceClassifierConnection{nodes{name}}}}`;
-const B2M_LIST = `query($e:String!,$p:URI!,$a:String){eventByEuidV2(euid:$e){... on Event{routeByPath(path:$p){__typename
-  ... on OpportunitiesRoute{opportunitiesV2(filters:{},page:{first:50,after:$a}){pageInfo{hasNextPage endCursor} nodes{${B2M_ENTRY}}}}}}}}`;
+const B2M_LIST = `query($e:String!,$p:URI!,$a:String,$f:Int!,$o:OpportunityOrderBy){eventByEuidV2(euid:$e){... on Event{routeByPath(path:$p){__typename
+  ... on OpportunitiesRoute{opportunitiesV2(filters:{orderBy:$o},page:{first:$f,after:$a}){pageInfo{hasNextPage endCursor} nodes{${B2M_ENTRY}}}}}}}}`;
 const B2M_ONE = `query($e:String!,$p:URI!){eventByEuidV2(euid:$e){... on Event{routeByPath(path:$p){__typename
   ... on OpportunityRoute{opportunity{${B2M_ENTRY}}}}}}}`;
 const B2M_LOGIN = `mutation($i:ID!,$m:String!,$w:String!){login(input:{eventId:$i,email:$m,password:$w}){__typename
@@ -194,12 +194,13 @@ const b2mNumber = (id) => (atob(id).match(/(\d+)$/) || [])[1];
 // Seeks or offers, from the event's own words for it, which differ per
 // event and sit under Kind (DUT) or Stage (EP PerMed); one that says both
 // counts as seeking. The Horizon Europe brokerages say "Consortium seeks
-// Partners" and "Partner seeks Consortium", and give an offer of expertise
-// the type Expertize, spelt so.
+// Partners" (CL4 Digital "partner(s)") and "Partner seeks Consortium"
+// (Nature "Coordinator looking for partners" and "Partner looking for
+// consortium"), and give an offer of expertise the type Expertize, spelt so.
 const b2mKind = (g, type) => {
   const said = `${g.Kind ?? ""} ${g.Stage ?? ""}`;
-  return /looking for (an? )?(additional )?partners?|seeking partners|seeks partners/i.test(said) || /request/i.test(type) ? "seeks"
-    : /looking to join|contribute .*with my expertise|offer|seeks consortium/i.test(said) || /experti[sz]e|service|product/i.test(type) ? "offers" : null;
+  return /looking for (an? )?(additional )?partners?|seeking partners|seeks partner/i.test(said) || /request/i.test(type) ? "seeks"
+    : /looking to join|contribute .*with my expertise|offer|seeks consortium|looking for (an? )?consortium/i.test(said) || /experti[sz]e|service|product/i.test(type) ? "offers" : null;
 };
 const b2mGroups = (elements) => {
   const out = {};
@@ -209,17 +210,17 @@ const b2mGroups = (elements) => {
   }
   return out;
 };
-async function b2mPost(query, variables, token) {
-  const r = await fetch(B2M_API, {
+async function b2mPost(query, variables, token, api = B2M_API) {
+  const r = await fetch(api, {
     method: "POST",
     headers: { "user-agent": UA, "content-type": "application/json", accept: "application/json",
                ...(token ? { authorization: `Bearer ${token}` } : {}) },
     body: JSON.stringify({ query, variables }),
     signal: AbortSignal.timeout(30_000),
   });
-  if (!r.ok) throw new Error(`${r.status} ${r.statusText} from ${B2M_API}`);
+  if (!r.ok) throw new Error(`${r.status} ${r.statusText} from ${api}`);
   const d = await r.json();
-  if (d.errors?.length) throw new Error(d.errors[0].message);
+  if (d.errors?.length) throw Object.assign(new Error(d.errors[0].message), { fromSite: true });
   return d.data;
 }
 // The login of this run, per event: null for an event that showed its
@@ -248,38 +249,72 @@ async function b2mRoute(euid, query, variables) {
   }
 }
 const b2mWhere = (url) => { const [, euid, ...rest] = new URL(url).pathname.split("/").filter(Boolean); return { euid, path: rest.join("/") }; };
+// The list's pages, from whichever data service asks them: `ask` gives the
+// page after a cursor, `link` an entry's address on the site.
+//
+// One broken entry stops the site's own list at the page it is on: CL4
+// Digital's 659 (2026-10-17) answered "finding participation opportunity …
+// failed: key not found" past the 450th, newest first, an entry the site
+// still counts but can no longer find. So a page that fails is asked again
+// one entry at a time up to the broken one, and the list is then read
+// again from the other end, oldest first, up to it from that side: every
+// entry but the broken one comes in. The broken one is simply missing, as
+// it is on the site.
+async function b2mPages(ask, link) {
+  const out = [], ids = new Set();
+  let broken = null;
+  for (const order of ["NEWEST", "OLDEST"]) {
+    broken = null;
+    for (let after = null, first = 50, n = 0; ; n++) {
+      if (n > 300) throw new Error("the list did not end after 5,000 entries");
+      let o;
+      try {
+        o = await ask(after, first, order);
+      } catch (err) {
+        if (!err.fromSite) throw err;
+        if (first > 1) { first = 1; continue; }
+        broken = err;
+        break;
+      }
+      for (const x of o.nodes) {
+        const ext = b2mNumber(x.id);
+        if (!ext || ids.has(ext)) continue;
+        ids.add(ext);
+        const g = b2mGroups(x.elements);
+        const who = `${x.author?.user?.firstName ?? ""} ${x.author?.user?.lastName ?? ""}`.trim();
+        out.push({
+          ext_id: ext, url: link(x.id), contact: who || null,
+          kind: b2mKind(g, x.type), looking_raw: g.Kind ?? "",
+          country: x.author?.location?.country?.name ?? null, org: x.author?.organisationName || null,
+          topic: g.Topic || null, keywords: null, posted: null,
+          list_text: [x.title, x.shortDescription].map(flat).filter(Boolean).join("\n"),
+        });
+      }
+      if (!o.pageInfo?.hasNextPage || !o.pageInfo.endCursor) break;
+      after = o.pageInfo.endCursor;
+      if (first > 1) await sleep(GAP_MS);
+    }
+    if (!broken) return out;
+  }
+  if (!out.length) throw broken;
+  return out;
+}
 async function fetchB2mList(site) {
   const { euid, path } = b2mWhere(site.list_url), origin = new URL(site.list_url).origin;
-  const out = [];
-  for (let after = null, n = 0; ; n++) {
-    if (n > 100) throw new Error("the list did not end after 5,000 entries");
-    const route = await b2mRoute(euid, B2M_LIST, { e: euid, p: path, a: after });
+  return b2mPages(async (a, f, o) => {
+    const route = await b2mRoute(euid, B2M_LIST, { e: euid, p: path, a, f, o });
     // An open event is remembered as open, so its entries are never asked
     // logged in.
     if (!b2mTokens.has(euid)) b2mTokens.set(euid, null);
     if (!route?.opportunitiesV2) throw new Error("list not found");
-    const o = route.opportunitiesV2;
-    for (const x of o.nodes) {
-      const ext = b2mNumber(x.id);
-      if (!ext) continue;
-      const g = b2mGroups(x.elements);
-      const who = `${x.author?.user?.firstName ?? ""} ${x.author?.user?.lastName ?? ""}`.trim();
-      out.push({
-        ext_id: ext, url: `${origin}/e/${euid}/opportunities/${x.id}`, contact: who || null,
-        kind: b2mKind(g, x.type), looking_raw: g.Kind ?? "",
-        country: x.author?.location?.country?.name ?? null, org: x.author?.organisationName || null,
-        topic: g.Topic || null, keywords: null, posted: null,
-        list_text: [x.title, x.shortDescription].map(flat).filter(Boolean).join("\n"),
-      });
-    }
-    if (!o.pageInfo?.hasNextPage || !o.pageInfo.endCursor) return out;
-    after = o.pageInfo.endCursor;
-    await sleep(GAP_MS);
-  }
+    return route.opportunitiesV2;
+  }, (id) => `${origin}/e/${euid}/opportunities/${id}`);
 }
 async function fetchB2mEntry(url) {
   const { euid, path } = b2mWhere(url);
-  const o = (await b2mRoute(euid, B2M_ONE, { e: euid, p: path }))?.opportunity;
+  return b2mEntry((await b2mRoute(euid, B2M_ONE, { e: euid, p: path }))?.opportunity);
+}
+function b2mEntry(o) {
   if (!o || o.description == null) throw new Error("entry content not found");
   const who = o.author ?? {}, user = who.user ?? {}, loc = who.location ?? {}, g = b2mGroups(o.elements);
   const fields = [
@@ -298,6 +333,40 @@ async function fetchB2mEntry(url) {
     ["Last updated on the site", String(o.updatedAt ?? "").replace("T", " ").slice(0, 16)],
   ];
   return { fields, text: fields.filter(([, v]) => v).map(([l, v]) => `${l}\n${v}`).join("\n\n") };
+}
+// An event b2match calls "v6" runs its newer marketplace on an address of
+// its own (<event>.b2match.io/components/<n>), and the data service at
+// www.b2match.com refuses it ("a v6 event, served on its own website").
+// The same service answers on the event's own address, at /api/v4/query,
+// asked by the event's number and the page's instead of their names: the
+// GREENET Partner Search Tool's Projects were the first (2026-10-17, 576
+// entries, shown to anyone; Mark knew them as Projects, which is the page's
+// name there). An entry's page is /marketplace/opportunities/<id>.
+const V6_LIST = `query($i:ID!,$r:ID!,$a:String,$f:Int!,$o:OpportunityOrderBy){event(id:$i){route(id:$r){__typename
+  ... on OpportunitiesRoute{opportunitiesV2(filters:{orderBy:$o},page:{first:$f,after:$a}){pageInfo{hasNextPage endCursor} nodes{${B2M_ENTRY}}}}}}}`;
+const V6_ONE = `query($i:ID!,$id:CompositeID!){event(id:$i){opportunity(id:$id){${B2M_ENTRY}}}}`;
+const isV6 = (url) => new URL(url).hostname.endsWith(".b2match.io") && /^\/(components\/\d+|marketplace\/opportunities\/)/.test(new URL(url).pathname);
+const v6Events = new Map();
+async function v6Event(origin) {
+  if (!v6Events.has(origin)) {
+    const id = ((await get(origin + "/marketplace")).match(/EventID\s*=\s*(\d+)/) || [])[1];
+    if (!id) throw new Error("the event's number was not found on its marketplace page");
+    v6Events.set(origin, id);
+  }
+  return v6Events.get(origin);
+}
+async function fetchV6List(site) {
+  const u = new URL(site.list_url), r = u.pathname.match(/components\/(\d+)/)[1], i = await v6Event(u.origin);
+  return b2mPages(async (a, f, o) => {
+    const route = (await b2mPost(V6_LIST, { i, r, a, f, o }, null, u.origin + "/api/v4/query"))?.event?.route;
+    if (!route?.opportunitiesV2)
+      throw new Error(`list not found (the page is ${route?.__typename ?? "missing"}); it may be shown only to registered participants`);
+    return route.opportunitiesV2;
+  }, (id) => `${u.origin}/marketplace/opportunities/${id}`);
+}
+async function fetchV6Entry(url) {
+  const u = new URL(url), id = decodeURIComponent(u.pathname.split("/").pop());
+  return b2mEntry((await b2mPost(V6_ONE, { i: await v6Event(u.origin), id }, null, u.origin + "/api/v4/query"))?.event?.opportunity);
 }
 // Some b2match events still run on its older platform, at an address of
 // their own (<event>.b2match.io), which knows nothing of the data service
@@ -391,8 +460,8 @@ const PARSERS = {
   epss: { list: parseEpssList, detail: parseEpssDetail },
   ptj: { list: parsePtjList, detail: parsePtjDetail },
   b2match: {
-    fetchList: (s) => isB2o(s.list_url) ? fetchB2oList(s) : fetchB2mList(s),
-    fetchEntry: (e) => isB2o(e.url) ? fetchB2oEntry(e) : fetchB2mEntry(e.url),
+    fetchList: (s) => isV6(s.list_url) ? fetchV6List(s) : isB2o(s.list_url) ? fetchB2oList(s) : fetchB2mList(s),
+    fetchEntry: (e) => isV6(e.url) ? fetchV6Entry(e.url) : isB2o(e.url) ? fetchB2oEntry(e) : fetchB2mEntry(e.url),
   },
 };
 
@@ -451,8 +520,14 @@ async function readList(site, now) {
   if (!rows.length) throw new Error("the list came back empty; the site may have changed its page");
 
   const have = new Map((await all(() =>
-    db.from("partner_entries").select("id, list_text, removed_at").eq("site", site.id).order("id")
+    db.from("partner_entries").select("id, list_text, removed_at, before_watch").eq("site", site.id).order("id")
   )).map((e) => [e.id, e]));
+  // A venue Mark wants only the news of (`new_only`) takes the entries
+  // already on its site at the first reading as seen before he watched:
+  // kept, so they never come back as new, but never copied whole and never
+  // shown (Mark, 2026-10-17, for CL4 Digital's 658 and the GREENET
+  // tool's 576: "don't add the entries, only update them with new ones").
+  const baseline = site.new_only && !site.listed_at;
 
   const added = [], changed = [], seen = [], ids = new Set();
   for (const r of rows) {
@@ -465,9 +540,9 @@ async function readList(site, now) {
     for (const k of ["kind", "contact", "org", "country", "topic", "keywords", "posted", "list_text"])
       if (r[k] != null && r[k] !== "") base[k] = r[k];
     const old = have.get(id);
-    if (!old) added.push({ id, ...base, first_seen: now, last_seen: now, needs_fetch: true });
+    if (!old) added.push({ id, ...base, first_seen: now, last_seen: now, needs_fetch: !baseline, before_watch: baseline });
     else if ((old.list_text ?? "") !== (r.list_text ?? "") || old.removed_at)
-      changed.push({ id, ...base, last_seen: now, removed_at: null, needs_fetch: true });
+      changed.push({ id, ...base, last_seen: now, removed_at: null, needs_fetch: !old.before_watch });
     else seen.push(id);
   }
   const gone = [...have.values()].filter((e) => !ids.has(e.id) && !e.removed_at).map((e) => e.id);
@@ -492,7 +567,7 @@ async function readList(site, now) {
   await db.from("partner_sites").update({
     listed_at: now, list_count: ids.size, last_error: null, last_error_at: null,
   }).eq("id", site.id);
-  return { listed: ids.size, added: added.length, removed: gone.length };
+  return { listed: ids.size, added: baseline ? 0 : added.length, removed: gone.length };
 }
 
 async function copyEntry(e, platform, now) {

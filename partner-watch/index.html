@@ -3,10 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Project Watch</title>
+<title>MARK-it Place</title>
 <!--
-  Project Watch (Partner Watch until 2026-10-16) — the partner-search
-  entries of the brokerage sites, which Mark calls arenas, copied
+  MARK-it Place (Partner Watch until 2026-10-16, then Project Watch until
+  2026-10-17) — the partner-search entries of the brokerage sites, which
+  Mark calls venues, as the Marketplace does (arenas until 2026-10-17), copied
   every night by the partner-copier function (supabase/8-…), browsed here:
   site, list, entry. One file on its own while it is tried out; it is drawn
   in the Marketplace room's colours and type so that it can move into the
@@ -101,6 +102,21 @@ button{font:inherit;color:inherit}
 .site.on{background:var(--sel);border-left-color:var(--key2)}
 .site .nm{font:15px var(--serif)}
 .site .sub{font-size:12.5px;color:var(--muted)}
+/* The venues stand in the Marketplace's groups, each under a thin band in
+   its type's colour, and carry the arenas they serve as the Marketplace's
+   tags do: the arena's tone struck into the paper with a rule of it down
+   the left, the name in full ink (Mark, 2026-10-17: "a bit the same
+   colours"). The tones are the Marketplace's own; see `TONES` below. */
+.vgrp{display:flex;align-items:center;gap:8px;height:22px;margin:12px 0 0;padding:0 9px 0 12px;border-radius:0 var(--radius) var(--radius) 0;
+  background:color-mix(in srgb,var(--tone,#7D7466) 26%,var(--paper));box-shadow:inset 3px 0 0 var(--tone,var(--line2));
+  font:600 9.5px var(--serif);letter-spacing:.18em;text-transform:uppercase;color:var(--ink)}
+.vgrp:first-child{margin-top:0}
+.vgrp b{font:10px var(--mono);font-weight:400;letter-spacing:0;color:var(--key2)}
+.vgrp + .arena{border-top-color:transparent}
+.site .tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.site .tag{padding:0 7px 1px 6px;font:italic 12px/1.45 var(--body);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;
+  background:color-mix(in srgb,var(--tone) 30%,var(--paper));border-left:3px solid var(--tone);border-radius:0 var(--radius) var(--radius) 0}
+.site .tag.more{background:none;border-left-color:transparent;font-style:normal;color:var(--muted)}
 /* The scroll opens the call's documents beside the page; the note under
    it opens Mark's own notes on the call in the entry pane, its lines drawn
    in once there is something written. Both sit over the card rather than
@@ -300,7 +316,7 @@ button{font:inherit;color:inherit}
 
 <div id="login" hidden>
   <form id="loginForm">
-    <h2>Project Watch</h2>
+    <h2>MARK-it Place</h2>
     <p>Log in with the same email and password as the One App.</p>
     <input id="email" type="email" autocomplete="username" placeholder="Email" required>
     <input id="pass" type="password" autocomplete="current-password" placeholder="Password" required>
@@ -310,8 +326,8 @@ button{font:inherit;color:inherit}
 </div>
 
 <header class="bar">
-  <button class="rd rd-list" data-drawer="1" aria-label="Show the arenas and entries"></button>
-  <h1>Project Watch</h1>
+  <button class="rd rd-list" data-drawer="1" aria-label="Show the venues and entries"></button>
+  <h1>MARK-it Place</h1>
   <span class="meta" id="total"></span>
   <div class="grow"></div>
   <span class="rd rd-step" id="rdstep"><button data-step="-1" aria-label="Previous entry"></button><span id="rdat"></span><button data-step="1" aria-label="Next entry"></button></span>
@@ -321,10 +337,10 @@ button{font:inherit;color:inherit}
 
 <div class="cols">
   <div class="col">
-    <div class="colhead" style="justify-content:flex-start">Arenas<button class="editlinks" data-editlinks="1" title="Change the scrolls' links" aria-label="Change the call documents links"></button><button class="fold" data-fold="1" title="Fold the arenas away" aria-label="Fold the arenas away"></button></div>
+    <div class="colhead" style="justify-content:flex-start">Venues<button class="editlinks" data-editlinks="1" title="Change the scrolls' links" aria-label="Change the call documents links"></button><button class="fold" data-fold="1" title="Fold the venues away" aria-label="Fold the venues away"></button></div>
     <div class="scroll" id="sites"></div>
     <div class="runbox" id="runbox"></div>
-    <button class="unfold" data-fold="0" title="Show the arenas" aria-label="Show the arenas"></button>
+    <button class="unfold" data-fold="0" title="Show the venues" aria-label="Show the venues"></button>
   </div>
   <div class="col">
     <div class="colhead"><span id="listhead"></span><span class="meta" id="listcount"></span></div>
@@ -420,11 +436,13 @@ var COLS = 'id,site,ext_id,url,kind,contact,org,country,topic,keywords,posted,li
 function load(){
   return Promise.all([
     api('/rest/v1/partner_sites?select=*&order=sort'),
-    all('/rest/v1/partner_entries?select=' + COLS + '&order=first_seen.desc,id'),
+    all('/rest/v1/partner_entries?select=' + COLS + '&before_watch=is.false&order=first_seen.desc,id'),
     api('/rest/v1/partner_watch_log?select=*&order=ran_at.desc&limit=1'),
-    api('/rest/v1/app_state?id=eq.' + MINE_ROW + '&select=data').catch(function(){ return []; })
+    api('/rest/v1/app_state?id=eq.' + MINE_ROW + '&select=data').catch(function(){ return []; }),
+    api('/rest/v1/app_state?id=eq.semaphore&select=data').catch(function(){ return []; })
   ]).then(function(r){
-    sites = r[0]; entries = r[1]; lastRun = r[2][0] || null;
+    market = (r[4][0] || {}).data || null;
+    sites = inMarketOrder(r[0]); entries = r[1]; lastRun = r[2][0] || null;
     var mine = (r[3][0] || {}).data || {};
     links = mine.docs || {};
     Object.keys(mine.notes || {}).forEach(function(k){ if (!(k in notes)) notes[k] = mine.notes[k]; });
@@ -519,12 +537,98 @@ function noteIcon(full){ return svg(16, '<path d="M15 3H5a2 2 0 0 0-2 2v14a2 2 0
 $('.rd-list').innerHTML = svg(17, '<path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h16"/>') + 'Entries';
 $('[data-step="-1"]').innerHTML = svg(18, '<path d="M15 6l-6 6 6 6"/>');
 $('[data-step="1"]').innerHTML = svg(18, '<path d="M9 6l6 6-6 6"/>');
+/* ── the Marketplace's order ──
+   Mark wants the venues here in the order the Marketplace's Venues gives
+   them (2026-10-17): those serving two arenas or more first, then each
+   type's own in his order of types, then his own dragged order (`vpos`),
+   then the opening of the window. Each venue here is matched to the
+   Marketplace's by its site, which the Marketplace reads as `siteKey`
+   does; one the Marketplace does not have stands after them all, in the
+   copier's own order. The Marketplace's data is only read here, never
+   written. */
+var market = null;
+var TONES = { blush:'#e19292', terracotta:'#db9973', sand:'#cda364', straw:'#bdaa62', olive:'#9db672', sage:'#6ebe9b',
+  aqua:'#59beb8', mist:'#5bbad0', cornflower:'#71b3e1', dusk:'#8faae8', lilac:'#aca0e2', mauve:'#c598d1', rose:'#d992b3',
+  rosewood:'#ad6464', rust:'#a96b45', umber:'#9c7334', ochre:'#8d7b32', moss:'#6f8644', fern:'#3c8d6d', teal:'#1b8e88',
+  slate:'#218a9f', cobalt:'#4183ae', twilight:'#617ab5', violet:'#7d71b0', plum:'#9469a0', berry:'#a66384' };
+/* linkKey, SHARED_HOSTS and siteKey are the Marketplace's own
+   (one-app/rooms/semaphore/semaphore.js), so the two read a site alike. */
+function linkKey(u){ return String(u || '').trim().toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/[#?].*$/, '').replace(/\/+$/, ''); }
+var SHARED_HOSTS = /^(?:b2match\.(?:io|com|eu)|(?:.+\.)?(?:europa\.eu|google\.com|linkedin\.com|youtube\.com|github\.com|eventbrite\.[a-z.]+|meetup\.com|lu\.ma|zoom\.us|microsoft\.com|sharepoint\.com|gov\.pl|horizoneuropencpportal\.eu|eurekanetwork\.org)|proposals\.etag\.ee)$/;
+function siteKey(u){
+  var k = linkKey(u), i = k.indexOf('/');
+  var host = (i < 0 ? k : k.slice(0, i)).replace(/:\d+$/, '');
+  if (!SHARED_HOSTS.test(host)) return host;
+  var segs = (i < 0 ? '' : k.slice(i + 1)).split('/').filter(function(x){ return x && !/^[a-z]{2}(?:[-_][a-z]{2})?$/.test(x); });
+  var e = segs.findIndex(function(x){ return /^(?:e|event|events)$/.test(x); });
+  return [host].concat(e >= 0 && segs[e + 1] ? segs.slice(0, e + 2) : segs).join('/');
+}
+/* A key on a shared host with nothing after the host names no one site,
+   so it matches nothing; otherwise one key may stand inside the other, as
+   a partner-search page inside its partnership's proposals site. */
+function sameSite(a, b){
+  if (a === b) return true;
+  var s = a.length < b.length ? a : b, l = s === a ? b : a;
+  return s.indexOf('/') > 0 && l.indexOf(s + '/') === 0;
+}
+function marketVenue(s){
+  if (!market || !market.venues) return null;
+  var k = siteKey(s.list_url), best = null;
+  market.venues.forEach(function(v){
+    if (v.place === 'gone') return;
+    var keys = [v.url].concat((v.pages || []).map(function(p){ return p.url; })).filter(Boolean).map(siteKey);
+    if (keys.some(function(x){ return sameSite(x, k); }) && (!best || (v.place === 'venues' && best.place !== 'venues'))) best = v;
+  });
+  return best;
+}
+function venueArenas(v){
+  var as = (market && market.arenas) || [];
+  return (v ? v.arenas || [] : []).map(function(id){ return as.find(function(a){ return a.id === id; }); })
+    .filter(function(a){ return a && !a.frozenAt; });
+}
+function arenaTone(a){ var t = ((market && market.types) || []).find(function(t){ return t.id === a.typeId; }); return t ? TONES[t.color] || '' : ''; }
+/* the group: -1 shared, then the place of its arena's type in his order,
+   then untyped, then serving no arena, then not in the Marketplace */
+function venueBlock(v){
+  var tys = (market && market.types) || [];
+  if (!v) return tys.length + 2;
+  var as = venueArenas(v);
+  if (as.length > 1) return -1;
+  if (!as.length) return tys.length + 1;
+  var i = tys.findIndex(function(t){ return t.id === as[0].typeId; });
+  return i < 0 ? tys.length : i;
+}
+function inMarketOrder(list){
+  var start = function(v){ var d = v && (v.opens || v.start); return d ? Date.parse(d) || Infinity : Infinity; };
+  var pos = function(v){ return v && isFinite(v.vpos) ? v.vpos : Infinity; };
+  return list.map(function(s, i){ var v = marketVenue(s); return { s:s, v:v, k:venueBlock(v), i:i }; })
+    .sort(function(x, y){
+      return x.k - y.k || (x.v && y.v ? (pos(x.v) - pos(y.v) || start(x.v) - start(y.v) || 0) : 0) || x.i - y.i;
+    })
+    .map(function(x){ x.s._venue = x.v; x.s._block = x.k; return x.s; });
+}
+function groupHead(k, n){
+  var tys = (market && market.types) || [], t = k >= 0 && k < tys.length ? tys[k] : null;
+  var name = k === -1 ? 'Shared' : t ? t.name : k === tys.length ? 'Untyped' : k === tys.length + 1 ? 'No arena' : 'Others';
+  var tone = k === -1 ? '#9c7334' : t ? TONES[t.color] || '' : '';
+  return '<div class="vgrp"' + (tone ? ' style="--tone:' + esc(tone) + '"' : '') + '><span>' + esc(name) + '</span><b>' + n + '</b></div>';
+}
+function arenaTags(v){
+  var as = venueArenas(v), shown = as.slice(0, 3);
+  if (!as.length) return '';
+  return '<span class="tags">' + shown.map(function(a){ var tone = arenaTone(a);
+      return '<span class="tag"' + (tone ? ' style="--tone:' + esc(tone) + '"' : '') + '>' + esc(a.name) + '</span>'; }).join('')
+    + (as.length > shown.length ? '<span class="tag more" title="' + esc(as.slice(shown.length).map(function(a){ return a.name; }).join(', ')) + '">+' + (as.length - shown.length) + '</span>' : '')
+    + '</span>';
+}
 function drawSites(){
   /* No "All sites": Mark works one site at a time (2026-10-16). */
   var h = '', typed = {}, errs = {};
   document.querySelectorAll('[data-linkfor]').forEach(function(i){ typed[i.dataset.linkfor] = i.value; });
   document.querySelectorAll('[data-errfor]').forEach(function(d){ errs[d.dataset.errfor] = d.textContent; });
-  sites.forEach(function(s){
+  sites.forEach(function(s, i){
+    if (i === 0 || sites[i - 1]._block !== s._block)
+      h += groupHead(s._block, sites.filter(function(x){ return x._block === s._block; }).length);
     if (editingLinks){
       h += '<div class="arena editing"><div class="nm">' + esc(s.name) + '</div>'
          + '<input type="url" spellcheck="false" data-linkfor="' + esc(s.id) + '" aria-label="Call documents link of ' + esc(s.name) + '" value="' + esc(s.id in typed ? typed[s.id] : docsOf(s.id)) + '">'
@@ -534,6 +638,7 @@ function drawSites(){
     var doc = docsOf(s.id), hasNote = !!noteText(notes[s.id]);
     h += '<div class="arena"><button class="site' + (view.site === s.id ? ' on' : '') + '" data-site="' + esc(s.id) + '">'
        + '<div class="nm">' + esc(s.name) + '</div><div class="sub">' + esc(s.call || '') + '</div>'
+       + arenaTags(s._venue)
        + (s.last_error ? '<div class="err">Last read failed, ' + esc(stamp(s.last_error_at)) + ': ' + esc(s.last_error) + '</div>' : '')
        + '</button>'
        + (doc ? '<a class="docs" href="' + esc(doc) + '" target="_blank" rel="noopener" title="Call documents" aria-label="Call documents of ' + esc(s.name) + '">' + SCROLL + '</a>' : '')
@@ -546,7 +651,7 @@ function drawSites(){
   $('.editlinks').innerHTML = PENCIL;
   $('.editlinks').hidden = editingLinks;
   $('.fold').innerHTML = svg(16, '<path d="M15 6l-6 6 6 6"/>');
-  $('.unfold').innerHTML = svg(16, '<path d="M9 6l6 6-6 6"/>') + '<span>Arenas</span>';
+  $('.unfold').innerHTML = svg(16, '<path d="M9 6l6 6-6 6"/>') + '<span>Venues</span>';
   $('.cols').classList.toggle('folded', view.fold);
   if (editingLinks && !Object.keys(typed).length){ var first = $('[data-linkfor]'); if (first) first.focus(); }
   var waiting = entries.filter(function(e){ return !e.fetched_at && !e.removed_at; }).length;
@@ -556,7 +661,7 @@ function drawSites(){
       : '<b>Not checked yet</b><br>The copier runs every night.')
     + (waiting ? '<br>' + waiting + ' entry pages still to copy' : '')
     + '<button class="btn" id="checkNow"' + (checking ? ' disabled>' + esc(checking) : '>Check now') + '</button>';
-  $('#total').textContent = entries.length ? entries.length + ' entries on ' + sites.length + ' arenas' : '';
+  $('#total').textContent = entries.length ? entries.length + ' entries on ' + sites.length + ' venues' : '';
 }
 function drawFilters(){
   function chips(list, key){ return list.map(function(c){
@@ -570,7 +675,7 @@ function drawRows(){
   $('#listcount').textContent = list.length + ' shown';
   drawStep();
   if (!entries.length){
-    $('#rows').innerHTML = '<div class="empty">Nothing copied yet. Press <b>Check now</b> to read the arenas; their entries appear here at once, and the full entry pages follow over the night.</div>';
+    $('#rows').innerHTML = '<div class="empty">Nothing copied yet. Press <b>Check now</b> to read the venues; their entries appear here at once, and the full entry pages follow over the night.</div>';
     return;
   }
   if (!list.length){ $('#rows').innerHTML = '<div class="empty">No entries match. Try All, Both kinds, or clear the search.</div>'; return; }
@@ -977,10 +1082,10 @@ document.addEventListener('input', function(ev){
 });
 document.addEventListener('focusout', function(ev){ if (ev.target.id === 'callNote') flushNote(); });
 document.addEventListener('visibilitychange', function(){ if (document.visibilityState === 'hidden') flushNote(); });
-/* One run copies at most forty entry pages, so a new arena of several
+/* One run copies at most forty entry pages, so a new venue of several
    hundred took Mark a press of the button per forty (2026-10-17). Now a
    press goes on by itself while pages are still waiting and the last run
-   copied some; a run that copied none stops it, so an arena whose pages
+   copied some; a run that copied none stops it, so a venue whose pages
    all fail cannot keep it going. */
 var checking = '';
 function checkNow(btn){

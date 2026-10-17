@@ -198,9 +198,10 @@ only the cloud joins them.
 answers `state()` and `applyState()`, emits `<room>:saved`, is handed to
 `roomCloud()` in `bridge.js`, and is named in `ROOM_STORES` (`ledger.js`).
 Cloud is one Supabase table, **`app_state`**, one row per store: `main` is
-the Ledger, then `semaphore`, `notes` and `atlas`. (Project Watch keeps
+the Ledger, then `semaphore`, `notes` and `atlas`. (MARK-it Place keeps
 its scroll links and call notes in a row of its own, `partnerwatch`, which
-Export leaves out.) The Ledger's **Export**
+Export leaves out, and only reads `semaphore`, for the order and arenas of
+its venues.) The Ledger's **Export**
 writes the journal and, beside it, every store in `ROOM_STORES` under its
 own name; Import merges the journal and replaces a room's store, and a
 file written before a room joined has no key for it and leaves it alone.
@@ -524,7 +525,7 @@ one-app/
     atlas-graph.js              the graph
     callboard-topics.js         clusters, destinations, topics, calls
     callboard-descriptions.js   the Commission's prose
-partner-watch/        Project Watch, a page of its own, and in pocket/ its phone version — see notes/partner-watch.md
+partner-watch/        MARK-it Place, a page of its own, and in pocket/ its phone version — see notes/partner-watch.md
 pocket/               Pocket — see pocket/POCKET.md
 supabase/             the database's SQL, the two agents' gatekeepers and Partner Watch's copier
 tools/                the scripts below

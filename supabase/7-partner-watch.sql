@@ -17,7 +17,8 @@
 -- marketplace page (its link is the page itself, /e/<event>/components/<n>,
 -- as the event's menu gives it, logged in if the event hides it from
 -- visitors; for an event still on b2match's older platform, its own
--- address, <event>.b2match.io). A new site on any of them is
+-- address, <event>.b2match.io, and /components/<n> after it where that
+-- event runs the newer marketplace). A new site on any of them is
 -- a new row here, and its scroll's link is set with the pencil above the
 -- arenas on the page; a site on a fourth platform needs a reader of its own in the copier
 -- first.
@@ -36,6 +37,10 @@ create table if not exists partner_sites (
 );
 -- The table was first made allowing only the first two readers, and the
 -- `create` above does not change a table that is already there; this does.
+-- A venue Mark wants only the news of (2026-10-17): the entries already
+-- on its site at the copier's first reading are kept as seen before he
+-- watched (`before_watch` on the entry), never copied whole and never shown.
+alter table partner_sites add column if not exists new_only boolean not null default false;
 alter table partner_sites drop constraint if exists partner_sites_platform_check;
 alter table partner_sites add constraint partner_sites_platform_check
   check (platform in ('epss','ptj','b2match'));
@@ -60,7 +65,15 @@ insert into partner_sites (id, name, call, list_url, platform, sort) values
   ('hehealth',   'Cluster Health',           'Horizon Europe 2027, Cluster 1',
    'https://www.b2match.com/e/cluster-health-horizon-europe-brokerage-2027/components/75073', 'b2match', 9),
   ('greenet',    'GREENET',                  'Horizon Europe 2027, Cluster 5',
-   'https://greenet-brokerage-event-2026-calls.b2match.io/', 'b2match', 10)
+   'https://greenet-brokerage-event-2026-calls.b2match.io/', 'b2match', 10),
+  ('henature',   'HE Nature',                'Horizon Europe 2027, Nature',
+   'https://www.b2match.com/e/horizon-europe-online-matchmaking-nature/components/74659', 'b2match', 11)
+on conflict (id) do nothing;
+insert into partner_sites (id, name, call, list_url, platform, sort, new_only) values
+  ('cl4digital', 'CL4 Digital 2026',         'Horizon Europe, Cluster 4 digital',
+   'https://www.b2match.com/e/cl4-digital2026-matchmaking/components/70739', 'b2match', 12, true),
+  ('greenettool','GREENET tool',             'Standing partner search',
+   'https://greenet-partner-search-tool.b2match.io/components/27120', 'b2match', 13, true)
 on conflict (id) do nothing;
 -- Advanced Digital Tech was first given its participant list, component
 -- 70907, read off the event while logged out, where its menu is hidden; the
@@ -96,12 +109,14 @@ create table if not exists partner_entries (
   removed_at  timestamptz,
   needs_fetch boolean not null default true,
   fetch_errors integer not null default 0,
+  before_watch boolean not null default false,  -- on its site before Mark watched it; see new_only
   -- Mark's own columns: the only ones his login may change.
   opened_at   timestamptz,
   verdict     text check (verdict in ('interesting','later','bin')),
   why         text,
   decided_at  timestamptz
 );
+alter table partner_entries add column if not exists before_watch boolean not null default false;
 create index if not exists partner_entries_site_idx  on partner_entries (site, first_seen desc);
 create index if not exists partner_entries_fetch_idx on partner_entries (needs_fetch, first_seen);
 
@@ -192,7 +207,7 @@ select cron.schedule('partner-watch-copier', '*/10 0-4 * * *', $job$
 $job$);
 
 -- ── 5. the check ──────────────────────────────────────────────────────
--- Ten sites, the schedule, and rules on every table.
+-- Thirteen sites, the schedule, and rules on every table.
 select (select count(*) from partner_sites)                              as sites,
        (select count(*) from cron.job where jobname = 'partner-watch-copier') as scheduled,
        (select bool_and(c.relrowsecurity) from pg_class c
