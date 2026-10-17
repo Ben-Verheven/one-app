@@ -159,8 +159,8 @@ button{font:inherit;color:inherit}
 .st.newtag{border-color:var(--new-line);color:var(--new-ink)}
 .st.gone{color:var(--warn-ink);border-color:var(--warn-line)}
 .empty{padding:22px 16px;color:var(--muted);font-size:14px}
-.det{padding:18px 28px 40px;max-width:1180px}
-#detwrap{background:var(--sheet);container-type:inline-size;container-name:entry}
+.det{padding:18px 28px 40px;max-width:1180px;container-type:inline-size;container-name:entry}
+#detwrap{background:var(--sheet)}
 /* The text column takes all the room beside the facts, up to a line of
    about ninety characters: on a full wide screen it was held to seventy
    and left a gulf before the facts, and Mark wanted longer lines there. */
@@ -179,9 +179,10 @@ button{font:inherit;color:inherit}
 /* When the entry pane is narrow (a half-screen window, or an iPad), a
    side column would squeeze the text to a few words a line; there the
    facts become a box above the text, several to a row, and the text gets
-   the full width. Measured on the pane itself, not the window, because the
-   pane's width is what decides. */
-@container entry (max-width: 700px){
+   the full width. Measured on the entry itself, not the window, because its
+   width is what decides: 644 px inside the padding is a pane of 700. The
+   upright iPad's reader holds the entry narrower than that on purpose. */
+@container entry (max-width: 644px){
   .read{grid-template-columns:minmax(0,1fr);gap:0}
   .facts{order:-1;border:1px solid var(--line);border-radius:var(--radius);background:var(--field);padding:12px 14px;
          display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px 18px}
@@ -243,6 +244,40 @@ button{font:inherit;color:inherit}
 .diff{font:12.5px/1.6 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere;margin-top:6px}
 .diff .add{color:var(--new-ink);background:var(--new-soft)}
 .diff .del{color:var(--brok-ink);background:var(--brok-soft);text-decoration:line-through}
+/* ── the reader, on an iPad held upright ──────────────────────────────
+   Upright, the three columns read as a side view: a list and a sliver of
+   entry, and the page set wider than the screen cut every entry off at the
+   right (Mark, 2026-10-17). There the entry is the page, held to a line of
+   about seventy-five characters, and the arenas and the list slide in over
+   it from the button at the top left; the arrows beside the search, ← → or
+   a sideways swipe turn to the next entry without opening the list. Held
+   sideways, and at the desk, nothing here applies. */
+.rd{display:none}
+.veil{display:none}
+@media (orientation:portrait){
+  body{min-width:0}
+  #total{display:none}
+  .rd{display:flex;align-items:center}
+  .rd-list{gap:7px;margin-left:-6px;background:none;border:1px solid var(--line2);border-radius:var(--radius);color:var(--key2);font:14px var(--serif);padding:5px 11px 5px 9px;cursor:pointer}
+  .rd-step{gap:2px;font:12.5px var(--mono);color:var(--muted);white-space:nowrap}
+  .rd-step button{display:flex;background:none;border:0;border-radius:5px;color:var(--key2);padding:6px;cursor:pointer}
+  .rd-step button:disabled{color:var(--line2);cursor:default}
+  #search{width:220px}
+  .cols,.cols.folded,.cols.noting,.cols.folded.noting{grid-template-columns:minmax(0,1fr);position:relative}
+  .cols > .col{position:absolute;top:0;bottom:0;z-index:4;background:var(--paper);
+    transform:translateX(-640px);visibility:hidden;transition:transform .22s ease,visibility 0s .22s}
+  .cols > .col:first-child{left:0;width:220px}
+  .cols > .col + .col{left:220px;width:360px;box-shadow:6px 0 18px rgba(42,38,32,.16)}
+  .cols.folded > .col:first-child{width:44px}
+  .cols.folded > .col + .col{left:44px}
+  body.drawer .cols > .col{transform:none;visibility:visible;transition:transform .22s ease}
+  body.drawer .veil{display:block;position:absolute;inset:0;z-index:3;background:rgba(42,38,32,.28)}
+  .det{max-width:700px;margin:0 auto;padding-top:26px}
+  .dtitle{font-size:26px}
+  .sec .txt,.sec.lead .txt{font-size:18px;line-height:1.65}
+  #callNote{max-width:none}
+}
+@media (orientation:portrait) and (prefers-reduced-motion:reduce){ .cols > .col{transition:none} }
 .banner{padding:8px 18px;background:var(--brok-soft);color:var(--warn-ink);font-size:13.5px;flex:none}
 /* the login */
 #login{position:fixed;inset:0;background:var(--paper);display:flex;align-items:center;justify-content:center;z-index:5}
@@ -268,9 +303,11 @@ button{font:inherit;color:inherit}
 </div>
 
 <header class="bar">
+  <button class="rd rd-list" data-drawer="1" aria-label="Show the arenas and entries"></button>
   <h1>Project Watch</h1>
   <span class="meta" id="total"></span>
   <div class="grow"></div>
+  <span class="rd rd-step" id="rdstep"><button data-step="-1" aria-label="Previous entry"></button><span id="rdat"></span><button data-step="1" aria-label="Next entry"></button></span>
   <input id="search" type="search" placeholder="Search names, organisations, keywords…" aria-label="Search">
 </header>
 <div class="banner" id="banner" hidden></div>
@@ -289,6 +326,7 @@ button{font:inherit;color:inherit}
     <div class="scroll" id="rows"></div>
   </div>
   <div class="scroll" id="detwrap"><div class="det" id="det"></div></div>
+  <div class="veil" data-drawer="0"></div>
 </div>
 
 <script>
@@ -469,6 +507,9 @@ var SCROLL = svg(17, '<path d="M15 12h-5"/><path d="M15 8h-5"/><path d="M19 17V5
   + '<path d="M8 21h12a2 2 0 0 0 2-2v-1a1 1 0 0 0-1-1H11a1 1 0 0 0-1 1v1a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v2a1 1 0 0 0 1 1h3"/>');
 function noteIcon(full){ return svg(16, '<path d="M15 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9z"/><path d="M15 3v4a2 2 0 0 0 2 2h4"/>'
   + (full ? '<path d="M7 13h10"/><path d="M7 17h6"/>' : '')); }
+$('.rd-list').innerHTML = svg(17, '<path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h16"/>') + 'Entries';
+$('[data-step="-1"]').innerHTML = svg(18, '<path d="M15 6l-6 6 6 6"/>');
+$('[data-step="1"]').innerHTML = svg(18, '<path d="M9 6l6 6-6 6"/>');
 function drawSites(){
   /* No "All sites": Mark works one site at a time (2026-10-16). */
   var h = '', typed = {}, errs = {};
@@ -518,6 +559,7 @@ function drawRows(){
   $('#listhead').textContent = s ? s.name : '';
   var list = shown();
   $('#listcount').textContent = list.length + ' shown';
+  drawStep();
   if (!entries.length){
     $('#rows').innerHTML = '<div class="empty">Nothing copied yet. Press <b>Check now</b> to read the four arenas; their entries appear here at once, and the full entry pages follow over the night.</div>';
     return;
@@ -635,8 +677,16 @@ function diff(oldT, newT){
     .concat(b.filter(function(l){ return !inA.has(l); }).map(function(l){ return '<span class="add">' + esc(l) + '</span>'; }));
   return out.length ? out.join('\n') : 'Only the spacing changed.';
 }
+function drawStep(){
+  var list = shown(), i = view.note ? -1 : list.findIndex(function(e){ return e.id === view.id; });
+  $('#rdstep').style.visibility = i < 0 ? 'hidden' : '';
+  $('#rdat').textContent = i < 0 ? '' : (i + 1) + ' of ' + list.length;
+  $('[data-step="-1"]').disabled = i <= 0;
+  $('[data-step="1"]').disabled = i < 0 || i >= list.length - 1;
+}
 function drawDetail(){
   $('.cols').classList.toggle('noting', !!view.note);
+  drawStep();
   if (view.note) return drawNote();
   var e = byId[view.id];
   if (!e){ $('#det').innerHTML = entries.length ? '<div class="empty">Choose an entry on the left.</div>' : ''; return; }
@@ -697,6 +747,17 @@ function patchMany(list, vals){
     api('/rest/v1/partner_entries?id=in.(' + part + ')', { method:'PATCH', body:vals, headers:{ Prefer:'return=minimal' } })
       .catch(function(err){ $('#banner').textContent = 'Not saved: ' + err.message; $('#banner').hidden = false; });
   }
+}
+function step(d){
+  var list = shown(), i = list.findIndex(function(e){ return e.id === view.id; });
+  var n = list[Math.max(0, Math.min(list.length - 1, i + d))];
+  if (n && n.id !== view.id){ openEntry(n.id); return true; }
+  return false;
+}
+var upright = matchMedia('(orientation:portrait)');
+function drawer(open){
+  document.body.classList.toggle('drawer', open);
+  if (open){ var row = document.querySelector('.row.on'); if (row) row.scrollIntoView({ block:'center' }); }
 }
 function openEntry(id){
   view.id = id; view.note = null; saveView();
@@ -869,8 +930,12 @@ function checkNow(btn){
 }
 
 document.addEventListener('click', function(ev){
-  var t = ev.target.closest('[data-pick],[data-bulk],[data-site],[data-id],[data-state],[data-kind],[data-tab],[data-verdict],[data-editlinks],[data-savelinks],[data-cancellinks],[data-callnote],[data-fold],#checkNow');
+  var t = ev.target.closest('[data-pick],[data-bulk],[data-site],[data-id],[data-state],[data-kind],[data-tab],[data-verdict],[data-editlinks],[data-savelinks],[data-cancellinks],[data-callnote],[data-fold],[data-drawer],[data-step],#checkNow');
   if (!t) return;
+  if (t.dataset.drawer) return drawer(t.dataset.drawer === '1');
+  if (t.dataset.step) return step(+t.dataset.step);
+  /* In the reader, choosing what to read puts the list away again. */
+  if (upright.matches && (t.dataset.callnote || (t.dataset.id && !t.dataset.pick && !(ev.ctrlKey || ev.metaKey || ev.shiftKey)))) drawer(false);
   if (t.id === 'checkNow') return checkNow(t);
   if (t.dataset.editlinks) return editLinks();
   if (t.dataset.savelinks) return saveLinks();
@@ -895,6 +960,21 @@ function markStuck(){
   var a = $('.actions'); if (a) a.classList.toggle('stuck', a.getBoundingClientRect().top <= $('#detwrap').getBoundingClientRect().top + 1);
 }
 $('#detwrap').addEventListener('scroll', markStuck);
+/* A page turn in the reader: a quick, clearly sideways swipe across the
+   entry. Not one that starts in the answers bar or a field, where a finger
+   moving sideways is choosing text or scrolling a row of buttons. */
+var swipe = null;
+$('#detwrap').addEventListener('touchstart', function(ev){
+  swipe = upright.matches && !view.note && ev.touches.length === 1 && !ev.target.closest('.actions,input,[contenteditable]')
+    ? { x:ev.touches[0].clientX, y:ev.touches[0].clientY, t:Date.now() } : null;
+}, { passive:true });
+$('#detwrap').addEventListener('touchend', function(ev){
+  if (!swipe) return;
+  var c = ev.changedTouches[0], dx = c.clientX - swipe.x, dy = c.clientY - swipe.y;
+  if (Date.now() - swipe.t < 600 && Math.abs(dx) > 70 && Math.abs(dy) < Math.abs(dx) / 2) step(dx < 0 ? 1 : -1);
+  swipe = null;
+});
+upright.addEventListener('change', function(){ if (!upright.matches) drawer(false); });
 $('#search').addEventListener('input', function(){ view.q = this.value; drawRows(); });
 /* The keys: ↑ ↓ walk the list, I L B answer the open entry (or all the
    picked ones), X picks the open entry, Esc lets go of the picked ones.
@@ -910,10 +990,11 @@ document.addEventListener('keydown', function(ev){
   /* With a call's notes open no entry is on screen, so the letters that
      answer an entry would answer one Mark cannot see. */
   if (view.note && /^[ilbx]$/i.test(k)) return;
-  if (k === 'ArrowDown' || k === 'ArrowUp'){
-    var list = shown(), i = list.findIndex(function(e){ return e.id === view.id; });
-    var n = list[Math.max(0, Math.min(list.length - 1, i + (k === 'ArrowDown' ? 1 : -1)))];
-    if (n){ ev.preventDefault(); openEntry(n.id); }
+  if (k === 'ArrowDown' || k === 'ArrowUp' || (upright.matches && (k === 'ArrowRight' || k === 'ArrowLeft'))){
+    if (view.note) return;
+    if (step(k === 'ArrowDown' || k === 'ArrowRight' ? 1 : -1)) ev.preventDefault();
+  } else if (k === 'Escape' && document.body.classList.contains('drawer')){
+    drawer(false);
   } else if (/^[ilb]$/i.test(k)){
     setVerdict({ i:'interesting', l:'later', b:'bin' }[k.toLowerCase()]);
   } else if (/^x$/i.test(k) && view.id){
