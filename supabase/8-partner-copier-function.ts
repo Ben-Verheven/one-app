@@ -147,7 +147,123 @@ function parsePtjDetail(html) {
     fields.push([one(m[1]).replace(/\s*:$/, ""), clean(m[2])]);
   return { fields, text: clean(region.slice(region.indexOf(">") + 1)).replace(/^Requests and Offers\nBack to list\n/, "") };
 }
-const PARSERS = { epss: { list: parseEpssList, detail: parseEpssDetail }, ptj: { list: parsePtjList, detail: parsePtjDetail } };
+// b2match (www.b2match.com/e/<event>) is a different kind of site: its
+// pages are drawn in the browser, and a list page carries only its first
+// twenty entries, so the list is asked of the site's own data service
+// instead, fifty at a time, which is what its page does when scrolled. It
+// answers without a login, as the pages do, for every event that shows its
+// marketplace to visitors; an event that shows it only to registered
+// participants (EP PerMed's, on 2026-10-17) answers "not found" here, and
+// would need Mark's own login. Tested on DUT Call 2026's 390 entries on
+// 2026-10-17. An entry page holds the same data in its source, which is
+// where the entry itself is copied from.
+const B2M_API = "https://www.b2match.com/b2md-api/v4/query";
+const B2M_LIST = `query($e:String!,$p:URI!,$a:String){eventByEuidV2(euid:$e){... on Event{routeByPath(path:$p){__typename
+  ... on OpportunitiesRoute{opportunitiesV2(filters:{},page:{first:50,after:$a}){pageInfo{hasNextPage endCursor}
+  nodes{id title type shortDescription author{... on Participant{organisationName location{country{name}} user{firstName lastName}}}
+  elements{widget{subtype} value{... on MarketplaceClassifierConnection{nodes{name}}}}}}}}}}}`;
+// The descriptions are written in Markdown, which the site turns into bold
+// and lists on screen; the marks themselves are taken out here, so the text
+// reads as the site shows it, and a link keeps its address beside its words.
+const unmark = (t) => {
+  let s = String(t ?? "").replace(/\r/g, "")
+    .replace(/\[([^\]]*)\]\(([^)\s]+)\)/g, (m, w, u) => (!w || u.replace(/^(https?:\/\/|mailto:)/, "").replace(/\/$/, "") === w.replace(/^(https?:\/\/)/, "").replace(/\/$/, "") ? u.replace(/^mailto:/, "") : `${w} (${u.replace(/^mailto:/, "")})`))
+    .replace(/\*\*([\s\S]*?)\*\*/g, "$1").replace(/__([^_\n]+)__/g, "$1")
+    .replace(/(^|[\s(])[*_]([^*_\n]+)[*_](?=$|[\s).,;:!?])/gm, "$1$2")
+    .replace(/^[ \t]*[*+-][ \t]+/gm, "• ").replace(/^#{1,6}[ \t]+/gm, "")
+    .replace(/\\([\\`*_{}\[\]()#+\-.!>])/g, "$1")
+    .split("\n").map((l) => l.replace(/[ \t ]+/g, " ").trim()).join("\n");
+  // The site's editor leaves an empty line between the points of a list.
+  for (let p; p !== s;) { p = s; s = s.replace(/^(• .*)\n\n(?=• )/gm, "$1\n"); }
+  return s.replace(/\n{3,}/g, "\n\n").trim();
+};
+// The number inside the site's id ("ParticipationOpportunity:244594"),
+// which counts upwards as entries are made, like the other platforms'.
+const b2mNumber = (id) => (atob(id).match(/(\d+)$/) || [])[1];
+const b2mKind = (kind, type) =>
+  /looking for partners|seeking partners/i.test(kind) || /request/i.test(type) ? "seeks"
+  : /looking to join|offer/i.test(kind) || /expertise|service|product/i.test(type) ? "offers" : null;
+const b2mGroups = (elements, name) => {
+  const out = [];
+  for (const el of elements ?? []) {
+    const sub = String(el?.widget?.subtype ?? "").split("::").pop();
+    if (!/^(Kind|Topic|Stage|Call)$/.test(sub)) continue;
+    out.push([sub, (el.value?.nodes ?? []).map(name).filter(Boolean)]);
+  }
+  return out;
+};
+async function fetchB2mList(site) {
+  const u = new URL(site.list_url);
+  const [, euid, ...rest] = u.pathname.split("/").filter(Boolean);
+  const out = [];
+  for (let after = null, n = 0; ; n++) {
+    if (n > 100) throw new Error("the list did not end after 5,000 entries");
+    const r = await fetch(B2M_API, {
+      method: "POST",
+      headers: { "user-agent": UA, "content-type": "application/json", accept: "application/json" },
+      body: JSON.stringify({ query: B2M_LIST, variables: { e: euid, p: rest.join("/"), a: after } }),
+      signal: AbortSignal.timeout(30_000),
+    });
+    if (!r.ok) throw new Error(`${r.status} ${r.statusText} from ${B2M_API}`);
+    const d = await r.json();
+    if (d.errors?.length) throw new Error(d.errors[0].message);
+    const route = d.data?.eventByEuidV2?.routeByPath;
+    if (!route?.opportunitiesV2)
+      throw new Error(route?.__typename === "NotFoundRoute" ? "the marketplace is not shown to visitors; it may need a login" : "list not found");
+    const o = route.opportunitiesV2;
+    for (const x of o.nodes) {
+      const ext = b2mNumber(x.id);
+      if (!ext) continue;
+      const g = Object.fromEntries(b2mGroups(x.elements, (c) => c?.name));
+      const who = x.author?.user ? `${x.author.user.firstName ?? ""} ${x.author.user.lastName ?? ""}`.trim() : "";
+      out.push({
+        ext_id: ext, url: `${u.origin}/e/${euid}/opportunities/${x.id}`, contact: who || null,
+        kind: b2mKind((g.Kind ?? []).join(" "), x.type), looking_raw: (g.Kind ?? []).join(" "),
+        country: x.author?.location?.country?.name ?? null, org: x.author?.organisationName || null,
+        topic: (g.Topic ?? []).join("; ") || null, keywords: null, posted: null,
+        list_text: [x.title, x.shortDescription].map(flat).filter(Boolean).join("\n"),
+      });
+    }
+    if (!o.pageInfo?.hasNextPage || !o.pageInfo.endCursor) return out;
+    after = o.pageInfo.endCursor;
+    await sleep(GAP_MS);
+  }
+}
+function parseB2mDetail(html, url) {
+  const m = html.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/);
+  if (!m) throw new Error("entry content not found");
+  const a = JSON.parse(m[1])?.props?.pageProps?.__APOLLO_STATE__ ?? {};
+  const ref = (r) => (r && r.__ref ? a[r.__ref] : r);
+  // A country is named only in the event's language on this page, under a
+  // key that carries the event's name, never under plain `name`.
+  const named = (r) => { r = ref(r); return r ? r.name ?? Object.entries(r).find(([k]) => k.startsWith("translatedName"))?.[1] : null; };
+  const id = decodeURIComponent(String(url).split("/opportunities/")[1] ?? "").split(/[?#]/)[0];
+  const o = a[`Opportunity:${id}`];
+  if (!o || o.description == null) throw new Error("entry content not found");
+  const who = ref(o.author) ?? {}, user = ref(who.user) ?? {}, loc = who.location ?? {};
+  const g = Object.fromEntries(b2mGroups(o.elements, named));
+  const fields = [
+    ["Title", flat(o.title)],
+    ["Looking for", (g.Kind ?? []).join("; ")],
+    ["Short description", flat(o.shortDescription)],
+    ["Description", unmark(o.description)],
+    ["Topic", (g.Topic ?? []).join("; ")],
+    ["Call", (g.Call ?? []).join("; ")],
+    ["Stage", (g.Stage ?? []).join("; ")],
+    ["Contact name", `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim()],
+    ["Job position", flat(user.jobPosition)],
+    ["Organisation name", flat(who.organisationName)],
+    ["City", flat(loc.city)],
+    ["Country", flat(named(loc.country))],
+    ["Last updated on the site", String(o.updatedAt ?? "").replace("T", " ").slice(0, 16)],
+  ];
+  return { fields, text: fields.filter(([, v]) => v).map(([l, v]) => `${l}\n${v}`).join("\n\n") };
+}
+const PARSERS = {
+  epss: { list: parseEpssList, detail: parseEpssDetail },
+  ptj: { list: parsePtjList, detail: parsePtjDetail },
+  b2match: { fetchList: fetchB2mList, detail: parseB2mDetail },
+};
 
 // ── the run ───────────────────────────────────────────────────────────
 
@@ -196,8 +312,8 @@ function picked(fields) {
 }
 
 async function readList(site, now) {
-  const origin = new URL(site.list_url).origin;
-  const rows = PARSERS[site.platform].list(await get(site.list_url), origin);
+  const origin = new URL(site.list_url).origin, P = PARSERS[site.platform];
+  const rows = P.fetchList ? await P.fetchList(site) : P.list(await get(site.list_url), origin);
   // An empty list is far more likely a page the reader no longer
   // understands than a site that emptied overnight. Taken at its word it
   // would mark every entry removed, so it stops here and says so instead.
@@ -249,7 +365,7 @@ async function readList(site, now) {
 }
 
 async function copyEntry(e, platform, now) {
-  const p = PARSERS[platform].detail(await get(e.url));
+  const p = PARSERS[platform].detail(await get(e.url), e.url);
   if (!p.text) throw new Error("the entry page had no text");
   const h = hash(flat(p.text));
   const upd = {

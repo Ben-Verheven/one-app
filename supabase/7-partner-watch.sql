@@ -12,17 +12,19 @@
 
 -- ── 1. the sites ──────────────────────────────────────────────────────
 -- One row per partner-search page. `platform` says which of the copier's
--- two readers fits the page: 'epss' for the proposals.etag.ee sites,
--- 'ptj' for the PtJ "partnering" pages. A new site on either platform is
+-- three readers fits the page: 'epss' for the proposals.etag.ee sites,
+-- 'ptj' for the PtJ "partnering" pages, 'b2match' for a b2match event's
+-- marketplace page (its link is the page itself, /e/<event>/components/<n>,
+-- as the event's menu gives it). A new site on any of them is
 -- a new row here, and its scroll's link is set with the pencil above the
--- arenas on the page; a site on a third platform needs a reader of its own in the copier
+-- arenas on the page; a site on a fourth platform needs a reader of its own in the copier
 -- first.
 create table if not exists partner_sites (
   id            text primary key,
   name          text not null,
   call          text,
   list_url      text not null,
-  platform      text not null check (platform in ('epss','ptj')),
+  platform      text not null check (platform in ('epss','ptj','b2match')),
   active        boolean not null default true,
   sort          integer not null default 0,
   listed_at     timestamptz,          -- when the copier last read the list
@@ -30,6 +32,11 @@ create table if not exists partner_sites (
   last_error    text,
   last_error_at timestamptz
 );
+-- The table was first made allowing only the first two readers, and the
+-- `create` above does not change a table that is already there; this does.
+alter table partner_sites drop constraint if exists partner_sites_platform_check;
+alter table partner_sites add constraint partner_sites_platform_check
+  check (platform in ('epss','ptj','b2match'));
 
 insert into partner_sites (id, name, call, list_url, platform, sort) values
   ('sbep',       'Sustainable Blue Economy', 'Sustainable Blue Call 2026',
@@ -39,7 +46,9 @@ insert into partner_sites (id, name, call, list_url, platform, sort) values
   ('biodiversa', 'Biodiversa+',              'BiodivFuture call 2026',
    'https://proposals.etag.ee/biodiversa/2026/partner-search', 'epss', 3),
   ('forest',     'Forest Pathways',          'FOREST joint call 2026',
-   'https://submission-forest.ptj.de/partnering/list', 'ptj', 4)
+   'https://submission-forest.ptj.de/partnering/list', 'ptj', 4),
+  ('dut',        'Driving Urban Transitions', 'DUT Call 2026',
+   'https://www.b2match.com/e/dut-call-2026/components/69838', 'b2match', 5)
 on conflict (id) do nothing;
 
 -- ── 2. the entries ────────────────────────────────────────────────────
@@ -146,7 +155,7 @@ create policy "owner reads runs"     on partner_watch_log      for select to aut
 -- ── 4. the night ──────────────────────────────────────────────────────
 -- Every ten minutes from 00:00 to 04:50 UTC (01:00–05:50 in winter, 02:00–
 -- 06:50 in summer in the Netherlands). The first run of a night reads the
--- four lists; every run then copies up to 40 entry pages, so the 800-odd of
+-- lists; every run then copies up to 40 entry pages, so the 800-odd of
 -- the first night are all in by morning and later nights finish in a run
 -- or two. It costs no Claude usage: this is the database calling the copier.
 create extension if not exists pg_cron;
@@ -165,7 +174,7 @@ select cron.schedule('partner-watch-copier', '*/10 0-4 * * *', $job$
 $job$);
 
 -- ── 5. the check ──────────────────────────────────────────────────────
--- Four sites, the schedule, and rules on every table.
+-- Five sites, the schedule, and rules on every table.
 select (select count(*) from partner_sites)                              as sites,
        (select count(*) from cron.job where jobname = 'partner-watch-copier') as scheduled,
        (select bool_and(c.relrowsecurity) from pg_class c

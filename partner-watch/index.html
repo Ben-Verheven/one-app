@@ -498,13 +498,14 @@ function stateTags(e){
    row of their own, because his login may write that table and only reads
    partner_sites; so what is set on one device is there on the others. An
    empty link is kept too: it means no scroll, not the starting link back.
-   The phone's page (pocket/index.html here) holds a copy of these four as
+   The phone's page (pocket/index.html here) holds a copy of these as
    PW_DOCS; a change to one is a change to both. */
 var DOCS = {
   sbep:       'https://www.bluepartnership.eu/sites/bluepartnership.eu/files/documents/2026-10/sbep_jtc_2026_4th_call_announcement_061026_0.pdf',
   water4all:  'https://www.water4all-partnership.eu/sites/default/files/2026-09/Call_Announcement_Water4All_JTC2026_20260908.pdf',
   biodiversa: 'https://www.biodiversa.eu/wp-content/uploads/2026/09/BiodivFuture_Doc1_Announcement-opportunity.pdf',
-  forest:     'https://forest-partnership.eu/wp-content/uploads/2026/09/260915_FOREST_JC2026_Call_Announcement_FINAL-1.pdf'
+  forest:     'https://forest-partnership.eu/wp-content/uploads/2026/09/260915_FOREST_JC2026_Call_Announcement_FINAL-1.pdf',
+  dut:        'https://dutpartnership.eu/sites/default/files/2026-10/DUT%20Call%202026_Call%20Text_0.pdf'
 };
 var MINE_ROW = 'partnerwatch', links = {}, notes = {}, editingLinks = false;
 function docsOf(id){ return Object.prototype.hasOwnProperty.call(links, id) ? links[id] : (DOCS[id] || ''); }
@@ -568,7 +569,7 @@ function drawRows(){
   $('#listcount').textContent = list.length + ' shown';
   drawStep();
   if (!entries.length){
-    $('#rows').innerHTML = '<div class="empty">Nothing copied yet. Press <b>Check now</b> to read the four arenas; their entries appear here at once, and the full entry pages follow over the night.</div>';
+    $('#rows').innerHTML = '<div class="empty">Nothing copied yet. Press <b>Check now</b> to read the arenas; their entries appear here at once, and the full entry pages follow over the night.</div>';
     return;
   }
   if (!list.length){ $('#rows').innerHTML = '<div class="empty">No entries match. Try All, Both kinds, or clear the search.</div>'; return; }
@@ -648,7 +649,9 @@ function bulk(what){
    (Mark, 2026-10-16): who it is comes first, in his words for it whatever
    the site calls it, then a break, then the rest with the call topic first,
    kept in the column even when it runs long. */
-var MIDDLE = /description|cooperation interest/i;
+/* A b2match entry's title is its headline (DUT, 2026-10-17): in the side
+   column it read as one more fact, so it heads the middle instead. */
+var MIDDLE = /description|cooperation interest|^title$/i;
 var WHO = [[/^(organisation name|name of organisation\/institution\/company)$/i, 'Name of organisation'],
            [/^country$/i, 'Country'], [/^(name|contact name)$/i, 'Contact name'], [/^(email|email address)$/i, 'Email']];
 var TOPIC = /^(topics?|priority areas|disciplines)$/i;

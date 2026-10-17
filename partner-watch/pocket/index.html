@@ -563,7 +563,8 @@ var PW_DOCS = {
   sbep:       'https://www.bluepartnership.eu/sites/bluepartnership.eu/files/documents/2026-10/sbep_jtc_2026_4th_call_announcement_061026_0.pdf',
   water4all:  'https://www.water4all-partnership.eu/sites/default/files/2026-09/Call_Announcement_Water4All_JTC2026_20260908.pdf',
   biodiversa: 'https://www.biodiversa.eu/wp-content/uploads/2026/09/BiodivFuture_Doc1_Announcement-opportunity.pdf',
-  forest:     'https://forest-partnership.eu/wp-content/uploads/2026/09/260915_FOREST_JC2026_Call_Announcement_FINAL-1.pdf'
+  forest:     'https://forest-partnership.eu/wp-content/uploads/2026/09/260915_FOREST_JC2026_Call_Announcement_FINAL-1.pdf',
+  dut:        'https://dutpartnership.eu/sites/default/files/2026-10/DUT%20Call%202026_Call%20Text_0.pdf'
 };
 function pwDocs(id){ return Object.prototype.hasOwnProperty.call(pwLinks, id) ? pwLinks[id] : (PW_DOCS[id] || ''); }
 
@@ -784,7 +785,7 @@ function pwDrawRows(){
    holds a blank line, and never when it is the call topic; who it is comes
    first, in Mark's words for it whatever the site calls it; a pair the page
    repeats word for word (EPSS prints "Looking for" twice) is shown once. */
-var PW_MIDDLE = /description|cooperation interest/i;
+var PW_MIDDLE = /description|cooperation interest|^title$/i;
 var PW_WHO = [[/^(organisation name|name of organisation\/institution\/company)$/i, 'Name of organisation'],
               [/^country$/i, 'Country'], [/^(name|contact name)$/i, 'Contact name'], [/^(email|email address)$/i, 'Email']];
 var PW_TOPIC = /^(topics?|priority areas|disciplines)$/i;
