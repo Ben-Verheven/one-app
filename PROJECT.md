@@ -273,7 +273,8 @@ each serving one arena or several. Since 2026-10-15 a venue has no kind:
 each is a window of activity (`opens`, `closes`) with event days inside it
 or none, and a `place`: `new` on the board, kept on the `board`, in
 `venues`, or `gone`, a stub the agent reads so it does not bring back
-what Mark removed. `kind` stays on every venue, always `event`, only
+the occasion Mark removed (the same site for a later call or edition it
+may, with days of its own after the stub's). `kind` stays on every venue, always `event`, only
 because an older gatekeeper and an older Pocket wipe a tool's window. Pocket, an older copy of
 the desk and an agent's finding can all still put a brokerage date or
 link on an arena, so every read of the board turns those into venues

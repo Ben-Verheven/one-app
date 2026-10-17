@@ -442,6 +442,26 @@ function siteTaken(s: any, url: string, but?: string): any {
   const k = url && siteKey(url);
   return k ? (s.venues ?? []).find((v: any) => v.id !== but && v.url && siteKey(v.url) === k) ?? null : null;
 }
+// The last day a venue's occasion runs: its window's end, else its event
+// days' end, else, for one removed with no days at all, the day it went.
+function lastDay(v: any): string | null {
+  return v.closes || v.end || v.start || (v.place === "gone" ? v.goneAt : null) || null;
+}
+// A site Mark removed, or one whose venue is over, may be used again for a
+// new call or a new edition (Mark, 2026-10-17): the same brokerage platform
+// or partner search opens for the next round. So a venue at that site
+// stands in the way only of the same occasion. A find whose own days begin
+// after the last day of every venue already at the site is a new occasion
+// and goes on the board as new; one without days of its own, or overlapping,
+// is still the old one. Before this, a removed site was refused for good,
+// which would have kept the next round of a platform off the board.
+function siteInWay(s: any, url: string, from: string | null): { live: any; gone: any } {
+  const k = url && siteKey(url);
+  const same = k ? (s.venues ?? []).filter((v: any) => v.url && siteKey(v.url) === k) : [];
+  const inWay = (v: any) => { const end = lastDay(v); return !from || !end || from <= end; };
+  return { live: same.find((v: any) => v.place !== "gone" && inWay(v)) ?? null,
+           gone: same.find((v: any) => v.place === "gone" && inWay(v)) ?? null };
+}
 // One op on a venue of a board read a moment ago, as applyOp below is for
 // an arena.
 function venueOp(s: any, op: any): any {
@@ -457,10 +477,11 @@ function venueOp(s: any, op: any): any {
       visits: [], pages: [], note: "", foundAt: now, place: "new" };
     const why = shapeVenue(v, f);
     if (why) return { error: why };
+    const from = v.opens || v.start || null;
     if (!v.start && !v.opens && !v.closes) v.opens = todayISO();
-    const dup = siteTaken(s, v.url);
-    if (dup?.place === "gone") return { error: "Mark removed that site (" + dup.name + ") on " + dup.goneAt + "; do not bring it back" };
-    if (dup) return { error: "that site is already a venue: " + dup.id + " (" + dup.name + "); use add_venue_arena or update_venue" };
+    const dup = siteInWay(s, v.url, from);
+    if (dup.live) return { error: "that site is already a venue: " + dup.live.id + " (" + dup.live.name + "), running to " + (lastDay(dup.live) ?? "no end") + "; use add_venue_arena or update_venue, or give the new occasion's own days, beginning after that" };
+    if (dup.gone) return { error: "Mark removed that occasion (" + dup.gone.name + ", to " + lastDay(dup.gone) + ") on " + dup.gone.goneAt + "; do not bring it back. The same site for a later call or edition is welcome: give its own event days or window, beginning after " + lastDay(dup.gone) };
     v.id = crypto.randomUUID();
     s.venues.push(tidyVenue(v));
     return { ok: true, venue_id: v.id };
