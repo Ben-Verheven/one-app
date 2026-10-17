@@ -54,7 +54,7 @@ insert into partner_sites (id, name, call, list_url, platform, sort) values
   ('eppermed',   'EP PerMed',                'JTC 2027, cell and gene therapy',
    'https://www.b2match.com/e/eppermed-partnering/components/49386', 'b2match', 6),
   ('hedigital',  'HE Advanced Digital Tech', 'Horizon Europe 2027, Cluster 4 digital',
-   'https://www.b2match.com/e/horizon-europe-advanced-digital-tech/components/70907', 'b2match', 7),
+   'https://www.b2match.com/e/horizon-europe-advanced-digital-tech/components/71671', 'b2match', 7),
   ('heindustry', 'HE Industry',              'Horizon Europe 2027, Cluster 4 industry',
    'https://www.b2match.com/e/horizon-europe-industry-2027/components/75001', 'b2match', 8),
   ('hehealth',   'Cluster Health',           'Horizon Europe 2027, Cluster 1',
@@ -62,6 +62,12 @@ insert into partner_sites (id, name, call, list_url, platform, sort) values
   ('greenet',    'GREENET',                  'Horizon Europe 2027, Cluster 5',
    'https://greenet-brokerage-event-2026-calls.b2match.io/', 'b2match', 10)
 on conflict (id) do nothing;
+-- Advanced Digital Tech was first given its participant list, component
+-- 70907, read off the event while logged out, where its menu is hidden; the
+-- copier then answered "list not found" (2026-10-17). The `insert` above
+-- leaves a row that is already there alone, so this puts it right.
+update partner_sites set list_url = 'https://www.b2match.com/e/horizon-europe-advanced-digital-tech/components/71671'
+ where id = 'hedigital' and list_url like '%/components/70907';
 
 -- ── 2. the entries ────────────────────────────────────────────────────
 -- One row per entry, its id the site's id and the site's own number. An
