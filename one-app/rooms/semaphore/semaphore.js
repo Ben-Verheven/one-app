@@ -871,10 +871,16 @@ function laneHTML(a,vs){
     callH=placed.length?Y[Y.length-1]+8:0;
     for(const{it,lv}of placed){
       const r=it.r,L=Math.max(0,X(it.s)),R=Math.min(100,X(it.e)),W=Math.max(R-L,.3);
+      /* A call with a date or stage that is new (see "what the agents
+         brought") wears the new colour on the board itself, glowing, until
+         Mark marks the arena seen: inside the arena's panel alone it was
+         missed, which he found when an import was to bring a season of new
+         call dates at once (2026-10-17). */
+      const fr=[r.open,r.close].concat(r.dls).some(d=>d&&isFresh(a,d))?' fresh':'';
       /* the earlier deadlines stand beside the bar, not in it: a faded end
          is a mask, and a mask cuts whatever is inside the bar to its height */
       const notch=r.dls.slice(0,-1).map(d=>{const x=X(T(d.start)+DAY/2);
-        return x>=L&&x<=R?'<i class="rbn'+(T(d.end||d.start)<now?' past':'')+'" style="left:'+x.toFixed(2)+'%;bottom:'+(Y[lv]-4)+'px" '+
+        return x>=L&&x<=R?'<i class="rbn'+(T(d.end||d.start)<now?' past':'')+(isFresh(a,d)?' fresh':'')+'" style="left:'+x.toFixed(2)+'%;bottom:'+(Y[lv]-4)+'px" '+
           'data-act="openDate" data-a="'+a.id+'" data-d="'+d.id+'" title="'+esc(dtLabel(d)+' \u2014 '+dispDate(d))+'"></i>':'';}).join('');
       const at=r.next||r.close||r.open;
       const attrs='data-act="openDate" data-a="'+a.id+'" data-d="'+at.id+'" data-tipt="'+esc(runTip(r))+'" '+
@@ -891,16 +897,16 @@ function laneHTML(a,vs){
       if(d1){
         const t1=T(d1.end||d1.start),S=Math.min(100,Math.max(0,X(t1+DAY)));
         if(S>L){
-          const cls=(t1<now?' past':'')+([r.open,d1].some(d=>d&&d.grade!=='fixed')?' unc':'')+(r.open?'':' lead-in');
+          const cls=(t1<now?' past':'')+([r.open,d1].some(d=>d&&d.grade!=='fixed')?' unc':'')+(r.open?'':' lead-in')+fr;
           h+='<div class="mk cl rb'+cls+'" style="left:'+L.toFixed(2)+'%;width:'+Math.max(S-L,.3).toFixed(2)+'%;bottom:'+Y[lv]+'px" '+attrs+'></div>';
         }
         if(R>S){
-          const cls=(r.state==='closed'?' past':'')+(r.close.grade!=='fixed'?' unc':'');
+          const cls=(r.state==='closed'?' past':'')+(r.close.grade!=='fixed'?' unc':'')+fr;
           h+='<div class="mk cl rbt'+cls+'" style="left:'+S.toFixed(2)+'%;width:'+(R-S).toFixed(2)+'%;bottom:'+(Y[lv]+1)+'px" '+attrs+'></div>';
         }
         h+=notch;continue;
       }
-      const cls=(r.state==='closed'?' past':'')+(r.unc?' unc':'')+(r.open?'':' lead-in')+(r.close?'':' run-on');
+      const cls=(r.state==='closed'?' past':'')+(r.unc?' unc':'')+(r.open?'':' lead-in')+(r.close?'':' run-on')+fr;
       h+='<div class="mk cl rb'+cls+'" style="left:'+L.toFixed(2)+'%;width:'+W.toFixed(2)+'%;bottom:'+Y[lv]+'px" '+attrs+'></div>'+notch;
     }
   }
@@ -950,8 +956,15 @@ let sortOpen=false;
    venues with windows of their own (2026-10-15). */
 function arenaTools(a){return venuesOf(a).filter(v=>!v.start);}
 /* The board stays a picture of the calendar. A dot after an arena's name
-   says it holds something new, so a folded group or a long row still shows
-   where the agent has been. */
+   says one of its venues is new, so a folded group or a long row still
+   shows where the agent has been; new dates and links say how many after
+   the name, in the new colour, with the tick that marks them seen. */
+function freshPill(a){
+  const n=freshItems(a).length;
+  return n?'<button class="freshn" data-act="seenArena" data-id="'+a.id+'" title="'+n+' new date'+(n===1?'':'s')+
+    ' or link'+(n===1?'':'s')+' on '+esc(a.name)+', glowing on the board \u2014 press when you have seen '+(n===1?'it':'them')+'">'+
+    n+' new <span aria-hidden="true">\u2713</span></button>':'';
+}
 function boardRow(a,bg){
   const looms=a.dates.filter(d=>!d.start);
   const loomBtn=looms.length?
@@ -964,7 +977,7 @@ function boardRow(a,bg){
      2026-10-11 (Mark): the calendar beside the name says it already. */
   return '<div class="row"><div class="cell name">'+
     '<button class="nm'+weightClass(a)+'" data-act="openArena" data-id="'+a.id+'">'+esc(a.name)+'</button>'+
-    (fresh?'<i class="newdot" title="Something new from the agent on this row"></i>':'')+loomBtn+shTag+
+    (fresh?'<i class="newdot" title="Something new from the agent on this row"></i>':'')+freshPill(a)+loomBtn+shTag+
     '</div>'+
     '<div class="lane" style="height:'+lane.height+'px;background-image:'+bg+'" data-aid="'+a.id+'" data-t0="'+T0+'" data-t1="'+T1+'">'+lane.h+'</div></div>';
 }
@@ -1021,7 +1034,7 @@ function sharedRows(bg){
       for(const a of as){
         const ln=laneHTML(a,[]),tone=arenaTone(a);
         h+='<div class="row shsub"><div class="cell name">'+
-          '<button class="cuat'+(tone?' toned':'')+'" data-act="openArena" data-id="'+a.id+'"'+(tone?' style="--tone:'+esc(tone)+'"':'')+' title="'+esc(a.name)+'">'+esc(a.name)+'</button></div>'+
+          '<button class="cuat'+(tone?' toned':'')+'" data-act="openArena" data-id="'+a.id+'"'+(tone?' style="--tone:'+esc(tone)+'"':'')+' title="'+esc(a.name)+'">'+esc(a.name)+'</button>'+freshPill(a)+'</div>'+
           '<div class="lane" style="height:'+ln.height+'px;background-image:'+bg+'" data-t0="'+T0+'" data-t1="'+T1+'">'+shade+ln.h+'</div></div>';
       }
     }
@@ -1047,18 +1060,35 @@ function trayRow(v){
       (v.place==='new'?'<button class="btn" data-act="vPlace" data-v="'+v.id+'" data-p="board" title="Leave it on the board to think about">Keep</button>':'')+
       '<button class="btn ghost" data-act="vRemove" data-v="'+v.id+'" title="Off the board; the agent will not bring it back">Remove</button></span></div>';
 }
+/* An arena with new dates or links stands in the tray too, under the new
+   venues, with what is new on it and the tick that marks it seen. */
+function trayDatesRow(a){
+  const xs=freshItems(a),nd=xs.filter(x=>(a.dates||[]).includes(x)).length,nl=xs.length-nd;
+  const what=[nd?nd+' date'+(nd===1?'':'s'):'',nl?nl+' link'+(nl===1?'':'s'):''].filter(Boolean).join(', ');
+  const tone=arenaTone(a);
+  return '<div class="trow st-new"><span aria-hidden="true"></span>'+
+    '<button class="tnm" data-act="openArena" data-id="'+a.id+'" title="Open '+esc(a.name)+'">'+esc(a.name)+'</button>'+
+    '<span class="tar">'+(tone?'<i class="tdot" style="background:'+esc(tone)+'"></i>':'')+esc(typeOf(a)?typeOf(a).name:'')+'</span>'+
+    '<span class="twhen">'+esc(what)+' new</span>'+
+    '<span class="tact"><button class="btn" data-act="seenArena" data-id="'+a.id+'" title="The glow on its calls goes">Seen \u2713</button></span></div>';
+}
 function trayHTML(){
   const all=visibleVenues();
   const fresh=all.filter(v=>v.place==='new'),kept=all.filter(v=>v.place==='board');
   const arenasNew=finds.state==='ready'?finds.rows.filter(r=>r.kind==='arena').length:0;
-  if(!fresh.length&&!kept.length&&!arenasNew)return '';
+  const dated=visibleArenas().filter(a=>freshItems(a).length);
+  if(!fresh.length&&!kept.length&&!arenasNew&&!dated.length)return '';
   const by=v=>{const w=vWin(v);return w&&w.from!==null?w.from:9e15;};
   const order=(x,y)=>by(x)-by(y)||x.name.localeCompare(y.name);
   const open=!!S.ui.keptOpen;
-  return '<div class="tray'+(fresh.length?' fresh':'')+'">'+
+  return '<div class="tray'+(fresh.length||dated.length?' fresh':'')+'">'+
     (fresh.length?'<p class="thead"><i class="tglow"></i>New on the board<b>'+fresh.length+'</b>'+
       '<span>found by the agent — move each to Venues, keep it here to think about, or remove it</span></p>'+
       '<div class="trows">'+fresh.sort(order).map(trayRow).join('')+'</div>':'')+
+    (dated.length?'<p class="thead"><i class="tglow"></i>New dates and links<b>'+dated.length+'</b>'+
+      '<span>glowing on their arenas\u2019 rows \u2014 mark each seen when you have looked</span>'+
+      (dated.length>1?'<button class="btn ghost tall" data-act="seenAll">All seen \u2713</button>':'')+'</p>'+
+      '<div class="trows">'+dated.map(trayDatesRow).join('')+'</div>':'')+
     (kept.length?'<button class="thead tkept" data-act="trayKept" aria-expanded="'+open+'"><span aria-hidden="true">'+(open?'▾':'▸')+'</span>'+
       'Kept on the board<b>'+kept.length+'</b><span>to think about</span></button>'+
       (open?'<div class="trows">'+kept.sort(order).map(trayRow).join('')+'</div>':''):'')+
@@ -1114,7 +1144,7 @@ function renderBoard(){keepPlace(()=>{
     const group=vis.filter(a=>a.typeId===ty.id).sort(boardOrder());
     if(!group.length)continue;
     const col=!!S.ui.collapsed[ty.id];
-    const nNew=col?group.filter(a=>venuesOf(a).some(v=>v.place==='new'&&!isShared(v))).length:0;
+    const nNew=col?group.filter(a=>venuesOf(a).some(v=>v.place==='new'&&!isShared(v))||freshItems(a).length).length:0;
     h+='<div class="grp'+(col?' collapsed':'')+'" style="--tone:'+esc(toneHex(ty.color))+'">'+
        '<div class="ghead"><div class="gc">'+
        '<button class="caret" data-act="toggleGroup" data-id="'+ty.id+'" aria-label="Collapse group">'+(col?'▸':'▾')+'</button>'+
@@ -2615,11 +2645,11 @@ function streamHTML(a){
 }
 /* the same follow-up as on the wall, so an arena reads the same
    from either side, plus the one fact the wall keeps in its tooltip */
-/* beside the sweep that will clear them, how many marks the panel is showing */
+/* how many marks the panel is showing, and the tick that clears them */
 function freshSaid(a){
   const n=freshItems(a).length;
-  return n?'<i class="wfresh" title="'+n+' thing'+(n===1?'':'s')+' the nightly agent found, marked new below '+
-    '\u2014 closing this panel marks '+(n===1?'it':'them')+' seen">'+n+' new</i>':'';
+  return n?'<i class="wfresh" title="'+n+' new thing'+(n===1?'':'s')+', marked new below">'+n+' new</i>'+
+    '<button class="btn ghost wseen" data-act="seenArena" data-id="'+a.id+'">Seen \u2713</button>':'';
 }
 /* The panel's band of leads. It carried the arena's sweep, the ring that
    asked the nightly agent and the wait as well, until the rotation of
@@ -2810,7 +2840,6 @@ function openDrawer(id,dateId){
    the sweep went with the rotation (2026-10-14). */
 function closeDrawer(){
   const a=!drawer.vid&&!drawer.vnew&&arena(drawer.id);
-  if(a&&freshItems(a).length){a.seenAt=new Date().toISOString();save();}
   if(leadEdit.a===VENUE_LEAD)closeComposers();
   drawer.id=null;drawer.vid=null;drawer.vnew=null;drawer.edit=null;drawer.hi=null;drawer.editing=false;drawer.scope=null;renderDrawer();
   repaint();
@@ -2859,13 +2888,15 @@ function sortedDone(a){return doneLeads(a).slice().sort((x,y)=>
 function leadName(l){return l.project||(l.links[0]?linkName(l.links[0]):'')||'Untitled lead';}
 
 /* What the nightly agents brought, and whether you have looked since. A date
-   or a link that comes in through Dispatches carries `foundAt`, the moment it
-   was accepted, and reads as new until the arena's panel is next shut
-   (closeDrawer; it was the arena's sweep until the sweep went with the
-   rotation), so it needs no button of its own. Before this an accepted
-   finding simply joined the arena
-   and looked exactly like something typed by hand, so a morning's Accept all
-   left nothing to say what had changed. */
+   or a link that comes in through Dispatches, or in a file imported with it,
+   carries `foundAt`, the moment it was accepted, and reads as new until Mark
+   marks the arena seen (`seenAt`), with the tick on its row, in the tray or
+   in its panel. Until 2026-10-17 shutting the panel marked it seen, and a
+   glance at an arena cleared what he had meant to come back to; he asked
+   for the new to stay until he checks it off. Before any of this an
+   accepted finding simply joined the arena and looked exactly like
+   something typed by hand, so a morning's Accept all left nothing to say
+   what had changed. */
 function isFresh(a,x){return !!(x&&x.foundAt)&&(!a.seenAt||x.foundAt>a.seenAt);}
 function freshItems(a){
   const bk=a.brokerage||{links:[]};
@@ -2873,7 +2904,7 @@ function freshItems(a){
 }
 function foundTitle(x){
   return 'Found by the nightly agent'+(x.foundAt?' — accepted '+shortDay(x.foundAt.slice(0,10)):'')+
-    '. New until you next close this panel.';
+    '. New until you mark this arena seen.';
 }
 function freshTag(a,x){
   return isFresh(a,x)?'<i class="wfresh" title="'+esc(foundTitle(x))+'">new</i>':'';
@@ -4638,6 +4669,8 @@ document.addEventListener('click',e=>{
       ar.frozenAt=null;save();renderAll();break;}
     case 'toggleFreezer':S.ui.freezerOpen=!S.ui.freezerOpen;save();renderFreezer();break;
     case 'trayKept':S.ui.keptOpen=!S.ui.keptOpen;save();renderBoard();break;
+    case 'seenArena':{const a=arena(b.dataset.id);if(!a)break;a.seenAt=new Date().toISOString();save();renderAll();break;}
+    case 'seenAll':{const at=new Date().toISOString();for(const a of S.arenas)if(freshItems(a).length)a.seenAt=at;save();renderAll();break;}
     case 'shOpen':{const k=b.dataset.v;if(S.ui.shOpen[k])delete S.ui.shOpen[k];else S.ui.shOpen[k]=true;save();renderBoard();break;}
     /* Quick, but not one slip from gone: the first press turns the cross into
        the word, a second within three seconds removes the link. The button is

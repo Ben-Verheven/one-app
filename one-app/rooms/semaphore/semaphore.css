@@ -231,6 +231,17 @@
 #pane-semaphore .rbn.past{background:var(--muted)}
 #pane-semaphore .rb.lead-in{-webkit-mask-image:linear-gradient(90deg,transparent,#000 22px);mask-image:linear-gradient(90deg,transparent,#000 22px)}
 #pane-semaphore .rb.run-on{-webkit-mask-image:linear-gradient(270deg,transparent,#000 22px);mask-image:linear-gradient(270deg,transparent,#000 22px)}
+/* A call with a new date (laneHTML says why) is drawn in the new colour,
+   thicker and glowing as a new venue does, over past and uncertain alike,
+   so a season of new dates stands out across the board until it is marked
+   seen. */
+#pane-semaphore .rb.fresh{height:6px;background:var(--new);box-shadow:0 0 0 1px rgba(185,227,90,.35),0 0 10px rgba(185,227,90,.55)}
+#pane-semaphore .rb.unc.fresh{height:7px;background:rgba(185,227,90,.38);border:1px dashed var(--new);border-right:2px solid var(--new);box-shadow:0 0 10px rgba(185,227,90,.55)}
+#pane-semaphore .rbt.fresh{border-top:3px solid var(--new);box-shadow:0 0 8px rgba(185,227,90,.5)}
+#pane-semaphore .rbt.unc.fresh{border-top-style:dashed}
+#pane-semaphore .rbn.fresh{background:var(--new);box-shadow:0 0 0 1.5px var(--paper),0 0 8px rgba(185,227,90,.7)}
+@media (prefers-reduced-motion:no-preference){
+  #pane-semaphore .rb.fresh{animation:vNewGlow 2.8s ease-in-out infinite}}
 #pane-semaphore .empty{padding:60px 0;text-align:center;color:var(--muted);font-size:15px}
 #pane-semaphore .empty .btns{margin-top:14px;display:flex;gap:10px;justify-content:center}
 /* ---------- the sheet ----------
@@ -374,6 +385,7 @@
 /* the name gives up its width to the host rather than to a gap, so the word
    sits right after the name it is about */
 #pane-semaphore .wlink .wfresh{margin-left:-4px;align-self:center}
+#pane-semaphore .wseen{height:24px;margin-left:8px;padding:0 9px;font-size:10.5px}
 /* A link is picked up and dropped to reorder it (see "putting links in your
    own order"), so its text cannot be selected by the same press, and the iPad
    must not offer its own menu for a held link. */
@@ -1227,6 +1239,13 @@
 #pane-semaphore .newdot{flex:none;display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--new);
   box-shadow:0 0 6px rgba(185,227,90,.6)}
 #pane-semaphore .ghead .newdot{margin-left:4px}
+/* how many dates and links are new on a row, and the tick that marks them
+   seen: the new colour struck solid, as the tag on a new venue's name */
+#pane-semaphore .freshn{flex:none;display:inline-flex;align-items:center;gap:4px;margin-left:6px;padding:1px 7px 1px 6px;border-radius:9px;
+  background:var(--new);color:#191713;font:600 10px/1.5 var(--mono);white-space:nowrap;cursor:pointer;
+  box-shadow:0 0 8px rgba(185,227,90,.45)}
+#pane-semaphore .freshn:hover{background:var(--new-ink)}
+#pane-semaphore .freshn span{font-weight:400}
 /* ---------- the tray ----------
    Over the board: what the agent found that is still new, each with the
    three things to do with it, and, folded, what is kept on the board. */
@@ -1257,6 +1276,8 @@
 #pane-semaphore .trow .vgl.ev{background:var(--new)}
 #pane-semaphore .trow.st-board .vgl.ev{background:var(--key2)}
 #pane-semaphore .trow .vgl.ev.unc{background:none;border-color:var(--new)}
+#pane-semaphore .trow .tdot{display:inline-block;width:7px;height:7px;border-radius:2px;margin-right:6px;vertical-align:0}
+#pane-semaphore .thead .tall{margin-left:auto;height:24px;padding:0 10px;font-size:10.5px;letter-spacing:.06em}
 /* ---------- Venues: three sections and Limbo ----------
    Every venue on one strip of time (Mark chose the strip, 2026-10-14): the
    name and the arenas it serves on the left, the strip in the middle with
