@@ -16,7 +16,8 @@
 -- 'ptj' for the PtJ "partnering" pages, 'b2match' for a b2match event's
 -- marketplace page (its link is the page itself, /e/<event>/components/<n>,
 -- as the event's menu gives it, logged in if the event hides it from
--- visitors). A new site on any of them is
+-- visitors; for an event still on b2match's older platform, its own
+-- address, <event>.b2match.io). A new site on any of them is
 -- a new row here, and its scroll's link is set with the pencil above the
 -- arenas on the page; a site on a fourth platform needs a reader of its own in the copier
 -- first.
@@ -51,7 +52,15 @@ insert into partner_sites (id, name, call, list_url, platform, sort) values
   ('dut',        'Driving Urban Transitions', 'DUT Call 2026',
    'https://www.b2match.com/e/dut-call-2026/components/69838', 'b2match', 5),
   ('eppermed',   'EP PerMed',                'JTC 2027, cell and gene therapy',
-   'https://www.b2match.com/e/eppermed-partnering/components/49386', 'b2match', 6)
+   'https://www.b2match.com/e/eppermed-partnering/components/49386', 'b2match', 6),
+  ('hedigital',  'HE Advanced Digital Tech', 'Horizon Europe 2027, Cluster 4 digital',
+   'https://www.b2match.com/e/horizon-europe-advanced-digital-tech/components/70907', 'b2match', 7),
+  ('heindustry', 'HE Industry',              'Horizon Europe 2027, Cluster 4 industry',
+   'https://www.b2match.com/e/horizon-europe-industry-2027/components/75001', 'b2match', 8),
+  ('hehealth',   'Cluster Health',           'Horizon Europe 2027, Cluster 1',
+   'https://www.b2match.com/e/cluster-health-horizon-europe-brokerage-2027/components/75073', 'b2match', 9),
+  ('greenet',    'GREENET',                  'Horizon Europe 2027, Cluster 5',
+   'https://greenet-brokerage-event-2026-calls.b2match.io/', 'b2match', 10)
 on conflict (id) do nothing;
 
 -- ── 2. the entries ────────────────────────────────────────────────────
@@ -177,7 +186,7 @@ select cron.schedule('partner-watch-copier', '*/10 0-4 * * *', $job$
 $job$);
 
 -- ── 5. the check ──────────────────────────────────────────────────────
--- Six sites, the schedule, and rules on every table.
+-- Ten sites, the schedule, and rules on every table.
 select (select count(*) from partner_sites)                              as sites,
        (select count(*) from cron.job where jobname = 'partner-watch-copier') as scheduled,
        (select bool_and(c.relrowsecurity) from pg_class c

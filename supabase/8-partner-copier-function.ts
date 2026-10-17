@@ -193,11 +193,13 @@ const unmark = (t) => {
 const b2mNumber = (id) => (atob(id).match(/(\d+)$/) || [])[1];
 // Seeks or offers, from the event's own words for it, which differ per
 // event and sit under Kind (DUT) or Stage (EP PerMed); one that says both
-// counts as seeking.
+// counts as seeking. The Horizon Europe brokerages say "Consortium seeks
+// Partners" and "Partner seeks Consortium", and give an offer of expertise
+// the type Expertize, spelt so.
 const b2mKind = (g, type) => {
   const said = `${g.Kind ?? ""} ${g.Stage ?? ""}`;
-  return /looking for (an? )?(additional )?partners?|seeking partners/i.test(said) || /request/i.test(type) ? "seeks"
-    : /looking to join|contribute .*with my expertise|offer/i.test(said) || /expertise|service|product/i.test(type) ? "offers" : null;
+  return /looking for (an? )?(additional )?partners?|seeking partners|seeks partners/i.test(said) || /request/i.test(type) ? "seeks"
+    : /looking to join|contribute .*with my expertise|offer|seeks consortium/i.test(said) || /experti[sz]e|service|product/i.test(type) ? "offers" : null;
 };
 const b2mGroups = (elements) => {
   const out = {};
@@ -297,10 +299,101 @@ async function fetchB2mEntry(url) {
   ];
   return { fields, text: fields.filter(([, v]) => v).map(([l, v]) => `${l}\n${v}`).join("\n\n") };
 }
+// Some b2match events still run on its older platform, at an address of
+// their own (<event>.b2match.io), which knows nothing of the data service
+// above: GREENET's 2027 calls were the first (2026-10-17, 139 entries, shown
+// to anyone). There the list comes from the event's own /api/v2, twenty-five
+// at a time, and carries each entry whole, description and all; the site
+// has no address that gives one entry by itself (it answers 405), so an
+// entry is copied from the list, read once a run, and its link is the
+// author's profile, where the site shows it. The event's number, which the
+// service wants, is read from its marketplace page. Such an event is still
+// platform 'b2match' in partner_sites: the address says which reader fits.
+const isB2o = (url) => new URL(url).hostname.endsWith(".b2match.io");
+const b2oLists = new Map();
+async function b2oGet(url) {
+  const r = await fetch(url, {
+    headers: { "user-agent": UA, accept: "application/json" },
+    signal: AbortSignal.timeout(30_000),
+  });
+  if (r.status === 401 || r.status === 403)
+    throw new Error("this older b2match event shows its marketplace only to registered participants; the copier cannot log in there yet");
+  if (!r.ok) throw new Error(`${r.status} ${r.statusText} from ${url}`);
+  return await r.json();
+}
+async function b2oAll(origin) {
+  if (b2oLists.has(origin)) return b2oLists.get(origin);
+  const id = ((await get(origin + "/marketplace")).match(/EventID\s*=\s*(\d+)/) || [])[1];
+  if (!id) throw new Error("the event's number was not found on its marketplace page");
+  const api = `${origin}/api/v2/events/${id}/marketplace`;
+  const names = {};
+  for (const s of (await b2oGet(api + "/schemas")).schemas ?? [])
+    for (const w of s.widgets ?? [])
+      for (const c of w.options ?? []) names[c.id] = [String(w.subtype ?? "").split("::").pop(), c.name];
+  const out = [];
+  for (let token = "", n = 0; ; n++) {
+    if (n > 200) throw new Error("the list did not end after 5,000 entries");
+    const d = await b2oGet(`${api}/opportunities:search?query=&page_size=25&order_by=created_at${token ? "&page_token=" + encodeURIComponent(token) : ""}`);
+    for (const o of d.opportunities ?? []) {
+      const g = {};
+      for (const c of o.classifier_ids ?? []) {
+        const [sub, name] = names[c] ?? [];
+        if (/^(Kind|Topic|Stage|Call)$/.test(sub)) g[sub] = g[sub] ? `${g[sub]}; ${flat(name)}` : flat(name);
+      }
+      out.push({ o, g });
+    }
+    if (!d.next_page_token || !d.opportunities?.length) break;
+    token = d.next_page_token;
+    await sleep(GAP_MS);
+  }
+  b2oLists.set(origin, out);
+  return out;
+}
+async function fetchB2oList(site) {
+  const origin = new URL(site.list_url).origin;
+  return (await b2oAll(origin)).map(({ o, g }) => {
+    const p = o.participant ?? {}, u = p.user ?? {};
+    return {
+      ext_id: String(o.id), url: origin + (p.profile_url ?? "/marketplace"),
+      contact: `${u.first_name ?? ""} ${u.last_name ?? ""}`.trim() || null,
+      kind: b2mKind(g, o.type), looking_raw: g.Kind ?? "",
+      country: p.country?.name ?? null, org: p.organisation_name || null,
+      topic: g.Topic || null, keywords: null, posted: null,
+      list_text: flat(o.title),
+    };
+  });
+}
+async function fetchB2oEntry(e) {
+  const found = (await b2oAll(new URL(e.url).origin)).find(({ o }) => String(o.id) === e.ext_id);
+  if (!found) throw new Error("entry content not found");
+  const { o, g } = found, p = o.participant ?? {}, u = p.user ?? {};
+  const text = (t) => String(t ?? "").replace(/\r/g, "").split("\n").map((l) => l.replace(/[ \t ]+/g, " ").trim()).join("\n").replace(/\n{3,}/g, "\n\n").trim();
+  const fields = [
+    ["Title", flat(o.title)],
+    ["Looking for", g.Kind ?? ""],
+    ["Description", text(o.description)],
+    ["Topic", g.Topic ?? ""],
+    ["Call", g.Call ?? ""],
+    ["Stage", g.Stage ?? ""],
+    ["Contact name", `${u.first_name ?? ""} ${u.last_name ?? ""}`.trim()],
+    ["Job position", flat(p.job_description || u.job_description)],
+    ["Organisation name", flat(p.organisation_name)],
+    ["Organisation type", flat(p.organisation_type?.name)],
+    ["About the organisation", text(p.organisation_description)],
+    ["Website", flat(p.website)],
+    ["City", flat(p.city)],
+    ["Country", flat(p.country?.name)],
+    ["Last updated on the site", String(o.updated_at ?? "").replace("T", " ").slice(0, 16)],
+  ];
+  return { fields, text: fields.filter(([, v]) => v).map(([l, v]) => `${l}\n${v}`).join("\n\n") };
+}
 const PARSERS = {
   epss: { list: parseEpssList, detail: parseEpssDetail },
   ptj: { list: parsePtjList, detail: parsePtjDetail },
-  b2match: { fetchList: fetchB2mList, fetchEntry: fetchB2mEntry },
+  b2match: {
+    fetchList: (s) => isB2o(s.list_url) ? fetchB2oList(s) : fetchB2mList(s),
+    fetchEntry: (e) => isB2o(e.url) ? fetchB2oEntry(e) : fetchB2mEntry(e.url),
+  },
 };
 
 // ── the run ───────────────────────────────────────────────────────────
@@ -404,7 +497,7 @@ async function readList(site, now) {
 
 async function copyEntry(e, platform, now) {
   const P = PARSERS[platform];
-  const p = P.fetchEntry ? await P.fetchEntry(e.url) : P.detail(await get(e.url));
+  const p = P.fetchEntry ? await P.fetchEntry(e) : P.detail(await get(e.url));
   if (!p.text) throw new Error("the entry page had no text");
   const h = hash(flat(p.text));
   const upd = {
@@ -430,6 +523,7 @@ async function run(byMark) {
   const t0 = Date.now(), now = new Date().toISOString();
   const tally = { listed: 0, added: 0, fetched: 0, changed: 0, removed: 0, waiting: 0 };
   b2mTokens.clear();
+  b2oLists.clear();
   const errors = [];
 
   const { data: sites, error } = await db.from("partner_sites").select("*").eq("active", true).order("sort");
@@ -448,7 +542,7 @@ async function run(byMark) {
     }
   }
 
-  const cols = "id, site, url, page_hash, fields, page_text, fetched_at, fetch_errors";
+  const cols = "id, site, ext_id, url, page_hash, fields, page_text, fetched_at, fetch_errors";
   const active = Object.keys(platformOf);
   const { data: due } = await db.from("partner_entries").select(cols)
     .eq("needs_fetch", true).is("removed_at", null).in("site", active)

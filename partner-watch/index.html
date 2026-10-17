@@ -555,7 +555,7 @@ function drawSites(){
         + (lastRun.errors ? '<br><span style="color:var(--warn-ink)">' + esc(lastRun.errors.split('\n')[0]) + '</span>' : '')
       : '<b>Not checked yet</b><br>The copier runs every night.')
     + (waiting ? '<br>' + waiting + ' entry pages still to copy' : '')
-    + '<button class="btn" id="checkNow">Check now</button>';
+    + '<button class="btn" id="checkNow"' + (checking ? ' disabled>' + esc(checking) : '>Check now') + '</button>';
   $('#total').textContent = entries.length ? entries.length + ' entries on ' + sites.length + ' arenas' : '';
 }
 function drawFilters(){
@@ -977,11 +977,27 @@ document.addEventListener('input', function(ev){
 });
 document.addEventListener('focusout', function(ev){ if (ev.target.id === 'callNote') flushNote(); });
 document.addEventListener('visibilitychange', function(){ if (document.visibilityState === 'hidden') flushNote(); });
+/* One run copies at most forty entry pages, so a new arena of several
+   hundred took Mark a press of the button per forty (2026-10-17). Now a
+   press goes on by itself while pages are still waiting and the last run
+   copied some; a run that copied none stops it, so an arena whose pages
+   all fail cannot keep it going. */
+var checking = '';
 function checkNow(btn){
-  btn.disabled = true; btn.textContent = 'Checking… (up to two minutes)';
+  checking = 'Checking… (up to two minutes)';
+  btn.disabled = true; btn.textContent = checking;
   api('/functions/v1/partner-copier', { method:'POST', body:{} })
-    .then(function(r){ if (r && r.error) throw new Error(r.error); return load(); })
-    .catch(function(err){ $('#banner').textContent = 'The check did not finish: ' + err.message; $('#banner').hidden = false; drawSites(); });
+    .then(function(r){
+      if (r && r.error) throw new Error(r.error);
+      return load().then(function(){
+        checking = '';
+        if (!(r && r.waiting && r.fetched)) return drawSites();
+        var again = $('#checkNow');
+        checkNow(again);
+        checking = again.textContent = 'Copying… ' + r.waiting + ' entry pages to go';
+      });
+    })
+    .catch(function(err){ checking = ''; $('#banner').textContent = 'The check did not finish: ' + err.message; $('#banner').hidden = false; drawSites(); });
 }
 
 document.addEventListener('click', function(ev){
