@@ -276,6 +276,13 @@ button{font:inherit;color:inherit}
   .dtitle{font-size:26px}
   .sec .txt,.sec.lead .txt{font-size:18px;line-height:1.65}
   #callNote{max-width:none}
+  /* The page turn (see turnPage). The pane takes vertical scrolling for
+     itself and leaves sideways movement to the page, and the page in
+     motion is a sheet with edges, so two of them side by side read as
+     two pages rather than one smear of text. */
+  #detwrap{position:relative;overflow-x:hidden;touch-action:pan-y pinch-zoom}
+  .det.turning{background:var(--sheet);min-height:100%;box-shadow:0 0 0 1px var(--grid),0 6px 28px rgba(42,38,32,.16);will-change:transform}
+  .det.ghost{position:absolute;left:0;right:0;pointer-events:none;z-index:3}
 }
 @media (orientation:portrait) and (prefers-reduced-motion:reduce){ .cols > .col{transition:none} }
 .banner{padding:8px 18px;background:var(--brok-soft);color:var(--warn-ink);font-size:13.5px;flex:none}
@@ -748,13 +755,57 @@ function patchMany(list, vals){
       .catch(function(err){ $('#banner').textContent = 'Not saved: ' + err.message; $('#banner').hidden = false; });
   }
 }
-function step(d){
+var upright = matchMedia('(orientation:portrait)'), still = matchMedia('(prefers-reduced-motion: reduce)');
+function step(d, fromX){
   var list = shown(), i = list.findIndex(function(e){ return e.id === view.id; });
   var n = list[Math.max(0, Math.min(list.length - 1, i + d))];
-  if (n && n.id !== view.id){ openEntry(n.id); return true; }
+  if (n && n.id !== view.id){
+    if (upright.matches && !still.matches) turnPage(n.id, d, fromX || 0); else openEntry(n.id);
+    return true;
+  }
   return false;
 }
-var upright = matchMedia('(orientation:portrait)');
+/* ── the page turn ───────────────────────────────────────────────────
+   Upright, turning to the next entry swapped the text in place, so it was
+   hard to see that anything had turned at all (Mark, 2026-10-17). Now the
+   page leaves to one side and the next comes in from the other, both in
+   view at once, and under a finger the page follows the finger first.
+   The leaving page is a copy of the entry as it stood, laid where it was
+   on screen, because the entry itself is redrawn for the next one at once.
+   The curve decelerates, as a page let go of does; the start waits two
+   frames, because the next entry is a large redraw and a slide that loses
+   its first frames to it is seen as a jump (notes/animation.md). */
+var TURN_MS = 320, turning = null;
+function settleTurn(){ if (turning){ var f = turning; turning = null; f(); } }
+function turnPage(id, d, fromX){
+  settleTurn();
+  var wrap = $('#detwrap'), det = $('#det'), W = wrap.clientWidth, top = wrap.scrollTop;
+  var ghost = det.cloneNode(true);
+  ghost.removeAttribute('id');
+  ghost.querySelectorAll('[id]').forEach(function(n){ n.removeAttribute('id'); });
+  ghost.classList.add('turning', 'ghost');
+  openEntry(id);
+  ghost.style.top = -top + 'px';
+  ghost.style.transform = 'translateX(' + fromX + 'px)';
+  wrap.appendChild(ghost);
+  det.classList.add('turning');
+  det.style.transition = 'none';
+  det.style.transform = 'translateX(' + (d * W + fromX) + 'px)';
+  void wrap.offsetWidth;
+  var done = false, end = function(){
+    if (done) return; done = true;
+    ghost.remove(); det.classList.remove('turning'); det.style.transition = ''; det.style.transform = '';
+  };
+  turning = end;
+  requestAnimationFrame(function(){ requestAnimationFrame(function(){
+    if (done) return;
+    var go = 'transform ' + TURN_MS + 'ms cubic-bezier(.22,.7,.25,1)';
+    ghost.style.transition = go; det.style.transition = go;
+    ghost.style.transform = 'translateX(' + (-d * W) + 'px)';
+    det.style.transform = 'translateX(0)';
+    setTimeout(function(){ if (turning === end) turning = null; end(); markStuck(); }, TURN_MS + 40);
+  }); });
+}
 function drawer(open){
   document.body.classList.toggle('drawer', open);
   if (open){ var row = document.querySelector('.row.on'); if (row) row.scrollIntoView({ block:'center' }); }
@@ -960,20 +1011,52 @@ function markStuck(){
   var a = $('.actions'); if (a) a.classList.toggle('stuck', a.getBoundingClientRect().top <= $('#detwrap').getBoundingClientRect().top + 1);
 }
 $('#detwrap').addEventListener('scroll', markStuck);
-/* A page turn in the reader: a quick, clearly sideways swipe across the
-   entry. Not one that starts in the answers bar or a field, where a finger
-   moving sideways is choosing text or scrolling a row of buttons. */
+/* A page turn in the reader by hand: once a finger has clearly gone
+   sideways the page follows it, and on letting go it turns if it went a
+   fifth of the way across or was flicked, and springs back if not. At
+   the first or last entry it gives a little and comes back, so the end
+   of the list is felt rather than a swipe that does nothing. Not from the
+   answers bar or a field, where moving sideways is choosing text. */
 var swipe = null;
+function neighbour(d){
+  var list = shown(), i = list.findIndex(function(e){ return e.id === view.id; });
+  return i >= 0 && !!list[i + d];
+}
+function springBack(){
+  var det = $('#det');
+  det.style.transition = 'transform 220ms cubic-bezier(.22,.7,.25,1)';
+  det.style.transform = 'translateX(0)';
+  setTimeout(function(){ if (!turning){ det.classList.remove('turning'); det.style.transition = ''; det.style.transform = ''; } }, 260);
+}
 $('#detwrap').addEventListener('touchstart', function(ev){
-  swipe = upright.matches && !view.note && ev.touches.length === 1 && !ev.target.closest('.actions,input,[contenteditable]')
-    ? { x:ev.touches[0].clientX, y:ev.touches[0].clientY, t:Date.now() } : null;
+  swipe = upright.matches && !view.note && view.id && ev.touches.length === 1 && !ev.target.closest('.actions,input,[contenteditable]')
+    ? { x:ev.touches[0].clientX, y:ev.touches[0].clientY, t:Date.now(), axis:null, dx:0 } : null;
 }, { passive:true });
-$('#detwrap').addEventListener('touchend', function(ev){
+$('#detwrap').addEventListener('touchmove', function(ev){
+  if (!swipe || ev.touches.length !== 1) return;
+  var dx = ev.touches[0].clientX - swipe.x, dy = ev.touches[0].clientY - swipe.y;
+  if (!swipe.axis){
+    if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return;
+    swipe.axis = Math.abs(dx) > Math.abs(dy) * 1.2 ? 'x' : 'y';
+    if (swipe.axis === 'x'){ settleTurn(); $('#det').classList.add('turning'); }
+  }
+  if (swipe.axis !== 'x') return;
+  swipe.dx = neighbour(dx < 0 ? 1 : -1) ? dx : dx * 0.3;
+  var det = $('#det');
+  det.style.transition = 'none';
+  det.style.transform = 'translateX(' + swipe.dx + 'px)';
+}, { passive:true });
+function letGo(ev){
   if (!swipe) return;
-  var c = ev.changedTouches[0], dx = c.clientX - swipe.x, dy = c.clientY - swipe.y;
-  if (Date.now() - swipe.t < 600 && Math.abs(dx) > 70 && Math.abs(dy) < Math.abs(dx) / 2) step(dx < 0 ? 1 : -1);
-  swipe = null;
-});
+  var sw = swipe; swipe = null;
+  if (sw.axis !== 'x') return;
+  var W = $('#detwrap').clientWidth, fast = Math.abs(sw.dx) > 30 && Math.abs(sw.dx) / (Date.now() - sw.t) > 0.45;
+  var d = sw.dx < 0 ? 1 : -1;
+  if (ev.type === 'touchend' && (Math.abs(sw.dx) > W / 5 || fast) && neighbour(d)) step(d, sw.dx);
+  else springBack();
+}
+$('#detwrap').addEventListener('touchend', letGo);
+$('#detwrap').addEventListener('touchcancel', letGo);
 upright.addEventListener('change', function(){ if (!upright.matches) drawer(false); });
 $('#search').addEventListener('input', function(){ view.q = this.value; drawRows(); });
 /* The keys: ↑ ↓ walk the list, I L B answer the open entry (or all the
