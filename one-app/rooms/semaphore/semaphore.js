@@ -956,7 +956,7 @@ function boardRow(a,bg){
   const looms=a.dates.filter(d=>!d.start);
   const loomBtn=looms.length?
     '<button class="loom" data-act="openArena" data-id="'+a.id+'" data-tipl="1"><i class="sw sw-uncertain"></i>'+looms.length+'</button>':'';
-  const all=venuesOf(a),shared=all.filter(isShared),own=all.filter(v=>!isShared(v));
+  const all=venuesOf(a).filter(v=>!inLimbo(v)),shared=all.filter(isShared),own=all.filter(v=>!isShared(v));
   const fresh=own.some(v=>v.place==='new');
   const lane=laneHTML(a,own);
   const shTag=shared.length?'<span class="shtag" title="Also served by, under Shared venues at the top: '+esc(shared.map(v=>v.name).join(', '))+'">+'+shared.length+' shared</span>':'';
@@ -987,7 +987,7 @@ function isShared(v){return v.arenas.filter(id=>{const a=arena(id);return a&&!a.
    against the event. The tags under the name, two to a line, did not
    line up with anything. */
 function sharedRows(bg){
-  const vs=visibleVenues().filter(isShared);
+  const vs=visibleVenues().filter(v=>isShared(v)&&!inLimbo(v));
   if(!vs.length)return '';
   const by=v=>{const w=vWin(v);return w&&w.from!==null?w.from:w?-1e15:1e15;};
   vs.sort((x,y)=>by(x)-by(y)||x.name.localeCompare(y.name));
@@ -1614,6 +1614,11 @@ function visibleVenues(){
   return (S.venues||[]).filter(v=>liveVenue(v)&&(!ql||venueHay(v).includes(ql)||v.arenas.some(id=>vis.has(id))));
 }
 const inVenues=v=>v.place==='venues';
+/* Limbo is what is over, and the board is what is coming and going on: a
+   venue in Limbo is off the board (Mark, 2026-10-17), on the arena rows
+   and among the Shared venues alike, and waits in Limbo to be deleted.
+   Its arena's panel still lists it. */
+const inLimbo=v=>inVenues(v)&&vPhase(v)==='over';
 const onTrial=v=>v.place==='new'||v.place==='board';
 /* A venue's event days are its meeting days when they are a day or a span
    of up to two weeks. A longer exact span is the stretch its marketplace is
@@ -2081,7 +2086,7 @@ function nowRow(v,sp,over){
         vArenaChips(v,2)+'</span></div>'+
     vTrackHTML(v,sp)+
     '<div class="vend">'+vGoHTML(v)+
-      (over?'<button class="cudel" data-act="vDrop" data-v="'+v.id+'" data-limbo="1" title="Let it go — off the board" aria-label="Let '+esc(v.name)+' go">✕</button>':'')+
+      (over?'<button class="btn ghost vdel" data-act="vDrop" data-v="'+v.id+'" data-limbo="1" title="Gone from the app, and the agent will not bring it back" aria-label="Delete '+esc(v.name)+'">Delete</button>':'')+
     '</div></div>';
 }
 function nowAxisHTML(sp){
@@ -2211,7 +2216,7 @@ function renderNow(){keepPlace(()=>{
        a stage of the work but what is left of it */
     '<button class="culimbo vlimbotab'+(tab==='over'?' on':'')+'" data-act="nowTab" data-t="over" aria-pressed="'+(tab==='over')+'">'+
       '<span class="culfog" aria-hidden="true"></span>'+LIMBO_GHOST+'<span class="culc">Limbo</span><b>'+by.over.length+'</b></button>'+
-    '<span class="wsay">'+(tab==='over'?(by.over.length?'Over, each waiting until you let it go with ✕ \u2014 or drag its end on, or put it in another section from its panel.':'Nothing in Limbo.'):
+    '<span class="wsay">'+(tab==='over'?(by.over.length?'Over and off the board, each waiting until you delete it \u2014 or drag its end on, or put it in another section from its panel.':'Nothing in Limbo.'):
       due?'<b>'+due+'</b> '+(due===1?'venue here is':'venues here are')+' due for a visit.':'Nothing here is due for a visit.')+'</span>'+
     '<span class="vkey"><i class="vgl ev"></i>event days<i class="vkbar"></i>window, by how much goes on<i class="vkp"></i>due</span></div>';
   h+='<div class="vaxis"><span class="vaxl">'+NOW_TABS[tab].name+'</span><div class="vaxt">'+nowAxisHTML(sp)+'</div><span></span></div>';

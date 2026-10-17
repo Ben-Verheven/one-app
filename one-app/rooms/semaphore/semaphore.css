@@ -1365,6 +1365,11 @@
 @keyframes vBreathe{0%,100%{box-shadow:0 0 0 3px var(--brok-soft)}50%{box-shadow:0 0 0 7px rgba(239,91,76,.06)}}
 #pane-semaphore .vrow.due .vnm{color:#FFF7EC}
 #pane-semaphore .vend{display:flex;align-items:center;justify-content:flex-end;gap:8px}
+/* Limbo's Delete was a faint cross that Mark did not find as the way to
+   delete a venue (2026-10-17); it is a word now, quiet until pointed at,
+   as Remove is in the board's tray. */
+#pane-semaphore .btn.vdel{min-height:28px;padding:0 10px;font-size:12.5px;color:var(--muted)}
+#pane-semaphore .btn.vdel:hover{color:var(--brok-deep);border-color:var(--brok-soft);background:var(--brok-soft)}
 #pane-semaphore .vgo{display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 11px;border-radius:var(--radius);
   border:1px solid var(--line2);background:var(--slab);font:12px var(--mono);color:var(--key2);text-decoration:none;white-space:nowrap;
   transition:border-color .14s,background-color .14s,color .14s}
