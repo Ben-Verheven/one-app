@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Mark't place</title>
+<title>Mark't Place</title>
 <!--
-  Mark't place (Partner Watch until 2026-10-16, then Project Watch, and
+  Mark't Place (Partner Watch until 2026-10-16, then Project Watch, and
   for an afternoon MARK-it Place, MARKetplace and two spellings of this,
   until 2026-10-17) — the partner-search entries of the brokerage sites,
   which Mark calls venues, as the Marketplace does (arenas until
@@ -59,31 +59,26 @@ button{font:inherit;color:inherit}
 .meta{font:12px var(--mono);color:var(--faint)}
 #search{background:var(--field);border:1px solid var(--line);border-radius:var(--radius);color:var(--ink);font:14px var(--body);padding:5px 10px;width:260px}
 #search::placeholder{color:var(--faint)}
-.cols{flex:1;display:grid;grid-template-columns:240px 360px minmax(0,1fr);min-height:0}
-/* In a window of half a wide screen the two left columns gave up so much
-   room that the entry's text ran a few words a line (2026-10-16); below
-   1280 px they narrow, and the entry pane rearranges itself (see .read). */
-@media (max-width:1280px){ .cols{grid-template-columns:200px 300px minmax(0,1fr)} }
-/* With a call's notes open the entry list has nothing to say, so it goes
-   and the notes sit beside the arenas (Mark, 2026-10-16). */
-.cols.noting{grid-template-columns:240px minmax(0,1fr)}
-.cols.noting > .col + .col{display:none}
-@media (max-width:1280px){ .cols.noting{grid-template-columns:200px minmax(0,1fr)} }
-/* On the iPad the arenas took a fifth of the screen from the entry for a
-   choice made once a session (Mark, 2026-10-16), so the column folds to a
-   rail that brings it back. It starts folded where the pointer is a
-   finger and open at the desk; either way the fold is kept per device. */
-.cols.folded{grid-template-columns:44px 360px minmax(0,1fr)}
-.cols.folded.noting{grid-template-columns:44px minmax(0,1fr)}
-@media (max-width:1280px){ .cols.folded{grid-template-columns:44px 300px minmax(0,1fr)} }
-.cols.folded > .col:first-child > :not(.unfold){display:none}
-.unfold{display:none;flex:1;flex-direction:column;align-items:center;gap:10px;width:100%;padding:12px 0;border:0;background:none;color:var(--faint);cursor:pointer;
-  font:11.5px/16px var(--serif);letter-spacing:.08em;text-transform:uppercase}
-.unfold:hover{background:var(--hover);color:var(--key2)}
-.unfold span{writing-mode:vertical-rl}
-.cols.folded .unfold{display:flex}
-.colhead .fold{margin:-6px -8px -6px auto;border:0;background:none;padding:6px 8px;border-radius:5px;color:var(--key);cursor:pointer;display:flex}
-.colhead .fold:hover{color:var(--key2);background:var(--hover)}
+/* ── the reader ──────────────────────────────────────────────────────
+   The entry is the page, on every screen (Mark, 2026-10-17). It was so on
+   the upright iPad only, where three columns had read as a side view; he
+   chose it for the desk too, over three columns side by side, a drawer
+   that shows the venues and then a venue's entries, and an overview page
+   apart from the reader, drawn side by side. Entries at the top left
+   slides the venues and the chosen venue's entries in over the entry,
+   side by side, and takes them away again; ← → or a sideways swipe turn
+   to the next entry without them. The venues are wide enough to stand in
+   one line each with their arenas under them, so most of them are in view
+   at once. */
+.cols{flex:1;min-height:0;position:relative;display:flex}
+.cols > .col{position:absolute;top:0;bottom:0;z-index:4;background:var(--paper);
+  transform:translateX(-860px);visibility:hidden;transition:transform .22s ease,visibility 0s .22s}
+.cols > .col:first-child{left:0;width:420px}
+.cols > .col + .col{left:420px;width:400px;box-shadow:8px 0 22px rgba(42,38,32,.16)}
+body.drawer .cols > .col{transform:none;visibility:visible;transition:transform .22s ease}
+.veil{display:none}
+body.drawer .veil{display:block;position:absolute;inset:0;z-index:3;background:rgba(42,38,32,.28)}
+@media (prefers-reduced-motion:reduce){ .cols > .col{transition:none} }
 .col{border-right:1px solid var(--line);min-width:0;display:flex;flex-direction:column;min-height:0}
 .scroll{overflow-y:auto;min-height:0;flex:1}
 /* One line height for both heads, whatever their type: the list's count in
@@ -91,19 +86,19 @@ button{font:inherit;color:inherit}
    list's head two pixels below the arenas' head. */
 .colhead{padding:12px 14px 8px;font:11.5px/16px var(--serif);letter-spacing:.08em;text-transform:uppercase;color:var(--faint);display:flex;justify-content:space-between;align-items:center;gap:8px;flex:none}
 .colhead .meta{line-height:16px}
-/* An arena is drawn like an entry row beside it: a hairline between each,
-   the name in the rows' type. Its cards had no edges of their own, so the
-   selected one stood out as a grey slab among text floating on the paper,
-   and the counts under the name, in typewriter type and red, were the
-   loudest thing in the column (Mark dropped them on 2026-10-16). */
-.arena{position:relative;border-top:1px solid var(--grid)}
-.arena:first-child{border-top-color:var(--line)}
-.arena:last-child{border-bottom:1px solid var(--grid)}
-.site{display:block;width:100%;text-align:left;background:none;border:0;border-left:3px solid transparent;padding:10px 40px 10px 11px;cursor:pointer}
+/* A venue is a row like the Brokerage Semaphore's Venues tab: its name on
+   one line, with how many entries are new and the scroll and the note at
+   the end of it, and the arenas it serves in one line under it (Mark,
+   2026-10-17: "I like the way you get overview then"). Its call is said at
+   the head of its entries instead. The cards before were three lines and
+   their icons stacked beside them, a hundred pixels a venue. */
+.venue{position:relative;border-bottom:1px solid var(--grid)}
+.site{display:block;width:100%;text-align:left;background:none;border:0;border-left:3px solid transparent;padding:6px 64px 7px 13px;cursor:pointer}
 .site:hover{background:var(--hover)}
 .site.on{background:var(--sel);border-left-color:var(--key2)}
-.site .nm{font:15px var(--serif)}
-.site .sub{font-size:12.5px;color:var(--muted)}
+.site .l1{display:flex;align-items:baseline;gap:10px;min-width:0}
+.site .nm{font:15px/1.35 var(--serif);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.site .nw{margin-left:auto;font:11.5px var(--mono);color:var(--new-ink);white-space:nowrap}
 /* The venues stand in the Marketplace's groups, each under a thin band in
    its type's colour, and carry the arenas they serve as the Marketplace's
    tags do: the arena's tone struck into the paper with a rule of it down
@@ -114,36 +109,36 @@ button{font:inherit;color:inherit}
   font:600 9.5px var(--serif);letter-spacing:.18em;text-transform:uppercase;color:var(--ink)}
 .vgrp:first-child{margin-top:0}
 .vgrp b{font:10px var(--mono);font-weight:400;letter-spacing:0;color:var(--key2)}
-.vgrp + .arena{border-top-color:transparent}
-.site .tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
-.site .tag{padding:0 7px 1px 6px;font:italic 12px/1.45 var(--body);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;
+.site .tags{display:flex;flex-wrap:nowrap;gap:4px;margin-top:3px;overflow:hidden}
+.site .tag{flex:0 1 auto;min-width:0;padding:0 7px 1px 6px;font:italic 12px/1.45 var(--body);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   background:color-mix(in srgb,var(--tone) 30%,var(--paper));border-left:3px solid var(--tone);border-radius:0 var(--radius) var(--radius) 0}
-.site .tag.more{background:none;border-left-color:transparent;font-style:normal;color:var(--muted)}
-/* The scroll opens the call's documents beside the page; the note under
-   it opens Mark's own notes on the call in the entry pane, its lines drawn
-   in once there is something written. Both sit over the card rather than
-   in it, because a link inside the card's button is not allowed and would
-   not be clickable on its own. */
-.docs,.cnote{position:absolute;right:9px;display:flex;padding:4px;border:0;border-radius:5px;background:none;color:var(--key);cursor:pointer}
-.docs{top:9px}
-.cnote{top:35px}
+.site .tag.more{flex:none;background:none;border-left-color:transparent;font-style:normal;color:var(--muted)}
+/* The scroll opens the call's documents beside the page; the note beside
+   it opens Mark's own notes on the call in the reading pane, its lines
+   drawn in once there is something written. Both sit over the row rather
+   than in it, because a link inside the row's button is not allowed and
+   would not be clickable on its own. */
+.docs,.cnote{position:absolute;top:4px;display:flex;padding:3px;border:0;border-radius:5px;background:none;color:var(--key);cursor:pointer}
+.docs{right:34px}
+.cnote{right:8px}
 .cnote.on{color:var(--key2);background:var(--sel)}
 .docs:hover,.cnote:hover{color:var(--key2);background:var(--hover)}
 /* The pencil in the column's head turns every arena into its link field at
    once, with one Save under them all (Mark, 2026-10-16). */
 .colhead .editlinks{border:0;background:none;padding:2px 4px;margin:-2px 0;border-radius:5px;color:var(--key);cursor:pointer;display:flex}
 .colhead .editlinks:hover{color:var(--key2);background:var(--hover)}
-.arena.editing{padding:9px 12px 11px 14px}
-.arena.editing .nm{font:15px var(--serif);margin-bottom:4px}
-.arena.editing input{width:100%;background:var(--field);border:1px solid var(--line2);border-radius:var(--radius);color:var(--ink);font:13px var(--body);padding:5px 8px}
-.arena.editing .err{font-size:12px;color:var(--warn-ink);margin-top:4px}
+.venue.editing{padding:9px 12px 11px 14px}
+.venue.editing .nm{font:15px var(--serif);margin-bottom:4px}
+.venue.editing input{width:100%;background:var(--field);border:1px solid var(--line2);border-radius:var(--radius);color:var(--ink);font:13px var(--body);padding:5px 8px}
+.venue.editing .err{font-size:12px;color:var(--warn-ink);margin-top:4px}
 .linkbar{padding:10px 14px 4px;font-size:12.5px;color:var(--muted)}
 .linkbar .lbtns{display:flex;gap:6px;margin-top:8px}
 .linkbar .btn{padding:3px 12px;font-size:12.5px}
-.site .err{font-size:12px;color:var(--warn-ink);margin-top:3px;overflow-wrap:anywhere}
-.runbox{margin:12px 14px 16px;padding:10px 12px;border:1px dashed var(--line2);border-radius:var(--radius);font-size:12.5px;color:var(--muted);flex:none}
+.site .err{font-size:12px;color:var(--warn-ink);margin-top:3px;overflow-wrap:anywhere;white-space:normal}
+.runbox{display:flex;align-items:center;gap:12px;padding:9px 14px 10px;border-top:1px solid var(--line);font-size:12.5px;line-height:1.45;color:var(--muted);flex:none}
+.runbox .say{flex:1;min-width:0}
 .runbox b{color:var(--ink);font-weight:500}
-.runbox .btn{margin-top:8px;width:100%}
+.runbox .btn{flex:none;padding:3px 11px;font-size:12.5px}
 .filters{display:flex;flex-wrap:wrap;gap:6px;padding:0 14px 10px;flex:none}
 .chip{font:12px var(--serif);color:var(--muted);border:1px solid var(--line);border-radius:99px;padding:2px 9px;background:none;cursor:pointer}
 .chip.on{color:var(--ink);border-color:var(--line2);background:var(--sel)}
@@ -167,6 +162,8 @@ button{font:inherit;color:inherit}
 .dot.seen{border:1px solid var(--line2)}
 .row .t{font:15px var(--serif);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .row .o{font-size:12.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .lt{font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.colhead .call{text-transform:none;letter-spacing:0;font:italic 13px var(--body);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .tags{display:flex;gap:6px;margin-top:4px;flex-wrap:wrap;align-items:center}
 .kind{font:11.5px var(--serif);border-radius:4px;padding:1px 7px;white-space:nowrap}
 .kind.seeks{background:var(--brok-soft);color:var(--brok-ink)}
@@ -177,7 +174,7 @@ button{font:inherit;color:inherit}
 .st.newtag{border-color:var(--new-line);color:var(--new-ink)}
 .st.gone{color:var(--warn-ink);border-color:var(--warn-line)}
 .empty{padding:22px 16px;color:var(--muted);font-size:14px}
-.det{padding:18px 28px 40px;max-width:1180px;container-type:inline-size;container-name:entry}
+.det{padding:18px 28px 40px;max-width:1120px;container-type:inline-size;container-name:entry}
 #detwrap{background:var(--sheet)}
 /* The text column takes all the room beside the facts, up to a line of
    about ninety characters: on a full wide screen it was held to seventy
@@ -262,47 +259,36 @@ button{font:inherit;color:inherit}
 .diff{font:12.5px/1.6 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere;margin-top:6px}
 .diff .add{color:var(--new-ink);background:var(--new-soft)}
 .diff .del{color:var(--brok-ink);background:var(--brok-soft);text-decoration:line-through}
-/* ── the reader, on an iPad held upright ──────────────────────────────
-   Upright, the three columns read as a side view: a list and a sliver of
-   entry, and the page set wider than the screen cut every entry off at the
-   right (Mark, 2026-10-17). There the entry is the page, held to a line of
-   about seventy-five characters, and the arenas and the list slide in over
-   it from the button at the top left; the arrows beside the search, ← → or
-   a sideways swipe turn to the next entry without opening the list. Held
-   sideways, and at the desk, nothing here applies. */
-.rd{display:none}
-.veil{display:none}
+/* The bar's Entries button and the arrows that turn the page. Entries
+   opens the drawer and closes it again (Mark, 2026-10-17: it only opened
+   it, and the veil or Esc were the only ways back). */
+.rd{display:flex;align-items:center}
+.rd-list{gap:7px;margin-left:-6px;background:none;border:1px solid var(--line2);border-radius:var(--radius);color:var(--key2);font:14px var(--serif);padding:5px 11px 5px 9px;cursor:pointer}
+body.drawer .rd-list{background:var(--sel);border-color:var(--key)}
+.rd-step{gap:2px;font:12.5px var(--mono);color:var(--muted);white-space:nowrap}
+.rd-step button{display:flex;background:none;border:0;border-radius:5px;color:var(--key2);padding:6px;cursor:pointer}
+.rd-step button:disabled{color:var(--line2);cursor:default}
+/* The entry runs down the middle of the page: on a wide screen the long
+   texts and the facts beside them, about ninety characters a line, as
+   Mark wanted there; held upright, a line of about seventy-five, the facts
+   in a box above and the type a size up, as on the reader he chose then. */
+.det{margin:0 auto;padding-top:26px}
+#callNote{max-width:none}
 @media (orientation:portrait){
   body{min-width:0}
   #total{display:none}
-  .rd{display:flex;align-items:center}
-  .rd-list{gap:7px;margin-left:-6px;background:none;border:1px solid var(--line2);border-radius:var(--radius);color:var(--key2);font:14px var(--serif);padding:5px 11px 5px 9px;cursor:pointer}
-  .rd-step{gap:2px;font:12.5px var(--mono);color:var(--muted);white-space:nowrap}
-  .rd-step button{display:flex;background:none;border:0;border-radius:5px;color:var(--key2);padding:6px;cursor:pointer}
-  .rd-step button:disabled{color:var(--line2);cursor:default}
   #search{width:220px}
-  .cols,.cols.folded,.cols.noting,.cols.folded.noting{grid-template-columns:minmax(0,1fr);position:relative}
-  .cols > .col{position:absolute;top:0;bottom:0;z-index:4;background:var(--paper);
-    transform:translateX(-640px);visibility:hidden;transition:transform .22s ease,visibility 0s .22s}
-  .cols > .col:first-child{left:0;width:220px}
-  .cols > .col + .col{left:220px;width:360px;box-shadow:6px 0 18px rgba(42,38,32,.16)}
-  .cols.folded > .col:first-child{width:44px}
-  .cols.folded > .col + .col{left:44px}
-  body.drawer .cols > .col{transform:none;visibility:visible;transition:transform .22s ease}
-  body.drawer .veil{display:block;position:absolute;inset:0;z-index:3;background:rgba(42,38,32,.28)}
-  .det{max-width:700px;margin:0 auto;padding-top:26px}
+  .det{max-width:700px}
   .dtitle{font-size:26px}
   .sec .txt,.sec.lead .txt{font-size:18px;line-height:1.65}
-  #callNote{max-width:none}
-  /* The page turn (see turnPage). The pane takes vertical scrolling for
-     itself and leaves sideways movement to the page, and the page in
-     motion is a sheet with edges, so two of them side by side read as
-     two pages rather than one smear of text. */
-  #detwrap{position:relative;overflow-x:hidden;touch-action:pan-y pinch-zoom}
-  .det.turning{background:var(--sheet);min-height:100%;box-shadow:0 0 0 1px var(--grid),0 6px 28px rgba(42,38,32,.16);will-change:transform}
-  .det.ghost{position:absolute;left:0;right:0;pointer-events:none;z-index:3}
 }
-@media (orientation:portrait) and (prefers-reduced-motion:reduce){ .cols > .col{transition:none} }
+/* The page turn (see turnPage). The pane takes vertical scrolling for
+   itself and leaves sideways movement to the page, and the page in motion
+   is a sheet with edges, so two of them side by side read as two pages
+   rather than one smear of text. */
+#detwrap{position:relative;overflow-x:hidden;touch-action:pan-y pinch-zoom}
+.det.turning{background:var(--sheet);min-height:100%;box-shadow:0 0 0 1px var(--grid),0 6px 28px rgba(42,38,32,.16);will-change:transform}
+.det.ghost{position:absolute;left:0;right:0;pointer-events:none;z-index:3}
 .banner{padding:8px 18px;background:var(--brok-soft);color:var(--warn-ink);font-size:13.5px;flex:none}
 /* the login */
 #login{position:fixed;inset:0;background:var(--paper);display:flex;align-items:center;justify-content:center;z-index:5}
@@ -318,7 +304,7 @@ button{font:inherit;color:inherit}
 
 <div id="login" hidden>
   <form id="loginForm">
-    <h2>Mark't place</h2>
+    <h2>Mark't Place</h2>
     <p>Log in with the same email and password as the One App.</p>
     <input id="email" type="email" autocomplete="username" placeholder="Email" required>
     <input id="pass" type="password" autocomplete="current-password" placeholder="Password" required>
@@ -328,8 +314,8 @@ button{font:inherit;color:inherit}
 </div>
 
 <header class="bar">
-  <button class="rd rd-list" data-drawer="1" aria-label="Show the venues and entries"></button>
-  <h1>Mark't place</h1>
+  <button class="rd rd-list" data-drawer="toggle" aria-expanded="false" aria-label="Show the venues and entries"></button>
+  <h1>Mark't Place</h1>
   <span class="meta" id="total"></span>
   <div class="grow"></div>
   <span class="rd rd-step" id="rdstep"><button data-step="-1" aria-label="Previous entry"></button><span id="rdat"></span><button data-step="1" aria-label="Next entry"></button></span>
@@ -339,13 +325,12 @@ button{font:inherit;color:inherit}
 
 <div class="cols">
   <div class="col">
-    <div class="colhead" style="justify-content:flex-start">Venues<button class="editlinks" data-editlinks="1" title="Change the scrolls' links" aria-label="Change the call documents links"></button><button class="fold" data-fold="1" title="Fold the venues away" aria-label="Fold the venues away"></button></div>
+    <div class="colhead" style="justify-content:flex-start">Venues<button class="editlinks" data-editlinks="1" title="Change the scrolls' links" aria-label="Change the call documents links"></button><span class="meta" id="vcount" style="margin-left:auto"></span></div>
     <div class="scroll" id="sites"></div>
     <div class="runbox" id="runbox"></div>
-    <button class="unfold" data-fold="0" title="Show the venues" aria-label="Show the venues"></button>
   </div>
   <div class="col">
-    <div class="colhead"><span id="listhead"></span><span class="meta" id="listcount"></span></div>
+    <div class="colhead" style="justify-content:flex-start"><span id="listhead"></span><span class="call" id="listcall"></span><span class="meta" id="listcount" style="margin-left:auto"></span></div>
     <div class="filters" id="filters"></div>
     <div class="bulk" id="bulk" hidden></div>
     <div class="scroll" id="rows"></div>
@@ -422,11 +407,10 @@ function all(path){
 var sites = [], entries = [], lastRun = null, byId = {};
 var view = { site:null, kind:'all', state:'open', q:'', id:null, tab:'fields' };
 try { Object.assign(view, JSON.parse(localStorage.getItem(VIEW) || '{}'), { q:'' }); } catch(e){}
-if (typeof view.fold !== 'boolean') view.fold = matchMedia('(pointer:coarse)').matches;
 var detail = {};          // id → { fields, page_text, versions }
 var $ = function(s){ return document.querySelector(s); };
 function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]; }); }
-function saveView(){ try { localStorage.setItem(VIEW, JSON.stringify({ site:view.site, kind:view.kind, state:view.state, id:view.id, tab:view.tab, fold:view.fold })); } catch(e){} }
+function saveView(){ try { localStorage.setItem(VIEW, JSON.stringify({ site:view.site, kind:view.kind, state:view.state, id:view.id, tab:view.tab })); } catch(e){} }
 function day(iso){ if (!iso) return ''; var d = new Date(iso);
   return d.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' }); }
 function stamp(iso){ if (!iso) return ''; var d = new Date(iso);
@@ -625,21 +609,22 @@ function arenaTags(v){
 }
 function drawSites(){
   /* No "All sites": Mark works one site at a time (2026-10-16). */
-  var h = '', typed = {}, errs = {};
+  var h = '', typed = {}, errs = {}, fresh = {};
+  entries.forEach(function(e){ if (isNew(e) && !e.removed_at) fresh[e.site] = (fresh[e.site] || 0) + 1; });
   document.querySelectorAll('[data-linkfor]').forEach(function(i){ typed[i.dataset.linkfor] = i.value; });
   document.querySelectorAll('[data-errfor]').forEach(function(d){ errs[d.dataset.errfor] = d.textContent; });
   sites.forEach(function(s, i){
     if (i === 0 || sites[i - 1]._block !== s._block)
       h += groupHead(s._block, sites.filter(function(x){ return x._block === s._block; }).length);
     if (editingLinks){
-      h += '<div class="arena editing"><div class="nm">' + esc(s.name) + '</div>'
+      h += '<div class="venue editing"><div class="nm">' + esc(s.name) + '</div>'
          + '<input type="url" spellcheck="false" data-linkfor="' + esc(s.id) + '" aria-label="Call documents link of ' + esc(s.name) + '" value="' + esc(s.id in typed ? typed[s.id] : docsOf(s.id)) + '">'
          + '<div class="err" data-errfor="' + esc(s.id) + '">' + esc(errs[s.id] || '') + '</div></div>';
       return;
     }
-    var doc = docsOf(s.id), hasNote = !!noteText(notes[s.id]);
-    h += '<div class="arena"><button class="site' + (view.site === s.id ? ' on' : '') + '" data-site="' + esc(s.id) + '">'
-       + '<div class="nm">' + esc(s.name) + '</div><div class="sub">' + esc(s.call || '') + '</div>'
+    var doc = docsOf(s.id), hasNote = !!noteText(notes[s.id]), n = fresh[s.id] || 0;
+    h += '<div class="venue"><button class="site' + (view.site === s.id ? ' on' : '') + '" data-site="' + esc(s.id) + '" title="' + esc(s.call || '') + '">'
+       + '<span class="l1"><span class="nm">' + esc(s.name) + '</span>' + (n ? '<span class="nw">' + n + ' new</span>' : '') + '</span>'
        + arenaTags(s._venue)
        + (s.last_error ? '<div class="err">Last read failed, ' + esc(stamp(s.last_error_at)) + ': ' + esc(s.last_error) + '</div>' : '')
        + '</button>'
@@ -652,18 +637,16 @@ function drawSites(){
   $('#sites').innerHTML = h;
   $('.editlinks').innerHTML = PENCIL;
   $('.editlinks').hidden = editingLinks;
-  $('.fold').innerHTML = svg(16, '<path d="M15 6l-6 6 6 6"/>');
-  $('.unfold').innerHTML = svg(16, '<path d="M9 6l6 6-6 6"/>') + '<span>Venues</span>';
-  $('.cols').classList.toggle('folded', view.fold);
   if (editingLinks && !Object.keys(typed).length){ var first = $('[data-linkfor]'); if (first) first.focus(); }
   var waiting = entries.filter(function(e){ return !e.fetched_at && !e.removed_at; }).length;
-  $('#runbox').innerHTML = (lastRun
-      ? '<b>Last check ' + esc(stamp(lastRun.ran_at)) + '</b><br>' + lastRun.added + ' new · ' + lastRun.changed + ' changed · ' + lastRun.removed + ' gone'
+  $('#runbox').innerHTML = '<span class="say">' + (lastRun
+      ? '<b>Last check ' + esc(stamp(lastRun.ran_at)) + '</b> · ' + lastRun.added + ' new · ' + lastRun.changed + ' changed · ' + lastRun.removed + ' gone'
         + (lastRun.errors ? '<br><span style="color:var(--warn-ink)">' + esc(lastRun.errors.split('\n')[0]) + '</span>' : '')
-      : '<b>Not checked yet</b><br>The copier runs every night.')
-    + (waiting ? '<br>' + waiting + ' entry pages still to copy' : '')
+      : '<b>Not checked yet.</b> The copier runs every night.')
+    + (waiting ? '<br>' + waiting + ' entry pages still to copy' : '') + '</span>'
     + '<button class="btn" id="checkNow"' + (checking ? ' disabled>' + esc(checking) : '>Check now') + '</button>';
   $('#total').textContent = entries.length ? entries.length + ' entries on ' + sites.length + ' venues' : '';
+  $('#vcount').textContent = sites.length || '';
 }
 function drawFilters(){
   function chips(list, key){ return list.map(function(c){
@@ -673,6 +656,7 @@ function drawFilters(){
 function drawRows(){
   var s = sites.find(function(x){ return x.id === view.site; });
   $('#listhead').textContent = s ? s.name : '';
+  $('#listcall').textContent = s ? s.call || '' : '';
   var list = shown();
   $('#listcount').textContent = list.length + ' shown';
   drawStep();
@@ -696,7 +680,7 @@ function drawRows(){
       + '" data-id="' + esc(e.id) + '" role="button" tabindex="0">'
       + '<button class="pick" data-pick="' + esc(e.id) + '" aria-pressed="' + picked + '" aria-label="Select">' + (picked ? '✓' : '') + '</button>'
       + '<span class="dot ' + (isNew(e) ? 'new' : 'seen') + '"></span><span style="min-width:0">'
-      + '<div class="t">' + esc(title(e)) + '</div><div class="o">' + esc(sub) + '</div>'
+      + '<div class="t">' + esc(title(e)) + '</div>' + (e.list_text ? '<div class="lt">' + esc(e.list_text.split('\n')[0]) + '</div>' : '') + '<div class="o">' + esc(sub) + '</div>'
       + '<div class="tags">' + kindTag(e.kind) + stateTags(e) + '</div></span></div>';
   }).join('');
   drawBulk();
@@ -803,11 +787,10 @@ function drawStep(){
   $('[data-step="1"]').disabled = i < 0 || i >= list.length - 1;
 }
 function drawDetail(){
-  $('.cols').classList.toggle('noting', !!view.note);
   drawStep();
   if (view.note) return drawNote();
   var e = byId[view.id];
-  if (!e){ $('#det').innerHTML = entries.length ? '<div class="empty">Choose an entry on the left.</div>' : ''; return; }
+  if (!e){ $('#det').innerHTML = entries.length ? '<div class="empty">Press Entries, at the top left, to choose an entry.</div>' : ''; return; }
   var s = siteOf(e), d = detail[e.id];
   var meta = [s.name, e.country, e.posted ? 'posted ' + e.posted.slice(0, 10) : null, 'first seen ' + day(e.first_seen)].filter(Boolean).join(' · ');
   var h = '<div class="dhead"><div style="flex:1;min-width:0"><div class="tags">' + kindTag(e.kind)
@@ -866,12 +849,12 @@ function patchMany(list, vals){
       .catch(function(err){ $('#banner').textContent = 'Not saved: ' + err.message; $('#banner').hidden = false; });
   }
 }
-var upright = matchMedia('(orientation:portrait)'), still = matchMedia('(prefers-reduced-motion: reduce)');
+var still = matchMedia('(prefers-reduced-motion: reduce)');
 function step(d, fromX){
   var list = shown(), i = list.findIndex(function(e){ return e.id === view.id; });
   var n = list[Math.max(0, Math.min(list.length - 1, i + d))];
   if (n && n.id !== view.id){
-    if (upright.matches && !still.matches) turnPage(n.id, d, fromX || 0); else openEntry(n.id);
+    if (!still.matches) turnPage(n.id, d, fromX || 0); else openEntry(n.id);
     return true;
   }
   return false;
@@ -918,7 +901,9 @@ function turnPage(id, d, fromX){
   }); });
 }
 function drawer(open){
+  if (open === 'toggle') open = !document.body.classList.contains('drawer');
   document.body.classList.toggle('drawer', open);
+  $('.rd-list').setAttribute('aria-expanded', String(open));
   if (open){ var row = document.querySelector('.row.on'); if (row) row.scrollIntoView({ block:'center' }); }
 }
 function openEntry(id){
@@ -1108,18 +1093,17 @@ function checkNow(btn){
 }
 
 document.addEventListener('click', function(ev){
-  var t = ev.target.closest('[data-pick],[data-bulk],[data-site],[data-id],[data-state],[data-kind],[data-tab],[data-verdict],[data-editlinks],[data-savelinks],[data-cancellinks],[data-callnote],[data-fold],[data-drawer],[data-step],#checkNow');
+  var t = ev.target.closest('[data-pick],[data-bulk],[data-site],[data-id],[data-state],[data-kind],[data-tab],[data-verdict],[data-editlinks],[data-savelinks],[data-cancellinks],[data-callnote],[data-drawer],[data-step],#checkNow');
   if (!t) return;
-  if (t.dataset.drawer) return drawer(t.dataset.drawer === '1');
+  if (t.dataset.drawer) return drawer(t.dataset.drawer === 'toggle' ? 'toggle' : t.dataset.drawer === '1');
   if (t.dataset.step) return step(+t.dataset.step);
   /* In the reader, choosing what to read puts the list away again. */
-  if (upright.matches && (t.dataset.callnote || (t.dataset.id && !t.dataset.pick && !(ev.ctrlKey || ev.metaKey || ev.shiftKey)))) drawer(false);
+  if ((t.dataset.callnote || (t.dataset.id && !t.dataset.pick && !(ev.ctrlKey || ev.metaKey || ev.shiftKey)))) drawer(false);
   if (t.id === 'checkNow') return checkNow(t);
   if (t.dataset.editlinks) return editLinks();
   if (t.dataset.savelinks) return saveLinks();
   if (t.dataset.cancellinks) return cancelLinks();
   if (t.dataset.callnote) return openNote(t.dataset.callnote);
-  if (t.dataset.fold){ view.fold = t.dataset.fold === '1'; saveView(); return drawSites(); }
   if (t.dataset.pick) pick(t.dataset.pick, ev.shiftKey);
   else if (t.dataset.bulk) bulk(t.dataset.bulk);
   else if (t.dataset.site){ view.site = t.dataset.site; view.note = null; sel.clear(); regroup(); saveView(); draw(); }
@@ -1156,7 +1140,7 @@ function springBack(){
   setTimeout(function(){ if (!turning){ det.classList.remove('turning'); det.style.transition = ''; det.style.transform = ''; } }, 260);
 }
 $('#detwrap').addEventListener('touchstart', function(ev){
-  swipe = upright.matches && !view.note && view.id && ev.touches.length === 1 && !ev.target.closest('.actions,input,[contenteditable]')
+  swipe = !view.note && view.id && ev.touches.length === 1 && !ev.target.closest('.actions,input,[contenteditable]')
     ? { x:ev.touches[0].clientX, y:ev.touches[0].clientY, t:Date.now(), axis:null, dx:0 } : null;
 }, { passive:true });
 $('#detwrap').addEventListener('touchmove', function(ev){
@@ -1184,7 +1168,6 @@ function letGo(ev){
 }
 $('#detwrap').addEventListener('touchend', letGo);
 $('#detwrap').addEventListener('touchcancel', letGo);
-upright.addEventListener('change', function(){ if (!upright.matches) drawer(false); });
 $('#search').addEventListener('input', function(){ view.q = this.value; drawRows(); });
 /* The keys: ↑ ↓ walk the list, I L B answer the open entry (or all the
    picked ones), X picks the open entry, Esc lets go of the picked ones.
@@ -1200,7 +1183,7 @@ document.addEventListener('keydown', function(ev){
   /* With a call's notes open no entry is on screen, so the letters that
      answer an entry would answer one Mark cannot see. */
   if (view.note && /^[ilbx]$/i.test(k)) return;
-  if (k === 'ArrowDown' || k === 'ArrowUp' || (upright.matches && (k === 'ArrowRight' || k === 'ArrowLeft'))){
+  if (k === 'ArrowDown' || k === 'ArrowUp' || k === 'ArrowRight' || k === 'ArrowLeft'){
     if (view.note) return;
     if (step(k === 'ArrowDown' || k === 'ArrowRight' ? 1 : -1)) ev.preventDefault();
   } else if (k === 'Escape' && document.body.classList.contains('drawer')){
