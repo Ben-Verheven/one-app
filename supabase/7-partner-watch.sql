@@ -41,6 +41,9 @@ create table if not exists partner_sites (
 -- on its site at the copier's first reading are kept as seen before he
 -- watched (`before_watch` on the entry), never copied whole and never shown.
 alter table partner_sites add column if not exists new_only boolean not null default false;
+-- A venue Mark wants from a first day on (2026-10-17): an entry its site
+-- says was posted before `shown_from` is kept the same way, unshown.
+alter table partner_sites add column if not exists shown_from date;
 alter table partner_sites drop constraint if exists partner_sites_platform_check;
 alter table partner_sites add constraint partner_sites_platform_check
   check (platform in ('epss','ptj','b2match'));
@@ -75,6 +78,10 @@ insert into partner_sites (id, name, call, list_url, platform, sort, new_only) v
   ('greenettool','GREENET tool',             'Standing partner search',
    'https://greenet-partner-search-tool.b2match.io/components/27120', 'b2match', 13, true)
 on conflict (id) do nothing;
+insert into partner_sites (id, name, call, list_url, platform, sort, shown_from) values
+  ('cluster2',   'Cluster 2 community',      'Standing partner search, entries from 1 September 2026',
+   'https://cluster2-community-platform.b2match.io/components/26012', 'b2match', 14, '2026-09-01')
+on conflict (id) do nothing;
 -- Advanced Digital Tech was first given its participant list, component
 -- 70907, read off the event while logged out, where its menu is hidden; the
 -- copier then answered "list not found" (2026-10-17). The `insert` above
@@ -97,7 +104,7 @@ create table if not exists partner_entries (
   country     text,
   topic       text,
   keywords    text,
-  posted      text,                         -- 'YYYY-MM-DD HH:MM', German time; only the PtJ sites say when
+  posted      text,                         -- 'YYYY-MM-DD HH:MM': German time on the PtJ sites, UTC on b2match; the others do not say
   list_text   text,                         -- the line the list shows
   fields      jsonb,                        -- the entry page's own [label, value] pairs, in order
   page_text   text,                         -- the entry page's whole text, as copied
@@ -207,7 +214,7 @@ select cron.schedule('partner-watch-copier', '*/10 0-4 * * *', $job$
 $job$);
 
 -- ── 5. the check ──────────────────────────────────────────────────────
--- Thirteen sites, the schedule, and rules on every table.
+-- Fourteen sites, the schedule, and rules on every table.
 select (select count(*) from partner_sites)                              as sites,
        (select count(*) from cron.job where jobname = 'partner-watch-copier') as scheduled,
        (select bool_and(c.relrowsecurity) from pg_class c

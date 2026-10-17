@@ -164,7 +164,7 @@ function parsePtjDetail(html) {
 // only a new row in partner_sites, as long as Mark is registered for it.
 // Tested on both events on 2026-10-17.
 const B2M_API = "https://www.b2match.com/b2md-api/v4/query";
-const B2M_ENTRY = `id title type updatedAt shortDescription description
+const B2M_ENTRY = `id title type createdAt updatedAt shortDescription description
   author{... on Participant{organisationName location{city country{name}} user{firstName lastName jobPosition}}}
   elements{widget{subtype} value{... on MarketplaceClassifierConnection{nodes{name}}}}`;
 const B2M_LIST = `query($e:String!,$p:URI!,$a:String,$f:Int!,$o:OpportunityOrderBy){eventByEuidV2(euid:$e){... on Event{routeByPath(path:$p){__typename
@@ -191,22 +191,26 @@ const unmark = (t) => {
 // The number inside the site's id ("ParticipationOpportunity:244594"),
 // which counts upwards as entries are made, like the other platforms'.
 const b2mNumber = (id) => (atob(id).match(/(\d+)$/) || [])[1];
+// A date as the site gives it, in UTC, as 'YYYY-MM-DD HH:MM'.
+const b2mWhen = (t) => t ? String(t).replace("T", " ").slice(0, 16) : null;
 // Seeks or offers, from the event's own words for it, which differ per
-// event and sit under Kind (DUT) or Stage (EP PerMed); one that says both
+// event and sit under Kind (DUT), Stage (EP PerMed) or Need (the Cluster 2
+// community platform: "Partners for an existing consortium" and "A
+// consortium to join as partner"); one that says both
 // counts as seeking. The Horizon Europe brokerages say "Consortium seeks
 // Partners" (CL4 Digital "partner(s)") and "Partner seeks Consortium"
 // (Nature "Coordinator looking for partners" and "Partner looking for
 // consortium"), and give an offer of expertise the type Expertize, spelt so.
 const b2mKind = (g, type) => {
-  const said = `${g.Kind ?? ""} ${g.Stage ?? ""}`;
-  return /looking for (an? )?(additional )?partners?|seeking partners|seeks partner/i.test(said) || /request/i.test(type) ? "seeks"
-    : /looking to join|contribute .*with my expertise|offer|seeks consortium|looking for (an? )?consortium/i.test(said) || /experti[sz]e|service|product/i.test(type) ? "offers" : null;
+  const said = `${g.Kind ?? ""} ${g.Stage ?? ""} ${g.Need ?? ""}`;
+  return /looking for (an? )?(additional )?partners?|seeking partners|seeks partner|partners for an existing/i.test(said) || /request/i.test(type) ? "seeks"
+    : /looking to join|contribute .*with my expertise|offer|seeks consortium|looking for (an? )?consortium|consortium to join/i.test(said) || /experti[sz]e|service|product/i.test(type) ? "offers" : null;
 };
 const b2mGroups = (elements) => {
   const out = {};
   for (const el of elements ?? []) {
     const sub = String(el?.widget?.subtype ?? "").split("::").pop();
-    if (/^(Kind|Topic|Stage|Call)$/.test(sub)) out[sub] = (el.value?.nodes ?? []).map((c) => c?.name).filter(Boolean).join("; ");
+    if (/^(Kind|Need|Topic|Stage|Call)$/.test(sub)) out[sub] = (el.value?.nodes ?? []).map((c) => c?.name).filter(Boolean).join("; ");
   }
   return out;
 };
@@ -284,9 +288,9 @@ async function b2mPages(ask, link) {
         const who = `${x.author?.user?.firstName ?? ""} ${x.author?.user?.lastName ?? ""}`.trim();
         out.push({
           ext_id: ext, url: link(x.id), contact: who || null,
-          kind: b2mKind(g, x.type), looking_raw: g.Kind ?? "",
+          kind: b2mKind(g, x.type), looking_raw: g.Kind ?? g.Need ?? "",
           country: x.author?.location?.country?.name ?? null, org: x.author?.organisationName || null,
-          topic: g.Topic || null, keywords: null, posted: null,
+          topic: g.Topic || null, keywords: null, posted: b2mWhen(x.createdAt),
           list_text: [x.title, x.shortDescription].map(flat).filter(Boolean).join("\n"),
         });
       }
@@ -319,7 +323,7 @@ function b2mEntry(o) {
   const who = o.author ?? {}, user = who.user ?? {}, loc = who.location ?? {}, g = b2mGroups(o.elements);
   const fields = [
     ["Title", flat(o.title)],
-    ["Looking for", g.Kind ?? ""],
+    ["Looking for", g.Kind ?? g.Need ?? ""],
     ["Short description", flat(o.shortDescription)],
     ["Description", unmark(o.description)],
     ["Topic", g.Topic ?? ""],
@@ -330,7 +334,7 @@ function b2mEntry(o) {
     ["Organisation name", flat(who.organisationName)],
     ["City", flat(loc.city)],
     ["Country", flat(loc.country?.name)],
-    ["Last updated on the site", String(o.updatedAt ?? "").replace("T", " ").slice(0, 16)],
+    ["Last updated on the site", b2mWhen(o.updatedAt) ?? ""],
   ];
   return { fields, text: fields.filter(([, v]) => v).map(([l, v]) => `${l}\n${v}`).join("\n\n") };
 }
@@ -528,6 +532,11 @@ async function readList(site, now) {
   // shown (Mark, 2026-10-17, for CL4 Digital's 658 and the GREENET
   // tool's 576: "don't add the entries, only update them with new ones").
   const baseline = site.new_only && !site.listed_at;
+  // A venue with a first day (`shown_from`) takes an entry the site says
+  // was posted before it the same way, at any reading (Mark, 2026-10-17,
+  // for the Cluster 2 platform's 1,159 entries going back to 2022: "from
+  // September 1, not before"). An entry whose site gives no date is shown.
+  const early = (r) => !!(site.shown_from && r.posted && r.posted.slice(0, 10) < site.shown_from);
 
   const added = [], changed = [], seen = [], ids = new Set();
   for (const r of rows) {
@@ -540,7 +549,10 @@ async function readList(site, now) {
     for (const k of ["kind", "contact", "org", "country", "topic", "keywords", "posted", "list_text"])
       if (r[k] != null && r[k] !== "") base[k] = r[k];
     const old = have.get(id);
-    if (!old) added.push({ id, ...base, first_seen: now, last_seen: now, needs_fetch: !baseline, before_watch: baseline });
+    if (!old) {
+      const before = baseline || early(r);
+      added.push({ id, ...base, first_seen: now, last_seen: now, needs_fetch: !before, before_watch: before });
+    }
     else if ((old.list_text ?? "") !== (r.list_text ?? "") || old.removed_at)
       changed.push({ id, ...base, last_seen: now, removed_at: null, needs_fetch: !old.before_watch });
     else seen.push(id);
@@ -567,7 +579,7 @@ async function readList(site, now) {
   await db.from("partner_sites").update({
     listed_at: now, list_count: ids.size, last_error: null, last_error_at: null,
   }).eq("id", site.id);
-  return { listed: ids.size, added: baseline ? 0 : added.length, removed: gone.length };
+  return { listed: ids.size, added: added.filter((e) => !e.before_watch).length, removed: gone.length };
 }
 
 async function copyEntry(e, platform, now) {
