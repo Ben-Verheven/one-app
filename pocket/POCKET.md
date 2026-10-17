@@ -1,7 +1,7 @@
 # Pocket — how to change it
 
-`pocket/index.html` is the phone companion of One App's **Marketplace room only** (the Semaphore
-until 2026-10-14) — made to open in an idle minute instead of the news. It is dressed like the desk's
+`pocket/index.html` is the phone companion of One App's **Brokerage Semaphore room only** (the Marketplace until 2026-10-17, the
+Semaphore until 2026-10-14) — made to open in an idle minute instead of the news. It is dressed like the desk's
 room. Two tabs, Now and Leads (the Rotation and Coming up went on 2026-10-14, when the room was
 rebuilt around venues; PROJECT.md says what a venue is):
 

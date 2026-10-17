@@ -104,6 +104,7 @@ html.oa-veiled #oa-title{opacity:.14; pointer-events:none}
   transition:color .16s ease, opacity .2s ease;
 }
 #oa-title.home{cursor:pointer}
+#oa-title.oa-squeezed{display:none}
 #oa-title.home:hover{color:var(--oa-title-hi)}
 
 /* whatever each app used to call itself, it no longer says it twice */

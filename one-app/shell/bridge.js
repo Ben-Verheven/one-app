@@ -383,7 +383,7 @@
   function showArena(aid) {
     var api = Hub.api('semaphore');
     if (!Hub.pane('semaphore') || !api.openArena) {
-      Hub.note('The Marketplace did not start — see the console'); return;
+      Hub.note('The Brokerage Semaphore did not start — see the console'); return;
     }
     lendArena();
     try { api.openArena(aid); }
@@ -452,10 +452,10 @@
      the width shell.css reserves for it: adding a room here means moving
      the two numbers named at #oa-ring. */
 
-  var ROOMS = [{"id": "ledger", "label": "Proposal Ledger", "sub": "proposals in flight"}, {"id": "semaphore", "label": "Marketplace", "sub": "venues, visits and leads"}, {"id": "callboard", "label": "Call Board", "sub": "Horizon Europe 2026\u201327"}, {"id": "atlas", "label": "Researcher Atlas", "sub": "researcher atlas"}, {"id": "notes", "label": "Notes", "sub": "a shelf that files itself"}];
+  var ROOMS = [{"id": "ledger", "label": "Proposal Ledger", "sub": "proposals in flight"}, {"id": "semaphore", "label": "Brokerage Semaphore", "sub": "venues, visits and leads"}, {"id": "callboard", "label": "Call Board", "sub": "Horizon Europe 2026\u201327"}, {"id": "atlas", "label": "Researcher Atlas", "sub": "researcher atlas"}, {"id": "notes", "label": "Notes", "sub": "a shelf that files itself"}];
   /* what each room calls itself in the bar now */
   var TITLES = {
-    ledger: 'Proposal Ledger', semaphore: 'Marketplace',
+    ledger: 'Proposal Ledger', semaphore: 'Brokerage Semaphore',
     callboard: 'Call Board', atlas: 'Researcher Atlas', notes: 'Notes'
   };
   /* per room: the element that carries the bar, and the wordmark to hide
@@ -585,9 +585,19 @@
     if (!bar) return;
     /* measure whichever of the two is actually on screen — the name is
        dropped on narrow screens and the glyph line carries the room */
+    titleEl.classList.remove('oa-squeezed');
     var anchor = titleEl.offsetWidth ? titleEl : ring;
     var clear = Math.round(anchor.getBoundingClientRect().right + 22);
     bar.style.setProperty('padding-left', clear + 'px', 'important');
+    /* A name too long for the room's bar goes too, as on a tablet: the
+       Brokerage Semaphore (the Marketplace until 2026-10-17) pushed its
+       bar's last buttons past the edge of a 1280-pixel window, where the
+       shorter name had fitted. The glyph line carries the room then. */
+    if (titleEl.offsetWidth && bar.scrollWidth > bar.clientWidth + 1) {
+      titleEl.classList.add('oa-squeezed');
+      clear = Math.round(ring.getBoundingClientRect().right + 22);
+      bar.style.setProperty('padding-left', clear + 'px', 'important');
+    }
     /* the same measurement, for the ground the line of rooms stands on */
     document.documentElement.style.setProperty('--oa-clear', clear + 'px');
   }
@@ -1295,7 +1305,7 @@
     })();
   }
 
-  roomCloud({ room: 'semaphore', name: 'Marketplace', row: 'semaphore',
+  roomCloud({ room: 'semaphore', name: 'Brokerage Semaphore', row: 'semaphore',
               key: 'semaphore.v1', things: 'arenas', ui: ['ui'], merge: true,
               pane: 'pane-semaphore', chip: 'semcloud' });
 
@@ -1900,7 +1910,7 @@
   Hub.on('leads:excel', function (o) {
     var data;
     try { data = read(); } catch (e) { console.error(e); }
-    if (!data) { Hub.note('The leads could not be read — is the Marketplace running?'); return; }
+    if (!data) { Hub.note('The leads could not be read — is the Brokerage Semaphore running?'); return; }
     var seen = null;
     try { seen = JSON.parse(localStorage.getItem(SEEN) || 'null'); } catch (e) {}
     var out;

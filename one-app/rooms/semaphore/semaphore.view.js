@@ -8,7 +8,7 @@ Hub.markup('semaphore', `
 
 <header class="top">
   <div class="mark">
-    <h1><i class="markglyph"></i>Marketplace</h1>
+    <h1><i class="markglyph"></i>Brokerage Semaphore</h1>
   </div>
   <div class="grow"></div>
   <!-- Venues and Board (2026-10-15). Everything lands on the Board first,

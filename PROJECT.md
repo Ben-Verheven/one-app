@@ -410,9 +410,12 @@ a researcher's name written anywhere is `.atlas-ref`.
 | the contribution tracker, over the board | `.ct-sheet` |
 | any box that opens over the room | the `pf-` family — `pf-host`, `pf-box`, `pf-head`, `pf-body`, `pf-foot` |
 
-**The Marketplace** — the Semaphore until 2026-10-14, and still
-`semaphore` in the code: its pane, its files, its store and its cloud row
-kept the name, so nothing stored had to move.
+**The Brokerage Semaphore** — the Semaphore until 2026-10-14, the
+Marketplace until 2026-10-17, when Mark named it back so that it is not
+taken for Mark't Place, and always `semaphore` in
+the code: its pane, its files, its store and its cloud row kept the name,
+so nothing stored had to move. Most documents here still say the
+Marketplace; it is the same room.
 
 | on screen | in the code |
 |---|---|

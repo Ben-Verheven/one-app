@@ -680,7 +680,7 @@ input[type="search"]:focus{outline:none;border-color:var(--key)}
 
 <div id="setup">
   <h2>Connect</h2>
-  <p>Pocket reads the same Supabase project the Marketplace syncs to.
+  <p>Pocket reads the same Supabase project the Brokerage Semaphore syncs to.
      Log in with the email and password you use in One App.</p>
   <div class="err" id="setup-err"></div>
   <!-- The two values are Pocket's own since 2026-10-10 (BUILT_IN), so this
@@ -1696,7 +1696,7 @@ function pull(){
   /* Semaphore only: the Ledger's row is not read at all any more */
   return rest('app_state?id=eq.semaphore&select=id,data')
     .then(function(rows){
-      if (!rows || !rows.length){ stamp('no Marketplace row in the cloud'); return; }
+      if (!rows || !rows.length){ stamp('no Brokerage Semaphore row in the cloud'); return; }
       var r = rows[0];
       data.semaphore = typeof r.data === 'string' ? JSON.parse(r.data) : r.data;
       data.at = new Date().toISOString();

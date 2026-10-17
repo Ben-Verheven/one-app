@@ -1360,7 +1360,7 @@ function renderDispatch(){
       '<button class="btn ghost" data-act="findRefresh"'+(finds.all?' disabled':'')+
         '>Check again</button>');
   if(!finds.rows.length){
-    el.innerHTML=head+'<p class="dpnote">The Marketplace agent works when you ask it to, from a Claude '+
+    el.innerHTML=head+'<p class="dpnote">The room\u2019s agent (the task called Marketplace agent) works when you ask it to, from a Claude '+
       'session, and changes the board itself: venues, their dates and websites, call dates, links and the '+
       'About and Brokerage texts. What it changed is in its own report. Only a new arena it suggests waits here.</p>';
     return;
@@ -2104,7 +2104,7 @@ function nowAxisHTML(sp){
 }
 function nowEmptyHTML(){
   if(!S.arenas.length&&!(S.venues||[]).length)
-    return '<div class="empty"><p>Nothing in the Marketplace yet.</p>'+
+    return '<div class="empty"><p>Nothing in the Brokerage Semaphore yet.</p>'+
       '<p class="hint" style="margin-top:6px">Add a venue, or an arena first,<br>or load the example set to see how it reads.</p>'+
       '<div class="btns"><button class="btn primary" data-act="vNew">+ Venue</button>'+
       '<button class="btn" data-act="addArena">+ Arena</button>'+
