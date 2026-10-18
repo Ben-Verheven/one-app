@@ -290,6 +290,132 @@ body.drawer .rd-list{background:var(--sel);border-color:var(--key)}
 .det.turning{background:var(--sheet);min-height:100%;box-shadow:0 0 0 1px var(--grid),0 6px 28px rgba(42,38,32,.16);will-change:transform}
 .det.ghost{position:absolute;left:0;right:0;pointer-events:none;z-index:3}
 .banner{padding:8px 18px;background:var(--brok-soft);color:var(--warn-ink);font-size:13.5px;flex:none}
+/* ── the Semaphore's slide-ins (see openPanel) ───────────────────────
+   The venue's name and the arena's tags say they open something of their
+   own, apart from the row that chooses the venue. The panel is the
+   Semaphore's: 404 px from the right edge, over the drawer and the entry
+   alike, the rest veiled; a press on the veil, ✕ or Esc puts it away. */
+.site .nm[data-mvenue]:hover{text-decoration:underline;text-decoration-color:var(--line2);text-underline-offset:3px}
+.site .tag[data-marena]:hover{background:color-mix(in srgb,var(--tone) 46%,var(--paper))}
+.mscrim{position:absolute;inset:0;z-index:5;background:rgba(42,38,32,.28);visibility:hidden;opacity:0;transition:opacity .24s ease,visibility 0s linear .24s}
+.mpanel{position:absolute;top:0;right:0;bottom:0;width:404px;max-width:94vw;z-index:6;display:flex;flex-direction:column;
+  background:var(--sheet);border-left:1px solid var(--line2);box-shadow:-10px 0 28px rgba(42,38,32,.2);
+  transform:translateX(105%);visibility:hidden;transition:transform .3s cubic-bezier(.22,.72,.24,1),visibility 0s linear .3s}
+.mpanel:focus{outline:none}
+body.mopen .mscrim{visibility:visible;opacity:1;transition:opacity .24s ease,visibility 0s}
+body.mopen .mpanel{transform:none;visibility:visible;transition:transform .3s cubic-bezier(.22,.72,.24,1),visibility 0s}
+@media (prefers-reduced-motion:reduce){ .mscrim,.mpanel,body.mopen .mscrim,body.mopen .mpanel{transition:none} }
+.mbody{flex:1;overflow-y:auto;overflow-x:hidden;padding:24px 26px 22px}
+.mhead{position:relative;padding-right:26px}
+.mhead h2{font:400 20px/1.3 var(--serif);letter-spacing:.03em;margin:0}
+.mx{position:absolute;top:-4px;right:-8px;border:0;background:none;color:var(--faint);font-size:15px;line-height:1;padding:5px 7px;border-radius:6px;cursor:pointer}
+.mx:hover{color:var(--ink);background:var(--hover)}
+.mkind,.mmeta{margin:0 0 5px;font:600 9.5px var(--serif);letter-spacing:.16em;text-transform:uppercase;color:var(--faint)}
+.mmeta{margin:7px 0 0}
+.mdoubt{display:inline-block;font:600 12px/18px var(--serif);width:18px;text-align:center;border-radius:50%;background:var(--gold-soft);color:var(--gold-ink);vertical-align:2px;cursor:help}
+.mrow{display:flex;align-items:center;gap:10px;margin-top:11px}
+.mgo{border:1px solid var(--line2);border-radius:var(--radius);padding:3px 10px;color:var(--key2);font:13px var(--mono);text-decoration:none;white-space:nowrap}
+.mgo:hover{border-color:var(--key);background:var(--hover)}
+.mlast{font:11.5px var(--mono);color:var(--muted)}
+.mplace{margin:14px 0 4px;padding:9px 12px;border:1px solid var(--line);border-radius:var(--radius);font:13px/1.45 var(--body);color:var(--muted)}
+.mplace b{font:600 9.5px var(--serif);letter-spacing:.16em;text-transform:uppercase;color:var(--ink);margin-right:8px}
+.mplace.st-new{border-color:var(--new-line);background:var(--new-soft)}
+.mplace.st-new b{color:var(--new-ink)}
+.mplace i{font-style:italic}
+.mps{margin-top:18px}
+.mph{display:flex;align-items:baseline;gap:9px;margin:0 0 7px;padding-bottom:5px;border-bottom:1px solid var(--grid);
+  font:600 9.5px var(--serif);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.mph i{font:italic 12.5px var(--body);letter-spacing:0;text-transform:none;color:var(--faint)}
+.mnone{font:italic 13px var(--body);color:var(--faint);margin:0}
+.mtext{margin:0;font-size:13.5px;line-height:1.6;color:var(--muted);white-space:pre-wrap;overflow-wrap:anywhere}
+.mlink{border:0;background:none;padding:0;text-align:left;color:var(--ink);cursor:pointer;text-decoration:underline;text-decoration-color:var(--line2);text-underline-offset:3px}
+.mlink:hover{text-decoration-color:var(--ink)}
+/* the window: its band shaded by how much goes on, the event days a
+   diamond, today the gold line */
+.mlife{position:relative;height:62px;margin:6px 6px 2px}
+.mlife > *{position:absolute}
+.max{left:0;right:0;top:28px;height:1px;background:var(--line)}
+.mband{top:28px;height:12px;transform:translateY(-50%);min-width:6px;border-radius:4px;border:1px solid rgba(194,56,44,.7)}
+.mband.st-new{border-color:var(--new-line)}
+.mband.st-board{border-color:var(--line2)}
+.mband.season{border-style:dashed}
+.mband.past{border-color:var(--line)}
+.mband.openl{border-left:none;border-radius:0 4px 4px 0;-webkit-mask-image:linear-gradient(90deg,transparent,#000 30px);mask-image:linear-gradient(90deg,transparent,#000 30px)}
+.mband.openr{border-right:none;border-radius:4px 0 0 4px;-webkit-mask-image:linear-gradient(270deg,transparent,#000 30px);mask-image:linear-gradient(270deg,transparent,#000 30px)}
+.mrun{top:28px;transform:translateY(-50%);margin-left:3px;font:11px/1 var(--mono);color:var(--muted)}
+.mmeet{top:28px;height:4px;transform:translateY(-50%);background:var(--brok);border-radius:2px}
+.mdia{top:28px;width:10px;height:10px;margin-left:-5px;transform:translateY(-50%) rotate(45deg);background:var(--brok);box-shadow:0 0 0 2px var(--sheet)}
+.mdia.unc{background:var(--sheet);border:1.5px dashed var(--brok)}
+.mdia.past{background:var(--faint)}
+.mnow{top:16px;bottom:16px;width:2px;margin-left:-1px;background:var(--gold)}
+.mlt{top:38px;transform:translateX(-50%);font:10.5px/1.25 var(--mono);color:var(--muted);text-align:center;white-space:nowrap}
+.mlt.up{top:0}
+.mlt.now{color:var(--gold-ink)}
+.mdl{display:grid;grid-template-columns:96px minmax(0,1fr);gap:4px 12px;margin:10px 0 0;font-size:13.5px}
+.mdl dt{font:11px var(--mono);color:var(--muted);padding-top:2px}
+.mdl dd{margin:0}
+.mdl dd i{color:var(--faint)}
+.mvis{display:grid;grid-template-columns:56px 92px minmax(0,1fr);gap:8px;align-items:baseline;padding:5px 0;border-bottom:1px solid var(--grid);font-size:13.5px}
+.mvd{font:11.5px var(--mono);color:var(--muted)}
+.mgot{justify-self:start;padding:3px 6px 2px;border-radius:3px;font:600 8.5px/1.2 var(--serif);letter-spacing:.12em;text-transform:uppercase;background:var(--sel);color:var(--muted)}
+.mgot.something{background:var(--new-soft);color:var(--new-ink)}
+.mgot.lead{background:var(--brok-soft);color:var(--brok-ink)}
+.mvt{min-width:0;overflow-wrap:anywhere}
+.mlead{display:flex;flex-direction:column;align-items:flex-start;margin:0;padding:4px 0}
+.mlead i{font:italic 12.5px var(--body);color:var(--faint)}
+.mchips{display:flex;flex-wrap:wrap;gap:6px}
+.mchip{padding:1px 9px 2px 7px;border:0;border-left:3px solid var(--tone,var(--line2));border-radius:0 var(--radius) var(--radius) 0;cursor:pointer;
+  background:color-mix(in srgb,var(--tone,#7D7466) 30%,var(--sheet));font:italic 14px/1.45 var(--body);color:var(--ink)}
+.mchip:hover{background:color-mix(in srgb,var(--tone,#7D7466) 46%,var(--sheet))}
+.mpg{padding:3px 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mpg a,.mlinks a{color:var(--ink);text-decoration:none}
+.mpg a:hover,.mlinks a:hover{text-decoration:underline}
+.mfoot{flex:none;padding:10px 26px;border-top:1px solid var(--line);background:var(--panel);font:italic 12.5px var(--body);color:var(--muted)}
+/* an arena: the Semaphore's cards, About plain, Brokerage and Venues
+   under a band of the brokerage red */
+.mblocks{display:flex;flex-direction:column;gap:10px;margin-top:16px}
+.mcard{border:1px solid var(--line);border-radius:var(--radius);background:var(--field);overflow:hidden}
+.mcard > .mtext{padding:10px 12px 8px}
+.mchd{margin:0;padding:9px 12px;border-bottom:1px solid var(--grid);background:var(--panel);font:600 9.5px var(--serif);letter-spacing:.16em;text-transform:uppercase;color:var(--ink)}
+.mcard.brok > .mchd{background:var(--brok-soft);color:var(--brok-ink)}
+.mlinks{display:flex;flex-direction:column;padding:4px 12px 9px;font-size:13.5px}
+.mlinks a{padding:2px 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mav{display:grid;grid-template-columns:14px minmax(0,1fr);gap:9px;align-items:center;margin:0 12px;padding:7px 0;border-bottom:1px solid var(--grid)}
+.mav:last-child{border-bottom:none}
+.mavt{display:flex;flex-direction:column;align-items:flex-start;min-width:0;font-size:14px}
+.mavt i{font:italic 12px var(--body);color:var(--faint)}
+.mav.over .mlink{color:var(--muted)}
+.mgl{justify-self:center}
+.mgl.ev{width:8px;height:8px;transform:rotate(45deg);background:var(--brok)}
+.mgl.ev.unc{background:none;border:1.5px dashed var(--brok)}
+.mgl.win{width:12px;height:5px;border-radius:3px;background:linear-gradient(90deg,rgba(194,56,44,.3),rgba(194,56,44,.8))}
+.mlead2{display:flex;align-items:baseline;gap:10px;margin:0 12px;padding:6px 0;border-bottom:1px solid var(--grid);font-size:14px}
+.mlead2 span{flex:1;min-width:0}
+.mlead2 i{font:italic 12px var(--body);color:var(--faint)}
+.mcard > .mnone{padding:8px 12px}
+/* its dates, one stream down a line, as in the Semaphore's panel; a past
+   one in quieter ink, not fainter */
+.mstream{position:relative;margin-top:20px;padding-top:6px;border-top:1px solid var(--line)}
+.mstream::before{content:"";position:absolute;left:113px;top:12px;bottom:6px;width:1px;background:var(--line)}
+.mln{position:relative;display:flex;align-items:baseline;gap:10px;padding:7px 0;--c:var(--call)}
+.mln.r-announcement{--c:#137F9B}
+.mln.r-deadline{--c:#A32E87}
+.mln.brok{--c:var(--brok)}
+.md{flex:0 0 96px;text-align:right;font:11.5px/1.45 var(--mono);color:var(--brok-ink)}
+.md.unc{font-style:italic}
+.mg{flex:none;width:9px;height:9px;transform:rotate(45deg);background:var(--c);box-shadow:0 0 0 3px var(--sheet);position:relative;z-index:1}
+.mg.unc{background:var(--sheet);border:1.5px dashed var(--c)}
+.mt{min-width:0;font-size:14px;overflow-wrap:anywhere}
+.mt a{display:block;font:11px var(--mono);color:var(--muted);text-decoration:none}
+.mt a:hover{text-decoration:underline}
+.mstage{display:block;margin-top:2px;font:600 9px var(--serif);letter-spacing:.13em;text-transform:uppercase;color:var(--c)}
+.mln.past .md,.mln.past .mt{color:var(--muted)}
+.mln.past .mg{background:var(--faint)}
+.mmark{display:flex;align-items:center;gap:10px;margin:6px 0;font:600 9px var(--serif);letter-spacing:.16em;text-transform:uppercase;color:var(--faint)}
+.mmark span{flex:0 0 96px;text-align:right}
+.mmark::after{content:"";flex:1;height:1px;background:var(--line)}
+.mmark.today{color:var(--gold-ink)}
+.mmark.today::after{background:var(--gold-line)}
 /* the login */
 #login{position:fixed;inset:0;background:var(--paper);display:flex;align-items:center;justify-content:center;z-index:5}
 #login form{width:340px;display:flex;flex-direction:column;gap:10px}
@@ -337,6 +463,8 @@ body.drawer .rd-list{background:var(--sel);border-color:var(--key)}
   </div>
   <div class="scroll" id="detwrap"><div class="det" id="det"></div></div>
   <div class="veil" data-drawer="0"></div>
+  <div class="mscrim" data-mclose="1"></div>
+  <aside class="mpanel" id="mpanel" tabindex="-1" aria-label="From the Brokerage Semaphore"></aside>
 </div>
 
 <script>
@@ -603,10 +731,288 @@ function arenaTags(v){
   var as = venueArenas(v), shown = as.slice(0, 3);
   if (!as.length) return '';
   return '<span class="tags">' + shown.map(function(a){ var tone = arenaTone(a);
-      return '<span class="tag"' + (tone ? ' style="--tone:' + esc(tone) + '"' : '') + '>' + esc(a.name) + '</span>'; }).join('')
+      return '<span class="tag" data-marena="' + esc(a.id) + '" title="Open ' + esc(a.name) + '"' + (tone ? ' style="--tone:' + esc(tone) + '"' : '') + '>' + esc(a.name) + '</span>'; }).join('')
     + (as.length > shown.length ? '<span class="tag more" title="' + esc(as.slice(shown.length).map(function(a){ return a.name; }).join(', ')) + '">+' + (as.length - shown.length) + '</span>' : '')
     + '</span>';
 }
+/* ── the Semaphore's slide-ins ──
+   A venue's name and an arena's tag open the panels the Brokerage
+   Semaphore's Venues tab opens, sliding in from the right as there (Mark,
+   2026-10-18): a venue's window, visits, leads, the arenas it serves, its
+   pages and his note; an arena's About and Brokerage, its venues, its open
+   leads and its dates in time order. One leads to the other, as in the
+   Semaphore. They only read the Semaphore's data, as the order above
+   does: its row is written by the One App and Pocket under rules of their
+   own (pocket/WRITES.md), and a second writer here could undo a change
+   made there. So Go, which in the Semaphore is the visit, is Site here and
+   only opens the site, and every change stays in the Semaphore. How a
+   venue's window is reckoned is the Semaphore's own (vWin, vState, vHeat,
+   heatBG and vDateSay in one-app/rooms/semaphore/semaphore.js), copied so
+   that the two say the same of every venue; a change there wants copying
+   here. */
+var DAY = 864e5, MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+var SPOT_MAX = 14, LEAD_IN = 21, TAIL = 14, DYING_MAX = 21, OPEN_RUN = 42;
+var PLACE_RGB = { new:'185,227,90', board:'150,140,122', venues:'239,91,76', gone:'125,116,102' };
+var PLACE_SAY = { new:'New on the board', board:'Kept on the board', venues:'In Venues', gone:'Removed' };
+var PHASE = { undated:'arising', arising:'arising', meeting:'active', active:'active', dying:'dying', over:'over' };
+var PHASE_SAY = { arising:'Arising', active:'Active', dying:'Dying', over:'Limbo' };
+var VGOT = { nothing:'nothing new', something:'something', lead:'a lead' };
+var STAGE_NAME = { spotted:'Spotted', contacted:'Contacted', talking:'Talking' };
+var ROLES = { announcement:'announcement window', publication:'publication', deadline:'submission deadline' };
+var panel = { kind:null, id:null };
+function pad2(n){ return (n < 10 ? '0' : '') + n; }
+function T(iso){ return new Date(iso + 'T12:00:00').getTime(); }
+function todayISO(){ var d = new Date(); return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
+function fmtDay(iso){ var p = iso.split('-'); return +p[2] + ' ' + MONTHS[+p[1] - 1] + ' ' + p[0]; }
+/* this year is understood, so it goes unsaid */
+function trimYear(s){ var y = ' ' + new Date().getFullYear(); return s.slice(-y.length) === y ? s.slice(0, -y.length) : s; }
+function shortDay(iso){ return trimYear(fmtDay(iso)); }
+function tDay(t){ return shortDay(new Date(t).toISOString().slice(0, 10)); }
+function dispDate(dt){
+  if (dt.gran === 'none' || !dt.start) return 'no date yet';
+  var m = +dt.start.slice(5, 7), y = dt.start.slice(0, 4);
+  switch (dt.gran){
+    case 'day': return fmtDay(dt.start);
+    case 'month': return MONTHS[m - 1] + ' ' + y;
+    case 'quarter': return 'Q' + (Math.floor((m - 1) / 3) + 1) + ' ' + y;
+    case 'half': return 'H' + (m < 7 ? 1 : 2) + ' ' + y;
+    case 'year': return y;
+    case 'range': return fmtDay(dt.start) + ' – ' + fmtDay(dt.end);
+    default: return '';
+  }
+}
+function shortDate(dt){ return dt.gran === 'range' && dt.start && dt.end ? shortDay(dt.start) + ' – ' + shortDay(dt.end) : trimYear(dispDate(dt)); }
+function linkName(lk){
+  if (lk.label) return lk.label;
+  if (!lk.url) return '(unnamed)';
+  if (/^mailto:/i.test(lk.url)) return lk.url.slice(7);
+  try { return new URL(lk.url).hostname.replace(/^www\./, ''); } catch(e){ return lk.url; }
+}
+function leadName(l){ return l.project || (l.links && l.links[0] ? linkName(l.links[0]) : '') || 'Untitled lead'; }
+function stageOf(l){ var s = l && l.stage; return STAGE_NAME[s] ? s : s === 'agreed' ? 'talking' : 'spotted'; }
+function marketArena(id){ return ((market && market.arenas) || []).find(function(a){ return a.id === id; }); }
+function marketVenueById(id){ return ((market && market.venues) || []).find(function(v){ return v.id === id && v.place !== 'gone'; }); }
+function venuesOf(a){ return ((market && market.venues) || []).filter(function(v){ return v.place !== 'gone' && (v.arenas || []).indexOf(a.id) >= 0; }); }
+function isSpot(v){
+  if (!v.start) return false;
+  return v.gran === 'day' || (v.gran === 'range' && T(v.end) - T(v.start) <= SPOT_MAX * DAY);
+}
+function vWin(v){
+  var spot = isSpot(v);
+  var ms = spot ? T(v.start) : null, me = spot ? T(v.end || v.start) : null;
+  var from = v.opens ? T(v.opens) : null, to = v.closes ? T(v.closes) : null;
+  var set = { from:from !== null, to:to !== null }, season = false;
+  if (spot){
+    if (from === null) from = ms - LEAD_IN * DAY;
+    if (to === null) to = me + TAIL * DAY;
+    from = Math.min(from, ms); to = Math.max(to, me);
+  } else if (v.start){
+    season = !(v.gran === 'range' && v.grade === 'fixed');
+    if (from === null) from = T(v.start);
+    if (to === null) to = T(v.end || v.start);
+  }
+  if (from === null && to === null) return null;
+  return { from:from, to:to, ms:ms, me:me, season:season && !set.from && !set.to, set:set, unc:v.start ? v.grade !== 'fixed' : false };
+}
+function vTail(w){ return Math.min(DYING_MAX * DAY, w.from !== null ? (w.to - w.from) / 3 : DYING_MAX * DAY); }
+function vState(v){
+  var w = vWin(v); if (!w) return 'undated';
+  var now = T(todayISO());
+  if (w.to !== null && now > w.to) return 'over';
+  if (w.season || (w.from !== null && now < w.from)) return 'arising';
+  if (w.ms !== null) return now < w.ms ? 'active' : now <= w.me ? 'meeting' : 'dying';
+  if (w.to !== null) return now >= w.to - vTail(w) ? 'dying' : 'active';
+  return 'active';
+}
+function vPhase(v){ return v.phase || PHASE[vState(v)]; }
+function vHeat(v, t){
+  var w = vWin(v); if (!w) return 0;
+  if ((w.from !== null && t < w.from) || (w.to !== null && t > w.to + DAY)) return 0;
+  if (w.ms !== null){
+    if (t < w.ms) return .3 + .7 * (t - w.from) / Math.max(DAY, w.ms - w.from);
+    if (t <= w.me + DAY) return 1;
+    return Math.max(.15, 1 - .85 * (t - w.me - DAY) / Math.max(DAY, w.to - w.me));
+  }
+  if (w.season) return .35;
+  if (w.to !== null && t > w.to - vTail(w)) return Math.max(.15, .6 - .45 * (t - (w.to - vTail(w))) / Math.max(DAY, vTail(w)));
+  return .6;
+}
+function heatBG(v, x0, x1, rgb){
+  var w = vWin(v); if (!w || x1 <= x0) return '';
+  var pts = [x0, x1];
+  [w.from, w.ms, w.me !== null ? w.me + DAY : null, w.to].forEach(function(t){ if (t !== null && t > x0 && t < x1) pts.push(t); });
+  if (w.to !== null && w.ms === null && !w.season){ var k = w.to - vTail(w); if (k > x0 && k < x1) pts.push(k); }
+  pts.sort(function(a, b){ return a - b; });
+  return 'linear-gradient(90deg,' + pts.map(function(t){
+    return 'rgba(' + rgb + ',' + (.1 + .6 * vHeat(v, Math.min(t, x1 - 1))).toFixed(2) + ') ' + ((t - x0) / (x1 - x0) * 100).toFixed(1) + '%'; }).join(',') + ')';
+}
+function vDateSay(v){
+  var st = vState(v), w = vWin(v);
+  var meets = v.start ? (v.grade === 'fixed' ? '' : '≈ ') + shortDate(v) : '';
+  switch (st){
+    case 'undated': return 'not dated yet';
+    case 'arising': return w.season ? 'expected ' + meets : 'opens ' + tDay(w.from) + (w.ms !== null ? ' · meets ' + meets : '');
+    case 'meeting': return 'meeting now · until ' + tDay(w.to);
+    case 'active': return w.ms !== null ? 'meets ' + meets : w.to !== null ? 'until ' + tDay(w.to) : 'open, no end set';
+    case 'dying': return (w.ms !== null ? 'met ' + meets + ' · ' : '') + 'closes ' + tDay(w.to);
+    default: return 'closed ' + tDay(w.to) + (w.ms !== null ? ' · met ' + meets : '');
+  }
+}
+/* a venue's mark: a diamond where it has event days, dashed while they are
+   a guess; a rounded bar, the shape of a window, where it has none */
+function vGlyph(v){ return '<i class="mgl ' + (v.start ? 'ev' + (v.grade === 'fixed' ? '' : ' unc') : 'win') + '" aria-hidden="true"></i>'; }
+function arenaChip(a){ var tone = arenaTone(a);
+  return '<button class="mchip" data-marena="' + esc(a.id) + '"' + (tone ? ' style="--tone:' + esc(tone) + '"' : '') + '>' + esc(a.name) + '</button>'; }
+/* the window on a strip of its own, a week either side, with today, as
+   the Semaphore's panel draws it, without the ends to drag */
+function vLifeHTML(v){
+  var w = vWin(v); if (!w) return '';
+  var now = T(todayISO());
+  var a = w.from === null ? Math.min(now, w.to) - 42 * DAY : w.from, b = w.to === null ? Math.max(now, w.from) + 42 * DAY : w.to;
+  var t0 = Math.min(a, now) - 7 * DAY, t1 = Math.max(b, now) + 7 * DAY;
+  var P = function(t){ return ((t - t0) / (t1 - t0) * 100).toFixed(2); }, C = function(x){ return Math.max(0, Math.min(100, x)); };
+  var from = w.from === null ? t0 : w.from;
+  var to = w.to === null ? Math.min(t1, Math.max(now, from) + OPEN_RUN * DAY) : w.to + DAY;
+  var past = w.to !== null && w.to + DAY < now;
+  var L = C(+P(from)), R = C(+P(to));
+  var h = '<div class="mlife"><i class="max"></i>'
+    + '<i class="mband' + (past ? ' past' : ' st-' + esc(v.place)) + (w.season ? ' season' : '') + (w.from === null ? ' openl' : '') + (w.to === null ? ' openr' : '')
+    + '" style="left:' + L.toFixed(2) + '%;width:' + Math.max(R - L, .5).toFixed(2) + '%;background:' + heatBG(v, from, to, past ? PLACE_RGB.gone : PLACE_RGB[v.place] || PLACE_RGB.venues) + '"></i>';
+  if (w.to === null && R < 99) h += '<span class="mrun" style="left:' + R.toFixed(2) + '%" aria-hidden="true">→</span>';
+  if (w.ms !== null){
+    if (w.me > w.ms) h += '<i class="mmeet" style="left:' + P(w.ms) + '%;width:' + (+P(w.me + DAY) - +P(w.ms)).toFixed(2) + '%"></i>';
+    h += '<i class="mdia' + (w.unc ? ' unc' : '') + (past ? ' past' : '') + '" style="left:' + P(w.ms + DAY / 2) + '%"></i>'
+       + '<span class="mlt up" style="left:' + P(w.ms + DAY / 2) + '%">meets ' + esc(shortDate(v)) + '</span>';
+  }
+  if (w.from !== null) h += '<span class="mlt" style="left:' + P(w.from) + '%">opens<br>' + tDay(w.from) + '</span>';
+  if (w.to !== null) h += '<span class="mlt" style="left:' + P(w.to + DAY) + '%">closes<br>' + tDay(w.to) + '</span>';
+  return h + '<i class="mnow" style="left:' + P(now + DAY / 2) + '%"></i><span class="mlt up now" style="left:' + P(now + DAY / 2) + '%">today</span></div>';
+}
+function venuePanelHTML(v){
+  var w = vWin(v), visits = (v.visits || []).slice().reverse(), host = v.url ? linkName({ url:v.url }) : '';
+  var last = visits[0], since = last ? Math.round((T(todayISO()) - T(last.at)) / DAY) : null;
+  var leads = [];
+  ((market && market.arenas) || []).forEach(function(a){ (a.leads || []).forEach(function(l){ if (l.venueId === v.id) leads.push({ a:a, l:l }); }); });
+  var end = function(k, t, set){ return '<dt>' + k + '</dt><dd>' + (t === null ? '<i>no end set</i>' : esc(fmtDay(new Date(t).toISOString().slice(0, 10)))
+    + (set ? '' : ' <i>' + (w.season ? '— the season, a guess' : '— round the event days') + '</i>')) + '</dd>'; };
+  var place = PLACE_SAY[v.place] || PLACE_SAY.venues;
+  return '<div class="mbody">'
+    + '<div class="mhead"><button class="mx" data-mclose="1" aria-label="Close">✕</button>'
+      + '<p class="mkind">Venue' + (host ? ' · ' + esc(host) : '') + '</p>'
+      + '<h2>' + esc(v.name) + (v.doubt ? ' <span class="mdoubt" title="' + esc(v.doubt) + '">?</span>' : '') + '</h2>'
+      + '<div class="mrow">' + (v.url ? '<a class="mgo" href="' + esc(v.url) + '" target="_blank" rel="noopener" title="Opens its site; a visit is recorded with Go in the Semaphore">Site ↗</a>' : '')
+        + '<span class="mlast">' + (since === null ? 'not visited yet' : 'last visit ' + (since <= 0 ? 'today' : since === 1 ? 'yesterday' : since + ' days ago'))
+        + (v.every ? ' · every ' + v.every + ' d' : '') + '</span></div></div>'
+    + '<p class="mplace' + (v.place === 'new' ? ' st-new' : '') + '"><b>' + esc(place) + '</b>' + (v.place === 'venues' ? esc(PHASE_SAY[vPhase(v)]) : '')
+      + (v.doubt ? '<br><i>The agent is unsure: ' + esc(v.doubt) + '</i>' : '') + '</p>'
+    + '<section class="mps"><p class="mph">Its window <i>' + esc(vDateSay(v)) + '</i></p>' + vLifeHTML(v)
+      + '<dl class="mdl">' + (w ? end('opens', w.from, w.set.from) : '<dt>window</dt><dd><i>not set</i></dd>')
+      + '<dt>event days</dt><dd>' + (v.start ? esc((v.grade === 'fixed' ? '' : '≈ ') + dispDate(v)) : '<i>none</i>') + '</dd>'
+      + (w ? end('closes', w.to, w.set.to) : '') + (v.note ? '<dt>basis</dt><dd>' + esc(v.note) + '</dd>' : '') + '</dl></section>'
+    + '<section class="mps"><p class="mph">Visits <i>' + (visits.length ? visits.length + ' visit' + (visits.length === 1 ? '' : 's') : 'not visited yet') + '</i></p>'
+      + (visits.length ? visits.map(function(x){
+          var ld = x.leadId && leads.find(function(y){ return y.l.id === x.leadId; });
+          return '<div class="mvis"><span class="mvd">' + esc(shortDay(x.at.slice(0, 10))) + '</span>'
+            + '<span class="mgot ' + esc(x.got || 'none') + '">' + (x.got ? VGOT[x.got] || esc(x.got) : 'visited') + '</span>'
+            + '<span class="mvt">' + (ld ? '→ <button class="mlink" data-marena="' + esc(ld.a.id) + '">' + esc(leadName(ld.l)) + '</button>' : esc(x.text || '')) + '</span></div>';
+        }).join('') : '<p class="mnone">None yet.</p>') + '</section>'
+    + (leads.length ? '<section class="mps"><p class="mph">Leads from here</p>' + leads.map(function(x){
+        return '<p class="mlead"><button class="mlink" data-marena="' + esc(x.a.id) + '">' + esc(leadName(x.l)) + '</button>'
+          + '<i>' + esc(x.a.name) + ' · ' + (x.l.doneAt ? 'closed' : STAGE_NAME[stageOf(x.l)]) + '</i></p>'; }).join('') + '</section>' : '')
+    + '<section class="mps"><p class="mph">Serves</p><div class="mchips">'
+      + ((v.arenas || []).map(marketArena).filter(Boolean).map(arenaChip).join('') || '<span class="mnone">no arena</span>') + '</div></section>'
+    + ((v.pages || []).length ? '<section class="mps"><p class="mph">Other pages</p>' + v.pages.map(function(p){
+        return '<div class="mpg"><a href="' + esc(p.url) + '" target="_blank" rel="noopener" title="' + esc(p.url) + '">↗ ' + esc(p.label || linkName(p)) + '</a></div>'; }).join('') + '</section>' : '')
+    + (v.memo ? '<section class="mps"><p class="mph">Your note</p><p class="mtext">' + esc(v.memo) + '</p></section>' : '')
+    + '</div>'
+    + '<div class="mfoot">From the Brokerage Semaphore, and changed there.</div>';
+}
+/* About and Brokerage, as the Semaphore's two matched cards */
+function arenaCard(label, brok, notes, links){
+  links = (links || []).filter(function(l){ return l.url; });
+  if (!notes && !links.length) return '';
+  return '<section class="mcard' + (brok ? ' brok' : '') + '"><p class="mchd">' + label + '</p>'
+    + (notes ? '<p class="mtext">' + esc(notes) + '</p>' : '')
+    + (links.length ? '<div class="mlinks">' + links.map(function(l){
+        return '<a href="' + esc(l.url) + '" target="_blank" rel="noopener" title="' + esc(l.url) + '">↗ ' + esc(linkName(l)) + '</a>'; }).join('') + '</div>' : '')
+    + '</section>';
+}
+/* The arena's dates in time order, its venues' event days among its calls,
+   with today drawn where it falls, as in the Semaphore's panel. */
+function arenaStreamHTML(a){
+  var now = T(todayISO()), dated = [], undated = [];
+  var evs = venuesOf(a).filter(function(v){ return v.start; }).map(function(v){
+    return { id:v.id, kind:'brokerage', label:v.name, gran:v.gran, start:v.start, end:v.end, grade:v.grade, url:v.url }; });
+  (a.dates || []).concat(evs).forEach(function(dt){ if (!dt.start) undated.push(dt); else dated.push(dt); });
+  dated.sort(function(x, y){ return T(x.start) - T(y.start); });
+  if (!dated.length && !undated.length) return '<p class="mnone">No dates recorded yet.</p>';
+  var row = function(dt, past){
+    var call = dt.kind === 'call', role = call ? (ROLES[dt.role] ? dt.role : 'publication') : '';
+    return '<div class="mln' + (past ? ' past' : '') + (call ? ' r-' + role : ' brok') + '">'
+      + '<span class="md' + (dt.start && dt.grade !== 'fixed' ? ' unc' : '') + '">' + (dt.start ? (dt.grade === 'fixed' ? '' : '≈ ') + esc(dispDate(dt)) : '—') + '</span>'
+      + '<i class="mg' + (dt.grade === 'fixed' ? '' : ' unc') + '"></i>'
+      + '<span class="mt">' + esc(call ? dt.call || 'Untitled call' : dt.label || '(untitled)')
+      + (call ? '<span class="mstage">' + ROLES[role] + '</span>' : dt.url ? '<a href="' + esc(dt.url) + '" target="_blank" rel="noopener">' + esc(linkName({ url:dt.url })) + '</a>' : '')
+      + '</span></div>';
+  };
+  var h = '', placed = false, today = '<div class="mmark today"><span>today</span></div>';
+  dated.forEach(function(dt){
+    var past = T(dt.end || dt.start) < now;
+    if (!past && !placed){ h += today; placed = true; }
+    h += row(dt, past);
+  });
+  if (!placed && dated.length) h += today;
+  if (undated.length) h += '<div class="mmark"><span>no date yet</span></div>' + undated.map(function(dt){ return row(dt, false); }).join('');
+  return h;
+}
+function arenaPanelHTML(a){
+  var t = ((market && market.types) || []).find(function(t){ return t.id === a.typeId; });
+  var tags = (a.tags || []).map(function(x){ return '#' + esc(x); }).join(' · ');
+  var bk = a.brokerage || {};
+  var by = function(v){ var w = vWin(v); return w && w.from !== null ? w.from : 1e15; };
+  var vs = venuesOf(a).sort(function(x, y){ return by(x) - by(y) || x.name.localeCompare(y.name); });
+  var order = { talking:0, contacted:1, spotted:2 };
+  var open = (a.leads || []).filter(function(l){ return !l.doneAt; }).sort(function(x, y){ return order[stageOf(x)] - order[stageOf(y)]; });
+  var closed = (a.leads || []).length - open.length;
+  return '<div class="mbody">'
+    + '<div class="mhead"><button class="mx" data-mclose="1" aria-label="Close">✕</button>'
+      + '<h2>' + esc(a.name) + '</h2>'
+      + '<p class="mmeta">' + esc(t ? t.name : 'no type') + (tags ? ' · ' + tags : '') + '</p></div>'
+    + (a.frozenAt ? '<p class="mplace"><b>In the freezer</b>since ' + esc(shortDay(a.frozenAt.slice(0, 10))) + '</p>' : '')
+    + '<div class="mblocks">'
+      + arenaCard('About', false, a.notes || '', a.links)
+      + arenaCard('Brokerage', true, bk.notes || '', bk.links)
+      + '<section class="mcard brok"><p class="mchd">Venues</p>' + (vs.length ? vs.map(function(v){
+          return '<div class="mav' + (vState(v) === 'over' ? ' over' : '') + '">' + vGlyph(v)
+            + '<span class="mavt"><button class="mlink" data-mvenue="' + esc(v.id) + '">' + esc(v.name) + '</button>'
+            + '<i>' + (v.place === 'new' ? 'new · ' : v.place === 'board' ? 'on the board · ' : '') + esc(vDateSay(v)) + '</i></span></div>'; }).join('')
+          : '<p class="mtext mnone">No venue yet.</p>') + '</section>'
+      + (open.length || closed ? '<section class="mcard"><p class="mchd">Leads</p>' + open.map(function(l){
+          return '<div class="mlead2"><span>' + esc(leadName(l)) + '</span><i>' + STAGE_NAME[stageOf(l)] + '</i></div>'; }).join('')
+          + (closed ? '<p class="mtext mnone">' + closed + ' closed</p>' : '') + '</section>' : '')
+    + '</div>'
+    + '<div class="mstream">' + arenaStreamHTML(a) + '</div>'
+    + '</div>'
+    + '<div class="mfoot">From the Brokerage Semaphore, and changed there.</div>';
+}
+/* The class that slides it in waits two frames after the panel is
+   written, so the slide does not lose its first frames to the layout
+   (notes/animation.md, "The panels that slide"); and a close inside those
+   two frames is not undone by them. */
+function openPanel(kind, id){
+  var it = kind === 'venue' ? marketVenueById(id) : marketArena(id);
+  if (!it) return;
+  panel.kind = kind; panel.id = id;
+  var el = $('#mpanel');
+  el.innerHTML = kind === 'venue' ? venuePanelHTML(it) : arenaPanelHTML(it);
+  el.scrollTop = 0; var b = el.querySelector('.mbody'); if (b) b.scrollTop = 0;
+  requestAnimationFrame(function(){ requestAnimationFrame(function(){
+    if (panel.id !== id) return;
+    document.body.classList.add('mopen');
+    el.focus({ preventScroll:true });
+  }); });
+}
+function closePanel(){ panel.kind = panel.id = null; document.body.classList.remove('mopen'); }
 function drawSites(){
   /* No "All sites": Mark works one site at a time (2026-10-16). */
   var h = '', typed = {}, errs = {}, fresh = {};
@@ -624,7 +1030,7 @@ function drawSites(){
     }
     var doc = docsOf(s.id), hasNote = !!noteText(notes[s.id]), n = fresh[s.id] || 0;
     h += '<div class="venue"><button class="site' + (view.site === s.id ? ' on' : '') + '" data-site="' + esc(s.id) + '" title="' + esc(s.call || '') + '">'
-       + '<span class="l1"><span class="nm">' + esc(s.name) + '</span>' + (n ? '<span class="nw">' + n + ' new</span>' : '') + '</span>'
+       + '<span class="l1"><span class="nm"' + (s._venue ? ' data-mvenue="' + esc(s._venue.id) + '" title="Open ' + esc(s._venue.name) + '"' : '') + '>' + esc(s.name) + '</span>' + (n ? '<span class="nw">' + n + ' new</span>' : '') + '</span>'
        + arenaTags(s._venue)
        + (s.last_error ? '<div class="err">Last read failed, ' + esc(stamp(s.last_error_at)) + ': ' + esc(s.last_error) + '</div>' : '')
        + '</button>'
@@ -1093,6 +1499,14 @@ function checkNow(btn){
 }
 
 document.addEventListener('click', function(ev){
+  /* A venue's name opens its panel and chooses it too, as a press on the
+     rest of its row does; an arena's tag only opens the arena's. */
+  var m = ev.target.closest('[data-mvenue],[data-marena],[data-mclose]');
+  if (m){
+    if (m.dataset.mclose) closePanel();
+    else openPanel(m.dataset.mvenue ? 'venue' : 'arena', m.dataset.mvenue || m.dataset.marena);
+    if (!m.dataset.mvenue || !m.closest('[data-site]')) return;
+  }
   var t = ev.target.closest('[data-pick],[data-bulk],[data-site],[data-id],[data-state],[data-kind],[data-tab],[data-verdict],[data-editlinks],[data-savelinks],[data-cancellinks],[data-callnote],[data-drawer],[data-step],#checkNow');
   if (!t) return;
   if (t.dataset.drawer) return drawer(t.dataset.drawer === 'toggle' ? 'toggle' : t.dataset.drawer === '1');
@@ -1180,6 +1594,9 @@ document.addEventListener('keydown', function(ev){
   }
   if (ev.target.matches('input,textarea') || ev.target.isContentEditable || ev.metaKey || ev.ctrlKey || ev.altKey) return;
   var k = ev.key;
+  /* With a panel open, the letters and arrows would answer and turn an
+     entry hidden under it; Esc puts the panel away first. */
+  if (panel.id){ if (k === 'Escape') closePanel(); return; }
   /* With a call's notes open no entry is on screen, so the letters that
      answer an entry would answer one Mark cannot see. */
   if (view.note && /^[ilbx]$/i.test(k)) return;
