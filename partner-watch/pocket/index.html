@@ -180,7 +180,9 @@ input[type="search"]:focus{outline:none;border-color:var(--key)}
 .pw-an{font:15px/1.25 var(--body);color:var(--ink)}
 .pw-ac{font:italic 12.5px/1.2 var(--body);color:var(--muted)}
 .pw-ac b{font-style:normal;font-weight:400;color:var(--todo-ink)}
-.pw-ac .pw-mk{color:#6B4A00}
+/* the desk's badge, in the colours the Marked tag has on this dark ground */
+.pw-ac .pw-mk{display:inline-block;margin-left:7px;min-width:22px;padding:0 6px;border:1px solid rgba(240,180,41,.45);border-radius:99px;
+  background:rgba(240,180,41,.1);font:normal 10.5px/16px var(--mono);color:var(--today);text-align:center}
 /* The venues in the Marketplace's groups, each under a thin band in its
    type's colour across both columns, and on each the arenas it serves as
    Pocket's Marketplace tags them; see `pwInMarketOrder`. */
@@ -791,7 +793,7 @@ function pwDrawArenas(){
     else c.textContent = 'nothing new';
     /* how many are Marked, after the new ones, as on the desk (2026-10-18) */
     var mk = pwEntries.filter(function(e){ return e.site === s.id && e.verdict === 'interesting'; }).length;
-    if (mk){ c.appendChild(document.createTextNode(' · ')); c.appendChild(el('i', 'pw-mk', mk + ' marked')); }
+    if (mk){ var m = el('i', 'pw-mk', mk + 'm'); m.title = mk + ' marked'; c.appendChild(m); }
     b.appendChild(c);
     b.addEventListener('click', function(){
       if (pwView.site === s.id) return;
