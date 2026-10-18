@@ -180,6 +180,7 @@ input[type="search"]:focus{outline:none;border-color:var(--key)}
 .pw-an{font:15px/1.25 var(--body);color:var(--ink)}
 .pw-ac{font:italic 12.5px/1.2 var(--body);color:var(--muted)}
 .pw-ac b{font-style:normal;font-weight:400;color:var(--todo-ink)}
+.pw-ac .pw-mk{color:#6B4A00}
 /* The venues in the Marketplace's groups, each under a thin band in its
    type's colour across both columns, and on each the arenas it serves as
    Pocket's Marketplace tags them; see `pwInMarketOrder`. */
@@ -207,7 +208,7 @@ input[type="search"]:focus{outline:none;border-color:var(--key)}
 .pw-chip{flex:0 0 auto;min-height:34px;padding:0 12px;border:1px solid var(--line);border-radius:99px;
   font:13.5px var(--body);color:var(--muted);white-space:nowrap}
 .pw-chip.on{border-color:var(--line2);background:rgba(216,205,184,.17);color:var(--ink)}
-/* a group of the list: New, Marked, Later, Seen, as on the desk */
+/* a group of the list: New, Marked, Seen, as on the desk */
 .pw-group{display:flex;justify-content:space-between;align-items:center;margin:12px 16px 2px;padding-bottom:5px;
   border-bottom:1px solid var(--line);font:600 10px/1 var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--key2)}
 .pw-group b{font:11px var(--mono);font-weight:400;letter-spacing:0;color:var(--muted)}
@@ -281,6 +282,8 @@ input[type="search"]:focus{outline:none;border-color:var(--key)}
 .pw-diff .add{color:#43590E;background:rgba(140,190,40,.16)}
 .pw-diff .del{color:#8E241B;background:rgba(194,56,44,.13);text-decoration:line-through}
 #sheet .pw-why{margin:6px 0 0}
+/* a line written is lit in the desk's gold, so a glance says a note is in */
+#sheet .pw-why:not(:placeholder-shown){background:rgba(154,106,0,.13);border-color:rgba(154,106,0,.45)}
 /* the three answers in the bar, each showing when it is the one given */
 #sheet .bar button.pw-i.on{border-color:#9A6A00;background:rgba(154,106,0,.16);color:#6B4A00}
 #sheet .bar button.pw-b.on{color:var(--muted);background:rgba(42,38,32,.08);text-decoration:line-through}
@@ -562,6 +565,8 @@ var pwSites = [], pwEntries = [], pwById = {}, pwRun = null, pwLoaded = false;
 var pwLinks = {}, pwNotes = {}, pwDetail = {}, pwOpenId = null;
 var pwView = { site:null, state:'open', kind:'all', q:'' };
 try { Object.assign(pwView, JSON.parse(localStorage.getItem(PW_VIEW) || '{}'), { q:'' }); } catch(e){}
+/* a phone last left on Later, which went on 2026-10-18, comes back to All */
+if (pwView.state === 'later') pwView.state = 'open';
 function pwSaveView(){ try { localStorage.setItem(PW_VIEW, JSON.stringify({ site:pwView.site, state:pwView.state, kind:pwView.kind })); } catch(e){} }
 
 /* Where each arena's scroll points until Mark sets it at the desk: the
@@ -640,15 +645,15 @@ function pwWhen(iso){ if (!iso) return ''; var d = new Date(iso);
 /* ── what is shown, in what order ─────────────────────────────────────
    The desk's filters and groups. Binned entries stay out of every view but
    Binned. Within an arena the list reads New, then Marked, then
-   Later, then the rest (Mark, 2026-10-16), each newest first; the group is
+   the rest (Mark, 2026-10-16; Later went on 2026-10-18), each newest first; the group is
    fixed when the list is drawn afresh, not when an entry is answered, so
    going to the next entry never skips or repeats one. */
-var PW_STATES = [['open','All'],['unsorted','Unsorted'],['interesting','Marked'],['later','Later'],['bin','Binned']];
+var PW_STATES = [['open','All'],['unsorted','Unsorted'],['interesting','Marked'],['bin','Binned']];
 var PW_KINDS = [['all','Both kinds'],['seeks','Seeks partners'],['offers','Offers expertise']];
-var PW_GROUPS = ['New', 'Marked', 'Later', 'Seen', 'Binned'];
+var PW_GROUPS = ['New', 'Marked', 'Seen', 'Binned'];
 function pwIsNew(e){ return !e.opened_at && !e.verdict; }
 function pwGroupOf(e){
-  return e.verdict === 'interesting' ? 1 : e.verdict === 'later' ? 2 : e.verdict === 'bin' ? 4 : !e.opened_at ? 0 : 3;
+  return e.verdict === 'interesting' ? 1 : e.verdict === 'bin' ? 3 : !e.opened_at ? 0 : 2;
 }
 function pwRegroup(){ pwEntries.forEach(function(e){ e._g = pwGroupOf(e); }); }
 function pwPasses(e){
@@ -657,7 +662,7 @@ function pwPasses(e){
   if (v.kind !== 'all' && e.kind !== v.kind) return false;
   if (v.state === 'open' && e.verdict === 'bin') return false;
   if (v.state === 'unsorted' && e.verdict) return false;
-  if (['interesting','later','bin'].indexOf(v.state) >= 0 && e.verdict !== v.state) return false;
+  if (['interesting','bin'].indexOf(v.state) >= 0 && e.verdict !== v.state) return false;
   if (v.q){
     var hay = [e.contact, e.org, e.country, e.topic, e.keywords, e.list_text, e.why].join(' ').toLowerCase();
     if (v.q.toLowerCase().split(/\s+/).some(function(w){ return w && hay.indexOf(w) < 0; })) return false;
@@ -784,6 +789,9 @@ function pwDrawArenas(){
     var c = el('span', 'pw-ac');
     if (n){ c.appendChild(el('b', '', String(n))); c.appendChild(document.createTextNode(' new')); }
     else c.textContent = 'nothing new';
+    /* how many are Marked, after the new ones, as on the desk (2026-10-18) */
+    var mk = pwEntries.filter(function(e){ return e.site === s.id && e.verdict === 'interesting'; }).length;
+    if (mk){ c.appendChild(document.createTextNode(' · ')); c.appendChild(el('i', 'pw-mk', mk + ' marked')); }
     b.appendChild(c);
     b.addEventListener('click', function(){
       if (pwView.site === s.id) return;
@@ -826,7 +834,6 @@ function pwKindTag(k){
 function pwStateTags(e){
   var out = [];
   if (e.verdict === 'interesting') out.push(el('span', 'pw-tag interesting', 'Marked'));
-  else if (e.verdict === 'later') out.push(el('span', 'pw-tag', 'Later'));
   else if (e.verdict === 'bin') out.push(el('span', 'pw-tag', 'Binned'));
   if (e.changed_at && (!e.opened_at || e.changed_at > e.opened_at)) out.push(el('span', 'pw-tag chg', 'Changed'));
   if (e.removed_at) out.push(el('span', 'pw-tag gone', 'Gone from site'));
@@ -1055,7 +1062,7 @@ function pwNext(e, list){
    sorting the night's new entries is the work, and going back to the
    list between each would double the presses. Pressing the answer an
    entry already has takes it back, as at the desk, and stays put. */
-var PW_SAID = { interesting:'Marked', later:'For later', bin:'Binned' };
+var PW_SAID = { interesting:'Marked', bin:'Binned' };
 function pwAnswer(e, v){
   var nv = e.verdict === v ? null : v;
   var was = { verdict:e.verdict || null, decided_at:e.decided_at || null };
