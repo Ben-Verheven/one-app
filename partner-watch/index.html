@@ -589,7 +589,7 @@ function load(){
 /* ── the filters ─────────────────────────────────────────────────────
    Binned entries stay out of every view but Binned: they are kept so the
    copier never brings them back as new, not so they are seen again. */
-var STATES = [['open','All'],['unsorted','Unsorted'],['interesting','Interesting'],['later','Later'],['bin','Binned']];
+var STATES = [['open','All'],['unsorted','Unsorted'],['interesting','Marked'],['later','Later'],['bin','Binned']];
 var KINDS = [['all','Both kinds'],['seeks','Seeks partners'],['offers','Offers expertise']];
 function passes(e){
   if (e.site !== view.site) return false;
@@ -603,12 +603,12 @@ function passes(e){
   }
   return true;
 }
-/* Within a site: what is new on top, then Interesting, then Later, then
+/* Within a site: what is new on top, then Marked, then Later, then
    the rest (Mark, 2026-10-16), each newest first. The group is fixed when
    the list is drawn afresh — on loading, or on choosing a site, a filter or
    a kind — and not when an entry is opened or flagged: an entry that jumped
    to another group under the cursor would make ↓ skip or repeat entries. */
-var GROUPS = ['New', 'Interesting', 'Later', 'Seen', 'Binned'];
+var GROUPS = ['New', 'Marked', 'Later', 'Seen', 'Binned'];
 function groupOf(e){
   return e.verdict === 'interesting' ? 1 : e.verdict === 'later' ? 2 : e.verdict === 'bin' ? 4 : !e.opened_at ? 0 : 3;
 }
@@ -622,7 +622,7 @@ function isNew(e){ return !e.opened_at && !e.verdict; }
 function kindTag(k){ return k === 'seeks' ? '<span class="kind seeks">Seeks partners</span>'
   : k === 'offers' ? '<span class="kind offers">Offers expertise</span>' : ''; }
 function stateTags(e){
-  return (e.verdict === 'interesting' ? '<span class="st interesting">Interesting</span>'
+  return (e.verdict === 'interesting' ? '<span class="st interesting">Marked</span>'
         : e.verdict === 'later' ? '<span class="st">Later</span>'
         : e.verdict === 'bin' ? '<span class="st">Binned</span>' : '')
        + (e.changed_at && (!e.opened_at || e.changed_at > e.opened_at) ? '<span class="st chg">Changed</span>' : '')
