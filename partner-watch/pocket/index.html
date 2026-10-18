@@ -1023,7 +1023,7 @@ function pwOpen(id){
     pwBody(body, e);
 
     bar.classList.add('five');
-    [['interesting','Interesting','pw-i'],['later','Later','pw-l'],['bin','Bin','pw-b']].forEach(function(a){
+    [['interesting','Mark','pw-i'],['later','Later','pw-l'],['bin','Bin','pw-b']].forEach(function(a){
       var btn = el('button', a[2] + (e.verdict === a[0] ? ' on' : ''), a[1]);
       btn.addEventListener('click', function(){ pwAnswer(e, a[0]); });
       bar.appendChild(btn);

@@ -1098,14 +1098,14 @@ function drawRows(){
 /* ── choosing several ────────────────────────────────────────────────
    The tick box picks an entry; shift picks every entry between it and the
    last one picked; Ctrl or ⌘ on a row picks it too. With anything picked,
-   the bar's buttons and the keys I L B answer all of them at once. */
+   the bar's buttons and the keys M L B answer all of them at once. */
 var sel = new Set(), anchor = null;
 function drawBulk(){
   var b = $('#bulk');
   if (!sel.size){ b.hidden = true; return; }
   b.hidden = false;
   b.innerHTML = '<b>' + sel.size + ' selected</b>'
-    + '<button class="act" data-bulk="interesting">Interesting</button>'
+    + '<button class="act" data-bulk="interesting">Mark</button>'
     + '<button class="act" data-bulk="later">Later</button>'
     + '<button class="act" data-bulk="bin">Bin</button>'
     + '<button class="act" data-bulk="none">Unsort</button>'
@@ -1209,7 +1209,7 @@ function drawDetail(){
     + '<div class="dsub">' + esc([e.org ? e.contact : null, e.topic].filter(Boolean).join(' · ')) + '</div></div>'
     + '<a class="btn" style="text-decoration:none" href="' + esc(e.url) + '" target="_blank" rel="noopener">Open on site ↗</a></div>'
     + '<div class="actions">'
-    + [['interesting','Interesting','I'],['later','Later','L'],['bin','Bin','B']].map(function(a){
+    + [['interesting','Mark','M'],['later','Later','L'],['bin','Bin','B']].map(function(a){
         return '<button class="act ' + a[0] + (e.verdict === a[0] ? ' on' : '') + '" data-verdict="' + a[0] + '">' + a[1] + '<kbd>' + a[2] + '</kbd></button>'; }).join('')
     + '<input id="why" placeholder="Why? A line for your future self" value="' + esc(e.why || '') + '" aria-label="Why"></div>'
     + (!e.fetched_at ? '' : '<div class="tabs"><button data-tab="fields" class="' + (view.tab === 'fields' ? 'on' : '') + '">From the site</button>'
@@ -1587,7 +1587,7 @@ function letGo(ev){
 $('#detwrap').addEventListener('touchend', letGo);
 $('#detwrap').addEventListener('touchcancel', letGo);
 $('#search').addEventListener('input', function(){ view.q = this.value; drawRows(); });
-/* The keys: ↑ ↓ walk the list, I L B answer the open entry (or all the
+/* The keys: ↑ ↓ walk the list, M L B answer the open entry (or all the
    picked ones), X picks the open entry, Esc lets go of the picked ones.
    Not while typing, or a search for "Ireland" would flag three entries. */
 document.addEventListener('keydown', function(ev){
@@ -1603,14 +1603,15 @@ document.addEventListener('keydown', function(ev){
   if (panel.id){ if (k === 'Escape') closePanel(); return; }
   /* With a call's notes open no entry is on screen, so the letters that
      answer an entry would answer one Mark cannot see. */
-  if (view.note && /^[ilbx]$/i.test(k)) return;
+  if (view.note && /^[milbx]$/i.test(k)) return;
   if (k === 'ArrowDown' || k === 'ArrowUp' || k === 'ArrowRight' || k === 'ArrowLeft'){
     if (view.note) return;
     if (step(k === 'ArrowDown' || k === 'ArrowRight' ? 1 : -1)) ev.preventDefault();
   } else if (k === 'Escape' && document.body.classList.contains('drawer')){
     drawer(false);
-  } else if (/^[ilb]$/i.test(k)){
-    setVerdict({ i:'interesting', l:'later', b:'bin' }[k.toLowerCase()]);
+  } else if (/^[milb]$/i.test(k)){
+    /* M since the button became Mark (2026-10-18); I, its old key, still works */
+    setVerdict({ m:'interesting', i:'interesting', l:'later', b:'bin' }[k.toLowerCase()]);
   } else if (/^x$/i.test(k) && view.id){
     pick(view.id, ev.shiftKey);
   } else if (k === 'Escape' && sel.size){
