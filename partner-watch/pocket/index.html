@@ -130,8 +130,6 @@ input[type="search"]:focus{outline:none;border-color:var(--key)}
   font:600 10px/1 var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--ink);
   border:1px solid var(--line2);background:var(--field)}
 #sheet .bar button.key,#sheet .bar a.key{flex:1.35;color:#F6F1E6;border-color:#3A342B;background:#3A342B}
-#sheet .bar.five button{padding:14px 2px;letter-spacing:.06em;font-size:9.5px}
-#sheet .bar.five button.x{flex:0 0 40px}
 #sheet .bar button.x{flex:0 0 46px;padding:13px 0;font:17px/1 var(--body);letter-spacing:0;color:var(--faint)}
 #sheet .bar button:active{filter:brightness(.94)}
 
@@ -285,7 +283,6 @@ input[type="search"]:focus{outline:none;border-color:var(--key)}
 #sheet .pw-why{margin:6px 0 0}
 /* the three answers in the bar, each showing when it is the one given */
 #sheet .bar button.pw-i.on{border-color:#9A6A00;background:rgba(154,106,0,.16);color:#6B4A00}
-#sheet .bar button.pw-l.on{border-color:#3A342B;background:#3A342B;color:#F6F1E6}
 #sheet .bar button.pw-b.on{color:var(--muted);background:rgba(42,38,32,.08);text-decoration:line-through}
 /* Mark's notes on a call, as long as he writes them */
 /* Mark's notes on a call, as long as he writes them, with the formatting
@@ -1022,8 +1019,7 @@ function pwOpen(id){
     b.appendChild(body);
     pwBody(body, e);
 
-    bar.classList.add('five');
-    [['interesting','Mark','pw-i'],['later','Later','pw-l'],['bin','Bin','pw-b']].forEach(function(a){
+    [['interesting','Mark','pw-i'],['bin','Bin','pw-b']].forEach(function(a){
       var btn = el('button', a[2] + (e.verdict === a[0] ? ' on' : ''), a[1]);
       btn.addEventListener('click', function(){ pwAnswer(e, a[0]); });
       bar.appendChild(btn);
