@@ -70,7 +70,11 @@ button{font:inherit;color:inherit}
    to the next entry without them. The venues are wide enough to stand in
    one line each with their arenas under them, so most of them are in view
    at once. */
-.cols{flex:1;min-height:0;position:relative;display:flex}
+/* The page clips what is parked beside it: the Semaphore's panel waits
+   past the right edge, and unclipped it made the page 400 px wider than
+   the screen, which the iPad answered by shrinking the whole page to fit
+   (Mark, 2026-10-18: the venues, the entries and Entries all smaller). */
+.cols{flex:1;min-height:0;position:relative;display:flex;overflow:hidden;overflow:clip}
 .cols > .col{position:absolute;top:0;bottom:0;z-index:4;background:var(--paper);
   transform:translateX(-860px);visibility:hidden;transition:transform .22s ease,visibility 0s .22s}
 .cols > .col:first-child{left:0;width:420px}
