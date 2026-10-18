@@ -1492,7 +1492,7 @@ function leadName(l){return l.project||(l.links[0]?linkName(l.links[0]):'')||'Un
 function isFresh(a,x){return !!(x&&x.foundAt)&&(!a.seenAt||x.foundAt>a.seenAt);}
 /* ---- a call's run ----
    The stages of one call — Stage 1 and Stage 2, pre- and full proposals,
-   outline and full proposal — are one bar with a notch at each earlier
+   outline and full proposal, PO and FPP (Mark, 2026-10-18) — are one bar with a notch at each earlier
    deadline (`callBase`), and calls with exactly the same dates are one bar,
    because a cluster's work programme opens a dozen topics on the same two
    days and a dozen identical bars say nothing. Drawn so on the rotation
@@ -1500,7 +1500,7 @@ function isFresh(a,x){return !!(x&&x.foundAt)&&(!a.seenAt||x.foundAt>a.seenAt);}
    with the Marketplace (2026-10-14). */
 function callBase(n){
   return String(n||'').replace(/\s*\(expected\)/ig,'')
-    .replace(/\s*[–—-]\s*(stage\s*\d|pre-?proposals?|full( project)? proposals?|project outline).*$/i,'')
+    .replace(/\s*[–—-]\s*(stage\s*\d|pre-?proposals?|full( project)? proposals?|project outline|(?:po|fpp)\b).*$/i,'')
     .replace(/[\s\/]+stage\s*\d.*$/i,'').trim();
 }
 function callRuns(a){

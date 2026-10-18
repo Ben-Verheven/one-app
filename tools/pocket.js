@@ -111,7 +111,7 @@ async function run(browser, name, rows, login, shoot) {
   for (const [tab, n] of Object.entries(full.views || {}))
     if (tab === 'people' ? !n : !(n > ((none.views || {})[tab] || 0)))
       wrong.push('full board: ' + tab + ' drew no more than the empty cloud');
-  if (!/no Marketplace row/.test(none.stamp || '')) wrong.push('no row: the stamp said "' + none.stamp + '"');
+  if (!/no Brokerage Semaphore row/.test(none.stamp || '')) wrong.push('no row: the stamp said "' + none.stamp + '"');
   if (!fresh.asksLogin) wrong.push('never logged in: the login sheet did not open');
 
   console.log('pocket: ' + arenas + ' arenas; drawn ' + JSON.stringify(full.views));
