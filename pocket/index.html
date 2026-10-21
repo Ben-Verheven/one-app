@@ -1548,8 +1548,10 @@ function linkHost(lk){
    back to Spotted; a middle dot switches its path; the last makes the lead
    Talking, or takes it back to Contacted when it already is. A lead with no
    path left lit falls back to Spotted, because "contacted, but nobody" says
-   nothing; and a lead made Talking with no path yet takes the lower one, the
-   lead itself, since a conversation is with someone. */
+   nothing. A lead made Talking lights every dot on its way (Mark,
+   2026-10-21): it used to take only the lower path when none was lit, which
+   left a talking lead looking half-reached, and he had to press the other
+   two by hand each time. Taken back to Contacted, it keeps both paths. */
 function leadPath(l,v){
   if(v==='spotted'){l.stage='spotted';l.toResearchers=false;l.toLead=false;return true;}
   if(v==='researchers'||v==='lead'){
@@ -1561,7 +1563,7 @@ function leadPath(l,v){
   }
   if(v==='talking'){
     if(l.stage==='talking'){l.stage=(l.toResearchers||l.toLead)?'contacted':'spotted';return true;}
-    if(!l.toResearchers&&!l.toLead)l.toLead=true;
+    l.toResearchers=true;l.toLead=true;
     l.stage='talking';return true;
   }
   return false;

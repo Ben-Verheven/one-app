@@ -3155,13 +3155,44 @@ function leadPanesHTML(a,l,shut,adding){
           '<button class="lcopy" data-act="copyMail" data-v="'+esc(mail)+'" title="Copy the address">Copy</button></p>':'')+
       '</div>'
     : '';
-  const links=n||adding
-    ? '<div class="lpane" data-act="leadStay"><p class="lph">Links'+(n?'<b>'+n+'</b>':'')+'</p>'+
-        (n?'<div class="llinks">'+leadLinkRows(a,l,shut)+'</div>':'')+
+  /* The box is there on an open lead even with nothing in it, because the
+     way to add a link is on its head now (Mark, 2026-10-21); a closed lead
+     with none has nothing to add to and shows none. */
+  const links=n||adding||!shut
+    ? '<div class="lpane" data-act="leadStay"><p class="lph">Links'+(n?'<b>'+n+'</b>':'')+
+        (shut||adding?'':'<button class="lact lphb" data-act="lkAdd" data-id="'+a.id+'" data-l="'+l.id+'" '+
+          'title="A web address, or a contact’s email address">+ Link or email</button>')+'</p>'+
+        (n?'<div class="llinks">'+leadLinkRows(a,l,shut)+'</div>':adding?'':'<p class="lnil">None yet</p>')+
         (adding?lkFormHTML(a,l.id):'')+
       '</div>'
     : '';
   return who||links?'<div class="lpanes">'+who+links+'</div>':'';
+}
+/* What has happened, newest first, in a box of its own under the two, with
+   + Add update on its head and the line being written straight under it,
+   above the lines already there (Mark, 2026-10-21: "add update right above
+   the update pane"). The button stood in a row at the top of the card, and
+   the line it opened came up there, apart from the history it joins. */
+function leadUpdHTML(a,l,shut,writing){
+  const ups=l.updates||[];
+  if(shut&&!ups.length)return '';
+  const more=updOpen.has(l.id),ids='data-id="'+a.id+'" data-l="'+l.id+'"';
+  const rows=(more?ups.map((u,i)=>[u,i]):ups.map((u,i)=>[u,i]).slice(-UPD_SHOWN)).reverse();
+  return '<div class="lpane lupdpane" data-act="leadStay"><p class="lph">Updates'+(ups.length?'<b>'+ups.length+'</b>':'')+
+      (shut||writing?'':'<button class="lact prim lphb" data-act="noteAdd" '+ids+'>+ Add update</button>')+'</p>'+
+    (writing?'<div class="lnew">'+noteFormHTML(a,l)+'</div>':'')+
+    (rows.length
+      ? '<div class="lupd">'+rows.map(([u,i])=>
+          '<p class="lurow"><span class="lud">'+esc(updWhen(u))+'</span><span>'+esc(u.text||'')+'</span>'+
+          '<button class="lx" data-act="updDel" '+ids+' data-u="'+i+'" '+
+            'title="Take this line out" aria-label="Remove update">✕</button></p>').join('')+
+          (ups.length>UPD_SHOWN
+            ? '<button class="lfa lmore" data-act="updMore" '+ids+'>'+
+                (more?'fewer':(ups.length-UPD_SHOWN)+' earlier')+'</button>'
+            : '')+
+        '</div>'
+      : writing?'':'<p class="lnil">Nothing yet</p>')+
+  '</div>';
 }
 /* Through a selected, off-screen field first, as the Ledger's mailing list
    copies, because that works from file:// in every browser the app opens
@@ -3220,8 +3251,10 @@ function leadRuitHTML(a,l,st,done){
    back to Spotted; a middle dot switches its path; the last makes the lead
    Talking, or takes it back to Contacted when it already is. A lead with no
    path left lit falls back to Spotted, because "contacted, but nobody" says
-   nothing; and a lead made Talking with no path yet takes the lower one, the
-   lead itself, since a conversation is with someone. */
+   nothing. A lead made Talking lights every dot on its way (Mark,
+   2026-10-21): it used to take only the lower path when none was lit, which
+   left a talking lead looking half-reached, and he had to press the other
+   two by hand each time. Taken back to Contacted, it keeps both paths. */
 function leadPath(l,v){
   if(v==='spotted'){l.stage='spotted';l.toResearchers=false;l.toLead=false;return true;}
   if(v==='researchers'||v==='lead'){
@@ -3233,7 +3266,7 @@ function leadPath(l,v){
   }
   if(v==='talking'){
     if(l.stage==='talking'){l.stage=(l.toResearchers||l.toLead)?'contacted':'spotted';return true;}
-    if(!l.toResearchers&&!l.toLead)l.toLead=true;
+    l.toResearchers=true;l.toLead=true;
     l.stage='talking';return true;
   }
   return false;
@@ -3285,32 +3318,46 @@ function leadToProject(a,l){
       links:(l.links||[]).filter(k=>k.url).map(k=>({name:linkName(k),url:k.url}))});
   }catch(e){console.error(e);}
 }
-/* Which of Contacted's two paths a lead is on, for the leads view's split.
+/* Which of Contacted's two paths a lead is on, for the order of Leads.
    Both ways first: those are the most promising, and Mark asked for them on
    top of the stack (2026-10-08). The Ledger's list keeps the same order. */
 const KIND_RANK={both:0,researchers:1,lead:2};
 const KIND_NAME={researchers:'researchers contacted',both:'both contacted',lead:'lead contacted'};
 function leadKind(l){return l.toResearchers&&l.toLead?'both':(l.toResearchers?'researchers':'lead');}
-function leadKindHTML(k){
-  const up=k!=='lead',dn=k!=='researchers';
-  const ln=(x1,y1,x2,y2,on)=>'<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'"'+(on?' class="on"':'')+'/>';
-  return '<div class="lkind"><svg viewBox="0 0 16 10" aria-hidden="true">'+
-    ln(1,5,8,1.5,up)+ln(8,1.5,15,5,up)+ln(1,5,8,8.5,dn)+ln(8,8.5,15,5,dn)+
-    '</svg><span>'+KIND_NAME[k]+'</span></div>';
-}
 /* ───────── one lead card, in both rooms ─────────
    Mark asked on 2026-10-06 for a lead to look the same wherever it is shown,
    and chose the Ledger's card as the standard: shut until pressed. So a lead
    here is two lines — its three steps and its day, then its name — and a press
-   opens it to the same action row the Ledger's card has, in the same order and
-   with the same words (+ Add update, + Link or email, Edit, then Complete at
-   the far right), and under that its match, its links and its updates, newest
-   first, each with its day. The colours stay this room's: dark on the wall and
-   the board, paper in the drawer.
+   opens it: Edit and Complete at its head, who and the links side by side
+   under it, and its updates under those, newest first, each with its day.
+   Since 2026-10-21 each box carries the button that adds to it, where the
+   Ledger's card still has its one row of them, in the same words. The
+   colours stay this room's: dark on the wall and the board, paper in the
+   drawer.
 
    Which leads stand open is not saved: it is where you are working this
    session, as it is on the Ledger. Opening a composer opens its lead. */
 const leadOpen=new Set();
+/* The leads table's columns, and what its heading sorts each step by. The
+   order chosen is not saved either: it is a way of looking for something
+   now. Unsorted, each step runs by the day, as it always has. The last
+   update and the score put the newest and the best first. */
+const LEAD_COLS=[{name:'Step'},{name:'Arena',k:'arena'},{name:'Project',k:'project'},{name:'Match',k:'match'},
+  {name:'Who',k:'who'},{name:'Last update',k:'update'},{name:'Score',k:'score'},{name:'Next',k:'day'}];
+const lastAt=l=>{const u=(l.updates||[])[(l.updates||[]).length-1];return u?(u.at||''):'';};
+const byText=f=>(x,y)=>{const p=f(x),q=f(y);return !p!==!q?(p?-1:1):p.localeCompare(q);};
+const LEAD_SORT={
+  arena:byText(x=>x.a.name),
+  project:byText(x=>leadName(x.l)),
+  match:byText(x=>x.l.match||''),
+  who:byText(x=>x.l.contact||x.l.coordinator||''),
+  update:(x,y)=>{const p=lastAt(x.l),q=lastAt(y.l);return p===q?0:p>q?-1:1;},
+  score:(x,y)=>(y.l.score||0)-(x.l.score||0),
+  day:(x,y)=>!!x.l.due!==!!y.l.due?(x.l.due?-1:1):x.l.due===y.l.due?0:x.l.due<y.l.due?-1:1
+};
+let leadSort={k:null,rev:false};
+const STAGE_SAY={talking:'a conversation is running',contacted:'written to, waiting for an answer',
+  spotted:'found, nobody written to yet'};
 const LONG_DOW=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 const LONG_MON=['January','February','March','April','May','June','July','August',
   'September','October','November','December'];
@@ -3326,17 +3373,6 @@ function longDay(iso){
 }
 /* Each lead wears its arena type's colour (see "a type's colour"). */
 function leadToneOf(a){return arenaTone(a);}
-/* ───────── the colour dot ─────────
-   On the leads view each row carries the Ledger's dot before the arena's
-   name, in its type's colour. It was a button opening the swatches, when the
-   colour was the arena's; the colour is chosen on the type now, at the head
-   of its row on the wall or the board, so here the dot only shows it. */
-function leadColHTML(a){
-  const hex=arenaTone(a),t=typeOf(a);
-  if(!hex)return '';
-  return '<span class="lcolwrap"><span class="lcol" style="--c:'+esc(hex)+'" '+
-    'title="'+esc((t?t.name+' \u2014 ':'')+'the colour of '+a.name+'\u2019s type')+'"><i aria-hidden="true"></i></span></span>';
-}
 /* ───────── a type's colour dot ─────────
    In the list of types each type carries its colour as a dot that opens the
    swatches. Only one menu is open at a time; a press anywhere else or Escape
@@ -3365,10 +3401,11 @@ function leadRowHTML(a,l,hit,say){
   const over=l.due?daysBetween(T(l.due),now):null;
   const done=!!l.doneAt;
   const due=over!==null&&over>=0&&!done;      /* a closed lead is not owed */
+  /* within the week: the leads table colours it as coming (Mark chose the
+     table with its dates coloured by how near they are, 2026-10-21) */
+  const soon=over!==null&&over<0&&over>=-7&&!done;
   const st=stageOf(l);
   const ups=l.updates||[];
-  const more=updOpen.has(l.id);
-  const rows=(more?ups.map((u,i)=>[u,i]):ups.map((u,i)=>[u,i]).slice(-UPD_SHOWN)).reverse();
   const writing=noteEdit.a===a.id&&noteEdit.l===l.id;
   const adding=lkEdit.a===a.id&&lkEdit.l===l.id;
   /* Editing happens in the card itself (Mark, 2026-10-06): the card keeps
@@ -3382,55 +3419,54 @@ function leadRowHTML(a,l,hit,say){
   const ids='data-id="'+a.id+'" data-l="'+l.id+'"';
   /* the day, set where it is read; the invisible field over the label opens
      the calendar. Short on the quiet line of a card a few hundred pixels
-     wide, where the long form pushed the match out. */
+     wide, where the long form pushed the match out, and short in the
+     table's last column, where how near it is is said beside it. */
   /* While the card is being edited the day is one more of its fields: its
      calendar writes into the edit (`name="due"`) instead of saving at once,
      because a save redraws the card and would throw away everything else
      typed into it. The ruit waits for the same reason. */
+  const near=say&&l.due&&!done?(over>1?' · '+over+' days late':over===1?' · 1 day late':over===0?' · today':''):'';
   const when=done
-    ? '<span class="lwhen shut" title="Closed">'+(isOutcome(l.outcome)?OUTCOMES[l.outcome].said+' \u00B7 ':'closed ')+
+    ? '<span class="lwhen shut" title="Closed">'+(isOutcome(l.outcome)?OUTCOMES[l.outcome].said+' · ':'closed ')+
         esc(shortDay(l.doneAt))+'</span>'
     : editing
-    ? '<label class="lwhen set" title="The day to come back to this \u2014 click to change it">'+
-        '<span>'+esc(l.due?(say?longDay(l.due):shortDow(l.due)):'No date')+'</span>'+
-        '<input type="text" inputmode="none" readonly data-cal data-cal-none name="due" value="'+esc(l.due||'')+'" data-say="'+(say?1:'')+'" '+
+    ? '<label class="lwhen set" title="The day to come back to this — click to change it">'+
+        '<span>'+esc(l.due?shortDow(l.due):'No date')+'</span>'+
+        '<input type="text" inputmode="none" readonly data-cal data-cal-none name="due" value="'+esc(l.due||'')+'" '+
           'aria-label="Come back on"></label>'
-    : '<label class="lwhen'+(l.due?' set':'')+(due?' late':'')+'" '+
+    : '<label class="lwhen'+(l.due?' set':'')+(due?' late':'')+(soon?' soon':'')+'" '+
         'title="'+(l.due?esc(longDay(l.due))+' — ':'')+'The day to come back to this — click to set it">'+
-        '<span>'+esc(l.due?(say?longDay(l.due):shortDow(l.due)):'No date')+'</span>'+
+        '<span>'+esc(l.due?shortDow(l.due):'No date')+(near?'<i class="lnear">'+esc(near)+'</i>':'')+'</span>'+
         '<input type="text" inputmode="none" readonly data-cal data-cal-none value="'+esc(l.due||'')+'" data-lda="'+a.id+'" data-ldl="'+l.id+'" '+
           'aria-label="Come back on"></label>';
-  /* How a lead ends. In the arena's panel it stands at the top right of the
-     open card, where the eye leaves it, and only once the card is open
-     (Mark, 2026-10-06); on the wide rows of the leads view it ends the action
-     row, as Done ends a todo's. Pressed, it asks how the lead ended. */
+  /* How a lead ends, and the way into editing it, stand at the head of the
+     open card, on the line they change (Mark, 2026-10-21, from a drawn
+     sheet): in the arena's panel at its top right, on the table in the
+     column that says the last update when the lead is shut, since the
+     updates themselves are in sight below once it is open. Each other verb
+     moved onto the box it adds to: + Add update on the updates, + Link or
+     email on the links. They were one row of buttons between the head and
+     the boxes, and the update written with the first of them landed a
+     screen below it. Pressed, Complete asks how the lead ended. */
   const doneBtn='<button class="ldone'+(done?' back':'')+'" data-act="leadDone" '+ids+' '+
       'title="'+(done?'Put this lead back into the funnel':'Done with this one — say how it ended; it stays in the record')+'" '+
       'aria-label="'+(done?'Reopen this lead':'Complete this lead')+'">'+
       '<i aria-hidden="true">'+(done?'↺':'✓')+'</i>'+(done?'Reopen':'Complete')+'</button>';
-  /* Left to right as on the Ledger: what the lead is for, what changes it,
-     what ends it. A closed lead is a record — the one thing left to do with it
-     is put it back. While editing the row is the way out of the edit, and
+  const editBtn=done?'':'<button class="lact quiet" data-act="leadEdit" '+ids+' '+
+      'title="Edit everything on this lead">✎ Edit</button>';
+  const headActs=open&&!editing&&!ending?'<span class="lheadacts">'+editBtn+doneBtn+'</span>':'';
+  /* While editing the row under the card is the way out of the edit, and
      while Complete is asking how the lead ended it is the three answers. */
   const acts=ending
     ? '<div class="lacts"><span class="lendq">How did it end?</span>'+
         Object.keys(OUTCOMES).map(k=>'<button class="lact" data-act="leadEnd" '+ids+' data-v="'+k+'">'+
           OUTCOMES[k].name+'</button>').join('')+
-        '<span class="sp"></span><button class="lact quiet" data-act="leadEndCancel">Cancel</button></div>'
+        '<span class="sp"></span><button class="lact quiet" data-act="leadEndCancel" '+ids+'>Cancel</button></div>'
     : editing
     ? '<div class="lacts"><span class="lfhint">⌘↩ to save</span><span class="sp"></span>'+
-        '<button class="lact quiet" data-act="leadCancel">Cancel</button>'+
+        '<button class="lact quiet" data-act="leadCancel" '+ids+'>Cancel</button>'+
         '<button class="lact prim" data-act="leadSave" '+ids+'>Save</button></div>'
-    : '<div class="lacts">'+
-      (done?'':
-        '<button class="lact prim" data-act="noteAdd" '+ids+'>+ Add update</button>'+
-        '<button class="lact" data-act="lkAdd" '+ids+' '+
-          'title="A web address, or a contact’s email address">+ Link or email</button>'+
-        '<span class="lgap" aria-hidden="true"></span>'+
-        '<button class="lact quiet" data-act="leadEdit" '+ids+' '+
-          'title="Edit everything on this lead">✎ Edit</button>')+
-      '<span class="sp"></span>'+(say?doneBtn:'')+
-    '</div>';
+    : '';
   const box=(name,v,ph,cls)=>'<textarea class="grow '+cls+'" name="'+name+'" rows="1" '+
     'placeholder="'+ph+'" aria-label="'+ph+'">'+esc(v||'')+'</textarea>';
   /* While editing, every link is its address and its name, side by side,
@@ -3454,7 +3490,7 @@ function leadRowHTML(a,l,hit,say){
      right half of a wide card empty and gave the contact no address; a link
      said neither what kind it was nor where it went. A press inside either
      box keeps the card open, so an address can be selected. */
-  const panes=editing?'':leadPanesHTML(a,l,done,adding);
+  const panes=editing?'':leadPanesHTML(a,l,done,adding)+leadUpdHTML(a,l,done,writing);
   /* the venue it was found at, which opens it */
   const fromV=l.venueId&&venue(l.venueId);
   const from=fromV&&!editing?leadSec('from','<button class="lfrom" data-act="openVenue" data-v="'+fromV.id+'" '+
@@ -3474,20 +3510,41 @@ function leadRowHTML(a,l,hit,say){
           box('text',u.text,'What happened','ledup')+
           '<button class="lx" data-act="leadEditDrop" title="Take this line out when saved" aria-label="Remove update">✕</button></div>').join('')+
       '</div>':'')
-    : panes+
-    (writing?'<div class="lnew">'+noteFormHTML(a,l)+'</div>':'')+
-    (rows.length
-      ? '<div class="lupd">'+rows.map(([u,i])=>
-          '<p class="lurow"><span class="lud">'+esc(updWhen(u))+'</span><span>'+esc(u.text||'')+'</span>'+
-          '<button class="lx" data-act="updDel" '+ids+' data-u="'+i+'" '+
-            'title="Take this line out" aria-label="Remove update">✕</button></p>').join('')+
-          (ups.length>UPD_SHOWN
-            ? '<button class="lfa lmore" data-act="updMore" '+ids+'>'+
-                (more?'fewer':(ups.length-UPD_SHOWN)+' earlier')+'</button>'
-            : '')+
-        '</div>'
-      : ''));
+    : panes);
   const tone=leadToneOf(a);
+  /* ── the leads table ──
+     Mark chose one table for Leads (2026-10-21), from three drawn beside the
+     list it replaced: a line per lead, under its step's coloured heading,
+     with the ruit as the first column rather than a coloured box naming
+     the step. So on Leads (`say`) the head is a row of cells — the ruit, the
+     arena in its type's colour, what it is, who could fit it, who is behind
+     it, the last thing that happened, the score, the day — and a press on
+     the line opens the lead under it. In the arena's panel the arena goes
+     without saying and the day rides on the quiet line, as before. */
+  const last=ups.length?ups[ups.length-1]:null;
+  const whoSaid=[l.contact,l.coordinator].filter(Boolean).join(' · ');
+  const cells=say
+    ? (editing
+        ? '<div class="ltx">'+box('project',l.project,'What is the project?','lname lname-in')+
+            '<div class="lsub">'+box('match',l.match,'Who could be a good match?','lmt lmt-in')+'</div></div>'
+        : '<p class="lname" title="'+(open?'Shut this lead':'Open this lead')+'">'+esc(leadName(l))+'</p>'+
+          '<span class="lmt'+(l.match?'':' none')+'">'+esc(l.match||'No match yet')+'</span>'+
+          '<span class="lcwho'+(whoSaid?'':' none')+'">'+esc(whoSaid||'—')+'</span>'+
+          (headActs||'<span class="lcup'+(last?'':' none')+'">'+
+            (last?'<i>'+esc(updWhen(last))+'</i>'+esc(last.text||''):'—')+'</span>'))
+    : '<div class="ltx">'+
+        /* floated, so it takes the top right corner and the name runs beside
+           it while the quiet line below keeps the card's whole width */
+        headActs+
+        (editing
+          ? box('project',l.project,'What is the project?','lname lname-in')+
+            '<div class="lsub">'+box('match',l.match,'Who could be a good match?','lmt lmt-in')+when+'</div>'
+          : '<p class="lname" title="'+(open?'Shut this lead':'Open this lead')+'">'+esc(leadName(l))+'</p>'+
+            '<div class="lsub">'+
+              '<span class="lmt'+(l.match?'':' none')+'">'+esc(l.match||'No match yet')+'</span>'+
+              leadScoreHTML(a,l,done)+when+
+            '</div>')+
+      '</div>';
   return '<article class="lead k-'+st+(say?' wide':'')+(due?' due':'')+(done?' done':'')+(hit?' hit':'')+
       (open?' open':'')+(editing?' editing':'')+(tone?' toned':'')+
       '"'+(tone?' style="--tone:'+esc(tone)+'"':'')+' data-lid="'+l.id+'" data-act="leadOpen" '+ids+'>'+
@@ -3496,32 +3553,14 @@ function leadRowHTML(a,l,hit,say){
        leads because it is the thing that changes; a column of these sorts
        itself by how far each has got (Mark chose this over the name leading
        and the ruit closing the row, 2026-10-06). */
-    /* On the leads board (`say`) the row is the Ledger's, column for column:
-       ruit, the arena — a lead there stands among every other arena's, so it
-       says whose it is, and that name opens it — then what it is over who
-       could fit it, then the day written in full. In the arena's panel the
-       arena goes without saying and the day rides on the quiet line. */
     '<header class="lhead">'+leadRuitHTML(a,l,st,done||editing)+
-      (say?leadColHTML(a):'')+
       (say?'<button class="lar" data-act="openArena" data-id="'+a.id+'" '+
         'title="Open '+esc(a.name)+'">'+esc(a.name)+'</button>':'')+
-      '<div class="ltx">'+
-        /* floated, so it takes the top right corner and the name runs beside
-           it while the quiet line below keeps the card's whole width */
-        (!say&&open&&!editing&&!ending?doneBtn:'')+
-        (editing
-          ? box('project',l.project,'What is the project?','lname lname-in')+
-            '<div class="lsub">'+box('match',l.match,'Who could be a good match?','lmt lmt-in')+(say?'':when)+'</div>'
-          : '<p class="lname" title="'+(open?'Shut this lead':'Open this lead')+'">'+esc(leadName(l))+'</p>'+
-            '<div class="lsub">'+
-              '<span class="lmt'+(l.match?'':' none')+'">'+esc(l.match||'No match yet')+'</span>'+
-              (say?'':leadScoreHTML(a,l,done)+when)+
-            '</div>')+
-      '</div>'+
+      cells+
       (say?leadScoreHTML(a,l,done||editing)+when:'')+
     '</header>'+
     /* while editing, Cancel and Save come after everything being edited */
-    (open?(editing?'':acts)+(body?'<div class="lbody">'+body+'</div>':'')+(editing?acts:''):'')+
+    (open?(ending?acts:'')+(body?'<div class="lbody">'+body+'</div>':'')+(editing?acts:''):'')+
   '</article>';
 }
 /* What Save on an edited card keeps. One place, used by this room's card and
@@ -3617,7 +3656,7 @@ function leadListHTML(a,hits){
     const band=open.filter(l=>stageOf(l)===k);
     if(!band.length)continue;
     h+='<section class="lband k-'+k+'">'+
-      '<p class="lbh">'+STAGE_NAME[k]+'<b>'+band.length+'</b></p>'+
+      '<p class="lbh" data-mk="g:'+k+'">'+STAGE_NAME[k]+'<b>'+band.length+'</b></p>'+
       '<div class="lgrid">'+band.map(row).join('')+'</div>'+
     '</section>';
   }
@@ -3625,7 +3664,7 @@ function leadListHTML(a,hits){
   /* the way to add one sits directly under the ones you have, not past the
      record of the ones you have closed */
   if(adding)h+=leadFormHTML(a);
-  else h+='<div class="leadadd"><button data-act="leadAdd" data-id="'+a.id+'">+ Lead</button></div>';
+  else h+='<div class="leadadd" data-mk="add"><button data-act="leadAdd" data-id="'+a.id+'">+ Lead</button></div>';
   /* Closed leads are out of the open view entirely: one line saying how many,
      and the record itself only if you ask. A search that lands inside a closed
      lead opens the record on its own, because a hit you cannot see is worse
@@ -3640,7 +3679,7 @@ function leadListHTML(a,hits){
     const shown=closedOpen.has(a.id)||done.some(l=>hit.has(l.id));
     const all=a.leads||[],talked=all.filter(l=>stageOf(l)==='talking').length,
           made=all.filter(l=>l.outcome==='project').length;
-    h+='<div class="lclosed'+(shown?' open':'')+'">'+
+    h+='<div class="lclosed'+(shown?' open':'')+'" data-mk="closed">'+
       '<button class="lcbar" data-act="closedMore" data-id="'+a.id+'" '+
         'aria-expanded="'+(shown?'true':'false')+'" '+
         'title="'+(shown?'Put the record away again':'Leads you have closed \u2014 a record, not a queue')+'">'+
@@ -3701,33 +3740,35 @@ function paintWall(){
         if(x.l.due&&y.l.due&&x.l.due!==y.l.due)return x.l.due<y.l.due?-1:1;
         return leadName(x.l).localeCompare(leadName(y.l));
       };
-      /* The Ledger's list, exactly (Mark, 2026-10-06): the three steps one
-         under another rather than side by side, each a run of full-width lead
-         rows with its name and count braced down the left, and a step with
-         nothing in it left out, as the Ledger leaves out a category with no
-         todos. Every lead is the same shut row the Ledger draws — ruit, arena,
-         what it is over who could fit it, the day — and opens in place. */
+      const sorter=LEAD_SORT[leadSort.k]||null;
+      const order=(x,y)=>(sorter?sorter(x,y)*(leadSort.rev?-1:1):0)||byDay(x,y);
+      /* One table (Mark, 2026-10-21; see "the leads table"): a heading over
+         the columns, whose names sort the leads within each step, and the
+         steps one under another, each under a band in a colour of its own,
+         a step with nothing in it left out. Every lead is one line and opens
+         in place. It replaced the Ledger's list, whose rows all wore the same
+         grey and said neither who was behind a lead nor what had last
+         happened on it. */
       /* Furthest along first (Mark, 2026-10-16): Talking on top, over even
          the both-ways Contacted, then Contacted, then Spotted last. It used
          to run spotted-first, the order a lead moves in, which put the leads
          with a conversation running at the bottom of the board. */
-      h+='<div class="lruns">';
+      h+='<div class="ltable"><div class="lthead" data-mk="thead">'+LEAD_COLS.map(c=>c.k
+          ? '<button class="ltc'+(leadSort.k===c.k?' on':'')+'" data-act="leadSort" data-v="'+c.k+'" '+
+              'title="Sort each step by '+c.name.toLowerCase()+(leadSort.k===c.k?' — again to turn the order round':'')+'">'+
+              c.name+(leadSort.k===c.k?'<i aria-hidden="true">'+(leadSort.rev?'▴':'▾')+'</i>':'')+'</button>'
+          : '<span class="ltc">'+c.name+'</span>').join('')+'</div>';
       for(const k of STAGES.slice().reverse()){
-        const col=all.filter(({l})=>stageOf(l)===k).sort(byDay);
+        const col=all.filter(({l})=>stageOf(l)===k).sort(order);
         if(!col.length)continue;
-        /* Contacted runs by its two paths, as on the Ledger's list (Mark,
-           2026-10-06): both ways first (2026-10-08), then the researchers
-           asked, then the lead written to — the ruit's upper point over its
-           lower — each run under a small ruit with only its own path drawn. */
-        if(k==='contacted')col.sort((x,y)=>KIND_RANK[leadKind(x.l)]-KIND_RANK[leadKind(y.l)]||byDay(x,y));
-        h+='<section class="lrun k-'+k+'">'+
-          '<div class="lflank"><span class="lfn">'+STAGE_NAME[k]+'</span>'+
-            '<span class="lfc">'+col.length+' lead'+(col.length===1?'':'s')+'</span></div>'+
-          '<div class="lrows">'+col.map(({a,l},i)=>{
-            const kd=k==='contacted'?leadKind(l):null;
-            return (kd&&(!i||leadKind(col[i-1].l)!==kd)?leadKindHTML(kd):'')+
-              leadRowHTML(a,l,hit.has(l.id),true);
-          }).join('')+'</div>'+
+        /* Contacted runs by its two paths while the day orders it, as it did
+           on the Ledger's list (Mark, 2026-10-06): both ways first
+           (2026-10-08), then the researchers asked, then the lead written to.
+           The ruit at the head of each line says which. */
+        if(k==='contacted'&&!sorter)col.sort((x,y)=>KIND_RANK[leadKind(x.l)]-KIND_RANK[leadKind(y.l)]||byDay(x,y));
+        h+='<section class="lgrp k-'+k+'">'+
+          '<p class="lgh" data-mk="g:'+k+'">'+STAGE_NAME[k]+'<b>'+col.length+'</b><span>'+STAGE_SAY[k]+'</span></p>'+
+          col.map(({a,l})=>leadRowHTML(a,l,hit.has(l.id),true)).join('')+
         '</section>';
       }
       h+='</div>';
@@ -3806,6 +3847,7 @@ function keepPlace(fn){
 const UNFOLD_MS=320;
 const easeInOut=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
 function leadUnfold(lid,pressed){
+  if(!pressed){repaint();renderDrawer();return;}
   /* this arena's card for the lead, on Leads and in the panel alike: a lead
      copied with its arena keeps its id, and the copy is a card of its own */
   const cards=[...document.querySelectorAll('#pane-semaphore article.lead[data-lid="'+CSS.escape(lid)+'"]'+
@@ -3853,6 +3895,94 @@ function leadUnfold(lid,pressed){
     requestAnimationFrame(step);
   });
 }
+/* A lead's card drawn again where it stands, for everything that changes
+   only what is inside it — a composer opened or put away, a line or a link
+   taken out, more of its history — so the rest of the list stays where it
+   is under the pointer, as opening it does. A composer open on another lead
+   is put away by redrawing that lead too; the two forms that belong to no
+   card (a new lead, an arena's own link) still need the room drawn again. */
+function leadRedo(card,set){
+  const lid=card&&card.dataset.lid;
+  const loose=leadEdit.l==='new'||(lkEdit.a&&!lkEdit.l);
+  const was=[noteEdit.l,lkEdit.l,leadEdit.l,endAsk.l].filter(k=>k&&k!=='new'&&k!==lid);
+  closeComposers();if(set)set();
+  if(!card||!card.isConnected||loose){repaint();renderDrawer();return;}
+  was.forEach(k=>{
+    const c=document.querySelector('#pane-semaphore article.lead[data-lid="'+CSS.escape(k)+'"]');
+    if(c)leadUnfold(k,c);
+  });
+  leadUnfold(lid,card);
+}
+/* ── a lead moving, and the view moving with it ──
+   A press on the ruit, a new day, a score, an update or Complete can each
+   send a lead to another place in the list: another step, further down its
+   step, or off the list. It used to vanish from under the pointer and stand
+   somewhere else at once, often out of sight, with everything between the
+   two places jumping by a card's height, so Mark lost track of what had gone
+   where (2026-10-21). Now the list is drawn in its new order and then every
+   lead and heading in it is put back where it was and slides to its new
+   place, on easeInOutCubic over MOVE_MS; the lead that moved rides over the
+   others, the view scrolls with it on the same curve only as far as keeps
+   it in sight, and it glows for a moment where it landed. A lead new to the
+   list fades in. Positions are measured against the scroller, never the
+   window, and every write comes after every read (notes/animation.md). */
+const MOVE_MS=560;
+function leadMarks(sc){
+  const top=sc.getBoundingClientRect().top,m=new Map();
+  sc.querySelectorAll('article.lead[data-lid],[data-mk]').forEach(el=>{
+    const k=el.dataset.mk||('l:'+el.dataset.id+':'+el.dataset.lid);
+    if(!m.has(k))m.set(k,{el,y:el.getBoundingClientRect().top-top});
+  });
+  return m;
+}
+function leadMove(card,fn){
+  const sc0=card&&card.isConnected&&(card.closest('.cbody')||document.getElementById('semscroll'));
+  const still=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(!sc0||still){fn();return;}
+  /* the panel is drawn afresh, scroller and all, so it is found again after */
+  const inPanel=!!card.closest('#card'),key='l:'+card.dataset.id+':'+card.dataset.lid;
+  const before=leadMarks(sc0);
+  fn();
+  const sc=inPanel?document.querySelector('#card .cbody'):document.getElementById('semscroll');
+  if(!sc)return;
+  const after=leadMarks(sc),view=sc.clientHeight,pad=24,me=after.get(key);
+  const top0=sc.scrollTop;let top1=top0;
+  if(me){
+    const y=me.y,h=me.el.getBoundingClientRect().height;
+    if(y<pad)top1=top0+y-pad;
+    else if(y+h>view-pad)top1=top0+Math.min(y+h-(view-pad),y-pad);
+    top1=Math.max(0,Math.min(top1,sc.scrollHeight-view));
+  }
+  const moving=[];
+  after.forEach((x,k)=>{
+    const b=before.get(k);
+    if(!b){x.el.classList.add('lmv-in');moving.push(x.el);return;}
+    const dy=b.y-x.y;if(Math.abs(dy)<1)return;
+    x.el.style.transition='none';x.el.style.transform='translateY('+dy+'px)';moving.push(x.el);
+  });
+  const went=!!me&&moving.includes(me.el);
+  if(went)me.el.classList.add('lmv-me');
+  void sc.offsetWidth;          /* one style pass, so the start is seen */
+  moving.forEach(el=>{el.style.transition='transform '+MOVE_MS+'ms cubic-bezier(.65,0,.35,1)';el.style.transform='';});
+  if(sc._sb===undefined)sc._sb=sc.style.scrollBehavior;
+  sc.style.scrollBehavior='auto';
+  const t0=performance.now(),run=(sc._mv||0)+1;sc._mv=run;
+  const step=now=>{
+    if(sc._mv!==run)return;
+    const p=Math.min(1,(now-t0)/MOVE_MS),e=easeInOut(p);
+    if(top1!==top0)sc.scrollTop=top0+(top1-top0)*e;
+    if(p<1){requestAnimationFrame(step);return;}
+    sc.style.scrollBehavior=sc._sb;
+    moving.forEach(el=>{el.style.transition='';el.classList.remove('lmv-in');});
+    if(went){
+      me.el.classList.remove('lmv-me');me.el.classList.add('lmv-land');
+      setTimeout(()=>me.el.classList.remove('lmv-land'),1700);
+    }
+  };
+  requestAnimationFrame(step);
+}
+/* the card a press came from, found from the press */
+const cardOf=el=>el&&el.closest&&el.closest('article.lead');
 function repaint(){
   if(S.ui.view==='now')renderNow();
   else if(S.ui.view==='leads')renderWall();
@@ -4586,15 +4716,15 @@ document.addEventListener('click',e=>{
       leadUnfold(k,b);break;}
     case 'leadAdd':{closeComposers();leadEdit={a:id,l:'new'};
       repaint();renderDrawer();focusLead();break;}
-    case 'leadEdit':{closeComposers();leadEdit={a:id,l:b.dataset.l};leadOpen.add(b.dataset.l);
-      repaint();renderDrawer();focusLead();break;}
+    case 'leadEdit':{leadRedo(cardOf(b),()=>{leadEdit={a:id,l:b.dataset.l};leadOpen.add(b.dataset.l);});
+      focusLead();break;}
     case 'leadAddBoard':{const was=leadEdit.a===BOARD;closeComposers();
       if(!was)leadEdit={a:BOARD,l:'new'};
       repaint();renderDrawer();
       if(!was){growAll();const f=document.querySelector('.leadboard select[name=arena]');
         if(f)f.focus({preventScroll:true});}
       break;}
-    case 'leadCancel':{closeComposers();repaint();renderDrawer();break;}
+    case 'leadCancel':{leadRedo(leadEdit.l!=='new'&&cardOf(b));break;}
     case 'leadsExcel':{
       /* ⌥ (Alt) with the press asks where to keep the file afresh */
       if(typeof Hub!=='undefined'&&Hub.emit)Hub.emit('leads:excel',{fresh:!!e.altKey});break;}
@@ -4607,29 +4737,28 @@ document.addEventListener('click',e=>{
       const l=(ar.leads||[]).find(x=>x.id===b.dataset.l);if(!l)break;
       const card=b.closest('.lead');if(!card)break;
       if(!leadEditAll(l,leadEditRead(card))){Ask.tell('Nothing left','A lead needs at least a project, a match or a link.');break;}
-      closeComposers();restack();break;}
+      leadMove(card,()=>{closeComposers();restack();});break;}
     /* marks a link or an update to go when the edit is saved, and back */
     case 'leadEditDrop':{const r=b.closest('.ledrow');if(r)r.classList.toggle('gone');break;}
     /* One way to move a lead on: press a dot of its ruit. There is no second
        control that walks it round, and none in the form. */
     case 'leadPath':{const ar=arena(id);if(!ar)break;
       const l=(ar.leads||[]).find(x=>x.id===b.dataset.l);if(!l||l.doneAt)break;
-      if(leadPath(l,b.dataset.v)){save();repaint();renderDrawer();}break;}
+      leadMove(cardOf(b),()=>{if(leadPath(l,b.dataset.v)){save();repaint();renderDrawer();}});break;}
     /* Complete asks how the lead ended before it closes it (see OUTCOMES);
        Reopen puts it back at once, answer and all, since nothing was thrown
        away. */
     case 'leadDone':{const ar=arena(id);if(!ar)break;
       const l=(ar.leads||[]).find(x=>x.id===b.dataset.l);if(!l)break;
-      if(l.doneAt){l.doneAt=null;delete l.outcome;restack();break;}
-      closeComposers();endAsk={a:ar.id,l:l.id};leadOpen.add(l.id);
-      repaint();renderDrawer();break;}
+      if(l.doneAt){leadMove(cardOf(b),()=>{l.doneAt=null;delete l.outcome;restack();});break;}
+      leadRedo(cardOf(b),()=>{endAsk={a:ar.id,l:l.id};leadOpen.add(l.id);});break;}
     case 'leadEnd':{const ar=arena(id);if(!ar)break;
       const l=(ar.leads||[]).find(x=>x.id===b.dataset.l);if(!l||l.doneAt)break;
-      if(!endLead(l,b.dataset.v))break;
-      restack();
+      if(!isOutcome(b.dataset.v))break;
+      leadMove(cardOf(b),()=>{endLead(l,b.dataset.v);restack();});
       if(l.outcome==='project')leadToProject(ar,l);
       break;}
-    case 'leadEndCancel':{closeComposers();repaint();renderDrawer();break;}
+    case 'leadEndCancel':{leadRedo(cardOf(b));break;}
     /* the button says it worked, in place of a toast over the card */
     case 'copyMail':{const v=b.dataset.v;if(!v)break;
       copyText(v,ok=>{b.textContent=ok?'Copied':'Not copied';
@@ -4638,13 +4767,13 @@ document.addEventListener('click',e=>{
     case 'leadLinkDel':{const ar=arena(id);if(!ar)break;
       const l=(ar.leads||[]).find(x=>x.id===b.dataset.l);if(!l)break;
       l.links=(l.links||[]).filter(k=>k.id!==b.dataset.k);
-      save();repaint();renderDrawer();break;}
-    case 'noteAdd':{closeComposers();noteEdit={a:id,l:b.dataset.l};leadOpen.add(b.dataset.l);
-      repaint();renderDrawer();focusNote();break;}
-    case 'noteCancel':{closeComposers();repaint();renderDrawer();break;}
+      save();leadUnfold(l.id,cardOf(b));break;}
+    case 'noteAdd':{leadRedo(cardOf(b),()=>{noteEdit={a:id,l:b.dataset.l};leadOpen.add(b.dataset.l);});
+      focusNote();break;}
+    case 'noteCancel':{leadRedo(cardOf(b));break;}
     case 'updMore':{const k=b.dataset.l;
       if(updOpen.has(k))updOpen.delete(k);else updOpen.add(k);
-      repaint();renderDrawer();break;}
+      leadUnfold(k,cardOf(b));break;}
     case 'closedMore':{
       if(closedOpen.has(id))closedOpen.delete(id);else closedOpen.add(id);
       repaint();renderDrawer();break;}
@@ -4653,10 +4782,18 @@ document.addEventListener('click',e=>{
       const i=+b.dataset.u;
       if(!Array.isArray(l.updates)||!(i>=0&&i<l.updates.length))break;
       l.updates.splice(i,1);
-      save();repaint();renderDrawer();break;}
-    case 'lkAdd':{closeComposers();lkEdit={a:id,l:b.dataset.l||null};if(b.dataset.l)leadOpen.add(b.dataset.l);
-      repaint();renderDrawer();focusLk();break;}
-    case 'lkCancel':{closeComposers();repaint();renderDrawer();break;}
+      save();leadUnfold(l.id,cardOf(b));break;}
+    case 'lkAdd':{
+      if(b.dataset.l)leadRedo(cardOf(b),()=>{lkEdit={a:id,l:b.dataset.l};leadOpen.add(b.dataset.l);});
+      else{closeComposers();lkEdit={a:id,l:null};repaint();renderDrawer();}
+      focusLk();break;}
+    case 'lkCancel':{
+      if(lkEdit.l)leadRedo(cardOf(b));
+      else{closeComposers();repaint();renderDrawer();}
+      break;}
+    case 'leadSort':{const k=b.dataset.v;
+      if(leadSort.k===k)leadSort.rev=!leadSort.rev;else leadSort={k,rev:false};
+      renderWall();break;}
 
     case 'setWeight':{const ar=arena(id);if(!ar)break;
       if(!WEIGHTS[b.dataset.v])break;
@@ -4933,7 +5070,9 @@ document.addEventListener('submit',e=>{
     const a=arena(lf.dataset.lka);if(!a)return;
     const url=typedAddr(lf.elements.url.value);
     const label=lf.elements.label.value.trim();
-    if(!url&&!label){closeComposers();repaint();renderDrawer();return;}
+    if(!url&&!label){
+      if(lf.dataset.lkl)leadRedo(cardOf(lf));else{closeComposers();repaint();renderDrawer();}
+      return;}
     const lead=lf.dataset.lkl?(a.leads||[]).find(x=>x.id===lf.dataset.lkl):null;
     if(lf.dataset.lkl&&!lead)return;
     if(lead)lead.links.push({id:uid(),label,url});
@@ -4942,7 +5081,8 @@ document.addEventListener('submit',e=>{
       a.brokerage.links=a.brokerage.links||[];
       a.brokerage.links.push({id:uid(),label,url});
     }
-    save();repaint();renderDrawer();
+    save();
+    if(lead)leadUnfold(lead.id,cardOf(lf));else{repaint();renderDrawer();}
     focusLk();            /* the composer stays up: these tend to come in twos and threes */
     return;
   }
@@ -4952,11 +5092,13 @@ document.addEventListener('submit',e=>{
     const a=arena(nf.dataset.na);if(!a)return;
     const l=(a.leads||[]).find(x=>x.id===nf.dataset.nl);if(!l)return;
     const text=nf.elements.text.value.trim();
-    if(text){
-      if(!Array.isArray(l.updates))l.updates=[];
-      l.updates.push({at:todayISO(),text});
-    }
-    closeComposers();restack();
+    leadMove(cardOf(nf),()=>{
+      if(text){
+        if(!Array.isArray(l.updates))l.updates=[];
+        l.updates.push({at:todayISO(),text});
+      }
+      closeComposers();restack();
+    });
     return;
   }
   const df=e.target.closest('.leadform');
@@ -5037,7 +5179,7 @@ document.addEventListener('change',e=>{
   if(el.dataset&&el.dataset.lsa&&el.dataset.lsl){
     const a=arena(el.dataset.lsa);if(!a)return;
     const l=(a.leads||[]).find(x=>x.id===el.dataset.lsl);if(!l||l.doneAt)return;
-    leadScore(l,el.value);save();repaint();renderDrawer();return;
+    leadMove(cardOf(el),()=>{leadScore(l,el.value);save();repaint();renderDrawer();});return;
   }
   /* a venue's rhythm, and another arena it serves */
   if(el.dataset&&el.dataset.vevery){
@@ -5052,8 +5194,7 @@ document.addEventListener('change',e=>{
   if(el.dataset&&el.dataset.lda&&el.dataset.ldl){
     const a=arena(el.dataset.lda);if(!a)return;
     const l=(a.leads||[]).find(x=>x.id===el.dataset.ldl);if(!l)return;
-    l.due=el.value||null;
-    restack();return;
+    leadMove(cardOf(el),()=>{l.due=el.value||null;restack();});return;
   }
   /* link rows */
   if(el.dataset.lk&&drawer.id){
@@ -5142,8 +5283,9 @@ document.addEventListener('keydown',e=>{
   if(sortOpen){sortOpen=false;renderBoard();return;}         /* the board's order */
   if(Ask.isOpen()){Ask.shut();return;}                       /* the question */
   if(document.querySelector('.modal.open')){closeModals();return;}   /* a sheet */
-  if(lkEdit.a||leadEdit.a||noteEdit.a){            /* a composer */
-    closeComposers();repaint();renderDrawer();return;
+  if(lkEdit.a||leadEdit.a||noteEdit.a||endAsk.a){  /* a composer, put away in its own card */
+    const k=noteEdit.l||lkEdit.l||leadEdit.l||endAsk.l;
+    leadRedo(k&&k!=='new'&&document.querySelector('#pane-semaphore article.lead[data-lid="'+CSS.escape(k)+'"]'));return;
   }
   if(drawer.vnew){drawer.vnew=null;closeDrawer();return;}    /* a venue being made */
   if(drawer.edit){drawer.edit=null;renderDrawer();return;}   /* a date form */

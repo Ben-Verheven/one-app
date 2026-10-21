@@ -432,63 +432,116 @@
 #pane-semaphore .lgrid{display:flex;flex-direction:column;gap:7px}
 #pane-semaphore .llist{display:flex;flex-direction:column;gap:7px}
 /* ───────── the leads view ─────────
-   The Ledger's list of leads, exactly (Mark, 2026-10-06): the three steps one
-   under another, each a run of full-width rows braced down the left by its
-   name and count — the Ledger's flank, 132px, the rule in the Ledger's stone.
-   The frame was the leads' clay until each arena's leads wore a colour of
-   their own; then, as in the Ledger, it stepped back to the warm grey
-   (#a3967f, the Ledger's --lead) so it no longer competes with them (Mark,
-   2026-10-10).
-   It replaced one open column beside two narrow ones; with the steps stacked
-   every lead is a full row and nothing is taken down to a tab. */
-/* As wide as the Ledger's list and no wider: its board is 1144px with the
-   flank, and a lead row there is the 1000 left beside it. */
-#pane-semaphore .lruns{display:flex;flex-direction:column;gap:14px;max-width:1144px}
+   One table (Mark, 2026-10-21, chosen from three drawn beside the list it
+   replaced, which was the Ledger's list: every row the same grey, the step
+   names small down the left). A heading over the columns, then each step
+   under a band in a colour of its own — Talking green, Contacted amber,
+   Spotted a blue-grey, apart from the type colours the leads wear and from
+   the lime of what is new — with its rows faintly in the same colour. He
+   asked for the steps to be said by the ruit at the head of each line
+   rather than by a coloured box. Every colour on it is a solid one, chosen
+   against the ground it sits on: the band's words 7:1 and more, the
+   quiet cells 6:1 on the tinted rows. */
+#pane-semaphore .ltable{max-width:1240px;display:flex;flex-direction:column;gap:12px;
+  --lcols:50px 150px minmax(0,1.25fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1.35fr) 22px 150px}
+#pane-semaphore .lgrp.k-talking{--st:#7FC08A;--st-ink:#A6DCA9}
+#pane-semaphore .lgrp.k-contacted{--st:#E0A458;--st-ink:#F0C48A}
+#pane-semaphore .lgrp.k-spotted{--st:#8FA3BF;--st-ink:#B9C8DD}
+#pane-semaphore .lgrp{border:1px solid color-mix(in srgb,var(--st) 32%,transparent);border-radius:12px;
+  background:color-mix(in srgb,var(--st) 5%,transparent);padding-bottom:6px}
+#pane-semaphore .lgh{display:flex;align-items:center;gap:10px;margin:0 0 4px;padding:8px 14px;
+  border-radius:11px 11px 0 0;background:color-mix(in srgb,var(--st) 15%,transparent);
+  font:600 12.5px var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--st-ink)}
+#pane-semaphore .lgh b{padding:1px 8px;border-radius:99px;background:var(--st);
+  font:600 11.5px var(--mono);letter-spacing:0;color:#1c160e}
+#pane-semaphore .lgh span{font:italic 12.5px var(--body);letter-spacing:0;text-transform:none;color:#CFC6B6}
+/* the heading over the columns, at the rows' own columns; a name that sorts
+   is a button, the one in force marked with its arrow */
+#pane-semaphore .lthead{display:grid;grid-template-columns:var(--lcols);column-gap:12px;align-items:end;
+  padding:0 13px 2px 16px;border-bottom:1px solid var(--line2)}
+#pane-semaphore .ltc{display:flex;align-items:center;gap:4px;min-width:0;padding:4px 0 6px;text-align:left;
+  font:600 9.5px var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--key);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#pane-semaphore button.ltc:hover,#pane-semaphore .ltc.on{color:var(--key2)}
+#pane-semaphore .ltc i{font-style:normal;font-size:10px}
+#pane-semaphore .lthead>:nth-child(7){justify-self:center}
+#pane-semaphore .lthead>:last-child{justify-self:end}
 /* + Lead stands at the far end of the head, as + Brokerage event does on
    Coming up, and its form opens under the head, a lead's width rather than
    the board's: what is typed in it is a couple of sentences */
-#pane-semaphore .whead.lhead{max-width:1144px}
+#pane-semaphore .whead.lhead{max-width:1240px}
 #pane-semaphore .whead .leadnew{margin-left:auto;align-self:center}
 #pane-semaphore .whead .leadxl{margin-left:auto;align-self:center}
 #pane-semaphore .whead .leadxl+.leadnew{margin-left:8px}
 #pane-semaphore .leadform.leadboard{max-width:640px;margin:-6px 0 18px}
 #pane-semaphore .leadform select{flex:1 1 100%;min-width:0;border:1px solid var(--line);border-radius:var(--radius);
   background:var(--surface);color:var(--ink);padding:6px 8px;font-family:var(--body);font-size:13px}
-#pane-semaphore .lrun{display:flex;align-items:stretch;gap:12px}
-#pane-semaphore .lflank{position:relative;flex:0 0 132px;display:flex;flex-direction:column;gap:3px;
-  padding:6px 12px 6px 11px}
-#pane-semaphore .lflank::before{content:"";position:absolute;right:0;top:2px;bottom:8px;width:3px;
-  border-radius:3px;background:#a3967f}
-#pane-semaphore .lfn{font:600 10.5px var(--sans);letter-spacing:.08em;color:#a3967f}
-#pane-semaphore .lfc{font:9px var(--sans);letter-spacing:.06em;color:var(--muted)}
-#pane-semaphore .lrows{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:7px}
-/* the quiet heading over each of Contacted's two paths: the ruit drawn small
-   with only that path lit, in the brace's own small type */
-#pane-semaphore .lkind{display:flex;align-items:center;gap:7px;padding:0 0 0 8px;margin-top:5px;
-  font:9px var(--sans);letter-spacing:.06em;color:var(--muted);--lead:#a3967f;--ltrack:rgba(205,176,105,.34)}
-#pane-semaphore .lkind:first-child{margin-top:2px}
-#pane-semaphore .lkind svg{width:19px;height:12px;overflow:visible}
-#pane-semaphore .lkind line{stroke:var(--ltrack);stroke-width:1.2;stroke-linecap:round}
-#pane-semaphore .lkind line.on{stroke:var(--lead);stroke-width:1.7}
-/* A row on the leads view: ruit, arena, what it is over who could fit it, the
-   day — the Ledger's columns, at the Ledger's widths. */
-#pane-semaphore .lead.wide{padding:9px 14px 9px 12px}
-#pane-semaphore .lead.wide .lhead{gap:14px}
-#pane-semaphore .lead.wide .lruit{margin:0 32px 0 4px}
-#pane-semaphore .lead.wide>.lhead>.lar{flex:0 0 160px;max-width:160px;margin:0;
-  font:600 10.5px var(--sans);letter-spacing:.06em;text-transform:none;color:var(--muted)}
-#pane-semaphore .lead.wide>.lhead>.lar:hover{color:var(--key2)}
-#pane-semaphore .lead.wide .lname{font-size:14.5px}
-#pane-semaphore .lead.wide .lsub{font-size:12.5px}
-#pane-semaphore .lead.wide>.lhead>.lwhen{font-size:13px}
-/* The colour dot (see "the colour dot" and "a type's head" in semaphore.js):
-   the Ledger's, a 9px disc in a 22px ring. On a lead it only shows the type's
-   colour, standing between the ruit and the arena as it does there; it takes
-   back most of the ruit's margin, so the columns after it move by only a few
-   pixels. At the head of a type it is a button, and its menu hangs under it
-   on the dark panel: the twenty-six swatches thirteen to a row, the light
-   shades over the deep ones, so each hue stands over its own darker self. */
-#pane-semaphore .lead.wide .lcolwrap{position:relative;flex:0 0 22px;margin:0 -6px 0 -22px;display:flex}
+/* One line of the table: shut, it is a row of cells with a hairline under
+   it; open, it lifts off the band as a card in its arena's type colour. */
+#pane-semaphore .lead.wide{margin:0 6px;padding:6px 7px 6px 7px;border:0;border-left:3px solid transparent;
+  border-bottom:1px solid var(--grid);border-radius:6px 6px 0 0;background:none}
+#pane-semaphore .lead.wide:hover{background:var(--strip)}
+#pane-semaphore .lead.wide.open{margin:4px 6px 8px;padding:7px 10px 10px 7px;border:1px solid var(--line);
+  border-left:3px solid var(--lead);border-radius:9px;background:var(--panel);box-shadow:0 6px 20px rgba(0,0,0,.28)}
+#pane-semaphore .lead.wide>.lhead{display:grid;grid-template-columns:var(--lcols);column-gap:12px;align-items:center}
+#pane-semaphore .lead.wide .lruit{margin:0 0 0 2px}
+#pane-semaphore .lead.wide .lname{font-size:14.5px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#pane-semaphore .lead.wide.open .lname{white-space:normal}
+#pane-semaphore .lead.wide>.lhead>.lmt{font:italic 12.5px/1.3 var(--body);color:var(--lquiet)}
+#pane-semaphore .lead.wide>.lhead>.lmt.none,#pane-semaphore .lead.wide .lcwho.none,
+#pane-semaphore .lead.wide .lcup.none{color:var(--key);font-size:12px}
+#pane-semaphore .lead.wide .lcwho,#pane-semaphore .lead.wide .lcup{min-width:0;font:12.5px/1.3 var(--body);
+  color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#pane-semaphore .lead.wide .lcup i{margin-right:6px;font-size:11.5px;color:var(--key)}
+#pane-semaphore .lead.wide .ltx{grid-column:3/7}
+#pane-semaphore .lead.wide .lheadacts{display:flex;justify-content:flex-end;gap:5px}
+#pane-semaphore .lead.wide .lscore{margin:0}
+/* whose lead this is: the arena, in its type's colour, as Venues tags it */
+#pane-semaphore .lead.wide>.lhead>.lar{justify-self:start;max-width:100%;margin:0;padding:3px 9px;border-radius:99px;
+  font:600 11px var(--sans);letter-spacing:.04em;text-transform:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  background:color-mix(in srgb,var(--lead) 24%,transparent);border:1px solid color-mix(in srgb,var(--lead) 55%,transparent);
+  color:color-mix(in srgb,var(--lead) 45%,#fff)}
+#pane-semaphore .lead.wide>.lhead>.lar:hover{color:#fff;background:color-mix(in srgb,var(--lead) 38%,transparent)}
+/* the day, in the last column, coloured by how near it is: owed red, within
+   the week amber, later in the quiet hand */
+#pane-semaphore .lead.wide>.lhead>.lwhen{justify-self:end;min-width:0;font:12px var(--body);font-style:normal;
+  color:var(--muted);padding:2px 8px;border-radius:99px;border:1px solid transparent}
+#pane-semaphore .lead.wide>.lhead>.lwhen.set{border-color:var(--line)}
+#pane-semaphore .lead.wide>.lhead>.lwhen.soon{color:#F3CC6E;border-color:rgba(240,180,41,.4);background:rgba(240,180,41,.12)}
+#pane-semaphore .lead.wide>.lhead>.lwhen.late{color:var(--brok-deep);border-color:rgba(239,91,76,.5);background:var(--brok-soft)}
+#pane-semaphore .lead.wide>.lhead>.lwhen.shut{border-color:transparent;font-style:italic}
+/* An iPad held across, or a desk window that narrow, drops who is behind
+   the lead from the line; it is still in the open card. */
+@media (max-width:1099px){
+  #pane-semaphore .ltable{--lcols:50px 130px minmax(0,1.2fr) minmax(0,1fr) minmax(0,1.3fr) 22px 140px}
+  #pane-semaphore .lthead>:nth-child(5),#pane-semaphore .lead.wide .lcwho{display:none}
+  #pane-semaphore .lthead>:nth-child(7){justify-self:start}
+  #pane-semaphore .lthead>:nth-child(6){justify-self:center}
+}
+/* An iPad held upright: the arena's tag narrower, and the day without the
+   words saying how late, which its colour already says */
+@media (max-width:900px){
+  #pane-semaphore .ltable{--lcols:50px 108px minmax(0,1.3fr) minmax(0,1fr) minmax(0,1.1fr) 22px 96px}
+  #pane-semaphore .lead.wide .lnear{display:none}
+}
+#pane-semaphore .lead.wide .lnear{font-style:normal}
+/* ── a lead moving (see "a lead moving" in semaphore.js) ──
+   The lead that moved rides over the others while it travels and glows in
+   its own colour for a moment where it lands; a lead new to the list fades
+   in. The travel itself is written on each element by the script. */
+#pane-semaphore .lead.lmv-me{position:relative;z-index:4;box-shadow:0 12px 30px rgba(0,0,0,.5)}
+#pane-semaphore .lead.wide.lmv-me{background:var(--panel)}
+#pane-semaphore .lead.lmv-land{animation:semLeadLand 1.6s ease-out}
+@keyframes semLeadLand{0%{box-shadow:0 0 0 2px var(--lead),0 0 22px color-mix(in srgb,var(--lead) 60%,transparent)}
+  100%{box-shadow:0 0 0 2px transparent,0 0 22px transparent}}
+#pane-semaphore .lmv-in{animation:semLeadIn .56s cubic-bezier(.65,0,.35,1)}
+@keyframes semLeadIn{from{opacity:0}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){#pane-semaphore .lead.lmv-land,#pane-semaphore .lmv-in{animation:none}}
+/* The colour dot (see "a type's colour dot" in semaphore.js): the Ledger's,
+   a 9px disc in a 22px ring. At the head of a type it is a button, and its
+   menu hangs under it on the dark panel: the twenty-six swatches thirteen to
+   a row, the light shades over the deep ones, so each hue stands over its
+   own darker self. */
 #pane-semaphore .lcolwrap.tycol{position:relative;flex:0 0 22px;display:inline-flex}
 #pane-semaphore .lcol{width:22px;height:22px;padding:0;border:1px solid transparent;border-radius:50%;
   background:none;display:flex;align-items:center;justify-content:center;cursor:pointer;
@@ -504,8 +557,8 @@
   cursor:pointer;background:var(--c);box-shadow:0 0 0 1px rgba(0,0,0,.25)}
 #pane-semaphore .lcolpop .lsw.sel{box-shadow:0 0 0 2px var(--panel),0 0 0 4px var(--key2)}
 #pane-semaphore .lcolpop .lsw:focus-visible{outline:1px solid var(--focus);outline-offset:3px}
-/* Complete, at the top right of an open lead on a card back or in the drawer */
-#pane-semaphore .lead .ltx>.ldone{float:right;margin:0 -2px 2px 8px}
+/* Edit and Complete, at the top right of an open lead in the drawer */
+#pane-semaphore .lead .ltx>.lheadacts{float:right;display:flex;align-items:center;gap:4px;margin:0 -2px 2px 8px}
 /* ── Editing in the card ──
    The card keeps its look: each fact stays where it was, in its own type, and
    only gains a faint ground and a dashed edge to say it can be typed into. */
@@ -654,6 +707,13 @@
   font:11px var(--sans);letter-spacing:.08em;color:var(--key);transition:color .14s,border-color .14s}
 #pane-semaphore .lead .lcopy:hover{color:var(--key2);border-color:var(--line)}
 #pane-semaphore .lead .lpane .lkform{margin-top:4px}
+/* the button that adds to a box, on the box's own head (Mark, 2026-10-21) */
+#pane-semaphore .lead .lph .lphb{margin-left:auto;padding:3px 8px;text-transform:none;letter-spacing:.06em;font-weight:400}
+#pane-semaphore .lead .lph .lphb.prim{font-weight:600}
+#pane-semaphore .lead .lph{min-height:24px;align-items:center}
+#pane-semaphore .lead .lnil{margin:2px 0 0;font:italic 12px var(--body);color:var(--key)}
+#pane-semaphore .lead .lupdpane{margin-top:3px}
+#pane-semaphore .lead .lupdpane .lupd{border-top:0;margin-top:0;padding-top:2px}
 /* a finger has no hover to find the cross with */
 @media (hover:none){#pane-semaphore .llrow .lx{opacity:1}}
 #pane-semaphore .lx{flex:0 0 auto;width:19px;height:19px;padding:0;border-radius:5px;color:var(--faint);
@@ -702,9 +762,9 @@
    The Ledger's lead card is the standard (Mark, 2026-10-06), so a lead here is
    shut until pressed: the steps and the day on the first line, the name on the
    second, and the Ledger's clay down the left edge and in the steps. Open, it
-   has the Ledger's action row — the two things it is for, a rule, Edit, and
-   Complete at the far right — then match, links and the updates, newest first,
-   each with its day. The colours are this room's: the paper of the drawer
+   has Edit and Complete at its head, then who and the links, then the updates,
+   newest first, each with its day, each box with the button that adds to it
+   (2026-10-21). The colours are this room's: the paper of the drawer
    restates the clay darker so it still reads there (5.6:1). */
 #pane-semaphore .lead{--lead:#b98676;border-left:3px solid var(--lead);
   padding:7px 10px 8px;cursor:pointer}
@@ -788,7 +848,6 @@
 #pane-semaphore .lscore.shut{opacity:.55;cursor:default}
 #pane-semaphore .lscore.shut select{cursor:default}
 #pane-semaphore .lead .lsub>.lwhen{min-width:66px}
-#pane-semaphore .lead.wide>.lhead>.lwhen{min-width:184px;box-sizing:border-box;justify-content:flex-end}
 #pane-semaphore .lead .lname{display:block;margin:0;padding:0;cursor:inherit;
   font-family:var(--body);font-size:14px;line-height:1.35;color:var(--ink);text-decoration:none}
 #pane-semaphore .lead .lname:hover{color:var(--ink)}
@@ -796,12 +855,15 @@
 /* the paper drawer's red name-hover belonged to the old door on the name;
    the name is the card's own ground now, so it keeps the card's ink */
 #pane-semaphore #card .lead .lname:hover{color:var(--ink)}
-/* the action row, read from the left edge to the right one */
+/* the row under a lead being edited, and Complete's question */
 #pane-semaphore .lacts{display:flex;flex-wrap:wrap;align-items:center;gap:5px;
   margin-top:8px;padding-top:8px;border-top:1px solid var(--grid)}
 /* Complete asking how the lead ended, in place of the action row: the
-   question 5.8:1 on the panel's lead and 4.8:1 on the Leads board */
+   question 5.8:1 on the panel's lead; on the Leads table an open lead
+   stands on the darker panel ground, where the faint colour is 3.6:1, so
+   it takes the muted one there, 7:1 */
 #pane-semaphore .lendq{margin-right:4px;font-family:var(--body);font-size:12.5px;font-style:italic;color:var(--faint)}
+#pane-semaphore .lead.wide .lendq{color:var(--muted)}
 #pane-semaphore .lacts .sp{flex:1 1 auto}
 #pane-semaphore .lact{padding:4px 8px;border:1px solid var(--line);border-radius:6px;
   font:10px var(--sans);letter-spacing:.06em;color:var(--muted);white-space:nowrap;
@@ -809,7 +871,6 @@
 #pane-semaphore .lact.prim{border-color:var(--key);color:var(--key2);font-weight:600;background:var(--sink)}
 #pane-semaphore .lact.quiet{border-color:transparent}
 #pane-semaphore .lact:hover{border-color:var(--line2);color:var(--ink);background:var(--sink)}
-#pane-semaphore .lgap{width:1px;align-self:stretch;margin:1px 2px;background:var(--grid)}
 #pane-semaphore .lead .ldone{margin-left:auto;opacity:1;border-color:var(--line);border-radius:6px;padding:3px 8px;
   font:10px var(--sans);letter-spacing:.06em;color:var(--muted)}
 #pane-semaphore .lead .ldone i{display:inline-flex;align-items:center;justify-content:center;

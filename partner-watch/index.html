@@ -265,6 +265,13 @@ body.drawer .veil{display:block;position:absolute;inset:0;z-index:3;background:r
 .act.bin.on{color:var(--muted);background:var(--hover);text-decoration:line-through}
 #why{flex:1;min-width:220px;background:var(--field);border:1px solid var(--line);border-radius:var(--radius);color:var(--ink);font:13.5px var(--body);padding:6px 10px}
 #why::placeholder{color:var(--faint)}
+/* Make lead, in the leads' clay as the Semaphore's drawer wears it, struck
+   deep enough for 7:1 on the sheet; once made it names the arena and opens it */
+.act.mklead{border-color:rgba(141,85,69,.55);color:#7a4536}
+.act.mklead.made{background:rgba(141,85,69,.12)}
+.act.mklead:disabled{color:var(--faint);cursor:default}
+.mkask{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+#mkArena{background:var(--field);border:1px solid var(--line2);border-radius:var(--radius);color:var(--ink);font:13.5px var(--body);padding:5px 8px;max-width:280px}
 /* A line written is lit in the gold of Marked, so a glance says the entry
    carries a note (Mark, 2026-10-18: an empty field and a filled one looked
    alike). */
@@ -735,8 +742,8 @@ $('[data-step="1"]').innerHTML = svg(18, '<path d="M9 6l6 6-6 6"/>');
    then the opening of the window. Each venue here is matched to the
    Marketplace's by its site, which the Marketplace reads as `siteKey`
    does; one the Marketplace does not have stands after them all, in the
-   copier's own order. The Marketplace's data is only read here, never
-   written. */
+   copier's own order. The Marketplace's data is only read here, and
+   written only by Make lead (see "Make lead"). */
 var market = null;
 var TONES = { blush:'#e19292', terracotta:'#db9973', sand:'#cda364', straw:'#bdaa62', olive:'#9db672', sage:'#6ebe9b',
   aqua:'#59beb8', mist:'#5bbad0', cornflower:'#71b3e1', dusk:'#8faae8', lilac:'#aca0e2', mauve:'#c598d1', rose:'#d992b3',
@@ -1424,7 +1431,7 @@ function drawDetail(){
     + '<div class="actions">'
     + [['interesting','Mark','M'],['bin','Bin','B']].map(function(a){
         return '<button class="act ' + a[0] + (e.verdict === a[0] ? ' on' : '') + '" data-verdict="' + a[0] + '">' + a[1] + '<kbd>' + a[2] + '</kbd></button>'; }).join('')
-    + '<input id="why" placeholder="Why? A line for your future self" value="' + esc(e.why || '') + '" aria-label="Why"></div>'
+    + '<input id="why" placeholder="Why? A line for your future self" value="' + esc(e.why || '') + '" aria-label="Why">' + leadBtnHTML(e) + '</div>'
     + (!e.fetched_at ? '' : '<div class="tabs"><button data-tab="fields" class="' + (view.tab === 'fields' ? 'on' : '') + '">From the site</button>'
     + '<button data-tab="orig" class="' + (view.tab === 'orig' ? 'on' : '') + '">Original page</button>'
     + '<button data-tab="hist" class="' + (view.tab === 'hist' ? 'on' : '') + '">History</button></div>');
@@ -1575,6 +1582,98 @@ function storeMine(part, changes){
   });
   mineQueue = run.catch(function(){});
   return run;
+}
+/* ── Make lead ───────────────────────────────────────────────────────
+   An entry worth following becomes a lead in the Brokerage Semaphore
+   (Mark, 2026-10-21): the project from the entry's own title, the leading
+   organisation as its coordinator, its contact person and address, the
+   project's website as a link named "project" with the entry's page beside
+   it (the page is the "project" link when the entry gives no website), and
+   the line written under Why as the researcher who could match it. It is
+   filed under the arena of the entry's venue, asked only when the venue
+   serves more than one or none, and remembers the venue and the entry
+   (`entryId`), so the button then says where the lead is and opens that
+   arena instead of making a second one. It is written as Pocket writes a
+   lead (pocket/index.html, `commit`): the Semaphore's row read afresh, the
+   lead added to it, the whole put back, so nothing changed elsewhere since
+   this page was opened is undone; the desk takes it in the next time it
+   looks at the cloud, as it takes Pocket's. */
+var mkAsk = null, mkBusy = null;
+var EMAIL = /[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}/;
+function newId(){ return window.crypto && crypto.randomUUID ? crypto.randomUUID() : 'id' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36); }
+function leadOf(e){
+  var hit = null;
+  ((market && market.arenas) || []).some(function(a){
+    return (a.leads || []).some(function(l){ if (l.entryId === e.id){ hit = { a:a, l:l }; return true; } return false; });
+  });
+  return hit;
+}
+function leadArenas(e){
+  var mine = venueArenas(siteOf(e)._venue), ids = mine.map(function(a){ return a.id; });
+  var rest = ((market && market.arenas) || []).filter(function(a){ return !a.frozenAt && ids.indexOf(a.id) < 0; })
+    .sort(function(x, y){ return String(x.name).localeCompare(String(y.name)); });
+  return { mine:mine, rest:rest };
+}
+function leadBtnHTML(e){
+  if (!market) return '';
+  var had = leadOf(e);
+  if (had) return '<button class="act mklead made" data-marena="' + esc(had.a.id) + '" title="This entry is a lead in the Brokerage Semaphore, under '
+    + esc(had.a.name) + ' — open the arena">Lead in ' + esc(had.a.name) + '</button>';
+  if (mkBusy === e.id) return '<button class="act mklead" disabled>Making the lead…</button>';
+  if (mkAsk === e.id){
+    var c = leadArenas(e), opt = function(a){ return '<option value="' + esc(a.id) + '">' + esc(a.name) + '</option>'; };
+    return '<span class="mkask"><select id="mkArena" aria-label="The arena this lead is filed under">'
+      + (c.mine.length ? '<optgroup label="This venue serves">' + c.mine.map(opt).join('') + '</optgroup>' : '<option value="">Choose an arena</option>')
+      + '<optgroup label="' + (c.mine.length ? 'Every other arena' : 'Arenas') + '">' + c.rest.map(opt).join('') + '</optgroup></select>'
+      + '<button class="act mklead" data-mkgo="1">Make lead</button><button class="act" data-mkno="1">Cancel</button></span>';
+  }
+  return '<button class="act mklead" data-mklead="1" title="Make this entry a lead in the Brokerage Semaphore: the project, its coordinator, '
+    + 'contact and email, the project\'s website, and your Why line as the researcher who could match it">Make lead</button>';
+}
+/* The entry page's own pairs are read for what the list line does not
+   carry. Each site words its labels its own way, so each fact takes the
+   first label it recognises, as the copier's PICK does. */
+function leadFromEntry(e, d){
+  var f = (d && d.fields) || [];
+  var get = function(re){ for (var i = 0; i < f.length; i++) if (re.test(f[i][0]) && String(f[i][1] || '').trim()) return String(f[i][1]).trim(); return ''; };
+  var line = function(t){ return String(t || '').split('\n')[0].trim().slice(0, 200); };
+  var id = newId(), site = siteOf(e), v = site._venue;
+  var project = line(get(/^(project (title|name|acronym)|acronym|title|project)$/i) || get(/project.*(title|name|acronym)/i)) || title(e);
+  var coord = line(get(/coordinat|lead(ing)?\b.*(organi[sz]ation|partner|institution)/i)) || e.org || '';
+  var mail = (get(/e-?mail/i).match(EMAIL) || String((d && d.page_text) || '').match(EMAIL) || [''])[0];
+  var web = (get(/web ?site|homepage|^url$|^web$/i).match(/(?:https?:\/\/)?[^\s,;]+\.[^\s,;]+/i) || [''])[0];
+  var links = [];
+  if (web) links.push({ id:newId(), label:'project', url:/^https?:/i.test(web) ? web : 'https://' + web });
+  if (e.url) links.push({ id:newId(), label:web ? site.name + ' entry' : 'project', url:e.url });
+  var l = { id:id, project:project, match:String(e.why || '').trim(), links:links, stage:'spotted', toResearchers:false, toLead:false,
+            due:null, doneAt:null, updates:[{ at:todayISO(), text:'Made in Marked Place from ' + site.name + '’s entry' }], entryId:e.id };
+  if (coord) l.coordinator = coord;
+  if (e.contact) l.contact = String(e.contact).trim();
+  if (mail) l.email = mail;
+  if (v && v.id) l.venueId = v.id;
+  return l;
+}
+function makeLead(e, aid){
+  if (!aid) return;
+  mkBusy = e.id; mkAsk = null; drawDetail();
+  var fields = detail[e.id] || !e.fetched_at ? Promise.resolve(detail[e.id] || null)
+    : api('/rest/v1/partner_entries?select=fields,page_text&id=eq.' + encodeURIComponent(e.id)).then(function(r){ return r[0] || null; });
+  fields.then(function(d){
+    var l = leadFromEntry(e, d);
+    return api('/rest/v1/app_state?id=eq.semaphore&select=data').then(function(rows){
+      if (!rows.length) throw new Error('the Brokerage Semaphore has no copy in the cloud yet');
+      var s = rows[0].data;
+      if (typeof s === 'string') s = JSON.parse(s);
+      var a = (s.arenas || []).find(function(x){ return x.id === aid; });
+      if (!a) throw new Error('that arena is no longer on the board');
+      /* a second press, or another device, got there first */
+      var twice = (s.arenas || []).some(function(x){ return (x.leads || []).some(function(y){ return y.entryId === e.id; }); });
+      if (!twice){ if (!Array.isArray(a.leads)) a.leads = []; a.leads.push(l); }
+      return api('/rest/v1/app_state', { method:'POST', body:[{ id:'semaphore', data:s, updated_at:new Date().toISOString() }],
+        headers:{ Prefer:'resolution=merge-duplicates,return=representation' } }).then(function(){ market = s; });
+    });
+  }).then(function(){ mkBusy = null; drawDetail(); },
+    function(err){ mkBusy = null; drawDetail(); $('#banner').textContent = 'The lead was not made: ' + err.message; $('#banner').hidden = false; });
 }
 function editLinks(){ editingLinks = true; drawSites(); }
 function cancelLinks(){ editingLinks = false; drawSites(); }
@@ -1742,6 +1841,21 @@ document.addEventListener('click', function(ev){
     else openPanel(m.dataset.mvenue ? 'venue' : 'arena', m.dataset.mvenue || m.dataset.marena);
     if (!m.dataset.msite) return;
   }
+  /* Make lead: the Why line is kept first, since a press on the button
+     may come before the field has said it changed */
+  var mk = ev.target.closest('[data-mklead],[data-mkgo],[data-mkno]');
+  if (mk){
+    var me = byId[view.id], w = $('#why');
+    if (!me) return;
+    if (w && (w.value.trim() || null) !== (me.why || null)) patch(me, { why:w.value.trim() || null });
+    if (mk.dataset.mkno){ mkAsk = null; return drawDetail(); }
+    if (mk.dataset.mkgo) return makeLead(me, $('#mkArena') && $('#mkArena').value);
+    var c = leadArenas(me);
+    if (c.mine.length === 1) return makeLead(me, c.mine[0].id);
+    mkAsk = me.id; drawDetail();
+    if ($('#mkArena')) $('#mkArena').focus();
+    return;
+  }
   var t = ev.target.closest('[data-pick],[data-bulk],[data-site],[data-id],[data-state],[data-kind],[data-tab],[data-verdict],[data-editlinks],[data-savelinks],[data-cancellinks],[data-callnote],[data-drawer],[data-step],#checkNow');
   if (!t) return;
   if (t.dataset.drawer) return drawer(t.dataset.drawer === 'toggle' ? 'toggle' : t.dataset.drawer === '1');
@@ -1827,7 +1941,7 @@ document.addEventListener('keydown', function(ev){
     else if (ev.key === 'Escape') cancelLinks();
     return;
   }
-  if (ev.target.matches('input,textarea') || ev.target.isContentEditable || ev.metaKey || ev.ctrlKey || ev.altKey) return;
+  if (ev.target.matches('input,textarea,select') || ev.target.isContentEditable || ev.metaKey || ev.ctrlKey || ev.altKey) return;
   var k = ev.key;
   /* With a panel open, the letters and arrows would answer and turn an
      entry hidden under it; Esc puts the panel away first. */

@@ -200,8 +200,9 @@ answers `state()` and `applyState()`, emits `<room>:saved`, is handed to
 Cloud is one Supabase table, **`app_state`**, one row per store: `main` is
 the Ledger, then `semaphore`, `notes` and `atlas`. (Marked Place keeps
 its scroll links and call notes in a row of its own, `partnerwatch`, which
-Export leaves out, and only reads `semaphore`, for the order and arenas of
-its venues.) The Ledger's **Export**
+Export leaves out, and reads `semaphore` for the order and arenas of its
+venues; it writes there only a lead made from an entry, the way Pocket
+writes one.) The Ledger's **Export**
 writes the journal and, beside it, every store in `ROOM_STORES` under its
 own name; Import merges the journal and replaces a room's store, and a
 file written before a room joined has no key for it and leaves it alone.
@@ -425,6 +426,7 @@ Marketplace; it is the same room.
 | Venues: its three tabs, Arising · Active · Dying, and Limbo's apart; the axis over them, sticky; the heading of each group, Shared then each type; one venue's row, its mark the grip it is dragged by into his own order, its name and the arenas it serves, its strip, and Go, which is the visit (Visited once pressed today) | `.vtabs` › `.vtab`, `.culimbo.vlimbotab`; `.vaxis`; `.vgrp`; `.vgl`, `.vrow.vdragging`; `.vrow` = `.vname` (`.vnmrow` › `.vnm`, `.vchips`) + `.vtrack` + `.vend` (`.vgo`, `.vgo.done`) |
 | a venue's window, on the board's lanes, on Venues and in its panel: the band, its two ends to drag, its name, the event days, the visits, today, due | `.vband` (`.st-new`, `.st-board`, `.st-venues`), `.vh`, `.vbl`, `.vmeet` and `.vdia`, `.vtick`, `.vnow`, `.vpulse` |
 | the visit question, at the foot of the room after Go | `#vbar` › `.vask.bar` |
+| Leads: the table, its heading of columns that sort, a step's coloured band, one lead's line, and open, its Who, Links and Updates boxes | `.ltable` › `.lthead` (`.ltc`), `.lgrp` › `.lgh`, `article.lead.wide`; `.lpane`, `.lupdpane` |
 | the month axis over the board, sticky, and the heading that names and chooses the order (My order / By date) | `.axisrow` = `.corner.sorter` (`.whsort`, its menu `.whmenu`) + `.axis`; a month is `.mcell` |
 | one arena type's group on the board, its heading | `.grp`, its heading `.ghead` |
 | the types, managed — opened by Types: a type's line and its grip, its arenas one per row, its colour dot, the copy that follows a drag | `#typesModal` › `#tylist` › `.tyblock` (`.tyline` › `.tygrip`, `.tyarenas` › `.tyrow`); `.lcolwrap.tycol`; `.tyghost` |

@@ -202,5 +202,19 @@ rather than through a redraw. In the Ledger, `byId` searches inside the
 room and so cannot find `#pane-ledger` itself; reach it from the card with
 `closest`.
 
+**A lead that moves slides, and the view goes with it** (2026-10-21). In
+the Brokerage Semaphore a lead's ruit, day, score, update or Complete
+redraws the list in its new order, and a lead used to vanish from under the
+pointer and appear somewhere else, often below the fold, with everything
+between jumping a card's height; Mark "lost track". `leadMove` measures
+every lead and heading against its scroller, draws, puts each back where it
+was with a transform, and lets them all slide home on the 560ms curve while
+the scroll follows the lead that moved, only as far as keeps it in view; it
+rides above the others and glows where it lands, and a lead new to the list
+fades in. Changes that only alter what is inside one card — a composer
+opened or put away, a line taken out — go through `leadRedo`, which redraws
+that card alone with the opening's height tween, so nothing else is touched.
+A new control on a lead goes through one of the two, never a bare redraw.
+
 See also [pitfalls](pitfalls.md), [project-card](project-card.md) and
 [testing](testing.md).
