@@ -113,14 +113,17 @@ body.drawer .veil{display:block;position:absolute;inset:0;z-index:3;background:r
    type rather than the bold of the sheet. They have a section of their own
    at the row's right edge, across both lines, behind a hairline, and the
    arenas fade out before it rather than under it (Mark, the same day):
-   three slots of fixed width, so each kind of count stands in one column
-   down the venues and an empty one leaves its place empty. */
-.site .cnt{grid-column:2;grid-row:1 / span 2;align-self:center;display:grid;grid-template-columns:22px 22px 36px;gap:3px;justify-items:center;
-  padding-left:9px;border-left:1px solid var(--grid)}
+   slots of fixed width, so each kind of count stands in one column down
+   the venues and an empty one leaves its place empty. Marked sits on top
+   of the rest, the entries kept that are not Marked, and new beside the
+   two, which made the section narrower than three in a row (Mark, the
+   same day: the total had counted the Marked twice over, as it were). */
+.site .cnt{grid-column:2;grid-row:1 / span 2;align-self:center;display:grid;grid-template-columns:34px 22px;grid-template-rows:17px 17px;gap:3px;
+  justify-items:center;align-items:center;padding-left:8px;border-left:1px solid var(--grid)}
 .site .cnt span{min-width:17px;height:17px;padding:0 5px;border-radius:99px;font:11px/17px var(--serif);text-align:center;white-space:nowrap}
-.site .cnt .m{grid-column:1;background:var(--gold-ink);color:var(--sheet)}
-.site .cnt .n{grid-column:2;background:var(--new-ink);color:var(--sheet)}
-.site .cnt .t{grid-column:3;border:1px solid var(--line2);line-height:15px;color:var(--key2)}
+.site .cnt .m{grid-column:1;grid-row:1;background:var(--gold-ink);color:var(--sheet)}
+.site .cnt .n{grid-column:2;grid-row:1 / span 2;background:var(--new-ink);color:var(--sheet)}
+.site .cnt .t{grid-column:1;grid-row:2;border:1px solid var(--line2);line-height:15px;color:var(--key2)}
 /* The venues stand in the Marketplace's groups, each under a thin band in
    its type's colour, and carry the arenas they serve as the Marketplace's
    tags do: the arena's tone struck into the paper with a rule of it down
@@ -1232,7 +1235,7 @@ function drawSites(){
        + '<span class="l1"><span class="nm" data-msite="' + esc(s.id) + '" title="Open ' + esc(s._venue ? s._venue.name : s.name) + '">' + esc(s.name) + '</span></span>'
        + (tags ? '<span class="l2">' + tags + '</span>' : '')
        + '<span class="cnt">' + (mk ? '<span class="m" title="' + mk + ' marked">' + mk + '</span>' : '') + (n ? '<span class="n" title="' + n + ' new">' + n + '</span>' : '')
-         + '<span class="t" title="' + all + ' entries, not counting the binned">' + all + '</span></span>'
+         + '<span class="t" title="' + (all - mk) + ' more kept, not Marked; the binned not counted">' + (all - mk) + '</span></span>'
        + (s.last_error ? '<div class="err">Last read failed, ' + esc(stamp(s.last_error_at)) + ': ' + esc(s.last_error) + '</div>' : '')
        + '</button></div>';
   });
