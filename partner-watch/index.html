@@ -320,6 +320,69 @@ body.drawer .rd-list{background:var(--sel);border-color:var(--key)}
 .det.turning{background:var(--sheet);min-height:100%;box-shadow:0 0 0 1px var(--grid),0 6px 28px rgba(42,38,32,.16);will-change:transform}
 .det.ghost{position:absolute;left:0;right:0;pointer-events:none;z-index:3}
 .banner{padding:8px 18px;background:var(--brok-soft);color:var(--warn-ink);font-size:13.5px;flex:none}
+/* ── the search's results (see "the search" in the script) ────────────
+   The Atlas's results in this page's paper and type: a card per entry,
+   its score a bar in the colours of the parts that made it, and under it
+   each term with the places it was found, the sentence of the best one
+   open. Each part has its colour: what they seek the red of Seeks
+   partners, the project the page's ink, keywords a quiet brown, terms
+   together a teal the page uses nowhere else, and what they already have
+   hatched, because it is taken off. */
+.lv-seek{--lv:var(--brok);--lv-ink:var(--brok-ink);--lv-soft:var(--brok-soft)}
+.lv-proj{--lv:var(--key2);--lv-ink:var(--key2);--lv-soft:var(--sel)}
+.lv-frame{--lv:#A99F8B;--lv-ink:var(--muted);--lv-soft:var(--hover)}
+.lv-joint{--lv:#2E7D7A;--lv-ink:#1F5C59;--lv-soft:rgba(46,125,122,.15)}
+.lv-own{--lv:var(--warn-ink);--lv-ink:var(--warn-ink);--lv-soft:transparent}
+.shead{padding-bottom:14px;border-bottom:1px solid var(--line)}
+.sterms{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;font-size:13.5px;color:var(--muted)}
+.sterms b{color:var(--ink);font-weight:500}
+.sterm{font:13px var(--serif);border:1px solid var(--line2);border-radius:99px;padding:1px 10px;color:var(--key2);background:var(--field)}
+.sterm.none{border-color:var(--warn-line);color:var(--warn-ink)}
+.sopts{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:10px}
+.sopts .gap{width:8px}
+.sopts .linkbtn{margin-left:6px}
+.sweights{display:grid;grid-template-columns:max-content 170px 40px;gap:6px 12px;align-items:center;margin-top:10px;padding:10px 14px;
+  font-size:13.5px;color:var(--key2);border:1px solid var(--line);border-radius:var(--radius);background:var(--field);width:max-content;max-width:100%}
+.sweights input{width:100%;accent-color:var(--key2)}
+.sweights .linkbtn{grid-column:1 / -1;justify-self:start;padding-left:0}
+.slegend{display:flex;flex-wrap:wrap;gap:4px 16px;margin-top:10px;font-size:12.5px;color:var(--muted)}
+.sindex{font-size:12.5px;color:var(--muted);margin-top:6px}
+.sindex:empty{display:none}
+.badge{display:inline-block;font:10.5px/16px var(--mono);min-width:17px;padding:0 3px;text-align:center;border-radius:4px;background:var(--lv-soft);color:var(--lv-ink);box-shadow:inset 0 0 0 1px var(--lv)}
+.hit{background:var(--field);border:1px solid var(--line);border-radius:10px;padding:13px 18px 9px;margin-top:12px}
+.htop{display:flex;align-items:baseline;gap:5px 9px;flex-wrap:wrap}
+.htitle{background:none;border:0;padding:0;font:17.5px/1.3 var(--serif);color:var(--ink);text-align:left;cursor:pointer}
+.htitle:hover{text-decoration:underline;text-decoration-color:var(--line2);text-underline-offset:3px}
+.hsub{font-size:12.5px;color:var(--muted)}
+.htop .scorewrap{margin-left:auto;display:flex;align-items:center;gap:8px;align-self:center}
+.sbar{width:110px;height:7px;border-radius:4px;background:var(--sel);overflow:hidden;display:flex}
+.sbar i{display:block;height:100%;background:var(--lv)}
+.sbar i.lv-own{background:repeating-linear-gradient(135deg,var(--warn-ink) 0 2px,transparent 2px 4px)}
+.snum{font:11.5px var(--mono);color:var(--faint);min-width:28px;text-align:right}
+.hline{font-size:14px;color:var(--key2);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.paths{margin-top:9px;border-top:1px solid var(--grid);padding-top:2px}
+.qgroup{margin:8px 0 2px;font-size:12.5px;color:var(--muted)}
+.qgroup b{color:var(--ink);font-weight:600}
+.path{display:flex;align-items:center;flex-wrap:wrap;gap:3px 4px;padding:3px 6px;border-radius:6px;font-size:13.5px}
+.path:hover{background:var(--hover)}
+.pmt{font:11px var(--mono);color:var(--faint);width:14px;text-align:center}
+.pw{padding:0 6px;border-radius:5px;background:var(--lv-soft);color:var(--lv-ink);font-weight:600}
+.pw.lv-own{box-shadow:inset 0 0 0 1px var(--warn-line)}
+.prel{font:10.5px var(--mono);color:var(--faint);padding:0 3px}
+.psrc{background:none;border:0;border-bottom:1px dashed var(--line2);padding:0 1px;margin-left:5px;font:12.5px var(--body);color:var(--muted);cursor:pointer}
+.psrc:hover{color:var(--ink)}
+.against{font:italic 12px var(--body);color:var(--warn-ink);margin-left:6px}
+.snippet{margin:3px 4px 8px 26px;padding:8px 12px;background:var(--sheet);border-left:2px solid var(--lv);border-radius:0 7px 7px 0;
+  font-size:14px;line-height:1.55;color:var(--key2);max-width:780px;overflow-wrap:anywhere}
+.snippet mark{background:none;color:var(--ink);font-weight:700;box-shadow:inset 0 -2px 0 var(--lv)}
+.snippet .from{display:block;margin-top:4px;color:var(--faint);font-size:12px}
+.showmore{background:none;border:0;font:12.5px var(--serif);color:var(--muted);padding:3px 6px;cursor:pointer}
+.showmore:hover{color:var(--ink)}
+.sdiv{margin-top:28px;padding-top:12px;border-top:1px solid var(--line2);font-size:13.5px;color:var(--muted)}
+.sdiv b{display:block;font:400 13px var(--serif);letter-spacing:.07em;text-transform:uppercase;color:var(--warn-ink);margin-bottom:2px}
+.smore{margin:16px 0 0}
+/* the words found, in the entry opened from the results */
+mark.lit{background:rgba(46,125,122,.17);color:inherit;border-radius:2px;box-shadow:0 0 0 1px rgba(46,125,122,.17)}
 /* ── the Semaphore's slide-ins (see openPanel) ───────────────────────
    The venue's name and the arena's tags say they open something of their
    own, apart from the row that chooses the venue. The panel is the
@@ -500,7 +563,7 @@ body.mopen .mpanel{transform:none;visibility:visible;transition:transform .3s cu
   <span class="meta" id="total"></span>
   <div class="grow"></div>
   <span class="rd rd-step" id="rdstep"><button data-step="-1" aria-label="Previous entry"></button><span id="rdat"></span><button data-step="1" aria-label="Next entry"></button></span>
-  <input id="search" type="search" placeholder="Search names, organisations, keywords…" aria-label="Search">
+  <input id="search" type="search" placeholder="Search the entries, commas between terms" aria-label="Search">
 </header>
 <div class="banner" id="banner" hidden></div>
 
@@ -602,14 +665,14 @@ function all(path){
 
 /* ── state ─────────────────────────────────────────────────────────── */
 var sites = [], entries = [], lastRun = null, byId = {};
-var view = { site:null, kind:'all', state:'open', q:'', id:null, tab:'fields' };
+var view = { site:null, kind:'all', state:'open', q:'', id:null, tab:'fields', scope:'all', every:false, results:false, hits:false };
 try { Object.assign(view, JSON.parse(localStorage.getItem(VIEW) || '{}'), { q:'' }); } catch(e){}
 /* a device last left on Later, which went on 2026-10-18, comes back to All */
 if (view.state === 'later') view.state = 'open';
 var detail = {};          // id → { fields, page_text, versions }
 var $ = function(s){ return document.querySelector(s); };
 function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]; }); }
-function saveView(){ try { localStorage.setItem(VIEW, JSON.stringify({ site:view.site, kind:view.kind, state:view.state, id:view.id, tab:view.tab })); } catch(e){} }
+function saveView(){ try { localStorage.setItem(VIEW, JSON.stringify({ site:view.site, kind:view.kind, state:view.state, id:view.id, tab:view.tab, scope:view.scope, every:view.every })); } catch(e){} }
 function day(iso){ if (!iso) return ''; var d = new Date(iso);
   return d.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' }); }
 function stamp(iso){ if (!iso) return ''; var d = new Date(iso);
@@ -617,7 +680,7 @@ function stamp(iso){ if (!iso) return ''; var d = new Date(iso);
 function siteOf(e){ return sites.find(function(s){ return s.id === e.site; }) || { name:e.site }; }
 function title(e){ return e.org || e.contact || ('Entry ' + e.ext_id); }
 
-var COLS = 'id,site,ext_id,url,kind,contact,org,country,topic,keywords,posted,list_text,first_seen,fetched_at,changed_at,removed_at,opened_at,verdict,why,decided_at';
+var COLS = 'id,site,ext_id,url,kind,contact,org,country,topic,keywords,posted,list_text,first_seen,fetched_at,changed_at,removed_at,opened_at,verdict,why,decided_at,page_hash';
 function load(){
   return Promise.all([
     api('/rest/v1/partner_sites?select=*&order=sort'),
@@ -644,8 +707,12 @@ function load(){
     entries.forEach(function(e, i){ e._i = i; });
     if (!sites.some(function(s){ return s.id === view.site; })) view.site = sites.length ? sites[0].id : null;
     regroup();
+    if (view.q) runSearch();
     $('#banner').hidden = true;
     draw();
+    /* a device the search has read pages on before takes the new ones in */
+    var used = false; try { used = !!localStorage.getItem(SXKEY); } catch(e){}
+    if (found || used) syncIndex();
   }).catch(function(e){
     if (String(e.message) === 'logged out' || e.status === 401) return;
     $('#banner').textContent = 'Could not reach the cloud: ' + e.message;
@@ -658,16 +725,17 @@ function load(){
    copier never brings them back as new, not so they are seen again. */
 var STATES = [['open','All'],['unsorted','Unsorted'],['interesting','Marked'],['bin','Binned']];
 var KINDS = [['all','Both kinds'],['seeks','Seeks partners'],['offers','Offers expertise']];
-function passes(e){
-  if (e.site !== view.site) return false;
-  if (view.kind !== 'all' && e.kind !== view.kind) return false;
+function stateOk(e){
   if (view.state === 'open' && e.verdict === 'bin') return false;
   if (view.state === 'unsorted' && e.verdict) return false;
   if (['interesting','bin'].indexOf(view.state) >= 0 && e.verdict !== view.state) return false;
-  if (view.q){
-    var hay = [e.contact, e.org, e.country, e.topic, e.keywords, e.list_text, e.why].join(' ').toLowerCase();
-    if (view.q.toLowerCase().split(/\s+/).some(function(w){ return w && hay.indexOf(w) < 0; })) return false;
-  }
+  return true;
+}
+function passes(e){
+  if (e.site !== view.site) return false;
+  if (view.kind !== 'all' && e.kind !== view.kind) return false;
+  if (!stateOk(e)) return false;
+  if (found && !reaches(found.per[e.id])) return false;
   return true;
 }
 /* Within a site: what is new on top, then Marked, then the rest (Mark,
@@ -685,6 +753,7 @@ function regroup(){ entries.forEach(function(e){ e._g = groupOf(e); }); }
    top, so an entry binned by mistake a moment ago is the first one there
    to take back out (Mark, 2026-10-21). */
 function shown(){
+  if (view.hits && found) return results();
   var bin = view.state === 'bin';
   return entries.filter(passes).sort(function(a, b){
     return bin ? (b.decided_at || '').localeCompare(a.decided_at || '') || (a._i - b._i) : (a._g - b._g) || (a._i - b._i); });
@@ -698,6 +767,478 @@ function binnedWhen(iso){
   return d.toLocaleDateString('en-GB', d.getFullYear() === t.getFullYear() ? { day:'numeric', month:'short' } : { day:'numeric', month:'short', year:'numeric' });
 }
 function isNew(e){ return !e.opened_at && !e.verdict; }
+
+/* ── the search ──────────────────────────────────────────────────────
+   The bar at the top reads the entries the way the Atlas's Search reads
+   the researchers (Mark, 2026-10-21): each place a term is found is shown,
+   with how it matched and in which part of the entry, and the parts weigh
+   differently by what a word there says about the entry. It used to keep,
+   in the list's own order, every entry whose list line held the words
+   typed, which could not say which of forty entries naming "water" is
+   about water.
+
+   The parts, heaviest first. A sentence of the project's own text that
+   says what is wanted ("we are looking for", "partners with") is what the
+   entry seeks: a term there is the best news an entry can give. The
+   project's text is what it is about. Keywords, topics and disciplines
+   are the frame it is filed under, which the whole call shares, so they
+   weigh half. What the partner says of themselves (their expertise, their
+   organisation, and the whole text of an entry offering expertise)
+   counts AGAINST the entry, as Mark asked: what they already have is what
+   they will not need from us. An entry found only there is listed apart,
+   after the rest.
+
+   Several terms in one entry earn extra, the more the closer they stand:
+   in one sentence, in one part, or only somewhere in the entry. A term
+   found again in the same part counts half once more, and at most twice,
+   so a long text does not win on its length. The weights are Mark's to
+   change under Weights, and kept on the device.
+
+   A name, an organisation, a country or a word of his own Why line flags
+   the entry and adds nothing to its score, as a name does in the Atlas,
+   so a search for a person or a country still finds them. */
+var SW = { seek:1.5, proj:1, frame:0.5, own:0.5, joint:1 }, SWKEY = 'partnerwatch.weights';
+try { Object.assign(SW, JSON.parse(localStorage.getItem(SWKEY) || '{}')); } catch(e){}
+var LV = { seek:['S','what they seek'], proj:['P','the project'], frame:['K','keywords and topics'], own:['O','what they already have'] };
+var MT = { exact:['=', 1, 'the word itself'], grows:['⊇', 0.75, 'the start of a longer word'],
+           inside:['⊆', 0.6, 'inside a longer word'], apart:['∼', 0.5, 'its words apart, in one sentence'] };
+/* Which part a field is, by its label on the site. What is no text about
+   the project (who, where, how to reach them, and the site's own choices
+   such as EPSS's "Looking for: a project to join") is left out: "partner"
+   would be found in every EPSS entry. EPSS's Title is a person's (Dr,
+   Prof), b2match's the entry's headline; EPSS's Call is the same in every
+   entry of a venue. PtJ's "Cooperation interest" is what is sought. */
+var SKIP = /^(name|contact name|email|email address|e-mail|telephone|phone|website|city|region|country|orcid id|status.*|organisation name|name of organisation\/institution\/company|organisation type|looking for|last updated on the site|opportunities for networking|link to .*)$/i;
+var OWNF = /expertise|skills|about the organi[sz]ation|job position|department/i;
+var SEEKF = /cooperation interest|sought|wanted|required/i;
+var FRAMEF = /^(topics?|priority areas|disciplines|keywords|call|stage)$/i;
+function partOf(label, e, site, ownField){
+  label = String(label).trim();
+  if (SKIP.test(label)) return null;
+  if (/^(title|call)$/i.test(label) && site.platform === 'epss') return null;
+  if (FRAMEF.test(label)) return 'frame';
+  if (OWNF.test(label)) return 'own';
+  if (SEEKF.test(label)) return 'seek';
+  return e.kind === 'offers' && !ownField ? 'own' : 'proj';
+}
+/* A sentence of the project's text that asks for something. Read from
+   the sentence as written, so its snippet shows why it counted. Not in an
+   entry offering expertise, whose "we are seeking to join" asks for a
+   project, not for what we have. */
+var SEEKS = /\b(looking for|look for|seek(s|ing)?(?! to join)|search(ing)? for|in search of|wanted|missing|lack(s|ing)?|require[sd]?|requiring|would (like|love) to (find|involve|include|add|welcome)|we (also |still )?need|needs? (a |an )?(partner|expert)|(partner|expert|organi[sz]ation|compan(y|ies)|institution|universit(y|ies)|sme)s? (with|having|who|that|able|in charge|specialised|specialized)|to complement|complementary|invite[sd]?|welcome[sd]?)\b/i;
+var STOP = /^(a|an|and|or|of|the|for|in|on|to|with|by|at|from|as|is|are)$/;
+var WORD = /[\p{L}\p{N}]+/gu;
+/* Lower case without accents, one character for one, so that a place
+   found in the folded text is the same place in the text as written. */
+function fold(s){
+  return String(s || '').replace(/[^\x00-\x7f]/g, function(c){
+    var f = c.normalize('NFKD').replace(/[̀-ͯ]/g, ''); return f.length === 1 ? f : c; }).toLowerCase();
+}
+/* the Atlas's singular (atlas.js, "normalization"), without its list of
+   irregular words */
+function singular(w){
+  if (w.length > 3 && /ies$/.test(w) && !/[aeiou]ies$/.test(w)) return w.slice(0, -3) + 'y';
+  if (w.length > 2 && /s$/.test(w) && !/(ss|us|is)$/.test(w)) return w.slice(0, -1);
+  return w;
+}
+function escRe(s){ return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+/* How a word of the text answers a word of the term: itself (or its
+   plural), a longer word it starts ("model" in "modelling"), or a longer
+   word it stands inside ("water" in "wastewater"). Short words only as
+   themselves, or "art" would be found in every "part". */
+function kindOf(word, w){
+  if (word === w || singular(word) === w) return 'exact';
+  if (w.length >= 4 && word.indexOf(w) === 0) return 'grows';
+  if (w.length >= 5 && word.indexOf(w) > 0) return 'inside';
+  return null;
+}
+
+/* The texts the search reads are each entry's own page, which the list
+   does not load, because hundreds of pages would slow every opening of
+   this page. So the pages are fetched once, the first time the search is
+   used on a device, and kept on that device in its IndexedDB, which holds
+   megabytes where localStorage would run out beside the One App on the
+   same address. After that only an entry whose page is new or changed is
+   fetched, told by its fingerprint (`page_hash`), each time the page is
+   opened or checked: a new entry is in the search as soon as its page is
+   copied. Until then an entry is searched by its list line. Only the
+   texts are kept, never a name, an email or a telephone. */
+var SX = { docs:{}, dbp:null, loaded:false, running:null, again:false, waiting:0, failed:'' }, SXKEY = 'partnerwatch.searched', prepped = {}, found = null;
+function idb(){
+  if (!SX.dbp) SX.dbp = new Promise(function(ok){
+    try {
+      var r = indexedDB.open('marked-place-search', 1);
+      r.onupgradeneeded = function(){ r.result.createObjectStore('pages', { keyPath:'id' }); };
+      r.onsuccess = function(){ ok(r.result); };
+      r.onerror = r.onblocked = function(){ ok(null); };
+    } catch(e){ ok(null); }
+  });
+  return SX.dbp;
+}
+function idbAll(db){
+  return new Promise(function(ok){
+    try { var q = db.transaction('pages').objectStore('pages').getAll(); q.onsuccess = function(){ ok(q.result || []); }; q.onerror = function(){ ok([]); }; }
+    catch(e){ ok([]); }
+  });
+}
+function idbPut(db, rows){
+  try { var st = db.transaction('pages', 'readwrite').objectStore('pages'); rows.forEach(function(r){ st.put(r); }); } catch(e){}
+}
+function hashOf(e){ return e.page_hash || e.fetched_at; }
+function texts(fields){
+  return (fields || []).filter(function(f){ return f && f[1] && !SKIP.test(String(f[0]).trim()); })
+    .map(function(f){ return [String(f[0]), String(f[1])]; });
+}
+function syncIndex(){
+  if (SX.running){ SX.again = true; return SX.running; }
+  SX.running = idb().then(function(db){
+    return (SX.loaded || !db ? Promise.resolve([]) : idbAll(db)).then(function(rows){
+      if (!SX.loaded){ rows.forEach(function(r){ if (!SX.docs[r.id]) SX.docs[r.id] = r; }); SX.loaded = true; }
+      var need = entries.filter(function(e){ var d = SX.docs[e.id]; return e.fetched_at && (!d || d.h !== hashOf(e)); })
+        .map(function(e){ return e.id; });
+      SX.waiting = need.length; indexSays();
+      var batches = [];
+      for (var i = 0; i < need.length; i += 100) batches.push(need.slice(i, i + 100));
+      return batches.reduce(function(p, ids){ return p.then(function(){
+        return api('/rest/v1/partner_entries?select=id,page_hash,fetched_at,fields&id=in.('
+            + ids.map(function(id){ return encodeURIComponent('"' + id + '"'); }).join(',') + ')').then(function(got){
+          var put = got.map(function(x){ return { id:x.id, h:x.page_hash || x.fetched_at, f:texts(x.fields) }; });
+          put.forEach(function(d){ SX.docs[d.id] = d; });
+          if (db) idbPut(db, put);
+          SX.waiting = Math.max(0, SX.waiting - ids.length); indexSays();
+        });
+      }); }, Promise.resolve());
+    });
+  }).then(function(){ SX.failed = ''; try { localStorage.setItem(SXKEY, '1'); } catch(e){} }, function(err){ SX.failed = err.message; }).then(function(){
+    SX.running = null; SX.waiting = 0;
+    if (found){ runSearch(); drawRows(); if (view.results) drawResults(); } else indexSays();
+    if (SX.again){ SX.again = false; syncIndex(); }
+  });
+  return SX.running;
+}
+function indexSays(){
+  var el = $('#sindex'); if (!el) return;
+  var list = entries.filter(function(e){ return !SX.docs[e.id]; }).length;
+  el.textContent = SX.waiting ? 'Reading the entry pages into the search: ' + SX.waiting + ' still to come, read by their list line until then.'
+    : SX.failed ? 'The entry pages could not all be read into the search (' + SX.failed + '); those are read by their list line.'
+    : list ? list + ' entr' + (list === 1 ? 'y is' : 'ies are') + ' read by the list line only, until the copier has copied their pages.' : '';
+}
+
+/* An entry's parts, each with where its sentences end and which of them
+   ask for something, made once per copy of its page. */
+function prep(e){
+  var d = SX.docs[e.id], key = d ? d.h : 'l|' + (e.list_text || '') + '|' + (e.keywords || '') + '|' + (e.topic || '');
+  var c = prepped[e.id];
+  if (c && c.key === key) return c.secs;
+  var site = siteOf(e), pairs = d ? d.f : [['On the list', e.list_text], ['Keywords', e.keywords], ['Topic', e.topic]];
+  var ownField = pairs.some(function(f){ return f[1] && OWNF.test(f[0]); }), seen = {}, secs = [];
+  pairs.forEach(function(f){
+    var lvl = f[1] ? partOf(f[0], e, site, ownField) : null, k = f[0] + '\u0000' + f[1];
+    if (!lvl || seen[k]) return;
+    seen[k] = 1;
+    var raw = String(f[1]), ends = [], seek = [], re = /[.!?]+(?=\s|$)|\n/g, m;
+    while ((m = re.exec(raw))) ends.push(m.index + m[0].length);
+    if (ends[ends.length - 1] !== raw.length) ends.push(raw.length);
+    if (lvl === 'proj' && e.kind !== 'offers') ends.forEach(function(b, i){ seek.push(SEEKS.test(raw.slice(i ? ends[i - 1] : 0, b))); });
+    secs.push({ lvl:lvl, label:f[0], raw:raw, ft:fold(raw), ends:ends, seek:seek });
+  });
+  prepped[e.id] = { key:key, secs:secs };
+  return secs;
+}
+function sentOf(sec, pos){
+  var lo = 0, hi = sec.ends.length - 1;
+  while (lo < hi){ var mid = (lo + hi) >> 1; if (sec.ends[mid] <= pos) lo = mid + 1; else hi = mid; }
+  return lo;
+}
+function levelOf(sec, sent){ return sec.lvl === 'proj' && sec.seek[sent] ? 'seek' : sec.lvl; }
+
+/* Commas or semicolons part the terms; a term of several words is found
+   as those words in a row, or less surely as all of them in one sentence. */
+function parseTerms(q){
+  return q.split(/[,;]+/).map(function(t){ return t.trim(); }).filter(Boolean).slice(0, 8).map(function(t){
+    var raw = fold(t).match(WORD) || [], words = raw.map(singular);
+    var content = words.filter(function(w){ return !STOP.test(w); });
+    return { q:t, raw:raw, words:words, content:content.length ? content : words, bases:words.map(baseOf),
+      who:raw.length ? new RegExp('(^|[^\\p{L}\\p{N}])' + raw.map(escRe).join('[^\\p{L}\\p{N}]+'), 'u') : null };
+  }).filter(function(t){ return t.words.length; });
+}
+var RANK = { exact:3, grows:2, inside:1 };
+/* What is looked for in the text: the word, less a final y, so that
+   "study" finds "studies" too. */
+function baseOf(w){ return /y$/.test(w) && w.length > 3 ? w.slice(0, -1) : w; }
+/* Every word of a part that holds the term's word, found by plain
+   indexOf and widened to the whole word: a pattern that matched the word
+   around it was tried first and took two seconds a search over 2,700
+   entries, being tried afresh at every letter of every page. */
+var LETTER = /[\p{L}\p{N}]/u;
+function isLetter(c){ var n = c.charCodeAt(0); return n < 128 ? (n > 47 && n < 58) || (n > 96 && n < 123) || (n > 64 && n < 91) : LETTER.test(c); }
+function occ(sec, t, i){
+  var ft = sec.ft, base = t.bases[i], out = [], at = 0, p;
+  while ((p = ft.indexOf(base, at)) >= 0){
+    var s = p, e = p + base.length;
+    while (s > 0 && isLetter(ft[s - 1])) s--;
+    while (e < ft.length && isLetter(ft[e])) e++;
+    var k = kindOf(ft.slice(s, e), t.words[i]);
+    if (k) out.push({ s:s, e:e, k:k });
+    at = e;
+  }
+  return out;
+}
+var GAP = /[\s\-\/‐-―]+/y, TOK = /[\p{L}\p{N}]+/uy;
+function termHits(sec, si, t, hits){
+  var first = occ(sec, t, 0);
+  if (t.words.length === 1){
+    first.forEach(function(o){ hits.push({ si:si, sent:sentOf(sec, o.s), spans:[[o.s, o.e]], k:o.k }); });
+    return;
+  }
+  var inRow = {};
+  first.forEach(function(o){
+    var pos = o.e, worst = o.k;
+    for (var i = 1; i < t.words.length; i++){
+      GAP.lastIndex = pos; if (!GAP.exec(sec.ft)) return;
+      TOK.lastIndex = GAP.lastIndex; var m = TOK.exec(sec.ft); if (!m) return;
+      var k = kindOf(m[0], t.words[i]);
+      if (!k || (STOP.test(t.words[i]) && k !== 'exact')) return;
+      if (RANK[k] < RANK[worst]) worst = k;
+      pos = TOK.lastIndex;
+    }
+    var sent = sentOf(sec, o.s);
+    inRow[sent] = 1;
+    hits.push({ si:si, sent:sent, spans:[[o.s, pos]], k:worst });
+  });
+  /* "the water" is found as water where the whole is not */
+  if (t.content.length === 1){
+    var only = occ(sec, t, t.words.indexOf(t.content[0]));
+    only.forEach(function(o){ var s = sentOf(sec, o.s); if (!inRow[s]) hits.push({ si:si, sent:s, spans:[[o.s, o.e]], k:o.k }); });
+    return;
+  }
+  var per = t.content.map(function(w){ var i = t.words.indexOf(w); return i ? occ(sec, t, i) : first; });
+  var bySent = per.map(function(list){ var b = {}; list.forEach(function(o){ var s = sentOf(sec, o.s); (b[s] = b[s] || []).push(o); }); return b; });
+  Object.keys(bySent[0]).forEach(function(s){
+    if (inRow[s] || !bySent.every(function(b){ return b[s]; })) return;
+    hits.push({ si:si, sent:+s, spans:bySent.map(function(b){ var o = b[s][0]; return [o.s, o.e]; }), k:'apart' });
+  });
+}
+var FLAGS = [['contact','the name'], ['org','the organisation'], ['country','the country'], ['why','your Why line']];
+function runSearch(){
+  var terms = parseTerms(view.q || '');
+  if (!terms.length){ found = null; return; }
+  var per = {};
+  entries.forEach(function(e){
+    var secs = prep(e), r = null;
+    terms.forEach(function(t, ti){
+      var hits = [];
+      secs.forEach(function(sec, si){ termHits(sec, si, t, hits); });
+      var flags = FLAGS.filter(function(w){ return e[w[0]] && t.who.test(fold(e[w[0]])); }).map(function(w){ return w[1]; });
+      if (!hits.length && !flags.length) return;
+      if (!r) r = { e:e, secs:secs, terms:[] };
+      r.terms[ti] = { hits:hits, flags:flags };
+    });
+    if (r){ score(r, terms.length); per[e.id] = r; }
+  });
+  found = { terms:terms, per:per };
+}
+function score(r, n){
+  var sl = r.sl = { seek:0, proj:0, frame:0, joint:0, own:0 };
+  r.flagged = false; r.joint = null; r.pairs = 0;
+  var pos = [];
+  for (var ti = 0; ti < n; ti++){
+    var tr = r.terms[ti]; if (!tr) continue;
+    var by = {};
+    tr.hits.forEach(function(h){
+      h.lvl = levelOf(r.secs[h.si], h.sent);
+      var b = by[h.lvl] || (by[h.lvl] = { q:0, n:0 });
+      b.q = Math.max(b.q, MT[h.k][1]); b.n++;
+    });
+    Object.keys(by).forEach(function(l){ sl[l] += SW[l] * by[l].q * (1 + 0.5 * Math.min(by[l].n - 1, 2)); });
+    if (tr.flags.length) r.flagged = true;
+    var good = tr.hits.filter(function(h){ return h.lvl !== 'own'; });
+    if (good.length) pos.push([ti, good]);
+  }
+  /* The pairs of terms found together: in one sentence (1), in one part
+     (½), only in the same entry (¼); the closest place of each pair counts.
+     Two keywords side by side in a list of keywords are only in the same
+     entry: a list has no sentences to share. */
+  for (var a = 0; a < pos.length; a++) for (var b = a + 1; b < pos.length; b++){
+    var best = { a:pos[a][0], b:pos[b][0], close:0.25, ha:pos[a][1][0], hb:pos[b][1][0] };
+    pos[a][1].forEach(function(x){ pos[b][1].forEach(function(y){
+      var c = x.si !== y.si || x.lvl === 'frame' ? 0.25 : x.sent === y.sent ? 1 : 0.5;
+      if (c > best.close){ best.close = c; best.ha = x; best.hb = y; }
+    }); });
+    sl.joint += SW.joint * best.close;
+    if (!r.joint || best.close > r.joint.close) r.joint = best;
+    r.pairs++;
+  }
+  r.positive = sl.seek + sl.proj + sl.frame > 0;
+  r.score = sl.seek + sl.proj + sl.frame + sl.joint - sl.own;
+}
+function reaches(r){
+  if (!r) return false;
+  return !view.every || found.terms.every(function(t, i){ return r.terms[i]; });
+}
+/* What the results page lists: the venue chosen or all of them, the
+   kind and the state chosen in the list, best first, and after the rest
+   the entries found only in what they already have. */
+function results(){
+  if (!found) return [];
+  var list = [];
+  Object.keys(found.per).forEach(function(id){
+    var r = found.per[id], e = byId[id] || r.e;
+    if (view.scope === 'site' && e.site !== view.site) return;
+    if (view.kind !== 'all' && e.kind !== view.kind) return;
+    if (!stateOk(e) || !reaches(r)) return;
+    list.push(r);
+  });
+  list.sort(function(a, b){
+    return ((b.positive || b.flagged) - (a.positive || a.flagged)) || (b.score - a.score) || (b.flagged - a.flagged) || (a.e._i - b.e._i); });
+  return list.map(function(r){ return byId[r.e.id] || r.e; });
+}
+
+/* The results page, in the reader where an entry stands. */
+var SHOW = 40, showing = SHOW, snips = {}, opened = {}, weighing = false;
+function chipsOf(list, key, cur){
+  return list.map(function(c){ return '<button class="chip' + (cur === c[0] ? ' on' : '') + '" data-' + key + '="' + c[0] + '">' + esc(c[1]) + '</button>'; }).join('');
+}
+function drawResults(){
+  drawStep();
+  var list = results(), terms = found ? found.terms : [], site = sites.find(function(x){ return x.id === view.site; });
+  var rs = list.map(function(e){ return found.per[e.id]; });
+  var counts = terms.map(function(t, i){ return rs.filter(function(r){ return r.terms[i]; }).length; });
+  var h = '<div class="shead"><div class="sterms">' + terms.map(function(t, i){
+      return '<span class="sterm' + (counts[i] ? '' : ' none') + '">' + esc(t.q) + ' · ' + (counts[i] ? counts[i] + ' entr' + (counts[i] === 1 ? 'y' : 'ies') : 'found nowhere') + '</span>'; }).join('')
+    + '<span>→ <b>' + list.length + ' entr' + (list.length === 1 ? 'y' : 'ies') + '</b> reached' + (view.every && terms.length > 1 ? ', each with every term' : '') + '</span></div>'
+    + '<div class="sopts">' + chipsOf([['all','All venues'], ['site', site ? site.name : 'This venue']], 'scope', view.scope || 'all')
+    + (terms.length > 1 ? '<span class="gap"></span>' + chipsOf([['any','Any term'], ['every','Every term']], 'every', view.every ? 'every' : 'any') : '')
+    + '<span class="gap"></span>' + chipsOf(KINDS, 'kind', view.kind)
+    + '<button class="linkbtn" data-weigh="1">' + (weighing ? 'Hide the weights' : 'Weights') + '</button></div>';
+  if (weighing) h += '<div class="sweights">' + [['seek','What they seek', 3], ['proj','The project', 3], ['frame','Keywords and topics', 3],
+      ['joint','Terms together', 3], ['own','What they already have, taken off', 3]].map(function(w){
+      return '<label for="sw-' + w[0] + '">' + w[1] + '</label><input type="range" id="sw-' + w[0] + '" data-sw="' + w[0] + '" min="0" max="' + w[2] + '" step="0.1" value="' + SW[w[0]] + '">'
+        + '<span class="meta">' + (w[0] === 'own' ? '−' : '') + SW[w[0]].toFixed(1) + '</span>'; }).join('')
+    + '<button class="linkbtn" data-weigh="reset">As they were</button></div>';
+  h += '<div class="slegend">' + Object.keys(LV).map(function(l){ return '<span><span class="badge lv-' + l + '">' + LV[l][0] + '</span> ' + LV[l][1] + (l === 'own' ? ', which counts against' : '') + '</span>'; }).join('')
+    + '<span><span class="badge lv-joint">+</span> terms together</span></div>'
+    + '<div class="sindex" id="sindex"></div></div>';
+  if (!list.length){
+    h += '<div class="empty">No entry reached.' + (terms.some(function(t, i){ return !counts[i]; }) && found
+        ? ' A term marked red is in no entry ' + (view.scope === 'site' ? 'of this venue ' : '') + 'that the chips above let through.' : '')
+      + (terms.length > 1 && view.every ? ' Try Any term.' : '') + '</div>';
+  } else {
+    var max = Math.max.apply(null, rs.map(function(r){ return r.sl.seek + r.sl.proj + r.sl.frame + r.sl.joint + r.sl.own; }).concat([0.001]));
+    var parted = false;
+    h += list.slice(0, showing).map(function(e){
+      var r = found.per[e.id], head = '';
+      if (!parted && !r.positive && !r.flagged){
+        parted = true;
+        head = '<div class="sdiv"><b>Found only in what they already have</b>The terms stand in their own expertise or organisation, so they may not need them from us.</div>';
+      }
+      return head + hitCard(e, r, max, terms);
+    }).join('');
+    if (list.length > showing) h += '<button class="btn smore" data-showmore="1">Show ' + Math.min(SHOW, list.length - showing) + ' more of ' + (list.length - showing) + '</button>';
+  }
+  $('#det').innerHTML = h;
+  indexSays();
+}
+function hitCard(e, r, max, terms){
+  var s = siteOf(e), pct = function(v){ return (v / max * 100).toFixed(1); };
+  var bar = ['seek','proj','frame','joint','own'].map(function(l){ return r.sl[l] ? '<i class="lv-' + l + '" style="width:' + pct(r.sl[l]) + '%"></i>' : ''; }).join('');
+  var line = e.list_text ? e.list_text.split('\n')[0] : '', best = null, top = 0, rows = '';
+  /* each term's places, one row per part and kind of match, heaviest
+     first; the heaviest of the card has its sentence open */
+  var orders = terms.map(function(t, ti){
+    var tr = r.terms[ti]; if (!tr) return null;
+    var groups = {}, order = [];
+    tr.hits.forEach(function(x){
+      var k = x.lvl + '|' + r.secs[x.si].label + '|' + x.k;
+      if (!groups[k]){ groups[k] = { lvl:x.lvl, label:r.secs[x.si].label, k:x.k, hits:[] }; order.push(groups[k]); }
+      groups[k].hits.push(x);
+    });
+    order.sort(function(a, b){ return (b.lvl !== 'own') - (a.lvl !== 'own') || SW[b.lvl] * MT[b.k][1] - SW[a.lvl] * MT[a.k][1]; });
+    if (order[0] && order[0].lvl !== 'own' && SW[order[0].lvl] * MT[order[0].k][1] > top){ top = SW[order[0].lvl] * MT[order[0].k][1]; best = e.id + '|' + ti + '|0'; }
+    return order;
+  });
+  terms.forEach(function(t, ti){
+    var tr = r.terms[ti], order = orders[ti]; if (!tr) return;
+    var all = opened[e.id + '|' + ti], n = tr.hits.length;
+    rows += '<div class="qgroup"><b>' + esc(t.q) + '</b> — ' + (n ? n + ' place' + (n === 1 ? '' : 's') : 'no place in the texts')
+      + (tr.flags.length ? ' · in ' + tr.flags.join(', ') : '') + '</div>';
+    (all ? order : order.slice(0, 3)).forEach(function(g, gi){
+      var x = g.hits[0], sec = r.secs[x.si], key = e.id + '|' + ti + '|' + gi;
+      rows += '<div class="path"><span class="pmt" title="' + MT[g.k][2] + '">' + MT[g.k][0] + '</span>'
+        + '<span class="pw lv-' + g.lvl + '">' + esc(x.spans.map(function(p){ return sec.raw.slice(p[0], p[1]); }).join(' … ')) + '</span>'
+        + '<span class="prel">→</span><span class="badge lv-' + g.lvl + '" title="' + LV[g.lvl][1] + '">' + LV[g.lvl][0] + '</span>'
+        + '<button class="psrc" data-snip="' + esc(key) + '">' + esc(g.label.toLowerCase()) + (g.hits.length > 1 ? ' ×' + g.hits.length : '') + '</button>'
+        + (g.lvl === 'own' ? '<span class="against">counts against</span>' : '') + '</div>';
+      if (snips[key] !== undefined ? snips[key] : key === best && !(r.joint && r.joint.close === 1)) rows += snippet(sec, x.sent, g.hits, g.lvl);
+    });
+    if (order.length > 3 && !all) rows += '<button class="showmore" data-more="' + esc(e.id + '|' + ti) + '">show all ' + order.length + ' ↓</button>';
+  });
+  var j = r.joint;
+  if (j){
+    var key = e.id + '|j', sa = r.secs[j.ha.si];
+    rows += '<div class="qgroup"><span class="badge lv-joint">+</span> <b>together</b> — ' + esc(terms[j.a].q) + ' and ' + esc(terms[j.b].q)
+      + (j.close === 1 ? ' in one sentence of ' + esc(sa.label.toLowerCase()) : j.close === 0.5 ? ' in ' + esc(sa.label.toLowerCase()) : ' in different parts of the entry')
+      + (r.pairs > 1 ? ' · ' + r.pairs + ' pairs counted' : '')
+      + (j.close > 0.25 ? ' <button class="psrc" data-snip="' + esc(key) + '">the place</button>' : '') + '</div>';
+    if (j.close > 0.25 && (snips[key] !== undefined ? snips[key] : j.close === 1))
+      rows += snippet(sa, j.ha.sent, j.close === 1 ? [j.ha, j.hb] : [j.ha], 'joint', j.close === 0.5 ? [r.secs[j.hb.si], j.hb] : null);
+  }
+  return '<div class="hit"><div class="htop"><button class="htitle" data-hit="' + esc(e.id) + '">' + esc(title(e)) + '</button>'
+    + '<span class="hsub">' + esc([s.name, e.country].filter(Boolean).join(' · ')) + '</span>'
+    + kindTag(e.kind) + (isNew(e) ? '<span class="st newtag">New</span>' : '') + stateTags(e)
+    + '<span class="scorewrap"><span class="sbar">' + bar + '</span><span class="snum">' + r.score.toFixed(1) + '</span></span></div>'
+    + (line ? '<div class="hline">' + esc(line) + '</div>' : '')
+    + '<div class="paths">' + rows + '</div></div>';
+}
+/* The sentence a place is in, its words marked, cut to some 160
+   characters each side when a sentence runs on (a page without stops is
+   one sentence); a second sentence follows when two terms stand in one
+   part but not one sentence. */
+function snippet(sec, sent, hits, lvl, also){
+  var a = sent ? sec.ends[sent - 1] : 0, b = sec.ends[sent];
+  var spans = [];
+  hits.forEach(function(x){ if (x.sent === sent) x.spans.forEach(function(p){ spans.push(p); }); });
+  spans.sort(function(x, y){ return x[0] - y[0]; });
+  var lo = a, hi = b;
+  if (spans.length && b - a > 400){
+    lo = Math.max(a, spans[0][0] - 160); hi = Math.min(b, spans[spans.length - 1][1] + 160);
+    if (lo > a){ var sp = sec.raw.indexOf(' ', lo); if (sp > 0 && sp < spans[0][0]) lo = sp + 1; }
+    if (hi < b){ var sq = sec.raw.lastIndexOf(' ', hi); if (sq > spans[spans.length - 1][1]) hi = sq; }
+  }
+  var out = '', at = lo;
+  spans.forEach(function(p){ if (p[0] < at) return; out += esc(sec.raw.slice(at, p[0])) + '<mark>' + esc(sec.raw.slice(p[0], p[1])) + '</mark>'; at = p[1]; });
+  out += esc(sec.raw.slice(at, hi));
+  var html = '<div class="snippet lv-' + lvl + '">“' + (lo > 0 ? '…' : '') + out.trim() + (hi < sec.raw.length && !/[.!?]\s*$/.test(sec.raw.slice(lo, hi)) ? '…' : '') + '”'
+    + '<span class="from">' + esc(sec.label) + (lvl === 'seek' ? ', where they say what they want' : '') + '</span></div>';
+  return also ? html + snippet(also[0], also[1].sent, [also[1]], lvl) : html;
+}
+/* The words found, marked in the entry's own text when it is opened from
+   the search, so the eye goes to them. Text between the tags only. */
+function lit(html){
+  if (!found) return html;
+  var words = [];
+  found.terms.forEach(function(t){ t.words.forEach(function(w){ if (!STOP.test(w) && words.indexOf(w) < 0) words.push(w); }); });
+  if (!words.length) return html;
+  var re = new RegExp('[\\p{L}\\p{N}]*(?:' + words.map(function(w){ return escRe(baseOf(w)); }).join('|') + ')[\\p{L}\\p{N}]*', 'giu');
+  return html.split(/(<[^>]*>|&[#\w]+;)/).map(function(part, i){
+    return i % 2 ? part : part.replace(re, function(m){
+      var f = fold(m);
+      return words.some(function(w){ return kindOf(f, w); }) ? '<mark class="lit">' + m + '</mark>' : m;
+    });
+  }).join('');
+}
+var searchTimer = null;
+function setQuery(v){
+  view.q = v; showing = SHOW; snips = {}; opened = {};
+  if (!v.trim()){
+    found = null; view.results = false; view.hits = false;
+    drawRows(); drawDetail(); return;
+  }
+  runSearch();
+  if (!view.results){ view.results = true; $('#detwrap').scrollTop = 0; }
+  drawRows(); drawDetail();
+  syncIndex();
+}
 
 /* ── drawing ───────────────────────────────────────────────────────── */
 function kindTag(k){ return k === 'seeks' ? '<span class="kind seeks">Seeks partners</span>'
@@ -1285,9 +1826,11 @@ function drawFilters(){
   $('#filters').innerHTML = chips(STATES, 'state') + '<span class="sep"></span>' + chips(KINDS, 'kind');
 }
 function drawRows(){
-  var s = sites.find(function(x){ return x.id === view.site; });
-  $('#listhead').textContent = s ? s.name : '';
-  $('#listcall').textContent = s ? s.call || '' : '';
+  var s = sites.find(function(x){ return x.id === view.site; }), ranked = !!(view.hits && found);
+  /* Opened from the search, the list is the search's, best first, so
+     that the arrows turn through it in that order. */
+  $('#listhead').textContent = ranked ? 'Search, best first' : s ? s.name : '';
+  $('#listcall').textContent = ranked ? view.q : s ? s.call || '' : '';
   var list = shown();
   $('#listcount').textContent = list.length + ' shown';
   drawStep();
@@ -1301,8 +1844,8 @@ function drawRows(){
   var per = {}; list.forEach(function(e){ per[e._g] = (per[e._g] || 0) + 1; });
   var last = -1;
   $('#rows').innerHTML = list.map(function(e){
-    var sub = [e.org && e.contact ? e.contact : null, e.country].filter(Boolean).join(' · ');
-    var head = e._g !== last ? '<div class="group"><span>' + GROUPS[e._g] + '</span><span>' + per[e._g] + '</span></div>' : '';
+    var sub = [ranked ? siteOf(e).name : null, e.org && e.contact ? e.contact : null, e.country].filter(Boolean).join(' · ');
+    var head = !ranked && e._g !== last ? '<div class="group"><span>' + GROUPS[e._g] + '</span><span>' + per[e._g] + '</span></div>' : '';
     last = e._g;
     var picked = sel.has(e.id);
     /* A row is a div and not a button, because the tick box inside it is
@@ -1393,10 +1936,10 @@ function entryBody(fields){
   var empty = function(v){ return !v || /^[-–—\s]*$/.test(v); };
   var fact = function(f){
     return '<div class="f"><div class="l">' + esc(f[0].replace(/^Link to 'research gate' or equivalent$/i, 'Research profile')) + '</div>'
-         + '<div class="v' + (empty(f[1]) ? ' none' : '') + '">' + (empty(f[1]) ? 'empty on the site' : esc(f[1])) + '</div></div>'; };
+         + '<div class="v' + (empty(f[1]) ? ' none' : '') + '">' + (empty(f[1]) ? 'empty on the site' : lit(esc(f[1]))) + '</div></div>'; };
   return '<div class="read"><div class="texts">'
     + (long.length ? long.map(function(f, i){
-        return '<section class="sec' + (i === 0 ? ' lead' : '') + '"><h3>' + esc(f[0]) + '</h3><div class="txt">' + (f[1] ? paras(f[1]) : '<p class="none">empty on the site</p>') + '</div></section>'; }).join('')
+        return '<section class="sec' + (i === 0 ? ' lead' : '') + '"><h3>' + esc(f[0]) + '</h3><div class="txt">' + (f[1] ? lit(paras(f[1])) : '<p class="none">empty on the site</p>') + '</div></section>'; }).join('')
       : '<p class="note">This entry has no long text; everything it says is in the column beside.</p>')
     + '</div><aside class="facts">' + who.map(fact).join('')
     + (who.length && short.length ? '<div class="fbreak"></div>' : '') + short.map(fact).join('')
@@ -1410,13 +1953,14 @@ function diff(oldT, newT){
   return out.length ? out.join('\n') : 'Only the spacing changed.';
 }
 function drawStep(){
-  var list = shown(), i = view.note ? -1 : list.findIndex(function(e){ return e.id === view.id; });
+  var list = shown(), i = view.note || view.results ? -1 : list.findIndex(function(e){ return e.id === view.id; });
   $('#rdstep').style.visibility = i < 0 ? 'hidden' : '';
   $('#rdat').textContent = i < 0 ? '' : (i + 1) + ' of ' + list.length;
   $('[data-step="-1"]').disabled = i <= 0;
   $('[data-step="1"]').disabled = i < 0 || i >= list.length - 1;
 }
 function drawDetail(){
+  if (view.results && found) return drawResults();
   drawStep();
   if (view.note) return drawNote();
   var e = byId[view.id];
@@ -1427,6 +1971,7 @@ function drawDetail(){
     + (!e.opened_at ? '<span class="st newtag">New</span>' : '') + stateTags(e) + '<span class="meta">' + esc(meta) + '</span></div>'
     + '<h2 class="dtitle">' + esc(title(e)) + '</h2>'
     + '<div class="dsub">' + esc([e.org ? e.contact : null, e.topic].filter(Boolean).join(' · ')) + '</div></div>'
+    + (view.hits && found ? '<button class="btn" data-results="1">Back to the results</button>' : '')
     + '<a class="btn" style="text-decoration:none" href="' + esc(e.url) + '" target="_blank" rel="noopener">Open on site ↗</a></div>'
     + '<div class="actions">'
     + [['interesting','Mark','M'],['bin','Bin','B']].map(function(a){
@@ -1537,7 +2082,7 @@ function drawer(open){
   if (open){ var row = document.querySelector('.row.on'); if (row) row.scrollIntoView({ block:'center' }); }
 }
 function openEntry(id){
-  view.id = id; view.note = null; saveView();
+  view.id = id; view.note = null; view.results = false; saveView();
   var e = byId[id];
   if (e && !e.opened_at) patch(e, { opened_at:new Date().toISOString() });
   /* Each entry starts at its head: with the answers held at the top, Mark
@@ -1869,10 +2414,10 @@ document.addEventListener('click', function(ev){
   if (t.dataset.callnote){ closePanel(); return openNote(t.dataset.callnote); }
   if (t.dataset.pick) pick(t.dataset.pick, ev.shiftKey);
   else if (t.dataset.bulk) bulk(t.dataset.bulk);
-  else if (t.dataset.site){ view.site = t.dataset.site; view.note = null; sel.clear(); regroup(); saveView(); draw(); }
+  else if (t.dataset.site){ view.site = t.dataset.site; view.note = null; view.hits = view.results = false; sel.clear(); regroup(); saveView(); draw(); }
   else if (t.dataset.id){ if (ev.ctrlKey || ev.metaKey || ev.shiftKey) pick(t.dataset.id, ev.shiftKey); else openEntry(t.dataset.id); }
-  else if (t.dataset.state){ view.state = t.dataset.state; sel.clear(); regroup(); saveView(); drawFilters(); drawRows(); }
-  else if (t.dataset.kind){ view.kind = t.dataset.kind; sel.clear(); regroup(); saveView(); drawFilters(); drawRows(); }
+  else if (t.dataset.state){ view.state = t.dataset.state; sel.clear(); regroup(); saveView(); drawFilters(); drawRows(); if (view.results) drawResults(); }
+  else if (t.dataset.kind){ view.kind = t.dataset.kind; sel.clear(); regroup(); saveView(); drawFilters(); drawRows(); if (view.results) drawResults(); }
   else if (t.dataset.tab){ view.tab = t.dataset.tab; saveView(); drawDetail(); }
   else if (t.dataset.verdict) setVerdict(t.dataset.verdict);
 });
@@ -1903,7 +2448,7 @@ function springBack(){
   setTimeout(function(){ if (!turning){ det.classList.remove('turning'); det.style.transition = ''; det.style.transform = ''; } }, 260);
 }
 $('#detwrap').addEventListener('touchstart', function(ev){
-  swipe = !view.note && view.id && ev.touches.length === 1 && !ev.target.closest('.actions,input,[contenteditable]')
+  swipe = !view.note && !view.results && view.id && ev.touches.length === 1 && !ev.target.closest('.actions,input,[contenteditable]')
     ? { x:ev.touches[0].clientX, y:ev.touches[0].clientY, t:Date.now(), axis:null, dx:0 } : null;
 }, { passive:true });
 $('#detwrap').addEventListener('touchmove', function(ev){
@@ -1931,7 +2476,47 @@ function letGo(ev){
 }
 $('#detwrap').addEventListener('touchend', letGo);
 $('#detwrap').addEventListener('touchcancel', letGo);
-$('#search').addEventListener('input', function(){ view.q = this.value; drawRows(); });
+/* The search waits for a pause in the typing, because each pass reads
+   every entry's pages. Back in the box, the results come back. */
+$('#search').addEventListener('input', function(){
+  var v = this.value; clearTimeout(searchTimer);
+  searchTimer = setTimeout(function(){ setQuery(v); }, 220);
+});
+$('#search').addEventListener('focus', function(){
+  if (found && !view.results){ view.results = true; drawDetail(); }
+});
+document.addEventListener('click', function(ev){
+  var t = ev.target.closest('[data-hit],[data-results],[data-snip],[data-more],[data-showmore],[data-scope],[data-every],[data-weigh]');
+  if (!t) return;
+  if (t.dataset.hit){ view.hits = true; drawer(false); return openEntry(t.dataset.hit); }
+  if (t.dataset.results){ view.results = true; $('#detwrap').scrollTop = 0; return drawDetail(); }
+  if (t.dataset.snip){
+    var k = t.dataset.snip, open = !!t.closest('.qgroup, .path').nextElementSibling && t.closest('.qgroup, .path').nextElementSibling.classList.contains('snippet');
+    snips[k] = !open;
+  } else if (t.dataset.more) opened[t.dataset.more] = true;
+  else if (t.dataset.showmore) showing += SHOW;
+  else if (t.dataset.scope) view.scope = t.dataset.scope;
+  else if (t.dataset.every) view.every = t.dataset.every === 'every';
+  else if (t.dataset.weigh === 'reset'){ SW = { seek:1.5, proj:1, frame:0.5, own:0.5, joint:1 }; try { localStorage.removeItem(SWKEY); } catch(e){} rescore(); }
+  else if (t.dataset.weigh) weighing = !weighing;
+  if (t.dataset.scope || t.dataset.every){ saveView(); showing = SHOW; drawRows(); }
+  drawResults();
+});
+/* A weight says its figure while it is dragged and orders the results
+   when it is let go: drawn afresh under the finger, the slider would be
+   dropped mid-drag. */
+document.addEventListener('input', function(ev){
+  var w = ev.target.dataset && ev.target.dataset.sw; if (!w) return;
+  ev.target.nextElementSibling.textContent = (w === 'own' ? '\u2212' : '') + (+ev.target.value).toFixed(1);
+});
+document.addEventListener('change', function(ev){
+  var w = ev.target.dataset && ev.target.dataset.sw; if (!w) return;
+  SW[w] = +ev.target.value;
+  try { localStorage.setItem(SWKEY, JSON.stringify(SW)); } catch(e){}
+  rescore(); drawRows(); drawResults();
+  var r = $('#sw-' + w); if (r) r.focus();
+});
+function rescore(){ if (found) Object.keys(found.per).forEach(function(id){ score(found.per[id], found.terms.length); }); }
 /* The keys: ↑ ↓ walk the list, M B answer the open entry (or all the
    picked ones), X picks the open entry, Esc lets go of the picked ones.
    Not while typing, or a search for "Ireland" would flag three entries. */
@@ -1946,11 +2531,12 @@ document.addEventListener('keydown', function(ev){
   /* With a panel open, the letters and arrows would answer and turn an
      entry hidden under it; Esc puts the panel away first. */
   if (panel.id){ if (k === 'Escape') closePanel(); return; }
-  /* With a call's notes open no entry is on screen, so the letters that
-     answer an entry would answer one Mark cannot see. */
-  if (view.note && /^[mibx]$/i.test(k)) return;
+  /* With a call's notes or the search's results open no entry is on
+     screen, so the letters that answer an entry would answer one Mark
+     cannot see. */
+  if ((view.note || view.results) && /^[mibx]$/i.test(k)) return;
   if (k === 'ArrowDown' || k === 'ArrowUp' || k === 'ArrowRight' || k === 'ArrowLeft'){
-    if (view.note) return;
+    if (view.note || view.results) return;
     if (step(k === 'ArrowDown' || k === 'ArrowRight' ? 1 : -1)) ev.preventDefault();
   } else if (k === 'Escape' && document.body.classList.contains('drawer')){
     drawer(false);
