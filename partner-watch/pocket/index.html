@@ -9,13 +9,13 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#191713">
-<meta name="apple-mobile-web-app-title" content="Marked Place">
+<meta name="apple-mobile-web-app-title" content="Mark’s Place">
 <link rel="icon" type="image/png" href="icon.png">
 <link rel="apple-touch-icon" href="icon.png">
-<title>Marked Place</title>
+<title>Mark’s Place</title>
 <style>
 /* ══════════════════════════════════════════════════════════════════════
-   Marked Place (Project Watch, then MARK-it Place, MARKetplace and two spellings of this, until 2026-10-17, then Mark't Place until 2026-10-18) on the phone — the brokerage sites' partner-search entries
+   Mark’s Place (Project Watch, then MARK-it Place, MARKetplace and two spellings of this, until 2026-10-17, then Mark't Place until 2026-10-18, then Marked Place until 2026-10-21) on the phone — the brokerage sites' partner-search entries
    that the copier brings in every night (partner-watch/index.html is the
    desk's page, notes/partner-watch.md what Mark chose for it), gone
    through in an idle minute: a venue, its list, an entry, a flag.
@@ -307,6 +307,24 @@ input[type="search"]:focus{outline:none;border-color:var(--key)}
 #sheet .pw-memo li > p{margin-bottom:.2em}
 #sheet .pw-memo blockquote{margin:0 0 .7em;padding-left:12px;border-left:2px solid var(--line2);color:var(--muted)}
 #sheet .pw-memo a{color:var(--notice-ink)}
+/* Held in the hand (2026-10-21): every control the thumb aims at takes a
+   touch of at least 44 points, Apple's measure, though the chips and the
+   call's buttons were drawn smaller; the reach is widened past their
+   edges rather than the controls grown, so the page looks as it did. */
+.pw-chip,.pw-cb,#toast button{position:relative}
+.pw-chip::after{content:"";position:absolute;inset:-5px -3px}
+.pw-cb::after{content:"";position:absolute;inset:-4px -3px}
+#toast button::after{content:"";position:absolute;inset:-8px -4px}
+.pw-f a{display:inline-block;padding:12px 0;margin:-12px 0}
+#top .icon{width:44px;height:44px}
+/* The entry follows the finger: sideways to turn to the next or the one
+   before, as the desk's reader turns, and down from the top to put the
+   sheet away. Scrolling the sheet must not drag the list behind it. */
+#sheet .panel{overscroll-behavior:contain}
+#sheet-body.pw-from-r{animation:pwFromR .24s cubic-bezier(.2,.8,.2,1)}
+#sheet-body.pw-from-l{animation:pwFromL .24s cubic-bezier(.2,.8,.2,1)}
+@keyframes pwFromR{from{transform:translateX(38%);opacity:0}}
+@keyframes pwFromL{from{transform:translateX(-38%);opacity:0}}
 /* a table pasted at the desk is wider than a phone: it slides sideways */
 #sheet .pw-memo table{display:block;max-width:100%;overflow-x:auto;border-collapse:collapse;margin:0 0 .7em;font-size:14px}
 #sheet .pw-memo td,#sheet .pw-memo th{border:1px solid var(--line);padding:4px 8px;vertical-align:top;text-align:left}
@@ -315,7 +333,7 @@ input[type="search"]:focus{outline:none;border-color:var(--key)}
 <body>
 
 <header id="top">
-  <h1><i class="glyph" aria-hidden="true"></i><span class="words"><span class="title">Marked Place</span><span class="sub" id="stamp">not yet loaded</span></span></h1>
+  <h1><i class="glyph" aria-hidden="true"></i><span class="words"><span class="title">Mark’s Place</span><span class="sub" id="stamp">not yet loaded</span></span></h1>
   <button class="icon" id="refresh" aria-label="Refresh">↻</button>
   <button class="icon" id="gear" aria-label="Settings">⚙</button>
 </header>
@@ -325,7 +343,7 @@ input[type="search"]:focus{outline:none;border-color:var(--key)}
     <div id="pw-arenas"></div>
     <div id="pw-call"></div>
     <div class="searchwrap">
-      <input type="search" id="pw-q" placeholder="Name, organisation, keyword"
+      <input type="search" id="pw-q" placeholder="Name, organisation, keyword" enterkeyhint="search"
              autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
     </div>
     <div class="pw-chips" id="pw-states"></div>
@@ -342,7 +360,7 @@ input[type="search"]:focus{outline:none;border-color:var(--key)}
 
 <div id="setup">
   <h2>Connect</h2>
-  <p>Marked Place reads the entries the copier brings in at night from the
+  <p>Mark’s Place reads the entries the copier brings in at night from the
      One App's cloud. Log in with the email and password you use in One App.</p>
   <div class="err" id="setup-err"></div>
   <label for="s-email">Email</label>
@@ -603,6 +621,9 @@ function pwAll(path){
 function pwLoad(){
   var icon = $('#refresh');
   icon.classList.add('spin');
+  /* a pull from the top shows nothing moving of its own, so the line
+     under the name says the cloud is being asked */
+  if (pwLoaded) pwStamp('fetching…');
   return Promise.all([
     rest('partner_sites?select=*&order=sort'),
     pwAll('partner_entries?select=' + PW_COLS + '&before_watch=is.false&order=first_seen.desc,id'),
@@ -1018,6 +1039,10 @@ function pwOpen(id){
     why.placeholder = 'Why? A line for your future self';
     why.value = e.why || '';
     why.setAttribute('aria-label', 'Why');
+    /* the keyboard's own key says Done, and puts the keyboard away and
+       saves the line, where Return did nothing at all */
+    why.enterKeyHint = 'done';
+    why.addEventListener('keydown', function(ev){ if (ev.key === 'Enter') why.blur(); });
     why.addEventListener('change', function(){
       var v = why.value.trim() || null;
       if (v !== (e.why || null)) pwPatch(e, { why:v });
@@ -1057,9 +1082,56 @@ function pwOpen(id){
    sheet closes on the list. */
 function pwNext(e, list){
   var i = list.indexOf(e), n = i >= 0 ? list[i + 1] : null;
-  if (n) pwOpen(n.id);
+  if (n) pwTurn(n.id, 'r');
   else { shut(); toast('That was the last one in this list'); }
 }
+function pwTurn(id, from){
+  pwOpen(id);
+  var b = $('#sheet-body');
+  b.classList.remove('pw-from-r', 'pw-from-l');
+  void b.offsetWidth;
+  b.classList.add('pw-from-' + from);
+}
+/* The sheet in the hand. A finger's first ten points of travel say which
+   way it means: sideways on an open entry turns to the entry beside it in
+   the list, down while the sheet is scrolled to its top puts it away; a
+   short pull springs back. A drag that starts in a field, the notes, or a
+   text that slides sideways of its own is left to that text. */
+(function(){
+  var panel = $('#sheet .panel'), x0, y0, way, dx, dy;
+  function body(){ return $('#sheet-body'); }
+  panel.addEventListener('touchstart', function(e){
+    way = null; dx = dy = 0;
+    if (e.touches.length !== 1 || e.target.closest('input,textarea,[contenteditable="true"],.pw-orig,.pw-diff,table,.bar')){ x0 = null; return; }
+    x0 = e.touches[0].clientX; y0 = e.touches[0].clientY;
+  }, { passive:true });
+  panel.addEventListener('touchmove', function(e){
+    if (x0 == null) return;
+    dx = e.touches[0].clientX - x0; dy = e.touches[0].clientY - y0;
+    if (!way){
+      if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return;
+      way = Math.abs(dx) > Math.abs(dy) * 1.4 && pwOpenId ? 'side'
+          : dy > 0 && panel.scrollTop <= 0 ? 'down' : 'none';
+      if (way !== 'none'){ panel.style.transition = 'none'; body().style.transition = 'none'; }
+    }
+    if (way === 'side') body().style.transform = 'translateX(' + dx * .6 + 'px)';
+    else if (way === 'down') panel.style.transform = 'translateY(' + Math.max(0, dy) + 'px)';
+  }, { passive:true });
+  function end(){
+    if (!way || way === 'none'){ way = null; return; }
+    var w = way; way = null;
+    panel.style.transition = ''; body().style.transition = '';
+    body().style.transform = ''; panel.style.transform = '';
+    if (w === 'down'){ if (dy > 90) shut(); return; }
+    if (Math.abs(dx) < 70) return;
+    var e = pwById[pwOpenId], list = pwShown(), i = list.indexOf(e);
+    var n = i < 0 ? null : list[i + (dx < 0 ? 1 : -1)];
+    if (n) pwTurn(n.id, dx < 0 ? 'r' : 'l');
+    else toast(dx < 0 ? 'That was the last one in this list' : 'This is the first one in the list');
+  }
+  panel.addEventListener('touchend', end, { passive:true });
+  panel.addEventListener('touchcancel', end, { passive:true });
+})();
 /* An answer is given and the next entry opens at once: on the phone,
    sorting the night's new entries is the work, and going back to the
    list between each would double the presses. Pressing the answer an
@@ -1216,6 +1288,7 @@ function pwOpenNotes(id){
 /* ── starting ─────────────────────────────────────────────────────── */
 
 $('#pw-q').addEventListener('input', function(){ pwView.q = this.value; pwDrawRows(); });
+$('#pw-q').addEventListener('keydown', function(e){ if (e.key === 'Enter') this.blur(); });
 $('#refresh').addEventListener('click', function(){ if (auth) pwLoad(); });
 $('#s-out').addEventListener('click', function(){
   var a = auth;
