@@ -101,29 +101,23 @@ body.drawer .veil{display:block;position:absolute;inset:0;z-index:3;background:r
 .site{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:10px;width:100%;text-align:left;background:none;border:0;border-left:3px solid transparent;padding:6px 13px 7px 13px;cursor:pointer}
 .site:hover{background:var(--hover)}
 .site.on{background:var(--sel);border-left-color:var(--key2)}
-.site .l1{grid-column:1;display:flex;align-items:baseline;gap:10px;min-width:0}
+.site .l1{grid-column:1;grid-row:1;display:flex;align-items:baseline;gap:10px;min-width:0}
 .site .nm{font:15px/1.35 var(--serif);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
-/* Its counts: how many entries are Marked, how many new, and how many
-   it still holds, binned ones not counted (Mark, 2026-10-21), as filled
-   discs in the inks of Marked and new, the total in a plain ring like the
-   filter chips', light figures on deep fills because on the plain gold
-   they read at only 4.4:1. Filled, where an arena's tag is a pale tint:
-   "2m" in the Marked tag's colours, at the end of the arenas, read as one
-   more arena. Chosen from a sheet of three; he wanted it in the page's own
-   type rather than the bold of the sheet. They have a section of their own
-   at the row's right edge, across both lines, behind a hairline, and the
-   arenas fade out before it rather than under it (Mark, the same day):
-   slots of fixed width, so each kind of count stands in one column down
-   the venues and an empty one leaves its place empty. Marked sits on top
-   of the rest, the entries kept that are not Marked, and new beside the
-   two, which made the section narrower than three in a row (Mark, the
-   same day: the total had counted the Marked twice over, as it were). */
-.site .cnt{grid-column:2;grid-row:1 / span 2;align-self:center;display:grid;grid-template-columns:34px 22px;grid-template-rows:17px 17px;gap:3px;
-  justify-items:center;align-items:center;padding-left:8px;border-left:1px solid var(--grid)}
-.site .cnt span{min-width:17px;height:17px;padding:0 5px;border-radius:99px;font:11px/17px var(--serif);text-align:center;white-space:nowrap}
-.site .cnt .m{grid-column:1;grid-row:1;background:var(--gold-ink);color:var(--sheet)}
-.site .cnt .n{grid-column:2;grid-row:1 / span 2;background:var(--new-ink);color:var(--sheet)}
-.site .cnt .t{grid-column:1;grid-row:2;border:1px solid var(--line2);line-height:15px;color:var(--key2)}
+/* Its counts: how many entries are new, how many Marked, and how many
+   more it still holds, binned ones not counted (Mark, 2026-10-21), as
+   words in the colours of new and Marked, each on a line of the card: new
+   beside the name, Marked and the rest beside the arenas, which fade out
+   before them; a venue of one line has all three beside its name. He went
+   through discs of three kinds that day, at the end of the name, then in a
+   section of their own and stacked, and none sat right; of four ways drawn
+   next he chose the plain words. A "2m" badge before them, in the Marked
+   tag's colours at the end of the arenas, read as one more arena. */
+.site .c1,.site .c2{grid-column:2;display:flex;justify-content:flex-end;align-items:baseline;gap:8px;font:12.5px/1.35 var(--serif);white-space:nowrap}
+.site .c1{grid-row:1;align-self:center}
+.site .c2{grid-row:2;align-self:center;margin-top:3px}
+.site .c1 .nw{color:var(--new-ink)}
+.site .c1 .mk,.site .c2 .mk{color:var(--gold-ink)}
+.site .c1 .mo,.site .c2 .mo{font-size:12px;color:var(--muted)}
 /* The venues stand in the Marketplace's groups, each under a thin band in
    its type's colour, and carry the arenas they serve as the Marketplace's
    tags do: the arena's tone struck into the paper with a rule of it down
@@ -138,7 +132,7 @@ body.drawer .veil{display:block;position:absolute;inset:0;z-index:3;background:r
    name, and those that do not fit fade out at the end of the line, which
    says there are more: a "+2" after three cut names cluttered the venues
    (Mark, 2026-10-21). The venue's panel names them all. */
-.site .l2{grid-column:1;display:flex;align-items:baseline;gap:10px;margin-top:3px;min-width:0}
+.site .l2{grid-column:1;grid-row:2;display:flex;align-items:baseline;gap:10px;margin-top:3px;min-width:0}
 .site .tags{display:flex;flex-wrap:nowrap;gap:4px;overflow:hidden;min-width:0;margin-top:0}
 .site .tags.over{-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 46px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 46px),transparent)}
 .site .tag{flex:none;padding:0 7px 1px 6px;font:italic 12px/1.45 var(--body);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
@@ -1892,11 +1886,12 @@ function drawSites(){
       return;
     }
     var n = fresh[s.id] || 0, mk = marked[s.id] || 0, all = held[s.id] || 0, tags = arenaTags(s._venue);
+    var said = (mk ? '<span class="mk">' + mk + ' marked</span>' : '') + (all - mk ? '<span class="mo" title="kept and not Marked; the binned not counted">' + (all - mk) + ' more</span>' : '');
     h += '<div class="venue"><button class="site' + (view.site === s.id ? ' on' : '') + '" data-site="' + esc(s.id) + '" title="' + esc(s.call || '') + '">'
        + '<span class="l1"><span class="nm" data-msite="' + esc(s.id) + '" title="Open ' + esc(s._venue ? s._venue.name : s.name) + '">' + esc(s.name) + '</span></span>'
        + (tags ? '<span class="l2">' + tags + '</span>' : '')
-       + '<span class="cnt">' + (mk ? '<span class="m" title="' + mk + ' marked">' + mk + '</span>' : '') + (n ? '<span class="n" title="' + n + ' new">' + n + '</span>' : '')
-         + '<span class="t" title="' + (all - mk) + ' more kept, not Marked; the binned not counted">' + (all - mk) + '</span></span>'
+       + '<span class="c1">' + (n ? '<span class="nw">' + n + ' new</span>' : '') + (tags ? '' : said) + '</span>'
+       + (tags ? '<span class="c2">' + said + '</span>' : '')
        + (s.last_error ? '<div class="err">Last read failed, ' + esc(stamp(s.last_error_at)) + ': ' + esc(s.last_error) + '</div>' : '')
        + '</button></div>';
   });
