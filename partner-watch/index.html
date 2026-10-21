@@ -98,24 +98,29 @@ body.drawer .veil{display:block;position:absolute;inset:0;z-index:3;background:r
    hundred pixels a venue. The scroll and the note stood at the end of the
    name until they moved into the venue's panel (Mark, 2026-10-21). */
 .venue{position:relative;border-bottom:1px solid var(--grid)}
-.site{display:block;width:100%;text-align:left;background:none;border:0;border-left:3px solid transparent;padding:6px 13px 7px 13px;cursor:pointer}
+.site{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:10px;width:100%;text-align:left;background:none;border:0;border-left:3px solid transparent;padding:6px 13px 7px 13px;cursor:pointer}
 .site:hover{background:var(--hover)}
 .site.on{background:var(--sel);border-left-color:var(--key2)}
-.site .l1{display:flex;align-items:baseline;gap:10px;min-width:0}
+.site .l1{grid-column:1;display:flex;align-items:baseline;gap:10px;min-width:0}
 .site .nm{font:15px/1.35 var(--serif);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 /* Its counts: how many entries are Marked, how many new, and how many
-   it holds in all (Mark, 2026-10-21), as filled discs in the gold of
-   Marked and the green of new, the total in a plain ring like the filter
-   chips'. The fills are the deeper inks of the two, because the light
-   figures read at only 4.4:1 on the plain gold. Filled with light figures, where an arena's tag is a pale tint
-   with dark ones: "2m" in the Marked tag's colours, at the end of the
-   arenas, read as one more arena. Chosen from a sheet of three; he wanted
-   it in the page's own type rather than the bold of the sheet. */
-.site .cnt{margin-left:auto;display:flex;gap:4px;align-items:center;flex:none}
-.site .cnt span{min-width:20px;height:19px;padding:0 6px;border-radius:99px;font:12px/19px var(--serif);text-align:center;white-space:nowrap}
-.site .cnt .m{background:var(--gold-ink);color:var(--sheet)}
-.site .cnt .n{background:var(--new-ink);color:var(--sheet)}
-.site .cnt .t{border:1px solid var(--line2);line-height:17px;color:var(--key2)}
+   it still holds, binned ones not counted (Mark, 2026-10-21), as filled
+   discs in the inks of Marked and new, the total in a plain ring like the
+   filter chips', light figures on deep fills because on the plain gold
+   they read at only 4.4:1. Filled, where an arena's tag is a pale tint:
+   "2m" in the Marked tag's colours, at the end of the arenas, read as one
+   more arena. Chosen from a sheet of three; he wanted it in the page's own
+   type rather than the bold of the sheet. They have a section of their own
+   at the row's right edge, across both lines, behind a hairline, and the
+   arenas fade out before it rather than under it (Mark, the same day):
+   three slots of fixed width, so each kind of count stands in one column
+   down the venues and an empty one leaves its place empty. */
+.site .cnt{grid-column:2;grid-row:1 / span 2;align-self:center;display:grid;grid-template-columns:22px 22px 36px;gap:3px;justify-items:center;
+  padding-left:9px;border-left:1px solid var(--grid)}
+.site .cnt span{min-width:17px;height:17px;padding:0 5px;border-radius:99px;font:11px/17px var(--serif);text-align:center;white-space:nowrap}
+.site .cnt .m{grid-column:1;background:var(--gold-ink);color:var(--sheet)}
+.site .cnt .n{grid-column:2;background:var(--new-ink);color:var(--sheet)}
+.site .cnt .t{grid-column:3;border:1px solid var(--line2);line-height:15px;color:var(--key2)}
 /* The venues stand in the Marketplace's groups, each under a thin band in
    its type's colour, and carry the arenas they serve as the Marketplace's
    tags do: the arena's tone struck into the paper with a rule of it down
@@ -130,7 +135,7 @@ body.drawer .veil{display:block;position:absolute;inset:0;z-index:3;background:r
    name, and those that do not fit fade out at the end of the line, which
    says there are more: a "+2" after three cut names cluttered the venues
    (Mark, 2026-10-21). The venue's panel names them all. */
-.site .l2{display:flex;align-items:baseline;gap:10px;margin-top:3px;min-width:0}
+.site .l2{grid-column:1;display:flex;align-items:baseline;gap:10px;margin-top:3px;min-width:0}
 .site .tags{display:flex;flex-wrap:nowrap;gap:4px;overflow:hidden;min-width:0;margin-top:0}
 .site .tags.over{-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 46px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 46px),transparent)}
 .site .tag{flex:none;padding:0 7px 1px 6px;font:italic 12px/1.45 var(--body);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
@@ -146,7 +151,7 @@ body.drawer .veil{display:block;position:absolute;inset:0;z-index:3;background:r
 .linkbar{padding:10px 14px 4px;font-size:12.5px;color:var(--muted)}
 .linkbar .lbtns{display:flex;gap:6px;margin-top:8px}
 .linkbar .btn{padding:3px 12px;font-size:12.5px}
-.site .err{font-size:12px;color:var(--warn-ink);margin-top:3px;overflow-wrap:anywhere;white-space:normal}
+.site .err{grid-column:1 / -1;font-size:12px;color:var(--warn-ink);margin-top:3px;overflow-wrap:anywhere;white-space:normal}
 .runbox{display:flex;align-items:center;gap:12px;padding:9px 14px 10px;border-top:1px solid var(--line);font-size:12.5px;line-height:1.45;color:var(--muted);flex:none}
 .runbox .say{flex:1;min-width:0}
 .runbox b{color:var(--ink);font-weight:500}
@@ -346,48 +351,60 @@ body.mopen .mpanel{transform:none;visibility:visible;transition:transform .3s cu
 .mtext{margin:0;font-size:13.5px;line-height:1.6;color:var(--muted);white-space:pre-wrap;overflow-wrap:anywhere}
 .mlink{border:0;background:none;padding:0;text-align:left;color:var(--ink);cursor:pointer;text-decoration:underline;text-decoration-color:var(--line2);text-underline-offset:3px}
 .mlink:hover{text-decoration-color:var(--ink)}
-/* the window: its band shaded by how much goes on, the event days a
-   diamond, today the gold line; and under it the calls of the arenas it
-   serves (see vLifeHTML) */
-.mlife{position:relative;height:62px;margin:6px 6px 2px}
-.mlife > *{position:absolute}
-.max{left:0;right:0;top:28px;height:1px;background:var(--line)}
-.mband{top:28px;height:12px;transform:translateY(-50%);min-width:6px;border-radius:4px;border:1px solid rgba(194,56,44,.7)}
+/* The window and the calls as a small table, as the Semaphore's board
+   lays out its rows: what each line is, and its date that matters, in a
+   column on the left; the line itself on a track to the right; one row of
+   months over them all, a hairline at each month, and today the gold line
+   straight down every track. The names and dates stood on the strip
+   itself until Mark found them floating over one another and the bars
+   (2026-10-21). See vLifeHTML. */
+.mtl{margin-top:8px}
+.mtr{display:grid;grid-template-columns:136px minmax(0,1fr);border-top:1px solid var(--grid)}
+.mtr.axis{border-top:0}
+.mtl:not(.all) .mtr.more{display:none}
+.mtn{min-width:0;padding:6px 10px 6px 0;font-size:13px;line-height:1.3}
+.mtn b,.mtn i,.mtn span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mtn b{font:400 13px/1.3 var(--serif);color:var(--ink)}
+.mtn i{font:italic 12.5px/1.3 var(--body);color:var(--muted)}
+.mtn span{margin-top:1px;font:10.5px/1.4 var(--mono);color:var(--key2)}
+.mtr.past .mtn b,.mtr.past .mtn i,.mtr.past .mtn span{color:var(--faint)}
+.mtk{position:relative;overflow:hidden;min-height:34px}
+.mtk > *{position:absolute}
+.mtr.axis .mtk{min-height:18px;overflow:visible}
+.mmo{bottom:3px;padding-left:3px;font:10px/1 var(--mono);color:var(--muted);white-space:nowrap}
+.mmo.jan{color:var(--ink)}
+.mnow{top:0;bottom:0;width:2px;margin-left:-1px;background:var(--gold);z-index:1}
+.mtr.axis .mnow{top:auto;height:7px;bottom:0}
+.mband{top:50%;height:12px;transform:translateY(-50%);min-width:6px;border-radius:4px;border:1px solid rgba(194,56,44,.7)}
 .mband.st-new{border-color:var(--new-line)}
 .mband.st-board{border-color:var(--line2)}
 .mband.season{border-style:dashed}
 .mband.past{border-color:var(--line)}
 .mband.openl{border-left:none;border-radius:0 4px 4px 0;-webkit-mask-image:linear-gradient(90deg,transparent,#000 30px);mask-image:linear-gradient(90deg,transparent,#000 30px)}
 .mband.openr{border-right:none;border-radius:4px 0 0 4px;-webkit-mask-image:linear-gradient(270deg,transparent,#000 30px);mask-image:linear-gradient(270deg,transparent,#000 30px)}
-.mrun{top:28px;transform:translateY(-50%);margin-left:3px;font:11px/1 var(--mono);color:var(--muted)}
-.mmeet{top:28px;height:4px;transform:translateY(-50%);background:var(--brok);border-radius:2px}
-.mdia{top:28px;width:10px;height:10px;margin-left:-5px;transform:translateY(-50%) rotate(45deg);background:var(--brok);box-shadow:0 0 0 2px var(--sheet)}
+.mmeet{top:50%;height:4px;transform:translateY(-50%);background:var(--brok);border-radius:2px}
+.mdia{top:50%;width:10px;height:10px;margin-left:-5px;transform:translateY(-50%) rotate(45deg);background:var(--brok);box-shadow:0 0 0 2px var(--sheet);z-index:2}
 .mdia.unc{background:var(--sheet);border:1.5px dashed var(--brok)}
 .mdia.past{background:var(--faint)}
-.mnow{top:16px;bottom:16px;width:2px;margin-left:-1px;background:var(--gold)}
-.mlt{top:38px;transform:translateX(-50%);font:10.5px/1.25 var(--mono);color:var(--muted);text-align:center;white-space:nowrap}
-.mlt.up{top:0}
-.mlt.now{color:var(--gold-ink)}
+.mtmore{display:block;margin:6px 0 0 136px;padding:2px 0;border:0;background:none;color:var(--key2);font:12.5px var(--serif);cursor:pointer;text-decoration:underline;text-decoration-color:var(--line2);text-underline-offset:3px}
+.mtmore:hover{text-decoration-color:var(--ink)}
 /* A call as the rotation cards drew it, and the Semaphore's board still
    does: one bar from publication to deadline, the publication's blue
    running into the deadline's purple; the stages of one call one bar, full
    only to the first deadline and a thin line on to the last, an earlier
    deadline a tick beside it; dashed where a date is a guess, grey once it
    is over, faded in where no publication is known and out where no
-   deadline is. Its name stands over it. */
-.mcn{height:14px;font:italic 11.5px/14px var(--body);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.mcn b{font-weight:400;font-style:normal;color:var(--ink)}
-.mcn.past{color:var(--faint)}
-.mcb{height:4px;min-width:3px;border-radius:2px;background:linear-gradient(90deg,var(--call),#A32E87)}
+   deadline is. */
+.mcb{top:50%;margin-top:-2px;height:4px;min-width:3px;border-radius:2px;background:linear-gradient(90deg,var(--call),#A32E87)}
 .mcb.unc{height:5px;background:none;border:1px dashed var(--call);border-right:2px solid #A32E87}
 .mcb.past{background:var(--line2)}
 .mcb.unc.past{background:none;border-color:var(--line2)}
 .mcb.lead-in{-webkit-mask-image:linear-gradient(90deg,transparent,#000 22px);mask-image:linear-gradient(90deg,transparent,#000 22px)}
 .mcb.run-on{-webkit-mask-image:linear-gradient(270deg,transparent,#000 22px);mask-image:linear-gradient(270deg,transparent,#000 22px)}
-.mcbt{height:0;border-top:2px solid #A32E87}
+.mcbt{top:50%;margin-top:-1px;height:0;border-top:2px solid #A32E87}
 .mcbt.unc{border-top-style:dashed}
 .mcbt.past{border-top-color:var(--line2)}
-.mcbn{width:3px;height:12px;margin-left:-1.5px;border-radius:1px;background:#A32E87;box-shadow:0 0 0 1.5px var(--sheet)}
+.mcbn{top:50%;margin-top:-6px;width:3px;height:12px;margin-left:-1.5px;border-radius:1px;background:#A32E87;box-shadow:0 0 0 1.5px var(--sheet)}
 .mcbn.past{background:var(--muted)}
 .mlead{display:flex;flex-direction:column;align-items:flex-start;margin:0;padding:4px 0}
 .mlead i{font:italic 12.5px var(--body);color:var(--faint)}
@@ -930,6 +947,7 @@ function callRuns(a){
     r.open = r.opens[0] || r.anns[0] || null;
     r.close = r.dls[r.dls.length - 1] || null;
     r.unc = [r.open, r.close].some(function(d){ return d && d.grade !== 'fixed'; });
+    r.next = r.dls.find(function(d){ return T(d.end || d.start) >= now; }) || null;
     var endT = r.close ? T(r.close.end || r.close.start) : T(r.open.start) + 365 * DAY;
     r.state = endT < now ? 'closed' : (r.open && T(r.open.start) > now ? 'soon' : 'open');
     var key = (r.open ? r.open.start : '') + '|' + r.dls.map(function(d){ return d.start; }).join(',') + '|' + r.unc;
@@ -942,82 +960,114 @@ function callRuns(a){
 function vGlyph(v){ return '<i class="mgl ' + (v.start ? 'ev' + (v.grade === 'fixed' ? '' : ' unc') : 'win') + '" aria-hidden="true"></i>'; }
 function arenaChip(a){ var tone = arenaTone(a);
   return '<button class="mchip" data-marena="' + esc(a.id) + '"' + (tone ? ' style="--tone:' + esc(tone) + '"' : '') + '>' + esc(a.name) + '</button>'; }
-/* The window on a strip of its own, as the Semaphore's panel draws it
-   without the ends to drag, and under it, each on a line of its own, the
-   calls of the arenas the venue serves (Mark, 2026-10-21). The strip runs
-   a week either side of the window, today and every call still to come,
-   held to half a year back and a little over a year ahead; a call wholly
-   outside that is left out. */
+/* The window, and under it the calls of the arenas the venue serves, each
+   a row of the table drawn above (Mark, 2026-10-21). Three calls are shown
+   at first, the ones that matter now: those open, the nearest deadline
+   first, then those still to open; the others, and those closed in the
+   last half year, wait behind a button, because a cluster opens a dozen
+   topics and drawing them all made the panel a mess. The months span the
+   window, today and the calls shown at first, from half a year back to
+   fifteen months ahead at most; a call beyond them runs off the edge, and
+   its date in the left column still says where it lies. */
+function dShort(iso, unc){
+  var p = iso.split('-');
+  return (unc ? '≈ ' : '') + +p[2] + ' ' + MONTHS[+p[1] - 1] + (+p[0] === new Date().getFullYear() ? '' : ' ’' + p[0].slice(2));
+}
+function callSay(r){
+  var u = function(d){ return d.grade !== 'fixed'; };
+  if (r.state === 'soon') return 'opens ' + dShort(r.open.start, u(r.open));
+  if (r.state === 'closed') return 'closed ' + dShort((r.close || r.open).start, u(r.close || r.open));
+  return r.next ? 'deadline ' + dShort(r.next.start, u(r.next)) : 'open, no deadline';
+}
 function vLifeHTML(v){
-  var w = vWin(v), now = T(todayISO()), calls = [];
+  var w = vWin(v), now = T(todayISO()), calls = [], many = (v.arenas || []).length > 1;
   (v.arenas || []).map(marketArena).filter(function(a){ return a && !a.frozenAt; }).forEach(function(a){
     callRuns(a).forEach(function(r){
       calls.push({ a:a, r:r, s:r.open ? T(r.open.start) : T((r.dls[0] || r.close).start) - 21 * DAY,
                    e:r.close ? T(r.close.end || r.close.start) + DAY : T(r.open.start) + 35 * DAY });
     });
   });
-  if (!w && !calls.length) return '';
-  var a = now, b = now;
-  if (w){ a = w.from === null ? Math.min(now, w.to) - 42 * DAY : w.from; b = w.to === null ? Math.max(now, w.from) + 42 * DAY : w.to; }
-  calls.forEach(function(c){ if (c.r.state !== 'closed'){ a = Math.min(a, c.s); b = Math.max(b, c.e); } });
-  var t0 = Math.max(Math.min(a, now) - 7 * DAY, now - 183 * DAY), t1 = Math.min(Math.max(b, now) + 7 * DAY, now + 400 * DAY);
-  calls = calls.filter(function(c){ return c.e >= t0 && c.s <= t1; }).sort(function(x, y){ return x.s - y.s || x.e - y.e; });
+  var when = function(c){ return c.r.state === 'open' ? (c.r.next ? T(c.r.next.start) : 9e15) : c.s; };
+  var live = calls.filter(function(c){ return c.r.state !== 'closed'; })
+    .sort(function(x, y){ return (x.r.state === 'soon') - (y.r.state === 'soon') || when(x) - when(y); });
+  var shut = calls.filter(function(c){ return c.r.state === 'closed'; }).sort(function(x, y){ return y.e - x.e; });
+  var first = live.slice(0, 3);
+  if (!first.length && shut.length) first = shut.splice(0, 1);
+  var rest = live.slice(3).concat(shut.filter(function(c){ return c.e >= now - 183 * DAY; }));
+  if (!w && !first.length) return '';
+  /* the months */
+  var lo = now - 30 * DAY, hi = now + 60 * DAY;
+  if (w){ if (w.from !== null) lo = Math.min(lo, w.from); if (w.to !== null) hi = Math.max(hi, w.to); }
+  first.forEach(function(c){ lo = Math.min(lo, c.s); hi = Math.max(hi, c.e); });
+  lo = Math.max(lo, now - 183 * DAY); hi = Math.min(hi, now + 456 * DAY);
+  var d0 = new Date(lo), d1 = new Date(hi);
+  var t0 = new Date(d0.getFullYear(), d0.getMonth(), 1, 12).getTime(), t1 = new Date(d1.getFullYear(), d1.getMonth() + 1, 1, 12).getTime();
   var P = function(t){ return ((t - t0) / (t1 - t0) * 100).toFixed(2); }, C = function(x){ return Math.max(0, Math.min(100, x)); };
-  var h = '', y = 20, meets = null;
+  var months = [];
+  for (var m = new Date(t0); m.getTime() < t1; m = new Date(m.getFullYear(), m.getMonth() + 1, 1, 12)) months.push(m);
+  /* a label every month while a month has room for one, else every
+     second or third, always on the quarter's first; the year only at
+     January, written out where the room allows and as ’27 where not. The
+     track is the panel's width less the names: 404 less 52 and 136. */
+  var mpx = 216 / months.length, every = mpx >= 30 ? 1 : mpx >= 15 ? 2 : 3;
+  var grid = 'background:linear-gradient(90deg,' + months.slice(1).map(function(m){ var x = P(m.getTime());
+    return 'transparent calc(' + x + '% - 1px),var(--grid) calc(' + x + '% - 1px),var(--grid) ' + x + '%,transparent ' + x + '%'; }).join(',') + ')';
+  if (months.length < 2) grid = '';
+  var today = '<i class="mnow" style="left:' + P(now + DAY / 2) + '%"></i>';
+  /* a span of days said once: 12–13 Nov, not 12 Nov – 13 Nov */
+  var span2 = function(a, b, unc){
+    if (!b || b === a) return dShort(a, unc);
+    return a.slice(0, 7) === b.slice(0, 7) ? (unc ? '≈ ' : '') + +a.slice(8) + '–' + dShort(b) : dShort(a, unc) + ' – ' + dShort(b);
+  };
+  var row = function(cls, name, track){ return '<div class="mtr' + cls + '"><div class="mtn">' + name + '</div><div class="mtk" style="' + grid + '">' + track + today + '</div></div>'; };
+  var h = '<div class="mtr axis"><div></div><div class="mtk">' + months.map(function(m, i){
+      if (m.getMonth() % every) return '';
+      var yr = '’' + String(m.getFullYear()).slice(2);
+      return '<span class="mmo' + (m.getMonth() === 0 ? ' jan' : '') + '" style="left:' + P(m.getTime()) + '%">'
+        + (m.getMonth() ? MONTHS[m.getMonth()] : mpx * every >= 44 ? 'Jan ' + yr : yr) + '</span>';
+    }).join('') + today + '</div></div>';
   if (w){
     var from = w.from === null ? t0 : w.from;
     var to = w.to === null ? Math.min(t1, Math.max(now, from) + OPEN_RUN * DAY) : w.to + DAY;
     var past = w.to !== null && w.to + DAY < now;
-    var L = C(+P(from)), R = C(+P(to));
-    h += '<i class="max"></i>'
-      + '<i class="mband' + (past ? ' past' : ' st-' + esc(v.place)) + (w.season ? ' season' : '') + (w.from === null ? ' openl' : '') + (w.to === null ? ' openr' : '')
+    var L = C(+P(from)), R = C(+P(to)), unc = v.grade !== 'fixed';
+    var tr = '<i class="mband' + (past ? ' past' : ' st-' + esc(v.place)) + (w.season ? ' season' : '') + (w.from === null || from < t0 ? ' openl' : '') + (w.to === null ? ' openr' : '')
       + '" style="left:' + L.toFixed(2) + '%;width:' + Math.max(R - L, .5).toFixed(2) + '%;background:' + heatBG(v, from, to, past ? PLACE_RGB.gone : PLACE_RGB[v.place] || PLACE_RGB.venues) + '"></i>';
-    if (w.to === null && R < 99) h += '<span class="mrun" style="left:' + R.toFixed(2) + '%" aria-hidden="true">→</span>';
     if (w.ms !== null){
-      if (w.me > w.ms) h += '<i class="mmeet" style="left:' + P(w.ms) + '%;width:' + (+P(w.me + DAY) - +P(w.ms)).toFixed(2) + '%"></i>';
-      meets = +P(w.ms + DAY / 2);
-      h += '<i class="mdia' + (w.unc ? ' unc' : '') + (past ? ' past' : '') + '" style="left:' + P(w.ms + DAY / 2) + '%"></i>'
-         + '<span class="mlt up" style="left:' + P(w.ms + DAY / 2) + '%">meets ' + esc(shortDate(v)) + '</span>';
+      if (w.me > w.ms) tr += '<i class="mmeet" style="left:' + P(w.ms) + '%;width:' + (+P(w.me + DAY) - +P(w.ms)).toFixed(2) + '%"></i>';
+      tr += '<i class="mdia' + (w.unc ? ' unc' : '') + (past ? ' past' : '') + '" style="left:' + P(w.ms + DAY / 2) + '%"></i>';
     }
-    if (w.from !== null && w.from >= t0) h += '<span class="mlt" style="left:' + P(w.from) + '%">opens<br>' + tDay(w.from) + '</span>';
-    if (w.to !== null && w.to + DAY <= t1) h += '<span class="mlt" style="left:' + P(w.to + DAY) + '%">closes<br>' + tDay(w.to) + '</span>';
-    y = 72;
+    var day = function(t){ return dShort(new Date(t).toISOString().slice(0, 10)); };
+    var span = w.season ? 'expected ' + shortDate(v) : (w.from !== null ? day(w.from) : '…') + ' – ' + (w.to !== null ? day(w.to) : 'open');
+    h += row(past ? ' past' : '', '<b>The venue\'s window</b><span>' + esc(span) + '</span>'
+      + (w.ms !== null && !w.season ? '<span>meets ' + esc(span2(v.start, v.gran === 'range' ? v.end : null, unc)) + '</span>' : ''), tr);
   }
-  var many = (v.arenas || []).length > 1;
-  calls.forEach(function(c){
-    var r = c.r, L = C(+P(c.s)), R = C(+P(c.e)), bar = y + 19;
-    var names = [], seen = {};
+  var callRow = function(c, more){
+    var r = c.r, L = C(+P(c.s)), R = C(+P(c.e)), names = [], seen = {};
     r.all.forEach(function(d){ var n = callBase(d.call || 'Untitled call') || d.call || 'Untitled call'; if (!seen[n]){ seen[n] = 1; names.push(n); } });
     var tip = c.a.name + ': ' + names.join(', ') + '\n' + (r.open ? 'publication ' + dispDate(r.open) : 'publication not recorded')
       + ' → ' + (r.close ? 'deadline ' + dispDate(r.close) : 'no deadline recorded') + (r.dls.length > 1 ? '\n' + r.dls.length + ' deadlines: ' + r.dls.map(shortDate).join(', ') : '');
-    /* the name stands from the bar's start, or ends at its end once the
-       bar lies in the right half, so it is never pushed off the strip */
-    var at = L <= 55 ? 'left:' + L.toFixed(2) + '%;max-width:' + (100 - L).toFixed(2) + '%' : 'right:' + (100 - R).toFixed(2) + '%;max-width:' + R.toFixed(2) + '%;text-align:right';
-    h += '<span class="mcn' + (r.state === 'closed' ? ' past' : '') + '" style="top:' + y + 'px;' + at + '" title="' + esc(tip) + '">'
-      + (many ? '<b>' + esc(c.a.name) + '</b> · ' : '') + esc(names.join(', ')) + '</span>';
-    var d1 = r.dls.length > 1 ? r.dls[0] : null;
+    var tr = '', d1 = r.dls.length > 1 ? r.dls[0] : null;
     if (d1){
       var t1d = T(d1.end || d1.start), S = C(+P(t1d + DAY));
-      if (S > L) h += '<i class="mcb' + (t1d < now ? ' past' : '') + ([r.open, d1].some(function(d){ return d && d.grade !== 'fixed'; }) ? ' unc' : '') + (r.open ? '' : ' lead-in')
-        + '" style="top:' + (bar - 2) + 'px;left:' + L.toFixed(2) + '%;width:' + Math.max(S - L, .3).toFixed(2) + '%"></i>';
-      if (R > S) h += '<i class="mcbt' + (r.state === 'closed' ? ' past' : '') + (r.close.grade !== 'fixed' ? ' unc' : '')
-        + '" style="top:' + (bar - 1) + 'px;left:' + S.toFixed(2) + '%;width:' + (R - S).toFixed(2) + '%"></i>';
+      if (S > L) tr += '<i class="mcb' + (t1d < now ? ' past' : '') + ([r.open, d1].some(function(d){ return d && d.grade !== 'fixed'; }) ? ' unc' : '') + (r.open && c.s >= t0 ? '' : ' lead-in')
+        + '" style="left:' + L.toFixed(2) + '%;width:' + Math.max(S - L, .3).toFixed(2) + '%"></i>';
+      if (R > S) tr += '<i class="mcbt' + (r.state === 'closed' ? ' past' : '') + (r.close.grade !== 'fixed' ? ' unc' : '')
+        + '" style="left:' + S.toFixed(2) + '%;width:' + (R - S).toFixed(2) + '%"></i>';
     } else {
-      h += '<i class="mcb' + (r.state === 'closed' ? ' past' : '') + (r.unc ? ' unc' : '') + (r.open ? '' : ' lead-in') + (r.close ? '' : ' run-on')
-        + '" style="top:' + (bar - 2) + 'px;left:' + L.toFixed(2) + '%;width:' + Math.max(R - L, .3).toFixed(2) + '%"></i>';
+      tr += '<i class="mcb' + (r.state === 'closed' ? ' past' : '') + (r.unc ? ' unc' : '') + (r.open && c.s >= t0 ? '' : ' lead-in') + (r.close && c.e <= t1 ? '' : ' run-on')
+        + '" style="left:' + L.toFixed(2) + '%;width:' + Math.max(R - L, .3).toFixed(2) + '%"></i>';
     }
     r.dls.slice(0, -1).forEach(function(d){
       var x = +P(T(d.start) + DAY / 2);
-      if (x >= L && x <= R) h += '<i class="mcbn' + (T(d.end || d.start) < now ? ' past' : '') + '" style="top:' + (bar - 6) + 'px;left:' + x.toFixed(2) + '%" title="' + esc((d.call || '') + ' — ' + dispDate(d)) + '"></i>';
+      if (x >= L && x <= R) tr += '<i class="mcbn' + (T(d.end || d.start) < now ? ' past' : '') + '" style="left:' + x.toFixed(2) + '%"></i>';
     });
-    y += 30;
-  });
-  return '<div class="mlife"' + (calls.length ? ' style="height:' + (y + 4) + 'px"' : '') + '>' + h
-    + '<i class="mnow" style="left:' + P(now + DAY / 2) + '%' + (calls.length ? ';bottom:4px' : '') + '"></i>'
-    /* the word only where it clears the event days' label: on a strip long
-       enough for a season of calls the two came to stand on each other,
-       and the gold line says today without it */
-    + (meets !== null && Math.abs(meets - +P(now + DAY / 2)) < 24 ? '' : '<span class="mlt up now" style="left:' + P(now + DAY / 2) + '%">today</span>') + '</div>';
+    return row((r.state === 'closed' ? ' past' : '') + (more ? ' more' : ''),
+      '<div title="' + esc(tip) + '">' + (many ? '<b>' + esc(c.a.name) + '</b>' : '') + '<i>' + esc(names.join(', ')) + '</i><span>' + esc(callSay(r)) + '</span></div>', tr);
+  };
+  h += first.map(function(c){ return callRow(c, false); }).join('') + rest.map(function(c){ return callRow(c, true); }).join('');
+  return '<div class="mtl">' + h + '</div>'
+    + (rest.length ? '<button class="mtmore" data-mcalls="' + rest.length + '">' + rest.length + ' more call' + (rest.length === 1 ? '' : 's') + '</button>' : '');
 }
 /* the scroll and the note of the venue's own call, beside Site */
 function siteTools(s){
@@ -1049,7 +1099,7 @@ function venuePanelHTML(v, s){
         + siteTools(s) + '</div></div>'
     + (limbo && !v.doubt ? '' : '<p class="mplace' + (v.place === 'new' ? ' st-new' : '') + '"><b>' + esc(place) + '</b>' + (v.place === 'venues' && !limbo ? esc(PHASE_SAY[vPhase(v)]) : '')
       + (v.doubt ? '<br><i>The agent is unsure: ' + esc(v.doubt) + '</i>' : '') + '</p>')
-    + '<section class="mps"><p class="mph">Its window <i>' + esc(vDateSay(v)) + '</i></p>' + vLifeHTML(v) + '</section>'
+    + '<section class="mps"><p class="mph">Window and calls <i>' + esc(vDateSay(v)) + '</i></p>' + vLifeHTML(v) + '</section>'
     + (leads.length ? '<section class="mps"><p class="mph">Leads from here</p>' + leads.map(function(x){
         return '<p class="mlead"><button class="mlink" data-marena="' + esc(x.a.id) + '">' + esc(leadName(x.l)) + '</button>'
           + '<i>' + esc(x.a.name) + ' · ' + (x.l.doneAt ? 'closed' : STAGE_NAME[stageOf(x.l)]) + '</i></p>'; }).join('') + '</section>' : '')
@@ -1165,7 +1215,7 @@ function drawSites(){
   var marked = {}, held = {};
   entries.forEach(function(e){ if (isNew(e) && !e.removed_at) fresh[e.site] = (fresh[e.site] || 0) + 1;
     if (e.verdict === 'interesting') marked[e.site] = (marked[e.site] || 0) + 1;
-    held[e.site] = (held[e.site] || 0) + 1; });
+    if (e.verdict !== 'bin') held[e.site] = (held[e.site] || 0) + 1; });
   document.querySelectorAll('[data-linkfor]').forEach(function(i){ typed[i.dataset.linkfor] = i.value; });
   document.querySelectorAll('[data-errfor]').forEach(function(d){ errs[d.dataset.errfor] = d.textContent; });
   sites.forEach(function(s, i){
@@ -1179,10 +1229,10 @@ function drawSites(){
     }
     var n = fresh[s.id] || 0, mk = marked[s.id] || 0, all = held[s.id] || 0, tags = arenaTags(s._venue);
     h += '<div class="venue"><button class="site' + (view.site === s.id ? ' on' : '') + '" data-site="' + esc(s.id) + '" title="' + esc(s.call || '') + '">'
-       + '<span class="l1"><span class="nm" data-msite="' + esc(s.id) + '" title="Open ' + esc(s._venue ? s._venue.name : s.name) + '">' + esc(s.name) + '</span>'
-         + '<span class="cnt">' + (mk ? '<span class="m" title="' + mk + ' marked">' + mk + '</span>' : '') + (n ? '<span class="n" title="' + n + ' new">' + n + '</span>' : '')
-         + '<span class="t" title="' + all + ' entries in all">' + all + '</span></span></span>'
+       + '<span class="l1"><span class="nm" data-msite="' + esc(s.id) + '" title="Open ' + esc(s._venue ? s._venue.name : s.name) + '">' + esc(s.name) + '</span></span>'
        + (tags ? '<span class="l2">' + tags + '</span>' : '')
+       + '<span class="cnt">' + (mk ? '<span class="m" title="' + mk + ' marked">' + mk + '</span>' : '') + (n ? '<span class="n" title="' + n + ' new">' + n + '</span>' : '')
+         + '<span class="t" title="' + all + ' entries, not counting the binned">' + all + '</span></span>'
        + (s.last_error ? '<div class="err">Last read failed, ' + esc(stamp(s.last_error_at)) + ': ' + esc(s.last_error) + '</div>' : '')
        + '</button></div>';
   });
@@ -1650,6 +1700,12 @@ function checkNow(btn){
 document.addEventListener('click', function(ev){
   /* A venue's name opens its panel and chooses it too, as a press on the
      rest of its row does; an arena's tag only opens the arena's. */
+  var mc = ev.target.closest('[data-mcalls]');
+  if (mc){
+    var all = mc.previousElementSibling.classList.toggle('all'), k = +mc.dataset.mcalls;
+    mc.textContent = all ? 'Fewer calls' : k + ' more call' + (k === 1 ? '' : 's');
+    return;
+  }
   var m = ev.target.closest('[data-msite],[data-mvenue],[data-marena],[data-mclose]');
   if (m){
     if (m.dataset.mclose) closePanel();
