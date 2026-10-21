@@ -248,7 +248,29 @@ input[type="search"]::-webkit-search-cancel-button{-webkit-appearance:none}
 /* the entry's own grouped cells sit flush with the page's sides */
 #sheet .pw-group{margin:0 -2px}
 #sheet .pw-gh{margin:24px 14px 7px}
-.pw-acts{margin-top:18px !important}
+/* The entry is read on paper (Mark, 2026-10-21: "the nice reading
+   colour", the bone the entry wore before the Apple look), and is set for
+   reading: the page's own words straight under the title, in the reading
+   face and without boxes, and the buttons and facts after them. Only its
+   head stays dark, so the clock's white figures over it can still be read. */
+#sheet.pw-full .panel{
+  --bg:#F4EEE2; --cell:#FBF8F1; --cell2:#ECE5D7; --fill:#E6DECF; --press:#E2D9C8;
+  --label:#282420; --label2:#5E574B; --label3:#6A6250; --sep:#D8CFBF;
+  --tint:#0A5FC2; --tint-ink:#0A5FC2; --orange:#9A5B00; --red-ink:#B4322A; --indigo-ink:#4646B8;
+  --yellow:#7A6200; --green:#2F7A2A; --clay:#8D4A35;
+  color-scheme:light;background:linear-gradient(170deg,#F6F1E6,#ECE4D3);color:var(--label)}
+#sheet.pw-full .pw-head{--tint:#0A84FF;--press:#3A3A3C;background:rgba(28,28,30,.96);border-bottom-color:#38383A}
+#sheet.pw-full .pw-arr:disabled{color:#636366}
+#sheet.pw-full .bar{background:rgba(242,236,224,.94);border-top-color:var(--sep)}
+#sheet.pw-full .pw-chev{color:#9A9082}
+.pw-page{max-width:640px;margin:0 auto}
+#sheet .pw-page h2{font:600 27px/1.2 var(--read);letter-spacing:0;margin:2px 0 6px}
+#sheet.pw-full .pw-dsub{font-size:15px}
+.pw-read{margin:22px 4px 8px}
+.pw-read .pw-sec + .pw-sec{margin-top:26px}
+.pw-read h3{margin:0 0 8px;font:600 12px/1.3 var(--ui);letter-spacing:.06em;text-transform:uppercase;color:var(--label2)}
+.pw-read .pw-txt{padding:0;font:19px/1.65 var(--read);color:var(--label);hyphens:auto;-webkit-hyphens:auto}
+#sheet.pw-full .pw-meta{margin:10px 14px 0;font-size:13px;line-height:1.4}
 #pw-lead:not(:empty){box-shadow:inset 0 .5px 0 var(--sep)}
 a.pw-cell{text-decoration:none}
 .pw-cell.link{color:var(--tint)}
@@ -1026,8 +1048,13 @@ function pwFacts(host, head, list){
   list.forEach(function(f){ g.appendChild(pwFact(f)); });
   host.appendChild(g);
 }
+/* The reading goes into host, the page's own words and nothing else;
+   who, the details and the copy go below the entry's buttons, in #pw-more
+   (Mark, 2026-10-21: the reading first, not the buttons and facts). */
 function pwBody(host, e){
   host.textContent = '';
+  var more = $('#pw-more') || el('div');
+  more.textContent = '';
   var d = pwDetail[e.id];
   if (!e.fetched_at){
     pwFacts(host, 'On the list', [['The line on the list', e.list_text || '']].concat(e.keywords ? [['Keywords', e.keywords]] : []));
@@ -1036,16 +1063,17 @@ function pwBody(host, e){
   }
   if (!d){ host.appendChild(el('p', 'pw-plain', d === null ? 'The entry could not be loaded. Go back and pull down on the list to try again.' : 'Loading the entry…')); return; }
   var parts = pwSplit(d.fields || []);
-  if (parts.who.length) pwFacts(host, 'Who', parts.who);
   if (!parts.long.length) host.appendChild(el('p', 'pw-plain', 'This entry has no long text; everything it says is in the details below.'));
   parts.long.forEach(function(f){
     var s = el('section', 'pw-sec');
-    pwGroupHeader(s, f[0]);
-    var t = el('div', 'pw-group pw-txt');
+    s.appendChild(el('h3', '', f[0]));
+    var t = el('div', 'pw-txt');
     if (f[1]) pwParas(t, f[1]); else t.appendChild(el('p', 'none', 'empty on the site'));
     s.appendChild(t);
     host.appendChild(s);
   });
+  host = more;
+  if (parts.who.length) pwFacts(host, 'Who', parts.who);
   if (parts.short.length) pwFacts(host, 'Details', parts.short);
   pwGroupHeader(host, 'The copy');
   var g = el('div', 'pw-group');
@@ -1108,11 +1136,14 @@ function pwOpen(id){
     of.appendChild(flags);
     b.appendChild(of);
     b.appendChild(el('h2', '', pwTitle(e)));
-    var sub = [e.org ? e.contact : null, e.topic].filter(Boolean).join(' · ');
+    var sub = [e.org ? e.contact : null, e.country].filter(Boolean).join(' · ');
     if (sub) b.appendChild(el('div', 'pw-dsub', sub));
-    b.appendChild(el('div', 'pw-meta', [s.name, e.country, e.posted ? 'posted ' + e.posted.slice(0, 10) : null, 'first seen ' + pwDay(e.first_seen)].filter(Boolean).join(' · ')));
+    var body = el('div', 'pw-read');
+    body.id = 'pw-body';
+    b.appendChild(body);
 
-    var g = el('div', 'pw-group pw-acts');
+    pwGroupHeader(b, 'This entry');
+    var g = el('div', 'pw-group');
     var go = pwCell('a', 'icon-cell link', { sq:PW_I.globe, tone:'#0A84FF', name:'Open on the Site', chev:PW_I.out });
     go.href = e.url; go.target = '_blank'; go.rel = 'noopener';
     g.appendChild(go);
@@ -1138,10 +1169,11 @@ function pwOpen(id){
     lead.id = 'pw-lead';
     g.appendChild(lead);
     b.appendChild(g);
+    b.appendChild(el('p', 'pw-meta', [e.topic, s.name, e.posted ? 'posted ' + e.posted.slice(0, 10) : null, 'first seen ' + pwDay(e.first_seen)].filter(Boolean).join(' · ')));
+    var more = el('div');
+    more.id = 'pw-more';
+    b.appendChild(more);
     pwDrawLead(e);
-    var body = el('div');
-    body.id = 'pw-body';
-    b.appendChild(body);
     pwBody(body, e);
 
     [['interesting', 'Mark', 'pw-i', e.verdict === 'interesting' ? PW_I.star : PW_I.starLine], ['bin', 'Bin', 'pw-b', PW_I.trash]].forEach(function(a){
