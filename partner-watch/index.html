@@ -555,13 +555,27 @@ function token(){
           function(e){ renewing = null; if (e.status === 400 || e.status === 401) dropAuth(); throw e; });
   return renewing;
 }
+/* "Load failed" is how Safari says a request got no answer at all: the
+   iPad waking from sleep or the wifi changing hands drops it, and Mark saw
+   those two bare words in the banner (2026-10-21). Every read and save
+   here can safely go twice, so a request that got no answer is sent again,
+   a second and then three seconds later, before anything is said; an
+   answer, even a refusal, is never sent again. The copier is the
+   exception (`once`): a second run beside the first only doubles the wait. */
+function send(url, init, tries){
+  return fetch(url, init).catch(function(err){
+    if (!tries) throw Object.assign(new Error('the connection dropped before the cloud answered (Safari calls it \u201c' + err.message + '\u201d)'), { dropped:true });
+    return new Promise(function(ok){ setTimeout(ok, tries > 1 ? 1000 : 3000); })
+      .then(function(){ return send(url, init, tries - 1); });
+  });
+}
 function api(path, opts){
   opts = opts || {};
   return token().then(function(t){
     var h = Object.assign({ apikey:CLOUD.key, Authorization:'Bearer ' + t }, opts.headers || {});
     if (opts.body) h['Content-Type'] = 'application/json';
-    return fetch(CLOUD.url + path, { method:opts.method || 'GET', headers:h,
-      body: opts.body ? JSON.stringify(opts.body) : undefined });
+    return send(CLOUD.url + path, { method:opts.method || 'GET', headers:h,
+      body: opts.body ? JSON.stringify(opts.body) : undefined }, opts.once ? 0 : 2);
   }).then(function(r){
     if (r.status === 401){ dropAuth(); showLogin('Your session ended. Log in again.'); throw new Error('logged out'); }
     if (!r.ok) return r.text().then(function(t){ throw new Error(r.status + ' ' + t.slice(0, 200)); });
@@ -1686,7 +1700,7 @@ var checking = '';
 function checkNow(btn){
   checking = 'Checking… (up to two minutes)';
   btn.disabled = true; btn.textContent = checking;
-  api('/functions/v1/partner-copier', { method:'POST', body:{} })
+  api('/functions/v1/partner-copier', { method:'POST', body:{}, once:true })
     .then(function(r){
       if (r && r.error) throw new Error(r.error);
       return load().then(function(){
@@ -1697,7 +1711,19 @@ function checkNow(btn){
         checking = again.textContent = 'Copying… ' + r.waiting + ' entry pages to go';
       });
     })
-    .catch(function(err){ checking = ''; $('#banner').textContent = 'The check did not finish: ' + err.message; $('#banner').hidden = false; drawSites(); });
+    .catch(function(err){
+      checking = '';
+      /* A run takes up to two minutes, long enough for the iPad to sleep
+         and drop the line. Whatever the run copied before that is kept, and
+         the next run takes up the entries still waiting, so the page
+         fetches what is there and asks for one more press. */
+      var said = err.dropped
+        ? 'The connection dropped while the check ran, so this page did not hear how it ended. What it copied is kept; press Check now again and it picks up where it stopped.'
+        : 'The check did not finish: ' + err.message;
+      (err.dropped ? load() : Promise.resolve()).then(function(){
+        $('#banner').textContent = said; $('#banner').hidden = false; drawSites();
+      });
+    });
 }
 
 document.addEventListener('click', function(ev){
