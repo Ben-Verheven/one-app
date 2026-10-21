@@ -325,6 +325,34 @@ input[type="search"]:focus{outline:none;border-color:var(--key)}
 #sheet-body.pw-from-l{animation:pwFromL .24s cubic-bezier(.2,.8,.2,1)}
 @keyframes pwFromR{from{transform:translateX(38%);opacity:0}}
 @keyframes pwFromL{from{transform:translateX(-38%);opacity:0}}
+/* An entry is read as a page of its own, filling the screen as the desk's
+   reader does (Mark, 2026-10-21, chosen over the sheet that left a band of
+   dimmed list above it): a head held at the top says the venue and turns
+   back to the list or to the entry either side. The notes on a call stay
+   a sheet. */
+#sheet.pw-full .panel{top:0;max-height:none;border-radius:0;padding-top:0}
+#sheet.pw-full .grab{display:none}
+#sheet.pw-full .bar button{min-height:46px}
+.pw-head{position:sticky;top:0;z-index:6;display:flex;align-items:center;gap:6px;margin:0 -16px 14px;
+  padding:calc(var(--top) + 8px) 10px 8px;background:#EFE8DA;border-bottom:1px solid var(--line)}
+.pw-back{flex:0 0 auto;min-height:44px;padding:0 8px;font:15px var(--body);color:var(--muted)}
+.pw-hv{flex:1;min-width:0;text-align:center;font:600 9.5px/1.3 var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pw-arr{flex:0 0 44px;height:44px;display:flex;align-items:center;justify-content:center;font:20px/1 var(--body);color:var(--ink);border-radius:var(--radius)}
+.pw-arr:disabled{color:var(--line2)}
+.pw-arr:active{background:rgba(42,38,32,.07)}
+/* Make lead, in the leads' clay as the desk wears it; once made it says
+   under which arena the lead is */
+.pw-lead{display:block;width:100%;min-height:46px;margin:8px 0 0;border:1px solid rgba(141,85,69,.55);border-radius:var(--radius);
+  background:var(--field);font:600 10px/1 var(--sans);letter-spacing:.14em;text-transform:uppercase;color:#7a4536;text-align:center}
+.pw-lead.made{background:rgba(141,85,69,.12);font:italic 14.5px/1.3 var(--body);letter-spacing:0;text-transform:none}
+.pw-lead:disabled{color:var(--faint)}
+.pw-leadask{display:flex;flex-wrap:wrap;gap:7px;margin:8px 0 0}
+.pw-leadask select{flex:1 1 100%;min-height:46px;font:16px var(--body);color:var(--ink);background:var(--field);
+  border:1px solid var(--line2);border-radius:var(--radius);padding:0 10px}
+.pw-leadask button{flex:1;min-height:46px;border:1px solid var(--line2);border-radius:var(--radius);background:var(--field);
+  font:600 10px/1 var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--ink);text-align:center}
+.pw-leadask button.go{border-color:rgba(141,85,69,.55);color:#7a4536}
 /* a table pasted at the desk is wider than a phone: it slides sideways */
 #sheet .pw-memo table{display:block;max-width:100%;overflow-x:auto;border-collapse:collapse;margin:0 0 .7em;font-size:14px}
 #sheet .pw-memo td,#sheet .pw-memo th{border:1px solid var(--line);padding:4px 8px;vertical-align:top;text-align:left}
@@ -577,8 +605,9 @@ $('#s-pass').addEventListener('keydown', function(e){ if (e.key === 'Enter') $('
    What moves into Pocket. It reads the copier's tables as the desk's page
    does (partner-watch/index.html) and writes only what that page writes:
    an entry's four columns of Mark's own (opened_at, verdict, why,
-   decided_at), and his notes on a call in the `partnerwatch` row of
-   app_state. The links of the arenas' scrolls are changed at the desk. */
+   decided_at), his notes on a call in the `partnerwatch` row of
+   app_state, and by Make lead a lead in the `semaphore` row. The links of
+   the arenas' scrolls are changed at the desk. */
 
 var PW_VIEW = 'partnerwatch.pocket.view', PW_ROW = 'partnerwatch';
 var pwSites = [], pwEntries = [], pwById = {}, pwRun = null, pwLoaded = false;
@@ -1021,7 +1050,20 @@ function pwOpen(id){
   var wasNew = pwIsNew(e);
   if (!e.opened_at) pwPatch(e, { opened_at:new Date().toISOString() });
   var list = pwShown(), at = list.indexOf(e), s = pwSite(e.site);
+  $('#sheet').classList.add('pw-full');
   sheet(function(b, bar){
+    var head = el('div', 'pw-head'), back = el('button', 'pw-back', '‹ List');
+    back.addEventListener('click', shut);
+    head.appendChild(back);
+    head.appendChild(el('span', 'pw-hv', s.name));
+    [[-1, '‹', 'The entry before'], [1, '›', 'The next entry']].forEach(function(d){
+      var a = el('button', 'pw-arr', d[1]);
+      a.setAttribute('aria-label', d[2]);
+      a.disabled = at < 0 || !list[at + d[0]];
+      a.addEventListener('click', function(){ pwStep(d[0]); });
+      head.appendChild(a);
+    });
+    b.appendChild(head);
     var tags = el('div', 'pw-tags'), k = pwKindTag(e.kind);
     if (k) tags.appendChild(k);
     if (wasNew) tags.appendChild(el('span', 'pw-tag newtag', 'New'));
@@ -1048,6 +1090,10 @@ function pwOpen(id){
       if (v !== (e.why || null)) pwPatch(e, { why:v });
     });
     b.appendChild(why);
+    var lead = el('div');
+    lead.id = 'pw-lead';
+    b.appendChild(lead);
+    pwDrawLead(e);
     var body = el('div');
     body.id = 'pw-body';
     b.appendChild(body);
@@ -1061,7 +1107,6 @@ function pwOpen(id){
     var nx = el('button', '', 'Next ›');
     nx.addEventListener('click', function(){ pwNext(e, list); });
     bar.appendChild(nx);
-    closeBtn(bar);
   });
   pwDrawArenas(); pwDrawRows();
   if (e.fetched_at && !pwDetail[id]){
@@ -1091,6 +1136,13 @@ function pwTurn(id, from){
   b.classList.remove('pw-from-r', 'pw-from-l');
   void b.offsetWidth;
   b.classList.add('pw-from-' + from);
+}
+/* the entry after this one (1) or before it (-1) in the list as it stands */
+function pwStep(d){
+  var e = pwById[pwOpenId], list = pwShown(), i = list.indexOf(e);
+  var n = i < 0 ? null : list[i + d];
+  if (n) pwTurn(n.id, d > 0 ? 'r' : 'l');
+  else toast(d > 0 ? 'That was the last one in this list' : 'This is the first one in the list');
 }
 /* The sheet in the hand. A finger's first ten points of travel say which
    way it means: sideways on an open entry turns to the entry beside it in
@@ -1123,11 +1175,7 @@ function pwTurn(id, from){
     panel.style.transition = ''; body().style.transition = '';
     body().style.transform = ''; panel.style.transform = '';
     if (w === 'down'){ if (dy > 90) shut(); return; }
-    if (Math.abs(dx) < 70) return;
-    var e = pwById[pwOpenId], list = pwShown(), i = list.indexOf(e);
-    var n = i < 0 ? null : list[i + (dx < 0 ? 1 : -1)];
-    if (n) pwTurn(n.id, dx < 0 ? 'r' : 'l');
-    else toast(dx < 0 ? 'That was the last one in this list' : 'This is the first one in the list');
+    if (Math.abs(dx) >= 70) pwStep(dx < 0 ? 1 : -1);
   }
   panel.addEventListener('touchend', end, { passive:true });
   panel.addEventListener('touchcancel', end, { passive:true });
@@ -1152,6 +1200,122 @@ function pwAnswer(e, v){
   });
   if (nv) pwNext(e, list);
   else { pwOpen(e.id); }
+}
+
+/* ── Make lead ────────────────────────────────────────────────────────
+   The desk's Make lead (partner-watch/index.html, "Make lead", which says
+   what goes where and why), on the phone since 2026-10-21: the same lead,
+   built by the same reading of the entry's page, written into the
+   Brokerage Semaphore's row the same way, so a lead made here and one made
+   at the desk cannot be told apart. The arena is asked only when the
+   entry's venue serves several or none, with the phone's own picker. The
+   desk's "Lead in" opens the arena's panel; the phone has none, so here it
+   only says where the lead is. */
+var pwMkAsk = null, pwMkBusy = null;
+var PW_EMAIL = /[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}/;
+function pwNewId(){ return window.crypto && crypto.randomUUID ? crypto.randomUUID() : 'id' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36); }
+function pwTodayISO(){ var d = new Date(), p = function(n){ return (n < 10 ? '0' : '') + n; };
+  return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()); }
+function pwLeadOf(e){
+  var hit = null;
+  ((pwMarket && pwMarket.arenas) || []).some(function(a){
+    return (a.leads || []).some(function(l){ if (l.entryId === e.id){ hit = { a:a, l:l }; return true; } return false; });
+  });
+  return hit;
+}
+function pwLeadArenas(e){
+  var mine = pwVenueArenas(pwSite(e.site)._venue), ids = mine.map(function(a){ return a.id; });
+  var others = ((pwMarket && pwMarket.arenas) || []).filter(function(a){ return !a.frozenAt && ids.indexOf(a.id) < 0; })
+    .sort(function(x, y){ return String(x.name).localeCompare(String(y.name)); });
+  return { mine:mine, rest:others };
+}
+function pwDrawLead(e){
+  var host = $('#pw-lead');
+  if (!host || pwOpenId !== e.id) return;
+  host.textContent = '';
+  if (!pwMarket) return;
+  var had = pwLeadOf(e);
+  if (had){
+    var m = el('button', 'pw-lead made', 'Lead in ' + had.a.name);
+    m.disabled = true;
+    host.appendChild(m);
+    return;
+  }
+  if (pwMkBusy === e.id){ var w = el('button', 'pw-lead', 'Making the lead…'); w.disabled = true; host.appendChild(w); return; }
+  if (pwMkAsk === e.id){
+    var c = pwLeadArenas(e), ask = el('div', 'pw-leadask'), sel = el('select');
+    sel.setAttribute('aria-label', 'The arena this lead is filed under');
+    function group(label, list){
+      var g = el('optgroup'); g.label = label;
+      list.forEach(function(a){ var o = el('option', '', a.name); o.value = a.id; g.appendChild(o); });
+      sel.appendChild(g);
+    }
+    if (!c.mine.length){ var o = el('option', '', 'Choose an arena'); o.value = ''; sel.appendChild(o); }
+    else group('This venue serves', c.mine);
+    group(c.mine.length ? 'Every other arena' : 'Arenas', c.rest);
+    ask.appendChild(sel);
+    var go = el('button', 'go', 'Make lead'), no = el('button', '', 'Cancel');
+    go.addEventListener('click', function(){ pwMakeLead(e, sel.value); });
+    no.addEventListener('click', function(){ pwMkAsk = null; pwDrawLead(e); });
+    ask.appendChild(go); ask.appendChild(no);
+    host.appendChild(ask);
+    return;
+  }
+  var b = el('button', 'pw-lead', 'Make lead');
+  b.addEventListener('click', function(){
+    /* the Why line is kept first: it is the lead's researcher, and a press
+       here can come before the field has said it changed */
+    var why = $('#sheet .pw-why');
+    if (why && (why.value.trim() || null) !== (e.why || null)) pwPatch(e, { why:why.value.trim() || null });
+    var c = pwLeadArenas(e);
+    if (c.mine.length === 1) return pwMakeLead(e, c.mine[0].id);
+    pwMkAsk = e.id; pwDrawLead(e);
+  });
+  host.appendChild(b);
+}
+/* The desk's leadFromEntry, as it stands there. */
+function pwLeadFromEntry(e, d){
+  var f = (d && d.fields) || [];
+  var get = function(re){ for (var i = 0; i < f.length; i++) if (re.test(f[i][0]) && String(f[i][1] || '').trim()) return String(f[i][1]).trim(); return ''; };
+  var line = function(t){ return String(t || '').split('\n')[0].trim().slice(0, 200); };
+  var id = pwNewId(), site = pwSite(e.site), v = site._venue;
+  var project = line(get(/^(project (title|name|acronym)|acronym|title|project)$/i) || get(/project.*(title|name|acronym)/i)) || pwTitle(e);
+  var coord = line(get(/coordinat|lead(ing)?\b.*(organi[sz]ation|partner|institution)/i)) || e.org || '';
+  var mail = (get(/e-?mail/i).match(PW_EMAIL) || String((d && d.page_text) || '').match(PW_EMAIL) || [''])[0];
+  var web = (get(/web ?site|homepage|^url$|^web$/i).match(/(?:https?:\/\/)?[^\s,;]+\.[^\s,;]+/i) || [''])[0];
+  var links = [];
+  if (web) links.push({ id:pwNewId(), label:'project', url:/^https?:/i.test(web) ? web : 'https://' + web });
+  if (e.url) links.push({ id:pwNewId(), label:web ? site.name + ' entry' : 'project', url:e.url });
+  var l = { id:id, project:project, match:String(e.why || '').trim(), links:links, stage:'spotted', toResearchers:false, toLead:false,
+            due:null, doneAt:null, updates:[{ at:pwTodayISO(), text:'Made in Mark’s Place from ' + site.name + '’s entry' }], entryId:e.id };
+  if (coord) l.coordinator = coord;
+  if (e.contact) l.contact = String(e.contact).trim();
+  if (mail) l.email = mail;
+  if (v && v.id) l.venueId = v.id;
+  return l;
+}
+function pwMakeLead(e, aid){
+  if (!aid) return;
+  pwMkBusy = e.id; pwMkAsk = null; pwDrawLead(e);
+  var fields = pwDetail[e.id] || !e.fetched_at ? Promise.resolve(pwDetail[e.id] || null)
+    : rest('partner_entries?select=fields,page_text&id=eq.' + encodeURIComponent(e.id)).then(function(r){ return (r || [])[0] || null; });
+  fields.then(function(d){
+    var l = pwLeadFromEntry(e, d), name = '';
+    return rest('app_state?id=eq.semaphore&select=data').then(function(rows){
+      if (!rows || !rows.length) throw new Error('the Brokerage Semaphore has no copy in the cloud yet');
+      var s = rows[0].data;
+      if (typeof s === 'string') s = JSON.parse(s);
+      var a = (s.arenas || []).filter(function(x){ return x.id === aid; })[0];
+      if (!a) throw new Error('that arena is no longer on the board');
+      name = a.name;
+      /* a second press, or another device, got there first */
+      var twice = (s.arenas || []).some(function(x){ return (x.leads || []).some(function(y){ return y.entryId === e.id; }); });
+      if (!twice){ if (!Array.isArray(a.leads)) a.leads = []; a.leads.push(l); }
+      return rest('app_state', { method:'POST', prefer:'resolution=merge-duplicates,return=minimal',
+        body:[{ id:'semaphore', data:s, updated_at:new Date().toISOString() }] }).then(function(){ pwMarket = s; return name; });
+    });
+  }).then(function(name){ pwMkBusy = null; pwDrawLead(e); toast('Lead made in ' + name); },
+    function(err){ pwMkBusy = null; pwDrawLead(e); toast('The lead was not made: ' + (err && err.message ? err.message : 'no answer'), null, true); });
 }
 
 /* ── writing ──────────────────────────────────────────────────────────
@@ -1258,6 +1422,7 @@ function pwOpenNotes(id){
     dirty = true;
     document.execCommand('insertHTML', false, html ? pwCleanNote(html) : pwParasHtml(text));
   });
+  $('#sheet').classList.remove('pw-full');
   sheet(function(b, bar){
     b.appendChild(el('span', 'pw-label', 'Your notes on the call'));
     b.appendChild(el('h2', '', s.name));
