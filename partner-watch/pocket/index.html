@@ -169,12 +169,23 @@ input[type="search"]:focus{outline:none;border-color:var(--key)}
 
 /* ── the watch ──────────────────────────────────────────────────────── */
 
-/* The arenas, two to a row: Mark works one at a time (the desk dropped
+/* The venues, one to a line: Mark works one at a time (the desk dropped
    "All sites" on 2026-10-16), so the one chosen fills the list, and each
-   says how many of its entries he has not opened yet. */
-.pw-arenas{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:12px 12px 0}
-.pw-arena{display:flex;flex-direction:column;justify-content:space-between;gap:6px;min-height:62px;padding:9px 11px 8px;
+   says how many of its entries he has not opened yet. Two to a row until
+   2026-10-21, when he did not want them side by side: the two columns
+   took the width their longest arena tag asked, so the cards of a row
+   stood unevenly left and right. Now, as at the desk, the name and its
+   arenas take the line and the counts stand at its right edge, and the
+   arenas that do not fit fade out rather than wrap. */
+.pw-arenas{display:grid;grid-template-columns:minmax(0,1fr);gap:6px;margin:12px 12px 0}
+.pw-arena{display:flex;align-items:center;gap:12px;min-width:0;min-height:52px;padding:8px 12px;
   border:1px solid var(--line);border-radius:var(--radius);background:var(--strip);text-align:left}
+.pw-al{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.pw-al .pw-an{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pw-arena .pw-tags{flex-wrap:nowrap;overflow:hidden;margin:0;
+  -webkit-mask-image:linear-gradient(90deg,#000 82%,transparent);mask-image:linear-gradient(90deg,#000 82%,transparent)}
+.pw-arena .pw-tag{flex:0 0 auto;max-width:none}
+.pw-arena .pw-ac{flex:0 0 auto;text-align:right;white-space:nowrap}
 .pw-arena.on{border-color:var(--line2);background:rgba(216,205,184,.17)}
 .pw-arena:active{border-color:var(--key)}
 .pw-an{font:15px/1.25 var(--body);color:var(--ink)}
@@ -194,7 +205,6 @@ input[type="search"]:focus{outline:none;border-color:var(--key)}
 .pw-tags{display:flex;flex-wrap:wrap;gap:4px}
 .pw-tag{max-width:100%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;padding:0 7px 1px 6px;font:italic 12px/1.45 var(--body);color:var(--ink);
   background:color-mix(in srgb,var(--tone) 30%,var(--paper));border-left:3px solid var(--tone);border-radius:0 var(--radius) var(--radius) 0}
-.pw-tag.more{background:none;border-left-color:transparent;font-style:normal;color:var(--muted)}
 /* the chosen arena's call: its text, and Mark's own notes on it */
 .pw-call{display:flex;align-items:center;gap:8px;margin:10px 16px 0;min-height:36px}
 .pw-cn{flex:1;min-width:0;font:italic 14px/1.3 var(--body);color:var(--muted)}
@@ -321,8 +331,8 @@ input[type="search"]:focus{outline:none;border-color:var(--key)}
    before, as the desk's reader turns, and down from the top to put the
    sheet away. Scrolling the sheet must not drag the list behind it. */
 #sheet .panel{overscroll-behavior:contain}
-#sheet-body.pw-from-r{animation:pwFromR .24s cubic-bezier(.2,.8,.2,1)}
-#sheet-body.pw-from-l{animation:pwFromL .24s cubic-bezier(.2,.8,.2,1)}
+#sheet-body .pw-page.pw-from-r{animation:pwFromR .24s cubic-bezier(.2,.8,.2,1)}
+#sheet-body .pw-page.pw-from-l{animation:pwFromL .24s cubic-bezier(.2,.8,.2,1)}
 @keyframes pwFromR{from{transform:translateX(38%);opacity:0}}
 @keyframes pwFromL{from{transform:translateX(-38%);opacity:0}}
 /* An entry is read as a page of its own, filling the screen as the desk's
@@ -817,12 +827,11 @@ function pwArenaTags(v){
   var as = pwVenueArenas(v);
   if (!as.length) return null;
   var w = el('span', 'pw-tags');
-  as.slice(0, 2).forEach(function(a){
+  as.forEach(function(a){
     var t = el('span', 'pw-tag', a.name), tone = pwArenaTone(a);
     if (tone) t.style.setProperty('--tone', tone);
     w.appendChild(t);
   });
-  if (as.length > 2){ var m = el('span', 'pw-tag more', '+' + (as.length - 2)); m.title = as.slice(2).map(function(a){ return a.name; }).join(', '); w.appendChild(m); }
   return w;
 }
 function pwDrawArenas(){
@@ -834,9 +843,11 @@ function pwDrawArenas(){
     if (i === 0 || pwSites[i - 1]._block !== s._block)
       host.appendChild(pwGroupHead(s._block, pwSites.filter(function(x){ return x._block === s._block; }).length));
     var b = el('button', 'pw-arena' + (s.id === pwView.site ? ' on' : ''));
-    b.appendChild(el('span', 'pw-an', s.name));
+    var left = el('span', 'pw-al');
+    left.appendChild(el('span', 'pw-an', s.name));
     var tags = pwArenaTags(s._venue);
-    if (tags) b.appendChild(tags);
+    if (tags) left.appendChild(tags);
+    b.appendChild(left);
     var n = pwEntries.filter(function(e){ return e.site === s.id && pwIsNew(e); }).length;
     var c = el('span', 'pw-ac');
     if (n){ c.appendChild(el('b', '', String(n))); c.appendChild(document.createTextNode(' new')); }
@@ -1064,6 +1075,9 @@ function pwOpen(id){
       head.appendChild(a);
     });
     b.appendChild(head);
+    var outer = b;
+    b = el('div', 'pw-page');
+    outer.appendChild(b);
     var tags = el('div', 'pw-tags'), k = pwKindTag(e.kind);
     if (k) tags.appendChild(k);
     if (wasNew) tags.appendChild(el('span', 'pw-tag newtag', 'New'));
@@ -1132,7 +1146,8 @@ function pwNext(e, list){
 }
 function pwTurn(id, from){
   pwOpen(id);
-  var b = $('#sheet-body');
+  var b = $('#sheet-body .pw-page');
+  if (!b) return;
   b.classList.remove('pw-from-r', 'pw-from-l');
   void b.offsetWidth;
   b.classList.add('pw-from-' + from);
@@ -1151,7 +1166,9 @@ function pwStep(d){
    text that slides sideways of its own is left to that text. */
 (function(){
   var panel = $('#sheet .panel'), x0, y0, way, dx, dy;
-  function body(){ return $('#sheet-body'); }
+  /* the entry's page, under its head: the head and the venue it names
+     stay where they are while the page beneath turns (Mark, 2026-10-21) */
+  function body(){ return $('#sheet-body .pw-page') || $('#sheet-body'); }
   panel.addEventListener('touchstart', function(e){
     way = null; dx = dy = 0;
     if (e.touches.length !== 1 || e.target.closest('input,textarea,[contenteditable="true"],.pw-orig,.pw-diff,table,.bar')){ x0 = null; return; }
