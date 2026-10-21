@@ -532,6 +532,7 @@ one-app/
     callboard-descriptions.js   the Commission's prose
 partner-watch/        Mark’s Place, a page of its own, and in pocket/ its phone version — see notes/partner-watch.md
 pocket/               Pocket — see pocket/POCKET.md
+topic-atlas/          the Topic Atlas, a page of its own, and in library.js its two concept libraries, which Mark’s Place reads too — see notes/topic-atlas.md
 supabase/             the database's SQL, the two agents' gatekeepers and Partner Watch's copier
 tools/                the scripts below
 ```
