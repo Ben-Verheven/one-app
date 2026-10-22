@@ -154,6 +154,41 @@ input[type="search"]::-webkit-search-cancel-button{-webkit-appearance:none}
 .pw-flags .chg{color:var(--yellow)}
 .pw-flags .gone{color:var(--red-ink)}
 .pw-flags .newtag{color:var(--tint-ink)}
+/* Choosing several, as Mail's Select (Mark, 2026-10-22): a long press on
+   an entry starts it, a round tick stands at the head of every row, the
+   bar at the top says how many and holds Select All and Done, and each
+   group's header can take the whole group; the answers stand in a
+   toolbar at the foot. The press must not open iOS's own menu or select
+   the row's words, or the long press shows a callout over the list. */
+.pw-row{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+.pw-txtbtn{flex:0 0 auto;height:44px;padding:0 10px;color:var(--tint);white-space:nowrap;display:none}
+body.pw-selecting .pw-txtbtn{display:block}
+body.pw-selecting #pw-up,body.pw-selecting #refresh,body.pw-selecting #gear{display:none}
+body.pw-selecting #pw-navtitle{opacity:1}
+#pw-seldone{font-weight:600}
+.pw-tick{flex:0 0 22px;width:22px;height:22px;border-radius:50%;border:1.5px solid #636366;align-self:center;
+  display:flex;align-items:center;justify-content:center;color:#fff}
+.pw-tick svg{width:13px;height:13px}
+.pw-row.picked{background:#14253A}
+.pw-row.picked .pw-tick{background:var(--tint);border-color:var(--tint)}
+body.pw-selecting .pw-row{--inset:70px}
+body.pw-selecting .pw-row .pw-chev{display:none}
+.pw-gh .pw-ghall{margin:-12px -8px;padding:12px 8px;color:var(--tint);font-size:13px;text-transform:none}
+#pw-selbar{position:fixed;z-index:45;inset:auto 0 0 0;display:none;align-items:center;padding:4px 8px calc(4px + var(--sb));
+  background:rgba(28,28,30,.86);-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);border-top:.5px solid var(--sep)}
+body.pw-selecting #pw-selbar{display:flex}
+#pw-selbar button{flex:1;min-height:46px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  font:500 10px/1.1 var(--ui);color:var(--tint);text-align:center;border-radius:8px}
+#pw-selbar button:active{background:var(--press)}
+#pw-selbar button:disabled{color:#636366}
+#pw-selbar svg{width:25px;height:25px}
+body.pw-selecting #stage{padding-bottom:calc(var(--sb) + 60px)}
+body.pw-selecting #toast{bottom:calc(var(--sb) + 68px)}
+/* Check Now on the first screen, as the desk's: the copier asked to read
+   every venue now rather than wait for the night */
+#pw-check .pw-group{margin-top:16px}
+#pw-check .pw-cell:disabled .pw-cn{color:var(--label2)}
+#pw-check .pw-sq.spin svg{animation:turn .9s linear infinite}
 .pw-note{padding:60px 32px;text-align:center;color:var(--label2);font-size:15px;line-height:1.45}
 .pw-note b{display:block;margin-bottom:6px;color:var(--label);font-size:20px;font-weight:600}
 
@@ -344,15 +379,18 @@ a.pw-cell{text-decoration:none}
 
 <header id="top">
   <button class="pw-up" id="pw-up" hidden></button>
+  <button class="pw-txtbtn" id="pw-selall"></button>
   <span id="pw-navtitle"></span>
   <button class="icon" id="refresh" aria-label="Refresh"></button>
   <button class="icon" id="gear" aria-label="Settings"></button>
+  <button class="pw-txtbtn" id="pw-seldone">Done</button>
 </header>
 
 <main id="stage">
   <section class="view on" id="v-venues">
     <h1 class="pw-large">Mark’s Place</h1>
     <span class="pw-stamp" id="stamp">not yet loaded</span>
+    <div id="pw-check"></div>
     <div id="pw-arenas"></div>
   </section>
   <section class="view" id="v-list">
@@ -373,6 +411,7 @@ a.pw-cell{text-decoration:none}
   <div class="body" id="sheet-body"></div><div class="bar" id="sheet-bar"></div>
 </div></div>
 
+<div id="pw-selbar"></div>
 <div id="toast"><span id="toast-text"></span><button id="toast-do"></button></div>
 
 <div id="setup">
@@ -739,7 +778,10 @@ var PW_I = {
   next: pwSvg('<path d="M12 4v16"/><path d="M18 14l-6 6-6-6"/>', 1.9),
   out: pwSvg('<path d="M7 17L17 7"/><path d="M9 7h8v8"/>', 2.2),
   globe: pwSvg('<circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 0 1 0 18 14 14 0 0 1 0-18"/>', 2),
-  pencil: pwSvg('<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/>', 2)
+  pencil: pwSvg('<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/>', 2),
+  seen: pwSvg('<path d="M3 10l9-6 9 6v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M3 10l9 6 9-6"/>', 1.8),
+  unsort: pwSvg('<path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/>', 1.9),
+  tick: pwSvg('<path d="M5 12.5l4.5 4.5L19 7.5"/>', 3)
 };
 /* A cell of a grouped list: an optional square or dot at the left, the
    words, an optional part at the right, and the chevron when it leads on. */
@@ -776,6 +818,7 @@ var pwScreen = 'venues', pwVenuesTop = 0;
 function pwGo(to, back){
   var stage = $('#stage');
   if (to === pwScreen) return;
+  if (pwSelecting) pwSelEnd();
   if (to === 'list') pwVenuesTop = stage.scrollTop;
   pwScreen = to;
   ['venues', 'list'].forEach(function(v){
@@ -798,10 +841,12 @@ function pwNav(){
 
 function pwDraw(){
   pwStamp();
+  pwDrawCheck();
   pwDrawArenas();
   pwDrawChips();
   pwDrawRows();
   pwNav();
+  if (pwSelecting) pwSelDraw();
 }
 /* ── the Marketplace's order ──
    As at the desk (see "the Marketplace's order" in partner-watch/index.html,
@@ -894,7 +939,7 @@ function pwDrawArenas(){
     var c = pwCell('button', 'icon-cell', { sq:pwEsc((s.name || '?').charAt(0).toUpperCase()), tone:pwGroupTone(s._block) || '#636366',
       name:s.name, sub:arenas || null, right:right, chev:true });
     c.addEventListener('click', function(){
-      if (pwView.site !== s.id){ pwView.site = s.id; pwSaveView(); pwRegroup(); $('#pw-q').value = ''; pwView.q = ''; }
+      if (pwView.site !== s.id){ pwView.site = s.id; pwSaveView(); pwRegroup(); $('#pw-q').value = ''; pwView.q = ''; pwSel.clear(); }
       pwDrawCall(); pwDrawChips(); pwDrawRows();
       pwGo('list');
     });
@@ -960,7 +1005,7 @@ function pwDrawRows(){
   host.textContent = '';
   if (!pwLoaded) return;
   if (!pwEntries.length){
-    host.appendChild(pwNote('Nothing copied yet', 'The copier reads the venues every night; their entries appear here the morning after.'));
+    host.appendChild(pwNote('Nothing copied yet', 'The copier reads the venues every night, or at once with Check Now on the first screen.'));
     return;
   }
   var list = pwShown();
@@ -972,7 +1017,8 @@ function pwDrawRows(){
   var last = -1, g = null;
   list.forEach(function(e){
     if (e._g !== last){
-      pwGroupHeader(host, PW_GROUPS[e._g], per[e._g]);
+      pwGroupHeader(host, PW_GROUPS[e._g], pwSelecting ? null : per[e._g]);
+      if (pwSelecting) host.lastChild.appendChild(pwGroupAll(list, e._g));
       g = el('div', 'pw-group');
       host.appendChild(g);
       last = e._g;
@@ -980,12 +1026,20 @@ function pwDrawRows(){
     var flags = el('span', 'pw-flags'), k = pwKindTag(e.kind);
     if (k) flags.appendChild(k);
     pwStateTags(e).forEach(function(x){ flags.appendChild(x); });
-    var r = pwCell('button', 'pw-row dot-cell' + (e.removed_at || e.verdict === 'bin' ? ' dim' : ''), {
-      lead:el('span', 'pw-unread' + (pwIsNew(e) ? ' new' : '')), name:pwTitle(e),
+    var lead = document.createDocumentFragment(), picked = pwSelecting && pwSel.has(e.id);
+    if (pwSelecting){ var tk = el('span', 'pw-tick'); if (picked) tk.innerHTML = PW_I.tick; lead.appendChild(tk); }
+    lead.appendChild(el('span', 'pw-unread' + (pwIsNew(e) ? ' new' : '')));
+    var r = pwCell('button', 'pw-row dot-cell' + (e.removed_at || e.verdict === 'bin' ? ' dim' : '') + (picked ? ' picked' : ''), {
+      lead:lead, name:pwTitle(e),
       sub:[e.org && e.contact ? e.contact : null, e.country].filter(Boolean).join(' · ') || null,
       under:flags.children.length ? flags : null, chev:true });
     if (pwIsNew(e)) r.setAttribute('aria-label', 'New: ' + pwTitle(e));
-    r.addEventListener('click', function(){ pwOpen(e.id); });
+    if (pwSelecting) r.setAttribute('aria-pressed', String(picked));
+    pwHold(r, e.id);
+    r.addEventListener('click', function(){
+      if (pwHeld){ pwHeld = false; return; }
+      if (pwSelecting) pwSelToggle(e.id); else pwOpen(e.id);
+    });
     g.appendChild(r);
   });
 }
@@ -1297,6 +1351,165 @@ function pwAnswer(e, v){
   else { pwOpen(e.id); }
 }
 
+/* ── choosing several ────────────────────────────────────────────────
+   Mark wanted to pick several entries on the phone and answer them
+   together, as the tick boxes do at the desk (2026-10-22). A long press on
+   an entry starts the choosing with that entry picked, as in Mail and
+   Photos; a tap then picks or lets go. Select All takes every entry the
+   list shows, so with Unsorted, Seeks partners or a search chosen it takes
+   only those; a group's header takes only that group, all the New ones
+   say. What is acted on is what is picked and still shown, so changing
+   the filters on the way never answers an entry out of sight. */
+var pwSel = new Set(), pwSelecting = false, pwHeld = false;
+/* Pointer events and not touch events, so that the scroll the system
+   starts under a finger cancels the press (pointercancel) by itself; a
+   mouse held down does the same at the desk's browser. */
+function pwHold(r, id){
+  var t = null, x0 = 0, y0 = 0;
+  function stop(){ clearTimeout(t); t = null; }
+  r.addEventListener('pointerdown', function(ev){
+    if (ev.button) return;
+    pwHeld = false; x0 = ev.clientX; y0 = ev.clientY;
+    t = setTimeout(function(){
+      t = null; pwHeld = true;
+      if (!pwSelecting){ pwSelecting = true; pwSel.clear(); }
+      pwSel.add(id);
+      pwSelDraw();
+    }, 450);
+  });
+  r.addEventListener('pointermove', function(ev){ if (t && Math.abs(ev.clientX - x0) + Math.abs(ev.clientY - y0) > 10) stop(); });
+  r.addEventListener('pointerup', stop);
+  r.addEventListener('pointercancel', stop);
+  r.addEventListener('contextmenu', function(ev){ ev.preventDefault(); });
+}
+function pwPicked(){ return pwShown().filter(function(e){ return pwSel.has(e.id); }); }
+function pwSelToggle(id){ if (pwSel.has(id)) pwSel.delete(id); else pwSel.add(id); pwSelDraw(); }
+function pwSelEnd(){ pwSelecting = false; pwSel.clear(); pwSelDraw(); }
+function pwGroupAll(list, g){
+  var mine = list.filter(function(e){ return e._g === g; });
+  var all = mine.every(function(e){ return pwSel.has(e.id); });
+  var b = el('button', 'pw-ghall', all ? 'Deselect' : 'Select All ' + mine.length);
+  b.addEventListener('click', function(){
+    mine.forEach(function(e){ if (all) pwSel.delete(e.id); else pwSel.add(e.id); });
+    pwSelDraw();
+  });
+  return b;
+}
+var PW_BULK = [['interesting', 'Mark', 'starLine'], ['read', 'Seen', 'seen'], ['none', 'Unsort', 'unsort'], ['bin', 'Bin', 'trash']];
+function pwSelDraw(){
+  document.body.classList.toggle('pw-selecting', pwSelecting);
+  var list = pwShown(), n = pwPicked().length, all = list.length && n === list.length;
+  $('#pw-selall').textContent = all ? 'Deselect All' : 'Select All';
+  $('#pw-navtitle').textContent = pwSelecting ? (n ? n + ' Selected' : 'Select Entries') : pwSite(pwView.site).name;
+  var bar = $('#pw-selbar');
+  bar.textContent = '';
+  PW_BULK.forEach(function(a){
+    var b = el('button');
+    b.innerHTML = PW_I[a[2]];
+    b.appendChild(el('span', '', a[1]));
+    b.disabled = !n;
+    b.addEventListener('click', function(){ pwBulk(a[0]); });
+    bar.appendChild(b);
+  });
+  pwDrawRows();
+  if (!pwSelecting) pwNav();
+}
+/* The picked entries answered at once, on the phone first and then in the
+   cloud, eighty to a request as the desk's patchMany does, so the address
+   stays short. The toast's Undo puts each back as it was. */
+function pwBulk(what){
+  var list = pwPicked(), now = new Date().toISOString();
+  var vals = what === 'read' ? { opened_at:now }
+           : what === 'none' ? { verdict:null, decided_at:null }
+           : { verdict:what, decided_at:now };
+  if (what === 'read') list = list.filter(function(e){ return !e.opened_at; });
+  var was = list.map(function(e){ var b = {}; Object.keys(vals).forEach(function(k){ b[k] = e[k] == null ? null : e[k]; }); return [e.id, b]; });
+  pwPatchMany(list.map(function(e){ return e.id; }), vals);
+  pwSelEnd(); pwDrawArenas();
+  var said = { interesting:'Marked', read:'Seen', none:'Unsorted', bin:'Binned' }[what];
+  toast(list.length ? said + ': ' + list.length + ' entr' + (list.length === 1 ? 'y' : 'ies') : 'They were all seen already', !list.length ? null : function(){
+    var by = {};
+    was.forEach(function(w){ var k = JSON.stringify(w[1]); (by[k] = by[k] || { vals:w[1], ids:[] }).ids.push(w[0]); });
+    Object.keys(by).forEach(function(k){ pwPatchMany(by[k].ids, by[k].vals); });
+    pwDrawArenas(); pwDrawRows();
+  });
+}
+function pwPatchMany(ids, vals){
+  var list = ids.map(function(id){ return pwById[id]; }).filter(Boolean);
+  var before = list.map(function(e){ var b = {}; Object.keys(vals).forEach(function(k){ b[k] = e[k] == null ? null : e[k]; }); return b; });
+  list.forEach(function(e){ Object.assign(e, vals); });
+  for (var i = 0; i < list.length; i += 80){
+    (function(part, back){
+      rest('partner_entries?id=in.(' + part.map(function(e){ return encodeURIComponent('"' + e.id + '"'); }).join(',') + ')',
+           { method:'PATCH', body:vals, prefer:'return=minimal' })
+        .catch(function(err){
+          part.forEach(function(e, j){ Object.assign(e, back[j]); });
+          pwDrawArenas(); pwDrawRows();
+          toast('Not saved: ' + (err && err.message ? err.message : 'no answer'), null, true);
+          console.error(err);
+        });
+    })(list.slice(i, i + 80), before.slice(i, i + 80));
+  }
+}
+
+/* ── Check Now ────────────────────────────────────────────────────────
+   The desk's Check now on the phone (Mark, 2026-10-22: to look on the
+   sites for new entries from wherever he is): the copier is asked to read
+   every venue at once, as the night's run does, and the list is fetched
+   afresh after. One run copies at most forty entry pages, so while pages
+   are still waiting and the last run copied some it goes on by itself, as
+   at the desk's checkNow; a run that copied none stops it. A run takes up
+   to two minutes, long enough for the phone to lock and drop the line:
+   what the run copied is kept either way, and the next press goes on
+   where it stopped. */
+var pwChecking = '', pwCheckAdded = 0;
+function pwDrawCheck(){
+  var host = $('#pw-check');
+  host.textContent = '';
+  if (!auth) return;
+  var g = el('div', 'pw-group');
+  var sub = pwChecking || (pwRun ? 'Last ' + pwWhen(pwRun.ran_at) + ' · ' + pwRun.added + ' new · ' + pwRun.changed + ' changed · ' + pwRun.removed + ' gone'
+    : 'The copier also reads them every night');
+  var c = pwCell('button', 'icon-cell link', { sq:PW_I.refresh, tone:'#0A84FF', name:pwChecking ? 'Checking the Venues…' : 'Check the Venues Now', sub:sub });
+  c.disabled = !!pwChecking;
+  if (pwChecking) c.querySelector('.pw-sq').classList.add('spin');
+  c.addEventListener('click', function(){ pwCheckAdded = 0; pwCheck(); });
+  g.appendChild(c);
+  host.appendChild(g);
+}
+function pwCopier(){
+  return token().then(function(tok){
+    return fetch(cfg.url.replace(/\/+$/,'') + '/functions/v1/partner-copier', { method:'POST',
+      headers:{ 'apikey':cfg.key, 'Authorization':'Bearer ' + tok, 'Content-Type':'application/json' }, body:'{}' })
+      .then(null, function(){ throw Object.assign(new Error('the connection dropped'), { dropped:true }); });
+  }).then(function(r){
+    return r.text().then(function(t){
+      var j = null; try { j = t ? JSON.parse(t) : null; } catch(e){}
+      if (!r.ok || (j && j.error)) throw new Error((j && j.error) || (r.status + ' ' + r.statusText));
+      return j || {};
+    });
+  });
+}
+function pwCheck(){
+  pwChecking = pwChecking || 'Up to two minutes';
+  pwDrawCheck();
+  pwCopier().then(function(r){
+    pwCheckAdded += r.added || 0;
+    var more = r.waiting && r.fetched;
+    pwChecking = more ? 'Copying… ' + r.waiting + ' entry pages to go' : '';
+    return pwLoad().then(function(){
+      if (more) return pwCheck();
+      pwDrawCheck();
+      toast(pwCheckAdded ? pwCheckAdded + ' new entr' + (pwCheckAdded === 1 ? 'y' : 'ies') + ' found' : 'Checked: nothing new on the venues');
+    });
+  }, function(err){
+    pwChecking = '';
+    var said = err.dropped ? 'The line dropped while checking. What was copied is kept; press Check Now again to go on.'
+      : 'The check did not finish: ' + err.message;
+    return pwLoad().then(function(){ pwDrawCheck(); toast(said, null, true); });
+  });
+}
+
 /* ── Make lead ────────────────────────────────────────────────────────
    The desk's Make lead (partner-watch/index.html, "Make lead", which says
    what goes where and why), on the phone since 2026-10-21: the same lead,
@@ -1553,6 +1766,12 @@ $('#refresh').innerHTML = PW_I.refresh;
 $('#gear').innerHTML = PW_I.gear;
 $('#pw-mag').innerHTML = PW_I.mag;
 $('#pw-up').addEventListener('click', function(){ pwGo('venues', true); });
+$('#pw-seldone').addEventListener('click', pwSelEnd);
+$('#pw-selall').addEventListener('click', function(){
+  var list = pwShown(), all = list.length && pwPicked().length === list.length;
+  list.forEach(function(e){ if (all) pwSel.delete(e.id); else pwSel.add(e.id); });
+  pwSelDraw();
+});
 $('#stage').addEventListener('scroll', function(){ $('#top').classList.toggle('edge', this.scrollTop > 36); }, { passive:true });
 $('#pw-q').addEventListener('input', function(){ pwView.q = this.value; pwDrawRows(); });
 $('#pw-q').addEventListener('keydown', function(e){ if (e.key === 'Enter') this.blur(); });
