@@ -3517,9 +3517,13 @@ function leadLinkRows(a,l,shut){
       ? '<a class="lla" draggable="false" href="'+esc(url)+'" target="_blank" rel="noopener" '+
           'title="'+esc(mail?'Write to '+host:url)+'">'+ico+said+'</a>'
       : '<span class="lla dead">'+ico+said+'</span>';
+    /* Copy, as the contact's address has (Mark, 2026-10-22): the page's
+       address, or a bare address to write to, for pasting elsewhere */
+    const copy=url?'<button class="lcopy" data-act="copyMail" data-v="'+esc(mail?host:url)+'" '+
+      'title="Copy '+(mail?'the address':'the link')+'">Copy</button>':'';
     const x=shut?'':'<button class="lx" data-act="leadLinkDel" data-id="'+a.id+'" data-l="'+l.id+'" '+
       'data-k="'+lk.id+'" title="Take this link off" aria-label="Remove link">\u2715</button>';
-    return '<div class="llrow">'+body+x+'</div>';
+    return '<div class="llrow">'+body+copy+x+'</div>';
   }).join('');
 }
 /* The marks on the two boxes, drawn in the stroke of the text beside them.
