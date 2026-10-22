@@ -745,7 +745,8 @@ function pwPasses(e){
   if (v.leads ? !e._lead : e._lead || e.site !== v.site) return false;
   if (!v.leads){
   if (v.kind !== 'all' && e.kind !== v.kind) return false;
-  if (v.state === 'open' && e.verdict === 'bin') return false;
+  /* a search under All reaches the binned too, as at the desk */
+  if (v.state === 'open' && e.verdict === 'bin' && !v.q) return false;
   if (v.state === 'unsorted' && e.verdict) return false;
   if (['interesting','bin'].indexOf(v.state) >= 0 && e.verdict !== v.state) return false;
   }

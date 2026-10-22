@@ -840,8 +840,9 @@ function load(){
 }
 
 /* ── the filters ─────────────────────────────────────────────────────
-   Binned entries stay out of every view but Binned: they are kept so the
-   copier never brings them back as new, not so they are seen again. */
+   Binned entries stay out of every view but Binned and the search: they
+   are kept so the copier never brings them back as new, not so they are
+   seen again. */
 var STATES = [['open','All'],['unsorted','Unsorted'],['interesting','Marked'],['bin','Binned']];
 var KINDS = [['all','Both kinds'],['seeks','Seeks partners'],['offers','Offers expertise']];
 function stateOk(e){
@@ -1538,7 +1539,10 @@ function results(){
     var r = found.per[id], e = byId[id] || r.e;
     if (view.scope === 'site' && e.site !== view.site) return;
     if (view.kind !== 'all' && e.kind !== view.kind) return;
-    if (!stateOk(e) || !reaches(r)) return;
+    /* The search reaches into the bin under All (Mark, 2026-10-22): an
+       entry binned in haste is still the one he remembers a word of, and
+       its Binned tag says where it lies. */
+    if (!(view.state === 'open' || stateOk(e)) || !reaches(r)) return;
     list.push(r);
   });
   list.sort(function(a, b){ return (b.main - a.main) || (b.score - a.score) || (b.flagged - a.flagged) || (a.e._i - b.e._i); });
