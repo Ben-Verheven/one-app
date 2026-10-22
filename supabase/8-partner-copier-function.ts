@@ -472,14 +472,32 @@ const PARSERS = {
 
 // ── the run ───────────────────────────────────────────────────────────
 
+// A site that turns the connection away (2026-10-22: the three
+// proposals.etag.ee venues all at once, "Connection refused", while Check
+// now went on by itself for NEB4All's 379 pages) is asked once more after
+// a pause, then left alone for the rest of the run: every further asking
+// of the same host only adds to what made it refuse.
+const refused = new Set();
+const refusal = (err) => /connection refused|tcp connect|os error 111|connection reset/i.test(String(err?.message ?? err));
 async function get(url) {
-  const r = await fetch(url, {
-    headers: { "user-agent": UA, accept: "text/html" },
-    redirect: "follow",
-    signal: AbortSignal.timeout(30_000),
-  });
-  if (!r.ok) throw new Error(`${r.status} ${r.statusText} from ${url}`);
-  return await r.text();
+  const host = new URL(url).host;
+  if (refused.has(host)) throw new Error(`skipped: ${host} refused the connection earlier in this check`);
+  for (let tries = 1; ; tries++) {
+    try {
+      const r = await fetch(url, {
+        headers: { "user-agent": UA, accept: "text/html" },
+        redirect: "follow",
+        signal: AbortSignal.timeout(30_000),
+      });
+      if (!r.ok) throw new Error(`${r.status} ${r.statusText} from ${url}`);
+      return await r.text();
+    } catch (err) {
+      if (!refusal(err)) throw err;
+      if (tries < 2) { await sleep(8_000); continue; }
+      refused.add(host);
+      throw err;
+    }
+  }
 }
 
 // Everything of one kind, a thousand rows at a time: the database hands out
@@ -654,17 +672,21 @@ async function copyEntry(e, platform, now) {
   return changed;
 }
 
-async function run(byMark) {
+async function run(byMark, lists) {
   const t0 = Date.now(), now = new Date().toISOString();
   const tally = { listed: 0, added: 0, fetched: 0, changed: 0, removed: 0, waiting: 0 };
   b2mTokens.clear();
   b2oLists.clear();
+  refused.clear();
   const errors = [];
 
   const { data: sites, error } = await db.from("partner_sites").select("*").eq("active", true).order("sort");
   if (error) throw error;
   const platformOf = Object.fromEntries(sites.map((s) => [s.id, s.platform]));
-  const dueAfter = Date.now() - (byMark ? 5 * 60_000 : LIST_EVERY_H * 3_600_000);
+  // Mark's press reads every list again; the runs the page then starts by
+  // itself to copy what is waiting (`lists: false`) leave the lists alone,
+  // or a long copy re-read each site every few minutes for as long as it went.
+  const dueAfter = Date.now() - (byMark && lists !== false ? 5 * 60_000 : LIST_EVERY_H * 3_600_000);
 
   for (const s of sites) {
     if (s.listed_at && Date.parse(s.listed_at) > dueAfter) continue;
@@ -700,6 +722,9 @@ async function run(byMark) {
       if (await copyEntry(e, platformOf[e.site], now)) tally.changed++;
       tally.fetched++;
     } catch (err) {
+      // A host that refused is the site's doing, not the entry's: the entry
+      // keeps its place and is not counted a failure.
+      if (refusal(err) || /^skipped:/.test(String(err?.message))) continue;
       // Three failures in a row and the entry waits for its fortnightly
       // turn instead of blocking the front of the queue every night.
       const n = (e.fetch_errors ?? 0) + 1;
@@ -734,7 +759,8 @@ Deno.serve(async (req) => {
     const byCron = !!(sec?.token && given && given === sec.token);
     const byMark = !byCron && await isMark(req);
     if (!byCron && !byMark) return json({ error: "not allowed" }, 401);
-    return json(await run(byMark));
+    const body = await req.json().catch(() => ({}));
+    return json(await run(byMark, body?.lists));
   } catch (err) {
     return json({ error: String(err?.message ?? err) }, 500);
   }

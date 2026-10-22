@@ -162,6 +162,13 @@ body.drawer .veil{display:block;position:absolute;inset:0;z-index:3;background:r
 .linkbar .lbtns{display:flex;gap:6px;margin-top:8px}
 .linkbar .btn{padding:3px 12px;font-size:12.5px}
 .site .err{grid-column:1 / -1;font-size:12px;color:var(--warn-ink);margin-top:3px;overflow-wrap:anywhere;white-space:normal}
+/* A failed read is one small line that opens on a tap (Mark, 2026-10-22:
+   four lines of the raw message under each venue were "so big"). */
+.errx{display:inline-block;font-size:12px;color:var(--warn-ink);cursor:pointer;margin-top:3px}
+.errx::after{content:' ›'}
+.errx.open::after{content:' ⌄'}
+.errx .full{display:block;white-space:pre-line;overflow-wrap:anywhere;margin-top:2px;color:var(--warn-ink)}
+.site .errx{grid-column:1 / -1}
 .runbox{display:flex;align-items:center;gap:12px;padding:9px 14px 10px;border-top:1px solid var(--line);font-size:12.5px;line-height:1.45;color:var(--muted);flex:none}
 .runbox .say{flex:1;min-width:0}
 .runbox b{color:var(--ink);font-weight:500}
@@ -605,6 +612,22 @@ function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c
 function saveView(){ try { localStorage.setItem(VIEW, JSON.stringify({ site:view.site, kind:view.kind, state:view.state, id:view.id, tab:view.tab, scope:view.scope, any:view.any, sums:view.sums })); } catch(e){} }
 function day(iso){ if (!iso) return ''; var d = new Date(iso);
   return d.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' }); }
+/* The copier's errors in words Mark reads, the site's own message after
+   them; and which of the small error lines he has opened, kept while the
+   page redraws. */
+var errOpen = {};
+function plainErr(m){
+  m = String(m || '');
+  if (/^skipped:/.test(m)) return 'Not tried: the site had turned the connection away earlier in the same check.';
+  if (/connection refused|tcp connect|os error 111/i.test(m)) return 'The site turned the connection away. This usually passes by itself; the next check tries again.\n' + m;
+  if (/timed? ?out|aborted/i.test(m)) return 'The site took too long to answer; the next check tries again.\n' + m;
+  return m;
+}
+function errLine(key, short, full){
+  var on = !!errOpen[key];
+  return '<span class="errx' + (on ? ' open' : '') + '" data-errx="' + esc(key) + '">⚠ ' + esc(short)
+    + (on ? '<span class="full">' + esc(full) + '</span>' : '') + '</span>';
+}
 function stamp(iso){ if (!iso) return ''; var d = new Date(iso);
   return d.toLocaleDateString('en-GB', { day:'numeric', month:'short' }) + ', ' + d.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' }); }
 function siteOf(e){ return sites.find(function(s){ return s.id === e.site; }) || { name:e.site }; }
@@ -2176,7 +2199,7 @@ function drawSites(){
        + (tags ? '<span class="l2">' + tags + '</span>' : '')
        + '<span class="c1">' + (mk ? '<span class="mk" title="' + mk + ' marked">' + STAR + mk + '</span>' : '') + (n ? '<span class="nw" title="' + n + ' new">' + n + '</span>' : '') + (tags ? '' : size) + '</span>'
        + (tags ? '<span class="c2">' + size + '</span>' : '')
-       + (s.last_error ? '<div class="err">Last read failed, ' + esc(stamp(s.last_error_at)) + ': ' + esc(s.last_error) + '</div>' : '')
+       + (s.last_error ? errLine('v:' + s.id, 'Last read failed · ' + stamp(s.last_error_at), plainErr(s.last_error)) : '')
        + '</button></div>';
   });
   if (editingLinks) h += '<div class="linkbar">The link each scroll opens, such as the call text\'s PDF. Empty for no scroll.'
@@ -2191,7 +2214,7 @@ function drawSites(){
   var waiting = entries.filter(function(e){ return !e.fetched_at && !e.removed_at; }).length;
   $('#runbox').innerHTML = '<span class="say">' + (lastRun
       ? '<b>Last check ' + esc(stamp(lastRun.ran_at)) + '</b> · ' + lastRun.added + ' new · ' + lastRun.changed + ' changed · ' + lastRun.removed + ' gone'
-        + (lastRun.errors ? '<br><span style="color:var(--warn-ink)">' + esc(lastRun.errors.split('\n')[0]) + '</span>' : '')
+        + (lastRun.errors ? '<br>' + errLine('run', lastRun.errors.split('\n').length + (lastRun.errors.split('\n').length === 1 ? ' problem' : ' problems'), lastRun.errors.split('\n').map(plainErr).join('\n')) : '')
       : '<b>Not checked yet.</b> The copier runs every night.')
     + (waiting ? '<br>' + waiting + ' entry pages still to copy' : '') + '</span>'
     + '<button class="btn" id="checkNow"' + (checking ? ' disabled>' + esc(checking) : '>Check now') + '</button>';
@@ -2718,17 +2741,20 @@ document.addEventListener('visibilitychange', function(){ if (document.visibilit
    copied some; a run that copied none stops it, so a venue whose pages
    all fail cannot keep it going. */
 var checking = '';
-function checkNow(btn){
+/* Only the press itself reads the venues' lists again; the runs that
+   follow it only copy what is waiting (2026-10-22, when re-reading them
+   every few minutes through a long copy had proposals.etag.ee refuse). */
+function checkNow(btn, more){
   checking = 'Checking… (up to two minutes)';
   btn.disabled = true; btn.textContent = checking;
-  api('/functions/v1/partner-copier', { method:'POST', body:{}, once:true })
+  api('/functions/v1/partner-copier', { method:'POST', body: more ? { lists:false } : {}, once:true })
     .then(function(r){
       if (r && r.error) throw new Error(r.error);
       return load().then(function(){
         checking = '';
         if (!(r && r.waiting && r.fetched)) return drawSites();
         var again = $('#checkNow');
-        checkNow(again);
+        checkNow(again, true);
         checking = again.textContent = 'Copying… ' + r.waiting + ' entry pages to go';
       });
     })
@@ -2778,6 +2804,8 @@ document.addEventListener('click', function(ev){
     if ($('#mkArena')) $('#mkArena').focus();
     return;
   }
+  var ex = ev.target.closest('[data-errx]');
+  if (ex){ ev.preventDefault(); errOpen[ex.dataset.errx] = !errOpen[ex.dataset.errx]; return drawSites(); }
   var t = ev.target.closest('[data-pick],[data-bulk],[data-site],[data-id],[data-state],[data-kind],[data-tab],[data-verdict],[data-editlinks],[data-savelinks],[data-cancellinks],[data-callnote],[data-drawer],[data-step],#checkNow');
   if (!t) return;
   if (t.dataset.drawer) return drawer(t.dataset.drawer === 'toggle' ? 'toggle' : t.dataset.drawer === '1');
