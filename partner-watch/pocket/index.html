@@ -2,8 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<!-- No viewport-fit=cover, for Pocket's reason (pocket/index.html, the same
-     meta): on the home screen iOS 26 draws nothing in the bottom status
+<!-- No viewport-fit=cover: on the home screen iOS 26 draws nothing in the bottom status
      bar's height of a page that covers the screen (WebKit bug 301108). -->
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -20,12 +19,12 @@
    desk's page, notes/partner-watch.md what Mark chose for it), gone
    through in an idle minute: a venue, its list, an entry, a flag.
 
-   It is built to become a tab of Pocket rather than to stay a page of its
-   own, and is made of two parts. The first, "Pocket's shell", is Pocket's
-   own sheet, toast, login and request, copied from pocket/index.html; when
-   the watch moves in, that part is dropped and Pocket's own serves. The
-   second, "the watch", is what moves: its classes start with pw- and its
-   names with pw, so none of them meets one of Pocket's.
+   It was built to become a tab of Pocket, and so is made of two parts.
+   The first, "Pocket's shell", is Pocket's own sheet, toast, login and
+   request, copied from it; the second, "the watch", has classes starting
+   with pw- and names with pw. Pocket was removed on 2026-10-22, when Mark
+   no longer needed it, so this page is the phone's only app and both
+   parts stay.
 
    It dresses as an iPhone app does (Mark, 2026-10-21: "much more easy and
    Apple like"), where until then it wore Pocket's charcoal, bone and
@@ -53,8 +52,7 @@
   --radius:10px;
   --sb:max(env(safe-area-inset-bottom), var(--home-b, 0px));
   --top:max(env(safe-area-inset-top), var(--top-fix, 0px));
-  /* No tab bar while the watch stands alone: the foot keeps only the home
-     bar's room. In Pocket this is its tab bar's height again. */
+  /* No tab bar: the foot keeps only the home bar's room. */
   --tabs:var(--sb);
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -432,8 +430,8 @@ a.pw-cell{text-decoration:none}
 <script>
 'use strict';
 /* ══ Pocket's shell ═══════════════════════════════════════════════════
-   Copied from pocket/index.html, where every part of it says why it is
-   as it is; dropped when the watch moves into Pocket. Only the login
+   Copied from Pocket (removed 2026-10-22; its file and its reasons for
+   each part are in git's history). Only the login
    sheet is cut down: this page knows its one project, so it never asks
    for a url or a key. The session is kept under a key of its own, not
    Pocket's: two pages renewing one session in turn would hand Supabase
@@ -630,7 +628,7 @@ $('#s-pass').addEventListener('keydown', function(e){ if (e.key === 'Enter') $('
 <script>
 'use strict';
 /* ══ The watch ════════════════════════════════════════════════════════
-   What moves into Pocket. It reads the copier's tables as the desk's page
+   The phone's Mark’s Place itself. It reads the copier's tables as the desk's page
    does (partner-watch/index.html) and writes only what that page writes:
    an entry's four columns of Mark's own (opened_at, verdict, why,
    decided_at), his notes on a call in the `partnerwatch` row of
@@ -853,8 +851,7 @@ function pwDraw(){
    which says why): the venues in the order of the Marketplace's Venues,
    matched by site, and tagged with the arenas they serve. linkKey,
    SHARED_HOSTS and siteKey are the Marketplace's own under names of this
-   page's; at the move into Pocket, Pocket's own siteKey and toneHex take
-   their place. */
+   page's. */
 var pwMarket = null;
 var PW_TONES = { blush:'#e19292', terracotta:'#db9973', sand:'#cda364', straw:'#bdaa62', olive:'#9db672', sage:'#6ebe9b',
   aqua:'#59beb8', mist:'#5bbad0', cornflower:'#71b3e1', dusk:'#8faae8', lilac:'#aca0e2', mauve:'#c598d1', rose:'#d992b3',

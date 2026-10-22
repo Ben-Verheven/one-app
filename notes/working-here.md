@@ -35,8 +35,8 @@ the way back.
   write its contents (as self-modification), so a change to what it says
   is Mark's, made on GitHub's website.
 - **Everything the tools need is already in the container:** node,
-  Playwright and its Chromium. `finish.py` and `tools/pocket.js` run as
-  they stand, about ten seconds each; installing anything is wasted time.
+  Playwright and its Chromium. `finish.py` runs as
+  it stands, in about ten seconds; installing anything is wasted time.
   The proxy refuses the jsdelivr CDN and Google Fonts, which is why the
   smoke reports a `net::ERR` it then ignores: the app comes up without
   either.

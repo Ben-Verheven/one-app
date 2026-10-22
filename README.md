@@ -1,7 +1,7 @@
 # One App — for the person who uses it
 
 This repository is the app, and GitHub Pages turns it into a website.
-One App and Pocket are both in it. About a minute after a change is
+One App and Mark’s Place are both in it. About a minute after a change is
 saved here, every device has it.
 
 **You do not run anything.** No install, no build, no command. That is the
@@ -15,11 +15,10 @@ whole point of the design, and it is the only promise this file makes.
 |---|---|---|
 | desk | `https://ben-verheven.github.io/one-app/` | bookmark it |
 | iPad | the same address, in Safari | Share → **Add to Home Screen** |
-| iPhone | `https://ben-verheven.github.io/one-app/pocket/` | Share → **Add to Home Screen** |
-| iPhone, Mark’s Place | `https://ben-verheven.github.io/one-app/partner-watch/pocket/` | the same |
+| iPhone, Mark’s Place | `https://ben-verheven.github.io/one-app/partner-watch/pocket/` | Share → **Add to Home Screen** |
 | desk, Topic Atlas | `https://ben-verheven.github.io/one-app/topic-atlas/` | bookmark it |
 
-From the home screen, One App and Pocket open full screen, with their own
+From the home screen, One App and Mark’s Place open full screen, with their own
 icons and without Safari's bars.
 
 **Log in once in each place.** The first time, the app asks for your email
@@ -69,7 +68,6 @@ the top-right rail names the room that failed to load.
 | | |
 |---|---|
 | `one-app/` | the app: the page, the shell, the rooms, the data |
-| `pocket/` | Pocket, with its own two guides |
 | `supabase/` | the database's scripts and the two night agents' gatekeepers |
 | `tools/` | scripts the assistant runs in its own workspace, never you |
 | `CLAUDE.md` | how the assistant works here |

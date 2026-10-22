@@ -16,7 +16,7 @@
   One App later as a room or a Marketplace view without being redrawn.
 
   It reads and writes only through the cloud, behind the same login as the
-  One App and Pocket, because the entries hold people's names and emails
+  One App, because the entries hold people's names and emails
   and the repository is public.
 -->
 <style>
@@ -504,14 +504,14 @@ button.badge:hover{box-shadow:inset 0 0 0 1.5px var(--lv)}
 <script src="../topic-atlas/library.js"></script>
 <script>
 /* The cloud: the One App's own Supabase project. The key is the public one
-   (the same as Pocket's BUILT_IN); since the lock it opens nothing without
+   (the same as the One App's BUILT_IN); since the lock it opens nothing without
    Mark's login, which is why it can stand in a public page. */
 var CLOUD = { url:'https://eaaggqydnjkufzajgpzh.supabase.co',
   key:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVhYWdncXlkbmprdWZ6YWpncHpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2NzEwMjMsImV4cCI6MjA5OTI0NzAyM30.pRQPc-qZWV0wwPPnfQU0I_HzmZZ36xZYIXJQYfQG96g' };
 var AUTH = 'partnerwatch.auth', VIEW = 'partnerwatch.view';
 
 /* ── the login ─────────────────────────────────────────────────────────
-   Pocket's way (pocket/index.html, "the login"): log in once, keep the
+   As Pocket did, until it went on 2026-10-22: log in once, keep the
    session on this device, renew it a minute before it runs out, and only
    one renewal at a time, because Supabase ends the whole session when the
    same refresh token comes back twice. */
@@ -1743,8 +1743,8 @@ function arenaTags(v){
    his note; an arena's About and Brokerage, its venues, its open
    leads and its dates in time order. One leads to the other, as in the
    Semaphore. They only read the Semaphore's data, as the order above
-   does: its row is written by the One App and Pocket under rules of their
-   own (pocket/WRITES.md), and a second writer here could undo a change
+   does: its row is written by the One App under rules of its
+   own, and a second writer here could undo a change
    made there. So Go, which in the Semaphore is the visit, is Site here and
    only opens the site, and every change stays in the Semaphore. How a
    venue's window is reckoned is the Semaphore's own (vWin, vState, vHeat,
@@ -2515,11 +2515,11 @@ function storeMine(part, changes){
    filed under the arena of the entry's venue, asked only when the venue
    serves more than one or none, and remembers the venue and the entry
    (`entryId`), so the button then says where the lead is and opens that
-   arena instead of making a second one. It is written as Pocket writes a
-   lead (pocket/index.html, `commit`): the Semaphore's row read afresh, the
-   lead added to it, the whole put back, so nothing changed elsewhere since
-   this page was opened is undone; the desk takes it in the next time it
-   looks at the cloud, as it takes Pocket's. */
+   arena instead of making a second one. It is written as Pocket wrote a
+   lead (its `commit`, until Pocket went on 2026-10-22): the Semaphore's row
+   read afresh, the lead added to it, the whole put back, so nothing changed
+   elsewhere since this page was opened is undone; the desk takes it in the
+   next time it looks at the cloud. */
 var mkAsk = null, mkBusy = null;
 var EMAIL = /[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}/;
 function newId(){ return window.crypto && crypto.randomUUID ? crypto.randomUUID() : 'id' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36); }

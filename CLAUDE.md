@@ -1,8 +1,8 @@
 # Working on One App
 
-One App: one HTML page, five independent vanilla-JS rooms: Ledger, Brokerage Semaphore, Call Board, Atlas and Notes. Pocket, the Brokerage Semaphore's phone companion, is `pocket/index.html`. No framework, no bundler, no build step. GitHub Pages serves this repository as it stands on `main`, so a push is live about a minute later. The tree must still run from file://, because the OneDrive folder is the way back.
+One App: one HTML page, five independent vanilla-JS rooms: Ledger, Brokerage Semaphore, Call Board, Atlas and Notes. Mark’s Place, the brokerage sites' partner-search entries, is a page of its own in `partner-watch/`, with its phone version in `partner-watch/pocket/`. No framework, no bundler, no build step. GitHub Pages serves this repository as it stands on `main`, so a push is live about a minute later. The tree must still run from file://, because the OneDrive folder is the way back.
 
-Read PROJECT.md first. It is the only description of how the app works and why every rule below exists. For Pocket, read pocket/POCKET.md. This file says how to behave; those say how the apps behave.
+Read PROJECT.md first. It is the only description of how the app works and why every rule below exists. This file says how to behave; those say how the apps behave.
 
 ## Who you are talking to
 
@@ -16,7 +16,7 @@ This clone is the only copy worked on. Pages serves only main, so work pushed an
 
 Commit as `Ben-Verheven <299968296+Ben-Verheven@users.noreply.github.com>`. The account refuses pushes that carry a private email.
 
-Don't read the three files in one-app/data/, Pocket's `atlas-index` line, or the Topic Atlas's `ta-data` line and its library.js: each is one line of raw data, megabytes long, with nothing in it to learn. First 300 characters if you need the shape; cut the line away when reading Pocket. The OneDrive way, a whole read ends the session. Here the tools cut it off first (notes/working-here.md), so a slip wastes a little room and nothing more.
+Don't read the three files in one-app/data/, or the Topic Atlas's `ta-data` line and its library.js: each is one line of raw data, megabytes long, with nothing in it to learn. First 300 characters if you need the shape. The OneDrive way, a whole read ends the session. Here the tools cut it off first (notes/working-here.md), so a slip wastes a little room and nothing more.
 
 Before touching a part, read its note: notes/INDEX.md lists them, one line each. They hold the bugs already paid for and the design choices I made, which nothing else records.
 
@@ -28,7 +28,7 @@ Edit in place. Never rewrite wholesale, reformat, rename, or modernise anything 
 
 Git is the undo. "Undo" means `git revert` of that change, pushed. Never rewrite history, never force-push.
 
-The repository is public. Nothing made from my own data goes in: no exports, builds, screenshots or Pocket's contract (.gitignore holds them out). Check every change for passwords and keys before committing. The anon key in `BUILT_IN` is public by design; nothing else is.
+The repository is public. Nothing made from my own data goes in: no exports, builds or screenshots (.gitignore holds them out). Check every change for passwords and keys before committing. The anon key in `BUILT_IN` is public by design; nothing else is.
 
 ## Rules that must not be broken
 
@@ -42,11 +42,11 @@ PROJECT.md opens with the documents and what each one owns. Put a fact where it 
 
 ## Closing a change
 
-Run `python3 tools/finish.py`: indexes, lint, and every room asked whether it starts. A Pocket change gets the checks in pocket/POCKET.md instead. Then commit with a plain message saying what changed and why, `git pull --rebase`, and `git push origin main`. A refused push means newer work is there: rebase onto it, never force. Tell me it is live in about a minute.
+Run `python3 tools/finish.py`: indexes, lint, and every room asked whether it starts. Then commit with a plain message saying what changed and why, `git pull --rebase`, and `git push origin main`. A refused push means newer work is there: rebase onto it, never force. Tell me it is live in about a minute.
 
 ## Going back to OneDrive (only when I ask)
 
-Copy the repository's one-app/, tools/ and documents into my folder one-app-source-cowork, and pocket/index.html into Pocket-app-source-cowork as Pocket.html. Then close it there the OneDrive way: finish.py builds in a folder without .git. The project instructions for that way are in one-app-source-cowork/Claude outputs/project-instructions-onedrive.txt.
+Copy the repository's one-app/, tools/ and documents into my folder one-app-source-cowork. Then close it there the OneDrive way: finish.py builds in a folder without .git. The project instructions for that way are in one-app-source-cowork/Claude outputs/project-instructions-onedrive.txt.
 
 ## Notes, not memory
 

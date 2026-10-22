@@ -33,10 +33,8 @@ splitting. No tool prints this number; it is read off the map.
 2026-08-21 all six checks were confirmed against a throwaway copy with
 each rule deliberately violated. If a check is added, add the
 corresponding break-it test — a lint nobody has seen fail is a lint that
-passes everything. `tools/pocket.js` was seen to fail the same way when it
-was written (2026-10-10): a throw put into Pocket's `drawLeads` failed it
-on the page error and on the two tabs left empty, and a throw put at the
-top of `notes.js` failed `finish.py`'s smoke with the report printed whole.
+passes everything. A throw put at the top of `notes.js` was seen to fail
+`finish.py`'s smoke with the report printed whole.
 
 **`seed.js` refuses to run in a browser that holds anything, so a record
 the app makes for ITSELF stops the seed dead.** The Horizon programme call

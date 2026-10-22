@@ -1,12 +1,9 @@
 # Nothing made from Mark's own data goes into this public repository.
-# Exports, builds and screenshots stay in the OneDrive folders on his PC,
-# and so does Pocket's contract, which shows short values from his journal
-# (partner and project names) as examples.
+# Exports, builds and screenshots stay in the OneDrive folders on his PC.
 builds/
 exports/
 Claude outputs/
 *.json
 !.claude/settings.json
-pocket/pocket-contract.md
 __pycache__/
 node_modules/

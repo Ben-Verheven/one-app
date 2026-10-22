@@ -26,10 +26,6 @@ are written down about this project and each has exactly one job:
 | `MAP.md`, `NAMES.md` | generated indexes. Never hand-written |
 | `notes/` | what no code file records: bugs already paid for, and Mark's design choices, one note per part. `notes/INDEX.md` lists them |
 
-Pocket keeps its own pair beside it, for the same two jobs at its own
-scale: `pocket/POCKET.md` (how Pocket is built and changed) and
-`pocket/WRITES.md` (what it writes to the cloud).
-
 A fact belongs in one of them. When two of them say the same thing they
 will eventually say it differently, and then neither can be trusted —
 which is how the four rules came to be written out in three places and the
@@ -41,10 +37,9 @@ sections, sizes — are only ever in the generated indexes.
 of one kind or another, and the narrowest of them wants about 760 points
 before it can say anything true. The stylesheets stop at 820px, because an
 iPad held upright is 768 and there is nothing under it to design for.
-There were phone layouts once; they are gone, and the phone has **Pocket**
-instead — one file, `pocket/index.html`, Marketplace only, that shares
-nothing with the tree except the cloud and a copy of the rotation maths
-(`pocket/POCKET.md` says how that copy is taken). Do not add a breakpoint
+There were phone layouts once; they are gone. Pocket, the Marketplace's
+phone companion, went on 2026-10-22, when Mark no longer needed it; the
+phone has only Mark’s Place's own page now. Do not add a breakpoint
 below 768px, and do not treat a narrow desktop window as a case to serve. `(hover:none)` and
 `(pointer:coarse)` are a different question and still matter — an iPad has
 no hover.
@@ -174,8 +169,7 @@ to prevent.
 
 `localStorage`, which a browser keeps per origin: on disk that is
 `file://` as a whole — so a copy finds its data at any local path — and on
-the site it is `https://ben-verheven.github.io`, which Pocket shares (no
-key of Pocket's, all `pocket.*`, is one of these). So the site, a copy on
+the site it is `https://ben-verheven.github.io`. So the site, a copy on
 disk and an iPad's home-screen app each keep a store of their own, and
 only the cloud joins them.
 
@@ -531,7 +525,6 @@ one-app/
     callboard-topics.js         clusters, destinations, topics, calls
     callboard-descriptions.js   the Commission's prose
 partner-watch/        Mark’s Place, a page of its own, and in pocket/ its phone version — see notes/partner-watch.md
-pocket/               Pocket — see pocket/POCKET.md
 topic-atlas/          the Topic Atlas, a page of its own, and in library.js its two concept libraries, which Mark’s Place reads too — see notes/topic-atlas.md
 supabase/             the database's SQL, the two agents' gatekeepers and Partner Watch's copier
 tools/                the scripts below
@@ -573,7 +566,6 @@ python3 tools/bundle.py  one-app/ one-app.html # a single file to send
 python3 tools/build.py                        # the same fold, filed in builds/
 node     tools/smoke.js  one-app/index.html   # does every room boot?
 node     tools/seed.js   one-app/index.html   # something to look at
-node     tools/pocket.js                      # Pocket's check — see pocket/POCKET.md
 ```
 
 Each tool's own docstring says how it works; what follows is only what
@@ -623,10 +615,9 @@ and the indexes have taken most of the reason for wanting it away.
 **`semaphore.js` is still one file, logic and DOM together.** The venue
 maths — `vWin()`, `vState()`, `vPhase()`, `vEvery()` and what they lean on — sits in
 the venues section beside the rendering, and the call runs the board
-draws (`callRuns()`) elsewhere again. Pocket carries a copy
-of it, taken by hand (`pocket/POCKET.md`). If Pocket ever wants to read
-the same code rather than a copy of it, splitting that room into a
-pure-logic core and a DOM half is the thing to do, and it is an
+draws (`callRuns()`) elsewhere again. If anything outside the room ever
+wants to read that code rather than a copy of it, splitting the room into
+a pure-logic core and a DOM half is the thing to do, and it is an
 afternoon.
 
 **Two things in the tree are not original code**: `Hub.markup()` in
