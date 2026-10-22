@@ -440,6 +440,14 @@
     });
   })();
 
+  /* Before ChatGPT's answer is put on the Semaphore's board, the board as
+     it was goes into a Ledger restore point, which keeps every room's
+     store, so a bad round is undone from the Ledger's cloud panel. */
+  Hub.on('semaphore:keep', function (why) {
+    try { var L = Hub.api('ledger'); if (L && L.snapshot) L.snapshot(why); }
+    catch (e) { console.error(e); }
+  });
+
   /* ── the ring ─────────────────────────────────────────────────────── */
 
   /* A line of glyphs, one to a room. The one at the right-hand end is the

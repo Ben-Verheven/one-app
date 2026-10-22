@@ -1622,6 +1622,340 @@ function acceptAllFinds(){
   next();
 }
 
+/* ── ChatGPT's search ──
+   Mark wanted a second searcher beside the nightly agent (2026-10-22): one
+   press writes a file holding every arena, its calls and links, every
+   venue, and the instructions, which he hands to ChatGPT's deep research as
+   it is; what ChatGPT gives back is read here and put on the board. The
+   answer is a list of changes, not the board written out again, because a
+   board several hundred kilobytes long copied back by a chat model comes
+   back shortened, and the Ledger's Import replaces the board whole, leads
+   and visits with it. The changes are the gatekeeper's own edits under
+   plainer names, with the same refusals: nothing is deleted, no text of
+   his is written over, and a venue he removed comes back only as a later
+   occasion on its site (siteInWay in the gatekeeper). What lands carries
+   `foundAt`, so a call date glows on its row and a venue waits in the tray,
+   as the agent's finds do, and he judges each there. The leads, his visits
+   and his notes on venues stay out of the file. */
+const GPT_FILE='brokerage-semaphore-for-chatgpt';
+const GPT_GRANS=['day','month','quarter','half','year','range','none'];
+const GPT_PLACE={new:'new on the board, not judged yet',board:'kept on the board to think about',
+  venues:'in Venues: Mark follows it',gone:'removed_by_mark'};
+let gpt={ans:null,plan:null};
+
+function gptBoard(){
+  const days=x=>x.gran==='none'||!x.start?{gran:'none'}:{gran:x.gran,start:x.start,end:x.end,grade:x.grade};
+  const links=ls=>(ls||[]).filter(l=>l&&l.url).map(l=>({label:l.label||'',url:l.url}));
+  return {
+    file:GPT_FILE,written:todayISO(),
+    arenas:S.arenas.map(a=>({
+      arena_id:a.id,name:a.name,type:typeName(a.typeId),tags:a.tags,frozen:!!a.frozenAt,
+      about:a.notes||'',brokerage_text:(a.brokerage&&a.brokerage.notes)||'',
+      links:links(a.links),brokerage_links:links(a.brokerage&&a.brokerage.links),
+      call_dates:(a.dates||[]).filter(d=>d.kind==='call').map(d=>Object.assign(
+        {date_id:d.id,call:d.call||'',role:d.role},days(d),{note:d.note||'',url:d.url||''}))
+    })),
+    venues:(S.venues||[]).map(v=>Object.assign(
+      {venue_id:v.id,name:v.name,url:v.url,other_pages:v.pages.map(p=>p.url),arena_ids:v.arenas,
+       status:GPT_PLACE[v.place]||v.place},
+      v.place==='gone'?{removed_on:v.goneAt}:{},
+      {event_days:days(v),window:{opens:v.opens,closes:v.closes},note:v.note||''}))
+  };
+}
+function gptFileText(){
+  const F='```',day=todayISO(),n=S.arenas.length;
+  return [
+'# Brokerage Semaphore: research task for ChatGPT',
+'',
+'Today is '+day+'. Read all of this before you start. The data is at the end.',
+'',
+'## What this is',
+'',
+'The Brokerage Semaphore is a research manager\'s board of European research-funding **arenas**: partnerships, joint undertakings, programmes and their calls ('+n+' arenas). Each arena has its **call dates**. Beside the arenas are **venues**: brokerage events and partner-search tools, each serving one arena or several.',
+'',
+'The whole point of the board is to find **actual, active brokerage**: places where projects in the making and the people leading them (coordinators) can be found and joined, partners second, now or announced for the future. That means:',
+'',
+'- brokerage or matchmaking events with arranged one-to-one (B2B) meetings, partnering days, project-idea pitch sessions, consortium-building sessions, an event\'s matchmaking marketplace (b2match and the like);',
+'- partner-search tools and platforms tied to an arena or its calls: a partnership\'s own partner search, project-idea or consortium-building databases, the Funding & Tenders portal\'s partner search for a topic, national contact point or Enterprise Europe Network matchmaking for those calls;',
+'- the call dates that drive them: publication, pre-proposal and full-proposal deadlines.',
+'',
+'**Not wanted**: general information days, call webinars or launch events with no matchmaking part, conferences with no sign of matchmaking, lists of organisations, newsletters, and expected call dates no official page gives. An info day **with** a real matchmaking, pitch or B2B part does count; say in its note what that part is. Lean to completeness: anything with real matchmaking goes in, even when only its month is known. A few misfires are acceptable; irrelevant items are not.',
+'',
+'## What to do: every arena, no exceptions',
+'',
+'Go through **every one of the '+n+' arenas** in the data, one by one. Frozen arenas (`"frozen": true`) get a lighter look, but they are checked too. For each arena:',
+'',
+'1. **Call dates.** Find the current and the next call rounds on the official sites; the arena\'s own links are the starting point. Check every call date already on the board: still right? Deadline moved? An uncertain date now published to the day? Add the rounds and stages that are missing.',
+'2. **Brokerage events.** Look for brokerage and matchmaking events for this arena\'s current or coming calls: on the arena\'s own pages, the EU Funding & Tenders portal, b2match, the Enterprise Europe Network, NCP networks, national funding agencies, and the venues already listed.',
+'3. **Partner-search tools.** Look for partner-search tools and platforms that serve this arena\'s calls and are open now or will open.',
+'4. **Venues already on the board** that serve this arena: check their event days and their window (when the marketplace, registration or tool opens and closes) and correct them.',
+'5. Write one line for the arena in `arenas_checked`, also when nothing changed: what you checked and what you found.',
+'',
+'If you cannot finish every arena in one answer, finish as many as you can, list the rest in `not_checked`, and say so at the top of your reply, so you can be asked to continue with them.',
+'',
+'## Rules',
+'',
+'- Use only dates from official or organiser pages. Every change carries `source_url`, the page you read it on, and `evidence`, a short quote from that page.',
+'- Dates are written YYYY-MM-DD.',
+'- `gran` says how exact a date is: `day`, `range` (several days), `month`, `quarter`, `half`, `year`. A date known only to the month is `"gran": "month"`, `start` the first and `end` the last day of that month.',
+'- `grade` is `fixed` only when an official page states the exact day or days (`day` or `range`); everything else is `uncertain`.',
+'- A call date\'s `role` is `publication` (the call opens), `deadline` (a submission deadline) or `announcement` (the window in which an unpublished call is expected). A call in stages has one deadline per stage, the stage named in the call\'s name, for example "Call 2027 - pre-proposal" and "Call 2027 - full proposal".',
+'- Only what is still ahead, or running now. Do not add things that are entirely over.',
+'- Venues are shared. Before adding one, search the whole `venues` list by address and by name. If it is there, use `add_venue_arena` or `correct_venue`; never add it a second time. An event stands once, serving the arenas it truly serves.',
+'- A venue with status `removed_by_mark` was thrown out by him. Never bring it back, unless the same site is used for a **new** call round or edition whose days begin after that venue\'s last day; then add it as a new venue and say so in its note.',
+'- A venue\'s `window` is when its activity runs: `opens` when the marketplace, registration or tool opens, `closes` when it closes (either may be null). `event_days` are the meeting days inside it. A tool that is simply open has a window and no event days.',
+'- Never delete anything, never rename an arena, never rewrite the `about` or `brokerage_text`. If something on the board looks wrong and you cannot find the right value, say so in that arena\'s line in `arenas_checked`.',
+'- Use the ids exactly as they are written in the data. New things get no id from you.',
+'',
+'## What to give back',
+'',
+'Give back **one JSON object and nothing else in it**, as a downloadable file named `semaphore-answer-'+day+'.json`; if you cannot make a file, as one json code block. Do not send the board back; send only the changes. Its shape, with one example of each kind of change:',
+'',
+F+'json',
+JSON.stringify({
+  answer_to:GPT_FILE,searched_on:day,
+  arenas_checked:[{arena_id:'(id)',result:'Checked the call page and b2match: Call 2027 deadline moved to 14 April; new brokerage event added.'}],
+  not_checked:[],
+  changes:[
+    {change:'add_call_date',arena_id:'(id)',call:'Call 2027 - full proposal',role:'deadline',gran:'day',start:'2027-04-14',end:'2027-04-14',grade:'fixed',source_url:'https://...',evidence:'Full proposals must be submitted by 14 April 2027'},
+    {change:'correct_call_date',arena_id:'(id)',date_id:'(id)',set:{start:'2027-03-02',end:'2027-03-02',grade:'fixed'},source_url:'https://...',evidence:'...'},
+    {change:'add_venue',arena_ids:['(id)','(id)'],name:'Short name of the event or tool',url:'https://...',gran:'range',start:'2027-01-20',end:'2027-01-21',grade:'fixed',opens:'2026-12-01',closes:'2027-02-15',note:'A few words of fact: what the matchmaking is',source_url:'https://...',evidence:'...'},
+    {change:'correct_venue',venue_id:'(id)',set:{start:'2027-02-03',end:'2027-02-03',grade:'fixed',closes:'2027-02-28'},source_url:'https://...',evidence:'...'},
+    {change:'add_venue_arena',venue_id:'(id)',arena_id:'(id)',source_url:'https://...',evidence:'...'},
+    {change:'add_link',arena_id:'(id)',list:'brokerage',label:'Partner search',url:'https://...',source_url:'https://...',evidence:'...'}
+  ],
+  new_arena_suggestions:[{name:'A partnership or programme not on the board',url:'https://...',why:'Its calls fit the board, and it runs matchmaking.'}]
+},null,1),
+F,
+'',
+'`list` in `add_link` is `brokerage` for a page about brokerage or partner search, `info` for any other page about the arena or its calls.',
+'',
+'## The board',
+'',
+F+'json',
+JSON.stringify(gptBoard(),null,1),
+F,
+''].join('\n');
+}
+function gptWrite(){
+  const name=GPT_FILE+'-'+todayISO()+'.md';
+  const blob=new Blob([gptFileText()],{type:'text/markdown'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);a.download=name;a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  gptSay('<p class="gptok">Written: <b>'+esc(name)+'</b>, in your downloads. Give it to ChatGPT with deep research on, and ask it to do what the file says.</p>');
+}
+
+/* What ChatGPT gives back comes as a file or pasted, often inside a code
+   block with a sentence or two around it, so the object is taken from the
+   first code block if there is one, else from the first { to the last }. */
+function gptParse(text){
+  const t=String(text||'');
+  const m=t.match(/```(?:json)?\s*([\s\S]*?)```/);
+  const body=m&&m[1].indexOf('{')>=0?m[1]:t;
+  const i=body.indexOf('{'),j=body.lastIndexOf('}');
+  if(i<0||j<i)throw new Error('there is no answer in it');
+  const o=JSON.parse(body.slice(i,j+1));
+  if(!o||typeof o!=='object'||!Array.isArray(o.changes))throw new Error('it holds no list of changes');
+  return o;
+}
+const gptHttp=v=>typeof v==='string'&&/^https?:\/\/\S+$/i.test(v.trim())?v.trim():'';
+const gptStr=(v,max)=>v==null?'':String(v).trim().slice(0,max||600);
+/* A date's or a venue's days as the room's own editor would leave them:
+   both ends, in order, and fixed only for an exact day or span. */
+function gptDays(x,f){
+  if('gran' in f){if(!GPT_GRANS.includes(f.gran))return 'gran must be one of '+GPT_GRANS.join(', ');x.gran=f.gran;}
+  if('start' in f)x.start=ISO_DAY.test(f.start||'')?f.start:null;
+  if('end' in f)x.end=ISO_DAY.test(f.end||'')?f.end:null;
+  if('grade' in f)x.grade=f.grade==='fixed'?'fixed':'uncertain';
+  if(!GPT_GRANS.includes(x.gran))x.gran=x.start?(x.end&&x.end!==x.start?'range':'day'):'none';
+  if(x.gran!=='none'&&!x.start)return 'no start day';
+  if(x.gran==='none'){x.start=null;x.end=null;}
+  if(x.start&&!x.end)x.end=x.start;
+  if(x.start&&x.end<x.start){const e=x.end;x.end=x.start;x.start=e;}
+  if(!gradeOptions(x.gran).includes(x.grade))x.grade='uncertain';
+  return null;
+}
+/* the gatekeeper's siteInWay: a venue at the same site stands in the way of
+   a find only when the find's days do not begin after its last day */
+function gptInWay(s,url,from){
+  const k=url&&siteKey(url);
+  const same=k?(s.venues||[]).filter(v=>v.url&&siteKey(v.url)===k):[];
+  const last=v=>v.closes||v.end||v.start||(v.place==='gone'?v.goneAt:null)||null;
+  const inWay=v=>{const e=last(v);return !from||!e||from<=e;};
+  return {live:same.find(v=>v.place!=='gone'&&inWay(v))||null,gone:same.find(v=>v.place==='gone'&&inWay(v))||null};
+}
+/* One change, made on the board `s`. Returns a line saying what it did,
+   or why not; `s` is changed only when it succeeds. */
+function gptOp(s,op,now){
+  const no=why=>({why});
+  if(!op||typeof op!=='object')return no('not a change');
+  const arenaIn=id=>s.arenas.find(a=>a.id===id)||null;
+  const venueIn=id=>(s.venues||[]).find(v=>v.id===id)||null;
+  const src=gptHttp(op.source_url);
+  const note=gptStr(op.note||op.evidence);
+  switch(op.change){
+    case 'add_call_date':{
+      const a=arenaIn(op.arena_id);if(!a)return no('no arena with that id');
+      const call=gptStr(op.call,300);if(!call)return no('a call date needs the call\'s name');
+      if(!ROLES[op.role])return no('role must be publication, deadline or announcement');
+      const d={id:uid(),kind:'call',label:'',call,role:op.role,note,url:src,foundAt:now};
+      const why=gptDays(d,op);if(why)return no(why);
+      if(d.gran==='none')return no('it has no date');
+      if((a.dates||[]).some(x=>x.kind==='call'&&x.role===d.role&&x.start===d.start&&x.end===d.end&&
+        (callBase(x.call)||x.call).toLowerCase()===(callBase(call)||call).toLowerCase()))return no('already on the board');
+      a.dates.push(d);
+      return {ok:a.name+': '+call+', '+ROLES[d.role].short+', '+dispDate(d)};
+    }
+    case 'correct_call_date':{
+      let a=arenaIn(op.arena_id),d=a&&(a.dates||[]).find(x=>x.id===op.date_id);
+      if(!d)for(const b of s.arenas){const x=(b.dates||[]).find(y=>y.id===op.date_id);if(x){a=b;d=x;break;}}
+      if(!d||d.kind!=='call')return no('no call date with that id');
+      const f=op.set&&typeof op.set==='object'?op.set:{};
+      const copy=Object.assign({},d),was=dispDate(d);
+      if('call' in f&&gptStr(f.call,300))copy.call=gptStr(f.call,300);
+      if('role' in f){if(!ROLES[f.role])return no('role must be publication, deadline or announcement');copy.role=f.role;}
+      const why=gptDays(copy,f);if(why)return no(why);
+      if(copy.gran==='none')return no('it would leave the call without a date');
+      if(['call','role','gran','start','end','grade'].every(k=>copy[k]===d[k]))return no('nothing to change');
+      if(note)copy.note=note;
+      if(src)copy.url=src;
+      copy.foundAt=now;
+      Object.assign(d,copy);
+      return {ok:a.name+': '+d.call+', '+ROLES[d.role].short+' corrected, '+was+' → '+dispDate(d)};
+    }
+    case 'add_venue':{
+      const ids=[...new Set((Array.isArray(op.arena_ids)?op.arena_ids:[op.arena_id]).filter(id=>arenaIn(id)))];
+      if(!ids.length)return no('it names no arena on the board');
+      const url=gptHttp(op.url)||src;
+      const name=gptStr(op.name,300);
+      if(!name&&!url)return no('a venue needs a name or an address');
+      const v={kind:'event',name:name||findHost(url),url,arenas:ids,visits:[],pages:[],note,foundAt:now,place:'new'};
+      const why=gptDays(v,op);if(why)return no(why);
+      for(const k of ['opens','closes'])v[k]=ISO_DAY.test(op[k]||'')?op[k]:null;
+      const from=v.opens||v.start||null;
+      if(v.end&&v.end<todayISO()&&(!v.closes||v.closes<todayISO()))return no('it is already over');
+      const dup=gptInWay(s,url,from);
+      if(dup.live)return no('already a venue: '+dup.live.name);
+      if(dup.gone)return no('you removed that one ('+dup.gone.name+')');
+      const nm=v.name.toLowerCase();
+      const same=(s.venues||[]).find(x=>x.place!=='gone'&&x.name.toLowerCase()===nm);
+      if(same)return no('already a venue: '+same.name);
+      if(!v.start&&!v.opens&&!v.closes)v.opens=todayISO();
+      if(src&&linkKey(src)!==linkKey(url))v.pages.push({id:uid(),label:'Source',url:src});
+      v.id=uid();
+      s.venues.push(tidyVenue(v));
+      return {ok:'New venue: '+v.name+(v.start?', '+dispDate(v):'')+', for '+ids.map(id=>arenaIn(id).name).join(', ')};
+    }
+    case 'correct_venue':{
+      const v=venueIn(op.venue_id);if(!v)return no('no venue with that id');
+      if(v.place==='gone')return no('you removed that venue');
+      const f=op.set&&typeof op.set==='object'?op.set:{};
+      const copy=JSON.parse(JSON.stringify(v)),was=v.start?dispDate(v):'no days';
+      if('name' in f&&gptStr(f.name,300))copy.name=gptStr(f.name,300);
+      if('url' in f){const u=gptHttp(f.url);if(!u)return no('its address must start with http');copy.url=u;}
+      if('note' in f)copy.note=gptStr(f.note);
+      const why=gptDays(copy,f);if(why)return no(why);
+      for(const k of ['opens','closes'])if(k in f)copy[k]=ISO_DAY.test(f[k]||'')?f[k]:null;
+      if(copy.url!==v.url){const k=siteKey(copy.url);
+        const dup=(s.venues||[]).find(x=>x!==v&&x.url&&siteKey(x.url)===k);
+        if(dup)return no('that address is already a venue: '+dup.name);}
+      if(['name','url','note','gran','start','end','grade','opens','closes'].every(k=>copy[k]===v[k]))return no('nothing to change');
+      Object.assign(v,tidyVenue(copy));
+      const is=v.start?dispDate(v):'no days';
+      return {ok:v.name+' corrected'+(was!==is?', '+was+' → '+is:'')};
+    }
+    case 'add_venue_arena':{
+      const v=venueIn(op.venue_id),a=arenaIn(op.arena_id);
+      if(!v)return no('no venue with that id');
+      if(v.place==='gone')return no('you removed that venue');
+      if(!a)return no('no arena with that id');
+      if(v.arenas.includes(a.id))return no('it already serves '+a.name);
+      v.arenas.push(a.id);
+      return {ok:v.name+' now serves '+a.name+' too'};
+    }
+    case 'add_link':{
+      const a=arenaIn(op.arena_id);if(!a)return no('no arena with that id');
+      const url=gptHttp(op.url);if(!url)return no('its address must start with http');
+      if(hasLink(a,url))return no('already on '+a.name);
+      const l={id:uid(),label:gptStr(op.label,200),url,foundAt:now};
+      if(op.list==='brokerage')a.brokerage.links.push(l);else a.links.push(l);
+      return {ok:a.name+': link '+(l.label||findHost(url))};
+    }
+    default:return no('not a change this room knows ('+gptStr(op.change,40)+')');
+  }
+}
+/* The whole answer, on the board `s`: each change in turn, then the board
+   settled as every read settles it, a brokerage link on a venue's site
+   joining that venue among them. */
+function gptApply(s,ans,now){
+  const out=ans.changes.map(op=>{
+    try{return Object.assign({op},gptOp(s,op,now));}
+    catch(e){return {op,why:e.message};}
+  });
+  s.arenas.forEach(reconcile);
+  absorbVenues(s);
+  return out;
+}
+function gptSay(html){const el=$('#gptSaid');if(el)el.innerHTML=html;}
+/* Read and tried on a copy of the board, so he sees every change and every
+   refusal before anything is put on the real one. */
+function gptRead(text){
+  gpt={ans:null,plan:null};
+  const put=$('#gptPut');if(put)put.disabled=true;
+  if(!String(text||'').trim()){gptSay('');return;}
+  let ans;
+  try{ans=gptParse(text);}
+  catch(e){gptSay('<p class="gptno">This could not be read: '+esc(e.message)+'. Paste the whole of ChatGPT\'s answer, or choose its file.</p>');return;}
+  const plan=gptApply(JSON.parse(JSON.stringify(S)),ans,new Date().toISOString());
+  gpt={ans,plan};
+  const ok=plan.filter(r=>r.ok),no=plan.filter(r=>!r.ok);
+  const seen=new Set((Array.isArray(ans.arenas_checked)?ans.arenas_checked:[]).map(x=>x&&x.arena_id));
+  const missed=S.arenas.filter(a=>!seen.has(a.id));
+  const names=xs=>esc(xs.slice(0,15).map(a=>a.name).join(', '))+(xs.length>15?' and '+(xs.length-15)+' more':'');
+  const sugg=(Array.isArray(ans.new_arena_suggestions)?ans.new_arena_suggestions:[]).filter(x=>x&&x.name);
+  gptSay(
+    '<p class="'+(missed.length?'gptno':'gptok')+'">ChatGPT checked '+(S.arenas.length-missed.length)+' of '+S.arenas.length+' arenas.'+
+      (missed.length?' Not checked: '+names(missed)+'. Ask it to continue with those.':'')+'</p>'+
+    '<p class="gptok"><b>'+ok.length+' change'+(ok.length===1?'':'s')+'</b> to put on the board'+(ok.length?':':'.')+'</p>'+
+    (ok.length?'<ul class="gptlist">'+ok.map(r=>'<li>'+esc(r.ok)+'</li>').join('')+'</ul>':'')+
+    (no.length?'<p class="gptno">'+no.length+' left out:</p><ul class="gptlist gptout">'+no.map(r=>'<li>'+
+      esc(gptStr(r.op&&r.op.change,40)||'?')+(r.op&&(r.op.name||r.op.call)?' — '+esc(gptStr(r.op.name||r.op.call,120)):'')+': '+esc(r.why)+'</li>').join('')+'</ul>':'')+
+    (sugg.length?'<p class="gptno">New arenas it suggests (add them yourself with + Arena if you want them):</p><ul class="gptlist gptout">'+
+      sugg.map(x=>'<li>'+esc(gptStr(x.name,200))+(x.why?' — '+esc(gptStr(x.why,300)):'')+(gptHttp(x.url)?' <a href="'+esc(gptHttp(x.url))+'" target="_blank" rel="noopener">site</a>':'')+'</li>').join('')+'</ul>':'')
+  );
+  if(put)put.disabled=!ok.length;
+}
+/* Put on the real board. A restore point in the Ledger holds the board as
+   it was first (the bridge takes it), so the whole round can be undone. */
+function gptPut(){
+  if(!gpt.ans)return;
+  try{Hub.emit('semaphore:keep','before ChatGPT\'s search was put on the board');}catch(e){}
+  const res=gptApply(S,gpt.ans,new Date().toISOString());
+  const n=res.filter(r=>r.ok).length;
+  S.ui.view='board';
+  save();renderAll();
+  closeModals();
+  gpt={ans:null,plan:null};
+  const t=$('#gptText');if(t)t.value='';
+  gptSay('');
+  Ask.tell('On the board',n+' change'+(n===1?'':'s')+' from ChatGPT '+(n===1?'is':'are')+' on the board. '+
+    'New and corrected call dates glow on their rows until you press Seen; new venues wait in the tray over the board, '+
+    'to go to Venues, be kept or be removed. A restore point in the Ledger holds the board as it was before.');
+}
+function openGpt(){
+  closeModals();
+  const m=$('#gptModal');if(!m)return;
+  m.classList.add('open');
+}
+$('#gptText').addEventListener('input',e=>gptRead(e.target.value));
+$('#gptFile').addEventListener('change',e=>{
+  const f=e.target.files&&e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{const t=$('#gptText');t.value=String(r.result||'');gptRead(t.value);e.target.value='';};
+  r.readAsText(f);
+});
+
 /* ── venues, on screen ── */
 const LIMBO_GHOST='<svg class="culgh" viewBox="0 0 16 18" width="16" height="18" aria-hidden="true"><path d="M8 1.5C4.7 1.5 2.5 4 2.5 7.2V16l1.8-1.4L6.1 16 8 14.6 9.9 16l1.8-1.4L13.5 16V7.2C13.5 4 11.3 1.5 8 1.5z" fill="currentColor"/><ellipse cx="6" cy="7.6" rx="1.05" ry="1.45" fill="#15171A"/><ellipse cx="10" cy="7.6" rx="1.05" ry="1.45" fill="#15171A"/><ellipse cx="8" cy="11" rx=".9" ry="1.1" fill="#15171A"/></svg>';
 function venue(id){return (S.venues||[]).find(v=>v.id===id)||null;}
@@ -4779,6 +5113,9 @@ document.addEventListener('click',e=>{
       if(t&&toneHex(b.dataset.v))t.color=b.dataset.v;
       save();typesShown();break;}
     case 'addArena':addArena();break;
+    case 'openGpt':openGpt();break;
+    case 'gptWrite':gptWrite();break;
+    case 'gptPut':gptPut();break;
     case 'openArena':openDrawer(id);break;
     case 'openDate':openDrawer(b.dataset.a,b.dataset.d);break;
     case 'closeDrawer':closeDrawer();break;

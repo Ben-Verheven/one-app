@@ -1701,6 +1701,18 @@
 #pane-semaphore .mbox-ask .sub{margin-bottom:0;color:var(--ink)}
 #pane-semaphore #askModal{z-index:40}
 #pane-semaphore #askModal.tell #askNo{display:none}
+/* ChatGPT's search: wide enough that a change reads on one line, and the
+   list of changes in ink, the refusals in the muted grey the box's own
+   words wear on the same ground. */
+#pane-semaphore #gptModal .mbox{width:640px}
+#pane-semaphore .gptrow{display:flex;gap:8px;margin:0 0 14px}
+#pane-semaphore #gptModal textarea{min-height:90px;margin-bottom:8px}
+#pane-semaphore #gptSaid p{font-family:var(--body);font-size:13.5px;line-height:1.5;margin:8px 0 4px}
+#pane-semaphore #gptSaid .gptok{color:var(--ink)}
+#pane-semaphore #gptSaid .gptno{color:var(--muted)}
+#pane-semaphore .gptlist{margin:0 0 6px 18px;padding:0;font-family:var(--body);font-size:13px;line-height:1.45;color:var(--ink)}
+#pane-semaphore .gptlist.gptout{color:var(--muted)}
+#pane-semaphore .gptlist a{color:var(--key2)}
 #pane-semaphore .tyline{display:flex;gap:8px;align-items:center;padding:4px 0}
 #pane-semaphore .tyline input{flex:1;border:1px solid var(--line);border-radius:var(--radius);background:var(--field);
   color:var(--ink);padding:6px 9px;font-family:var(--body);font-size:14px}
