@@ -118,8 +118,11 @@ svg{display:block}
 .pw-sq{flex:0 0 29px;width:29px;height:29px;border-radius:7px;display:flex;align-items:center;justify-content:center;
   background:var(--tone,#636366);color:#fff;font:600 15px/1 var(--ui)}
 .pw-sq svg{width:18px;height:18px}
-/* counts: new as the blue badge of an unread mailbox, Marked beside it */
-.pw-badge{min-width:24px;height:24px;padding:0 8px;border-radius:12px;background:var(--tint);color:#fff;font:600 15px/24px var(--ui);text-align:center}
+/* counts: new as the badge of an unread mailbox, Marked beside it. New
+   is green (Mark, 2026-10-22), not the system's blue, so it no longer
+   reads as one more thing to press; the badge's green is the darker one,
+   because white figures on the bright green cannot be read */
+.pw-badge{min-width:24px;height:24px;padding:0 8px;border-radius:12px;background:#248A3D;color:#fff;font:600 15px/24px var(--ui);text-align:center}
 .pw-star{display:flex;align-items:center;gap:3px;color:var(--orange);font-size:15px}
 .pw-star svg{width:15px;height:15px}
 
@@ -137,10 +140,10 @@ input[type="search"]::-webkit-search-cancel-button{-webkit-appearance:none}
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 4px;position:relative}
 .pw-seg button::after{content:"";position:absolute;inset:-6px 0}
 .pw-seg button.on{background:#636366;font-weight:600;box-shadow:0 3px 8px rgba(0,0,0,.25)}
-/* an entry's row: Mail's blue dot when unread, the organisation, who and
+/* an entry's row: Mail's dot when unread, in the green of new, the organisation, who and
    where, and its kind and state in coloured words */
 .pw-unread{flex:0 0 10px;width:10px;height:10px;border-radius:50%;align-self:flex-start;margin-top:6px}
-.pw-unread.new{background:var(--tint)}
+.pw-unread.new{background:var(--green)}
 .pw-row .pw-cn{font-weight:600}
 .pw-row.dim .pw-cn{color:var(--label2);font-weight:400}
 .pw-flags{display:flex;flex-wrap:wrap;gap:4px 10px;margin-top:2px;font-size:13px;color:var(--label2)}
@@ -151,7 +154,7 @@ input[type="search"]::-webkit-search-cancel-button{-webkit-appearance:none}
 .pw-flags .interesting{color:var(--orange)}
 .pw-flags .chg{color:var(--yellow)}
 .pw-flags .gone{color:var(--red-ink)}
-.pw-flags .newtag{color:var(--tint-ink)}
+.pw-flags .newtag{color:var(--green)}
 /* Choosing several, as Mail's Select (Mark, 2026-10-22): a long press on
    an entry starts it, a round tick stands at the head of every row, the
    bar at the top says how many and holds Select All and Done, and each
@@ -161,7 +164,7 @@ input[type="search"]::-webkit-search-cancel-button{-webkit-appearance:none}
 .pw-row{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 .pw-txtbtn{flex:0 0 auto;height:44px;padding:0 10px;color:var(--tint);white-space:nowrap;display:none}
 body.pw-selecting .pw-txtbtn{display:block}
-body.pw-selecting #pw-up,body.pw-selecting #refresh,body.pw-selecting #gear{display:none}
+body.pw-selecting #pw-up,body.pw-selecting #pw-checknow,body.pw-selecting #refresh,body.pw-selecting #gear{display:none}
 body.pw-selecting #pw-navtitle{opacity:1}
 #pw-seldone{font-weight:600}
 .pw-tick{flex:0 0 22px;width:22px;height:22px;border-radius:50%;border:1.5px solid #636366;align-self:center;
@@ -182,11 +185,10 @@ body.pw-selecting #pw-selbar{display:flex}
 #pw-selbar svg{width:25px;height:25px}
 body.pw-selecting #stage{padding-bottom:calc(var(--sb) + 60px)}
 body.pw-selecting #toast{bottom:calc(var(--sb) + 68px)}
-/* Check Now on the first screen, as the desk's: the copier asked to read
-   every venue now rather than wait for the night */
-#pw-check .pw-group{margin-top:16px}
-#pw-check .pw-cell:disabled .pw-cn{color:var(--label2)}
-#pw-check .pw-sq.spin svg{animation:turn .9s linear infinite}
+/* the check, an icon in the top bar beside refresh (Mark, 2026-10-22):
+   while the copier runs it breathes and cannot be pressed again */
+#pw-checknow:disabled svg{animation:pwBreathe 1.4s ease-in-out infinite}
+@keyframes pwBreathe{50%{opacity:.35}}
 .pw-note{padding:60px 32px;text-align:center;color:var(--label2);font-size:15px;line-height:1.45}
 .pw-note b{display:block;margin-bottom:6px;color:var(--label);font-size:20px;font-weight:600}
 
@@ -379,6 +381,7 @@ a.pw-cell{text-decoration:none}
   <button class="pw-up" id="pw-up" hidden></button>
   <button class="pw-txtbtn" id="pw-selall"></button>
   <span id="pw-navtitle"></span>
+  <button class="icon" id="pw-checknow" aria-label="Check the venues for new entries"></button>
   <button class="icon" id="refresh" aria-label="Refresh"></button>
   <button class="icon" id="gear" aria-label="Settings"></button>
   <button class="pw-txtbtn" id="pw-seldone">Done</button>
@@ -388,7 +391,6 @@ a.pw-cell{text-decoration:none}
   <section class="view on" id="v-venues">
     <h1 class="pw-large">Mark’s Place</h1>
     <span class="pw-stamp" id="stamp">not yet loaded</span>
-    <div id="pw-check"></div>
     <div id="pw-arenas"></div>
   </section>
   <section class="view" id="v-list">
@@ -714,7 +716,8 @@ function pwLoad(){
 function pwStamp(msg){
   if (msg){ $('#stamp').textContent = msg; return; }
   $('#stamp').textContent = !pwLoaded ? 'not yet loaded'
-    : pwRun ? 'checked ' + pwWhen(pwRun.ran_at) : 'not checked yet';
+    : pwChecking ? 'checking the venues… ' + pwChecking
+    : pwRun ? 'checked ' + pwWhen(pwRun.ran_at) + ' · ' + pwRun.added + ' new' : 'not checked yet';
 }
 function pwDay(iso){ return iso ? new Date(iso).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' }) : ''; }
 function pwWhen(iso){ if (!iso) return ''; var d = new Date(iso);
@@ -776,6 +779,7 @@ var PW_I = {
   next: pwSvg('<path d="M12 4v16"/><path d="M18 14l-6 6-6-6"/>', 1.9),
   out: pwSvg('<path d="M7 17L17 7"/><path d="M9 7h8v8"/>', 2.2),
   globe: pwSvg('<circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 0 1 0 18 14 14 0 0 1 0-18"/>', 2),
+  check: pwSvg('<path d="M12 3v11"/><path d="M7.5 9.5L12 14l4.5-4.5"/><path d="M3 14v4a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-4"/>', 2.1),
   pencil: pwSvg('<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/>', 2),
   seen: pwSvg('<path d="M3 10l9-6 9 6v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M3 10l9 6 9-6"/>', 1.8),
   unsort: pwSvg('<path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/>', 1.9),
@@ -1002,7 +1006,7 @@ function pwDrawRows(){
   host.textContent = '';
   if (!pwLoaded) return;
   if (!pwEntries.length){
-    host.appendChild(pwNote('Nothing copied yet', 'The copier reads the venues every night, or at once with Check Now on the first screen.'));
+    host.appendChild(pwNote('Nothing copied yet', 'The copier reads the venues every night, or at once with the check at the top, beside refresh.'));
     return;
   }
   var list = pwShown();
@@ -1461,18 +1465,8 @@ function pwPatchMany(ids, vals){
    where it stopped. */
 var pwChecking = '', pwCheckAdded = 0;
 function pwDrawCheck(){
-  var host = $('#pw-check');
-  host.textContent = '';
-  if (!auth) return;
-  var g = el('div', 'pw-group');
-  var sub = pwChecking || (pwRun ? 'Last ' + pwWhen(pwRun.ran_at) + ' · ' + pwRun.added + ' new · ' + pwRun.changed + ' changed · ' + pwRun.removed + ' gone'
-    : 'The copier also reads them every night');
-  var c = pwCell('button', 'icon-cell link', { sq:PW_I.refresh, tone:'#0A84FF', name:pwChecking ? 'Checking the Venues…' : 'Check the Venues Now', sub:sub });
-  c.disabled = !!pwChecking;
-  if (pwChecking) c.querySelector('.pw-sq').classList.add('spin');
-  c.addEventListener('click', function(){ pwCheckAdded = 0; pwCheck(); });
-  g.appendChild(c);
-  host.appendChild(g);
+  $('#pw-checknow').disabled = !!pwChecking;
+  pwStamp();
 }
 function pwCopier(){
   return token().then(function(tok){
@@ -1488,7 +1482,7 @@ function pwCopier(){
   });
 }
 function pwCheck(){
-  pwChecking = pwChecking || 'Up to two minutes';
+  pwChecking = pwChecking || '(up to two minutes)';
   pwDrawCheck();
   pwCopier().then(function(r){
     pwCheckAdded += r.added || 0;
@@ -1501,7 +1495,7 @@ function pwCheck(){
     });
   }, function(err){
     pwChecking = '';
-    var said = err.dropped ? 'The line dropped while checking. What was copied is kept; press Check Now again to go on.'
+    var said = err.dropped ? 'The line dropped while checking. What was copied is kept; press the check at the top again to go on.'
       : 'The check did not finish: ' + err.message;
     return pwLoad().then(function(){ pwDrawCheck(); toast(said, null, true); });
   });
@@ -1760,6 +1754,8 @@ function pwOpenNotes(id){
 /* ── starting ─────────────────────────────────────────────────────── */
 
 $('#refresh').innerHTML = PW_I.refresh;
+$('#pw-checknow').innerHTML = PW_I.check;
+$('#pw-checknow').addEventListener('click', function(){ if (auth && !pwChecking){ pwCheckAdded = 0; pwCheck(); } });
 $('#gear').innerHTML = PW_I.gear;
 $('#pw-mag').innerHTML = PW_I.mag;
 $('#pw-up').addEventListener('click', function(){ pwGo('venues', true); });
