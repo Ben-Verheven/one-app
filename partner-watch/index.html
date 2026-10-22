@@ -111,20 +111,22 @@ body.drawer .veil{display:block;position:absolute;inset:0;z-index:3;background:r
 .site.on{background:var(--sel);border-left-color:var(--key2)}
 .site .l1{grid-column:1;grid-row:1;display:flex;align-items:baseline;gap:10px;min-width:0}
 .site .nm{font:15px/1.35 var(--serif);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
-/* Its counts: how many entries are new, how many Marked, and how many
-   more it still holds, binned ones not counted (Mark, 2026-10-21), as
-   words in the colours of new and Marked, each on a line of the card: new
-   beside the name, Marked and the rest beside the arenas, which fade out
-   before them; a venue of one line has all three beside its name. He went
-   through discs of three kinds that day, at the end of the name, then in a
-   section of their own and stacked, and none sat right; of four ways drawn
-   next he chose the plain words. A "2m" badge before them, in the Marked
-   tag's colours at the end of the arenas, read as one more arena. */
-.site .c1,.site .c2{grid-column:2;display:flex;justify-content:flex-end;align-items:baseline;gap:8px;font:12.5px/1.35 var(--serif);white-space:nowrap}
+/* Its counts, in two kinds, as on the phone (Mark, 2026-10-22, from a
+   sheet of three drawn on both pages, for "unity, not similarity"): what
+   asks for him, how many Marked and how many new, at the right of the
+   name, as the phone's star and its green badge drawn in this page's
+   type; and how big the venue is, the entries it still holds with the
+   binned not counted, in quiet grey on the arenas' line, which on the
+   phone is the grey line under the name. A venue without arenas has it
+   beside the name. Before that day the three were words, and before
+   them discs of three kinds that never sat right (see the note); a "2m"
+   badge at the end of the arenas read as one more arena. */
+.site .c1,.site .c2{grid-column:2;display:flex;justify-content:flex-end;align-items:center;gap:8px;font:12.5px/1.35 var(--serif);white-space:nowrap}
 .site .c1{grid-row:1;align-self:center}
 .site .c2{grid-row:2;align-self:center;margin-top:3px}
-.site .c1 .nw{color:var(--new-ink)}
-.site .c1 .mk,.site .c2 .mk{color:var(--gold-ink)}
+.site .c1 .mk{display:flex;align-items:center;gap:3px;color:var(--gold-ink)}
+.site .c1 .mk svg{width:12px;height:12px}
+.site .c1 .nw{min-width:19px;height:19px;padding:0 6px;border-radius:99px;background:var(--new-ink);color:var(--sheet);font-size:12px;line-height:19px;text-align:center}
 .site .c1 .mo,.site .c2 .mo{font-size:12px;color:var(--muted)}
 /* The venues stand in the Marketplace's groups, each under a thin band in
    its type's colour, and carry the arenas they serve as the Marketplace's
@@ -1638,6 +1640,8 @@ var DOCS = {
 var MINE_ROW = 'partnerwatch', links = {}, notes = {}, editingLinks = false;
 function docsOf(id){ return Object.prototype.hasOwnProperty.call(links, id) ? links[id] : (DOCS[id] || ''); }
 function svg(size, paths){ return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + paths + '</svg>'; }
+/* the phone's star (PW_I.star there), so Marked is one sign on both */
+var STAR = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z"/></svg>';
 var PENCIL = svg(14, '<path d="M16.5 3.5l4 4L8 20l-5 1 1-5z"/><path d="M14.5 5.5l4 4"/>');
 var SCROLL = svg(17, '<path d="M15 12h-5"/><path d="M15 8h-5"/><path d="M19 17V5a2 2 0 0 0-2-2H4"/>'
   + '<path d="M8 21h12a2 2 0 0 0 2-2v-1a1 1 0 0 0-1-1H11a1 1 0 0 0-1 1v1a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v2a1 1 0 0 0 1 1h3"/>');
@@ -2163,12 +2167,12 @@ function drawSites(){
       return;
     }
     var n = fresh[s.id] || 0, mk = marked[s.id] || 0, all = held[s.id] || 0, tags = arenaTags(s._venue);
-    var said = (mk ? '<span class="mk">' + mk + ' marked</span>' : '') + (all - mk ? '<span class="mo" title="kept and not Marked; the binned not counted">' + (all - mk) + ' more</span>' : '');
+    var size = all ? '<span class="mo" title="the binned not counted">' + all + (all === 1 ? ' entry' : ' entries') + '</span>' : '';
     h += '<div class="venue"><button class="site' + (view.site === s.id ? ' on' : '') + '" data-site="' + esc(s.id) + '" title="' + esc(s.call || '') + '">'
        + '<span class="l1"><span class="nm" data-msite="' + esc(s.id) + '" title="Open ' + esc(s._venue ? s._venue.name : s.name) + '">' + esc(s.name) + '</span></span>'
        + (tags ? '<span class="l2">' + tags + '</span>' : '')
-       + '<span class="c1">' + (n ? '<span class="nw">' + n + ' new</span>' : '') + (tags ? '' : said) + '</span>'
-       + (tags ? '<span class="c2">' + said + '</span>' : '')
+       + '<span class="c1">' + (mk ? '<span class="mk" title="' + mk + ' marked">' + STAR + mk + '</span>' : '') + (n ? '<span class="nw" title="' + n + ' new">' + n + '</span>' : '') + (tags ? '' : size) + '</span>'
+       + (tags ? '<span class="c2">' + size + '</span>' : '')
        + (s.last_error ? '<div class="err">Last read failed, ' + esc(stamp(s.last_error_at)) + ': ' + esc(s.last_error) + '</div>' : '')
        + '</button></div>';
   });

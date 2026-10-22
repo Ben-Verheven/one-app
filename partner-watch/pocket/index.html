@@ -921,8 +921,12 @@ function pwGroupTone(k){
 }
 /* The venues, one to a line in the Marketplace's groups, each with the
    arenas it serves under its name (Mark did not want them side by side,
-   2026-10-21), how many he has Marked, and as a blue badge how many he has
-   not opened yet. A venue leads on to its entries. */
+   2026-10-21), how many he has Marked, and as a green badge how many he
+   has not opened yet. How big the venue is, the entries it still holds
+   with the binned not counted, leads the grey line under the name: what
+   asks for him stands at the right, what only describes the venue stands
+   quiet, as at the desk (Mark, 2026-10-22, "unity, not similarity"). A
+   venue leads on to its entries. */
 function pwDrawArenas(){
   var host = $('#pw-arenas');
   host.textContent = '';
@@ -936,7 +940,8 @@ function pwDrawArenas(){
     var right = el('span', 'pw-cr');
     if (mk){ var st = el('span', 'pw-star'); st.innerHTML = PW_I.star; st.appendChild(document.createTextNode(String(mk))); st.setAttribute('aria-label', mk + ' marked'); right.appendChild(st); }
     if (n){ var b = el('span', 'pw-badge', String(n)); b.setAttribute('aria-label', n + ' new'); right.appendChild(b); }
-    var arenas = pwVenueArenas(s._venue).map(function(a){ return a.name; }).join(' · ');
+    var kept = pwEntries.filter(function(e){ return e.site === s.id && e.verdict !== 'bin'; }).length;
+    var arenas = [kept ? kept + (kept === 1 ? ' entry' : ' entries') : ''].concat(pwVenueArenas(s._venue).map(function(a){ return a.name; })).filter(Boolean).join(' · ');
     var c = pwCell('button', 'icon-cell', { sq:pwEsc((s.name || '?').charAt(0).toUpperCase()), tone:pwGroupTone(s._block) || '#636366',
       name:s.name, sub:arenas || null, right:right, chev:true });
     c.addEventListener('click', function(){
