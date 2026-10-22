@@ -57,7 +57,15 @@ button{font:inherit;color:inherit}
 .btn:hover{border-color:var(--key)}
 .btn:disabled{color:var(--faint);cursor:default}
 .meta{font:12px var(--mono);color:var(--faint)}
-#search{background:var(--field);border:1px solid var(--line);border-radius:var(--radius);color:var(--ink);font:14px var(--body);padding:5px 10px;width:260px}
+/* The search box holds its terms as chips, the Topic Atlas's way (Mark,
+   2026-10-22): a term is typed and given with Enter, then the next. */
+#sbox{display:flex;align-items:center;gap:4px;background:var(--field);border:1px solid var(--line);border-radius:var(--radius);padding:2px 4px 2px 6px;min-width:260px;max-width:min(560px,48vw);overflow-x:auto;scrollbar-width:none}
+#sbox:focus-within{border-color:var(--line2)}
+#schips{display:flex;gap:4px;flex:none}
+.schip{display:inline-flex;align-items:center;gap:2px;padding:0 2px 0 8px;border:1px solid var(--line2);border-radius:99px;font:13px var(--body);color:var(--ink);background:var(--sheet);white-space:nowrap}
+.schip button{border:0;background:none;color:var(--muted);font:14px var(--body);padding:0 5px;cursor:pointer}
+.schip button:hover{color:var(--warn-ink)}
+#search{flex:1;min-width:110px;border:0;outline:none;background:none;color:var(--ink);font:14px var(--body);padding:3px 4px}
 #search::placeholder{color:var(--faint)}
 /* ── the reader ──────────────────────────────────────────────────────
    The entry is the page, on every screen (Mark, 2026-10-17). It was so on
@@ -301,7 +309,7 @@ body.drawer .rd-list{background:var(--sel);border-color:var(--key)}
 @media (orientation:portrait){
   body{min-width:0}
   #total{display:none}
-  #search{width:220px}
+  #sbox{min-width:220px}
   .det{max-width:700px}
   .dtitle{font-size:26px}
   .sec .txt,.sec.lead .txt{font-size:18px;line-height:1.65}
@@ -479,7 +487,7 @@ button.badge:hover{box-shadow:inset 0 0 0 1.5px var(--lv)}
   <span class="meta" id="total"></span>
   <div class="grow"></div>
   <span class="rd rd-step" id="rdstep"><button data-step="-1" aria-label="Previous entry"></button><span id="rdat"></span><button data-step="1" aria-label="Next entry"></button></span>
-  <input id="search" type="search" placeholder="Search the entries" aria-label="Search">
+  <div id="sbox"><span id="schips"></span><input id="search" type="search" placeholder="Search the entries" aria-label="Search" enterkeyhint="search"></div>
 </header>
 <div class="banner" id="banner" hidden></div>
 
@@ -582,8 +590,8 @@ function all(path){
 
 /* ── state ─────────────────────────────────────────────────────────── */
 var sites = [], entries = [], lastRun = null, byId = {};
-var view = { site:null, kind:'all', state:'open', q:'', id:null, tab:'fields', scope:'all', any:false, sums:false, results:false, hits:false };
-try { Object.assign(view, JSON.parse(localStorage.getItem(VIEW) || '{}'), { q:'' }); } catch(e){}
+var view = { site:null, kind:'all', state:'open', q:'', chips:[], id:null, tab:'fields', scope:'all', any:false, sums:false, results:false, hits:false };
+try { Object.assign(view, JSON.parse(localStorage.getItem(VIEW) || '{}'), { q:'', chips:[] }); } catch(e){}
 /* a device last left on Later, which went on 2026-10-18, comes back to All */
 if (view.state === 'later') view.state = 'open';
 var detail = {};          // id → { fields, page_text, versions }
@@ -625,7 +633,7 @@ function load(){
     entries.forEach(function(e, i){ e._i = i; });
     if (!sites.some(function(s){ return s.id === view.site; })) view.site = sites.length ? sites[0].id : null;
     regroup();
-    if (view.q) runSearch();
+    if (query().length) runSearch();
     $('#banner').hidden = true;
     draw();
     /* a device the search has read pages on before takes the new ones in */
@@ -1089,33 +1097,13 @@ function sentOf(sec, pos){
 }
 function levelOf(sec, sent){ return sec.roles ? sec.roles[sent] : sec.lvl; }
 
-/* Words typed are each a term, as they were in the list's search before
-   (Mark, 2026-10-22: "water energy" found almost nothing when it was read
-   as one phrase), except where some of them together are the name of an
-   idea: "machine learning water" is machine learning, and water. Quotes
-   keep a phrase whole, and commas part terms as typed. */
-function splitWords(part){
-  var V = vocab(), raw = part.match(WORD) || [], n = raw.map(function(w){ return V ? V.sing(fold(w)) : singular(fold(w)); }), out = [];
-  for (var i = 0; i < raw.length; ){
-    var took = 0;
-    if (V) for (var L = Math.min(6, raw.length - i); L > 1; L--){
-      if (V.names[n.slice(i, i + L).join(' ')]){ out.push(raw.slice(i, i + L).join(' ')); took = L; break; }
-    }
-    if (!took){ if (!STOP.test(n[i])) out.push(raw[i]); took = 1; }
-    i += took;
-  }
-  return out;
-}
-function parseTerms(q){
-  var seen = {}, list = [];
-  q.split(/[,;]+/).forEach(function(part){
-    part = part.trim();
-    if (!part) return;
-    var quoted = /^["“”].+["“”]$/.test(part);
-    (quoted ? ['"' + part.slice(1, -1).trim() + '"'] : splitWords(part)).forEach(function(t){
-      if (t && t !== '""' && !seen[t.toLowerCase()]){ seen[t.toLowerCase()] = 1; list.push(t); }
-    });
-  });
+/* The terms: those given with Enter, and the one still being typed, each
+   whole, several words and all, as the Topic Atlas takes its keywords;
+   commas part terms typed in one go. A term in quotes is looked for as
+   written and as nothing else. */
+function typed(){ return view.q.split(/[,;]+/).map(function(t){ return t.trim(); }).filter(Boolean); }
+function query(){ return view.chips.concat(typed().filter(function(t){ return view.chips.indexOf(t) < 0; })); }
+function parseTerms(list){
   return list.slice(0, 8).map(function(t){
     var raw = fold(t).match(WORD) || [], words = raw.map(singular);
     var content = words.filter(function(w){ return !STOP.test(w); });
@@ -1182,7 +1170,7 @@ function termHits(sec, si, t, hits){
 }
 var FLAGS = [['contact','the name'], ['org','the organisation'], ['country','the country'], ['why','your Why line']];
 function runSearch(){
-  var terms = parseTerms(view.q || '');
+  var terms = parseTerms(query());
   if (!terms.length){ found = null; return; }
   var V = vocab(), N = Math.max(entries.length, 1), cdf = {};
   /* how many entries name each idea, for its rarity */
@@ -1368,8 +1356,8 @@ function drawResults(){
   var counts = terms.map(function(t, i){ return rs.filter(function(r){ return r.terms[i]; }).length; });
   if (!found){
     $('#det').innerHTML = '<div class="sstart"><h2>Search the entries</h2>'
-      + '<p>Type a word or a few. Words that name one idea together, such as machine learning, stay together; put a phrase in quotes to keep it whole.</p>'
-      + '<div class="sopts">' + ['digital twin', 'water reuse', 'machine learning sensors'].map(function(x){ return '<button class="chip" data-try="' + x + '">' + x + '</button>'; }).join('') + '</div></div>';
+      + '<p>Type a term and press Enter, then the next the same way. A term can be several words, such as machine learning; put it in quotes to have it found only as written.</p>'
+      + '<div class="sopts">' + ['digital twin', 'water reuse', 'machine learning'].map(function(x){ return '<button class="chip" data-try="' + x + '">' + x + '</button>'; }).join('') + '</div></div>';
     return;
   }
   /* each term, with what it became */
@@ -1604,9 +1592,14 @@ function snippet(sec, sent, hits, lvl, also){
   return also ? html + snippet(also[0], also[1].sent, [also[1]], lvl) : html;
 }
 var searchTimer = null;
-function setQuery(v){
-  view.q = v; showing = SHOW; snips = {}; opened = {};
-  if (!v.trim()){
+function drawChips(){
+  $('#schips').innerHTML = view.chips.map(function(c, i){
+    return '<span class="schip">' + esc(c) + '<button data-unchip="' + i + '" aria-label="Take out ' + esc(c) + '">\u00D7</button></span>'; }).join('');
+}
+function setQuery(){
+  view.q = $('#search').value; showing = SHOW; snips = {}; opened = {};
+  drawChips();
+  if (!query().length){
     found = null; view.hits = false;
     view.results = document.activeElement === $('#search');
     drawRows(); drawDetail(); return;
@@ -2208,7 +2201,7 @@ function drawRows(){
   /* Opened from the search, the list is the search's, best first, so
      that the arrows turn through it in that order. */
   $('#listhead').textContent = ranked ? 'Search, best first' : s ? s.name : '';
-  $('#listcall').textContent = ranked ? view.q : s ? s.call || '' : '';
+  $('#listcall').textContent = ranked ? query().join(', ') : s ? s.call || '' : '';
   var list = shown();
   $('#listcount').textContent = list.length + ' shown';
   drawStep();
@@ -2856,17 +2849,44 @@ $('#detwrap').addEventListener('touchcancel', letGo);
 /* The search waits for a pause in the typing, because each pass reads
    every entry's pages. Back in the box, the results come back. */
 $('#search').addEventListener('input', function(){
-  var v = this.value; clearTimeout(searchTimer);
-  searchTimer = setTimeout(function(){ setQuery(v); }, 220);
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(setQuery, 220);
 });
+/* Enter gives the term typed and starts the next; Backspace in an empty
+   box takes the last term back to be typed again; Esc empties the box,
+   and an empty one puts the search away. */
+$('#search').addEventListener('keydown', function(ev){
+  if (ev.key === 'Enter'){
+    ev.preventDefault();
+    view.q = this.value;
+    typed().forEach(function(t){ if (view.chips.indexOf(t) < 0) view.chips.push(t); });
+    this.value = ''; clearTimeout(searchTimer); setQuery();
+  } else if (ev.key === 'Backspace' && !this.value && view.chips.length){
+    ev.preventDefault();
+    this.value = view.chips.pop(); clearTimeout(searchTimer); setQuery();
+  } else if (ev.key === 'Escape'){
+    ev.preventDefault();
+    if (this.value || view.chips.length){ this.value = ''; view.chips = []; clearTimeout(searchTimer); setQuery(); }
+    else this.blur();
+  }
+});
+document.addEventListener('click', function(ev){
+  var u = ev.target.closest('[data-unchip]'); if (!u) return;
+  view.chips.splice(+u.dataset.unchip, 1); setQuery(); $('#search').focus();
+});
+$('#sbox').addEventListener('click', function(ev){ if (ev.target === this) $('#search').focus(); });
 /* Pressing the box opens the search's page (Mark, 2026-10-22); leaving
    it empty goes back to the entry. */
+/* Pressing the box puts the venues and entries away and brings the
+   search's page to the front (Mark, 2026-10-22); leaving it with no term
+   goes back to the entry. */
 $('#search').addEventListener('focus', function(){
+  drawer(false); closePanel();
   if (!view.results){ view.results = true; $('#detwrap').scrollTop = 0; drawDetail(); }
 });
 $('#search').addEventListener('blur', function(){
   setTimeout(function(){
-    if (!view.q.trim() && view.results && document.activeElement !== $('#search')){ view.results = false; drawDetail(); }
+    if (!query().length && view.results && document.activeElement !== $('#search')){ view.results = false; drawDetail(); }
   }, 250);
 });
 document.addEventListener('click', function(ev){
@@ -2882,7 +2902,7 @@ document.addEventListener('click', function(ev){
     drawRows(); return drawDetail();
   }
   if (t.dataset.hit){ view.hits = true; drawer(false); return openEntry(t.dataset.hit); }
-  if (t.dataset.try){ $('#search').value = t.dataset.try; return setQuery(t.dataset.try); }
+  if (t.dataset.try){ view.chips = [t.dataset.try]; $('#search').value = ''; $('#search').focus(); return setQuery(); }
   if (t.dataset.results){ view.results = true; $('#detwrap').scrollTop = 0; return drawDetail(); }
   if (t.dataset.snip){
     snips[t.dataset.snip] = t.dataset.open !== '1';
