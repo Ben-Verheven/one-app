@@ -482,6 +482,165 @@ button.badge:hover{box-shadow:inset 0 0 0 1.5px var(--lv)}
    at their full lengths: the ideas' names give way (the whole name on
    hover), the words keep their column. */
 @media (orientation:portrait){ .lines{grid-template-columns:minmax(0,44%) minmax(0,1fr) var(--mw,0px) 0} .lmh{white-space:normal} }
+/* ── the Semaphore's slide-ins (see openPanel) ───────────────────────
+   The venue's name and the arena's tags say they open something of their
+   own, apart from the row that chooses the venue. The panel is the
+   Semaphore's: 404 px from the right edge, over the drawer and the entry
+   alike, the rest veiled; a press on the veil, ✕ or Esc puts it away. */
+.site .nm[data-msite]:hover{text-decoration:underline;text-decoration-color:var(--line2);text-underline-offset:3px}
+.site .tag[data-marena]:hover{background:color-mix(in srgb,var(--tone) 46%,var(--paper))}
+.mscrim{position:absolute;inset:0;z-index:5;background:rgba(42,38,32,.28);visibility:hidden;opacity:0;transition:opacity .24s ease,visibility 0s linear .24s}
+.mpanel{position:absolute;top:0;right:0;bottom:0;width:404px;max-width:94vw;z-index:6;display:flex;flex-direction:column;
+  background:var(--sheet);border-left:1px solid var(--line2);box-shadow:-10px 0 28px rgba(42,38,32,.2);
+  transform:translateX(105%);visibility:hidden;transition:transform .3s cubic-bezier(.22,.72,.24,1),visibility 0s linear .3s}
+.mpanel:focus{outline:none}
+body.mopen .mscrim{visibility:visible;opacity:1;transition:opacity .24s ease,visibility 0s}
+body.mopen .mpanel{transform:none;visibility:visible;transition:transform .3s cubic-bezier(.22,.72,.24,1),visibility 0s}
+@media (prefers-reduced-motion:reduce){ .mscrim,.mpanel,body.mopen .mscrim,body.mopen .mpanel{transition:none} }
+.mbody{flex:1;overflow-y:auto;overflow-x:hidden;padding:24px 26px 22px}
+.mhead{position:relative;padding-right:26px}
+.mhead h2{font:400 20px/1.3 var(--serif);letter-spacing:.03em;margin:0}
+.mx{position:absolute;top:-4px;right:-8px;border:0;background:none;color:var(--faint);font-size:15px;line-height:1;padding:5px 7px;border-radius:6px;cursor:pointer}
+.mx:hover{color:var(--ink);background:var(--hover)}
+.mkind,.mmeta{margin:0 0 5px;font:600 9.5px var(--serif);letter-spacing:.16em;text-transform:uppercase;color:var(--faint)}
+.mmeta{margin:7px 0 0}
+.mdoubt{display:inline-block;font:600 12px/18px var(--serif);width:18px;text-align:center;border-radius:50%;background:var(--gold-soft);color:var(--gold-ink);vertical-align:2px;cursor:help}
+.mrow{display:flex;align-items:center;gap:10px;margin-top:11px}
+.mgo{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line2);border-radius:var(--radius);padding:3px 10px;background:none;color:var(--key2);font:13px var(--mono);text-decoration:none;white-space:nowrap;cursor:pointer}
+.mgo:hover{border-color:var(--key);background:var(--hover)}
+.mgo svg{flex:none}
+.mgo.on{background:var(--sel)}
+.mplace{margin:14px 0 4px;padding:9px 12px;border:1px solid var(--line);border-radius:var(--radius);font:13px/1.45 var(--body);color:var(--muted)}
+.mplace b{font:600 9.5px var(--serif);letter-spacing:.16em;text-transform:uppercase;color:var(--ink);margin-right:8px}
+.mplace.st-new{border-color:var(--new-line);background:var(--new-soft)}
+.mplace.st-new b{color:var(--new-ink)}
+.mplace i{font-style:italic}
+.mps{margin-top:18px}
+.mph{display:flex;align-items:baseline;gap:9px;margin:0 0 7px;padding-bottom:5px;border-bottom:1px solid var(--grid);
+  font:600 9.5px var(--serif);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.mph i{font:italic 12.5px var(--body);letter-spacing:0;text-transform:none;color:var(--faint)}
+.mnone{font:italic 13px var(--body);color:var(--faint);margin:0}
+.mtext{margin:0;font-size:13.5px;line-height:1.6;color:var(--muted);white-space:pre-wrap;overflow-wrap:anywhere}
+.mlink{border:0;background:none;padding:0;text-align:left;color:var(--ink);cursor:pointer;text-decoration:underline;text-decoration-color:var(--line2);text-underline-offset:3px}
+.mlink:hover{text-decoration-color:var(--ink)}
+/* The window and the calls as a small table, as the Semaphore's board
+   lays out its rows: what each line is, and its date that matters, in a
+   column on the left; the line itself on a track to the right; one row of
+   months over them all, a hairline at each month, and today the gold line
+   straight down every track. The names and dates stood on the strip
+   itself until Mark found them floating over one another and the bars
+   (2026-10-21). See vLifeHTML. */
+.mtl{margin-top:8px}
+.mtr{display:grid;grid-template-columns:136px minmax(0,1fr);border-top:1px solid var(--grid)}
+.mtr.axis{border-top:0}
+.mtl:not(.all) .mtr.more{display:none}
+.mtn{min-width:0;padding:6px 10px 6px 0;font-size:13px;line-height:1.3}
+.mtn b,.mtn i,.mtn span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mtn b{font:400 13px/1.3 var(--serif);color:var(--ink)}
+.mtn i{font:italic 12.5px/1.3 var(--body);color:var(--muted)}
+.mtn span{margin-top:1px;font:10.5px/1.4 var(--mono);color:var(--key2)}
+.mtr.past .mtn b,.mtr.past .mtn i,.mtr.past .mtn span{color:var(--faint)}
+.mtk{position:relative;overflow:hidden;min-height:34px}
+.mtk > *{position:absolute}
+.mtr.axis .mtk{min-height:18px;overflow:visible}
+.mmo{bottom:3px;padding-left:3px;font:10px/1 var(--mono);color:var(--muted);white-space:nowrap}
+.mmo.jan{color:var(--ink)}
+.mnow{top:0;bottom:0;width:2px;margin-left:-1px;background:var(--gold);z-index:1}
+.mtr.axis .mnow{top:auto;height:7px;bottom:0}
+.mband{top:50%;height:12px;transform:translateY(-50%);min-width:6px;border-radius:4px;border:1px solid rgba(194,56,44,.7)}
+.mband.st-new{border-color:var(--new-line)}
+.mband.st-board{border-color:var(--line2)}
+.mband.season{border-style:dashed}
+.mband.past{border-color:var(--line)}
+.mband.openl{border-left:none;border-radius:0 4px 4px 0;-webkit-mask-image:linear-gradient(90deg,transparent,#000 30px);mask-image:linear-gradient(90deg,transparent,#000 30px)}
+.mband.openr{border-right:none;border-radius:4px 0 0 4px;-webkit-mask-image:linear-gradient(270deg,transparent,#000 30px);mask-image:linear-gradient(270deg,transparent,#000 30px)}
+.mmeet{top:50%;height:4px;transform:translateY(-50%);background:var(--brok);border-radius:2px}
+.mdia{top:50%;width:10px;height:10px;margin-left:-5px;transform:translateY(-50%) rotate(45deg);background:var(--brok);box-shadow:0 0 0 2px var(--sheet);z-index:2}
+.mdia.unc{background:var(--sheet);border:1.5px dashed var(--brok)}
+.mdia.past{background:var(--faint)}
+.mtmore{display:block;margin:6px 0 0 136px;padding:2px 0;border:0;background:none;color:var(--key2);font:12.5px var(--serif);cursor:pointer;text-decoration:underline;text-decoration-color:var(--line2);text-underline-offset:3px}
+.mtmore:hover{text-decoration-color:var(--ink)}
+/* A call as the rotation cards drew it, and the Semaphore's board still
+   does: one bar from publication to deadline, the publication's blue
+   running into the deadline's purple; the stages of one call one bar, full
+   only to the first deadline and a thin line on to the last, an earlier
+   deadline a tick beside it; dashed where a date is a guess, grey once it
+   is over, faded in where no publication is known and out where no
+   deadline is. */
+.mcb{top:50%;margin-top:-2px;height:4px;min-width:3px;border-radius:2px;background:linear-gradient(90deg,var(--call),#A32E87)}
+.mcb.unc{height:5px;background:none;border:1px dashed var(--call);border-right:2px solid #A32E87}
+.mcb.past{background:var(--line2)}
+.mcb.unc.past{background:none;border-color:var(--line2)}
+.mcb.lead-in{-webkit-mask-image:linear-gradient(90deg,transparent,#000 22px);mask-image:linear-gradient(90deg,transparent,#000 22px)}
+.mcb.run-on{-webkit-mask-image:linear-gradient(270deg,transparent,#000 22px);mask-image:linear-gradient(270deg,transparent,#000 22px)}
+.mcbt{top:50%;margin-top:-1px;height:0;border-top:2px solid #A32E87}
+.mcbt.unc{border-top-style:dashed}
+.mcbt.past{border-top-color:var(--line2)}
+.mcbn{top:50%;margin-top:-6px;width:3px;height:12px;margin-left:-1.5px;border-radius:1px;background:#A32E87;box-shadow:0 0 0 1.5px var(--sheet)}
+.mcbn.past{background:var(--muted)}
+.mlead{display:flex;flex-direction:column;align-items:flex-start;margin:0;padding:4px 0}
+.mlead i{font:italic 12.5px var(--body);color:var(--faint)}
+.mchips{display:flex;flex-wrap:wrap;gap:6px}
+.mchip{padding:1px 9px 2px 7px;border:0;border-left:3px solid var(--tone,var(--line2));border-radius:0 var(--radius) var(--radius) 0;cursor:pointer;
+  background:color-mix(in srgb,var(--tone,#7D7466) 30%,var(--sheet));font:italic 14px/1.45 var(--body);color:var(--ink)}
+.mchip:hover{background:color-mix(in srgb,var(--tone,#7D7466) 46%,var(--sheet))}
+.mpg{padding:3px 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mpg a,.mlinks a{color:var(--ink);text-decoration:none}
+.mpg a:hover,.mlinks a:hover{text-decoration:underline}
+.mfoot{flex:none;padding:10px 26px;border-top:1px solid var(--line);background:var(--panel);font:italic 12.5px var(--body);color:var(--muted)}
+/* an arena: the Semaphore's cards, About plain, Brokerage and Venues
+   under a band of the brokerage red */
+.mblocks{display:flex;flex-direction:column;gap:10px;margin-top:16px}
+.mcard{border:1px solid var(--line);border-radius:var(--radius);background:var(--field);overflow:hidden}
+.mcard > .mtext{padding:10px 12px 8px}
+.mchd{margin:0;padding:9px 12px;border-bottom:1px solid var(--grid);background:var(--panel);font:600 9.5px var(--serif);letter-spacing:.16em;text-transform:uppercase;color:var(--ink)}
+.mcard.brok > .mchd{background:var(--brok-soft);color:var(--brok-ink)}
+.mlinks{display:flex;flex-direction:column;padding:4px 12px 9px;font-size:13.5px}
+.mlinks a{padding:2px 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mav{display:grid;grid-template-columns:14px minmax(0,1fr);gap:9px;align-items:center;margin:0 12px;padding:7px 0;border-bottom:1px solid var(--grid)}
+.mav:last-child{border-bottom:none}
+.mavt{display:flex;flex-direction:column;align-items:flex-start;min-width:0;font-size:14px}
+.mavt i{font:italic 12px var(--body);color:var(--faint)}
+.mav.over .mlink{color:var(--muted)}
+.mgl{justify-self:center}
+.mgl.ev{width:8px;height:8px;transform:rotate(45deg);background:var(--brok)}
+.mgl.ev.unc{background:none;border:1.5px dashed var(--brok)}
+.mgl.win{width:12px;height:5px;border-radius:3px;background:linear-gradient(90deg,rgba(194,56,44,.3),rgba(194,56,44,.8))}
+.mlead2{display:flex;align-items:baseline;gap:10px;margin:0 12px;padding:6px 0;border-bottom:1px solid var(--grid);font-size:14px}
+.mlead2 span{flex:1;min-width:0}
+.mlead2 i{font:italic 12px var(--body);color:var(--faint)}
+.mcard > .mnone{padding:8px 12px}
+/* its dates, one stream down a line, as in the Semaphore's panel; a past
+   one in quieter ink, not fainter */
+.mstream{position:relative;margin-top:20px;padding-top:6px;border-top:1px solid var(--line)}
+.mstream::before{content:"";position:absolute;left:113px;top:12px;bottom:6px;width:1px;background:var(--line)}
+.mln{position:relative;display:flex;align-items:baseline;gap:10px;padding:7px 0;--c:var(--call)}
+.mln.r-announcement{--c:#137F9B}
+.mln.r-deadline{--c:#A32E87}
+.mln.brok{--c:var(--brok)}
+.md{flex:0 0 96px;text-align:right;font:11.5px/1.45 var(--mono);color:var(--brok-ink)}
+.md.unc{font-style:italic}
+.mg{flex:none;width:9px;height:9px;transform:rotate(45deg);background:var(--c);box-shadow:0 0 0 3px var(--sheet);position:relative;z-index:1}
+.mg.unc{background:var(--sheet);border:1.5px dashed var(--c)}
+.mt{min-width:0;font-size:14px;overflow-wrap:anywhere}
+.mt a{display:block;font:11px var(--mono);color:var(--muted);text-decoration:none}
+.mt a:hover{text-decoration:underline}
+.mstage{display:block;margin-top:2px;font:600 9px var(--serif);letter-spacing:.13em;text-transform:uppercase;color:var(--c)}
+.mln.past .md,.mln.past .mt{color:var(--muted)}
+.mln.past .mg{background:var(--faint)}
+.mmark{display:flex;align-items:center;gap:10px;margin:6px 0;font:600 9px var(--serif);letter-spacing:.16em;text-transform:uppercase;color:var(--faint)}
+.mmark span{flex:0 0 96px;text-align:right}
+.mmark::after{content:"";flex:1;height:1px;background:var(--line)}
+.mmark.today{color:var(--gold-ink)}
+.mmark.today::after{background:var(--gold-line)}
+/* the login */
+#login{position:fixed;inset:0;background:var(--paper);display:flex;align-items:center;justify-content:center;z-index:5}
+#login form{width:340px;display:flex;flex-direction:column;gap:10px}
+#login h2{font:400 22px var(--serif);margin:0 0 4px}
+#login p{color:var(--muted);font-size:13.5px;margin:0 0 6px}
+#login input{background:var(--field);border:1px solid var(--line2);border-radius:var(--radius);color:var(--ink);font:15px var(--body);padding:8px 10px}
+#login .btn{padding:8px;font-size:15px}
+#login .err{color:var(--warn-ink);font-size:13px;min-height:1.2em}
 </style>
 </head>
 <body>

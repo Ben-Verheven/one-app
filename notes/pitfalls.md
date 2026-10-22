@@ -357,5 +357,14 @@ the press finds it by position, as `vhAt` in the Marketplace does.
 Three rooms park a drawer at `translateX(100%)` and `overflow-x:clip`
 refuses the scroll. Judge overflow by looking, not by that number.
 
+**A deletion takes what follows it unless its end is checked.** Taking
+out the search's underline styles in Mark's Place (2026-10-22) removed
+everything from them to the end of the stylesheet: the venue and arena
+slide-ins and the login screen, 159 lines. Lint, the smoke test and the
+first screen all passed, because none of the three is on that screen;
+Mark found the panels unstyled a day later. How to apply: before
+committing a removal, read the diff's deleted lines to their last one,
+and open whatever the lost names drew.
+
 See also [animation](animation.md), [todo-card](todo-card.md), [tools](tools.md),
 [working-here](working-here.md), [notes-room](notes-room.md) and [testing](testing.md).
