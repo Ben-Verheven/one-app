@@ -1437,6 +1437,40 @@
   Hub.expose('atlas-inbox', agentInbox('atlas_inbox',
     'id,created_at,run,kind,person,grp,summary,detail,as_of,as_of_gran,url,source_url,evidence'));
 
+  /* Which sites Mark's Place copies every night, out of its own table,
+     `partner_sites` (supabase/7-partner-watch.sql). The Semaphore gives
+     the venues on those sites a section of their own on Venues (Mark,
+     2026-10-22), so a site added to Mark's Place lands there without his
+     moving it. Only the addresses are read, through the same connection
+     and on the same terms as the inboxes above. */
+  Hub.expose('partner-sites', (function () {
+    var CFG = 'pj-cloud-config';
+    var client = null;
+    function open() {
+      var L = Hub.api('ledger');
+      if (!L || typeof L.signedIn !== 'function' || !L.signedIn()) return null;
+      if (client) return client;
+      var cfg;
+      try { cfg = JSON.parse(localStorage.getItem(CFG) || 'null'); } catch (e) { cfg = null; }
+      if (!cfg || !cfg.url || !cfg.key || !window.supabase) return null;
+      try {
+        client = window.supabase.createClient(cfg.url, cfg.key, { accessToken: ledgerToken });
+      } catch (e) { client = null; }
+      return client;
+    }
+    function list(cb) {
+      var c = open();
+      if (!c) { cb(null, 'no cloud connection'); return; }
+      c.from('partner_sites').select('list_url').eq('active', true)
+        .then(function (res) {
+          if (res && res.error) { cb(null, res.error.message); return; }
+          cb(((res && res.data) || []).map(function (r) { return r.list_url; }), null);
+        })
+        .catch(function (e) { cb(null, e.message); });
+    }
+    return { ready: function () { return !!open(); }, list: list };
+  })());
+
   /* ── open where we left off ───────────────────────────────────────── */
 
   var start = order[0];

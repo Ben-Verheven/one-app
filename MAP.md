@@ -26,7 +26,7 @@ rooms                                                hub.js:296
 
 ## `shell/bridge.js`
 
-2001 lines · 96 KB
+2035 lines · 97 KB
 
 ```
 Bridge — what the five rooms say to each other.             bridge.js:1
@@ -45,14 +45,14 @@ which copy wins                                             bridge.js:740
 what the room says about itself                             bridge.js:795
 putting two copies together                                 bridge.js:988
 the agents' inboxes: what the scheduled agents found        bridge.js:1325
-open where we left off                                      bridge.js:1440
-the weekly Excel: every lead, open and closed               bridge.js:1451
-the zip                                                     bridge.js:1508
-the styles                                                  bridge.js:1562
-the look                                                    bridge.js:1601
-what goes in it                                             bridge.js:1819
-where it goes                                               bridge.js:1862
-on the iPad, links open in DuckDuckGo                       bridge.js:1947
+open where we left off                                      bridge.js:1474
+the weekly Excel: every lead, open and closed               bridge.js:1485
+the zip                                                     bridge.js:1542
+the styles                                                  bridge.js:1596
+the look                                                    bridge.js:1635
+what goes in it                                             bridge.js:1853
+where it goes                                               bridge.js:1896
+on the iPad, links open in DuckDuckGo                       bridge.js:1981
 ```
 
 ## `shell/boot.js`
@@ -367,7 +367,7 @@ _No section banners._
 
 ## `rooms/semaphore/semaphore.js`
 
-5482 lines · 298 KB
+5529 lines · 301 KB
 
 ```
 Brokerage Semaphore                         semaphore.js:1
@@ -387,44 +387,44 @@ the width of the names                      semaphore.js:1170
 render: freezer                             semaphore.js:1202
 dispatches                                  semaphore.js:1231
 venues, on screen                           semaphore.js:1625
-asking the agent about one venue            semaphore.js:1838
-the visit question                          semaphore.js:1880
-a venue's window, drawn                     semaphore.js:1934
-dragging a window's ends                    semaphore.js:1976
-Venues: three sections and Limbo            semaphore.js:2071
-dragging a venue into place                 semaphore.js:2192
-a venue, opened                             semaphore.js:2260
-drawer                                      semaphore.js:2474
-read view: one stream, in time order        semaphore.js:2578
-edit view                                   semaphore.js:2703
-actions                                     semaphore.js:2848
-a call's run                                semaphore.js:2951
-leads                                       semaphore.js:3025
-the ruit                                    semaphore.js:3218
-the score                                   semaphore.js:3274
-one lead card, in both rooms                semaphore.js:3327
-a type's colour dot                         semaphore.js:3376
-who and the links, side by side             semaphore.js:3485
-the leads table                             semaphore.js:3515
-leads: one board, three sections            semaphore.js:3705
-a lead opening in place                     semaphore.js:3833
-a lead moving, and the view moving with it  semaphore.js:3916
-leads, lent to the Ledger's board           semaphore.js:4257
-modals                                      semaphore.js:4388
-asking, and saying                          semaphore.js:4391
-the types, managed                          semaphore.js:4432
-dragging in the list of types               semaphore.js:4489
-tooltip                                     semaphore.js:4650
-events                                      semaphore.js:4688
-venues                                      semaphore.js:4845
-typing, and the forms it goes into          semaphore.js:5041
-escape, and closing by clicking away        semaphore.js:5267
-putting links in your own order             semaphore.js:5303
+asking the agent about one venue            semaphore.js:1876
+the visit question                          semaphore.js:1918
+a venue's window, drawn                     semaphore.js:1972
+dragging a window's ends                    semaphore.js:2014
+Venues: three sections and Limbo            semaphore.js:2109
+dragging a venue into place                 semaphore.js:2231
+a venue, opened                             semaphore.js:2302
+drawer                                      semaphore.js:2519
+read view: one stream, in time order        semaphore.js:2623
+edit view                                   semaphore.js:2748
+actions                                     semaphore.js:2893
+a call's run                                semaphore.js:2996
+leads                                       semaphore.js:3070
+the ruit                                    semaphore.js:3263
+the score                                   semaphore.js:3319
+one lead card, in both rooms                semaphore.js:3372
+a type's colour dot                         semaphore.js:3421
+who and the links, side by side             semaphore.js:3530
+the leads table                             semaphore.js:3560
+leads: one board, three sections            semaphore.js:3750
+a lead opening in place                     semaphore.js:3878
+a lead moving, and the view moving with it  semaphore.js:3961
+leads, lent to the Ledger's board           semaphore.js:4302
+modals                                      semaphore.js:4433
+asking, and saying                          semaphore.js:4436
+the types, managed                          semaphore.js:4477
+dragging in the list of types               semaphore.js:4534
+tooltip                                     semaphore.js:4695
+events                                      semaphore.js:4733
+venues                                      semaphore.js:4891
+typing, and the forms it goes into          semaphore.js:5087
+escape, and closing by clicking away        semaphore.js:5313
+putting links in your own order             semaphore.js:5349
 ```
 
 ## `rooms/semaphore/semaphore.css`
 
-1758 lines · 134 KB
+1760 lines · 134 KB
 
 ```
 Brokerage Semaphore                                     semaphore.css:1
@@ -452,12 +452,12 @@ dispatches                                              semaphore.css:1162
 a venue's window                                        semaphore.css:1214
 the tray                                                semaphore.css:1310
 Venues: three sections and Limbo                        semaphore.css:1342
-the visit question                                      semaphore.css:1465
-a venue, in the panel                                   semaphore.css:1492
-modals                                                  semaphore.css:1657
-the types, managed (renderTypes                         semaphore.css:1680
-the calendar                                            semaphore.css:1723
-tooltip                                                 semaphore.css:1750
+the visit question                                      semaphore.css:1467
+a venue, in the panel                                   semaphore.css:1494
+modals                                                  semaphore.css:1659
+the types, managed (renderTypes                         semaphore.css:1682
+the calendar                                            semaphore.css:1725
+tooltip                                                 semaphore.css:1752
 ```
 
 ## `rooms/callboard/callboard.view.js`
@@ -661,4 +661,4 @@ Generated data. Never open, never edit, never upload.
 
 ---
 
-**38371 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.
+**38454 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.

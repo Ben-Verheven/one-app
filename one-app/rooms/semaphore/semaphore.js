@@ -333,7 +333,7 @@ function migrate(s){
     /* which of Venues' tabs is showing (Mark, 2026-10-15): the three
        sections or Limbo; the Events and Tools of the Now page before land
        on Active */
-    ui.nowTab = ['arising','active','dying','over'].includes(u.nowTab) ? u.nowTab : 'active';
+    ui.nowTab = ['arising','active','dying','over','place'].includes(u.nowTab) ? u.nowTab : 'active';
     /* whether the board's tray lists what is kept on the board as well */
     ui.keptOpen = u.keptOpen===true;
     /* which shared venues on the board are unfolded to show their arenas */
@@ -1644,6 +1644,42 @@ function visibleVenues(){
   return (S.venues||[]).filter(v=>liveVenue(v)&&(!ql||venueHay(v).includes(ql)||v.arenas.some(id=>vis.has(id))));
 }
 const inVenues=v=>v.place==='venues';
+/* Mark's Place copies some venues' partner searches every night, and Mark
+   wants those venues in a section of their own on Venues, put there by
+   themselves (2026-10-22: he had put many of them in Limbo by hand to get
+   them out of the way). The sites are read from Mark's Place's own table
+   through the bridge, and kept on this device so the section is there
+   before the cloud answers, and offline. A venue is in it when one of its
+   addresses is on a copied site, as Mark's Place matches them (`sameSite`
+   in partner-watch/index.html); that wins over a section chosen by hand,
+   which stays stored and comes back if the site leaves Mark's Place. */
+const PLACE_LS='semaphore-place-sites';
+let placeSites=(()=>{try{const x=JSON.parse(localStorage.getItem(PLACE_LS)||'null');return Array.isArray(x)?x:[];}catch(e){return [];}})();
+/* a key on a shared host with nothing after the host names no one site;
+   otherwise one key may stand inside the other, as a partner-search page
+   inside its partnership's proposals site */
+function sameSite(a,b){
+  if(a===b)return true;
+  const s=a.length<b.length?a:b,l=s===a?b:a;
+  return s.indexOf('/')>0&&l.indexOf(s+'/')===0;
+}
+function inPlace(v){
+  if(!placeSites.length||!inVenues(v))return false;
+  return [v.url].concat(v.pages.map(p=>p.url)).filter(Boolean).map(siteKey)
+    .some(k=>placeSites.some(x=>sameSite(k,x)));
+}
+function refreshPlace(){
+  const api=(typeof Hub!=='undefined'&&Hub.api)?Hub.api('partner-sites'):null;
+  if(!api||!api.ready())return;
+  api.list((urls,err)=>{
+    if(err||!urls)return;
+    const keys=[...new Set(urls.map(siteKey))].sort();
+    if(keys.join('\n')===placeSites.join('\n'))return;
+    placeSites=keys;
+    try{localStorage.setItem(PLACE_LS,JSON.stringify(keys));}catch(e){}
+    renderAll();renderDrawer();
+  });
+}
 /* Limbo is what is over, and the board is what is coming and going on: a
    venue in Limbo is off the board (Mark, 2026-10-17), on the arena rows
    and among the Shared venues alike, and waits in Limbo to be deleted.
@@ -1706,7 +1742,7 @@ const PHASE={undated:'arising',arising:'arising',meeting:'active',active:'active
    gives it back to its dates; its window and its words keep saying what
    the dates say. */
 function vPhaseByDates(v){return PHASE[vState(v)];}
-function vPhase(v){return v.phase||vPhaseByDates(v);}
+function vPhase(v){return inPlace(v)?'place':v.phase||vPhaseByDates(v);}
 /* How much is going on at a venue at one moment, from 0 to 1: rising
    through the window to its event days, full on them, falling away after;
    flat where there are none, fading through the last stretch. It is the
@@ -1754,6 +1790,8 @@ function vSince(v){const x=lastVisit(v);return x?daysBetween(T(x.at),T(todayISO(
 function vEvery(v){
   if(v.every)return v.every;
   if(!inVenues(v))return null;
+  /* Mark's Place reads it every night, so it never falls due here */
+  if(inPlace(v))return null;
   /* a section set by hand sets the rhythm too: none in Arising or Limbo */
   const nat=vState(v),w=vWin(v);
   const st=!v.phase||v.phase===PHASE[nat]?nat:v.phase==='over'?'over':v.phase==='arising'?'arising':v.phase;
@@ -1804,7 +1842,7 @@ function vDateSay(v){
 /* Where it stands, in the board's words: new, kept, or in Venues and in
    which section of it */
 const PLACE_SAY={new:'New on the board',board:'Kept on the board',venues:'In Venues',gone:'Removed'};
-const PHASE_SAY={arising:'Arising',active:'Active',dying:'Dying',over:'Limbo'};
+const PHASE_SAY={arising:'Arising',active:'Active',dying:'Dying',over:'Limbo',place:'Mark\u2019s Place'};
 function vPlaceSay(v){return PLACE_SAY[v.place]+(inVenues(v)?' · '+PHASE_SAY[vPhase(v)]:'');}
 /* a venue's mark: a diamond where it has event days, dashed while they are
    a guess; a rounded bar, the shape of a window, where it has none */
@@ -2146,7 +2184,8 @@ function nowEmptyHTML(){
 const NOW_TABS={arising:{name:'Arising',none:'Nothing arising: no venue in Venues whose window is still ahead.'},
   active:{name:'Active',none:'Nothing active. A venue is active from its window’s opening through its event days.'},
   dying:{name:'Dying',none:'Nothing dying. A venue dies after its event days, or in the last weeks of its window.'},
-  over:{name:'Limbo',none:''}};
+  over:{name:'Limbo',none:''},
+  place:{name:'Mark\u2019s Place',none:'No venue in Venues is on a site Mark\u2019s Place copies.'}};
 /* the group a venue stands in on Venues: -1 shared, else the place of its
    arena's type in his order, then those of no known type, then those
    serving no arena */
@@ -2184,7 +2223,7 @@ function venueOrder(x,y){
 }
 function nowSections(){
   const all=visibleVenues().filter(inVenues);
-  const by={arising:[],active:[],dying:[],over:[]};
+  const by={arising:[],active:[],dying:[],over:[],place:[]};
   for(const v of all)by[vPhase(v)].push(v);
   for(const k in by)by[k].sort(venueOrder);
   return {all,by};
@@ -2242,11 +2281,14 @@ function renderNow(){keepPlace(()=>{
   const shown=by[tab],due=tabDue(shown);
   let h='<div class="vhead"><div class="vtabs" role="group" aria-label="Where the venues stand">'+
       tabHTML('arising')+tabHTML('active')+tabHTML('dying')+'</div>'+
+    /* Mark's Place stands apart too: not a stage of a venue's life, but
+       where its partner search is read */
+    '<div class="vtabs" role="group" aria-label="Copied by Mark\u2019s Place">'+tabHTML('place')+'</div>'+
     /* Limbo stands apart from the three, in its fog: what is over is not
        a stage of the work but what is left of it */
     '<button class="culimbo vlimbotab'+(tab==='over'?' on':'')+'" data-act="nowTab" data-t="over" aria-pressed="'+(tab==='over')+'">'+
       '<span class="culfog" aria-hidden="true"></span>'+LIMBO_GHOST+'<span class="culc">Limbo</span><b>'+by.over.length+'</b></button>'+
-    '<span class="wsay">'+(tab==='over'?(by.over.length?'Over and off the board, each waiting until you delete it \u2014 or drag its end on, or put it in another section from its panel.':'Nothing in Limbo.'):
+    '<span class="wsay">'+(tab==='place'?(by.place.length?'Copied every night by Mark\u2019s Place, so none of them comes due for a visit here.':''):tab==='over'?(by.over.length?'Over and off the board, each waiting until you delete it \u2014 or drag its end on, or put it in another section from its panel.':'Nothing in Limbo.'):
       due?'<b>'+due+'</b> '+(due===1?'venue here is':'venues here are')+' due for a visit.':'Nothing here is due for a visit.')+'</span>'+
     '<span class="vkey"><i class="vgl ev"></i>event days<i class="vkbar"></i>window, by how much goes on<i class="vkp"></i>due</span></div>';
   h+='<div class="vaxis"><span class="vaxl">'+NOW_TABS[tab].name+'</span><div class="vaxt">'+nowAxisHTML(sp)+'</div><span></span></div>';
@@ -2309,7 +2351,10 @@ function vPlaceHTML(v){
     (v.place==='new'?'<button class="btn" data-act="vPlace" data-v="'+v.id+'" data-p="board" title="Leave it on the board to think about">Keep on board</button>':'')+
     '<button class="btn ghost" data-act="vRemove" data-v="'+v.id+'" title="Off the board; the agent will not bring it back">Remove</button></div>';
   /* in Venues: the section it stands in, any of which can be chosen by
-     hand, and the way back to the board */
+     hand, and the way back to the board; one Mark's Place copies stands
+     in that section by itself */
+  if(inPlace(v))return '<div class="vplace st-venues"><span><b>In Venues</b><i>in Mark\u2019s Place, which copies its partner search every night</i></span>'+
+    '<button class="btn ghost" data-act="vPlace" data-v="'+v.id+'" data-p="board" title="Take it out of Venues; it stays on the board">Back to the board</button></div>';
   const ph=vPhase(v),nat=vPhaseByDates(v);
   return '<div class="vplace st-venues"><span><b>In Venues</b>'+
       (v.phase&&v.phase!==nat?'<i>put here by you; its dates say '+PHASE_SAY[nat]+'</i>':'')+'</span>'+
@@ -4829,6 +4874,7 @@ document.addEventListener('click',e=>{
          every time you come back: a list read an hour ago is a list another
          machine may have answered since */
       if(S.ui.view==='dispatch'||S.ui.view==='board')loadFinds();
+      if(S.ui.view==='now')refreshPlace();
       break;}
     case 'findRefresh':loadFinds();break;
     case 'findAll':{
@@ -5433,6 +5479,7 @@ renderAll();
    this view asks for its findings a moment later rather than at mount, when
    there would be nothing to ask. */
 if(S.ui.view==='dispatch'||S.ui.view==='board')setTimeout(loadFinds,800);
+setTimeout(refreshPlace,800);
 
 
 try{

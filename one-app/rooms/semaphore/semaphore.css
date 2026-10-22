@@ -1375,6 +1375,8 @@
 #pane-semaphore .vtab.t-arising::before{background:linear-gradient(90deg,rgba(239,91,76,.1),rgba(239,91,76,.55))}
 #pane-semaphore .vtab.t-active::before{background:var(--brok)}
 #pane-semaphore .vtab.t-dying::before{background:linear-gradient(90deg,rgba(239,91,76,.55),rgba(239,91,76,.1))}
+/* Mark's Place, in a box of its own: the gold of its Marked */
+#pane-semaphore .vtab.t-place::before{width:9px;height:9px;border-radius:50%;background:var(--today)}
 /* Limbo's own tab, apart from the three: the fog of the box it was */
 #pane-semaphore .culimbo.vlimbotab{display:flex;align-items:center;gap:9px;margin:0;height:33px;padding:0 14px;align-self:center;
   font:italic 13px var(--body);color:var(--lg-quiet);isolation:isolate;cursor:pointer}

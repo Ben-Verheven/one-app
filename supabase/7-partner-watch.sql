@@ -82,6 +82,13 @@ insert into partner_sites (id, name, call, list_url, platform, sort, shown_from)
   ('cluster2',   'Cluster 2 community',      'Standing partner search, entries from 1 September 2026',
    'https://cluster2-community-platform.b2match.io/components/26012', 'b2match', 14, '2026-09-01')
 on conflict (id) do nothing;
+-- NEB4All's matchmaking platform for the NEB Facility calls (2026-10-22;
+-- 50 entries that day, open to anyone). Its Kind says "Consortium seeking
+-- partners" and "Partner looking for consortium", which `b2mKind` reads.
+insert into partner_sites (id, name, call, list_url, platform, sort) values
+  ('neb4all',    'NEB4All',                  'NEB Facility 2026 calls',
+   'https://www.b2match.com/e/neb-facility-matchmaking-2026/components/64789', 'b2match', 15)
+on conflict (id) do nothing;
 -- Advanced Digital Tech was first given its participant list, component
 -- 70907, read off the event while logged out, where its menu is hidden; the
 -- copier then answered "list not found" (2026-10-17). The `insert` above
