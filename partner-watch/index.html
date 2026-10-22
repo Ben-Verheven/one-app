@@ -308,7 +308,11 @@ body.drawer .veil{display:block;position:absolute;inset:0;z-index:3;background:r
    it, and the veil or Esc were the only ways back). */
 .rd{display:flex;align-items:center}
 .rd-list{gap:7px;margin-left:-6px;background:none;border:1px solid var(--line2);border-radius:var(--radius);color:var(--key2);font:14px var(--serif);padding:5px 11px 5px 9px;cursor:pointer}
-body.drawer .rd-list{background:var(--sel);border-color:var(--key)}
+body.drawer:not(.leads) .rd-list{background:var(--sel);border-color:var(--key)}
+/* Leads beside it, smaller and in the leads' clay, as Make lead wears it */
+.rd-leads{gap:5px;margin-left:-8px;background:none;border:1px solid rgba(141,85,69,.55);border-radius:var(--radius);color:#7a4536;font:13px var(--serif);padding:3px 9px 3px 7px;cursor:pointer}
+.rd-leads .n{font:11.5px var(--mono);margin-left:2px}
+body.drawer.leads .rd-leads{background:rgba(141,85,69,.12)}
 .rd-step{gap:2px;font:12.5px var(--mono);color:var(--muted);white-space:nowrap}
 .rd-step button{display:flex;background:none;border:0;border-radius:5px;color:var(--key2);padding:6px;cursor:pointer}
 .rd-step button:disabled{color:var(--line2);cursor:default}
@@ -495,6 +499,7 @@ button.badge:hover{box-shadow:inset 0 0 0 1.5px var(--lv)}
 
 <header class="bar">
   <button class="rd rd-list" data-drawer="toggle" aria-expanded="false" aria-label="Show the venues and entries"></button>
+  <button class="rd rd-leads" data-drawer="leads" hidden aria-label="Show the leads made here"></button>
   <h1>Mark’s Place</h1>
   <span class="meta" id="total"></span>
   <div class="grow"></div>
@@ -602,14 +607,14 @@ function all(path){
 
 /* ── state ─────────────────────────────────────────────────────────── */
 var sites = [], entries = [], lastRun = null, byId = {};
-var view = { site:null, kind:'all', state:'open', q:'', chips:[], id:null, tab:'fields', scope:'all', any:false, sums:false, results:false, hits:false };
+var view = { site:null, leads:false, kind:'all', state:'open', q:'', chips:[], id:null, tab:'fields', scope:'all', any:false, sums:false, results:false, hits:false };
 try { Object.assign(view, JSON.parse(localStorage.getItem(VIEW) || '{}'), { q:'', chips:[] }); } catch(e){}
 /* a device last left on Later, which went on 2026-10-18, comes back to All */
 if (view.state === 'later') view.state = 'open';
 var detail = {};          // id → { fields, page_text, versions }
 var $ = function(s){ return document.querySelector(s); };
 function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]; }); }
-function saveView(){ try { localStorage.setItem(VIEW, JSON.stringify({ site:view.site, kind:view.kind, state:view.state, id:view.id, tab:view.tab, scope:view.scope, any:view.any, sums:view.sums })); } catch(e){} }
+function saveView(){ try { localStorage.setItem(VIEW, JSON.stringify({ site:view.site, leads:view.leads, kind:view.kind, state:view.state, id:view.id, tab:view.tab, scope:view.scope, any:view.any, sums:view.sums })); } catch(e){} }
 function day(iso){ if (!iso) return ''; var d = new Date(iso);
   return d.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' }); }
 /* The copier's errors in words Mark reads, the site's own message after
@@ -686,7 +691,12 @@ function stateOk(e){
   if (['interesting','bin'].indexOf(view.state) >= 0 && e.verdict !== view.state) return false;
   return true;
 }
+/* An entry made into a lead leaves its venue for Leads (Mark,
+   2026-10-22), where every lead is listed whatever the filters say; the
+   filters sort what is still to be judged, and a lead is past that. */
 function passes(e){
+  if (view.leads) return !!e._lead && (!found || reaches(found.per[e.id]));
+  if (e._lead) return false;
   if (e.site !== view.site) return false;
   if (view.kind !== 'all' && e.kind !== view.kind) return false;
   if (!stateOk(e)) return false;
@@ -703,13 +713,18 @@ var GROUPS = ['New', 'Marked', 'Seen', 'Binned'];
 function groupOf(e){
   return e.verdict === 'interesting' ? 1 : e.verdict === 'bin' ? 3 : !e.opened_at ? 0 : 2;
 }
-function regroup(){ entries.forEach(function(e){ e._g = groupOf(e); }); }
+/* Whether an entry is a lead is fixed with its group, for the same
+   reason: the lead just made stays in the list under the cursor, so ↓
+   goes on to the next entry, and leaves it at the next drawing afresh. */
+function regroup(){ var L = leadMap(); entries.forEach(function(e){ e._g = groupOf(e); e._lead = L[e.id] || null; }); }
 /* Binned reads in the order things went into the bin, the last one on
    top, so an entry binned by mistake a moment ago is the first one there
    to take back out (Mark, 2026-10-21). */
 function shown(){
   if (view.hits && found) return results();
   var bin = view.state === 'bin';
+  if (view.leads) return entries.filter(passes).sort(function(a, b){
+    return String(a._lead.a.name).localeCompare(String(b._lead.a.name)) || (a._i - b._i); });
   return entries.filter(passes).sort(function(a, b){
     return bin ? (b.decided_at || '').localeCompare(a.decided_at || '') || (a._i - b._i) : (a._g - b._g) || (a._i - b._i); });
 }
@@ -1668,6 +1683,8 @@ function docsOf(id){ return Object.prototype.hasOwnProperty.call(links, id) ? li
 function svg(size, paths){ return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + paths + '</svg>'; }
 /* the phone's star (PW_I.star there), so Marked is one sign on both */
 var STAR = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z"/></svg>';
+/* the Semaphore's ruit, drawn small before the word as its Leads wears it */
+var RUIT = '<svg width="20" height="12" viewBox="0 0 46 26" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" aria-hidden="true"><path d="M6 13L23 5L40 13L23 21Z"/></svg>';
 var PENCIL = svg(14, '<path d="M16.5 3.5l4 4L8 20l-5 1 1-5z"/><path d="M14.5 5.5l4 4"/>');
 var SCROLL = svg(17, '<path d="M15 12h-5"/><path d="M15 8h-5"/><path d="M19 17V5a2 2 0 0 0-2-2H4"/>'
   + '<path d="M8 21h12a2 2 0 0 0 2-2v-1a1 1 0 0 0-1-1H11a1 1 0 0 0-1 1v1a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v2a1 1 0 0 0 1 1h3"/>');
@@ -2177,8 +2194,9 @@ function closePanel(){ panel.kind = panel.id = null; document.body.classList.rem
 function drawSites(){
   /* No "All sites": Mark works one site at a time (2026-10-16). */
   var h = '', typed = {}, errs = {}, fresh = {};
-  var marked = {}, held = {};
-  entries.forEach(function(e){ if (isNew(e) && !e.removed_at) fresh[e.site] = (fresh[e.site] || 0) + 1;
+  var marked = {}, held = {}, L = leadMap();
+  entries.forEach(function(e){ if (L[e.id]) return;
+    if (isNew(e) && !e.removed_at) fresh[e.site] = (fresh[e.site] || 0) + 1;
     if (e.verdict === 'interesting') marked[e.site] = (marked[e.site] || 0) + 1;
     if (e.verdict !== 'bin') held[e.site] = (held[e.site] || 0) + 1; });
   document.querySelectorAll('[data-linkfor]').forEach(function(i){ typed[i.dataset.linkfor] = i.value; });
@@ -2194,7 +2212,7 @@ function drawSites(){
     }
     var n = fresh[s.id] || 0, mk = marked[s.id] || 0, all = held[s.id] || 0, tags = arenaTags(s._venue);
     var size = all ? '<span class="mo" title="the binned not counted">' + all + (all === 1 ? ' entry' : ' entries') + '</span>' : '';
-    h += '<div class="venue"><button class="site' + (view.site === s.id ? ' on' : '') + '" data-site="' + esc(s.id) + '" title="' + esc(s.call || '') + '">'
+    h += '<div class="venue"><button class="site' + (view.site === s.id && !view.leads ? ' on' : '') + '" data-site="' + esc(s.id) + '" title="' + esc(s.call || '') + '">'
        + '<span class="l1"><span class="nm" data-msite="' + esc(s.id) + '" title="Open ' + esc(s._venue ? s._venue.name : s.name) + '">' + esc(s.name) + '</span></span>'
        + (tags ? '<span class="l2">' + tags + '</span>' : '')
        + '<span class="c1">' + (mk ? '<span class="mk" title="' + mk + ' marked">' + STAR + mk + '</span>' : '') + (n ? '<span class="nw" title="' + n + ' new">' + n + '</span>' : '') + (tags ? '' : size) + '</span>'
@@ -2218,6 +2236,9 @@ function drawSites(){
       : '<b>Not checked yet.</b> The copier runs every night.')
     + (waiting ? '<br>' + waiting + ' entry pages still to copy' : '') + '</span>'
     + '<button class="btn" id="checkNow"' + (checking ? ' disabled>' + esc(checking) : '>Check now') + '</button>';
+  var nl = entries.filter(function(e){ return L[e.id]; }).length;
+  $('.rd-leads').hidden = !market;
+  $('.rd-leads').innerHTML = RUIT + 'Leads' + (nl ? '<span class="n">' + nl + '</span>' : '');
   $('#total').textContent = entries.length ? entries.length + ' entries on ' + sites.length + ' venues' : '';
   $('#vcount').textContent = sites.length || '';
 }
@@ -2230,24 +2251,27 @@ function drawRows(){
   var s = sites.find(function(x){ return x.id === view.site; }), ranked = !!(view.hits && found);
   /* Opened from the search, the list is the search's, best first, so
      that the arrows turn through it in that order. */
-  $('#listhead').textContent = ranked ? 'Search, best first' : s ? s.name : '';
-  $('#listcall').textContent = ranked ? query().join(', ') : s ? s.call || '' : '';
+  $('#listhead').textContent = ranked ? 'Search, best first' : view.leads ? 'Leads' : s ? s.name : '';
+  $('#listcall').textContent = ranked ? query().join(', ') : view.leads ? 'made here, under their arenas' : s ? s.call || '' : '';
   var list = shown();
   $('#listcount').textContent = list.length + ' shown';
+  $('#filters').hidden = view.leads && !ranked;
   drawStep();
   if (!entries.length){
     $('#rows').innerHTML = '<div class="empty">Nothing copied yet. Press <b>Check now</b> to read the venues; their entries appear here at once, and the full entry pages follow over the night.</div>';
     return;
   }
+  if (!list.length && view.leads && !ranked){ $('#rows').innerHTML = '<div class="empty">No leads yet. <b>Make lead</b>, in an entry\'s bar, files the entry in the Brokerage Semaphore and moves it here from its venue.</div>'; return; }
   if (!list.length){ $('#rows').innerHTML = '<div class="empty">No entries match. Try All, Both kinds, or clear the search.</div>'; return; }
   /* Drawn in one go: eight hundred rows of plain markup is quicker than any
      scheme for drawing only the visible ones, and keeps Find in page working. */
-  var per = {}; list.forEach(function(e){ per[e._g] = (per[e._g] || 0) + 1; });
-  var last = -1;
+  var leads = view.leads && !ranked, gk = function(e){ return leads ? e._lead.a.name : GROUPS[e._g]; };
+  var per = {}; list.forEach(function(e){ per[gk(e)] = (per[gk(e)] || 0) + 1; });
+  var last = null;
   $('#rows').innerHTML = list.map(function(e){
-    var sub = [ranked ? siteOf(e).name : null, e.org && e.contact ? e.contact : null, e.country].filter(Boolean).join(' · ');
-    var head = !ranked && e._g !== last ? '<div class="group"><span>' + GROUPS[e._g] + '</span><span>' + per[e._g] + '</span></div>' : '';
-    last = e._g;
+    var sub = [ranked || view.leads ? siteOf(e).name : null, e.org && e.contact ? e.contact : null, e.country].filter(Boolean).join(' · ');
+    var head = !ranked && gk(e) !== last ? '<div class="group"><span>' + esc(gk(e)) + '</span><span>' + per[gk(e)] + '</span></div>' : '';
+    last = gk(e);
     var picked = sel.has(e.id);
     /* A row is a div and not a button, because the tick box inside it is
        a button of its own, and a button may not hold another. */
@@ -2475,10 +2499,23 @@ function turnPage(id, d, fromX){
     setTimeout(function(){ if (turning === end) turning = null; end(); markStuck(); }, TURN_MS + 40);
   }); });
 }
+/* Entries and Leads open the same drawer, one with the chosen venue's
+   entries and the other with the leads; the one already showing closes it. */
 function drawer(open){
-  if (open === 'toggle') open = !document.body.classList.contains('drawer');
+  var was = document.body.classList.contains('drawer');
+  if (open === 'toggle' || open === 'leads'){
+    var leads = open === 'leads';
+    open = !(was && view.leads === leads);
+    if (open && view.leads !== leads){ view.leads = leads; view.hits = false; sel.clear(); regroup(); saveView(); drawSites(); }
+  }
+  /* A lead made since the list was last drawn moves over as the list comes
+     into view, where no ↓ is under way to lose its place. */
+  if (open && !was){ var L = leadMap(); entries.forEach(function(e){ e._lead = L[e.id] || null; }); }
+  if (open) drawRows();
   document.body.classList.toggle('drawer', open);
-  $('.rd-list').setAttribute('aria-expanded', String(open));
+  document.body.classList.toggle('leads', open && view.leads);
+  $('.rd-list').setAttribute('aria-expanded', String(open && !view.leads));
+  $('.rd-leads').setAttribute('aria-expanded', String(open && view.leads));
   if (open){ var row = document.querySelector('.row.on'); if (row) row.scrollIntoView({ block:'center' }); }
 }
 function openEntry(id){
@@ -2546,13 +2583,19 @@ function storeMine(part, changes){
 var mkAsk = null, mkBusy = null;
 var EMAIL = /[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}/;
 function newId(){ return window.crypto && crypto.randomUUID ? crypto.randomUUID() : 'id' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36); }
-function leadOf(e){
-  var hit = null;
-  ((market && market.arenas) || []).some(function(a){
-    return (a.leads || []).some(function(l){ if (l.entryId === e.id){ hit = { a:a, l:l }; return true; } return false; });
+/* Every lead made here, by its entry, read once for each copy of the
+   Semaphore's row: the venues' counts ask it of every entry at each
+   drawing, and walking every arena's leads for each was too slow for that. */
+var leadsRead = null, leadsBy = {};
+function leadMap(){
+  if (leadsRead === market) return leadsBy;
+  leadsRead = market; leadsBy = {};
+  ((market && market.arenas) || []).forEach(function(a){
+    (a.leads || []).forEach(function(l){ if (l.entryId && !leadsBy[l.entryId]) leadsBy[l.entryId] = { a:a, l:l }; });
   });
-  return hit;
+  return leadsBy;
 }
+function leadOf(e){ return leadMap()[e.id] || null; }
 function leadArenas(e){
   var mine = venueArenas(siteOf(e)._venue), ids = mine.map(function(a){ return a.id; });
   var rest = ((market && market.arenas) || []).filter(function(a){ return !a.frozenAt && ids.indexOf(a.id) < 0; })
@@ -2617,7 +2660,7 @@ function makeLead(e, aid){
       return api('/rest/v1/app_state', { method:'POST', body:[{ id:'semaphore', data:s, updated_at:new Date().toISOString() }],
         headers:{ Prefer:'resolution=merge-duplicates,return=representation' } }).then(function(){ market = s; });
     });
-  }).then(function(){ mkBusy = null; drawDetail(); },
+  }).then(function(){ mkBusy = null; drawSites(); drawDetail(); },
     function(err){ mkBusy = null; drawDetail(); $('#banner').textContent = 'The lead was not made: ' + err.message; $('#banner').hidden = false; });
 }
 function editLinks(){ editingLinks = true; drawSites(); }
@@ -2808,7 +2851,7 @@ document.addEventListener('click', function(ev){
   if (ex){ ev.preventDefault(); errOpen[ex.dataset.errx] = !errOpen[ex.dataset.errx]; return drawSites(); }
   var t = ev.target.closest('[data-pick],[data-bulk],[data-site],[data-id],[data-state],[data-kind],[data-tab],[data-verdict],[data-editlinks],[data-savelinks],[data-cancellinks],[data-callnote],[data-drawer],[data-step],#checkNow');
   if (!t) return;
-  if (t.dataset.drawer) return drawer(t.dataset.drawer === 'toggle' ? 'toggle' : t.dataset.drawer === '1');
+  if (t.dataset.drawer) return drawer(t.dataset.drawer === 'toggle' || t.dataset.drawer === 'leads' ? t.dataset.drawer : t.dataset.drawer === '1');
   if (t.dataset.step) return step(+t.dataset.step);
   /* In the reader, choosing what to read puts the list away again. */
   if ((t.dataset.callnote || (t.dataset.id && !t.dataset.pick && !(ev.ctrlKey || ev.metaKey || ev.shiftKey)))) drawer(false);
@@ -2819,7 +2862,7 @@ document.addEventListener('click', function(ev){
   if (t.dataset.callnote){ closePanel(); return openNote(t.dataset.callnote); }
   if (t.dataset.pick) pick(t.dataset.pick, ev.shiftKey);
   else if (t.dataset.bulk) bulk(t.dataset.bulk);
-  else if (t.dataset.site){ view.site = t.dataset.site; view.note = null; view.hits = view.results = false; sel.clear(); regroup(); saveView(); draw(); }
+  else if (t.dataset.site){ view.site = t.dataset.site; view.leads = false; document.body.classList.remove('leads'); $('.rd-list').setAttribute('aria-expanded', 'true'); $('.rd-leads').setAttribute('aria-expanded', 'false'); view.note = null; view.hits = view.results = false; sel.clear(); regroup(); saveView(); draw(); }
   else if (t.dataset.id){ if (ev.ctrlKey || ev.metaKey || ev.shiftKey) pick(t.dataset.id, ev.shiftKey); else openEntry(t.dataset.id); }
   else if (t.dataset.state){ view.state = t.dataset.state; sel.clear(); regroup(); saveView(); drawFilters(); drawRows(); if (view.results) drawResults(); }
   else if (t.dataset.kind){ view.kind = t.dataset.kind; sel.clear(); regroup(); saveView(); drawFilters(); drawRows(); if (view.results) drawResults(); }

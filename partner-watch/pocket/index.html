@@ -135,6 +135,7 @@ input[type="search"]::placeholder{color:var(--label3)}
 input[type="search"]::-webkit-search-cancel-button{-webkit-appearance:none}
 /* the system's segmented control: a grey track, the chosen part raised */
 .pw-seg{display:flex;margin:4px 16px 0;padding:2px;border-radius:9px;background:var(--fill)}
+.pw-seg[hidden]{display:none}
 .pw-seg + .pw-seg{margin-top:8px}
 .pw-seg button{flex:1;min-width:0;min-height:32px;border-radius:7px;font:500 13px/1.1 var(--ui);color:var(--label);text-align:center;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 4px;position:relative}
@@ -640,7 +641,7 @@ $('#s-pass').addEventListener('keydown', function(e){ if (e.key === 'Enter') $('
 var PW_VIEW = 'partnerwatch.pocket.view', PW_ROW = 'partnerwatch';
 var pwSites = [], pwEntries = [], pwById = {}, pwRun = null, pwLoaded = false;
 var pwLinks = {}, pwNotes = {}, pwDetail = {}, pwOpenId = null;
-var pwView = { site:null, state:'open', kind:'all', q:'' };
+var pwView = { site:null, leads:false, state:'open', kind:'all', q:'' };
 try { Object.assign(pwView, JSON.parse(localStorage.getItem(PW_VIEW) || '{}'), { q:'' }); } catch(e){}
 /* a phone last left on Later, which went on 2026-10-18, comes back to All */
 if (pwView.state === 'later') pwView.state = 'open';
@@ -736,14 +737,18 @@ function pwIsNew(e){ return !e.opened_at && !e.verdict; }
 function pwGroupOf(e){
   return e.verdict === 'interesting' ? 1 : e.verdict === 'bin' ? 3 : !e.opened_at ? 0 : 2;
 }
-function pwRegroup(){ pwEntries.forEach(function(e){ e._g = pwGroupOf(e); }); }
+/* An entry made into a lead leaves its venue for Leads, as at the desk
+   (see "Leads" in partner-watch/index.html), fixed with its group. */
+function pwRegroup(){ var L = pwLeadMap(); pwEntries.forEach(function(e){ e._g = pwGroupOf(e); e._lead = L[e.id] || null; }); }
 function pwPasses(e){
   var v = pwView;
-  if (e.site !== v.site) return false;
+  if (v.leads ? !e._lead : e._lead || e.site !== v.site) return false;
+  if (!v.leads){
   if (v.kind !== 'all' && e.kind !== v.kind) return false;
   if (v.state === 'open' && e.verdict === 'bin') return false;
   if (v.state === 'unsorted' && e.verdict) return false;
   if (['interesting','bin'].indexOf(v.state) >= 0 && e.verdict !== v.state) return false;
+  }
   if (v.q){
     var hay = [e.contact, e.org, e.country, e.topic, e.keywords, e.list_text, e.why].join(' ').toLowerCase();
     if (v.q.toLowerCase().split(/\s+/).some(function(w){ return w && hay.indexOf(w) < 0; })) return false;
@@ -751,6 +756,8 @@ function pwPasses(e){
   return true;
 }
 function pwShown(){
+  if (pwView.leads) return pwEntries.filter(pwPasses).sort(function(a, b){
+    return String(a._lead.a.name).localeCompare(String(b._lead.a.name)) || (a._i - b._i); });
   return pwEntries.filter(pwPasses).sort(function(a, b){ return (a._g - b._g) || (a._i - b._i); });
 }
 function pwTitle(e){ return e.org || e.contact || ('Entry ' + e.ext_id); }
@@ -766,6 +773,7 @@ function pwNoteIcon(full){ return pwSvg('<path d="M15 3H5a2 2 0 0 0-2 2v14a2 2 0
   + (full ? '<path d="M7 13h10"/><path d="M7 17h6"/>' : ''), 2); }
 /* the rest in the manner of the system's own symbols */
 var PW_I = {
+  ruit: '<svg viewBox="0 0 46 26" aria-hidden="true"><path d="M6 13L23 5L40 13L23 21Z" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linejoin="round"/></svg>',
   chev: '<svg viewBox="0 0 8 14" aria-hidden="true"><path d="M1.5 1.5L6.5 7l-5 5.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   back: pwSvg('<path d="M15 4l-8 8 8 8"/>', 2.6),
   up: pwSvg('<path d="M5 15l7-7 7 7"/>', 2.4),
@@ -837,7 +845,7 @@ function pwNav(){
   var up = $('#pw-up'), s = pwSite(pwView.site);
   up.hidden = pwScreen !== 'list';
   if (!up.hidden && !up.firstChild){ up.innerHTML = PW_I.back; up.appendChild(el('span', '', 'Venues')); }
-  $('#pw-navtitle').textContent = pwScreen === 'list' ? s.name : 'Mark’s Place';
+  $('#pw-navtitle').textContent = pwScreen === 'list' ? (pwView.leads ? 'Leads' : s.name) : 'Mark’s Place';
   $('#top').classList.toggle('edge', $('#stage').scrollTop > 36);
 }
 
@@ -928,25 +936,36 @@ function pwGroupTone(k){
    quiet, as at the desk (Mark, 2026-10-22, "unity, not similarity"). A
    venue leads on to its entries. */
 function pwDrawArenas(){
-  var host = $('#pw-arenas');
+  var host = $('#pw-arenas'), L = pwLeadMap();
   host.textContent = '';
+  if (pwMarket && pwSites.length){
+    var nl = pwEntries.filter(function(e){ return L[e.id]; }).length;
+    host.appendChild(el('div', 'pw-group'));
+    var lc = pwCell('button', 'icon-cell', { sq:PW_I.ruit, tone:'#B8644B', name:'Leads', sub:'made here, under their arenas', right:el('span', '', String(nl)), chev:true });
+    lc.addEventListener('click', function(){
+      if (!pwView.leads){ pwView.leads = true; pwRegroup(); $('#pw-q').value = ''; pwView.q = ''; pwSel.clear(); }
+      pwLeadsMoved(); pwDrawCall(); pwDrawChips(); pwDrawRows();
+      pwGo('list');
+    });
+    host.lastChild.appendChild(lc);
+  }
   pwSites.forEach(function(s, i){
     if (i === 0 || pwSites[i - 1]._block !== s._block){
       pwGroupHeader(host, pwGroupName(s._block));
       host.appendChild(el('div', 'pw-group'));
     }
-    var n = pwEntries.filter(function(e){ return e.site === s.id && pwIsNew(e); }).length;
-    var mk = pwEntries.filter(function(e){ return e.site === s.id && e.verdict === 'interesting'; }).length;
+    var n = pwEntries.filter(function(e){ return e.site === s.id && !L[e.id] && pwIsNew(e); }).length;
+    var mk = pwEntries.filter(function(e){ return e.site === s.id && !L[e.id] && e.verdict === 'interesting'; }).length;
     var right = el('span', 'pw-cr');
     if (mk){ var st = el('span', 'pw-star'); st.innerHTML = PW_I.star; st.appendChild(document.createTextNode(String(mk))); st.setAttribute('aria-label', mk + ' marked'); right.appendChild(st); }
     if (n){ var b = el('span', 'pw-badge', String(n)); b.setAttribute('aria-label', n + ' new'); right.appendChild(b); }
-    var kept = pwEntries.filter(function(e){ return e.site === s.id && e.verdict !== 'bin'; }).length;
+    var kept = pwEntries.filter(function(e){ return e.site === s.id && !L[e.id] && e.verdict !== 'bin'; }).length;
     var arenas = [kept ? kept + (kept === 1 ? ' entry' : ' entries') : ''].concat(pwVenueArenas(s._venue).map(function(a){ return a.name; })).filter(Boolean).join(' · ');
     var c = pwCell('button', 'icon-cell', { sq:pwEsc((s.name || '?').charAt(0).toUpperCase()), tone:pwGroupTone(s._block) || '#636366',
       name:s.name, sub:arenas || null, right:right, chev:true });
     c.addEventListener('click', function(){
-      if (pwView.site !== s.id){ pwView.site = s.id; pwSaveView(); pwRegroup(); $('#pw-q').value = ''; pwView.q = ''; pwSel.clear(); }
-      pwDrawCall(); pwDrawChips(); pwDrawRows();
+      if (pwView.site !== s.id || pwView.leads){ pwView.site = s.id; pwView.leads = false; pwSaveView(); pwRegroup(); $('#pw-q').value = ''; pwView.q = ''; pwSel.clear(); }
+      pwLeadsMoved(); pwDrawCall(); pwDrawChips(); pwDrawRows();
       pwGo('list');
     });
     host.lastChild.appendChild(c);
@@ -958,9 +977,9 @@ function pwDrawCall(){
   var call = $('#pw-call'), s = pwSite(pwView.site);
   call.textContent = '';
   var name = $('#pw-vname');
-  name.textContent = s.name || '';
-  name.classList.toggle('long', String(s.name || '').length > 18);
-  if (!pwSites.length) return;
+  name.textContent = pwView.leads ? 'Leads' : s.name || '';
+  name.classList.toggle('long', !pwView.leads && String(s.name || '').length > 18);
+  if (!pwSites.length || pwView.leads) return;
   var doc = pwDocs(s.id), noted = !!pwNoteText(pwNotes[s.id]);
   pwGroupHeader(call, s.call || 'The call');
   var g = el('div', 'pw-group');
@@ -987,6 +1006,7 @@ function pwDrawChips(){
   }
   row($('#pw-states'), PW_STATES, 'state');
   row($('#pw-kinds'), PW_KINDS, 'kind');
+  $('#pw-states').hidden = $('#pw-kinds').hidden = pwView.leads;
 }
 function pwKindTag(k){
   return k === 'seeks' ? el('span', 'seeks', 'Seeks partners')
@@ -1016,18 +1036,20 @@ function pwDrawRows(){
   }
   var list = pwShown();
   if (!list.length){
-    host.appendChild(pwNote('No entries', 'Try All and Both kinds, or clear the search.'));
+    host.appendChild(pwView.leads && !pwView.q ? pwNote('No leads yet', 'Make Lead, under an entry, files it in the Brokerage Semaphore and moves it here from its venue.')
+      : pwNote('No entries', 'Try All and Both kinds, or clear the search.'));
     return;
   }
-  var per = {}; list.forEach(function(e){ per[e._g] = (per[e._g] || 0) + 1; });
-  var last = -1, g = null;
+  var gk = function(e){ return pwView.leads ? e._lead.a.name : PW_GROUPS[e._g]; };
+  var per = {}; list.forEach(function(e){ per[gk(e)] = (per[gk(e)] || 0) + 1; });
+  var last = null, g = null;
   list.forEach(function(e){
-    if (e._g !== last){
-      pwGroupHeader(host, PW_GROUPS[e._g], pwSelecting ? null : per[e._g]);
-      if (pwSelecting) host.lastChild.appendChild(pwGroupAll(list, e._g));
+    if (gk(e) !== last){
+      pwGroupHeader(host, gk(e), pwSelecting ? null : per[gk(e)]);
+      if (pwSelecting && !pwView.leads) host.lastChild.appendChild(pwGroupAll(list, e._g));
       g = el('div', 'pw-group');
       host.appendChild(g);
-      last = e._g;
+      last = gk(e);
     }
     var flags = el('span', 'pw-flags'), k = pwKindTag(e.kind);
     if (k) flags.appendChild(k);
@@ -1037,7 +1059,7 @@ function pwDrawRows(){
     lead.appendChild(el('span', 'pw-unread' + (pwIsNew(e) ? ' new' : '')));
     var r = pwCell('button', 'pw-row dot-cell' + (e.removed_at || e.verdict === 'bin' ? ' dim' : '') + (picked ? ' picked' : ''), {
       lead:lead, name:pwTitle(e),
-      sub:[e.org && e.contact ? e.contact : null, e.country].filter(Boolean).join(' · ') || null,
+      sub:[pwView.leads ? pwSite(e.site).name : null, e.org && e.contact ? e.contact : null, e.country].filter(Boolean).join(' · ') || null,
       under:flags.children.length ? flags : null, chev:true });
     if (pwIsNew(e)) r.setAttribute('aria-label', 'New: ' + pwTitle(e));
     if (pwSelecting) r.setAttribute('aria-pressed', String(picked));
@@ -1406,7 +1428,7 @@ function pwSelDraw(){
   document.body.classList.toggle('pw-selecting', pwSelecting);
   var list = pwShown(), n = pwPicked().length, all = list.length && n === list.length;
   $('#pw-selall').textContent = all ? 'Deselect All' : 'Select All';
-  $('#pw-navtitle').textContent = pwSelecting ? (n ? n + ' Selected' : 'Select Entries') : pwSite(pwView.site).name;
+  $('#pw-navtitle').textContent = pwSelecting ? (n ? n + ' Selected' : 'Select Entries') : pwView.leads ? 'Leads' : pwSite(pwView.site).name;
   var bar = $('#pw-selbar');
   bar.textContent = '';
   PW_BULK.forEach(function(a){
@@ -1520,13 +1542,21 @@ var PW_EMAIL = /[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,
 function pwNewId(){ return window.crypto && crypto.randomUUID ? crypto.randomUUID() : 'id' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36); }
 function pwTodayISO(){ var d = new Date(), p = function(n){ return (n < 10 ? '0' : '') + n; };
   return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()); }
-function pwLeadOf(e){
-  var hit = null;
-  ((pwMarket && pwMarket.arenas) || []).some(function(a){
-    return (a.leads || []).some(function(l){ if (l.entryId === e.id){ hit = { a:a, l:l }; return true; } return false; });
+/* every lead made here, by its entry, read once for each copy of the
+   Semaphore's row, as at the desk's leadMap */
+var pwLeadsRead = null, pwLeadsBy = {};
+function pwLeadMap(){
+  if (pwLeadsRead === pwMarket) return pwLeadsBy;
+  pwLeadsRead = pwMarket; pwLeadsBy = {};
+  ((pwMarket && pwMarket.arenas) || []).forEach(function(a){
+    (a.leads || []).forEach(function(l){ if (l.entryId && !pwLeadsBy[l.entryId]) pwLeadsBy[l.entryId] = { a:a, l:l }; });
   });
-  return hit;
+  return pwLeadsBy;
 }
+function pwLeadOf(e){ return pwLeadMap()[e.id] || null; }
+/* A lead made since a list was last drawn moves over as a list is opened
+   from the venues, where no Next is under way to lose its place. */
+function pwLeadsMoved(){ var L = pwLeadMap(); pwEntries.forEach(function(e){ e._lead = L[e.id] || null; }); }
 function pwLeadArenas(e){
   var mine = pwVenueArenas(pwSite(e.site)._venue), ids = mine.map(function(a){ return a.id; });
   var others = ((pwMarket && pwMarket.arenas) || []).filter(function(a){ return !a.frozenAt && ids.indexOf(a.id) < 0; })
@@ -1620,7 +1650,7 @@ function pwMakeLead(e, aid){
       return rest('app_state', { method:'POST', prefer:'resolution=merge-duplicates,return=minimal',
         body:[{ id:'semaphore', data:s, updated_at:new Date().toISOString() }] }).then(function(){ pwMarket = s; return name; });
     });
-  }).then(function(name){ pwMkBusy = null; pwDrawLead(e); toast('Lead made in ' + name); },
+  }).then(function(name){ pwMkBusy = null; pwDrawLead(e); pwDrawArenas(); toast('Lead made in ' + name); },
     function(err){ pwMkBusy = null; pwDrawLead(e); toast('The lead was not made: ' + (err && err.message ? err.message : 'no answer'), null, true); });
 }
 
