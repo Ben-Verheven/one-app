@@ -531,8 +531,10 @@ const tooOld = (posted) => !!(posted && posted.slice(0, 10) <= oldDay());
 
 // Putting an entry away keeps only its row, hidden as `before_watch` hides
 // one, so the next reading of its list knows it and does not bring it back
-// as new; its copied text and its older copies are deleted. Marked entries
-// are never put away.
+// as new. Everything else goes, its copied text, its list line, contact and
+// the rest, and its older copies (Mark, 2026-10-22: "make it even
+// shorter"). Marked entries are never put away.
+const BARE = { kind: null, contact: null, org: null, country: null, topic: null, keywords: null, list_text: null };
 async function putAwayOld() {
   const day = oldDay();
   const notMarked = "verdict.is.null,verdict.neq.interesting";
@@ -545,7 +547,7 @@ async function putAwayOld() {
     const { error: v } = await db.from("partner_entry_versions").delete().in("entry_id", c);
     if (v) throw v;
     const { error } = await db.from("partner_entries").update({
-      before_watch: true, needs_fetch: false, fields: null, page_text: null, page_hash: null, fetched_at: null,
+      ...BARE, before_watch: true, needs_fetch: false, fields: null, page_text: null, page_hash: null, fetched_at: null,
     }).in("id", c);
     if (error) throw error;
   }
@@ -589,7 +591,15 @@ async function readList(site, now) {
     const old = have.get(id);
     if (!old) {
       const before = baseline || early(r);
-      added.push({ id, ...base, first_seen: now, last_seen: now, needs_fetch: !before, before_watch: before });
+      added.push(before
+        ? { id, site: site.id, ext_id: r.ext_id, url: r.url, posted: r.posted ?? null, ...BARE, first_seen: now, last_seen: now, needs_fetch: false, before_watch: true }
+        : { id, ...base, first_seen: now, last_seen: now, needs_fetch: true, before_watch: false });
+    }
+    // A hidden entry is only noted as still there: its list line was
+    // emptied on purpose, so comparing it with the site's would refill it.
+    else if (old.before_watch) {
+      if (old.removed_at) changed.push({ id, last_seen: now, removed_at: null });
+      else seen.push(id);
     }
     else if ((old.list_text ?? "") !== (r.list_text ?? "") || old.removed_at)
       changed.push({ id, ...base, last_seen: now, removed_at: null, needs_fetch: !old.before_watch });
