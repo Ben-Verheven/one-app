@@ -98,8 +98,10 @@ update partner_sites set list_url = 'https://www.b2match.com/e/horizon-europe-ad
 
 -- ── 2. the entries ────────────────────────────────────────────────────
 -- One row per entry, its id the site's id and the site's own number. An
--- entry is never deleted: one that leaves the site gets `removed_at`, so a
--- binned entry cannot come back as new, and a withdrawn one keeps its text.
+-- entry's row is never deleted: one that leaves the site gets `removed_at`,
+-- so a binned entry cannot come back as new, and a withdrawn one keeps its
+-- text. One two months old and not Marked is put away by the copier: its
+-- text goes, its row stays hidden (`before_watch`); see `putAwayOld` there.
 create table if not exists partner_entries (
   id          text primary key,             -- '<site>:<number on the site>'
   site        text not null references partner_sites (id),
@@ -123,7 +125,7 @@ create table if not exists partner_entries (
   removed_at  timestamptz,
   needs_fetch boolean not null default true,
   fetch_errors integer not null default 0,
-  before_watch boolean not null default false,  -- on its site before Mark watched it; see new_only
+  before_watch boolean not null default false,  -- kept unshown: on its site before Mark watched it (new_only), before shown_from, or two months old
   -- Mark's own columns: the only ones his login may change.
   opened_at   timestamptz,
   verdict     text check (verdict in ('interesting','later','bin')),

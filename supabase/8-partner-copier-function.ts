@@ -39,6 +39,7 @@ const GAP_MS = 400;          // a pause between pages, so a site never sees a bu
 const REFRESH_DAYS = 14;     // an entry page is copied again at least this often
 const LIST_EVERY_H = 20;     // the nightly runs read each list once
 const BUDGET_MS = 110_000;   // stop taking new pages after this, well before the limit
+const MAX_AGE_MONTHS = 2;    // an entry this old is put away and never copied; see `tooOld`
 const UA = "Mozilla/5.0 (compatible; PartnerWatch/1.0; nightly copy of public partner-search pages for TU/e research support)";
 
 const cors = {
@@ -515,6 +516,42 @@ function picked(fields) {
   return out;
 }
 
+// Mark, 2026-10-22: "Remove automatically all entries that are 2 months or
+// older. Except the marked ones. And never download these." An entry's age
+// is the day its site says it was posted; a site that gives no date (the
+// proposals.etag.ee sites, b2match's older platform) is aged from the day
+// the copier first saw the entry, the only date there is. The day is a
+// string compared with a string: `posted` is 'YYYY-MM-DD HH:MM'.
+function oldDay() {
+  const d = new Date();
+  d.setUTCMonth(d.getUTCMonth() - MAX_AGE_MONTHS);
+  return d.toISOString().slice(0, 10);
+}
+const tooOld = (posted) => !!(posted && posted.slice(0, 10) <= oldDay());
+
+// Putting an entry away keeps only its row, hidden as `before_watch` hides
+// one, so the next reading of its list knows it and does not bring it back
+// as new; its copied text and its older copies are deleted. Marked entries
+// are never put away.
+async function putAwayOld() {
+  const day = oldDay();
+  const notMarked = "verdict.is.null,verdict.neq.interesting";
+  const ids = (await all(() => db.from("partner_entries").select("id")
+    .eq("before_watch", false).or(notMarked).not("posted", "is", null).lte("posted", day + " 99").order("id")))
+    .concat(await all(() => db.from("partner_entries").select("id")
+    .eq("before_watch", false).or(notMarked).is("posted", null).lt("first_seen", day + "T23:59:59Z").order("id")))
+    .map((e) => e.id);
+  for (const c of chunks(ids, 150)) {
+    const { error: v } = await db.from("partner_entry_versions").delete().in("entry_id", c);
+    if (v) throw v;
+    const { error } = await db.from("partner_entries").update({
+      before_watch: true, needs_fetch: false, fields: null, page_text: null, page_hash: null, fetched_at: null,
+    }).in("id", c);
+    if (error) throw error;
+  }
+  return ids.length;
+}
+
 async function readList(site, now) {
   const origin = new URL(site.list_url).origin, P = PARSERS[site.platform];
   const rows = P.fetchList ? await P.fetchList(site) : P.list(await get(site.list_url), origin);
@@ -536,7 +573,8 @@ async function readList(site, now) {
   // was posted before it the same way, at any reading (Mark, 2026-10-17,
   // for the Cluster 2 platform's 1,159 entries going back to 2022: "from
   // September 1, not before"). An entry whose site gives no date is shown.
-  const early = (r) => !!(site.shown_from && r.posted && r.posted.slice(0, 10) < site.shown_from);
+  // An entry two months old or older (`tooOld`) is taken the same way.
+  const early = (r) => !!(site.shown_from && r.posted && r.posted.slice(0, 10) < site.shown_from) || tooOld(r.posted);
 
   const added = [], changed = [], seen = [], ids = new Set();
   for (const r of rows) {
@@ -629,6 +667,9 @@ async function run(byMark) {
     }
   }
 
+  try { tally.aged = await putAwayOld(); }
+  catch (err) { errors.push(`putting away old entries: ${err.message ?? err}`); }
+
   const cols = "id, site, ext_id, url, page_hash, fields, page_text, fetched_at, fetch_errors";
   const active = Object.keys(platformOf);
   const { data: due } = await db.from("partner_entries").select(cols)
@@ -637,7 +678,7 @@ async function run(byMark) {
   let queue = due ?? [];
   if (queue.length < PER_RUN) {
     const { data: stale } = await db.from("partner_entries").select(cols)
-      .eq("needs_fetch", false).is("removed_at", null).in("site", active)
+      .eq("needs_fetch", false).eq("before_watch", false).is("removed_at", null).in("site", active)
       .lt("fetched_at", new Date(Date.now() - REFRESH_DAYS * 86_400_000).toISOString())
       .order("fetched_at").limit(PER_RUN - queue.length);
     queue = queue.concat(stale ?? []);
@@ -661,7 +702,8 @@ async function run(byMark) {
   const { count } = await db.from("partner_entries").select("id", { count: "exact", head: true })
     .eq("needs_fetch", true).is("removed_at", null);
   tally.waiting = count ?? 0;
-  await db.from("partner_watch_log").insert({ ...tally, errors: errors.length ? errors.join("\n") : null });
+  const { aged, ...logged } = tally;
+  await db.from("partner_watch_log").insert({ ...logged, errors: errors.length ? errors.join("\n") : null });
   return { ...tally, errors };
 }
 
