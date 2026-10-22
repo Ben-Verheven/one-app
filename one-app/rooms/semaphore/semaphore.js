@@ -1638,6 +1638,11 @@ function acceptAllFinds(){
    as the agent's finds do, and he judges each there. The leads, his visits
    and his notes on venues stay out of the file. */
 const GPT_FILE='brokerage-semaphore-for-chatgpt';
+/* Arenas per research round (Mark, 2026-10-22): a deep search asked to
+   cover the whole board at once grows thin towards its end, so the file
+   splits the arenas into rounds of this many and asks ChatGPT to finish
+   each before it starts the next, carrying on by itself where it can. */
+const GPT_BATCH=15;
 const GPT_GRANS=['day','month','quarter','half','year','range','none'];
 const GPT_PLACE={new:'new on the board, not judged yet',board:'kept on the board to think about',
   venues:'in Venues: Mark follows it',gone:'removed_by_mark'};
@@ -1648,8 +1653,8 @@ function gptBoard(){
   const links=ls=>(ls||[]).filter(l=>l&&l.url).map(l=>({label:l.label||'',url:l.url}));
   return {
     file:GPT_FILE,written:todayISO(),
-    arenas:S.arenas.map(a=>({
-      arena_id:a.id,name:a.name,type:typeName(a.typeId),tags:a.tags,frozen:!!a.frozenAt,
+    arenas:S.arenas.map((a,i)=>({
+      round:Math.floor(i/GPT_BATCH)+1,arena_id:a.id,name:a.name,type:typeName(a.typeId),tags:a.tags,frozen:!!a.frozenAt,
       about:a.notes||'',brokerage_text:(a.brokerage&&a.brokerage.notes)||'',
       links:links(a.links),brokerage_links:links(a.brokerage&&a.brokerage.links),
       call_dates:(a.dates||[]).filter(d=>d.kind==='call').map(d=>Object.assign(
@@ -1663,7 +1668,9 @@ function gptBoard(){
   };
 }
 function gptFileText(){
-  const F='```',day=todayISO(),n=S.arenas.length;
+  const F='```',day=todayISO(),n=S.arenas.length,rounds=Math.ceil(n/GPT_BATCH);
+  const roundList=Array.from({length:rounds},(_,r)=>'- Round '+(r+1)+': '+
+    S.arenas.slice(r*GPT_BATCH,(r+1)*GPT_BATCH).map(a=>a.name).join(', '));
   return [
 '# Brokerage Semaphore: research task for ChatGPT',
 '',
@@ -1683,7 +1690,15 @@ function gptFileText(){
 '',
 '## What to do: every arena, no exceptions',
 '',
-'Go through **every one of the '+n+' arenas** in the data, one by one. Frozen arenas (`"frozen": true`) get a lighter look, but they are checked too. For each arena:',
+'Go through **every one of the '+n+' arenas** in the data, one by one. Frozen arenas (`"frozen": true`) get a lighter look, but they are checked too.',
+'',
+'**Work in rounds of at most '+GPT_BATCH+' arenas**, so that every arena gets the same careful search and the last ones are not rushed. Each arena in the data carries its `round`. There are '+rounds+' round'+(rounds===1?'':'s')+':',
+'',
+roundList.join('\n'),
+'',
+'Finish one round completely, every arena in it searched as carefully as the first, before you start the next. **Then go on to the next round by yourself, without waiting to be asked**, until all '+rounds+' rounds are done, and give one answer covering all of them. Never speed up or cut corners to fit more arenas in: if you have to stop, stop only between rounds, never in the middle of one.',
+'',
+'For each arena:',
 '',
 '1. **Call dates.** Find the current and the next call rounds on the official sites; the arena\'s own links are the starting point. Check every call date already on the board: still right? Deadline moved? An uncertain date now published to the day? Add the rounds and stages that are missing.',
 '2. **Brokerage events.** Look for brokerage and matchmaking events for this arena\'s current or coming calls: on the arena\'s own pages, the EU Funding & Tenders portal, b2match, the Enterprise Europe Network, NCP networks, national funding agencies, and the venues already listed.',
@@ -1691,7 +1706,7 @@ function gptFileText(){
 '4. **Venues already on the board** that serve this arena: check their event days and their window (when the marketplace, registration or tool opens and closes) and correct them.',
 '5. Write one line for the arena in `arenas_checked`, also when nothing changed: what you checked and what you found.',
 '',
-'If you cannot finish every arena in one answer, finish as many as you can, list the rest in `not_checked`, and say so at the top of your reply, so you can be asked to continue with them.',
+'Only if you truly cannot go on by yourself: give the answer for the rounds you finished, list the arenas of the rounds still to do in `not_checked`, and say at the top of your reply which round comes next. When you are told "continue", do the next round, then carry on with the rounds after it in the same way, giving an answer with only the changes from the rounds done since your last answer.',
 '',
 '## Rules',
 '',
@@ -1714,6 +1729,7 @@ function gptFileText(){
 F+'json',
 JSON.stringify({
   answer_to:GPT_FILE,searched_on:day,
+  rounds_done:[1,2],
   arenas_checked:[{arena_id:'(id)',result:'Checked the call page and b2match: Call 2027 deadline moved to 14 April; new brokerage event added.'}],
   not_checked:[],
   changes:[
