@@ -367,7 +367,7 @@ _No section banners._
 
 ## `rooms/semaphore/semaphore.js`
 
-5529 lines · 301 KB
+5567 lines · 304 KB
 
 ```
 Brokerage Semaphore                         semaphore.js:1
@@ -400,31 +400,31 @@ edit view                                   semaphore.js:2748
 actions                                     semaphore.js:2893
 a call's run                                semaphore.js:2996
 leads                                       semaphore.js:3070
-the ruit                                    semaphore.js:3263
-the score                                   semaphore.js:3319
-one lead card, in both rooms                semaphore.js:3372
-a type's colour dot                         semaphore.js:3421
-who and the links, side by side             semaphore.js:3530
-the leads table                             semaphore.js:3560
-leads: one board, three sections            semaphore.js:3750
-a lead opening in place                     semaphore.js:3878
-a lead moving, and the view moving with it  semaphore.js:3961
-leads, lent to the Ledger's board           semaphore.js:4302
-modals                                      semaphore.js:4433
-asking, and saying                          semaphore.js:4436
-the types, managed                          semaphore.js:4477
-dragging in the list of types               semaphore.js:4534
-tooltip                                     semaphore.js:4695
-events                                      semaphore.js:4733
-venues                                      semaphore.js:4891
-typing, and the forms it goes into          semaphore.js:5087
-escape, and closing by clicking away        semaphore.js:5313
-putting links in your own order             semaphore.js:5349
+the ruit                                    semaphore.js:3308
+the score                                   semaphore.js:3364
+one lead card, in both rooms                semaphore.js:3417
+a type's colour dot                         semaphore.js:3466
+who and the links, side by side             semaphore.js:3565
+the leads table                             semaphore.js:3582
+leads: one board, three sections            semaphore.js:3772
+a lead opening in place                     semaphore.js:3900
+a lead moving, and the view moving with it  semaphore.js:3987
+leads, lent to the Ledger's board           semaphore.js:4332
+modals                                      semaphore.js:4463
+asking, and saying                          semaphore.js:4466
+the types, managed                          semaphore.js:4507
+dragging in the list of types               semaphore.js:4564
+tooltip                                     semaphore.js:4725
+events                                      semaphore.js:4763
+venues                                      semaphore.js:4929
+typing, and the forms it goes into          semaphore.js:5125
+escape, and closing by clicking away        semaphore.js:5351
+putting links in your own order             semaphore.js:5387
 ```
 
 ## `rooms/semaphore/semaphore.css`
 
-1760 lines · 134 KB
+1785 lines · 135 KB
 
 ```
 Brokerage Semaphore                                     semaphore.css:1
@@ -443,21 +443,21 @@ the three sections                                      semaphore.css:413
 the leads view                                          semaphore.css:434
 a lead moving (see "a lead moving" in semaphore.js)     semaphore.css:528
 Editing in the card                                     semaphore.css:562
-the lead itself                                         semaphore.css:604
-who and the links, side by side ── (see leadPanesHTML)  semaphore.css:679
-one lead card, in both rooms                            semaphore.css:761
-freezer                                                 semaphore.css:946
-arena panel                                             semaphore.css:980
-dispatches                                              semaphore.css:1162
-a venue's window                                        semaphore.css:1214
-the tray                                                semaphore.css:1310
-Venues: three sections and Limbo                        semaphore.css:1342
-the visit question                                      semaphore.css:1467
-a venue, in the panel                                   semaphore.css:1494
-modals                                                  semaphore.css:1659
-the types, managed (renderTypes                         semaphore.css:1682
-the calendar                                            semaphore.css:1725
-tooltip                                                 semaphore.css:1752
+the lead itself                                         semaphore.css:595
+who and the links, side by side ── (see leadPanesHTML)  semaphore.css:670
+one lead card, in both rooms                            semaphore.css:770
+freezer                                                 semaphore.css:971
+arena panel                                             semaphore.css:1005
+dispatches                                              semaphore.css:1187
+a venue's window                                        semaphore.css:1239
+the tray                                                semaphore.css:1335
+Venues: three sections and Limbo                        semaphore.css:1367
+the visit question                                      semaphore.css:1492
+a venue, in the panel                                   semaphore.css:1519
+modals                                                  semaphore.css:1684
+the types, managed (renderTypes                         semaphore.css:1707
+the calendar                                            semaphore.css:1750
+tooltip                                                 semaphore.css:1777
 ```
 
 ## `rooms/callboard/callboard.view.js`
@@ -661,4 +661,4 @@ Generated data. Never open, never edit, never upload.
 
 ---
 
-**38454 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.
+**38517 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.

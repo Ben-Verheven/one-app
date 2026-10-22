@@ -577,15 +577,6 @@
 #pane-semaphore .lead .ledin{flex:1 1 0;font:12.5px var(--body)}
 #pane-semaphore .lead .ledlinks{margin-left:0}
 #pane-semaphore .lead .ledup{flex:1 1 auto;font:12.5px/1.45 var(--body)}
-/* Who is behind the project and who to write to there: each fact led by its
-   role in the gutter's own small capitals, so the two cannot be read as one
-   name; while editing, each is a field of its own under the other. */
-#pane-semaphore .lead .lwho{display:flex;flex-direction:column;gap:2px}
-#pane-semaphore .lead .lwr{display:flex;align-items:baseline;gap:8px;margin:0;padding-top:2px;
-  font:12.5px/1.4 var(--body);color:var(--muted)}
-#pane-semaphore .lead .lwr i{flex:0 0 96px;font:600 8.5px var(--sans);
-  font-style:normal;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
-#pane-semaphore .lead .lwr>span{flex:1 1 auto;min-width:0}
 #pane-semaphore .lead .lwin{display:block;flex:1 1 auto;width:100%;min-width:0;box-sizing:border-box;margin:0;
   padding:1px 5px;border:1px dashed var(--line);border-radius:4px;background:var(--sink);
   color:var(--ink);resize:none;overflow:hidden;font:12.5px/1.45 var(--body)}
@@ -678,11 +669,13 @@
   font:10.5px var(--mono);color:var(--key);overflow:hidden;text-overflow:ellipsis}
 /* ── who and the links, side by side ── (see leadPanesHTML). The two boxes
    share the card's width wherever each can have 260px, and stack below that,
-   which is the arena's panel. */
+   which is the arena's panel. Each box's name stands over it as its title
+   (see leadBoxHTML), and two boxes side by side are drawn the same height. */
 #pane-semaphore .lead .lpanes{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
   gap:10px;padding:7px 0 5px}
-#pane-semaphore .lead .lpane{min-width:0;padding:7px 10px 8px;border-radius:8px;background:var(--well);cursor:default}
-#pane-semaphore .lead .lph{display:flex;align-items:baseline;gap:7px;margin:0 0 3px;
+#pane-semaphore .lead .lpcol{display:flex;flex-direction:column;min-width:0;cursor:default}
+#pane-semaphore .lead .lpane{flex:1 1 auto;min-width:0;padding:6px 10px 7px;border-radius:8px;background:var(--well)}
+#pane-semaphore .lead .lph{display:flex;align-items:baseline;gap:7px;margin:0 0 4px 2px;
   font:600 8.5px var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--key)}
 #pane-semaphore .lead .lph b{font:400 10px var(--mono);letter-spacing:0;color:var(--key)}
 #pane-semaphore .lead .lki{flex:0 0 22px;width:22px;height:22px;display:inline-flex;align-items:center;
@@ -694,16 +687,25 @@
 #pane-semaphore .lead .lwv{flex:1 1 auto;min-width:0;overflow-wrap:anywhere}
 #pane-semaphore .lead .lwrow i{flex:0 0 auto;font:600 8px var(--sans);font-style:normal;
   letter-spacing:.14em;text-transform:uppercase;color:var(--key)}
-/* the address under the person it belongs to, lined up with the name */
-#pane-semaphore .lead .lmrow{display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin:3px 0 0 31px}
-#pane-semaphore .lead .lmail{display:inline-flex;align-items:center;gap:5px;max-width:100%;min-height:30px;
-  box-sizing:border-box;padding:0 10px 0 3px;border:1px solid var(--line);border-radius:7px;
+/* The contact person and their address, one group (Mark, 2026-10-22): a
+   hairline parts it from the coordinator above, and the address hangs
+   straight under the name at the name's own edge, a link in the name's
+   line rather than a bordered button a row apart, which read as a third
+   fact of its own. Alone, the address takes the group's first line, its
+   mark in the column of marks. */
+#pane-semaphore .lead .lwrow+.lwcon{margin-top:3px;padding-top:3px;border-top:1px solid var(--grid)}
+#pane-semaphore .lead .lmrow{display:flex;align-items:center;gap:4px;min-width:0;margin:-5px 0 0 31px}
+#pane-semaphore .lead .lmrow.solo{gap:9px;min-height:30px;margin:0}
+#pane-semaphore .lead .lmail{display:inline-flex;align-items:center;gap:4px;min-width:0;max-width:100%;min-height:26px;
+  box-sizing:border-box;padding:0 6px 0 0;border-radius:6px;
   font:12.5px var(--body);color:var(--key2);text-decoration:none;
-  transition:color .14s,border-color .14s,background-color .14s}
-#pane-semaphore .lead .lmail>span:last-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#pane-semaphore .lead .lmail .lki{background:none;color:var(--key2)}
-#pane-semaphore .lead .lmail:hover{color:var(--ink);border-color:var(--line2);background:var(--sink)}
-#pane-semaphore .lead .lcopy{min-height:30px;padding:0 10px;border:1px solid transparent;border-radius:7px;
+  transition:color .14s,background-color .14s}
+#pane-semaphore .lead .lmail>span:last-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}
+#pane-semaphore .lead .lmail .lki{flex-basis:16px;width:16px;background:none;color:var(--key2)}
+#pane-semaphore .lead .lmail:hover{color:var(--ink)}
+#pane-semaphore .lead .lmail:hover>span:last-child{text-decoration-color:var(--key2)}
+#pane-semaphore .lead .lcopy{flex:0 0 auto;min-height:26px;padding:0 8px;border:1px solid transparent;border-radius:6px;
   font:11px var(--sans);letter-spacing:.08em;color:var(--key);transition:color .14s,border-color .14s}
 #pane-semaphore .lead .lcopy:hover{color:var(--key2);border-color:var(--line)}
 #pane-semaphore .lead .lpane .lkform{margin-top:4px}
@@ -711,6 +713,13 @@
 #pane-semaphore .lead .lph .lphb{margin-left:auto;padding:3px 8px;text-transform:none;letter-spacing:.06em;font-weight:400}
 #pane-semaphore .lead .lph .lphb.prim{font-weight:600}
 #pane-semaphore .lead .lph{min-height:24px;align-items:center}
+/* While editing: each field on the line of the fact it holds, behind its
+   mark, and the links' empty pair keeping the cross's column */
+#pane-semaphore .lead .lwho .lwrow{min-height:32px}
+#pane-semaphore .lead .lwho .lwrow+.lwrow{margin-top:2px}
+#pane-semaphore .lead .ledlinks{margin:0}
+#pane-semaphore .lead .ledlinks+.lmore{margin:2px 0 0 -6px}
+#pane-semaphore .lead span.lx{visibility:hidden}
 #pane-semaphore .lead .lnil{margin:2px 0 0;font:italic 12px var(--body);color:var(--key)}
 #pane-semaphore .lead .lupdpane{margin-top:3px}
 #pane-semaphore .lead .lupdpane .lupd{border-top:0;margin-top:0;padding-top:2px}
@@ -806,15 +815,27 @@
    overlaps — the middle pair are 16px apart. */
 #pane-semaphore .lruit{position:relative;flex:0 0 46px;width:46px;height:26px}
 #pane-semaphore .lruit svg{position:absolute;left:0;top:0;width:46px;height:26px;overflow:visible}
+/* The ruit wears the colour of the step the lead has reached, the colours
+   of the steps' bands on Leads — Spotted blue-grey, Contacted amber,
+   Talking green — and not the arena's, which the edge and the tag already
+   say (Mark, 2026-10-22). On the drawer's paper each is a deeper shade of
+   itself, as the type colours are taken down there, so the dots still
+   stand off it. */
+#pane-semaphore .lead.k-spotted{--rc:#8FA3BF}
+#pane-semaphore .lead.k-contacted{--rc:#E0A458}
+#pane-semaphore .lead.k-talking{--rc:#7FC08A}
+#pane-semaphore #card .lead.k-spotted{--rc:#56657A}
+#pane-semaphore #card .lead.k-contacted{--rc:#8E5F22}
+#pane-semaphore #card .lead.k-talking{--rc:#3F7A4A}
 #pane-semaphore .lruit line{stroke:var(--ltrack);stroke-width:1.3}
-#pane-semaphore .lruit line.on{stroke:var(--lead)}
+#pane-semaphore .lruit line.on{stroke:var(--rc)}
 #pane-semaphore .ldot{position:absolute;width:16px;height:16px;margin:-8px 0 0 -8px;padding:0;
   border:0;background:none;display:flex;align-items:center;justify-content:center;cursor:pointer}
 #pane-semaphore .ldot i{width:7px;height:7px;border-radius:50%;box-sizing:border-box;
   border:1px solid var(--lquiet);background:var(--ldotbg);transition:transform .14s,background-color .14s}
-#pane-semaphore .ldot.on i{background:var(--lead);border-color:var(--lead)}
-#pane-semaphore .ldot.now i{box-shadow:0 0 0 3px color-mix(in srgb,var(--lead) 30%,transparent)}
-#pane-semaphore .ldot:hover i{transform:scale(1.35);border-color:var(--lead)}
+#pane-semaphore .ldot.on i{background:var(--rc);border-color:var(--rc)}
+#pane-semaphore .ldot.now i{box-shadow:0 0 0 3px color-mix(in srgb,var(--rc) 30%,transparent)}
+#pane-semaphore .ldot:hover i{transform:scale(1.35);border-color:var(--rc)}
 #pane-semaphore .ldot:focus-visible{outline:1px solid var(--focus);outline-offset:-2px;border-radius:50%}
 #pane-semaphore .lruit.shut{opacity:.55}
 #pane-semaphore .lruit.shut .ldot{cursor:default;pointer-events:none}
@@ -870,6 +891,10 @@
   transition:color .14s,border-color .14s,background-color .14s}
 #pane-semaphore .lact.prim{border-color:var(--key);color:var(--key2);font-weight:600;background:var(--sink)}
 #pane-semaphore .lact.quiet{border-color:transparent}
+/* Edit, the way into everything on the lead, stands as a button of its own
+   beside Complete, a size up from the other verbs */
+#pane-semaphore .lact.ledit{padding:4px 11px;border-color:var(--key);background:var(--sink);
+  font-size:11px;font-weight:600;color:var(--key2)}
 #pane-semaphore .lact:hover{border-color:var(--line2);color:var(--ink);background:var(--sink)}
 #pane-semaphore .lead .ldone{margin-left:auto;opacity:1;border-color:var(--line);border-radius:6px;padding:3px 8px;
   font:10px var(--sans);letter-spacing:.06em;color:var(--muted)}

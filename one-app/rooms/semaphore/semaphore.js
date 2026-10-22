@@ -3186,45 +3186,90 @@ const LEAD_ICON=(()=>{
 })();
 /* An address as it is kept: bare, never with the "mailto:" a link wears. */
 const leadMail=v=>String(v||'').trim().replace(/^mailto:/i,'').trim();
-function leadPanesHTML(a,l,shut,adding){
+/* A box of the open lead: its name over it, as the box's title, and on the
+   title's line the button that adds to it. The name stood inside the box,
+   in its top corner, where it read as one more line of the box (Mark asked
+   for it above, 2026-10-22). A press anywhere in it keeps the card open, so
+   an address can be selected and a field typed into. */
+function leadBoxHTML(title,count,body,btn,cls){
+  return '<div class="lpcol'+(cls?' '+cls:'')+'" data-act="leadStay">'+
+    '<p class="lph">'+title+(count?'<b>'+count+'</b>':'')+(btn||'')+'</p>'+
+    '<div class="lpane">'+body+'</div></div>';
+}
+/* One link while the lead is edited: its address and its name side by
+   side, an address to write to shown bare, as it was typed. Without a link
+   it is the empty pair a new one is typed into. */
+function leadEdLinkHTML(k){
+  const url=k?String(k.url||'').replace(/^mailto:/i,''):'';
+  return '<div class="ledrow" data-k="'+(k?k.id:'new')+'">'+
+    '<input class="ledin" name="url" value="'+esc(url)+'" placeholder="https://… or name@…" aria-label="Link or email address" autocomplete="off">'+
+    '<input class="ledin" name="label" value="'+esc(k?k.label||'':'')+'" placeholder="Whose, or what — optional" aria-label="Name the link" autocomplete="off">'+
+    (k?'<button class="lx" data-act="leadEditDrop" title="Take this link off when saved" aria-label="Remove link">✕</button>'
+      :'<span class="lx" aria-hidden="true"></span>')+
+  '</div>';
+}
+function leadPanesHTML(a,l,shut,editing){
   const mail=leadMail(l.email),n=(l.links||[]).length;
-  const row=(ico,v,k)=>'<p class="lwrow"><span class="lki" aria-hidden="true">'+LEAD_ICON[ico]+'</span>'+
-    '<span class="lwv">'+esc(v)+'</span><i>'+k+'</i></p>';
-  const who=l.coordinator||l.contact||mail
-    ? '<div class="lpane" data-act="leadStay"><p class="lph">Who</p>'+
-        (l.coordinator?row('org',l.coordinator,'Coordinator'):'')+
-        (l.contact?row('person',l.contact,'Main contact'):'')+
-        (mail?'<p class="lmrow"><a class="lmail" href="mailto:'+esc(mail)+'" draggable="false" '+
-            'title="Write to '+esc(l.contact||mail)+'"><span class="lki" aria-hidden="true">'+LEAD_ICON.mail+'</span>'+
-            '<span>'+esc(mail)+'</span></a>'+
+  const ico=k=>'<span class="lki" aria-hidden="true">'+LEAD_ICON[k]+'</span>';
+  const row=(k,v,say)=>'<p class="lwrow">'+ico(k)+'<span class="lwv">'+esc(v)+'</span><i>'+say+'</i></p>';
+  const field=(k,name,v,ph)=>'<div class="lwrow">'+ico(k)+
+    '<textarea class="grow lwin" name="'+name+'" rows="1" placeholder="'+ph+'" aria-label="'+ph+'">'+esc(v||'')+'</textarea></div>';
+  /* The contact person and their address are one thing, a person to write
+     to, so they stand together in a group of their own: the name, and the
+     address straight under it at the name's edge (Mark, 2026-10-22). An
+     address without a name stands on the group's first line. */
+  const person=editing
+    ? '<div class="lwcon">'+field('person','contact',l.contact,'Main contact person')+
+        field('mail','email',l.email,'Their email address')+'</div>'
+    : l.contact||mail
+    ? '<div class="lwcon">'+(l.contact?row('person',l.contact,'Main contact'):'')+
+        (mail?'<p class="lmrow'+(l.contact?'':' solo')+'">'+(l.contact?'':ico('mail'))+
+            '<a class="lmail" href="mailto:'+esc(mail)+'" draggable="false" title="Write to '+esc(l.contact||mail)+'">'+
+            (l.contact?ico('mail'):'')+'<span>'+esc(mail)+'</span></a>'+
           '<button class="lcopy" data-act="copyMail" data-v="'+esc(mail)+'" title="Copy the address">Copy</button></p>':'')+
       '</div>'
     : '';
-  /* The box is there on an open lead even with nothing in it, because the
-     way to add a link is on its head now (Mark, 2026-10-21); a closed lead
-     with none has nothing to add to and shows none. */
-  const links=n||adding||!shut
-    ? '<div class="lpane" data-act="leadStay"><p class="lph">Links'+(n?'<b>'+n+'</b>':'')+
-        (shut||adding?'':'<button class="lact lphb" data-act="lkAdd" data-id="'+a.id+'" data-l="'+l.id+'" '+
-          'title="A web address, or a contact’s email address">+ Link or email</button>')+'</p>'+
-        (n?'<div class="llinks">'+leadLinkRows(a,l,shut)+'</div>':adding?'':'<p class="lnil">None yet</p>')+
-        (adding?lkFormHTML(a,l.id):'')+
-      '</div>'
-    : '';
-  return who||links?'<div class="lpanes">'+who+links+'</div>':'';
+  const coord=editing?field('org','coordinator',l.coordinator,'Coordinator — the organisation that started it')
+    :l.coordinator?row('org',l.coordinator,'Coordinator'):'';
+  /* While editing, the fields stand in the boxes where what they hold is
+     read, and Save keeps them all (Mark, 2026-10-22: "all editing happens
+     in the location where it's also on the card"). The links take one more
+     empty pair at their foot, and + Another link adds a pair in place, so
+     links and addresses are added through Edit alone; the "+ Link or email"
+     on the box's title went. */
+  const links=editing
+    ? '<div class="llinks ledlinks">'+(l.links||[]).map(leadEdLinkHTML).join('')+leadEdLinkHTML(null)+'</div>'+
+      '<button type="button" class="lfa lmore" data-act="leadEditLink">+ Another link</button>'
+    : n?'<div class="llinks">'+leadLinkRows(a,l,shut)+'</div>':'<p class="lnil">None yet</p>';
+  /* Both boxes stand whenever the lead is open and not closed, and on a
+     closed lead whenever either holds something, so a lead with only links
+     keeps its Who box beside them and the two never become one box the
+     card's width (Mark, 2026-10-22). */
+  if(shut&&!editing&&!n&&!coord&&!person)return '';
+  return '<div class="lpanes">'+
+    leadBoxHTML('Who',0,editing?'<div class="lwho">'+coord+person+'</div>':
+      coord+person||'<p class="lnil">Nobody named yet</p>')+
+    leadBoxHTML('Links',editing?0:n,links)+
+  '</div>';
 }
 /* What has happened, newest first, in a box of its own under the two, with
    + Add update on its head and the line being written straight under it,
    above the lines already there (Mark, 2026-10-21: "add update right above
    the update pane"). The button stood in a row at the top of the card, and
    the line it opened came up there, apart from the history it joins. */
-function leadUpdHTML(a,l,shut,writing){
+function leadUpdHTML(a,l,shut,writing,editing){
   const ups=l.updates||[];
   if(shut&&!ups.length)return '';
+  /* While the lead is edited every line is its own field, in this same box;
+     a cross marks it to go when the edit is saved. */
+  if(editing)return ups.length?leadBoxHTML('Updates',0,'<div class="lupd ledups">'+ups.map((u,i)=>[u,i]).reverse().map(([u,i])=>
+      '<div class="lurow ledrow" data-u="'+i+'"><span class="lud">'+esc(updWhen(u))+'</span>'+
+        '<textarea class="grow ledup" name="text" rows="1" placeholder="What happened" aria-label="What happened">'+esc(u.text||'')+'</textarea>'+
+        '<button class="lx" data-act="leadEditDrop" title="Take this line out when saved" aria-label="Remove update">✕</button></div>').join('')+
+    '</div>',null,'lupdpane'):'';
   const more=updOpen.has(l.id),ids='data-id="'+a.id+'" data-l="'+l.id+'"';
   const rows=(more?ups.map((u,i)=>[u,i]):ups.map((u,i)=>[u,i]).slice(-UPD_SHOWN)).reverse();
-  return '<div class="lpane lupdpane" data-act="leadStay"><p class="lph">Updates'+(ups.length?'<b>'+ups.length+'</b>':'')+
-      (shut||writing?'':'<button class="lact prim lphb" data-act="noteAdd" '+ids+'>+ Add update</button>')+'</p>'+
+  return leadBoxHTML('Updates',ups.length,
     (writing?'<div class="lnew">'+noteFormHTML(a,l)+'</div>':'')+
     (rows.length
       ? '<div class="lupd">'+rows.map(([u,i])=>
@@ -3236,8 +3281,8 @@ function leadUpdHTML(a,l,shut,writing){
                 (more?'fewer':(ups.length-UPD_SHOWN)+' earlier')+'</button>'
             : '')+
         '</div>'
-      : writing?'':'<p class="lnil">Nothing yet</p>')+
-  '</div>';
+      : writing?'':'<p class="lnil">Nothing yet</p>'),
+    shut||writing?'':'<button class="lact prim lphb" data-act="noteAdd" '+ids+'>+ Add update</button>','lupdpane');
 }
 /* Through a selected, off-screen field first, as the Ledger's mailing list
    copies, because that works from file:// in every browser the app opens
@@ -3488,17 +3533,20 @@ function leadRowHTML(a,l,hit,say){
      open card, on the line they change (Mark, 2026-10-21, from a drawn
      sheet): in the arena's panel at its top right, on the table in the
      column that says the last update when the lead is shut, since the
-     updates themselves are in sight below once it is open. Each other verb
-     moved onto the box it adds to: + Add update on the updates, + Link or
-     email on the links. They were one row of buttons between the head and
-     the boxes, and the update written with the first of them landed a
-     screen below it. Pressed, Complete asks how the lead ended. */
+     updates themselves are in sight below once it is open. + Add update
+     moved onto the box it adds to; links and addresses are added through
+     Edit. They were one row of buttons between the head and the boxes,
+     and the update written with the first of them landed a screen below
+     it. Pressed, Complete asks how the lead ended. */
   const doneBtn='<button class="ldone'+(done?' back':'')+'" data-act="leadDone" '+ids+' '+
       'title="'+(done?'Put this lead back into the funnel':'Done with this one — say how it ended; it stays in the record')+'" '+
       'aria-label="'+(done?'Reopen this lead':'Complete this lead')+'">'+
       '<i aria-hidden="true">'+(done?'↺':'✓')+'</i>'+(done?'Reopen':'Complete')+'</button>';
-  const editBtn=done?'':'<button class="lact quiet" data-act="leadEdit" '+ids+' '+
-      'title="Edit everything on this lead">✎ Edit</button>';
+  /* Edit is the one way into every fact on the lead, links and addresses
+     included, so it is drawn as a button in its own right rather than a
+     word beside Complete (Mark, 2026-10-22: "a bit more prominent"). */
+  const editBtn=done?'':'<button class="lact ledit" data-act="leadEdit" '+ids+' '+
+      'title="Edit everything on this lead — its name, who, links, addresses and updates">✎ Edit</button>';
   const headActs=open&&!editing&&!ending?'<span class="lheadacts">'+editBtn+doneBtn+'</span>':'';
   /* While editing the row under the card is the way out of the edit, and
      while Complete is asking how the lead ended it is the three answers. */
@@ -3514,19 +3562,6 @@ function leadRowHTML(a,l,hit,say){
     : '';
   const box=(name,v,ph,cls)=>'<textarea class="grow '+cls+'" name="'+name+'" rows="1" '+
     'placeholder="'+ph+'" aria-label="'+ph+'">'+esc(v||'')+'</textarea>';
-  /* While editing, every link is its address and its name, side by side,
-     with one empty pair at the foot for a new one; every update is its own
-     line of text. A cross marks a line to go and Save takes it out, so
-     nothing is lost by a press until the edit is kept. */
-  /* Who is behind the project and who to write to there, over the links:
-     facts about the lead, where the links are the ways to it. A lead with
-     neither shows no band until it is edited. */
-  const who=editing
-    ? leadSec('who','<div class="lwho">'+
-        '<div class="lwr"><i>coordinator</i>'+box('coordinator',l.coordinator,'The organisation that started it','lwin')+'</div>'+
-        '<div class="lwr"><i>contact</i>'+box('contact',l.contact,'Main contact person','lwin')+'</div>'+
-        '<div class="lwr"><i>email</i>'+box('email',l.email,'The contact’s email address','lwin')+'</div></div>')
-    : '';
   /* ── who and the links, side by side ──
      Mark chose this from three drawn (2026-10-16): who is behind the
      project in one box, the ways to it in another, side by side wherever the
@@ -3535,27 +3570,14 @@ function leadRowHTML(a,l,hit,say){
      right half of a wide card empty and gave the contact no address; a link
      said neither what kind it was nor where it went. A press inside either
      box keeps the card open, so an address can be selected. */
-  const panes=editing?'':leadPanesHTML(a,l,done,adding)+leadUpdHTML(a,l,done,writing);
-  /* the venue it was found at, which opens it */
-  const fromV=l.venueId&&venue(l.venueId);
+  const panes=leadPanesHTML(a,l,done,editing)+leadUpdHTML(a,l,done,writing,editing);
+  /* the venue it was found at, which opens it. Not for a lead Mark’s Place
+     made (`entryId`): its venue is the arena's own, named just above it,
+     and its first update says where it came from (Mark, 2026-10-22). */
+  const fromV=l.venueId&&!l.entryId&&venue(l.venueId);
   const from=fromV&&!editing?leadSec('from','<button class="lfrom" data-act="openVenue" data-v="'+fromV.id+'" '+
     'title="Open '+esc(fromV.name)+'">'+esc(fromV.name)+'</button>'):'';
-  const body=from+who+(editing
-    ? leadSec('links','<div class="llinks ledlinks">'+
-        (l.links||[]).map(k=>'<div class="ledrow" data-k="'+k.id+'">'+
-          '<input class="ledin" name="url" value="'+esc(k.url||'')+'" placeholder="https://… or name@…" aria-label="Link or email address" autocomplete="off">'+
-          '<input class="ledin" name="label" value="'+esc(k.label||'')+'" placeholder="Whose, or what — optional" aria-label="Name the link" autocomplete="off">'+
-          '<button class="lx" data-act="leadEditDrop" title="Take this link off when saved" aria-label="Remove link">✕</button></div>').join('')+
-        '<div class="ledrow" data-k="new">'+
-          '<input class="ledin" name="url" placeholder="https://… or name@… — add a link" aria-label="New link or email address" autocomplete="off">'+
-          '<input class="ledin" name="label" placeholder="Whose, or what — optional" aria-label="Name the new link" autocomplete="off"></div>'+
-      '</div>')+
-      (ups.length?'<div class="lupd ledups">'+ups.map((u,i)=>[u,i]).reverse().map(([u,i])=>
-        '<div class="lurow ledrow" data-u="'+i+'"><span class="lud">'+esc(updWhen(u))+'</span>'+
-          box('text',u.text,'What happened','ledup')+
-          '<button class="lx" data-act="leadEditDrop" title="Take this line out when saved" aria-label="Remove update">✕</button></div>').join('')+
-      '</div>':'')
-    : panes);
+  const body=from+panes;
   const tone=leadToneOf(a);
   /* ── the leads table ──
      Mark chose one table for Leads (2026-10-21), from three drawn beside the
@@ -3891,6 +3913,10 @@ function keepPlace(fn){
    (see notes/animation.md), is what keeps the two moving as one thing. */
 const UNFOLD_MS=320;
 const easeInOut=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+/* The room's bar is sticky at the top of its own scroller and covers the
+   first 60px of it, so what can be seen of a list begins under the bar
+   (see notes/animation.md). The arena's panel has no such bar. */
+const scCover=sc=>{const h=sc.querySelector(':scope>header.top');return h?h.offsetHeight:0;};
 function leadUnfold(lid,pressed){
   if(!pressed){repaint();renderDrawer();return;}
   /* this arena's card for the lead, on Leads and in the panel alike: a lead
@@ -3915,11 +3941,11 @@ function leadUnfold(lid,pressed){
     const h1=card.getBoundingClientRect().height;
     const sc=card.closest('.cbody')||document.getElementById('semscroll');
     if(!sc)return;
-    const pad=18,view=sc.clientHeight;
+    const pad=18,view=sc.clientHeight,top=pad+scCover(sc);
     const at=card.getBoundingClientRect().top-sc.getBoundingClientRect().top;
     let shift=0;
-    if(at<pad)shift=at-pad;
-    else if(h1>h0&&at+h1>view-pad)shift=Math.min(at+h1-(view-pad),at-pad);
+    if(at<top)shift=at-top;
+    else if(h1>h0&&at+h1>view-pad)shift=Math.min(at+h1-(view-pad),at-top);
     const top0=sc.scrollTop,top1=Math.max(0,Math.min(top0+shift,sc.scrollHeight-view));
     if(still){sc.scrollTop=top1;return;}
     if(Math.abs(h1-h0)<1&&Math.abs(top1-top0)<1)return;
@@ -3990,12 +4016,12 @@ function leadMove(card,fn){
   fn();
   const sc=inPanel?document.querySelector('#card .cbody'):document.getElementById('semscroll');
   if(!sc)return;
-  const after=leadMarks(sc),view=sc.clientHeight,pad=24,me=after.get(key);
+  const after=leadMarks(sc),view=sc.clientHeight,pad=24,me=after.get(key),top=pad+scCover(sc);
   const top0=sc.scrollTop;let top1=top0;
   if(me){
     const y=me.y,h=me.el.getBoundingClientRect().height;
-    if(y<pad)top1=top0+y-pad;
-    else if(y+h>view-pad)top1=top0+Math.min(y+h-(view-pad),y-pad);
+    if(y<top)top1=top0+y-top;
+    else if(y+h>view-pad)top1=top0+Math.min(y+h-(view-pad),y-top);
     top1=Math.max(0,Math.min(top1,sc.scrollHeight-view));
   }
   const moving=[];
@@ -4019,7 +4045,11 @@ function leadMove(card,fn){
     if(p<1){requestAnimationFrame(step);return;}
     sc.style.scrollBehavior=sc._sb;
     moving.forEach(el=>{el.style.transition='';el.classList.remove('lmv-in');});
-    if(went){
+    /* The glow is the answer to the press, so it plays on the lead that was
+       changed whether it travelled or not: a lead that stays where it was —
+       a score, an update, a later day on the last of a step — showed
+       nothing. */
+    if(me){
       me.el.classList.remove('lmv-me');me.el.classList.add('lmv-land');
       setTimeout(()=>me.el.classList.remove('lmv-land'),1700);
     }
@@ -4756,6 +4786,9 @@ document.addEventListener('click',e=>{
        and the fields of a composer inside it are presses of their own. */
     case 'leadOpen':{
       if(e.target.closest('a,input,textarea,select,label,form'))break;
+      /* a press beside the fields of an edit would draw the card again and
+         throw away what is typed in it */
+      if(b.classList.contains('editing'))break;
       const k=b.dataset.l;if(!k)break;
       if(leadOpen.has(k))leadOpen.delete(k);else leadOpen.add(k);
       leadUnfold(k,b);break;}
@@ -4785,6 +4818,11 @@ document.addEventListener('click',e=>{
       leadMove(card,()=>{closeComposers();restack();});break;}
     /* marks a link or an update to go when the edit is saved, and back */
     case 'leadEditDrop':{const r=b.closest('.ledrow');if(r)r.classList.toggle('gone');break;}
+    /* another empty pair for a link, added in place: a redraw would cost
+       what is typed */
+    case 'leadEditLink':{const box=b.parentElement.querySelector('.ledlinks');if(!box)break;
+      box.insertAdjacentHTML('beforeend',leadEdLinkHTML(null));
+      box.lastElementChild.querySelector('[name=url]').focus({preventScroll:true});break;}
     /* One way to move a lead on: press a dot of its ruit. There is no second
        control that walks it round, and none in the form. */
     case 'leadPath':{const ar=arena(id);if(!ar)break;

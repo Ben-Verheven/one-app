@@ -216,5 +216,16 @@ opened or put away, a line taken out — go through `leadRedo`, which redraws
 that card alone with the opening's height tween, so nothing else is touched.
 A new control on a lead goes through one of the two, never a bare redraw.
 
+**The top of the view is under the room's bar, not at the scroller's
+edge** (2026-10-22). The Brokerage Semaphore's bar is sticky inside
+`#semscroll` and covers its first 60px. Both movements took the
+scroller's top edge for the top of what can be seen, so a lead from the
+bottom of Leads sent up to Talking was scrolled to 24px from it — under
+the bar, landing and glow unseen — which Mark reported as the animation
+not working for the leads at the bottom. `scCover` gives the bar's height
+to both. The glow also waited for a journey, so a change that left a lead
+where it stood showed nothing; it now plays on every lead `leadMove` is
+given.
+
 See also [pitfalls](pitfalls.md), [project-card](project-card.md) and
 [testing](testing.md).
