@@ -199,7 +199,7 @@ answers `state()` and `applyState()`, emits `<room>:saved`, is handed to
 `roomCloud()` in `bridge.js`, and is named in `ROOM_STORES` (`ledger.js`).
 Cloud is one Supabase table, **`app_state`**, one row per store: `main` is
 the Ledger, then `semaphore`, `notes` and `atlas`. (Mark’s Place keeps
-its scroll links and call notes in a row of its own, `partnerwatch`, which
+its scroll links, call notes and corrected readings of sentences in a row of its own, `partnerwatch`, which
 Export leaves out, and reads `semaphore` for the order and arenas of its
 venues; it writes there only a lead made from an entry, the way Pocket
 writes one.) The Ledger's **Export**

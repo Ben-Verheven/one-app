@@ -390,6 +390,82 @@ body.drawer .rd-list{background:var(--sel);border-color:var(--key)}
 .sdiv{margin-top:28px;padding-top:12px;border-top:1px solid var(--line2);font-size:13.5px;color:var(--muted)}
 .sdiv b{display:block;font:400 13px var(--serif);letter-spacing:.07em;text-transform:uppercase;color:var(--warn-ink);margin-bottom:2px}
 .smore{margin:16px 0 0}
+/* An idea of the Topic Atlas's libraries wears its axis's colours from
+   there: methods a dusk violet, application domains a slate blue. */
+.idea{display:inline-flex;align-items:center;gap:3px;padding:0 7px;border-radius:5px;border:0;font:13.5px/1.6 var(--body);white-space:nowrap;
+  background:#E7E2EC;color:#4F4566}
+.idea.ax-domain{background:#E0E6EE;color:#2E4560}
+button.idea{cursor:pointer}
+button.idea:hover{box-shadow:inset 0 0 0 1px currentColor}
+.idea.off{text-decoration:line-through;background:var(--hover);color:var(--faint)}
+.idea .pmt{width:auto;padding:0 2px 0 0}
+.smaps{margin-top:10px}
+.smap{display:flex;flex-wrap:wrap;align-items:center;gap:4px 5px;font-size:13.5px;color:var(--muted);margin:3px 0}
+.smap > b{color:var(--ink);font-weight:600}
+.nbrs{flex-basis:100%;display:flex;flex-wrap:wrap;gap:4px 12px;margin:3px 0 4px 18px;padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--field)}
+.nbrs .nb{display:inline-flex;align-items:center;gap:3px}
+.sweights .lbl{font-size:13.5px}
+.sweights .steps{display:flex;gap:5px}
+.against.waived{color:var(--muted)}
+button.badge{border:0;cursor:pointer}
+button.badge:hover{box-shadow:inset 0 0 0 1.5px var(--lv)}
+.fixrole{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin:2px 0 6px 26px;font-size:12.5px;color:var(--muted)}
+/* An entry's profile, over its own text: the ideas it asks for, those
+   of its project, and what they bring, each idea once. */
+.profile{margin-top:16px;padding:10px 14px;border:1px solid var(--line);border-radius:var(--radius);background:var(--field);display:grid;gap:6px}
+.prow{display:grid;grid-template-columns:100px minmax(0,1fr);gap:10px;align-items:baseline}
+.plab{font:11px var(--serif);letter-spacing:.06em;text-transform:uppercase;color:var(--lv-ink)}
+.pchips{display:flex;flex-wrap:wrap;gap:4px 5px}
+/* The card's lines, after the Topic Atlas's (see "the card's lines" in
+   the script): the way to the idea in its own column, each card's as wide
+   as its longest; a dotted arrow stretching to the words, in a shaded
+   column as wide on every card; where two terms meet, a bracket in the
+   column after it. */
+.lines{display:grid;position:relative;grid-template-columns:minmax(0,min(var(--pw,300px),58%)) var(--ww,240px) var(--mw,0px) minmax(0,1fr)}
+.wband{grid-column:2;background:rgba(42,38,32,.055);border-radius:7px}
+.lrow{grid-column:1/-1;display:grid;grid-template-columns:subgrid;position:relative;z-index:1;border-radius:6px}
+.lrow.line{cursor:pointer}
+.lrow.line:hover{background:var(--hover)}
+.lp{grid-column:1;align-self:start;display:flex;align-items:center;gap:3px;min-width:0;min-height:28px;padding-left:4px}
+.lp .idea{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.lp .pmt,.lp .prel{flex:none}
+.idea.ax-text{background:rgba(138,106,58,.15);color:#5E4520}
+.dots{flex:1 0 24px;height:0;border-top:1px dotted var(--faint);margin:0 -6px 0 8px;position:relative}
+.dots::after{content:"";position:absolute;right:0;top:-3.5px;border-left:5px solid var(--faint);border-top:3px solid transparent;border-bottom:3px solid transparent}
+.lw{grid-column:2;align-self:start;display:flex;flex-direction:column;min-width:0;padding:0 6px 0 10px}
+.lw1{display:flex;align-items:center;gap:6px;min-width:0;min-height:28px}
+.lph{font-size:14px;color:var(--lv-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.lph.meetw{border-bottom:1.5px solid #2E7D7A}
+.lfield{font-size:12px;color:var(--faint);white-space:nowrap}
+.lw .against{margin:-4px 0 4px 28px}
+.lwa{margin:-4px 0 5px 28px;padding-left:0;white-space:nowrap}
+.marm{flex:1 0 8px;height:0;border-top:1.5px solid #2E7D7A}
+.lh{align-self:end;padding-bottom:3px;font:10px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--faint);white-space:nowrap}
+.lwh{grid-column:2;padding-left:10px}
+.lmh{grid-column:3;padding-left:6px;color:#1F5C59}
+.lrow.lq .qgroup{grid-column:1;min-width:0}
+.qgroup.near b{color:#1F5C59}
+.lrow.lmore .lp{min-height:0}
+.lsn{grid-column:1 / 3;position:relative;z-index:1}
+.mbr{position:absolute;grid-column:3;left:0;width:8px;top:13px;bottom:-15px;border:1.5px solid #2E7D7A;border-left:none;border-radius:0 4px 4px 0;z-index:2;pointer-events:none}
+.mlw{position:absolute;grid-column:3;left:14px;top:13px;bottom:-15px;display:flex;align-items:center;z-index:2;pointer-events:none}
+.mlab{pointer-events:auto;font:11px var(--body);color:#1F5C59;background:rgba(46,125,122,.15);border:0;border-radius:4px;padding:1px 6px;white-space:nowrap;cursor:pointer}
+.mlab:hover{background:#2E7D7A;color:var(--sheet)}
+/* Upright, the card is too narrow for a way and the words side by side
+   at their full lengths: the ideas' names give way (the whole name on
+   hover), the words keep their column. */
+@media (orientation:portrait){ .lines{grid-template-columns:minmax(0,44%) minmax(0,1fr) var(--mw,0px) 0} .lmh{white-space:normal} }
+/* An entry's sentences, underlined in the colour of what they were read
+   as (Mark, 2026-10-22: the box of ideas over the text, and the reading
+   in the text itself, put right with a press). */
+.sr{-webkit-box-decoration-break:clone;box-decoration-break:clone;cursor:pointer;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px}
+.sr-A{text-decoration-color:var(--brok)}
+.sr-P{text-decoration-color:#B39A72}
+.sr-W{text-decoration-color:#A39C8E;text-decoration-style:dotted}
+.sr.fixed{text-decoration-style:double}
+.srfix{display:flex;flex-wrap:wrap;gap:5px;align-items:center;font-size:12.5px;color:var(--muted);margin:-2px 0 12px}
+.plegend{font-size:12px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 14px}
+.plegend u{text-decoration-thickness:2px;text-underline-offset:3px}
 /* the words found, in the entry opened from the results */
 mark.lit{background:rgba(46,125,122,.17);color:inherit;border-radius:2px;box-shadow:0 0 0 1px rgba(46,125,122,.17)}
 /* ── the Semaphore's slide-ins (see openPanel) ───────────────────────
@@ -594,6 +670,7 @@ body.mopen .mpanel{transform:none;visibility:visible;transition:transform .3s cu
   <aside class="mpanel" id="mpanel" tabindex="-1" aria-label="From the Brokerage Semaphore"></aside>
 </div>
 
+<script src="../topic-atlas/library.js"></script>
 <script>
 /* The cloud: the One App's own Supabase project. The key is the public one
    (the same as Pocket's BUILT_IN); since the lock it opens nothing without
@@ -702,6 +779,7 @@ function load(){
     sites = inMarketOrder(r[0]); entries = r[1]; lastRun = r[2][0] || null;
     var mine = (r[3][0] || {}).data || {};
     links = mine.docs || {};
+    roleFix = {}; Object.keys(mine.roles || {}).forEach(function(k){ if (mine.roles[k]) roleFix[k] = mine.roles[k]; }); roleRev++;
     Object.keys(mine.notes || {}).forEach(function(k){ if (!(k in notes)) notes[k] = mine.notes[k]; });
     byId = {}; entries.forEach(function(e){ byId[e.id] = e; });
     /* Newest first: the night it arrived, then the site's own date where
@@ -722,6 +800,7 @@ function load(){
     /* a device the search has read pages on before takes the new ones in */
     var used = false; try { used = !!localStorage.getItem(SXKEY); } catch(e){}
     if (found || used) syncIndex();
+    warm();
   }).catch(function(e){
     if (String(e.message) === 'logged out' || e.status === 401) return;
     $('#banner').textContent = 'Could not reach the cloud: ' + e.message;
@@ -781,51 +860,66 @@ function isNew(e){ return !e.opened_at && !e.verdict; }
    The bar at the top ranks the entries for what is typed, and says why
    (Mark, 2026-10-21). He pointed to his Topic Atlas, which ranks Horizon
    topics for a researcher's keywords, and asked for its ideas in a search
-   made for this page rather than a copy of it: an entry is a partner's
-   few paragraphs about a project and about themselves, not a topic of a
-   work programme, and it has no concept graph behind it. The list's
-   search before this kept, in the list's own order, every entry whose
-   list line held the words typed, and could not say which of forty
-   entries naming "water" is about water.
+   made for this page rather than a copy of it. It reads with the Topic
+   Atlas's own two concept libraries (../topic-atlas/library.js, one copy
+   for both pages) and stays a plain program, as he wants it: nothing
+   here asks Claude what a text means.
 
-   Each place a term is found is a line, and a line counts
-       the part's weight × the term's rarity × how surely it is the term
-       × its mentions there, at most two.
-   The parts, by what a word there says about the entry. The headline,
-   and a sentence of the project's text that says what is wanted ("we are
-   looking for", "partners with"), weigh most: there the entry names it or
-   asks for it. The rest of the project's text is what it is about.
-   Keywords, topics and disciplines are the frame it is filed under,
-   shared with its whole call. What the partner says of themselves (their
-   expertise, their organisation, the whole text of an entry that offers
-   expertise) is taken OFF, as Mark asked: what they already have is what
-   they will not need from us. Rarity is the Topic Atlas's idea: a term in
-   most entries of the watch ("water", with Water4All among the venues)
-   says less than one in a few, so of two terms the rarer leads.
+   A term becomes ideas first, as in the Topic Atlas: the concepts it is
+   one of the names of, or, when it names none, those whose names hold it.
+   From there the search may take one step along the libraries' links,
+   each kind of step costing what it costs there (a narrower idea is still
+   inside the term, a related one beside it, a broader one only partly
+   about it), and staying on its axis, methods among methods, domains
+   among domains. A term no idea answers to is looked for as its words.
 
-   A term's lines add up. With every term required, the default, an
+   Each entry is read once, sentence by sentence, for two things: which
+   ideas its sentences name, by the libraries' names (`extract`), and what
+   each sentence is doing, by how it is phrased (`roleOf`): asking for
+   something ("we are looking for", "partners with"), saying what the
+   project is or will do, or saying who they are and what they bring.
+   Mark asked for the last because descriptions are often about the
+   company; the field a sentence stands in only breaks the tie. Measured
+   on 250 sentences of real entries read by hand (2026-10-21), the
+   phrasing agreed with the reading on nine in ten, the field alone on
+   three in four, and it found every sentence that asked for a partner.
+   A sentence read wrongly can be put right by hand, and stays so.
+
+   Each place an idea a term reached is named is a line, counting
+       the sentence's weight × the idea's rarity × the step's cost
+       × how surely the term is the idea × its mentions there, at most two.
+   Asking weighs most, with the headline; then the project; then the
+   keywords and topics, shared with the whole call; and who they are is
+   taken OFF, as Mark asked: what they already have is what they will not
+   need from us, unless the same entry also asks for it. Rarity is how few
+   entries name the idea. With every term required, the default, an
    entry's score is the geometric mean of its terms', so it has to answer
-   each of them and not one loudly; with any term, their sum. Then where
-   the terms meet, which Mark asked to count extra: for each pair of terms
-   its closest meeting in one part, joined (one sentence, at most eight
-   words between, not two items of a list) 1, in the same sentence ½, in
-   the next ¼, each times how surely the two words are the terms; the
-   score is multiplied by 1 + strength × their mean over the pairs. Their
-   own expertise and the keywords are left out of meeting: a list of
-   keywords puts any two side by side. Show the sums puts the arithmetic
-   on every line.
+   each of them; with any term, their sum. Then where the terms meet, for
+   each pair the closest meeting in one part, joined (one sentence, at
+   most eight words between, not two items of a list) 1, in the same
+   sentence ½, in the next ¼, each times how surely the two are the
+   terms; the score is multiplied by 1 + strength × their mean. Show the
+   sums puts the arithmetic on every line.
 
    An entry whose terms are found only in what they already have stands
    apart, after the rest. A name, an organisation, a country or a word of
    his own Why line flags an entry without scoring it, so a search for a
    person or a country still finds them. The weights are his to change
    under Weights, and kept on the device. */
-var SWDEF = { title:3, seek:3, proj:2, frame:1, own:1, near:0.5 }, SW = Object.assign({}, SWDEF), SWKEY = 'partnerwatch.weights.v2';
+var SWDEF = { title:3, seek:3, proj:2, frame:1, own:1, near:0.5, hops:1 }, SW = Object.assign({}, SWDEF), SWKEY = 'partnerwatch.weights.v2';
 try { Object.assign(SW, JSON.parse(localStorage.getItem(SWKEY) || '{}')); } catch(e){}
 var PARTS = ['title','seek','proj','frame','own'], CAP = 2, WINDOW = 8;
-var LV = { title:['T','the headline'], seek:['S','what they seek'], proj:['P','the project'], frame:['K','keywords and topics'], own:['O','what they already have'] };
+var LV = { title:['T','the headline'], seek:['S','what they ask for'], proj:['P','the project'], frame:['K','keywords and topics'], own:['O','who they are, what they bring'] };
+/* how a word of the text answers the words of a term no idea answers to;
+   such a line counts half again, as the Topic Atlas counts the words
+   themselves against a named idea */
 var MT = { exact:['=', 1, 'the word itself'], grows:['⊇', 0.75, 'the start of a longer word'],
            inside:['⊆', 0.6, 'inside a longer word'], apart:['∋', 0.6, 'all its words, apart, in one sentence'] };
+var TEXTQ = 0.5;
+/* how a term answers an idea, and what a step to a neighbour costs */
+var CMT = { name:['=', 1, 'one of the idea’s names'], contains:['⊇', 0.75, 'the term inside one of its names'],
+            within:['⊆', 0.7, 'one of its names inside the term'], words:['∋', 0.6, 'all the term’s words in one of its names'] };
+var STEP = { narrower:0.8, related:0.6, broader:0.4 }, RELG = { narrower:'⊂', related:'~', broader:'⊃' };
 var MEET = { joined:[1, 'joined'], same:[0.5, 'in one sentence'], next:[0.25, 'in sentences side by side'] };
 /* Which part a field is, by its label on the site. What is no text about
    the project (who, where, how to reach them, and the site's own choices
@@ -847,11 +941,42 @@ function partOf(label, e, site, ownField){
   if (SEEKF.test(label)) return 'seek';
   return e.kind === 'offers' && !ownField ? 'own' : 'proj';
 }
-/* A sentence of the project's text that asks for something. Read from
-   the sentence as written, so its snippet shows why it counted. Not in an
-   entry offering expertise, whose "we are seeking to join" asks for a
-   project, not for what we have. */
-var SEEKS = /\b(looking for|look for|seek(s|ing)?(?! to join)|search(ing)? for|in search of|wanted|missing|lack(s|ing)?|require[sd]?|requiring|would (like|love) to (find|involve|include|add|welcome)|we (also |still )?need|needs? (a |an )?(partner|expert)|(partner|expert|organi[sz]ation|compan(y|ies)|institution|universit(y|ies)|sme)s? (with|having|who|that|able|in charge|specialised|specialized)|to complement|complementary|invite[sd]?|welcome[sd]?)\b/i;
+/* What a sentence is doing, read from its phrasing (see "the search").
+   A for asking (partners, expertise), J for wanting to join a project,
+   which says what they bring, W for who they are and what they offer, P
+   for the project. The order matters: "we are looking for partners to
+   join" asks, "we are looking to join a consortium" does not. A sentence
+   with none of these carries on: an item of a list takes the role of the
+   line that heads the list ("We offer:", "We seek partners in:"), a plain
+   sentence after one about them is still about them, and anything else
+   takes its field's role. The patterns are the ones measured; change one
+   and measure again. */
+var R_ASKP = /\b(looking for|seek(s|ing)?|search(ing)? for|need|welcome|invite)( \w+){0,3} (partners?|experts?|expertise|competences?)\b(?! to join)/i;
+var R_JOIN = /\b((seek|seeking|looking for)( \w+){0,2} (consortium|consortia|opportunit\w+)|looking (to join|for (a |an )?(consortium|consortia|project|projects))|seeking to join|join(ing)? (a |an |the )?(consortium|consortia|project|projects|proposal)|interested in (joining|contribut|projects|being)|open to (join|joining|develop|collaborat|discuss|participat|contribut)|would like to (join|participate))/i;
+var R_ASK = /\b(looking for|we seek|seeking|search(ing)? for|in search of|we need|we are missing|we lack|we invite|we welcome|partners? (should|with|from|having|who|that|able|specialised|specialized|in charge|offering|interested)|(complementary|additional) (expertise|partners?|competences?)|would (like|love) to (find|involve|include|add|welcome))\b/i;
+var R_WHO_SRC = "(^(we are|i am|i'm|we're)\\b(?! (currently |now |also )?\\w+ing\\b)|^(our|my) (team|group|lab|laboratory|company|institute|organi[sz]ation|university|department|unit|centre|center|expertise|research|work|focus|experience|contribution|role|activities|services|products?|portfolio|mission)\\b|^(we|i) (also )?(offer|provide|bring|have|hold|can|could|develop|specialise|specialize|focus|work|study|cover|deliver|lead|led|coordinate|run|operate|design|build|implement|support|combine|bridge|investigate|research|apply|use)\\b|\\b(can|could|would|will) (also )?(contribute|bring|offer|provide|support|act|take on|lead|serve)\\b|\\bcontribution\\b|\\b(our|my|its|their) (expertise|experience|competences?|capabilities|track record|know-how|background)\\b|\\bexpertise (in|includes|lies|covers|on)\\b|\\byears of experience\\b|\\bfounded\\b|\\bestablished in\\b|\\bpossible role\\b|\\bas a partner\\b|\\bis (a|an|one of)( the)? (leading|large|largest|small|young|public|private|non-profit|independent|research|software|technology|marine|engineering|consulting|national|european|spin-off|start-?up|sme|company|university|institute|ngo|organi[sz]ation|brand|research organi[sz]ation)\\b|^[A-Z][A-Za-z0-9&.\\-]+( [A-Z][A-Za-z0-9&.\\-]+)? (can|could|offers|provides|develops|implements|brings|has|delivers|specialises|specializes|focuses|works|is experienced)\\b)";
+var R_WHO = new RegExp(R_WHO_SRC), R_WHOI = new RegExp(R_WHO_SRC, 'i');
+var R_PROJ = /\b(the project|this project|our project|the proposal|our proposal|the pilot|the consortium will|we propose|proposed (project|initiative|solution)|aims? (is|to)|objectives?|it targets|will (develop|investigate|assess|create|test|deliver|explore|demonstrate|validate|establish|build|improve|integrate|combine|focus|address|account|show|include|support|compare|be developed|be tested)|would (explore|compare|be investigated|investigate|develop|test)|results will|work packages?)\b/i;
+var R_BULLET = /^[\-•·*–\t ]/;
+var ROLE = { A:'seek', P:'proj', W:'own', J:'own' }, ROLE_OF = { seek:'A', proj:'P', own:'W' };
+function roleOf(s, prev, head, dflt){
+  if (R_ASKP.test(s)) return 'A';
+  if (R_JOIN.test(s)) return 'J';
+  if (R_ASK.test(s) && !/\bwe (can|could) (offer|provide)/i.test(s)) return 'A';
+  if (R_WHO.test(s) || (/^(we|i|our|my)\b/i.test(s) && R_WHOI.test(s))) return 'W';
+  if (R_PROJ.test(s)) return 'P';
+  var r = R_BULLET.test(s) && head ? head : prev === 'W' && !R_BULLET.test(s) ? 'W' : dflt;
+  return r === 'J' ? dflt : r;
+}
+/* Mark's corrections, kept in his row like the scrolls' links: a
+   sentence is known by its entry and its words, so a page that changes
+   elsewhere keeps the corrections of the sentences it did not change. */
+var roleFix = {}, roleRev = 0;
+function sentKey(e, text){
+  var h = 5381, s = fold(text).replace(/\s+/g, ' ').trim();
+  for (var i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0;
+  return e.id + '|' + (h >>> 0).toString(36);
+}
 var STOP = /^(a|an|and|or|of|the|for|in|on|to|with|by|at|from|as|is|are)$/;
 var WORD = /[\p{L}\p{N}]+/gu;
 /* Lower case without accents, one character for one, so that a place
@@ -877,6 +1002,169 @@ function kindOf(word, w){
   if (w.length >= 4 && word.indexOf(w) === 0) return 'grows';
   if (w.length >= 5 && word.indexOf(w) > 0) return 'inside';
   return null;
+}
+
+/* ── the ideas: the Topic Atlas's libraries, made ready to read with ──
+   Made once, the first time something needs them. `names` is what a
+   term can be (every name of an idea, and its label where no other idea
+   of its axis is called so); `find` is what a text is read for, the names
+   each idea is found by, three ways: as words made singular, as written
+   for a name marked "=" in the library (arts is not art), and in
+   capitals for an acronym (ML, LCA, EV), so that "ev" in a word is not
+   an electric vehicle. `adj` links an idea to its broader, narrower and
+   related ones on its own axis; links across the axes are for reading in
+   the Topic Atlas, never for adding up. */
+var VOC = null;
+function vocab(){
+  if (VOC || !window.TOPIC_LIBRARY) return VOC;
+  var L = window.TOPIC_LIBRARY, IRR = (L.methods.meta || {}).irregular || {}, C = {}, names = {}, find = { n:{}, l:{}, c:{} }, adj = {};
+  var sing = function(w){ return IRR[w] !== undefined ? IRR[w] : singular(w); };
+  var toks = function(s){ return String(s).match(WORD) || []; };
+  var normOf = function(s){ return toks(fold(s)).map(sing).join(' '); };
+  [L.methods, L.domains].forEach(function(lib){ lib.concepts.forEach(function(c){ C[c.id] = c; }); });
+  var addName = function(nm, id){ if (!nm) return; var l = names[nm] || (names[nm] = []); if (l.indexOf(id) < 0) l.push(id); };
+  Object.keys(C).forEach(function(id){
+    var c = C[id];
+    (c.aliases || []).concat(c.extract || [], c.added || []).forEach(function(a){ addName(normOf(a.replace(/^=/, '')), id); });
+    (c.extract || []).concat(c.added || []).forEach(function(a){
+      var mode = 'n', keys;
+      if (a[0] === '='){ mode = 'l'; keys = toks(fold(a.slice(1))); }
+      else if (/^[A-Z0-9][A-Z0-9\-]{1,7}s?$/.test(a) && /[A-Z]/.test(a)){ mode = 'c'; keys = toks(a); }
+      else keys = toks(fold(a)).map(sing);
+      if (!keys.length) return;
+      var list = find[mode][keys[0]] || (find[mode][keys[0]] = []), k = keys.join(' ');
+      var had = list.find(function(x){ return x.key === k; });
+      if (had){ if (had.ids.indexOf(id) < 0) had.ids.push(id); } else list.push({ key:k, k:keys, ids:[id] });
+    });
+  });
+  Object.keys(C).forEach(function(id){
+    var c = C[id], nm = normOf(c.label);
+    if (!(names[nm] || []).some(function(o){ return o !== id && C[o].axis === c.axis; })) addName(nm, id);
+  });
+  var link = function(a, b, rel){
+    if (!C[a] || !C[b] || a === b || C[a].axis !== C[b].axis) return;
+    var l = adj[a] || (adj[a] = []);
+    if (!l.some(function(x){ return x.o === b && x.rel === rel; })) l.push({ o:b, rel:rel });
+  };
+  Object.keys(C).forEach(function(id){
+    var c = C[id];
+    if (c.broader){ link(id, c.broader, 'broader'); link(c.broader, id, 'narrower'); }
+    (c.related || []).forEach(function(r){ link(id, r.c, 'related'); link(r.c, id, 'related'); });
+  });
+  VOC = { C:C, names:names, nameList:Object.keys(names), find:find, adj:adj, sing:sing, normOf:normOf };
+  return VOC;
+}
+/* The ideas one part of an entry names, each with where: the longest
+   name that starts at a word wins, as the Atlas files a word, and the
+   reading goes on after it. Read once per copy of the page. */
+function mentionsOf(sec){
+  var V = vocab();
+  if (!V) return [];
+  if (sec.ments) return sec.ments;
+  var tk = [], m, re = /[\p{L}\p{N}]+/gu, out = [];
+  while ((m = re.exec(sec.raw))){ var l = fold(m[0]); tk.push({ s:m.index, e:m.index + m[0].length, c:m[0], l:l, n:V.sing(l) }); }
+  for (var i = 0; i < tk.length; i++){
+    var best = null;
+    ['n','l','c'].forEach(function(mode){
+      (V.find[mode][tk[i][mode]] || []).forEach(function(x){
+        if ((best && x.k.length <= best.k.length) || i + x.k.length > tk.length) return;
+        for (var j = 1; j < x.k.length; j++) if (tk[i + j][mode] !== x.k[j]) return;
+        best = x;
+      });
+    });
+    if (!best) continue;
+    var s = tk[i].s, e = tk[i + best.k.length - 1].e, sent = sentOf(sec, s);
+    best.ids.forEach(function(id){ out.push({ c:id, s:s, e:e, sent:sent }); });
+    i += best.k.length - 1;
+  }
+  return (sec.ments = out);
+}
+/* What a term can be. Its own name first; only a term no idea is called
+   is looked for inside longer names, as the Topic Atlas does it. */
+function ideasOf(q){
+  var V = vocab(); if (!V) return [];
+  var nm = V.normOf(q); if (!nm) return [];
+  var out = {}, push = function(c, mt, via){ if (!out[c] || CMT[mt][1] > CMT[out[c].mt][1]) out[c] = { c:c, mt:mt, via:via }; };
+  (V.names[nm] || []).forEach(function(c){ push(c, 'name', nm); });
+  if (!Object.keys(out).length && nm.split(' ').some(function(w){ return w.length >= 2 && !STOP.test(w); })){
+    var pnm = ' ' + nm + ' ', qw = nm.split(' ').filter(function(w){ return w.length >= 3; }), conts = [], withins = [], words = [];
+    V.nameList.forEach(function(n){
+      if (n === nm) return;
+      var pn = ' ' + n + ' ';
+      if (pn.indexOf(pnm) >= 0) conts.push(n);
+      else if (nm.length > n.length + 2 && pnm.indexOf(pn) >= 0) withins.push(n);
+      else if (qw.length > 1 && qw.every(function(w){ return pn.indexOf(' ' + w + ' ') >= 0; })) words.push(n);
+    });
+    conts.sort(function(a, b){ return a.length - b.length; }).slice(0, 40).forEach(function(n){ V.names[n].forEach(function(c){ push(c, 'contains', n); }); });
+    withins.sort(function(a, b){ return b.length - a.length; }).slice(0, 12).forEach(function(n){ V.names[n].forEach(function(c){ push(c, 'within', n); }); });
+    words.sort(function(a, b){ return a.length - b.length; }).slice(0, 25).forEach(function(n){ V.names[n].forEach(function(c){ push(c, 'words', n); }); });
+  }
+  return Object.keys(out).map(function(k){ return out[k]; });
+}
+/* from a term's ideas along the links, nearest first */
+function traverse(ideas, hops){
+  var V = vocab(), got = {}, queue = [];
+  ideas.forEach(function(x){ if (!got[x.c]){ got[x.c] = { c:x.c, d:0, mt:x.mt, start:x.c, path:[], hop:1 }; queue.push(got[x.c]); } });
+  for (var i = 0; i < queue.length; i++){
+    var cur = queue[i];
+    if (cur.d >= hops) continue;
+    (V.adj[cur.c] || []).forEach(function(l){
+      if (got[l.o]) return;
+      got[l.o] = { c:l.o, d:cur.d + 1, mt:cur.mt, start:cur.start, path:cur.path.concat([{ rel:l.rel, c:l.o }]), hop:cur.hop * STEP[l.rel] };
+      queue.push(got[l.o]);
+    });
+  }
+  return queue;
+}
+/* Reading every entry for its ideas took 0.8 s at the first search over
+   2,700 entries on a desk computer, and the iPad is slower; so the page
+   reads them ahead, a hundred entries at a time between other work, as
+   soon as it has them, and the first search finds them read. */
+var warming = null, warmAgain = false;
+function warm(){
+  if (warming){ warmAgain = true; return; }
+  if (!vocab()) return;
+  var i = 0;
+  warming = setTimeout(function step(){
+    var end = Math.min(entries.length, i + 100);
+    for (; i < end; i++) prep(entries[i]).forEach(mentionsOf);
+    warming = i < entries.length ? setTimeout(step, 0) : null;
+    if (!warming && warmAgain){ warmAgain = false; warm(); }
+  }, 0);
+}
+function ideaName(c){ var V = vocab(); return V && V.C[c] ? V.C[c].label : c; }
+function ideaAxis(c){ var V = vocab(); return V && V.C[c] ? V.C[c].axis : 'text'; }
+/* The ideas an entry names, by what its sentences do: what it asks for,
+   what its project is about, and what they bring. Every idea once, in
+   the most telling place it is named; one asked for is not also listed
+   as theirs. */
+function profileOf(e){
+  if (!vocab() || !SX.docs[e.id]) return null;
+  var out = { seek:{}, proj:{}, own:{} }, rank = { seek:3, title:2, proj:2, frame:1, own:0 };
+  prep(e).forEach(function(sec){
+    mentionsOf(sec).forEach(function(m){
+      var l = levelOf(sec, m.sent); if (l === 'none') return;
+      var g = l === 'title' ? 'proj' : l === 'frame' ? null : l;
+      if (!g) return;
+      out[g][m.c] = (out[g][m.c] || 0) + 1;
+    });
+  });
+  Object.keys(out.seek).forEach(function(c){ delete out.own[c]; delete out.proj[c]; });
+  Object.keys(out.proj).forEach(function(c){ delete out.own[c]; });
+  return out;
+}
+function profileHTML(e){
+  var p = profileOf(e); if (!p) return '';
+  var row = function(g, name){
+    var ids = Object.keys(p[g]).sort(function(a, b){ return p[g][b] - p[g][a]; });
+    if (!ids.length) return '';
+    return '<div class="prow"><span class="plab lv-' + g + '">' + name + '</span><span class="pchips">'
+      + ids.map(function(c){ return '<button class="idea ax-' + ideaAxis(c) + '" data-idea="' + esc(ideaName(c)) + '" title="Search for it">' + esc(ideaName(c)) + '</button>'; }).join('') + '</span></div>';
+  };
+  var h = row('seek', 'Asks for') + row('proj', 'The project') + row('own', 'They bring');
+  var read = prep(e).some(function(sec){ return sec.roles; });
+  if (read) h += '<div class="plegend"><span>Sentences read as</span><u class="sr-A sr">asking</u><u class="sr-P sr">the project</u><u class="sr-W sr">about them</u><span>\u00B7 press one to put it right</span></div>';
+  return h ? '<div class="profile">' + h + '</div>' : '';
 }
 
 /* The texts the search reads are each entry's own page, which the list
@@ -938,6 +1226,7 @@ function syncIndex(){
   }).then(function(){ SX.failed = ''; try { localStorage.setItem(SXKEY, '1'); } catch(e){} }, function(err){ SX.failed = err.message; }).then(function(){
     SX.running = null; SX.waiting = 0;
     if (found){ runSearch(); drawRows(); if (view.results) drawResults(); } else indexSays();
+    warm();
     if (SX.again){ SX.again = false; syncIndex(); }
   });
   return SX.running;
@@ -953,7 +1242,10 @@ function indexSays(){
 /* An entry's parts, each with where its sentences end and which of them
    ask for something, made once per copy of its page. */
 function prep(e){
-  var d = SX.docs[e.id], key = d ? d.h : 'l|' + (e.list_text || '') + '|' + (e.keywords || '') + '|' + (e.topic || '');
+  /* the page as kept for the search, or as fetched when the entry was
+     opened, or else the list line */
+  var d = SX.docs[e.id] || (detail[e.id] && detail[e.id].fields ? { h:'d' + e.fetched_at, f:texts(detail[e.id].fields) } : null);
+  var key = (d ? d.h : 'l|' + (e.list_text || '') + '|' + (e.keywords || '') + '|' + (e.topic || '')) + '|' + roleRev;
   var c = prepped[e.id];
   if (c && c.key === key) return c.secs;
   var site = siteOf(e), pairs = d ? d.f : [['On the list', e.list_text], ['Keywords', e.keywords], ['Topic', e.topic]];
@@ -962,18 +1254,35 @@ function prep(e){
     var lvl = f[1] ? partOf(f[0], e, site, ownField) : null, k = f[0] + '\u0000' + f[1];
     if (!lvl || seen[k]) return;
     seen[k] = 1;
-    var raw = String(f[1]), ends = [], seek = [], re = /[.!?]+(?=\s|$)|\n/g, m;
-    while ((m = re.exec(raw))) ends.push(m.index + m[0].length);
+    /* a sentence ends at a stop before a capital, a bullet or a figure,
+       or at the end of a line, which is how the sites set out lists */
+    var raw = String(f[1]), ends = [], re = /[.!?;](?=\s+[A-Z\u2022"\u201C(0-9\-\u2013])|\n/g, m;
+    while ((m = re.exec(raw))) ends.push(m.index + 1);
     if (ends[ends.length - 1] !== raw.length) ends.push(raw.length);
-    if (lvl === 'proj' && e.kind !== 'offers') ends.forEach(function(b, i){ seek.push(SEEKS.test(raw.slice(i ? ends[i - 1] : 0, b))); });
-    secs.push({ lvl:lvl, label:f[0], raw:raw, ft:fold(raw), ends:ends, seek:seek });
+    var sec = { lvl:lvl, label:f[0], raw:raw, ft:fold(raw), ends:ends };
+    if (lvl === 'own' || lvl === 'proj' || lvl === 'seek'){
+      var prev = null, head = null, dflt = ROLE_OF[lvl];
+      sec.rl = []; sec.roles = []; sec.keys = [];
+      ends.forEach(function(b, i){
+        var text = raw.slice(i ? ends[i - 1] : 0, b).trim(), k = sentKey(e, text);
+        var r = /[A-Za-z]/.test(text) ? roleOf(text, prev, head, dflt) : (prev || dflt);
+        sec.rl.push(r); sec.keys.push(k);
+        sec.roles.push(roleFix[k] || ROLE[r]);
+        if (!R_BULLET.test(text)) head = r;
+        prev = r;
+      });
+    }
+    secs.push(sec);
   });
   /* b2match's short description is the start of its description, word
      for word, and counted twice it doubled every term in it */
+  var all = secs;
   secs = secs.filter(function(x, i){
     var core = x.ft.replace(/(\.\.\.|\u2026)\s*$/, '').trim();
-    return core.length < 60 || !secs.some(function(o, j){ return j !== i && o.ft.length > x.ft.length && o.ft.indexOf(core) >= 0; });
+    return core.length < 60 || !all.some(function(o, j){ return j !== i && o.ft.length > x.ft.length && o.ft.indexOf(core) >= 0; });
   });
+  /* the entry's text shows every part, read once for the search or not */
+  secs.shown = all;
   prepped[e.id] = { key:key, secs:secs };
   return secs;
 }
@@ -982,7 +1291,7 @@ function sentOf(sec, pos){
   while (lo < hi){ var mid = (lo + hi) >> 1; if (sec.ends[mid] <= pos) lo = mid + 1; else hi = mid; }
   return lo;
 }
-function levelOf(sec, sent){ return sec.lvl === 'proj' && sec.seek[sent] ? 'seek' : sec.lvl; }
+function levelOf(sec, sent){ return sec.roles ? sec.roles[sent] : sec.lvl; }
 
 /* Commas or semicolons part the terms; a term of several words is found
    as those words in a row, or less surely as all of them in one sentence. */
@@ -1055,12 +1364,51 @@ var FLAGS = [['contact','the name'], ['org','the organisation'], ['country','the
 function runSearch(){
   var terms = parseTerms(view.q || '');
   if (!terms.length){ found = null; return; }
+  var V = vocab(), N = Math.max(entries.length, 1), cdf = {};
+  /* how many entries name each idea, for its rarity */
+  if (V) entries.forEach(function(e){
+    var seen = {};
+    prep(e).forEach(function(sec){ mentionsOf(sec).forEach(function(m){ if (!seen[m.c]){ seen[m.c] = 1; cdf[m.c] = (cdf[m.c] || 0) + 1; } }); });
+  });
+  var rare = function(df){ return df ? Math.log(1 + N / df) / Math.log(1 + N) : 1; };
+  terms.forEach(function(t){
+    var off = offIdeas[t.q.toLowerCase()] || {};
+    t.all = V ? ideasOf(t.q) : [];
+    t.all.forEach(function(x){ x.off = !!off[x.c]; });
+    t.ideas = t.all.filter(function(x){ return !x.off; });
+    t.reached = t.ideas.length ? traverse(t.ideas, SW.hops) : [];
+    t.byC = {};
+    t.reached.forEach(function(r){ t.byC[r.c] = r; });
+    /* A term that is no idea's name is also looked for as written: an
+       entry that says "water retention" says more than one that only
+       names water, which is all "water retention" can be as an idea.
+       Beside an idea it counts in full; alone, half, as the Topic Atlas
+       counts the words themselves. */
+    t.literal = !t.all.some(function(x){ return x.mt === 'name'; });
+    t.text = !t.all.length;
+  });
   var per = {}, df = terms.map(function(){ return 0; });
   entries.forEach(function(e){
     var secs = prep(e), r = null;
     terms.forEach(function(t, ti){
       var hits = [];
-      secs.forEach(function(sec, si){ termHits(sec, si, t, hits); });
+      if (t.literal) secs.forEach(function(sec, si){ termHits(sec, si, t, hits); });
+      if (!t.text) secs.forEach(function(sec, si){
+        /* a phrase counts once for a term, for the nearest idea that
+           reached it, as in the Topic Atlas */
+        var at = {};
+        mentionsOf(sec).forEach(function(m){
+          var rc = t.byC[m.c]; if (!rc) return;
+          var q = CMT[rc.mt][1], h = at[m.s];
+          /* where the term stands as written, the words line holds it */
+          if (t.literal && hits.some(function(w){ return !w.c && w.si === si && w.spans[0][0] < m.e && m.s < w.spans[0][1]; })) return;
+          if (h && h.hop * h.q >= rc.hop * q) return;
+          var x = { si:si, sent:m.sent, spans:[[m.s, m.e]], k:rc.mt, c:m.c, rc:rc, hop:rc.hop, q:q, idf:Math.min(rare(cdf[m.c]), rare(cdf[rc.start])) };
+          if (h) hits[hits.indexOf(h)] = x; else hits.push(x);
+          at[m.s] = x;
+        });
+      });
+      hits = hits.filter(function(h){ return levelOf(secs[h.si], h.sent) !== 'none'; });
       var flags = FLAGS.filter(function(w){ return e[w[0]] && t.who.test(fold(e[w[0]])); }).map(function(w){ return w[1]; });
       if (!hits.length && !flags.length) return;
       if (hits.length) df[ti]++;
@@ -1069,10 +1417,18 @@ function runSearch(){
     });
     if (r) per[e.id] = r;
   });
-  /* rarity: 1 for a term in one entry, falling towards ln 2 / ln(N+1)
-     for one in every entry, as the Topic Atlas counts a concept's */
-  var N = Math.max(entries.length, 1);
-  terms.forEach(function(t, i){ t.df = df[i]; t.idf = df[i] ? Math.log(1 + N / df[i]) / Math.log(1 + N) : 1; });
+  /* a term read as its words gets its rarity from the entries holding them */
+  terms.forEach(function(t, i){
+    t.df = df[i]; t.idf = rare(df[i]);
+    if (t.literal){
+      var wdf = 0;
+      Object.keys(per).forEach(function(id){ var tr = per[id].terms[i]; if (tr && tr.hits.some(function(h){ return !h.c; })) wdf++; });
+      Object.keys(per).forEach(function(id){
+        var tr = per[id].terms[i];
+        if (tr) tr.hits.forEach(function(h){ if (!h.c){ h.hop = 1; h.q = MT[h.k][1] * (t.text ? TEXTQ : 1); h.idf = rare(wdf); } });
+      });
+    }
+  });
   found = { terms:terms, per:per };
   rescore();
 }
@@ -1102,14 +1458,17 @@ function score(r, terms){
     var groups = {}, rows = [];
     tr.hits.forEach(function(h){
       h.lvl = levelOf(r.secs[h.si], h.sent);
-      var k = h.lvl + '|' + h.si + '|' + h.k;
-      if (!groups[k]){ groups[k] = { lvl:h.lvl, si:h.si, label:r.secs[h.si].label, k:h.k, hits:[] }; rows.push(groups[k]); }
+      var k = h.lvl + '|' + h.si + '|' + (h.c || '') + '|' + h.k;
+      if (!groups[k]){ groups[k] = { lvl:h.lvl, si:h.si, label:r.secs[h.si].label, k:h.k, c:h.c, rc:h.rc, hits:[] }; rows.push(groups[k]); }
       groups[k].hits.push(h);
     });
-    var net = 0;
+    /* what they ask for is not held against them for also having it */
+    var asks = rows.some(function(g){ return g.lvl === 'seek'; }), net = 0;
     rows.forEach(function(g){
-      g.W = SW[g.lvl]; g.idf = t.idf; g.q = MT[g.k][1]; g.n = Math.min(g.hits.length, CAP);
-      g.pts = (g.lvl === 'own' ? -1 : 1) * g.W * g.idf * g.q * g.n;
+      var x = g.hits[0];
+      g.W = SW[g.lvl]; g.idf = x.idf; g.hop = x.hop; g.q = x.q; g.n = Math.min(g.hits.length, CAP);
+      g.waived = g.lvl === 'own' && asks;
+      g.pts = g.waived ? 0 : (g.lvl === 'own' ? -1 : 1) * g.W * g.idf * g.hop * g.q * g.n;
       net += g.pts; sl[g.lvl] += Math.abs(g.pts);
     });
     rows.sort(function(a, b){ return (a.lvl === 'own') - (b.lvl === 'own') || Math.abs(b.pts) - Math.abs(a.pts); });
@@ -1144,7 +1503,7 @@ function score(r, terms){
     places[a].forEach(function(x){ places[b].forEach(function(y){
       if (x.si !== y.si) return;
       var m = meetOf(r.secs[x.si], x, y); if (!m) return;
-      var v = MEET[m][0] * MT[x.k][1] * MT[y.k][1];
+      var v = MEET[m][0] * x.q * x.hop * y.q * y.hop;
       if (!best || v > best.v) best = { a:a, b:b, m:m, v:v, x:x, y:y };
     }); });
     if (best){ sum += best.v; if (!r.meet || best.v > r.meet.v) r.meet = best; }
@@ -1187,18 +1546,20 @@ function drawResults(){
   var rs = list.map(function(e){ return found.per[e.id]; });
   var counts = terms.map(function(t, i){ return rs.filter(function(r){ return r.terms[i]; }).length; });
   var h = '<div class="shead"><div class="sterms">' + terms.map(function(t, i){
-      return '<span class="sterm' + (counts[i] ? '' : ' none') + '" title="' + (t.df ? 'In the texts of ' + t.df + ' of the ' + entries.length + ' entries; the rarer, the more it counts' : '') + '">'
-        + esc(t.q) + ' · ' + (counts[i] ? counts[i] + ' entr' + (counts[i] === 1 ? 'y' : 'ies') + (t.df ? ' · rarity ' + num(t.idf) : '') : 'found nowhere') + '</span>'; }).join('')
+      return '<span class="sterm' + (counts[i] ? '' : ' none') + '" title="' + (t.df ? 'Found in ' + t.df + ' of the ' + entries.length + ' entries' : '') + '">'
+        + esc(t.q) + ' · ' + (counts[i] ? counts[i] + ' entr' + (counts[i] === 1 ? 'y' : 'ies') + (t.text && t.df ? ' · rarity ' + num(t.idf) : '') : 'found nowhere') + '</span>'; }).join('')
     + '<span>→ <b>' + list.length + ' entr' + (list.length === 1 ? 'y' : 'ies') + '</b> reached' + (!view.any && terms.length > 1 ? ', each with every term' : '') + '</span></div>'
+    + mapHTML(terms)
     + '<div class="sopts">' + chipsOf([['all','All venues'], ['site', site ? site.name : 'This venue']], 'scope', view.scope || 'all')
     + (terms.length > 1 ? '<span class="gap"></span>' + chipsOf([['every','Every term'], ['any','Any term']], 'any', view.any ? 'any' : 'every') : '')
     + '<span class="gap"></span>' + chipsOf(KINDS, 'kind', view.kind)
     + '<span class="gap"></span><button class="tgl' + (view.sums ? ' on' : '') + '" data-sums="1" aria-pressed="' + !!view.sums + '"><span class="knob"></span>Show the sums</button>'
     + '<button class="linkbtn" data-weigh="1">' + (weighing ? 'Hide the weights' : 'Weights') + '</button></div>';
-  if (weighing) h += '<div class="sweights">' + [['title','The headline', 5], ['seek','What they seek', 5], ['proj','The project', 5], ['frame','Keywords and topics', 5],
-      ['own','What they already have, taken off', 5], ['near','Terms meeting, at most ×(1 + this)', 2]].map(function(w){
+  if (weighing) h += '<div class="sweights">' + [['title','The headline', 5], ['seek','What they ask for', 5], ['proj','The project', 5], ['frame','Keywords and topics', 5],
+      ['own','Who they are, taken off', 5], ['near','Terms meeting, at most ×(1 + this)', 2]].map(function(w){
       return '<label for="sw-' + w[0] + '">' + w[1] + '</label><input type="range" id="sw-' + w[0] + '" data-sw="' + w[0] + '" min="0" max="' + w[2] + '" step="0.1" value="' + SW[w[0]] + '">'
         + '<span class="meta">' + (w[0] === 'own' ? '−' : '') + SW[w[0]].toFixed(1) + '</span>'; }).join('')
+    + '<span class="lbl">Steps to nearby ideas</span><span class="steps">' + chipsOf([['0','None'], ['1','One']], 'hops', String(SW.hops)) + '</span><span></span>'
     + '<button class="linkbtn" data-weigh="reset">As they were</button></div>';
   h += '<div class="slegend">' + PARTS.map(function(l){ return '<span><span class="badge lv-' + l + '">' + LV[l][0] + '</span> ' + LV[l][1] + (l === 'own' ? ', which counts against' : '') + '</span>'; }).join('')
     + (terms.length > 1 ? '<span><span class="badge lv-near">+</span> where the terms meet</span>' : '') + '</div>'
@@ -1209,13 +1570,15 @@ function drawResults(){
       + (terms.length > 1 && !view.any ? ' Try Any term.' : '') + '</div>';
   } else {
     var max = Math.max.apply(null, rs.map(function(r){ return Math.abs(r.score); }).concat([0.001]));
+    var cw = colWidths(list.slice(0, showing));
+    $('#det').style.setProperty('--ww', cw.ww + 'px'); $('#det').style.setProperty('--mw', cw.mw + 'px');
     var parted = false;
     h += list.slice(0, showing).map(function(e){
       var r = found.per[e.id], head = '';
       if (!parted && !r.main){
         parted = true;
         head = '<div class="sdiv"><b>Found only in what they already have</b>'
-          + (view.any || terms.length < 2 ? 'The terms' : 'A term') + ' stands in their own expertise or organisation, so they may not need it from us.</div>';
+          + (view.any || terms.length < 2 ? 'The terms stand' : 'A term stands') + ' only where they say who they are and what they bring, so they may not need it from us.</div>';
       }
       return head + hitCard(e, r, max, terms);
     }).join('');
@@ -1223,6 +1586,39 @@ function drawResults(){
   }
   $('#det').innerHTML = h;
   indexSays();
+}
+/* What each term became: its ideas, each one off at a press when it is
+   the wrong reading of the term, and how many ideas one step away it
+   reaches, listed on asking. */
+var offIdeas = {}, nearOpen = {}, fixing = null;
+function mapHTML(terms){
+  if (!vocab()) return '';
+  return '<div class="smaps">' + terms.map(function(t){
+    var tq = t.q.toLowerCase();
+    if (t.text) return '<div class="smap"><b>' + esc(t.q) + '</b> <span class="prel">→</span> <span class="pmt">¶</span> no idea is called so; its words are looked for in the texts</div>';
+    var near = t.reached.filter(function(x){ return x.d > 0; });
+    return '<div class="smap"><b>' + esc(t.q) + '</b> <span class="prel">→</span> ' + (t.literal ? '<span class="pmt" title="looked for as written, in full">¶</span> its words, and ' : '') + t.all.map(function(x){
+        return '<button class="idea ax-' + ideaAxis(x.c) + (x.off ? ' off' : '') + '" data-offidea="' + esc(tq + '|' + x.c) + '" title="'
+          + esc(x.off ? 'Left out; press to use it again' : CMT[x.mt][2] + ' (' + x.via + '). Press to leave it out') + '"><span class="pmt">' + CMT[x.mt][0] + '</span>' + esc(ideaName(x.c)) + '</button>'; }).join(' ')
+      + (near.length ? ' <button class="linkbtn" data-near="' + esc(tq) + '">+ ' + near.length + ' idea' + (near.length === 1 ? '' : 's') + ' one step away</button>' : '')
+      + (nearOpen[tq] && near.length ? '<div class="nbrs">' + near.map(function(x){
+          var st = x.path[x.path.length - 1];
+          return '<span class="nb"><span class="prel" title="' + st.rel + '">' + RELG[st.rel] + '</span><span class="idea ax-' + ideaAxis(x.c) + '">' + esc(ideaName(x.c)) + '</span><span class="meta">×' + num(x.hop) + '</span></span>'; }).join('') + '</div>' : '')
+      + '</div>';
+  }).join('') + '</div>';
+}
+/* a line's way from the term to the idea the text names */
+function pathOf(g, t){
+  if (!g.c) return '<span class="pmt" title="the words themselves: ' + MT[g.k][2] + '">¶</span><span class="idea ax-text">“' + esc(t ? t.q : '') + '”</span>';
+  var rc = g.rc, h = '<span class="pmt" title="' + CMT[rc.mt][2] + '">' + CMT[rc.mt][0] + '</span><span class="idea ax-' + ideaAxis(rc.start) + '" title="' + esc(ideaName(rc.start)) + '">' + esc(ideaName(rc.start)) + '</span>';
+  rc.path.forEach(function(st){ h += '<span class="prel" title="' + st.rel + ', ×' + num(STEP[st.rel]) + '">—' + RELG[st.rel] + '→</span><span class="idea ax-' + ideaAxis(st.c) + '" title="' + esc(ideaName(st.c)) + '">' + esc(ideaName(st.c)) + '</span>'; });
+  return h;
+}
+/* the choice that puts a misread sentence right */
+function fixHTML(k){
+  var cur = roleFix[k] || '';
+  return '<div class="fixrole">This sentence ' + [['seek','asks for something'], ['proj','is about the project'], ['own','is about them'], ['none','says nothing that counts'], ['','as read']].map(function(o){
+    return '<button class="chip' + (cur === o[0] ? ' on' : '') + '" data-setrole="' + o[0] + '" data-rolekey="' + esc(k) + '">' + o[1] + '</button>'; }).join('') + '</div>';
 }
 /* A card's bar is its score, split in the colours of the parts that made
    it and of the terms' meeting; what was taken off follows it, hatched. */
@@ -1233,55 +1629,128 @@ function barOf(r, max){
     + (r.sl.near > 0 ? '<i class="lv-near" style="width:' + w(r.sl.near) + '%"></i>' : '')
     + (r.sl.own ? '<i class="lv-own" style="width:' + w(r.sl.own * (k || 1)) + '%"></i>' : '');
 }
+/* ── the card's lines, after the Topic Atlas's ──
+   Mark asked for the Topic Atlas's way of drawing them (2026-10-22): one
+   grid per card, each line the way from the term to the idea the entry
+   names, a dotted arrow, and then the words the entry uses, in a shaded
+   column of their own just right of the card's longest way; where two
+   terms meet, a bracket joins their two lines, with how they meet beside
+   it. The words' column, and where they meet, are as wide on every card
+   (colWidths), so the eye runs down one column; the arrow is what
+   stretches. With Show the sums, each line's sum stands under its words. */
+var MEAS = null;
+function textW(s, px, weight){
+  MEAS = MEAS || document.createElement('canvas').getContext('2d');
+  MEAS.font = (weight ? weight + ' ' : '') + px + 'px ' + getComputedStyle(document.documentElement).getPropertyValue('--body');
+  return Math.ceil(MEAS.measureText(s).width);
+}
+function phraseOf(r, g){ var x = g.hits[0], sec = r.secs[g.si]; return x.spans.map(function(p){ return sec.raw.slice(p[0], p[1]); }).join(' … '); }
+function wordsText(r, g){ return '“' + phraseOf(r, g) + '”' + (g.hits.length > 1 ? ' ×' + g.hits.length : '') + '  ' + g.label.toLowerCase(); }
+function arithText(g){ return (g.lvl === 'own' ? '−' : '') + [num(g.W), num(g.idf), num(g.hop), num(g.q), g.n].join(' × ') + ' = ' + num(g.pts); }
+function againstText(g){ return g.waived ? 'not held against them: they ask for it too' : g.lvl === 'own' ? 'counts against' : ''; }
+function pathW(g, t){
+  if (!g.c) return 60 + textW(t.q, 13.5);
+  var w = 26 + textW(ideaName(g.rc.start), 13.5) + 16;
+  g.rc.path.forEach(function(st){ w += 34 + textW(ideaName(st.c), 13.5) + 16; });
+  return w;
+}
+/* which of a term's lines a card shows: the first three, all on asking,
+   and any line where the terms meet */
+function shownRows(e, r, ti){
+  var tr = r.terms[ti], m = r.meet;
+  return tr.rows.map(function(g, k){ return { g:g, k:k }; }).filter(function(x){
+    return opened[e.id + '|' + ti] || x.k < 3 || (m && (x.g.hits.indexOf(m.x) >= 0 || x.g.hits.indexOf(m.y) >= 0));
+  });
+}
+function colWidths(list){
+  var ww = 0, mw = 0;
+  list.forEach(function(e){
+    var r = found.per[e.id];
+    found.terms.forEach(function(t, ti){
+      if (!r.terms[ti]) return;
+      shownRows(e, r, ti).forEach(function(x){
+        var w = 30 + textW(wordsText(r, x.g), 14), a = againstText(x.g);
+        if (a) w = Math.max(w, 30 + textW(a, 12));
+        if (view.sums) w = Math.max(w, 30 + textW(arithText(x.g), 11.5) * 0.92);
+        ww = Math.max(ww, w);
+      });
+    });
+    if (r.meet) mw = Math.max(mw, 34 + textW(MEET[r.meet.m][1], 11));
+  });
+  return { ww:Math.min(420, Math.max(200, ww + 24)), mw:mw };
+}
 function hitCard(e, r, max, terms){
-  var s = siteOf(e), line = e.list_text ? e.list_text.split('\n')[0] : '', rows = '', best = null, top = 0;
+  var s = siteOf(e), line = e.list_text ? e.list_text.split('\n')[0] : '', best = null, top = 0;
   terms.forEach(function(t, ti){
     var tr = r.terms[ti];
     if (tr && tr.rows[0] && tr.rows[0].pts > top){ top = tr.rows[0].pts; best = e.id + '|' + ti + '|0'; }
   });
-  var mk = r.meet ? e.id + '|m' : null, meetOpen = mk && (snips[mk] !== undefined ? snips[mk] : r.meet.m !== 'next');
+  var m = r.meet, mk = m ? e.id + '|m' : null, meetOpen = mk && (snips[mk] !== undefined ? snips[mk] : m.m !== 'next');
+  var h = '', row = 0, at = {}, pw = 300;
   terms.forEach(function(t, ti){
     var tr = r.terms[ti]; if (!tr) return;
-    var all = opened[e.id + '|' + ti], n = tr.hits.length;
-    rows += '<div class="qgroup"><b>' + esc(t.q) + '</b> — ' + (n ? n + ' place' + (n === 1 ? '' : 's') : 'no place in the texts')
+    var n = tr.hits.length, rows = shownRows(e, r, ti);
+    row++;
+    h += '<div class="lrow lq" style="grid-row:' + row + '"><span class="qgroup"><b>' + esc(t.q) + '</b> — ' + (n ? n + ' place' + (n === 1 ? '' : 's') : 'no place in the texts')
       + (tr.flags.length ? ' · in ' + tr.flags.join(', ') : '')
-      + (view.sums && tr.rows.length > 1 ? '<span class="arith">' + tr.rows.map(function(g){ return num(g.pts); }).join(' + ').replace(/\+ −/g, '− ') + ' = <b>' + num(tr.net) + '</b></span>' : '') + '</div>';
-    (all ? tr.rows : tr.rows.slice(0, 3)).forEach(function(g, gi){
-      var x = g.hits[0], sec = r.secs[g.si], key = e.id + '|' + ti + '|' + gi;
-      rows += '<div class="path"><span class="pmt" title="' + MT[g.k][2] + '">' + MT[g.k][0] + '</span>'
-        + '<span class="pw lv-' + g.lvl + '">' + esc(x.spans.map(function(p){ return sec.raw.slice(p[0], p[1]); }).join(' … ')) + '</span>'
-        + '<span class="prel">→</span><span class="badge lv-' + g.lvl + '" title="' + LV[g.lvl][1] + '">' + LV[g.lvl][0] + '</span>'
-        + '<button class="psrc" data-snip="' + esc(key) + '">' + esc(g.label.toLowerCase()) + (g.hits.length > 1 ? ' ×' + g.hits.length : '') + '</button>'
-        + (g.lvl === 'own' ? '<span class="against">counts against</span>' : '')
-        + (view.sums ? '<span class="arith" title="the part\'s weight × rarity × how surely × mentions, at most two">'
-            + (g.lvl === 'own' ? '−' : '') + [num(g.W), num(g.idf), num(g.q), g.n].join(' × ') + ' = <b>' + num(g.pts) + '</b></span>' : '')
-        + '</div>';
-      if (snips[key] !== undefined ? snips[key] : key === best && !meetOpen) rows += snippet(sec, x.sent, g.hits, g.lvl);
+      + (view.sums && tr.rows.length > 1 ? ' · <span class="mono">' + tr.rows.map(function(g){ return num(g.pts); }).join(' + ').replace(/\+ −/g, '− ') + ' = ' + num(tr.net) + '</span>' : '') + '</span>';
+    if (row === 1){
+      h += '<span class="lh lwh">the words they use' + (view.sums ? ' · points' : '') + '</span>';
+      if (m) h += '<span class="lh lmh">where they meet <span class="mono">×' + num(r.F) + '</span></span>';
+    }
+    h += '</div>';
+    rows.forEach(function(x){
+      var g = x.g, hit = g.hits[0], sec = r.secs[g.si], key = e.id + '|' + ti + '|' + x.k, fk = sec.keys ? sec.keys[hit.sent] : null;
+      var meets = m && (g.hits.indexOf(m.x) >= 0 || g.hits.indexOf(m.y) >= 0);
+      var open = snips[key] !== undefined ? snips[key] : key === best && !meetOpen, a = againstText(g);
+      pw = Math.max(pw, pathW(g, t) + 56);
+      row++;
+      if (meets) at[g.hits.indexOf(m.x) >= 0 ? 'x' : 'y'] = row;
+      h += '<div class="lrow line" style="grid-row:' + row + '" data-snip="' + esc(key) + '" data-open="' + (open ? 1 : 0) + '"><span class="lp">' + pathOf(g, t) + '<i class="dots" aria-hidden="true"></i></span>'
+        + '<span class="lw"><span class="lw1">'
+        + (fk ? '<button class="badge lv-' + g.lvl + '" data-fixrole="' + esc(fk) + '" title="' + LV[g.lvl][1] + (roleFix[fk] ? ', as you set it' : '') + '. Press if the sentence is read wrongly">' + LV[g.lvl][0] + '</button>'
+              : '<span class="badge lv-' + g.lvl + '" title="' + LV[g.lvl][1] + '">' + LV[g.lvl][0] + '</span>')
+        + '<span class="lph lv-' + g.lvl + (meets ? ' meetw' : '') + '">“' + esc(phraseOf(r, g)) + '”' + (g.hits.length > 1 ? ' ×' + g.hits.length : '') + '</span>'
+        + '<span class="lfield">' + esc(g.label.toLowerCase()) + '</span>' + (meets ? '<i class="marm" aria-hidden="true"></i>' : '') + '</span>'
+        + (a ? '<span class="against' + (g.waived ? ' waived' : '') + '">' + a + '</span>' : '')
+        + (view.sums ? '<span class="lwa arith" title="the sentence\'s weight × rarity × the step × how surely × mentions, at most two">' + esc(arithText(g)).replace(/= (.*)$/, '= <b>$1</b>') + '</span>' : '')
+        + '</span></div>';
+      if (fk && fixing === fk) h += '<div class="lsn" style="grid-row:' + (++row) + '">' + fixHTML(fk) + '</div>';
+      if (open) h += '<div class="lsn" style="grid-row:' + (++row) + '">' + snippet(sec, hit.sent, g.hits, g.lvl) + '</div>';
     });
-    if (tr.rows.length > 3 && !all) rows += '<button class="showmore" data-more="' + esc(e.id + '|' + ti) + '">show all ' + tr.rows.length + ' ↓</button>';
+    if (tr.rows.length > rows.length) h += '<div class="lrow lmore" style="grid-row:' + (++row) + '"><span class="lp"><button class="showmore" data-more="' + esc(e.id + '|' + ti) + '">show all ' + tr.rows.length + ' ↓</button></span></div>';
   });
-  var m = r.meet;
-  if (m){
-    var sec = r.secs[m.x.si];
-    rows += '<div class="qgroup"><span class="badge lv-near">+</span> <b>where they meet</b> — ' + esc(terms[m.a].q) + ' and ' + esc(terms[m.b].q)
-      + ' ' + MEET[m.m][1] + ' in ' + esc(sec.label.toLowerCase()) + (r.pairs > 1 ? ' · the closest of ' + r.pairs + ' pairs, which meet ' + num(r.C) + ' on average' : '')
-      + ' <button class="psrc" data-snip="' + esc(mk) + '">the place</button>'
-      + (view.sums ? '<span class="arith">' + MEET[m.m][0] + ' × ' + num(MT[m.x.k][1]) + ' × ' + num(MT[m.y.k][1]) + ' = <b>' + num(m.v) + '</b></span>' : '') + '</div>';
-    if (meetOpen) rows += m.m === 'next' ? snippet(sec, Math.min(m.x.sent, m.y.sent), [m.x, m.y], 'near', [sec, m.x.sent < m.y.sent ? m.y : m.x])
-                                         : snippet(sec, m.x.sent, [m.x, m.y], 'near');
+  var band = '<i class="wband" style="grid-row:1 / ' + (row + 1) + '" aria-hidden="true"></i>';
+  /* the bracket joining the two lines that meet, and how they meet */
+  if (m && at.x && at.y && at.x !== at.y){
+    var top2 = Math.min(at.x, at.y), bot = Math.max(at.x, at.y), sec = r.secs[m.x.si];
+    var tip = esc(found.terms[m.a].q + ' and ' + found.terms[m.b].q + ' ' + MEET[m.m][1] + ' in ' + sec.label.toLowerCase()
+      + (r.pairs > 1 ? '; the closest of ' + r.pairs + ' pairs, which meet ' + num(r.C) + ' on average' : '') + '. Press for the sentence');
+    h += '<i class="mbr" style="grid-row:' + top2 + ' / ' + bot + '" aria-hidden="true"></i>'
+      + '<span class="mlw" style="grid-row:' + top2 + ' / ' + bot + '"><button class="mlab" data-snip="' + esc(mk) + '" data-open="' + (meetOpen ? 1 : 0) + '" title="' + tip + '">'
+      + MEET[m.m][1] + (view.sums ? ' · ' + num(m.v) : '') + '</button></span>';
+    if (meetOpen) h += '<div class="lsn" style="grid-row:' + (++row) + '">' + (m.m === 'next'
+      ? snippet(sec, Math.min(m.x.sent, m.y.sent), [m.x, m.y], 'near', [sec, m.x.sent < m.y.sent ? m.y : m.x])
+      : snippet(sec, m.x.sent, [m.x, m.y], 'near')) + '</div>';
+  } else if (m){
+    /* both terms met in one line's sentence: said under the lines */
+    h += '<div class="lrow lq" style="grid-row:' + (++row) + '"><span class="qgroup near"><b>where they meet</b> — ' + MEET[m.m][1] + ' in ' + esc(r.secs[m.x.si].label.toLowerCase()) + '</span></div>';
+    if (meetOpen) h += '<div class="lsn" style="grid-row:' + (++row) + '">' + snippet(r.secs[m.x.si], m.x.sent, [m.x, m.y], 'near') + '</div>';
   }
+  var lines = h ? '<div class="lines" style="--pw:' + pw + 'px;grid-template-rows:repeat(' + row + ', auto)">' + band + h + '</div>' : '';
+  var combine = '';
   if (view.sums && r.main && (terms.length > 1 || r.F > 1)){
     var sc = r.nets.filter(function(x){ return x.net > 0 || !x.flag; }).map(function(x){ return num(x.net); });
     var every = !view.any && terms.length > 1;
-    rows += '<div class="combine">' + (sc.length > 1 ? (every ? (sc.length === 2 ? '√' : sc.length === 3 ? '∛' : sc.length + '√') + '(' + sc.join(' × ') + ')' : sc.join(' + ')) + ' = <b>' + num(r.base) + '</b>' : '')
-      + (r.pairs ? ' · meeting ×(1 + ' + num(SW.near) + ' × ' + num(r.C) + ') = <b>' + num(r.score) + '</b>' : '') + '</div>';
+    combine = '<div class="combine">' + (sc.length > 1 ? (every ? (sc.length === 2 ? '√' : sc.length === 3 ? '∛' : sc.length + '√') + '(' + sc.join(' × ') + ')' : sc.join(' + ')) + ' = <b>' + num(r.base) + '</b>' : '')
+      + (r.pairs ? ' · where they meet ×(1 + ' + num(SW.near) + ' × ' + num(r.C) + ') = <b>' + num(r.score) + '</b>' : '') + '</div>';
   }
   return '<div class="hit"><div class="htop"><button class="htitle" data-hit="' + esc(e.id) + '">' + esc(title(e)) + '</button>'
     + '<span class="hsub">' + esc([s.name, e.country].filter(Boolean).join(' · ')) + '</span>'
     + kindTag(e.kind) + (isNew(e) ? '<span class="st newtag">New</span>' : '') + stateTags(e)
     + '<span class="scorewrap"><span class="sbar">' + barOf(r, max) + '</span><span class="snum">' + num(r.score) + '</span></span></div>'
     + (line ? '<div class="hline">' + esc(line) + '</div>' : '')
-    + '<div class="paths">' + rows + '</div></div>';
+    + '<div class="paths">' + lines + '</div>' + combine + '</div>';
 }
 /* The sentence a place is in, its words marked, cut to some 160
    characters each side when a sentence runs on (a page without stops is
@@ -1308,16 +1777,16 @@ function snippet(sec, sent, hits, lvl, also){
 /* The words found, marked in the entry's own text when it is opened from
    the search, so the eye goes to them. Text between the tags only. */
 function lit(html){
-  if (!found) return html;
-  var words = [];
-  found.terms.forEach(function(t){ t.words.forEach(function(w){ if (!STOP.test(w) && words.indexOf(w) < 0) words.push(w); }); });
-  if (!words.length) return html;
-  var re = new RegExp('[\\p{L}\\p{N}]*(?:' + words.map(function(w){ return escRe(baseOf(w)); }).join('|') + ')[\\p{L}\\p{N}]*', 'giu');
-  return html.split(/(<[^>]*>|&[#\w]+;)/).map(function(part, i){
-    return i % 2 ? part : part.replace(re, function(m){
-      var f = fold(m);
-      return words.some(function(w){ return kindOf(f, w); }) ? '<mark class="lit">' + m + '</mark>' : m;
-    });
+  var r = found && found.per[view.id];
+  if (!r) return html;
+  var phr = [];
+  r.terms.forEach(function(tr){ if (tr) tr.hits.forEach(function(h){ h.spans.forEach(function(p){
+    var t = esc(r.secs[h.si].raw.slice(p[0], p[1])); if (t && phr.indexOf(t) < 0) phr.push(t); }); }); });
+  if (!phr.length) return html;
+  phr.sort(function(a, b){ return b.length - a.length; });
+  var re = new RegExp('(^|[^\\p{L}\\p{N}])(' + phr.map(escRe).join('|') + ')(?![\\p{L}\\p{N}])', 'giu');
+  return html.split(/(<[^>]*>)/).map(function(part, i){
+    return i % 2 ? part : part.replace(re, function(m, pre, w){ return pre + '<mark class="lit">' + w + '</mark>'; });
   }).join('');
 }
 var searchTimer = null;
@@ -2016,6 +2485,24 @@ var WHO = [[/^(organisation name|name of organisation\/institution\/company)$/i,
 var TOPIC = /^(topics?|priority areas|disciplines)$/i;
 function isLongField(f){ return !TOPIC.test(f[0]) && (MIDDLE.test(f[0]) || String(f[1] || '').length > 220 || /\n\s*\n/.test(f[1] || '')); }
 function paras(t){ return String(t).split(/\n\s*\n/).map(function(p){ return '<p>' + esc(p).replace(/\n/g, '<br>') + '</p>'; }).join(''); }
+/* A long text of the entry, each sentence underlined in the colour of
+   what it was read as, and pressed to put that right (see "the search").
+   Where the text was not read sentence by sentence (a headline, a list
+   of keywords), it is shown as it always was. */
+function readText(f){
+  var e = byId[view.id], sec = e && prep(e).shown.find(function(x){ return x.roles && x.label === f[0] && x.raw === String(f[1]); });
+  if (!sec) return lit(paras(f[1]));
+  var ws = function(t){ return esc(t).replace(/\n\s*\n/g, '</p><p>').replace(/\n/g, '<br>'); }, out = '', open = null;
+  var said = { seek:'asks for something', proj:'the project', own:'about them', none:'says nothing that counts' };
+  sec.ends.forEach(function(b, i){
+    var piece = sec.raw.slice(i ? sec.ends[i - 1] : 0, b), m = /^(\s*)([\s\S]*?)(\s*)$/.exec(piece), k = sec.keys[i], role = sec.roles[i];
+    if (!m[2]){ out += ws(piece); return; }
+    if (fixing === k) open = k;
+    out += ws(m[1]) + '<span class="sr sr-' + (ROLE_OF[role] || 'N') + (roleFix[k] ? ' fixed' : '') + '" data-sent="' + esc(k) + '" title="Read as: ' + said[role]
+      + (roleFix[k] ? ', as you set it' : '') + '. Press to put it right">' + esc(m[2]) + '</span>' + ws(m[3]);
+  });
+  return lit('<p>' + out + '</p>') + (open ? fixHTML(open) : '');
+}
 function entryBody(fields){
   var seen = {}, list = fields.filter(function(f){ var k = f[0] + '\u0000' + f[1]; if (seen[k]) return false; seen[k] = 1; return true; });
   var long = list.filter(isLongField), short = list.filter(function(f){ return !isLongField(f); });
@@ -2033,7 +2520,7 @@ function entryBody(fields){
          + '<div class="v' + (empty(f[1]) ? ' none' : '') + '">' + (empty(f[1]) ? 'empty on the site' : lit(esc(f[1]))) + '</div></div>'; };
   return '<div class="read"><div class="texts">'
     + (long.length ? long.map(function(f, i){
-        return '<section class="sec' + (i === 0 ? ' lead' : '') + '"><h3>' + esc(f[0]) + '</h3><div class="txt">' + (f[1] ? lit(paras(f[1])) : '<p class="none">empty on the site</p>') + '</div></section>'; }).join('')
+        return '<section class="sec' + (i === 0 ? ' lead' : '') + '"><h3>' + esc(f[0]) + '</h3><div class="txt">' + (f[1] ? readText(f) : '<p class="none">empty on the site</p>') + '</div></section>'; }).join('')
       : '<p class="note">This entry has no long text; everything it says is in the column beside.</p>')
     + '</div><aside class="facts">' + who.map(fact).join('')
     + (who.length && short.length ? '<div class="fbreak"></div>' : '') + short.map(fact).join('')
@@ -2081,7 +2568,7 @@ function drawDetail(){
   } else if (!d){
     h += '<p class="note">Loading the entry…</p>';
   } else if (view.tab === 'fields'){
-    h += entryBody(d.fields || []);
+    h += profileHTML(e) + entryBody(d.fields || []);
   } else if (view.tab === 'orig'){
     h += '<div class="orig">' + esc(d.page_text || '') + '</div>'
       + '<p class="note">Copied ' + esc(stamp(e.fetched_at)) + ' from ' + esc(e.url) + '. A newer copy goes beside this one, never over it: older copies are under History.</p>';
@@ -2580,19 +3067,42 @@ $('#search').addEventListener('focus', function(){
   if (found && !view.results){ view.results = true; drawDetail(); }
 });
 document.addEventListener('click', function(ev){
-  var t = ev.target.closest('[data-hit],[data-results],[data-snip],[data-more],[data-showmore],[data-scope],[data-any],[data-sums],[data-weigh]');
+  var t = ev.target.closest('[data-hit],[data-results],[data-snip],[data-more],[data-showmore],[data-scope],[data-any],[data-sums],[data-weigh],[data-hops],[data-offidea],[data-near],[data-fixrole],[data-setrole],[data-idea],[data-sent]');
   if (!t) return;
+  /* an idea on an entry's profile is searched for */
+  if (t.dataset.idea){ $('#search').value = t.dataset.idea; return setQuery(t.dataset.idea); }
+  if (t.dataset.sent){
+    if (String(window.getSelection() || '')) return;
+    fixing = fixing === t.dataset.sent ? null : t.dataset.sent;
+    return drawDetail();
+  }
+  if (t.dataset.setrole !== undefined){
+    var rk = t.dataset.rolekey, ch = {};
+    if (t.dataset.setrole) roleFix[rk] = t.dataset.setrole; else delete roleFix[rk];
+    ch[rk] = t.dataset.setrole || null;
+    fixing = null; roleRev++;
+    storeMine('roles', ch).catch(function(err){ $('#banner').textContent = 'The sentence\'s reading was not saved: ' + err.message; $('#banner').hidden = false; });
+    if (found) runSearch();
+    drawRows(); return drawDetail();
+  }
   if (t.dataset.hit){ view.hits = true; drawer(false); return openEntry(t.dataset.hit); }
   if (t.dataset.results){ view.results = true; $('#detwrap').scrollTop = 0; return drawDetail(); }
   if (t.dataset.snip){
-    var k = t.dataset.snip, open = !!t.closest('.qgroup, .path').nextElementSibling && t.closest('.qgroup, .path').nextElementSibling.classList.contains('snippet');
-    snips[k] = !open;
+    snips[t.dataset.snip] = t.dataset.open !== '1';
   } else if (t.dataset.more) opened[t.dataset.more] = true;
   else if (t.dataset.showmore) showing += SHOW;
   else if (t.dataset.scope) view.scope = t.dataset.scope;
   else if (t.dataset.any){ view.any = t.dataset.any === 'any'; rescore(); }
   else if (t.dataset.sums) view.sums = !view.sums;
-  else if (t.dataset.weigh === 'reset'){ SW = Object.assign({}, SWDEF); try { localStorage.removeItem(SWKEY); } catch(e){} rescore(); }
+  else if (t.dataset.weigh === 'reset'){ SW = Object.assign({}, SWDEF); try { localStorage.removeItem(SWKEY); } catch(e){} runSearch(); }
+  else if (t.dataset.hops){ SW.hops = +t.dataset.hops; try { localStorage.setItem(SWKEY, JSON.stringify(SW)); } catch(e){} runSearch(); }
+  else if (t.dataset.offidea){
+    var oi = t.dataset.offidea.split('|'), o = offIdeas[oi[0]] || (offIdeas[oi[0]] = {});
+    if (o[oi[1]]) delete o[oi[1]]; else o[oi[1]] = 1;
+    runSearch(); drawRows();
+  }
+  else if (t.dataset.near) nearOpen[t.dataset.near] = !nearOpen[t.dataset.near];
+  else if (t.dataset.fixrole) fixing = fixing === t.dataset.fixrole ? null : t.dataset.fixrole;
   else if (t.dataset.weigh) weighing = !weighing;
   if (t.dataset.scope || t.dataset.any || t.dataset.sums){ saveView(); showing = SHOW; drawRows(); }
   drawResults();
