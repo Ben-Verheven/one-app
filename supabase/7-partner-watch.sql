@@ -89,6 +89,18 @@ insert into partner_sites (id, name, call, list_url, platform, sort) values
   ('neb4all',    'NEB4All',                  'NEB Facility 2026 calls',
    'https://www.b2match.com/e/neb-facility-matchmaking-2026/components/64789', 'b2match', 15)
 on conflict (id) do nothing;
+-- Two venues Mark had in Active on the Semaphore (2026-10-23), both open to
+-- anyone: RADIANCE's MSCA platform (822 entries that day, back to May 2025,
+-- so the two-month rule keeps most of them out) and the Bilbao matchmaking
+-- for the 2027 battery calls (43). RADIANCE's "Looking for Partner/s" reads
+-- as seeking; the battery calls leave Kind empty on nearly every entry, so
+-- most come in as neither.
+insert into partner_sites (id, name, call, list_url, platform, sort) values
+  ('radiance',   'RADIANCE MSCA',            'MSCA 2027, doctoral networks, fellowships, staff exchanges, COFUND',
+   'https://www.b2match.com/e/radiance-msca/components/56332', 'b2match', 16),
+  ('battery',    'HE Battery Calls',         'Horizon Europe 2027, Cluster 5 batteries',
+   'https://www.b2match.com/e/he-2027-battery-calls-matchmaking/components/75308', 'b2match', 17)
+on conflict (id) do nothing;
 -- Advanced Digital Tech was first given its participant list, component
 -- 70907, read off the event while logged out, where its menu is hidden; the
 -- copier then answered "list not found" (2026-10-17). The `insert` above
