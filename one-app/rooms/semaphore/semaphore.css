@@ -1709,6 +1709,10 @@
 #pane-semaphore .gptlist{margin:0 0 6px 18px;padding:0;font-family:var(--body);font-size:13px;line-height:1.45;color:var(--ink)}
 #pane-semaphore .gptlist.gptout{color:var(--muted)}
 #pane-semaphore .gptlist a{color:var(--key2)}
+#pane-semaphore .gptadd{display:inline-flex;gap:6px;align-items:center;margin-left:8px;vertical-align:middle}
+#pane-semaphore .gptadd select{height:26px;padding:0 4px;border:1px solid var(--line);border-radius:var(--radius);background:transparent;font-size:12.5px}
+#pane-semaphore .gptadd .btn{min-height:26px;padding:2px 10px}
+#pane-semaphore .gptadd i{color:var(--ink)}
 #pane-semaphore .tyline{display:flex;gap:8px;align-items:center;padding:4px 0}
 #pane-semaphore .tyline input{flex:1;border:1px solid var(--line);border-radius:var(--radius);background:var(--field);
   color:var(--ink);padding:6px 9px;font-family:var(--body);font-size:14px}

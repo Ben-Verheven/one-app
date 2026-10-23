@@ -1646,7 +1646,7 @@ const GPT_BATCH=15;
 const GPT_GRANS=['day','month','quarter','half','year','range','none'];
 const GPT_PLACE={new:'new on the board, not judged yet',board:'kept on the board to think about',
   venues:'in Venues: Mark follows it',gone:'removed_by_mark'};
-let gpt={ans:null,plan:null};
+let gpt={ans:null,plan:null,sugg:[]};
 
 function gptBoard(){
   const days=x=>x.gran==='none'||!x.start?{gran:'none'}:{gran:x.gran,start:x.start,end:x.end,grade:x.grade};
@@ -1930,22 +1930,53 @@ function gptApply(s,ans,now){
   return out;
 }
 function gptSay(html){const el=$('#gptSaid');if(el)el.innerHTML=html;}
+/* The new arenas ChatGPT suggests, each with a type and + Add beside it
+   (Mark, 2026-10-23): he had to type them in again with + Arena, and the
+   list was gone once he pressed Put on the board. Adding takes only the
+   name, the address as a link and ChatGPT's reason as the arena's text,
+   and the arena lands on the board with its link glowing new, as the
+   agent's arenas do. The list stays in the box after Put on the board, so
+   the ones still wanted can be added then. One already on the board by
+   that name says so rather than offering a second. */
+function gptSuggHTML(){
+  if(!gpt.sugg.length)return '';
+  const has=x=>S.arenas.some(a=>a.name.toLowerCase()===gptStr(x.name,200).toLowerCase());
+  const types=S.types.map(t=>'<option value="'+t.id+'">'+esc(t.name)+'</option>').join('');
+  return '<p class="gptno">New arenas it suggests:</p><ul class="gptlist gptout">'+
+    gpt.sugg.map((x,i)=>'<li>'+esc(gptStr(x.name,200))+(x.why?' — '+esc(gptStr(x.why,300)):'')+
+      (gptHttp(x.url)?' <a href="'+esc(gptHttp(x.url))+'" target="_blank" rel="noopener">site</a>':'')+
+      '<span class="gptadd">'+(has(x)?'<i>on the board</i>':
+        '<select aria-label="Its type">'+types+'</select><button class="btn" data-act="gptAdd" data-i="'+i+'">+ Add</button>')+
+      '</span></li>').join('')+'</ul>';
+}
+function gptAdd(i,b){
+  const x=gpt.sugg[i];if(!x)return;
+  const name=gptStr(x.name,200);
+  if(!name||S.arenas.some(a=>a.name.toLowerCase()===name.toLowerCase()))return;
+  const sel=b.parentNode.querySelector('select');
+  const a=newArena(name,sel&&S.types.some(t=>t.id===sel.value)?sel.value:S.types[0].id,[]);
+  const url=gptHttp(x.url);
+  if(url)a.links.push({id:uid(),label:'',url,foundAt:new Date().toISOString()});
+  a.notes=gptStr(x.why);
+  S.arenas.push(a);
+  save();renderAll();
+  b.parentNode.innerHTML='<i>added to the board</i>';
+}
 /* Read and tried on a copy of the board, so he sees every change and every
    refusal before anything is put on the real one. */
 function gptRead(text){
-  gpt={ans:null,plan:null};
+  gpt={ans:null,plan:null,sugg:[]};
   const put=$('#gptPut');if(put)put.disabled=true;
   if(!String(text||'').trim()){gptSay('');return;}
   let ans;
   try{ans=gptParse(text);}
   catch(e){gptSay('<p class="gptno">This could not be read: '+esc(e.message)+'. Paste the whole of ChatGPT\'s answer, or choose its file.</p>');return;}
   const plan=gptApply(JSON.parse(JSON.stringify(S)),ans,new Date().toISOString());
-  gpt={ans,plan};
+  gpt={ans,plan,sugg:(Array.isArray(ans.new_arena_suggestions)?ans.new_arena_suggestions:[]).filter(x=>x&&x.name)};
   const ok=plan.filter(r=>r.ok),no=plan.filter(r=>!r.ok);
   const seen=new Set((Array.isArray(ans.arenas_checked)?ans.arenas_checked:[]).map(x=>x&&x.arena_id));
   const missed=S.arenas.filter(a=>!seen.has(a.id));
   const names=xs=>esc(xs.slice(0,15).map(a=>a.name).join(', '))+(xs.length>15?' and '+(xs.length-15)+' more':'');
-  const sugg=(Array.isArray(ans.new_arena_suggestions)?ans.new_arena_suggestions:[]).filter(x=>x&&x.name);
   gptSay(
     '<p class="'+(missed.length?'gptno':'gptok')+'">ChatGPT checked '+(S.arenas.length-missed.length)+' of '+S.arenas.length+' arenas.'+
       (missed.length?' Not checked: '+names(missed)+'. Ask it to continue with those.':'')+'</p>'+
@@ -1953,8 +1984,7 @@ function gptRead(text){
     (ok.length?'<ul class="gptlist">'+ok.map(r=>'<li>'+esc(r.ok)+'</li>').join('')+'</ul>':'')+
     (no.length?'<p class="gptno">'+no.length+' left out:</p><ul class="gptlist gptout">'+no.map(r=>'<li>'+
       esc(gptStr(r.op&&r.op.change,40)||'?')+(r.op&&(r.op.name||r.op.call)?' — '+esc(gptStr(r.op.name||r.op.call,120)):'')+': '+esc(r.why)+'</li>').join('')+'</ul>':'')+
-    (sugg.length?'<p class="gptno">New arenas it suggests (add them yourself with + Arena if you want them):</p><ul class="gptlist gptout">'+
-      sugg.map(x=>'<li>'+esc(gptStr(x.name,200))+(x.why?' — '+esc(gptStr(x.why,300)):'')+(gptHttp(x.url)?' <a href="'+esc(gptHttp(x.url))+'" target="_blank" rel="noopener">site</a>':'')+'</li>').join('')+'</ul>':'')
+    gptSuggHTML()
   );
   if(put)put.disabled=!ok.length;
 }
@@ -1968,12 +1998,14 @@ function gptPut(){
   S.ui.view='board';
   save();renderAll();
   closeModals();
-  gpt={ans:null,plan:null};
+  gpt={ans:null,plan:null,sugg:gpt.sugg};
   const t=$('#gptText');if(t)t.value='';
-  gptSay('');
+  gptSay(gptSuggHTML());
+  const put=$('#gptPut');if(put)put.disabled=true;
   Ask.tell('On the board',n+' change'+(n===1?'':'s')+' from ChatGPT '+(n===1?'is':'are')+' on the board. '+
     'New and corrected call dates glow on their rows until you press Seen; new venues wait in the tray over the board, '+
-    'to go to Venues, be kept or be removed. A restore point in the Ledger holds the board as it was before.');
+    'to go to Venues, be kept or be removed. A restore point in the Ledger holds the board as it was before.'+
+    (gpt.sugg.length?' The new arenas it suggests are still in the ChatGPT box, to add with + Add.':''));
 }
 function openGpt(){
   closeModals();
@@ -5152,6 +5184,7 @@ document.addEventListener('click',e=>{
     case 'openGpt':openGpt();break;
     case 'gptWrite':gptWrite();break;
     case 'gptPut':gptPut();break;
+    case 'gptAdd':gptAdd(+b.dataset.i,b);break;
     case 'openArena':openDrawer(id);break;
     case 'openDate':openDrawer(b.dataset.a,b.dataset.d);break;
     case 'closeDrawer':closeDrawer();break;
