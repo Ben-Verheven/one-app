@@ -245,14 +245,19 @@ body.drawer .veil{display:block;position:absolute;inset:0;z-index:3;background:r
 .dsub{color:var(--muted);font-size:14px;margin-top:3px}
 .dshare{display:flex;gap:6px;flex:none}
 /* A lead's sheet, printed on its own (see "a lead's sheet"): everything
-   else is put away, so the PDF holds the project and nothing of the app. */
+   else is put away, so the PDF holds the project and nothing of the app.
+   The page wears the reader's own ground, edge to edge, so the browser is
+   told to print its colours even when its background setting is off, and
+   the page's margin is the sheet's own padding, repeated on every page,
+   because the browser leaves a page margin white. */
 #sheet{display:none}
 @media print{
-  @page{margin:16mm}
-  html,body{height:auto;background:#FFFFFF}
+  @page{margin:0}
+  html,body{height:auto;background:#FAF7F0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
   body{display:block;min-width:0}
   body > :not(#sheet){display:none!important}
-  #sheet{display:block}
+  #sheet{display:block;padding:12mm 10mm;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+  #sheet > table{max-width:none!important}
 }
 /* Mark's notes on a call: a few paragraphs, so written and read at the
    size of an entry's own description, held to a readable line now that
@@ -2804,8 +2809,12 @@ function leadBtnHTML(e){
    message itself. One sheet serves both, its styles written on each tag,
    because a mail program throws a <style> block away on paste. Facts the
    site left empty and his Why line stay out: they speak to him, not to
-   whoever receives it. A table holds the two columns, the one layout every
-   mail program keeps. */
+   whoever receives it. It is laid out as the reader on the upright iPad
+   (Mark, 2026-10-23): the facts in a box on top, three to a row, who it is
+   first and the rest after a rule, then the long texts the full width. The
+   box is a table, the one layout every mail program keeps, and its colours
+   are the room's tokens already laid on the sheet's ground, since Outlook
+   reads no see-through colour. */
 function sheetLinks(e){
   var had = leadOf(e), web = had && (had.l.links || []).filter(function(k){ return k.label === 'project' && k.url !== e.url; })[0];
   return [[siteOf(e).name + ' entry', e.url]].concat(web ? [['Project website', web.url]] : []).filter(function(k){ return k[1]; });
@@ -2814,33 +2823,58 @@ function sheetParts(e){
   var p = entryParts((detail[e.id] && detail[e.id].fields) || []), full = function(f){ return !/^[-–—\s]*$/.test(f[1] || ''); };
   return { meta:[siteOf(e).name, e.country, e.posted ? 'posted ' + e.posted.slice(0, 10) : null].filter(Boolean).join(' · '),
            sub:[e.org ? e.contact : null, e.topic].filter(Boolean).join(' · '),
-           long:p.long.filter(full), facts:p.who.concat(p.short.filter(full)).filter(full) };
+           long:p.long.filter(full), who:p.who.filter(full), rest:p.short.filter(full) };
 }
 function sheetHTML(e){
-  var p = sheetParts(e), serif = "font-family:Optima,'Palatino Linotype','Book Antiqua',Georgia,serif;";
-  var link = function(u){ return '<a href="' + esc(u) + '" style="color:#3A342C">' + esc(u) + '</a>'; };
-  var linked = function(t){ return esc(t).replace(/https?:\/\/[^\s<]+/g, function(u){ return '<a href="' + u + '" style="color:#3A342C">' + u + '</a>'; }); };
-  var label = 'font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#6A6250;' + serif;
-  return '<div style="font-family:\'Iowan Old Style\',\'Palatino Linotype\',\'Book Antiqua\',Georgia,serif;color:#282420;font-size:14px;line-height:1.5;max-width:760px">'
-    + '<div style="font-size:12px;color:#6A6250">' + esc(p.meta) + '</div>'
-    + '<h1 style="' + serif + 'font-weight:400;font-size:24px;line-height:1.25;margin:4px 0 2px">' + esc(title(e)) + '</h1>'
-    + (p.sub ? '<div style="color:#5E574B">' + esc(p.sub) + '</div>' : '')
-    + '<p style="margin:10px 0 0">' + sheetLinks(e).map(function(k){ return esc(k[0]) + ': ' + link(k[1]); }).join('<br>') + '</p>'
-    + '<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;table-layout:fixed;border-collapse:collapse;margin-top:8px"><tr>'
-    + '<td style="vertical-align:top;padding-right:24px">' + p.long.map(function(f){
-        return '<div style="margin-top:14px"><div style="' + label + 'font-size:12px;margin-bottom:4px">' + esc(f[0]) + '</div>'
-          + String(f[1]).split(/\n\s*\n/).map(function(t){ return '<p style="margin:0 0 .7em;font-size:15px;line-height:1.55">' + linked(t).replace(/\n/g, '<br>') + '</p>'; }).join('') + '</div>'; }).join('')
-    + '</td><td style="vertical-align:top;width:200px;border-left:1px solid #D3CBBA;padding-left:16px">' + p.facts.map(function(f){
-        return '<div style="margin-top:12px"><div style="' + label + '">' + esc(f[0].replace(/^Link to 'research gate' or equivalent$/i, 'Research profile')) + '</div>'
-          + '<div style="font-size:13.5px;overflow-wrap:anywhere">' + linked(f[1]).replace(/\n/g, '<br>') + '</div></div>'; }).join('')
-    + '</td></tr></table></div>';
+  var p = sheetParts(e), C = { sheet:'#FAF7F0', field:'#FCFAF3', ink:'#282420', muted:'#5E574B', faint:'#6A6250', key2:'#3A342C', line:'#D5D1CB', line2:'#B7B4AD' };
+  var serif = "font-family:Optima,'Palatino Linotype','Book Antiqua',Georgia,serif;", body = "font-family:'Iowan Old Style','Palatino Linotype','Book Antiqua',Georgia,serif;";
+  var mono = "font-family:ui-monospace,'Cascadia Mono','SF Mono',Consolas,Menlo,monospace;";
+  var a = function(u, t){ return '<a href="' + u + '" style="color:' + C.key2 + ';text-decoration:underline;text-underline-offset:2px">' + t + '</a>'; };
+  var linked = function(t){ return esc(t).replace(/https?:\/\/[^\s<]+/g, function(u){ return a(u, u); }); };
+  var kind = e.kind === 'seeks' ? ['Seeks partners', '#F3DED7', '#8E241B'] : e.kind === 'offers' ? ['Offers expertise', '#E3E0E9', '#33338F'] : null;
+  var fact = function(f){
+    return '<td style="vertical-align:top;width:33%;padding:5px 14px 5px 0">'
+      + '<div style="' + serif + 'font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:' + C.faint + '">' + esc(f[0].replace(/^Link to 'research gate' or equivalent$/i, 'Research profile')) + '</div>'
+      + '<div style="' + body + 'font-size:13.5px;line-height:1.45;color:' + C.ink + ';overflow-wrap:anywhere">' + linked(f[1]).replace(/\n/g, '<br>') + '</div></td>'; };
+  var rows = function(list){
+    var h = '';
+    for (var i = 0; i < list.length; i += 3){
+      var r = list.slice(i, i + 3);
+      h += '<tr>' + r.map(fact).join('') + (r.length < 3 ? '<td colspan="' + (3 - r.length) + '"></td>' : '') + '</tr>';
+    }
+    return h;
+  };
+  var facts = p.who.length || p.rest.length
+    ? '<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;table-layout:fixed;border-collapse:separate;background:' + C.field + ';border:1px solid ' + C.line + ';border-radius:7px;margin-top:18px">'
+      + '<tr><td style="padding:9px 0 9px 14px"><table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;table-layout:fixed;border-collapse:collapse">'
+      + rows(p.who)
+      + (p.who.length && p.rest.length ? '<tr><td colspan="3" style="padding:6px 14px 6px 0"><div style="border-top:1px solid ' + C.line + ';font-size:0;line-height:0">&nbsp;</div></td></tr>' : '')
+      + rows(p.rest) + '</table></td></tr></table>'
+    : '';
+  var texts = p.long.map(function(f, i){
+    return '<div style="margin-top:22px;page-break-inside:auto"><div style="' + serif + 'font-size:13px;letter-spacing:.07em;text-transform:uppercase;color:' + C.faint + ';margin:0 0 6px">' + esc(f[0]) + '</div>'
+      + String(f[1]).split(/\n\s*\n/).map(function(t){
+          return '<p style="' + body + 'margin:0 0 .7em;font-size:' + (i === 0 ? 16 : 15.5) + 'px;line-height:1.6;color:' + C.ink + '">' + linked(t).replace(/\n/g, '<br>') + '</p>'; }).join('') + '</div>'; }).join('');
+  var links = sheetLinks(e).map(function(k){
+    return '<a href="' + esc(k[1]) + '" style="display:inline-block;' + serif + 'font-size:13px;color:' + C.key2 + ';text-decoration:none;border:1px solid ' + C.line2 + ';border-radius:7px;padding:4px 11px;margin:0 0 6px 6px;white-space:nowrap">' + esc(k[0]) + ' ↗</a>'; }).join('');
+  return '<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;max-width:700px;border-collapse:collapse;background:' + C.sheet + '"><tr><td style="padding:22px 26px 14px">'
+    + '<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse"><tr><td style="vertical-align:top">'
+    + '<div style="line-height:20px">' + (kind ? '<span style="' + serif + 'font-size:11.5px;background:' + kind[1] + ';color:' + kind[2] + ';border-radius:4px;padding:1px 7px;margin-right:8px;white-space:nowrap">' + kind[0] + '</span>' : '')
+    + '<span style="' + mono + 'font-size:12px;color:' + C.faint + '">' + esc(p.meta) + '</span></div>'
+    + '<div style="' + serif + 'font-weight:400;font-size:25px;line-height:1.25;color:' + C.ink + ';margin:7px 0 0">' + esc(title(e)) + '</div>'
+    + (p.sub ? '<div style="' + body + 'font-size:14px;color:' + C.muted + ';margin-top:3px">' + esc(p.sub) + '</div>' : '')
+    + '</td><td style="vertical-align:top;text-align:right;width:190px">' + links + '</td></tr></table>'
+    + facts + texts
+    + '<div style="' + body + 'font-size:12px;color:' + C.faint + ';border-top:1px solid ' + C.line + ';margin-top:18px;padding-top:9px;overflow-wrap:anywhere">'
+    + sheetLinks(e).map(function(k){ return esc(k[0]) + ': ' + a(esc(k[1]), esc(k[1])); }).join('<br>') + '</div>'
+    + '</td></tr></table>';
 }
 function sheetText(e){
   var p = sheetParts(e);
   return [title(e), p.meta, p.sub].filter(Boolean).join('\n') + '\n\n'
     + sheetLinks(e).map(function(k){ return k[0] + ': ' + k[1]; }).join('\n') + '\n\n'
     + p.long.map(function(f){ return f[0].toUpperCase() + '\n' + f[1]; }).join('\n\n') + '\n\n'
-    + p.facts.map(function(f){ return f[0] + ': ' + f[1]; }).join('\n');
+    + p.who.concat(p.rest).map(function(f){ return f[0] + ': ' + f[1]; }).join('\n');
 }
 /* The PDF is the browser's own Save as PDF, from the print box, so it
    works from file:// and on the iPad with nothing loaded. The page's
