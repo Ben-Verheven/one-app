@@ -1640,8 +1640,10 @@ function acceptAllFinds(){
 const GPT_FILE='brokerage-semaphore-for-chatgpt';
 /* Arenas per research round (Mark, 2026-10-22): a deep search asked to
    cover the whole board at once grows thin towards its end, so the file
-   splits the arenas into rounds of this many and asks ChatGPT to finish
-   each before it starts the next, carrying on by itself where it can. */
+   splits the arenas into rounds of this many. Each round goes to a fresh
+   agent of its own, because rounds run one after another in the same chat
+   still started each round with everything before it in mind (2026-10-23);
+   the file asks ChatGPT to say so rather than fall back to that. */
 const GPT_BATCH=15;
 const GPT_GRANS=['day','month','quarter','half','year','range','none'];
 const GPT_PLACE={new:'new on the board, not judged yet',board:'kept on the board to think about',
@@ -1696,7 +1698,25 @@ function gptFileText(){
 '',
 roundList.join('\n'),
 '',
-'Finish one round completely, every arena in it searched as carefully as the first, before you start the next. **Then go on to the next round by yourself, without waiting to be asked**, until all '+rounds+' rounds are done, and give one answer covering all of them. Never speed up or cut corners to fit more arenas in: if you have to stop, stop only between rounds, never in the middle of one.',
+'### Run each round with a fresh agent',
+'',
+'Use '+rounds+' separate research agents, one newly created agent per round. This explicitly authorises delegation to subagents.',
+'',
+'Each agent must start with fresh conversation context, without inheriting the accumulated research conversation or previous agents\' histories. Use `fork_turns="none"` or the equivalent where supported.',
+'',
+'Give each agent:',
+'',
+'- the complete original instructions and original dataset, which it must read directly;',
+'- its assigned round number and arena list;',
+'- access to the full original venues list, including removed venues, so it can check shared venues and avoid duplicates.',
+'',
+'Each agent researches only its assigned round, following every research and evidence rule below. It must return that round\'s changes, an audit entry for every assigned arena, and any unresolved issues. Save its complete result before proceeding.',
+'',
+'Run the rounds sequentially. After one agent finishes, create a new agent for the next round and continue automatically until all '+rounds+' rounds are complete.',
+'',
+'The coordinating agent must then merge the '+rounds+' results, resolve conflicting changes using the sources, deduplicate shared venues, preserve original ids, and validate coverage of all '+n+' arenas. Deliver one final JSON file in the format under "What to give back".',
+'',
+'If independent agents with fresh context are unavailable, tell Mark before starting and explain that separate chats are needed. Do not silently substitute '+rounds+' batches in the same conversation.',
 '',
 'For each arena:',
 '',
@@ -1705,8 +1725,6 @@ roundList.join('\n'),
 '3. **Partner-search tools.** Look for partner-search tools and platforms that serve this arena\'s calls and are open now or will open.',
 '4. **Venues already on the board** that serve this arena: check their event days and their window (when the marketplace, registration or tool opens and closes) and correct them.',
 '5. Write one line for the arena in `arenas_checked`, also when nothing changed: what you checked and what you found.',
-'',
-'Only if you truly cannot go on by yourself: give the answer for the rounds you finished, list the arenas of the rounds still to do in `not_checked`, and say at the top of your reply which round comes next. When you are told "continue", do the next round, then carry on with the rounds after it in the same way, giving an answer with only the changes from the rounds done since your last answer.',
 '',
 '## Rules',
 '',
