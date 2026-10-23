@@ -2850,8 +2850,13 @@ function sheetParts(e){
     { head:'Contact', lines:[[name, 'main'], [job, 'em'], [mail, 'mail'], [phone, '']] },
     { head:'Dates', lines:[[updated ? 'Updated ' + updated : '', 'main'], [posted ? 'Posted ' + posted : '', '']] }
   ].map(function(g){ g.lines = g.lines.filter(function(l){ return l[0]; }); return g; }).filter(function(g){ return g.lines.length; });
-  return { meta:siteOf(e).name, sub:e.topic || '', groups:groups,
-           long:p.long.filter(full), rest:pool.filter(function(f){ return !(e.topic && /^topics?$/i.test(f[0]) && f[1].trim() === e.topic.trim()); }) };
+  /* The organisation's name and the contact's no longer head the sheet
+     (Mark, 2026-10-23): the box under it already says both. The project's
+     own title heads it instead, where the site gives one. */
+  var long = p.long.filter(full), t = long.findIndex(function(f){ return /^title$/i.test(f[0]); });
+  var head = take(/^(project (title|name|acronym)|acronym|project)$/i) || (t >= 0 ? String(long.splice(t, 1)[0][1]).trim() : '');
+  return { meta:siteOf(e).name, head:head, sub:e.topic || '', groups:groups,
+           long:long, rest:pool.filter(function(f){ return !(e.topic && /^topics?$/i.test(f[0]) && f[1].trim() === e.topic.trim()); }) };
 }
 function sheetHTML(e){
   var p = sheetParts(e), C = { sheet:'#FAF7F0', field:'#FCFAF3', ink:'#282420', muted:'#5E574B', faint:'#6A6250', key2:'#3A342C', line:'#D5D1CB', line2:'#B7B4AD' };
@@ -2889,7 +2894,7 @@ function sheetHTML(e){
   return '<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;max-width:700px;border-collapse:collapse;background:' + C.sheet + '"><tr><td style="padding:22px 26px 14px">'
     + '<div style="line-height:20px">' + (kind ? '<span style="' + serif + 'font-size:11.5px;background:' + kind[1] + ';color:' + kind[2] + ';border-radius:4px;padding:1px 7px;margin-right:8px;white-space:nowrap">' + kind[0] + '</span>' : '')
     + '<span style="' + mono + 'font-size:12px;color:' + C.faint + '">' + esc(p.meta) + '</span></div>'
-    + '<div style="' + serif + 'font-weight:400;font-size:25px;line-height:1.25;color:' + C.ink + ';margin:7px 0 0">' + esc(title(e)) + '</div>'
+    + (p.head ? '<div style="' + serif + 'font-weight:400;font-size:25px;line-height:1.25;color:' + C.ink + ';margin:7px 0 0">' + esc(p.head) + '</div>' : '')
     + (p.sub ? '<div style="' + body + 'font-size:14px;color:' + C.muted + ';margin-top:3px">' + esc(p.sub) + '</div>' : '')
     + facts + texts
     + '<div style="' + body + 'font-size:12px;color:' + C.faint + ';border-top:1px solid ' + C.line + ';margin-top:18px;padding-top:9px;overflow-wrap:anywhere">'
@@ -2898,7 +2903,7 @@ function sheetHTML(e){
 }
 function sheetText(e){
   var p = sheetParts(e);
-  return [title(e), p.meta, p.sub].filter(Boolean).join('\n') + '\n\n'
+  return [p.head, p.meta, p.sub].filter(Boolean).join('\n') + '\n\n'
     + p.groups.map(function(g){ return g.head.toUpperCase() + '\n' + g.lines.map(function(l){ return l[0]; }).join('\n'); }).join('\n\n') + '\n\n'
     + p.rest.map(function(f){ return f[0] + ': ' + f[1]; }).join('\n') + '\n\n'
     + p.long.map(function(f){ return f[0].toUpperCase() + '\n' + f[1]; }).join('\n\n') + '\n\n'
