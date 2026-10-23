@@ -243,6 +243,17 @@ body.drawer .veil{display:block;position:absolute;inset:0;z-index:3;background:r
 .dhead{display:flex;gap:14px;align-items:flex-start}
 .dtitle{font:400 23px/1.25 var(--serif);margin:6px 0 0;text-wrap:balance}
 .dsub{color:var(--muted);font-size:14px;margin-top:3px}
+.dshare{display:flex;gap:6px;flex:none}
+/* A lead's sheet, printed on its own (see "a lead's sheet"): everything
+   else is put away, so the PDF holds the project and nothing of the app. */
+#sheet{display:none}
+@media print{
+  @page{margin:16mm}
+  html,body{height:auto;background:#FFFFFF}
+  body{display:block;min-width:0}
+  body > :not(#sheet){display:none!important}
+  #sheet{display:block}
+}
 /* Mark's notes on a call: a few paragraphs, so written and read at the
    size of an entry's own description, held to a readable line now that
    the pane runs the width of the page. Rich text, because he pastes from
@@ -2510,7 +2521,7 @@ var WHO = [[/^(organisation name|name of organisation\/institution\/company)$/i,
 var TOPIC = /^(topics?|priority areas|disciplines)$/i;
 function isLongField(f){ return !TOPIC.test(f[0]) && (MIDDLE.test(f[0]) || String(f[1] || '').length > 220 || /\n\s*\n/.test(f[1] || '')); }
 function paras(t){ return String(t).split(/\n\s*\n/).map(function(p){ return '<p>' + esc(p).replace(/\n/g, '<br>') + '</p>'; }).join(''); }
-function entryBody(fields){
+function entryParts(fields){
   var seen = {}, list = fields.filter(function(f){ var k = f[0] + '\u0000' + f[1]; if (seen[k]) return false; seen[k] = 1; return true; });
   var long = list.filter(isLongField), short = list.filter(function(f){ return !isLongField(f); });
   var first = /project description|cooperation interest/i;
@@ -2521,6 +2532,10 @@ function entryBody(fields){
     if (i >= 0) who.push([w[1], short.splice(i, 1)[0][1]]);
   });
   short = short.filter(function(f){ return TOPIC.test(f[0]); }).concat(short.filter(function(f){ return !TOPIC.test(f[0]); }));
+  return { long:long, who:who, short:short };
+}
+function entryBody(fields){
+  var p = entryParts(fields), long = p.long, who = p.who, short = p.short;
   var empty = function(v){ return !v || /^[-–—\s]*$/.test(v); };
   var fact = function(f){
     return '<div class="f"><div class="l">' + esc(f[0].replace(/^Link to 'research gate' or equivalent$/i, 'Research profile')) + '</div>'
@@ -2559,6 +2574,8 @@ function drawDetail(){
     + (!e.opened_at ? '<span class="st newtag">New</span>' : '') + stateTags(e) + '<span class="meta">' + esc(meta) + '</span></div>'
     + '<h2 class="dtitle">' + esc(title(e)) + '</h2>'
     + '<div class="dsub">' + esc([e.org ? e.contact : null, e.topic].filter(Boolean).join(' · ')) + '</div></div>'
+    + (leadOf(e) && d ? '<span class="dshare"><button class="btn" data-sheet="pdf" title="A PDF of this project, laid out as here, to attach to an email">PDF</button>'
+      + '<button class="btn" data-sheet="copy" title="Copy this project, laid out as here, to paste into an email">Copy for email</button></span>' : '')
     + '<a class="btn" style="text-decoration:none" href="' + esc(e.url) + '" target="_blank" rel="noopener">Open on site ↗</a></div>'
     + '<div class="actions">'
     + [['interesting','Mark','M'],['bin','Bin','B']].map(function(a){
@@ -2781,6 +2798,81 @@ function leadBtnHTML(e){
   return '<button class="act mklead" data-mklead="1" title="Make this entry a lead in the Brokerage Semaphore: the project, its coordinator, '
     + 'contact and email, the project\'s website, and your Why line as the researcher who could match it">Make lead</button>';
 }
+/* ── a lead's sheet ──
+   Mark asked on 2026-10-23 to send a lead's project to someone, laid out
+   as he reads it here: PDF to attach, Copy for email to paste into the
+   message itself. One sheet serves both, its styles written on each tag,
+   because a mail program throws a <style> block away on paste. Facts the
+   site left empty and his Why line stay out: they speak to him, not to
+   whoever receives it. A table holds the two columns, the one layout every
+   mail program keeps. */
+function sheetLinks(e){
+  var had = leadOf(e), web = had && (had.l.links || []).filter(function(k){ return k.label === 'project' && k.url !== e.url; })[0];
+  return [[siteOf(e).name + ' entry', e.url]].concat(web ? [['Project website', web.url]] : []).filter(function(k){ return k[1]; });
+}
+function sheetParts(e){
+  var p = entryParts((detail[e.id] && detail[e.id].fields) || []), full = function(f){ return !/^[-–—\s]*$/.test(f[1] || ''); };
+  return { meta:[siteOf(e).name, e.country, e.posted ? 'posted ' + e.posted.slice(0, 10) : null].filter(Boolean).join(' · '),
+           sub:[e.org ? e.contact : null, e.topic].filter(Boolean).join(' · '),
+           long:p.long.filter(full), facts:p.who.concat(p.short.filter(full)).filter(full) };
+}
+function sheetHTML(e){
+  var p = sheetParts(e), serif = "font-family:Optima,'Palatino Linotype','Book Antiqua',Georgia,serif;";
+  var link = function(u){ return '<a href="' + esc(u) + '" style="color:#3A342C">' + esc(u) + '</a>'; };
+  var linked = function(t){ return esc(t).replace(/https?:\/\/[^\s<]+/g, function(u){ return '<a href="' + u + '" style="color:#3A342C">' + u + '</a>'; }); };
+  var label = 'font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#6A6250;' + serif;
+  return '<div style="font-family:\'Iowan Old Style\',\'Palatino Linotype\',\'Book Antiqua\',Georgia,serif;color:#282420;font-size:14px;line-height:1.5;max-width:760px">'
+    + '<div style="font-size:12px;color:#6A6250">' + esc(p.meta) + '</div>'
+    + '<h1 style="' + serif + 'font-weight:400;font-size:24px;line-height:1.25;margin:4px 0 2px">' + esc(title(e)) + '</h1>'
+    + (p.sub ? '<div style="color:#5E574B">' + esc(p.sub) + '</div>' : '')
+    + '<p style="margin:10px 0 0">' + sheetLinks(e).map(function(k){ return esc(k[0]) + ': ' + link(k[1]); }).join('<br>') + '</p>'
+    + '<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;table-layout:fixed;border-collapse:collapse;margin-top:8px"><tr>'
+    + '<td style="vertical-align:top;padding-right:24px">' + p.long.map(function(f){
+        return '<div style="margin-top:14px"><div style="' + label + 'font-size:12px;margin-bottom:4px">' + esc(f[0]) + '</div>'
+          + String(f[1]).split(/\n\s*\n/).map(function(t){ return '<p style="margin:0 0 .7em;font-size:15px;line-height:1.55">' + linked(t).replace(/\n/g, '<br>') + '</p>'; }).join('') + '</div>'; }).join('')
+    + '</td><td style="vertical-align:top;width:200px;border-left:1px solid #D3CBBA;padding-left:16px">' + p.facts.map(function(f){
+        return '<div style="margin-top:12px"><div style="' + label + '">' + esc(f[0].replace(/^Link to 'research gate' or equivalent$/i, 'Research profile')) + '</div>'
+          + '<div style="font-size:13.5px;overflow-wrap:anywhere">' + linked(f[1]).replace(/\n/g, '<br>') + '</div></div>'; }).join('')
+    + '</td></tr></table></div>';
+}
+function sheetText(e){
+  var p = sheetParts(e);
+  return [title(e), p.meta, p.sub].filter(Boolean).join('\n') + '\n\n'
+    + sheetLinks(e).map(function(k){ return k[0] + ': ' + k[1]; }).join('\n') + '\n\n'
+    + p.long.map(function(f){ return f[0].toUpperCase() + '\n' + f[1]; }).join('\n\n') + '\n\n'
+    + p.facts.map(function(f){ return f[0] + ': ' + f[1]; }).join('\n');
+}
+/* The PDF is the browser's own Save as PDF, from the print box, so it
+   works from file:// and on the iPad with nothing loaded. The page's
+   title is the name the PDF is offered under, so it is the project's
+   while the box is open. */
+function printSheet(e){
+  if (!e) return;
+  var box = $('#sheet') || document.body.appendChild(Object.assign(document.createElement('div'), { id:'sheet' }));
+  box.innerHTML = sheetHTML(e);
+  var was = document.title;
+  document.title = title(e) + ' — ' + siteOf(e).name;
+  window.addEventListener('afterprint', function(){ document.title = was; }, { once:true });
+  window.print();
+}
+/* Both forms go on the clipboard: the laid-out one for a mail program,
+   the plain one for anywhere that takes only text. The older copy command
+   stands in where the browser's clipboard refuses. */
+function copySheet(e, btn){
+  if (!e) return;
+  var html = sheetHTML(e), text = sheetText(e);
+  var done = function(){ btn.textContent = 'Copied'; setTimeout(function(){ btn.textContent = 'Copy for email'; }, 1800); };
+  var old = function(){
+    var put = function(ev){ ev.clipboardData.setData('text/html', html); ev.clipboardData.setData('text/plain', text); ev.preventDefault(); };
+    document.addEventListener('copy', put, { once:true });
+    var ok = document.execCommand('copy');
+    document.removeEventListener('copy', put);
+    if (ok) done(); else btn.textContent = 'Could not copy';
+  };
+  if (navigator.clipboard && window.ClipboardItem){
+    navigator.clipboard.write([new ClipboardItem({ 'text/html':new Blob([html], { type:'text/html' }), 'text/plain':new Blob([text], { type:'text/plain' }) })]).then(done, old);
+  } else old();
+}
 /* The entry page's own pairs are read for what the list line does not
    carry. Each site words its labels its own way, so each fact takes the
    first label it recognises, as the copier's PICK does. */
@@ -2995,6 +3087,8 @@ document.addEventListener('click', function(ev){
     else openPanel(m.dataset.mvenue ? 'venue' : 'arena', m.dataset.mvenue || m.dataset.marena);
     if (!m.dataset.msite) return;
   }
+  var sh = ev.target.closest('[data-sheet]');
+  if (sh) return sh.dataset.sheet === 'pdf' ? printSheet(byId[view.id]) : copySheet(byId[view.id], sh);
   /* Make lead: the Why line is kept first, since a press on the button
      may come before the field has said it changed */
   var mk = ev.target.closest('[data-mklead],[data-mkgo],[data-mkno]');
