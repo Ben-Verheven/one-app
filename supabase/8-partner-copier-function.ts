@@ -23,8 +23,9 @@
 // sends Mark's session, and the password or the owner check does the rest.
 // For the b2match events that show their entries only to participants, add
 // two secrets under Edge Functions → Secrets: B2MATCH_EMAIL and
-// B2MATCH_PASSWORD, his b2match login. They live there and nowhere else:
-// this repository is public.
+// B2MATCH_PASSWORD, his b2match login. The EPSS venues sign in with the
+// same two, as Mark uses the same login there. They live there and nowhere
+// else: this repository is public.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -461,8 +462,55 @@ async function fetchB2oEntry(e) {
   ];
   return { fields, text: fields.filter(([, v]) => v).map(([l, v]) => `${l}\n${v}`).join("\n\n") };
 }
+// EPSS. On 2026-10-23 the three EPSS venues (Sustainable Blue, Water4All,
+// Biodiversa+) moved from proposals.etag.ee to epss.proposals.ee and put the
+// partner search behind a sign-in: the list sent the copier to the sign-in
+// page, and all three failed with "list table not found". Mark's account
+// there has his b2match email and password, so the copier signs in with
+// those, once per venue and run, and again whenever a page turns out to be
+// the sign-in page. Each venue keeps its own session cookie
+// (water4all_epss and so on). The old address is rewritten rather than
+// followed, so the cookie always goes to the host that set it.
+const EPSS_HOST = "epss.proposals.ee";
+const epssJars = new Map();
+const epssUrl = (url) => { const u = new URL(url); if (u.host === "proposals.etag.ee") u.host = EPSS_HOST; return u.toString(); };
+const signInPage = (html) => /<input[^>]*name="password"/i.test(html) && /action="[^"]*\/sign-in"/i.test(html);
+function keepCookies(jar, r) {
+  for (const c of r.headers.getSetCookie?.() ?? []) { const [kv] = c.split(";"); const i = kv.indexOf("="); jar.set(kv.slice(0, i).trim(), kv.slice(i + 1)); }
+  return jar;
+}
+const cookieLine = (jar) => [...jar].map(([k, v]) => `${k}=${v}`).join("; ");
+async function epssSignIn(venue) {
+  const email = Deno.env.get("B2MATCH_EMAIL"), password = Deno.env.get("B2MATCH_PASSWORD");
+  if (!email || !password)
+    throw new Error("the site now asks for a sign-in, and the copier has no login (the secrets B2MATCH_EMAIL and B2MATCH_PASSWORD)");
+  const at = `https://${EPSS_HOST}/${venue}/sign-in`, jar = new Map();
+  const first = await fetch(at, { headers: { "user-agent": UA }, redirect: "manual", signal: AbortSignal.timeout(30_000) });
+  keepCookies(jar, first); await first.body?.cancel();
+  const r = await fetch(at, {
+    method: "POST",
+    headers: { "user-agent": UA, "content-type": "application/x-www-form-urlencoded", cookie: cookieLine(jar) },
+    body: new URLSearchParams({ submitted: "1", username: email, password }),
+    redirect: "manual", signal: AbortSignal.timeout(30_000),
+  });
+  keepCookies(jar, r); await r.body?.cancel();
+  epssJars.set(venue, cookieLine(jar));
+}
+async function epssGet(url) {
+  url = epssUrl(url);
+  const venue = new URL(url).pathname.split("/")[1];
+  if (epssJars.has(venue)) { const h = await get(url, epssJars.get(venue)); if (!signInPage(h)) return h; }
+  await epssSignIn(venue);
+  const h = await get(url, epssJars.get(venue));
+  if (signInPage(h)) throw new Error("the site did not accept the sign-in with the b2match email and password");
+  return h;
+}
+
 const PARSERS = {
-  epss: { list: parseEpssList, detail: parseEpssDetail },
+  epss: {
+    fetchList: async (s) => parseEpssList(await epssGet(s.list_url), "https://" + EPSS_HOST),
+    fetchEntry: async (e) => parseEpssDetail(await epssGet(e.url)),
+  },
   ptj: { list: parsePtjList, detail: parsePtjDetail },
   b2match: {
     fetchList: (s) => isV6(s.list_url) ? fetchV6List(s) : isB2o(s.list_url) ? fetchB2oList(s) : fetchB2mList(s),
@@ -479,13 +527,13 @@ const PARSERS = {
 // of the same host only adds to what made it refuse.
 const refused = new Set();
 const refusal = (err) => /connection refused|tcp connect|os error 111|connection reset/i.test(String(err?.message ?? err));
-async function get(url) {
+async function get(url, cookie) {
   const host = new URL(url).host;
   if (refused.has(host)) throw new Error(`skipped: ${host} refused the connection earlier in this check`);
   for (let tries = 1; ; tries++) {
     try {
       const r = await fetch(url, {
-        headers: { "user-agent": UA, accept: "text/html" },
+        headers: { "user-agent": UA, accept: "text/html", ...(cookie ? { cookie } : {}) },
         redirect: "follow",
         signal: AbortSignal.timeout(30_000),
       });
