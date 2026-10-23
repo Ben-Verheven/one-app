@@ -2829,18 +2829,29 @@ function sheetLinks(e){
 }
 function sheetParts(e){
   var p = entryParts((detail[e.id] && detail[e.id].fields) || []), full = function(f){ return !/^[-–—\s]*$/.test(f[1] || ''); };
-  /* The contact's job goes under the contact's name, in the same cell, so
-     it reads as theirs (Mark, 2026-10-23): apart, three facts on, it read
-     as one more fact about the organisation. Their email joins them there,
-     where it had wrapped onto a row of its own. */
-  var who = p.who.filter(full).map(function(f){ return f.slice(); }), rest = p.short.filter(full);
-  var name = who.filter(function(f){ return f[0] === 'Contact name'; })[0], job = rest.findIndex(function(f){ return /^(job (position|title|function)|position|function)$/i.test(f[0]); });
-  if (name && job >= 0) name[2] = rest.splice(job, 1)[0][1];
-  var mail = who.findIndex(function(f){ return f[0] === 'Email'; });
-  if (name && mail >= 0) name[3] = who.splice(mail, 1)[0][1];
-  return { meta:[siteOf(e).name, e.country, e.posted ? 'posted ' + e.posted.slice(0, 10) : null].filter(Boolean).join(' · '),
-           sub:[e.org ? e.contact : null, e.topic].filter(Boolean).join(' · '),
-           long:p.long.filter(full), who:who, rest:rest };
+  /* The top of the sheet is three groups side by side, each about one
+     thing (Mark, 2026-10-23): the organisation and where it is, the
+     contact person and their job, and when the entry was posted and last
+     changed. The job had read as one more fact about the organisation
+     when it stood apart from the name. Whatever else the site gives
+     follows under a rule, three to a row. */
+  var pool = p.who.concat(p.short).filter(full), take = function(re){
+    var i = pool.findIndex(function(f){ return re.test(f[0]); });
+    return i < 0 ? '' : String(pool.splice(i, 1)[0][1]).trim();
+  };
+  var org = take(/^(name of organisation|organisation name)$/i) || e.org || '', type = take(/^(organisation type|type of organisation)$/i);
+  var city = take(/^city$/i), country = take(/^country$/i) || e.country || '', web = take(/^(web ?site|homepage)$/i);
+  var name = take(/^(contact name|name)$/i) || e.contact || '', job = take(/^(job (position|title|function)|position|function)$/i);
+  var mail = take(/^e-?mail( address)?$/i), phone = take(/phone/i), updated = take(/^last updated/i);
+  var when = function(t){ return /^\d{4}-\d\d-\d\d/.test(t) ? day(t.slice(0, 10)) : t; }, posted = when(e.posted || '');
+  updated = when(updated);
+  var groups = [
+    { head:'Organisation', lines:[[org, 'main'], [type, 'em'], [[city, country].filter(Boolean).join(', '), ''], [offSite(web, e) ? web : '', 'web']] },
+    { head:'Contact', lines:[[name, 'main'], [job, 'em'], [mail, 'mail'], [phone, '']] },
+    { head:'Dates', lines:[[updated ? 'Updated ' + updated : '', 'main'], [posted ? 'Posted ' + posted : '', '']] }
+  ].map(function(g){ g.lines = g.lines.filter(function(l){ return l[0]; }); return g; }).filter(function(g){ return g.lines.length; });
+  return { meta:siteOf(e).name, sub:e.topic || '', groups:groups,
+           long:p.long.filter(full), rest:pool.filter(function(f){ return !(e.topic && /^topics?$/i.test(f[0]) && f[1].trim() === e.topic.trim()); }) };
 }
 function sheetHTML(e){
   var p = sheetParts(e), C = { sheet:'#FAF7F0', field:'#FCFAF3', ink:'#282420', muted:'#5E574B', faint:'#6A6250', key2:'#3A342C', line:'#D5D1CB', line2:'#B7B4AD' };
@@ -2849,26 +2860,27 @@ function sheetHTML(e){
   var a = function(u, t){ return '<a href="' + u + '" style="color:' + C.key2 + ';text-decoration:underline;text-underline-offset:2px">' + t + '</a>'; };
   var linked = function(t){ return esc(t).replace(/https?:\/\/[^\s<]+/g, function(u){ return a(u, u); }); };
   var kind = e.kind === 'seeks' ? ['Seeks partners', '#F3DED7', '#8E241B'] : e.kind === 'offers' ? ['Offers expertise', '#E3E0E9', '#33338F'] : null;
+  var label = function(t){ return '<div style="' + serif + 'font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:' + C.faint + ';margin-bottom:3px">' + esc(t) + '</div>'; };
+  var line = function(l){
+    var v = l[1] === 'mail' ? a('mailto:' + esc(l[0]), esc(l[0])) : l[1] === 'web' ? a(esc(/^https?:/i.test(l[0]) ? l[0] : 'https://' + l[0]), esc(l[0].replace(/^https?:\/\/(www\.)?/i, '').replace(/\/$/, ''))) : esc(l[0]);
+    return '<div style="' + body + 'overflow-wrap:anywhere;' + (l[1] === 'main' ? 'font-size:15px;line-height:1.35;color:' + C.ink + ';margin-bottom:2px'
+      : 'font-size:13px;line-height:1.45;color:' + (l[1] === 'em' ? C.muted + ';font-style:italic' : C.ink)) + '">' + v + '</div>'; };
+  var w = p.groups.length ? Math.floor(100 / p.groups.length) : 100;
+  var top = p.groups.map(function(g, i){
+    return '<td style="vertical-align:top;width:' + w + '%;padding:2px 14px;' + (i ? 'border-left:1px solid ' + C.line + ';' : '') + '">' + label(g.head) + g.lines.map(line).join('') + '</td>'; }).join('');
   var fact = function(f){
-    return '<td style="vertical-align:top;width:33%;padding:5px 14px 5px 0">'
-      + '<div style="' + serif + 'font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:' + C.faint + '">' + esc(f[0].replace(/^Link to 'research gate' or equivalent$/i, 'Research profile')) + '</div>'
-      + '<div style="' + body + 'font-size:13.5px;line-height:1.45;color:' + C.ink + ';overflow-wrap:anywhere">' + linked(f[1]).replace(/\n/g, '<br>') + '</div>'
-      + (f[2] ? '<div style="' + body + 'font-size:13px;line-height:1.4;color:' + C.muted + ';font-style:italic">' + esc(f[2]) + '</div>' : '')
-      + (f[3] ? '<div style="' + body + 'font-size:13.5px;line-height:1.45;overflow-wrap:anywhere">' + a('mailto:' + esc(f[3].trim()), esc(f[3])) + '</div>' : '') + '</td>'; };
-  var rows = function(list){
-    var h = '';
-    for (var i = 0; i < list.length; i += 3){
-      var r = list.slice(i, i + 3);
-      h += '<tr>' + r.map(fact).join('') + (r.length < 3 ? '<td colspan="' + (3 - r.length) + '"></td>' : '') + '</tr>';
-    }
-    return h;
-  };
-  var facts = p.who.length || p.rest.length
-    ? '<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;table-layout:fixed;border-collapse:separate;background:' + C.field + ';border:1px solid ' + C.line + ';border-radius:7px;margin-top:18px">'
-      + '<tr><td style="padding:9px 0 9px 14px"><table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;table-layout:fixed;border-collapse:collapse">'
-      + rows(p.who)
-      + (p.who.length && p.rest.length ? '<tr><td colspan="3" style="padding:6px 14px 6px 0"><div style="border-top:1px solid ' + C.line + ';font-size:0;line-height:0">&nbsp;</div></td></tr>' : '')
-      + rows(p.rest) + '</table></td></tr></table>'
+    return '<td style="vertical-align:top;width:33%;padding:5px 14px">' + label(f[0].replace(/^Link to 'research gate' or equivalent$/i, 'Research profile'))
+      + '<div style="' + body + 'font-size:13px;line-height:1.45;color:' + C.ink + ';overflow-wrap:anywhere">' + linked(f[1]).replace(/\n/g, '<br>') + '</div></td>'; };
+  var rows = '';
+  for (var i = 0; i < p.rest.length; i += 3){
+    var r = p.rest.slice(i, i + 3);
+    rows += '<tr>' + r.map(fact).join('') + (r.length < 3 ? '<td colspan="' + (3 - r.length) + '"></td>' : '') + '</tr>';
+  }
+  var facts = top || rows
+    ? '<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:separate;background:' + C.field + ';border:1px solid ' + C.line + ';border-radius:7px;margin-top:18px">'
+      + (top ? '<tr><td style="padding:12px 0"><table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;table-layout:fixed;border-collapse:collapse"><tr>' + top + '</tr></table></td></tr>' : '')
+      + (rows ? '<tr><td style="padding:7px 0 9px;' + (top ? 'border-top:1px solid ' + C.line + ';' : '') + '"><table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;table-layout:fixed;border-collapse:collapse">' + rows + '</table></td></tr>' : '')
+      + '</table>'
     : '';
   var texts = p.long.map(function(f, i){
     return '<div style="margin-top:22px;page-break-inside:auto"><div style="' + serif + 'font-size:13px;letter-spacing:.07em;text-transform:uppercase;color:' + C.faint + ';margin:0 0 6px">' + esc(f[0]) + '</div>'
@@ -2887,9 +2899,10 @@ function sheetHTML(e){
 function sheetText(e){
   var p = sheetParts(e);
   return [title(e), p.meta, p.sub].filter(Boolean).join('\n') + '\n\n'
-    + sheetLinks(e).map(function(k){ return k[0] + ': ' + k[1]; }).join('\n') + '\n\n'
+    + p.groups.map(function(g){ return g.head.toUpperCase() + '\n' + g.lines.map(function(l){ return l[0]; }).join('\n'); }).join('\n\n') + '\n\n'
+    + p.rest.map(function(f){ return f[0] + ': ' + f[1]; }).join('\n') + '\n\n'
     + p.long.map(function(f){ return f[0].toUpperCase() + '\n' + f[1]; }).join('\n\n') + '\n\n'
-    + p.who.concat(p.rest).map(function(f){ return f[0] + ': ' + f[1] + (f[2] ? ' (' + f[2] + ')' : '') + (f[3] ? ', ' + f[3] : ''); }).join('\n');
+    + sheetLinks(e).map(function(k){ return k[0] + ': ' + k[1]; }).join('\n');
 }
 /* The PDF is the browser's own Save as PDF, from the print box, so it
    works from file:// and on the iPad with nothing loaded. The page's
