@@ -794,10 +794,9 @@ function venueLabel(v,indent){
     (v.place==='new'?'<b class="newtag">new</b>':'')+esc(nm)+'</span>';
 }
 /* The venues of one row packed into tracks: a band where it touches
-   nothing, its name inside or after it; a thin quiet line for one already in
-   Venues (`quietOk`), which needs no room for a name and packs tighter; the
-   undated as chips from today's line. Returns the markup and the height. */
-function venueTracks(vs,quietOk){
+   nothing, its name inside or after it; the undated as chips from today's
+   line. Returns the markup and the height. */
+function venueTracks(vs){
   let h='';
   const now=T(todayISO());
   const px=t=>X(t)/100*laneW;
@@ -809,7 +808,6 @@ function venueTracks(vs,quietOk){
     const to=w.to===null?Math.min(T1,Math.max(now,w.from===null?now:w.from)+OPEN_RUN*DAY):Math.min(T1,w.to+DAY);
     if(to<T0||from>T1)continue;
     const L=px(from),R=px(to),run=w.to===null?16:0;
-    if(quietOk&&v.place==='venues'){items.push({v,L,R,run,quiet:true,end:R+run});continue;}
     const lp=labelPx(v);
     /* a name inside the band starts clear of its first diamond */
     const at=w.ms!==null&&px(w.ms)<R?Math.max(L,px(w.ms+DAY)+8):L;
@@ -820,14 +818,14 @@ function venueTracks(vs,quietOk){
   const tracks=[];
   for(const it of items){
     let k=0;while(k<tracks.length&&tracks[k].end+6>it.L)k++;
-    tracks[k]={end:it.end,full:(tracks[k]&&tracks[k].full)||!it.quiet};it.k=k;
+    tracks[k]={end:it.end};it.k=k;
   }
   const tops=[];let y=5;
-  tracks.forEach((t,k)=>{const th=t.full?TRACK_H:12;tops[k]=y+th/2;y+=th;});
+  tracks.forEach((t,k)=>{tops[k]=y+TRACK_H/2;y+=TRACK_H;});
   for(const it of items){
     const top=Math.round(tops[it.k]);
-    h+=bandHTML(it.v,T0,T1,top,it.inside?venueLabel(it.v,it.indent+6):'',it.quiet);
-    if(!it.quiet&&!it.inside)h+='<span class="vbl out st-'+it.v.place+'" style="top:'+top+'px;left:calc('+(it.R/laneW*100).toFixed(2)+'% + '+it.run+'px)">'+venueLabel(it.v)+'</span>';
+    h+=bandHTML(it.v,T0,T1,top,it.inside?venueLabel(it.v,it.indent+6):'');
+    if(!it.inside)h+='<span class="vbl out st-'+it.v.place+'" style="top:'+top+'px;left:calc('+(it.R/laneW*100).toFixed(2)+'% + '+it.run+'px)">'+venueLabel(it.v)+'</span>';
   }
   if(chips.length){
     const top=Math.round(y+TRACK_H/2);let x=Math.max(0,px(now)+6);
@@ -842,7 +840,7 @@ function venueTracks(vs,quietOk){
 }
 function laneHTML(a,vs){
   const now=T(todayISO());
-  const vt=venueTracks(vs,true);
+  const vt=venueTracks(vs);
   let h=vt.h;
   /* the calls, under the venues. Where two bars overlap, a bar takes the
      lowest level whose previous occupant has already cleared, with daylight
@@ -969,7 +967,7 @@ function boardRow(a,bg){
   const looms=a.dates.filter(d=>!d.start);
   const loomBtn=looms.length?
     '<button class="loom" data-act="openArena" data-id="'+a.id+'" data-tipl="1"><i class="sw sw-uncertain"></i>'+looms.length+'</button>':'';
-  const all=venuesOf(a).filter(v=>!inLimbo(v)),shared=all.filter(isShared),own=all.filter(v=>!isShared(v));
+  const all=venuesOf(a).filter(onBoard),shared=all.filter(isShared),own=all.filter(v=>!isShared(v));
   const fresh=own.some(v=>v.place==='new');
   const lane=laneHTML(a,own);
   const shTag=shared.length?'<span class="shtag" title="Also served by, under Shared venues at the top: '+esc(shared.map(v=>v.name).join(', '))+'">+'+shared.length+' shared</span>':'';
@@ -992,15 +990,15 @@ function boardRow(a,bg){
    arena in the freezer does not count. */
 function isShared(v){return v.arenas.filter(id=>{const a=arena(id);return a&&!a.frozenAt;}).length>1;}
 /* Each shared venue is one line, folded (Mark, 2026-10-15): its name, how
-   many arenas it serves, and its window drawn as on the arena rows, thin
-   once it is in Venues. Unfolded by its caret, the arenas stand under it
+   many arenas it serves, and its window drawn as on the arena rows.
+   Unfolded by its caret, the arenas stand under it
    one to a line, each with its own calls drawn as on its own row, held to
    the venue by a rule down the left and the venue's window shaded faintly
    behind them, its event days a line through them, so a call can be read
    against the event. The tags under the name, two to a line, did not
    line up with anything. */
 function sharedRows(bg){
-  const vs=visibleVenues().filter(v=>isShared(v)&&!inLimbo(v));
+  const vs=visibleVenues().filter(v=>isShared(v)&&onBoard(v));
   if(!vs.length)return '';
   const by=v=>{const w=vWin(v);return w&&w.from!==null?w.from:w?-1e15:1e15;};
   vs.sort((x,y)=>by(x)-by(y)||x.name.localeCompare(y.name));
@@ -1016,7 +1014,7 @@ function sharedRows(bg){
     const open=!!S.ui.shOpen[v.id];
     const as=venueArenas(v).filter(a=>!a.frozenAt)
       .sort((x,y)=>(tyAt.has(x.typeId)?tyAt.get(x.typeId):99)-(tyAt.has(y.typeId)?tyAt.get(y.typeId):99)||boardOrder()(x,y));
-    const vt=venueTracks([v],true);
+    const vt=venueTracks([v]);
     h+='<div class="shblock'+(open?' open':'')+' st-'+v.place+'"><div class="row shrow"><div class="cell name">'+
       '<button class="shcar" data-act="shOpen" data-v="'+v.id+'" aria-expanded="'+open+'" title="'+(open?'Fold the arenas away':'Show the arenas it serves, with their calls')+'">'+(open?'\u25BE':'\u25B8')+'</button>'+
       vGlyph(v)+'<button class="nm" data-act="openVenue" data-v="'+v.id+'" title="'+esc(v.name)+'">'+esc(v.name)+'</button>'+
@@ -2048,11 +2046,14 @@ function refreshPlace(){
     renderAll();renderDrawer();
   });
 }
-/* Limbo is what is over, and the board is what is coming and going on: a
-   venue in Limbo is off the board (Mark, 2026-10-17), on the arena rows
-   and among the Shared venues alike, and waits in Limbo to be deleted.
-   Its arena's panel still lists it. */
-const inLimbo=v=>inVenues(v)&&vPhase(v)==='over';
+/* The board holds what still waits for Mark: a venue moved to Venues is
+   off it (Mark, 2026-10-23), on the arena rows and among the Shared venues
+   alike, whatever its section, Limbo and Mark's Place included. Until then
+   one stayed as a thin line on its arena's row, which he did not see, and
+   as a named row of its own among the Shared venues, which he did, and he
+   took the two for different rules. Its arena's panel still lists it, and
+   Back to the board brings it back. */
+const onBoard=v=>!inVenues(v);
 const onTrial=v=>v.place==='new'||v.place==='board';
 /* A venue's event days are its meeting days when they are a day or a span
    of up to two weeks. A longer exact span is the stretch its marketplace is
@@ -2348,13 +2349,10 @@ window.addEventListener('focus',cameBack);
    A window with no end runs on six weeks past today and fades out there
    with an arrow, rather than to the strip's edge: drawn to the edge, every
    standing partner search was a thick bar across the whole board (Mark,
-   2026-10-15). Its end can still be dragged to give it a real one. A
-   `quiet` band is one already in Venues, drawn on the board as a thin line
-   with its diamonds and no name, so what still waits for Mark stands out
-   (the same evening). */
+   2026-10-15). Its end can still be dragged to give it a real one. */
 const OPEN_RUN=42;          /* days an open-ended window is drawn past today */
 const PLACE_RGB={new:'185,227,90',board:'150,140,122',venues:'239,91,76',gone:'125,116,102'};
-function bandHTML(v,t0,t1,top,label,quiet){
+function bandHTML(v,t0,t1,top,label){
   const w=vWin(v);if(!w)return '';
   const P=t=>(t-t0)/(t1-t0)*100,C=x=>Math.max(0,Math.min(100,x));
   const now=T(todayISO());
@@ -2364,12 +2362,12 @@ function bandHTML(v,t0,t1,top,label,quiet){
   const y=top===null?'':'top:'+top+'px;';
   const rgb=past?PLACE_RGB.gone:PLACE_RGB[v.place];
   const data=' data-act="openVenue" data-v="'+v.id+'" data-tipv="'+v.id+'"';
-  let h='<div class="vband st-'+v.place+(quiet?' quiet':'')+(past?' past':'')+(w.season?' season':'')+(w.from===null?' openl':'')+(w.to===null?' openr':'')+
+  let h='<div class="vband st-'+v.place+(past?' past':'')+(w.season?' season':'')+(w.from===null?' openl':'')+(w.to===null?' openr':'')+
     '" style="'+y+'left:'+L.toFixed(2)+'%;width:'+Math.max(R-L,.5).toFixed(2)+'%;background:'+heatBG(v,from,to,rgb)+'"'+data+
     ' role="button" tabindex="0" aria-label="'+esc(v.name)+', '+esc(vDateSay(v))+'">'+
     '<i class="vh l" data-v="'+v.id+'" data-end="opens" title="Drag to set when it opens — double-click to undo"></i>'+
     '<i class="vh r" data-v="'+v.id+'" data-end="closes" title="Drag to set when it closes — double-click to undo"></i>'+
-    (quiet?'':label||'')+'</div>';
+    (label||'')+'</div>';
   if(w.to===null&&R<99)h+='<span class="vrun" style="'+y+'left:'+R.toFixed(2)+'%" aria-hidden="true">→</span>';
   if(w.ms!==null){
     if(w.me>w.ms){const a=C(P(w.ms)),b=C(P(w.me+DAY));
@@ -2722,7 +2720,7 @@ function vPlaceHTML(v){
      hand, and the way back to the board; one Mark's Place copies stands
      in that section by itself */
   if(inPlace(v))return '<div class="vplace st-venues"><span><b>In Venues</b><i>in Mark\u2019s Place, which copies its partner search every night</i></span>'+
-    '<button class="btn ghost" data-act="vPlace" data-v="'+v.id+'" data-p="board" title="Take it out of Venues; it stays on the board">Back to the board</button></div>';
+    '<button class="btn ghost" data-act="vPlace" data-v="'+v.id+'" data-p="board" title="Take it out of Venues and put it back on the board">Back to the board</button></div>';
   const ph=vPhase(v),nat=vPhaseByDates(v);
   return '<div class="vplace st-venues"><span><b>In Venues</b>'+
       (v.phase&&v.phase!==nat?'<i>put here by you; its dates say '+PHASE_SAY[nat]+'</i>':'')+'</span>'+
@@ -2730,7 +2728,7 @@ function vPlaceHTML(v){
       '<button class="'+(k===ph?'on':'')+'" data-act="vPhase" data-v="'+v.id+'" data-ph="'+k+'" aria-pressed="'+(k===ph)+'" title="'+
         (k===nat?'Where its dates put it':'Put it in '+PHASE_SAY[k]+' by hand')+'">'+PHASE_SAY[k]+'</button>').join('')+'</span>'+
     (v.phase?'<button class="vreset" data-act="vPhase" data-v="'+v.id+'" data-ph="" title="Let its dates decide again">by its dates</button>':'')+
-    '<button class="btn ghost" data-act="vPlace" data-v="'+v.id+'" data-p="board" title="Take it out of Venues; it stays on the board">Back to the board</button></div>';
+    '<button class="btn ghost" data-act="vPlace" data-v="'+v.id+'" data-p="board" title="Take it out of Venues and put it back on the board">Back to the board</button></div>';
 }
 function venueReadHTML(v){
   const d=vSince(v);

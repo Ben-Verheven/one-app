@@ -1268,10 +1268,6 @@
   background:var(--ink);box-shadow:0 0 0 1px rgba(0,0,0,.5);opacity:0;transition:opacity .14s}
 #pane-semaphore .vband:hover .vh::after,#pane-semaphore .vband.dragging .vh::after{opacity:.85}
 @media (hover:none){#pane-semaphore .vh::after{opacity:.35}}
-/* already in Venues, on the board: a thin line with its diamonds, its name
-   on hover, so what still waits for a decision stands out */
-#pane-semaphore .vband.quiet{height:4px;border:none;border-radius:2px;box-shadow:none;animation:none}
-#pane-semaphore .vband.quiet .vh{top:-7px;bottom:-7px}
 /* the arrow at the faded end of a window with no end */
 #pane-semaphore .vrun{position:absolute;top:50%;transform:translateY(-50%);margin-left:3px;font:11px/1 var(--mono);color:var(--muted);pointer-events:none}
 /* its name, inside the band where it fits and after it where it does not;
