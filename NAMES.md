@@ -1348,7 +1348,7 @@ the two lists at the foot of this file is where those names gather.
 .wd            semaphore.css:370 x3               semaphore.js:3367
 .wfresh        semaphore.css:382 x3               semaphore.js:3096 x2
 .whead         semaphore.css:319 x5               semaphore.js:4193
-.when          semaphore.css:1154                 semaphore.js:963 x18   ledger.js:2579 x4   atlas.js:975 x3
+.when          semaphore.css:1154                 semaphore.js:963 x20   ledger.js:2579 x4   atlas.js:975 x3
 .whmenu        semaphore.css:192 x7               semaphore.js:1136 x2
 .whsort        semaphore.css:184 x6               semaphore.js:1133
 .wide          semaphore.css:481 x27              semaphore.js:3229 x3
