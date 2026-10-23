@@ -2815,8 +2815,16 @@ function leadBtnHTML(e){
    box is a table, the one layout every mail program keeps, and its colours
    are the room's tokens already laid on the sheet's ground, since Outlook
    reads no see-through colour. */
+/* The site's own "website" was, on every lead Mark looked at (2026-10-23),
+   the brokerage site's page for the entry again, sent out as the project's
+   website beside its twin. A link is the project's own only when it leads
+   off the brokerage site. */
+function offSite(u, e){
+  var host = function(x){ try { return new URL(/^https?:/i.test(x) ? x : 'https://' + x).hostname.replace(/^www\./, ''); } catch(err){ return ''; } };
+  return !!u && host(u) !== host(e.url || '');
+}
 function sheetLinks(e){
-  var had = leadOf(e), web = had && (had.l.links || []).filter(function(k){ return k.label === 'project' && k.url !== e.url; })[0];
+  var had = leadOf(e), web = had && (had.l.links || []).filter(function(k){ return k.label === 'project' && offSite(k.url, e); })[0];
   return [[siteOf(e).name + ' entry', e.url]].concat(web ? [['Project website', web.url]] : []).filter(function(k){ return k[1]; });
 }
 function sheetParts(e){
@@ -2919,6 +2927,7 @@ function leadFromEntry(e, d){
   var coord = line(get(/coordinat|lead(ing)?\b.*(organi[sz]ation|partner|institution)/i)) || e.org || '';
   var mail = (get(/e-?mail/i).match(EMAIL) || String((d && d.page_text) || '').match(EMAIL) || [''])[0];
   var web = (get(/web ?site|homepage|^url$|^web$/i).match(/(?:https?:\/\/)?[^\s,;]+\.[^\s,;]+/i) || [''])[0];
+  if (!offSite(web, e)) web = '';
   var links = [];
   if (web) links.push({ id:newId(), label:'project', url:/^https?:/i.test(web) ? web : 'https://' + web });
   if (e.url) links.push({ id:newId(), label:web ? site.name + ' entry' : 'project', url:e.url });
