@@ -1688,6 +1688,8 @@ function gptFileText(){
 '',
 '**Not wanted**: general information days, call webinars or launch events with no matchmaking part, conferences with no sign of matchmaking, lists of organisations, newsletters, and expected call dates no official page gives. An info day **with** a real matchmaking, pitch or B2B part does count; say in its note what that part is. Lean to completeness: anything with real matchmaking goes in, even when only its month is known. A few misfires are acceptable; irrelevant items are not.',
 '',
+'**Netherlands eligibility.** The board is kept from the Netherlands. Where you can, check whether organisations based in the Netherlands can take part and be funded: the Netherlands among the participating countries, or a Dutch funder (such as NWO, ZonMw or RVO) in the call. A call date, venue or brokerage opportunity, or a suggested new arena, that Dutch organisations clearly cannot join or be funded in does not need to be taken up: leave it out, and say so in that arena\'s line in `arenas_checked`. When it cannot be found out, keep it as usual.',
+'',
 '## What to do: every arena, no exceptions',
 '',
 'Go through **every one of the '+n+' arenas** in the data, one by one. Frozen arenas (`"frozen": true`) get a lighter look, but they are checked too.',
