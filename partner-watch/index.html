@@ -2829,9 +2829,18 @@ function sheetLinks(e){
 }
 function sheetParts(e){
   var p = entryParts((detail[e.id] && detail[e.id].fields) || []), full = function(f){ return !/^[-–—\s]*$/.test(f[1] || ''); };
+  /* The contact's job goes under the contact's name, in the same cell, so
+     it reads as theirs (Mark, 2026-10-23): apart, three facts on, it read
+     as one more fact about the organisation. Their email joins them there,
+     where it had wrapped onto a row of its own. */
+  var who = p.who.filter(full).map(function(f){ return f.slice(); }), rest = p.short.filter(full);
+  var name = who.filter(function(f){ return f[0] === 'Contact name'; })[0], job = rest.findIndex(function(f){ return /^(job (position|title|function)|position|function)$/i.test(f[0]); });
+  if (name && job >= 0) name[2] = rest.splice(job, 1)[0][1];
+  var mail = who.findIndex(function(f){ return f[0] === 'Email'; });
+  if (name && mail >= 0) name[3] = who.splice(mail, 1)[0][1];
   return { meta:[siteOf(e).name, e.country, e.posted ? 'posted ' + e.posted.slice(0, 10) : null].filter(Boolean).join(' · '),
            sub:[e.org ? e.contact : null, e.topic].filter(Boolean).join(' · '),
-           long:p.long.filter(full), who:p.who.filter(full), rest:p.short.filter(full) };
+           long:p.long.filter(full), who:who, rest:rest };
 }
 function sheetHTML(e){
   var p = sheetParts(e), C = { sheet:'#FAF7F0', field:'#FCFAF3', ink:'#282420', muted:'#5E574B', faint:'#6A6250', key2:'#3A342C', line:'#D5D1CB', line2:'#B7B4AD' };
@@ -2843,7 +2852,9 @@ function sheetHTML(e){
   var fact = function(f){
     return '<td style="vertical-align:top;width:33%;padding:5px 14px 5px 0">'
       + '<div style="' + serif + 'font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:' + C.faint + '">' + esc(f[0].replace(/^Link to 'research gate' or equivalent$/i, 'Research profile')) + '</div>'
-      + '<div style="' + body + 'font-size:13.5px;line-height:1.45;color:' + C.ink + ';overflow-wrap:anywhere">' + linked(f[1]).replace(/\n/g, '<br>') + '</div></td>'; };
+      + '<div style="' + body + 'font-size:13.5px;line-height:1.45;color:' + C.ink + ';overflow-wrap:anywhere">' + linked(f[1]).replace(/\n/g, '<br>') + '</div>'
+      + (f[2] ? '<div style="' + body + 'font-size:13px;line-height:1.4;color:' + C.muted + ';font-style:italic">' + esc(f[2]) + '</div>' : '')
+      + (f[3] ? '<div style="' + body + 'font-size:13.5px;line-height:1.45;overflow-wrap:anywhere">' + a('mailto:' + esc(f[3].trim()), esc(f[3])) + '</div>' : '') + '</td>'; };
   var rows = function(list){
     var h = '';
     for (var i = 0; i < list.length; i += 3){
@@ -2863,15 +2874,11 @@ function sheetHTML(e){
     return '<div style="margin-top:22px;page-break-inside:auto"><div style="' + serif + 'font-size:13px;letter-spacing:.07em;text-transform:uppercase;color:' + C.faint + ';margin:0 0 6px">' + esc(f[0]) + '</div>'
       + String(f[1]).split(/\n\s*\n/).map(function(t){
           return '<p style="' + body + 'margin:0 0 .7em;font-size:' + (i === 0 ? 16 : 15.5) + 'px;line-height:1.6;color:' + C.ink + '">' + linked(t).replace(/\n/g, '<br>') + '</p>'; }).join('') + '</div>'; }).join('');
-  var links = sheetLinks(e).map(function(k){
-    return '<a href="' + esc(k[1]) + '" style="display:inline-block;' + serif + 'font-size:13px;color:' + C.key2 + ';text-decoration:none;border:1px solid ' + C.line2 + ';border-radius:7px;padding:4px 11px;margin:0 0 6px 6px;white-space:nowrap">' + esc(k[0]) + ' ↗</a>'; }).join('');
   return '<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;max-width:700px;border-collapse:collapse;background:' + C.sheet + '"><tr><td style="padding:22px 26px 14px">'
-    + '<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse"><tr><td style="vertical-align:top">'
     + '<div style="line-height:20px">' + (kind ? '<span style="' + serif + 'font-size:11.5px;background:' + kind[1] + ';color:' + kind[2] + ';border-radius:4px;padding:1px 7px;margin-right:8px;white-space:nowrap">' + kind[0] + '</span>' : '')
     + '<span style="' + mono + 'font-size:12px;color:' + C.faint + '">' + esc(p.meta) + '</span></div>'
     + '<div style="' + serif + 'font-weight:400;font-size:25px;line-height:1.25;color:' + C.ink + ';margin:7px 0 0">' + esc(title(e)) + '</div>'
     + (p.sub ? '<div style="' + body + 'font-size:14px;color:' + C.muted + ';margin-top:3px">' + esc(p.sub) + '</div>' : '')
-    + '</td><td style="vertical-align:top;text-align:right;width:190px">' + links + '</td></tr></table>'
     + facts + texts
     + '<div style="' + body + 'font-size:12px;color:' + C.faint + ';border-top:1px solid ' + C.line + ';margin-top:18px;padding-top:9px;overflow-wrap:anywhere">'
     + sheetLinks(e).map(function(k){ return esc(k[0]) + ': ' + a(esc(k[1]), esc(k[1])); }).join('<br>') + '</div>'
@@ -2882,7 +2889,7 @@ function sheetText(e){
   return [title(e), p.meta, p.sub].filter(Boolean).join('\n') + '\n\n'
     + sheetLinks(e).map(function(k){ return k[0] + ': ' + k[1]; }).join('\n') + '\n\n'
     + p.long.map(function(f){ return f[0].toUpperCase() + '\n' + f[1]; }).join('\n\n') + '\n\n'
-    + p.who.concat(p.rest).map(function(f){ return f[0] + ': ' + f[1]; }).join('\n');
+    + p.who.concat(p.rest).map(function(f){ return f[0] + ': ' + f[1] + (f[2] ? ' (' + f[2] + ')' : '') + (f[3] ? ', ' + f[3] : ''); }).join('\n');
 }
 /* The PDF is the browser's own Save as PDF, from the print box, so it
    works from file:// and on the iPad with nothing loaded. The page's
