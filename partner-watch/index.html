@@ -2826,7 +2826,7 @@ function offSite(u, e){
 }
 function sheetLinks(e){
   var had = leadOf(e), web = had && (had.l.links || []).filter(function(k){ return k.label === 'project' && offSite(k.url, e); })[0];
-  return [[siteOf(e).name + ' entry', e.url]].concat(web ? [['Project website', web.url]] : []).filter(function(k){ return k[1]; });
+  return [['Direct link to the project description', e.url]].concat(web ? [['Project website', web.url]] : []).filter(function(k){ return k[1]; });
 }
 function sheetParts(e){
   var p = entryParts((detail[e.id] && detail[e.id].fields) || []), full = function(f){ return !/^[-–—\s]*$/.test(f[1] || ''); };
