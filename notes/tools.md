@@ -51,7 +51,7 @@ and the failure reads as if the browser were dirty.
 one folder before a refactor and another after, and compare the eight PNGs
 pixel for pixel; identical images are the only honest evidence that a
 cleanup changed nothing on screen. The seeded data is the same on both runs,
-but the clock is not: `semaphore-board` and `callboard` draw a today line
+but the clock is not: `semaphore-venues` and `callboard` draw a today line
 placed by the time of day, so shots taken an hour apart differ by a few
 pixels there with no change at all. Before calling a diff real, shoot the
 untouched app again straight away and compare that as well.

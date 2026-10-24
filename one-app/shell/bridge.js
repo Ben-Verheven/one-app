@@ -380,13 +380,17 @@
   }
   Hub.onRoom(function () { returnArena(); });
 
-  function showArena(aid) {
+  function showArena(aid) { lendDrawer('openArena', aid); }
+  /* A venue stands in the same drawer, and the Call Board's lanes open it
+     there to change what the board cannot (2026-10-24). */
+  function showVenue(vid) { lendDrawer('openVenue', vid); }
+  function lendDrawer(verb, id) {
     var api = Hub.api('semaphore');
-    if (!Hub.pane('semaphore') || !api.openArena) {
+    if (!Hub.pane('semaphore') || !api[verb]) {
       Hub.note('The Brokerage Semaphore did not start — see the console'); return;
     }
     lendArena();
-    try { api.openArena(aid); }
+    try { api[verb](id); }
     catch (e) { console.error(e); returnArena(); }
     if (semCard && !semCard.classList.contains('open')) returnArena();
   }
@@ -400,18 +404,25 @@
     if (esc) esc(); else returnArena();
   }, true);
 
-  /* ── Semaphore's arenas and their calls, on the Call Board ─────────── */
+  /* ── Semaphore's board, on the Call Board ────────────────────────── */
 
   /* The Call Board draws every arena's calls in tabs of their own after the
      Horizon clusters (Mark, 2026-10-24), each call one row with its arena
-     named on the chip. It is handed a socket as the Ledger is: a read, and
-     the arena's drawer lent over the Board. The Board is the lazy room, so
-     the socket cannot be handed over at load, when there is nothing yet to
-     hand it to; the Board says when it has been built, and that is when it
-     gets it — whether it was opened or only built for a topic the Ledger
-     asked about. A change on the Semaphore's side reaches it by the same
-     two roads the Ledger's leads take: the save, and coming back into view
-     after a board was replaced from the cloud without one. */
+     named on the chip, the venues kept on the board as lanes under them,
+     and it is where whatever a search found is judged, one find at a time.
+     The Semaphore's own Board, its tray and Dispatches went there the same
+     day. It is handed a socket as the Ledger is: reads of the arenas'
+     calls, the venues and the finds waiting, the verbs that judge a find
+     and mark an arena's new dates seen, and the drawer lent over the Board
+     for an arena or a venue. The Board is the lazy room, so the socket
+     cannot be handed over at load, when there is nothing yet to hand it
+     to; the Board says when it has been built, and that is when it gets
+     it — whether it was opened or only built for a topic the Ledger asked
+     about. A change on the Semaphore's side reaches it by the same two
+     roads the Ledger's leads take: the save, and coming back into view
+     after a board was replaced from the cloud without one. The agent's new
+     arenas are read from the cloud on the way in too, since another
+     machine may have answered one since. */
   (function () {
     var S = Hub.api('semaphore');
     if (!S.calls) return;
@@ -419,13 +430,34 @@
       var B = Hub.api('callboard');
       if (B.arenasChanged) B.arenasChanged();
     }
+    function refresh() { if (S.refreshFinds) S.refreshFinds(changed); }
     Hub.on('callboard:ready', function () {
       var B = Hub.api('callboard');
       if (!B.setArenas) return;
-      B.setArenas({ list: function () { return S.calls(); }, open: showArena });
+      B.setArenas({
+        list: function () { return S.calls(); },
+        venues: function () { return S.venues(); },
+        finds: function () { return S.finds(); },
+        judge: function (key, verb, type, done) { S.judge(key, verb, type, done); },
+        seen: function (aid) { S.seen(aid); },
+        open: showArena,
+        openVenue: showVenue
+      });
+      refresh();
     });
     Hub.on('semaphore:saved', changed);
-    Hub.onRoom(function (now) { if (now === 'callboard') changed(); });
+    Hub.on('cloud:session', function (on) { if (on && Hub.started('callboard')) refresh(); });
+    Hub.onRoom(function (now) { if (now === 'callboard') { changed(); refresh(); } });
+    /* ChatGPT's answer put on the board: the finds it brought are judged
+       on the Call Board, so the app goes there and starts, and says what
+       landed. */
+    Hub.on('semaphore:judge', function (said) {
+      Hub.ensure('callboard');
+      Hub.go('callboard');
+      var B = Hub.api('callboard');
+      if (B.judge) B.judge();
+      if (said) Hub.note(said, 9000);
+    });
   })();
 
   /* ── Semaphore's leads, on the Ledger's board ─────────────────────── */

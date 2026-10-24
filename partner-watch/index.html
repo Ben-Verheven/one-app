@@ -698,8 +698,22 @@ body.mopen .mpanel{transform:none;visibility:visible;transition:transform .3s cu
   <aside class="mpanel" id="mpanel" tabindex="-1" aria-label="From the Brokerage Semaphore"></aside>
 </div>
 
+<script src="../one-app/shell/venues.js"></script>
 <script src="../topic-atlas/library.js"></script>
 <script>
+/* The venue maths — the dates a venue's window is written in, how the
+   window, its state and its shading are reckoned, how a site is read and
+   how an arena's call dates become bars — are the Brokerage Semaphore's
+   own, from the one file the One App's rooms read as well
+   (one-app/shell/venues.js, Mark 2026-10-24). Until then this page held a
+   copy, which every change there had to be copied into by hand. */
+var VM = VenueMaths;
+var DAY = VM.DAY, MONTHS = VM.MONTHS, OPEN_RUN = VM.OPEN_RUN, PLACE_RGB = VM.PLACE_RGB, PHASE = VM.PHASE;
+var T = VM.T, todayISO = VM.todayISO, fmtDay = VM.fmtDay, dispDate = VM.dispDate, trimYear = VM.trimYear,
+  shortDay = VM.shortDay, shortDate = VM.shortDate, tDay = VM.tDay;
+var linkKey = VM.linkKey, siteKey = VM.siteKey, sameSite = VM.sameSite;
+var vWin = VM.vWin, vState = VM.vState, vHeat = VM.vHeat, heatBG = VM.heatBG, vDateSay = VM.vDateSay,
+  callBase = VM.callBase, callRuns = VM.callRuns;
 /* The cloud: the One App's own Supabase project. The key is the public one
    (the same as the One App's BUILT_IN); since the lock it opens nothing without
    Mark's login, which is why it can stand in a public page. */
@@ -1884,26 +1898,9 @@ var TONES = { blush:'#e19292', terracotta:'#db9973', sand:'#cda364', straw:'#bda
   aqua:'#59beb8', mist:'#5bbad0', cornflower:'#71b3e1', dusk:'#8faae8', lilac:'#aca0e2', mauve:'#c598d1', rose:'#d992b3',
   rosewood:'#ad6464', rust:'#a96b45', umber:'#9c7334', ochre:'#8d7b32', moss:'#6f8644', fern:'#3c8d6d', teal:'#1b8e88',
   slate:'#218a9f', cobalt:'#4183ae', twilight:'#617ab5', violet:'#7d71b0', plum:'#9469a0', berry:'#a66384' };
-/* linkKey, SHARED_HOSTS and siteKey are the Marketplace's own
-   (one-app/rooms/semaphore/semaphore.js), so the two read a site alike. */
-function linkKey(u){ return String(u || '').trim().toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/[#?].*$/, '').replace(/\/+$/, ''); }
-var SHARED_HOSTS = /^(?:b2match\.(?:io|com|eu)|(?:.+\.)?(?:europa\.eu|google\.com|linkedin\.com|youtube\.com|github\.com|eventbrite\.[a-z.]+|meetup\.com|lu\.ma|zoom\.us|microsoft\.com|sharepoint\.com|gov\.pl|horizoneuropencpportal\.eu|eurekanetwork\.org)|epss\.proposals\.ee)$/;
-function siteKey(u){
-  var k = linkKey(u), i = k.indexOf('/');
-  var host = (i < 0 ? k : k.slice(0, i)).replace(/:\d+$/, '').replace(/^proposals\.etag\.ee$/, 'epss.proposals.ee');
-  if (!SHARED_HOSTS.test(host)) return host;
-  var segs = (i < 0 ? '' : k.slice(i + 1)).split('/').filter(function(x){ return x && !/^[a-z]{2}(?:[-_][a-z]{2})?$/.test(x); });
-  var e = segs.findIndex(function(x){ return /^(?:e|event|events)$/.test(x); });
-  return [host].concat(e >= 0 && segs[e + 1] ? segs.slice(0, e + 2) : segs).join('/');
-}
-/* A key on a shared host with nothing after the host names no one site,
-   so it matches nothing; otherwise one key may stand inside the other, as
-   a partner-search page inside its partnership's proposals site. */
-function sameSite(a, b){
-  if (a === b) return true;
-  var s = a.length < b.length ? a : b, l = s === a ? b : a;
-  return s.indexOf('/') > 0 && l.indexOf(s + '/') === 0;
-}
+/* linkKey, siteKey and sameSite, read from the file of venue maths at
+   the head of this page's script, are the Semaphore's own, so the two read
+   a site alike. */
 function marketVenue(s){
   if (!market || !market.venues) return null;
   var k = siteKey(s.list_url), best = null;
@@ -1964,48 +1961,20 @@ function arenaTags(v){
    own, and a second writer here could undo a change
    made there. So Go, which in the Semaphore is the visit, is Site here and
    only opens the site, and every change stays in the Semaphore. How a
-   venue's window is reckoned is the Semaphore's own (vWin, vState, vHeat,
-   heatBG and vDateSay in one-app/rooms/semaphore/semaphore.js), copied so
-   that the two say the same of every venue, as are callBase and callRuns
-   below (returning only the Semaphore's list of all the bars); a change
-   there wants copying here.
+   venue's window is reckoned, and how an arena's dates become bars, is the
+   Semaphore's own, read from the file of venue maths at the head of this
+   page's script, so that the two say the same of every venue.
    A venue's panel carries the calls of its arenas under its window, as
    the rotation cards did, and beside Site the scroll and the note that
    stood on the venue's row; it leaves out the lines that repeated the
    window's dates under it, the visits, and Limbo (Mark, 2026-10-21). Every
    venue here opens one, even one the Semaphore does not have, for the
    scroll and the note. */
-var DAY = 864e5, MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-var SPOT_MAX = 14, LEAD_IN = 21, TAIL = 14, DYING_MAX = 21, OPEN_RUN = 42;
-var PLACE_RGB = { new:'185,227,90', board:'150,140,122', venues:'239,91,76', gone:'125,116,102' };
 var PLACE_SAY = { new:'New on the board', board:'Kept on the board', venues:'In Venues', gone:'Removed' };
-var PHASE = { undated:'arising', arising:'arising', meeting:'active', active:'active', dying:'dying', over:'over' };
 var PHASE_SAY = { arising:'Arising', active:'Active', dying:'Dying', over:'Limbo' };
 var STAGE_NAME = { spotted:'Spotted', contacted:'Contacted', talking:'Talking' };
 var ROLES = { announcement:'announcement window', publication:'publication', deadline:'submission deadline' };
 var panel = { kind:null, id:null };
-function pad2(n){ return (n < 10 ? '0' : '') + n; }
-function T(iso){ return new Date(iso + 'T12:00:00').getTime(); }
-function todayISO(){ var d = new Date(); return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
-function fmtDay(iso){ var p = iso.split('-'); return +p[2] + ' ' + MONTHS[+p[1] - 1] + ' ' + p[0]; }
-/* this year is understood, so it goes unsaid */
-function trimYear(s){ var y = ' ' + new Date().getFullYear(); return s.slice(-y.length) === y ? s.slice(0, -y.length) : s; }
-function shortDay(iso){ return trimYear(fmtDay(iso)); }
-function tDay(t){ return shortDay(new Date(t).toISOString().slice(0, 10)); }
-function dispDate(dt){
-  if (dt.gran === 'none' || !dt.start) return 'no date yet';
-  var m = +dt.start.slice(5, 7), y = dt.start.slice(0, 4);
-  switch (dt.gran){
-    case 'day': return fmtDay(dt.start);
-    case 'month': return MONTHS[m - 1] + ' ' + y;
-    case 'quarter': return 'Q' + (Math.floor((m - 1) / 3) + 1) + ' ' + y;
-    case 'half': return 'H' + (m < 7 ? 1 : 2) + ' ' + y;
-    case 'year': return y;
-    case 'range': return fmtDay(dt.start) + ' – ' + fmtDay(dt.end);
-    default: return '';
-  }
-}
-function shortDate(dt){ return dt.gran === 'range' && dt.start && dt.end ? shortDay(dt.start) + ' – ' + shortDay(dt.end) : trimYear(dispDate(dt)); }
 function linkName(lk){
   if (lk.label) return lk.label;
   if (!lk.url) return '(unnamed)';
@@ -2017,103 +1986,7 @@ function stageOf(l){ var s = l && l.stage; return STAGE_NAME[s] ? s : s === 'agr
 function marketArena(id){ return ((market && market.arenas) || []).find(function(a){ return a.id === id; }); }
 function marketVenueById(id){ return ((market && market.venues) || []).find(function(v){ return v.id === id && v.place !== 'gone'; }); }
 function venuesOf(a){ return ((market && market.venues) || []).filter(function(v){ return v.place !== 'gone' && (v.arenas || []).indexOf(a.id) >= 0; }); }
-function isSpot(v){
-  if (!v.start) return false;
-  return v.gran === 'day' || (v.gran === 'range' && T(v.end) - T(v.start) <= SPOT_MAX * DAY);
-}
-function vWin(v){
-  var spot = isSpot(v);
-  var ms = spot ? T(v.start) : null, me = spot ? T(v.end || v.start) : null;
-  var from = v.opens ? T(v.opens) : null, to = v.closes ? T(v.closes) : null;
-  var set = { from:from !== null, to:to !== null }, season = false;
-  if (spot){
-    if (from === null) from = ms - LEAD_IN * DAY;
-    if (to === null) to = me + TAIL * DAY;
-    from = Math.min(from, ms); to = Math.max(to, me);
-  } else if (v.start){
-    season = !(v.gran === 'range' && v.grade === 'fixed');
-    if (from === null) from = T(v.start);
-    if (to === null) to = T(v.end || v.start);
-  }
-  if (from === null && to === null) return null;
-  return { from:from, to:to, ms:ms, me:me, season:season && !set.from && !set.to, set:set, unc:v.start ? v.grade !== 'fixed' : false };
-}
-function vTail(w){ return Math.min(DYING_MAX * DAY, w.from !== null ? (w.to - w.from) / 3 : DYING_MAX * DAY); }
-function vState(v){
-  var w = vWin(v); if (!w) return 'undated';
-  var now = T(todayISO());
-  if (w.to !== null && now > w.to) return 'over';
-  if (w.season || (w.from !== null && now < w.from)) return 'arising';
-  if (w.ms !== null) return now < w.ms ? 'active' : now <= w.me ? 'meeting' : 'dying';
-  if (w.to !== null) return now >= w.to - vTail(w) ? 'dying' : 'active';
-  return 'active';
-}
 function vPhase(v){ return v.phase || PHASE[vState(v)]; }
-function vHeat(v, t){
-  var w = vWin(v); if (!w) return 0;
-  if ((w.from !== null && t < w.from) || (w.to !== null && t > w.to + DAY)) return 0;
-  if (w.ms !== null){
-    if (t < w.ms) return .3 + .7 * (t - w.from) / Math.max(DAY, w.ms - w.from);
-    if (t <= w.me + DAY) return 1;
-    return Math.max(.15, 1 - .85 * (t - w.me - DAY) / Math.max(DAY, w.to - w.me));
-  }
-  if (w.season) return .35;
-  if (w.to !== null && t > w.to - vTail(w)) return Math.max(.15, .6 - .45 * (t - (w.to - vTail(w))) / Math.max(DAY, vTail(w)));
-  return .6;
-}
-function heatBG(v, x0, x1, rgb){
-  var w = vWin(v); if (!w || x1 <= x0) return '';
-  var pts = [x0, x1];
-  [w.from, w.ms, w.me !== null ? w.me + DAY : null, w.to].forEach(function(t){ if (t !== null && t > x0 && t < x1) pts.push(t); });
-  if (w.to !== null && w.ms === null && !w.season){ var k = w.to - vTail(w); if (k > x0 && k < x1) pts.push(k); }
-  pts.sort(function(a, b){ return a - b; });
-  return 'linear-gradient(90deg,' + pts.map(function(t){
-    return 'rgba(' + rgb + ',' + (.1 + .6 * vHeat(v, Math.min(t, x1 - 1))).toFixed(2) + ') ' + ((t - x0) / (x1 - x0) * 100).toFixed(1) + '%'; }).join(',') + ')';
-}
-function vDateSay(v){
-  var st = vState(v), w = vWin(v);
-  var meets = v.start ? (v.grade === 'fixed' ? '' : '≈ ') + shortDate(v) : '';
-  switch (st){
-    case 'undated': return 'not dated yet';
-    case 'arising': return w.season ? 'expected ' + meets : 'opens ' + tDay(w.from) + (w.ms !== null ? ' · meets ' + meets : '');
-    case 'meeting': return 'meeting now · until ' + tDay(w.to);
-    case 'active': return w.ms !== null ? 'meets ' + meets : w.to !== null ? 'until ' + tDay(w.to) : 'open, no end set';
-    case 'dying': return (w.ms !== null ? 'met ' + meets + ' · ' : '') + 'closes ' + tDay(w.to);
-    default: return 'closed ' + tDay(w.to) + (w.ms !== null ? ' · met ' + meets : '');
-  }
-}
-/* The stages of one call are one bar, and calls with exactly the same
-   dates are one bar (the Semaphore's "a call's run" says why). */
-function callBase(n){
-  return String(n || '').replace(/\s*\(expected\)/ig, '')
-    .replace(/\s*[–—-]\s*(stage\s*\d|pre-?proposals?|full( project)? proposals?|project outline|(?:po|fpp)\b).*$/i, '')
-    .replace(/[\s\/]+stage\s*\d.*$/i, '').trim();
-}
-function callRuns(a){
-  var now = T(todayISO()), by = {}, keys = [];
-  (a.dates || []).forEach(function(d){
-    if (d.kind !== 'call' || !d.start || d.gran === 'none') return;
-    var name = d.call || 'Untitled call', k = callBase(name) || name;
-    if (!by[k]){ by[k] = { all:[], opens:[], anns:[], dls:[] }; keys.push(k); }
-    var r = by[k];
-    r.all.push(d);
-    (d.role === 'deadline' ? r.dls : d.role === 'announcement' ? r.anns : r.opens).push(d);
-  });
-  var byStart = function(x, y){ return T(x.start) - T(y.start); }, merged = {}, out = [];
-  keys.forEach(function(k){
-    var r = by[k];
-    r.opens.sort(byStart); r.anns.sort(byStart); r.dls.sort(byStart);
-    r.open = r.opens[0] || r.anns[0] || null;
-    r.close = r.dls[r.dls.length - 1] || null;
-    r.unc = [r.open, r.close].some(function(d){ return d && d.grade !== 'fixed'; });
-    r.next = r.dls.find(function(d){ return T(d.end || d.start) >= now; }) || null;
-    var endT = r.close ? T(r.close.end || r.close.start) : T(r.open.start) + 365 * DAY;
-    r.state = endT < now ? 'closed' : (r.open && T(r.open.start) > now ? 'soon' : 'open');
-    var key = (r.open ? r.open.start : '') + '|' + r.dls.map(function(d){ return d.start; }).join(',') + '|' + r.unc;
-    if (merged[key]) merged[key].all = merged[key].all.concat(r.all); else { merged[key] = r; out.push(r); }
-  });
-  return out;
-}
 /* a venue's mark: a diamond where it has event days, dashed while they are
    a guess; a rounded bar, the shape of a window, where it has none */
 function vGlyph(v){ return '<i class="mgl ' + (v.start ? 'ev' + (v.grade === 'fixed' ? '' : ' unc') : 'win') + '" aria-hidden="true"></i>'; }
@@ -2141,7 +2014,7 @@ function callSay(r){
 function vLifeHTML(v){
   var w = vWin(v), now = T(todayISO()), calls = [], many = (v.arenas || []).length > 1;
   (v.arenas || []).map(marketArena).filter(function(a){ return a && !a.frozenAt; }).forEach(function(a){
-    callRuns(a).forEach(function(r){
+    callRuns(a).all.forEach(function(r){
       calls.push({ a:a, r:r, s:r.open ? T(r.open.start) : T((r.dls[0] || r.close).start) - 21 * DAY,
                    e:r.close ? T(r.close.end || r.close.start) + DAY : T(r.open.start) + 35 * DAY });
     });

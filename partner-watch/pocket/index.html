@@ -430,6 +430,7 @@ a.pw-cell{text-decoration:none}
   <p class="fit" id="s-fit"></p>
 </div>
 
+<script src="../../one-app/shell/venues.js"></script>
 <script>
 'use strict';
 /* ══ Pocket's shell ═══════════════════════════════════════════════════
@@ -856,29 +857,16 @@ function pwDraw(){
 /* ── the Marketplace's order ──
    As at the desk (see "the Marketplace's order" in partner-watch/index.html,
    which says why): the venues in the order of the Marketplace's Venues,
-   matched by site, and tagged with the arenas they serve. linkKey,
-   SHARED_HOSTS and siteKey are the Marketplace's own under names of this
+   matched by site, and tagged with the arenas they serve. The site is
+   read as the Semaphore reads it, by the one file of venue maths the One
+   App's rooms read too (one-app/shell/venues.js), under names of this
    page's. */
 var pwMarket = null;
 var PW_TONES = { blush:'#e19292', terracotta:'#db9973', sand:'#cda364', straw:'#bdaa62', olive:'#9db672', sage:'#6ebe9b',
   aqua:'#59beb8', mist:'#5bbad0', cornflower:'#71b3e1', dusk:'#8faae8', lilac:'#aca0e2', mauve:'#c598d1', rose:'#d992b3',
   rosewood:'#ad6464', rust:'#a96b45', umber:'#9c7334', ochre:'#8d7b32', moss:'#6f8644', fern:'#3c8d6d', teal:'#1b8e88',
   slate:'#218a9f', cobalt:'#4183ae', twilight:'#617ab5', violet:'#7d71b0', plum:'#9469a0', berry:'#a66384' };
-function pwLinkKey(u){ return String(u || '').trim().toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/[#?].*$/, '').replace(/\/+$/, ''); }
-var PW_SHARED_HOSTS = /^(?:b2match\.(?:io|com|eu)|(?:.+\.)?(?:europa\.eu|google\.com|linkedin\.com|youtube\.com|github\.com|eventbrite\.[a-z.]+|meetup\.com|lu\.ma|zoom\.us|microsoft\.com|sharepoint\.com|gov\.pl|horizoneuropencpportal\.eu|eurekanetwork\.org)|epss\.proposals\.ee)$/;
-function pwSiteKey(u){
-  var k = pwLinkKey(u), i = k.indexOf('/');
-  var host = (i < 0 ? k : k.slice(0, i)).replace(/:\d+$/, '').replace(/^proposals\.etag\.ee$/, 'epss.proposals.ee');
-  if (!PW_SHARED_HOSTS.test(host)) return host;
-  var segs = (i < 0 ? '' : k.slice(i + 1)).split('/').filter(function(x){ return x && !/^[a-z]{2}(?:[-_][a-z]{2})?$/.test(x); });
-  var e = segs.findIndex(function(x){ return /^(?:e|event|events)$/.test(x); });
-  return [host].concat(e >= 0 && segs[e + 1] ? segs.slice(0, e + 2) : segs).join('/');
-}
-function pwSameSite(a, b){
-  if (a === b) return true;
-  var s = a.length < b.length ? a : b, l = s === a ? b : a;
-  return s.indexOf('/') > 0 && l.indexOf(s + '/') === 0;
-}
+var pwLinkKey = VenueMaths.linkKey, pwSiteKey = VenueMaths.siteKey, pwSameSite = VenueMaths.sameSite;
 function pwMarketVenue(s){
   if (!pwMarket || !pwMarket.venues) return null;
   var k = pwSiteKey(s.list_url), best = null;

@@ -67,6 +67,15 @@ for r in ROOMS:
         err('index.html', 'shell/bridge.js loads before %s, so the room it '
                           'reaches into is not there yet' % js)
 
+# The venue maths is read at mount by the Semaphore and the Call Board, so
+# a room listed before it starts without it and fails at its first venue.
+if at('shell/venues.js') >= 0:
+    for r in ROOMS:
+        js = 'rooms/%s/%s.js' % (r, r)
+        if at(js) >= 0 and at(js) < at('shell/venues.js'):
+            err('index.html', '%s loads before shell/venues.js, the venue maths '
+                              'it reads' % js)
+
 for rel in scripts:
     if rel.startswith('data/') and at(rel) < at('rooms/ledger/ledger.js'):
         continue

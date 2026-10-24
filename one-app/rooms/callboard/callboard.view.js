@@ -13,6 +13,9 @@ Hub.markup('callboard', `
     <button class="ftchip" id="ftchip" aria-pressed="false" title="Also search Expected Outcome and Scope text">＋ full text</button>
     <div id="pills"></div>
     <span class="count" id="count"></span>
+    <!-- what waits to be judged, and a press to begin; while judging, how far
+         along (see "judging the finds, one at a time" in callboard.js) -->
+    <button class="jpill" id="jpill" hidden></button>
   </div>
   <div class="ovbar" id="ovbar">
     <span class="seglabel">Submission deadline between</span>
@@ -35,9 +38,13 @@ Hub.markup('callboard', `
 <div class="wrap">
   <main class="ledger" id="ledger" aria-label="Topics by destination"></main>
   <aside class="tl-sticky">
-    <div class="tl-title">Calls · chronological</div>
+    <!-- The chart's title, and beside it the switch that draws the venues
+         kept on the board as lanes under the calls (Mark, 2026-10-24). -->
+    <div class="tl-title"><span id="tltxt">Calls · chronological</span>
+      <button class="bk" id="bkswitch" aria-pressed="false" title="Draw the venues kept on the board under the calls"><span class="sw" aria-hidden="true"><i></i></span>Brokerage</button></div>
     <div class="tl" id="tl"></div>
     <div class="tl-foot">
+      <div class="vcard" id="vcard" hidden></div>
       <div class="selcard" id="selcard"></div>
       <div class="famkey" id="famkey"></div>
       <div class="legend">
@@ -50,6 +57,10 @@ Hub.markup('callboard', `
     </div>
   </aside>
 </div>
+
+<!-- A find waiting to be judged: what it is, where it was read, and the
+     choice, at the foot of the room while the board shows it in its tab. -->
+<div class="jbar" id="jbar" role="region" aria-label="Judging what was found" hidden></div>
 
 <div class="scrim" id="scrim"></div>
 <aside class="reader" id="reader" role="dialog" aria-modal="true" aria-labelledby="rdtitle" aria-hidden="true">

@@ -7,13 +7,13 @@ const LS='semaphore.v1';
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const uid=()=>crypto.randomUUID?crypto.randomUUID():'id'+Math.random().toString(36).slice(2,10)+Date.now().toString(36);
-const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-const DAY=86400000;
-const pad=n=>String(n).padStart(2,'0');
-const T=iso=>new Date(iso+'T12:00:00').getTime();
-const todayISO=()=>{const d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());};
+/* The dates, a venue's window and shading, a site's reading and a call's
+   runs are reckoned in the one file the Call Board and Mark's Place read
+   as well (shell/venues.js), so that the three say the same of every venue. */
+const {MONTHS,DAY,pad,T,todayISO,fmtDay,dispDate,trimYear,shortDay,shortDate,tDay,
+  linkKey,siteKey,sameSite,isSpot,vWin,vState,PHASE,vHeat,heatBG,vDateSay,
+  callBase,callRuns,OPEN_RUN,PLACE_RGB}=VenueMaths;
 const lastDay=(y,m)=>new Date(y,m,0).getDate();
-const fmtDay=iso=>{const[y,m,d]=iso.split('-');return +d+' '+MONTHS[+m-1]+' '+y;};
 const ymAdd=(ym,n)=>{const[y,m]=ym.split('-').map(Number);const i=y*12+(m-1)+n;return Math.floor(i/12)+'-'+pad(i%12+1);};
 const thisYM=()=>todayISO().slice(0,7);
 
@@ -149,14 +149,9 @@ function defaultTypes(){
   return ['Partnership','Mission','Cluster','Joint Undertaking','Programme']
     .map((n,i)=>({id:uid(),name:n,color:TONE_SPREAD[i]}));
 }
-/* How wide the board's column of names is, once dragged by its edge (Mark,
-   2026-10-14), so a long arena name can be read whole; null until then, and
-   the stylesheet's own width stands. */
-const NAME_MIN=140,NAME_MAX=560;
 function blank(){
-  return {v:1,types:defaultTypes(),arenas:[],venues:[],
-    ui:{q:'',collapsed:{},view:'now',
-        boardSort:'date',nameW:null,freezerOpen:false,nowTab:'active',keptOpen:false,shOpen:{}}};
+  return {v:1,types:defaultTypes(),arenas:[],venues:[],suggested:[],
+    ui:{q:'',view:'now',freezerOpen:false,nowTab:'active'}};
 }
 /* An arena remembers which of its own dates it is waiting for. That goes stale
    the moment the dates change, so this puts it straight — a wait ends when the
@@ -212,8 +207,8 @@ function migrate(s){
     if(!('sweptAt' in a))a.sweptAt=a.lastCheckedAt||null;
     if(!('sweptPrev' in a))a.sweptPrev=a.prevCheckedAt||null;
     delete a.lastCheckedAt;delete a.prevCheckedAt;delete a.lastWatchedAt;delete a.prevWatchedAt;
-    /* The look notice is gone — the nightly agents hunt for the event and the
-       tool now and leave what they find in Dispatches — so the answers it kept
+    /* The look notice is gone — the searches hunt for the event and the tool
+       now and put what they find before Mark to judge — so the answers it kept
        ("nothing yet", "found it") have nothing left to answer and are dropped. */
     delete a.look;
     /* A lead is whatever a sweep turned up: a partner, a project page, a thread
@@ -297,6 +292,11 @@ function migrate(s){
   /* the events and tools, wherever they still stand on an arena, become
      venues (see "venues") */
   absorbVenues(s);
+  /* the new arenas suggested and not judged yet (see "new arenas, waiting
+     to be judged"), each a name with an id, so two devices that judged
+     the same one agree when their copies are put together */
+  s.suggested=(Array.isArray(s.suggested)?s.suggested:[]).filter(x=>x&&typeof x==='object'&&x.id&&String(x.name||'').trim())
+    .map(x=>({id:String(x.id),name:String(x.name).trim(),url:typeof x.url==='string'?x.url:'',why:typeof x.why==='string'?x.why:'',at:typeof x.at==='string'?x.at:''}));
   /* ── the ui, whole ──
      Every field below was guarded one at a time, and each guard asked only
      whether `s.ui` existed at all. A board arriving with *some* of a ui —
@@ -313,29 +313,19 @@ function migrate(s){
      no way through this that leaves a hole. */
   {
     const d=blank().ui, u=(s.ui&&typeof s.ui==='object'&&!Array.isArray(s.ui))?s.ui:{};
-    const map=v=>(v&&typeof v==='object'&&!Array.isArray(v))?v:null;
     const ui=Object.assign({},d);
     ui.q        = typeof u.q==='string' ? u.q : d.q;
-    ui.collapsed= map(u.collapsed) || {};
-    /* Now, the Board, Leads and Dispatches since the Marketplace
-       (2026-10-14). The Rotation and Coming up went with it and land on
-       Now; Leads was the wall in its leads arrangement until then. */
-    ui.view     = ['now','board','leads','dispatch'].includes(u.view) ? u.view
-                : u.view==='brokerage'&&u.wallSort==='leads' ? 'leads' : 'now';
-    /* the board's two orders since 2026-10-11 (see "the board's two orders");
-       the two it had before — next publication, and by status — both read as
-       the date order, which took their place */
-    ui.boardSort = u.boardSort==='mine' ? 'mine' : 'date';
-    ui.nameW = Number.isFinite(u.nameW) ? Math.min(NAME_MAX,Math.max(NAME_MIN,Math.round(u.nameW))) : null;
+    /* Venues and Leads, since the Board and Dispatches went to the Call
+       Board (2026-10-24), and a room left on either opens on Venues. The
+       Rotation and Coming up went with the Marketplace (2026-10-14) and
+       land on Venues too; Leads was the wall in its leads arrangement
+       until then. */
+    ui.view     = u.view==='leads'||u.view==='brokerage'&&u.wallSort==='leads' ? 'leads' : 'now';
     ui.freezerOpen = u.freezerOpen===true;
     /* which of Venues' tabs is showing (Mark, 2026-10-15): the three
        sections or Limbo; the Events and Tools of the Now page before land
        on Active */
     ui.nowTab = ['arising','active','dying','over','place'].includes(u.nowTab) ? u.nowTab : 'active';
-    /* whether the board's tray lists what is kept on the board as well */
-    ui.keptOpen = u.keptOpen===true;
-    /* which shared venues on the board are unfolded to show their arenas */
-    ui.shOpen = map(u.shOpen) || {};
     s.ui=ui;
   }
   const first=new Map();
@@ -368,7 +358,7 @@ function migrate(s){
    A venue is any place of that kind, active for a while (Mark, 2026-10-15:
    "drop the distinction between tools and events, they are all just
    venues"). It has a window of activity, `opens` to `closes`, which he sets
-   by dragging its two ends on the board or on Venues, and it may have event
+   by dragging its two ends on Venues or in its panel, and it may have event
    days (`gran`/`start`/`end`/`grade`), the meeting days activity clusters
    round, drawn as diamonds inside the window. A venue serves one arena or
    several, and is listed once. It has a rhythm, how often it wants a visit,
@@ -388,9 +378,6 @@ function migrate(s){
    so the same visit made on the desk and the iPad is one visit when the two
    copies are put together. */
 const RHYTHM={meeting:2,active:4,dying:7,standing:21};   /* days between visits, by where a venue stands */
-const SPOT_MAX=14;          /* event days run at most two weeks; a longer exact span is the window itself */
-const LEAD_IN=21,TAIL=14;   /* the window event days are given until Mark drags it: three weeks before, two after */
-const DYING_MAX=21;         /* a window with no event days in it is dying for its last three weeks, or last third */
 const NOW_BACK=28,NOW_AHEAD=84;   /* the Venues page's strip: four weeks back, twelve ahead (Mark chose the strip of time) */
 const VGOT={nothing:'nothing new',something:'something',lead:'a lead'};
 const PLACES=['new','board','venues','gone'];
@@ -473,8 +460,7 @@ function takeStamps(v,x){
 }
 /* Everything the room used to keep about events and tools is turned into
    venues here, on every read of the board and not once: an older copy of
-   the desk and the agent's Dispatches can still put a
-   brokerage date or link on an arena, and each is taken in the moment it
+   the desk can still put a brokerage date or link on an arena, and each is taken in the moment it
    arrives. A brokerage date becomes an event venue under its own id, or
    joins the event already standing at the same site on the same day. The
    general tool, and every brokerage link that was ever stamped, becomes a
@@ -529,35 +515,6 @@ function absorbVenues(s){
   s.venues=s.venues.filter(v=>v.place!=='gone'||now-T(v.goneAt)<=GONE_KEEP*DAY);
   return s;
 }
-/* One site, for the stamp (Mark, 2026-10-12): a stamp stands on every link
-   that reaches the same event or tool, however each is named and whichever
-   page of it each points at — its front page, its sign-up, its list of
-   participants, another language. linkKey alone kept those apart, so one
-   event linked from three cards carried three stamps. The site is the host,
-   which is the event itself wherever it has a host of its own
-   (an-event.b2match.io). Where one host carries many events or tools side by
-   side — b2match.com, every europa.eu portal, the big general platforms — the
-   host would give them all one stamp, so there the site is the path, the
-   language left out, and it stops at the event's own name where the path has
-   one (/e/an-event, /events/an-event). A host goes on SHARED_HOSTS when two
-   unrelated links turn out to share a stamp, or a venue: the Estonian
-   research council's proposals site carries three partnerships' partner
-   searches side by side, and the Polish centres' sites several more
-   (found when the Marketplace made venues of them, 2026-10-14). That site
-   moved from proposals.etag.ee to epss.proposals.ee on 2026-10-23, and the
-   new host was not on the list: Water4All's, Biodiversa+'s and Sustainable
-   Blue's partner searches at the new address read as one site, and became
-   one venue serving all three arenas. The old host is read as the new, so
-   a link to either address of the same partner search is the same site. */
-const SHARED_HOSTS=/^(?:b2match\.(?:io|com|eu)|(?:.+\.)?(?:europa\.eu|google\.com|linkedin\.com|youtube\.com|github\.com|eventbrite\.[a-z.]+|meetup\.com|lu\.ma|zoom\.us|microsoft\.com|sharepoint\.com|gov\.pl|horizoneuropencpportal\.eu|eurekanetwork\.org)|epss\.proposals\.ee)$/;
-function siteKey(u){
-  const k=linkKey(u),i=k.indexOf('/');
-  const host=(i<0?k:k.slice(0,i)).replace(/:\d+$/,'').replace(/^proposals\.etag\.ee$/,'epss.proposals.ee');
-  if(!SHARED_HOSTS.test(host))return host;
-  const segs=(i<0?'':k.slice(i+1)).split('/').filter(x=>x&&!/^[a-z]{2}(?:[-_][a-z]{2})?$/.test(x));
-  const e=segs.findIndex(x=>/^(?:e|event|events)$/.test(x));
-  return [host].concat(e>=0&&segs[e+1]?segs.slice(0,e+2):segs).join('/');
-}
 /* Reading the board is the one place this app can lose everything: if migrate
    throws, the old code caught it, opened a blank board and let the next save
    write that blank over the only copy. So a genuine first run is told apart from
@@ -604,19 +561,6 @@ function resolve(gran,v){
     case 'year':return v.y?[v.y+'-01-01',v.y+'-12-31']:[null,null];
     case 'range':{if(!v.from||!v.to)return[null,null];return v.to<v.from?[v.to,v.from]:[v.from,v.to];}
     default:return[null,null];
-  }
-}
-function dispDate(dt){
-  if(dt.gran==='none'||!dt.start)return 'no date yet';
-  const[y,m]=dt.start.split('-').map(Number);
-  switch(dt.gran){
-    case 'day':return fmtDay(dt.start);
-    case 'month':return MONTHS[m-1]+' '+y;
-    case 'quarter':return 'Q'+(Math.floor((m-1)/3)+1)+' '+y;
-    case 'half':return 'H'+(m<7?1:2)+' '+y;
-    case 'year':return String(y);
-    case 'range':return fmtDay(dt.start)+' \u2013 '+fmtDay(dt.end);
-    default:return '';
   }
 }
 function gradeOptions(gran){
@@ -672,11 +616,10 @@ function visibleArenas(){
   return liveArenas().filter(a=>!ql||haystack(a).includes(ql));
 }
 /* an empty screen should say what to do, not just that it is empty */
-function emptyReason(onBoard){
+function emptyReason(){
   const frozen=S.arenas.length-liveArenas().length;
   return frozen&&frozen===S.arenas.length
-    ?['Every arena is in the freezer.',
-      onBoard?'Thaw one below to put it back.':'Thaw one from the freezer under the board.']
+    ?['Every arena is in the freezer.','Thaw one from the freezer under Venues.']
     :['Nothing matches the search.','Clear it, or try a shorter word.'];
 }
 /* Tags match case-insensitively. The first spelling entered is the one kept,
@@ -712,509 +655,43 @@ function applySearchBox(open){
   if(si.value!==S.ui.q)si.value=S.ui.q;
 }
 
-/* ============ render: board ============ */
-let T0=0,T1=1,SPAN=12,WSTART='';
-function winTimes(){
-  /* The board always shows last month and the next twelve: the controls
-     that moved the window and changed its span went with the filter panel. */
-  SPAN=12;WSTART=ymAdd(thisYM(),-1);
-  T0=T(WSTART+'-01');
-  T1=T(ymAdd(WSTART,SPAN)+'-01');
-}
-const X=t=>(t-T0)/(T1-T0)*100;
-
-function laneBG(){
-  const q=[],l=[];
-  for(let i=0;i<SPAN;i++){
-    const a=X(T(ymAdd(WSTART,i)+'-01')),b=X(T(ymAdd(WSTART,i+1)+'-01'));
-    const m=+ymAdd(WSTART,i).split('-')[1];
-    const col=Math.floor((m-1)/3)%2===1?'rgba(0,0,0,.22)':'transparent';
-    q.push(col+' '+a+'%, '+col+' '+b+'%');
-    if(i>0)l.push('transparent calc('+a+'% - 1px), var(--grid) calc('+a+'% - 1px), var(--grid) '+a+'%, transparent '+a+'%');
-  }
-  return 'linear-gradient(90deg, transparent 0%, '+l.join(', ')+', transparent 100%), linear-gradient(90deg, '+q.join(', ')+')';
-}
-
-function axisHTML(){
-  let cells='';
-  for(let i=0;i<SPAN;i++){
-    const ym=ymAdd(WSTART,i);
-    const[y,m]=ym.split('-').map(Number);
-    const left=X(T(ym+'-01'));
-    const jan=m===1||i===0;
-    const full=MONTHS[m-1]+(jan?' \u2019'+String(y).slice(2):'');
-    cells+='<span class="mcell'+(m===1?' jan':'')+'" style="left:'+left+'%">'+full+'</span>';
-  }
-  const now=T(todayISO());
-  if(now>=T0&&now<=T1)cells+='<div class="nowcaret" style="left:'+X(now)+'%"></div>';
-  return cells;
-}
-
-function callSpans(a){
-  const by=new Map();
-  for(const dt of a.dates){
-    if(dt.kind!=='call'||!dt.start)continue;
-    if(dt.role!=='publication'&&dt.role!=='deadline')continue;
-    const k=(dt.call||'').trim().toLowerCase();if(!k)continue;
-    if(!by.has(k))by.set(k,{});
-    by.get(k)[dt.role]=dt;
-  }
-  const out=[];
-  for(const[,v]of by){
-    if(v.publication&&v.deadline&&v.publication.start<=v.deadline.end)
-      out.push({name:v.publication.call,from:v.publication.start,to:v.deadline.end,
-                pub:v.publication.id,dl:v.deadline.id});
-  }
-  return out;
-}
-/* Every marker this arena puts into its lane, for the window on screen.
-
-   The venues are drawn first and largest, because they are what the room is
-   for: each its window, shaded by how much goes on in it, its event days as
-   diamonds, its name inside the band or after it, in the colour of where it
-   stands — new, kept on the board, or in Venues (see "a venue's window,
-   drawn"). Each venue has a track of its own wherever it would touch
-   another, its name included, so nothing on a row overlaps and a row
-   grows a track rather than piling one mark on another (Mark, 2026-10-15:
-   "make sure the board does not get cluttered"). A venue not dated yet is a
-   small chip, the chips side by side from today's line.
-
-   Calls are drawn the way the cards drew them (see callRuns): one bar from
-   publication to deadline under the venues, the stages of one call as one
-   bar with a notch, strong only up to the first deadline, and calls with
-   the same dates as one bar. Uncertain is
-   a dashed outline here as everywhere else in the room: a blurred 4px bar
-   only looks out of focus (Mark, 2026-10-07).
-
-   Whatever is over is grey — a closed call, a window gone by — so the
-   colour on a row is what still lies ahead of it. */
-const TRACK_H=19,LABEL_CH=6.3;     /* a venue's track, and the width of one letter of its name, in pixels */
-let laneW=1000;                    /* the lanes' width in pixels, measured as the board is drawn */
-const labelPx=v=>Math.min(v.name.length,38)*LABEL_CH+(v.place==='new'?34:0)+12;
-function venueLabel(v,indent){
-  const nm=v.name.length>38?v.name.slice(0,37)+'…':v.name;
-  return '<span class="vbl"'+(indent?' style="padding-left:'+Math.round(indent)+'px"':'')+'>'+
-    (v.place==='new'?'<b class="newtag">new</b>':'')+esc(nm)+'</span>';
-}
-/* The venues of one row packed into tracks: a band where it touches
-   nothing, its name inside or after it; the undated as chips from today's
-   line. Returns the markup and the height. */
-function venueTracks(vs){
-  let h='';
-  const now=T(todayISO());
-  const px=t=>X(t)/100*laneW;
-  const items=[],chips=[];
-  for(const v of vs){
-    const w=vWin(v);
-    if(!w){chips.push(v);continue;}
-    const from=w.from===null?T0:Math.max(T0,w.from);
-    const to=w.to===null?Math.min(T1,Math.max(now,w.from===null?now:w.from)+OPEN_RUN*DAY):Math.min(T1,w.to+DAY);
-    if(to<T0||from>T1)continue;
-    const L=px(from),R=px(to),run=w.to===null?16:0;
-    const lp=labelPx(v);
-    /* a name inside the band starts clear of its first diamond */
-    const at=w.ms!==null&&px(w.ms)<R?Math.max(L,px(w.ms+DAY)+8):L;
-    const inside=R-at>=lp+8;
-    items.push({v,L,R,run,inside,indent:at-L,end:(inside?R:Math.min(laneW,R+lp+6))+run});
-  }
-  items.sort((x,y)=>x.L-y.L||x.end-y.end);
-  const tracks=[];
-  for(const it of items){
-    let k=0;while(k<tracks.length&&tracks[k].end+6>it.L)k++;
-    tracks[k]={end:it.end};it.k=k;
-  }
-  const tops=[];let y=5;
-  tracks.forEach((t,k)=>{tops[k]=y+TRACK_H/2;y+=TRACK_H;});
-  for(const it of items){
-    const top=Math.round(tops[it.k]);
-    h+=bandHTML(it.v,T0,T1,top,it.inside?venueLabel(it.v,it.indent+6):'');
-    if(!it.inside)h+='<span class="vbl out st-'+it.v.place+'" style="top:'+top+'px;left:calc('+(it.R/laneW*100).toFixed(2)+'% + '+it.run+'px)">'+venueLabel(it.v)+'</span>';
-  }
-  if(chips.length){
-    const top=Math.round(y+TRACK_H/2);let x=Math.max(0,px(now)+6);
-    for(const v of chips){
-      h+='<button class="vchip st-'+v.place+'" style="top:'+top+'px;left:'+(x/laneW*100).toFixed(2)+'%" data-act="openVenue" data-v="'+v.id+'" data-tipv="'+v.id+'">'+
-        venueLabel(v)+'<i>not dated</i></button>';
-      x+=labelPx(v)+70;
-    }
-    y+=TRACK_H;
-  }
-  return {h,height:y};
-}
-function laneHTML(a,vs){
-  const now=T(todayISO());
-  const vt=venueTracks(vs);
-  let h=vt.h;
-  /* the calls, under the venues. Where two bars overlap, a bar takes the
-     lowest level whose previous occupant has already cleared, with daylight
-     between them, three levels at most. The floor never moves, so the
-     earliest call in every lane sits on one baseline across the whole
-     board. A call with no publication recorded comes in faded from three
-     weeks before its first deadline, so every stage of it lies on the bar
-     as a notch: from the last, BiodivFuture's pre-proposal deadline in
-     November fell off the board and only April's showed (2026-10-15). One
-     with no deadline runs out faded five weeks past its publication. */
-  let callH=0;
-  {
-    const gap=(T1-T0)*.015,freeAt=[],placed=[];
-    const items=callRuns(a).all
-      .map(r=>({r,s:r.open?T(r.open.start):T((r.dls[0]||r.close).start)-21*DAY,
-                  e:r.close?T(r.close.end||r.close.start)+DAY:T(r.open.start)+35*DAY}))
-      .filter(x=>x.e>=T0&&x.s<=T1)
-      .sort((x,y)=>x.s-y.s||x.e-y.e);
-    for(const it of items){
-      let lv=0;
-      while(lv<freeAt.length&&freeAt[lv]+gap>it.s)lv++;
-      freeAt[lv]=it.e;
-      placed.push({it,lv:Math.min(lv,2)});
-    }
-    const Y=[[5],[5],[4,11],[3,9,15]][Math.min(freeAt.length,3)]||[5];
-    callH=placed.length?Y[Y.length-1]+8:0;
-    for(const{it,lv}of placed){
-      const r=it.r,L=Math.max(0,X(it.s)),R=Math.min(100,X(it.e)),W=Math.max(R-L,.3);
-      /* A call with a date or stage that is new (see "what the agents
-         brought") wears the new colour on the board itself, glowing, until
-         Mark marks the arena seen: inside the arena's panel alone it was
-         missed, which he found when an import was to bring a season of new
-         call dates at once (2026-10-17). */
-      const fr=[r.open,r.close].concat(r.dls).some(d=>d&&isFresh(a,d))?' fresh':'';
-      /* the earlier deadlines stand beside the bar, not in it: a faded end
-         is a mask, and a mask cuts whatever is inside the bar to its height */
-      const notch=r.dls.slice(0,-1).map(d=>{const x=X(T(d.start)+DAY/2);
-        return x>=L&&x<=R?'<i class="rbn'+(T(d.end||d.start)<now?' past':'')+(isFresh(a,d)?' fresh':'')+'" style="left:'+x.toFixed(2)+'%;bottom:'+(Y[lv]-4)+'px" '+
-          'data-act="openDate" data-a="'+a.id+'" data-d="'+d.id+'" title="'+esc(dtLabel(d)+' \u2014 '+dispDate(d))+'"></i>':'';}).join('');
-      const at=r.next||r.close||r.open;
-      const attrs='data-act="openDate" data-a="'+a.id+'" data-d="'+at.id+'" data-tipt="'+esc(runTip(r))+'" '+
-         'tabindex="0" role="button" aria-label="'+esc(dtLabel(at)+', '+dispDate(at))+'"';
-      /* A call in stages is full strength only from its publication to its
-         first deadline, the pre-proposal or first stage, and a thin line on
-         to the last: the weeks before the first deadline are when consortia
-         form and brokerage can still do something, and after it the work is
-         in the hands of whoever got through (Mark, 2026-10-16). The strong
-         part greys once that first deadline is past, as anything over does,
-         while the line to the full proposal keeps its colour until it too
-         is over. */
-      const d1=r.dls.length>1?r.dls[0]:null;
-      if(d1){
-        const t1=T(d1.end||d1.start),S=Math.min(100,Math.max(0,X(t1+DAY)));
-        if(S>L){
-          const cls=(t1<now?' past':'')+([r.open,d1].some(d=>d&&d.grade!=='fixed')?' unc':'')+(r.open?'':' lead-in')+fr;
-          h+='<div class="mk cl rb'+cls+'" style="left:'+L.toFixed(2)+'%;width:'+Math.max(S-L,.3).toFixed(2)+'%;bottom:'+Y[lv]+'px" '+attrs+'></div>';
-        }
-        if(R>S){
-          const cls=(r.state==='closed'?' past':'')+(r.close.grade!=='fixed'?' unc':'')+fr;
-          h+='<div class="mk cl rbt'+cls+'" style="left:'+S.toFixed(2)+'%;width:'+(R-S).toFixed(2)+'%;bottom:'+(Y[lv]+1)+'px" '+attrs+'></div>';
-        }
-        h+=notch;continue;
-      }
-      const cls=(r.state==='closed'?' past':'')+(r.unc?' unc':'')+(r.open?'':' lead-in')+(r.close?'':' run-on')+fr;
-      h+='<div class="mk cl rb'+cls+'" style="left:'+L.toFixed(2)+'%;width:'+W.toFixed(2)+'%;bottom:'+Y[lv]+'px" '+attrs+'></div>'+notch;
-    }
-  }
-  if(now>=T0&&now<=T1)h+='<div class="now" style="left:'+X(now)+'%"></div>';
-  return {h,height:Math.max(36,Math.max(vt.height,4)+callH+4)};
-}
-/* ───────── the board's two orders ─────────
-   Mark chooses between two, from the heading over the column beside the
-   names (2026-10-11), and each group of the board follows it:
-   MINE   his own order of the arenas within a type, set by dragging in the
-          list of types, kept on each arena as `bkPos`.
-   DATE   whatever comes first: the soonest deadline, call opening or
-          venue's event days still to come, so the arena with the nearest
-          thing to act on stands at the top. A brokerage entry spanning more
-          than about six weeks is a season pencilled in, not an event, and
-          does not count. An arena with nothing coming goes
-          to the foot, by name.
-   It replaced two orders that each said half of this: the next publication
-   only, and Opens / Open / Between. */
-function nextKeyT(a){
-  const now=T(todayISO());
-  let best=Infinity;
-  for(const dt of a.dates||[]){
-    if(!dt.start||T(dt.end||dt.start)<now)continue;
-    if(dt.kind==='call'?!(dt.role==='deadline'||dt.role==='publication')
-                       :T(dt.end||dt.start)-T(dt.start)>45*DAY)continue;
-    best=Math.min(best,Math.max(now,T(dt.start)));
-  }
-  for(const v of venuesOf(a)){
-    const w=vWin(v);
-    if(w&&w.ms!==null&&w.me>=now)best=Math.min(best,Math.max(now,w.ms));
-  }
-  return best;
-}
+/* ============ the board, on the Call Board ============
+   The Board stood here until 2026-10-24: every arena a row of its calls
+   with its venues over them, a tray over it listing what was new, the
+   venues serving several arenas in a group of their own, and Dispatches
+   beside it for the agent's new arenas. Mark moved it to the Call Board,
+   where every call he follows is drawn (notes/call-board.md): an arena's
+   calls stand in the tab of its type there, the venues kept on the board
+   as lanes under the calls, and whatever a search found is judged there
+   one find at a time before it lands. This room still holds the board and
+   does what is judged there; "the board, lent to the Call Board" says
+   what it hands over. Of the Board's two orders the one left is his own
+   order of the arenas within a type, set by dragging in the list of
+   types and kept on each arena as `bkPos`, which the Call Board's tabs
+   follow. */
 function mineOrder(x,y){return bkPos(x)-bkPos(y)||x.name.localeCompare(y.name);}
-function dateOrder(x,y){
-  const a=nextKeyT(x),b=nextKeyT(y);
-  return (a===b?0:a-b)||x.name.localeCompare(y.name);
-}
-const boardOrder=()=>S.ui.boardSort==='mine'?mineOrder:dateOrder;
-const BOARD_SORTS={mine:{name:'My order',long:'Your own order, as set in Types'},
-                   date:{name:'By date',long:'Soonest first: the nearest deadline, call opening or event days'}};
-let sortOpen=false;
-/* An arena's venues without event days, for the old findings Dispatches may
-   still hold that offered an arena its general tool (see takeFind); the
-   diamond the tools stood as against the names went when tools became
-   venues with windows of their own (2026-10-15). */
-function arenaTools(a){return venuesOf(a).filter(v=>!v.start);}
-/* The board stays a picture of the calendar. A dot after an arena's name
-   says one of its venues is new, so a folded group or a long row still
-   shows where the agent has been; new dates and links say how many after
-   the name, in the new colour, with the tick that marks them seen. */
-function freshPill(a){
-  const n=freshItems(a).length;
-  return n?'<button class="freshn" data-act="seenArena" data-id="'+a.id+'" title="'+n+' new date'+(n===1?'':'s')+
-    ' or link'+(n===1?'':'s')+' on '+esc(a.name)+', glowing on the board \u2014 press when you have seen '+(n===1?'it':'them')+'">'+
-    n+' new <span aria-hidden="true">\u2713</span></button>':'';
-}
-function boardRow(a,bg){
-  const looms=a.dates.filter(d=>!d.start);
-  const loomBtn=looms.length?
-    '<button class="loom" data-act="openArena" data-id="'+a.id+'" data-tipl="1"><i class="sw sw-uncertain"></i>'+looms.length+'</button>':'';
-  const all=venuesOf(a).filter(onBoard),shared=all.filter(isShared),own=all.filter(v=>!isShared(v));
-  const fresh=own.some(v=>v.place==='new');
-  const lane=laneHTML(a,own);
-  const shTag=shared.length?'<span class="shtag" title="Also served by, under Shared venues at the top: '+esc(shared.map(v=>v.name).join(', '))+'">+'+shared.length+' shared</span>':'';
-  /* The column beside the names that said Open / Opens / Between went on
-     2026-10-11 (Mark): the calendar beside the name says it already. */
-  return '<div class="row"><div class="cell name">'+
-    '<button class="nm'+weightClass(a)+'" data-act="openArena" data-id="'+a.id+'">'+esc(a.name)+'</button>'+
-    (fresh?'<i class="newdot" title="Something new from the agent on this row"></i>':'')+freshPill(a)+loomBtn+shTag+
-    '</div>'+
-    '<div class="lane" style="height:'+lane.height+'px;background-image:'+bg+'" data-aid="'+a.id+'" data-t0="'+T0+'" data-t1="'+T1+'">'+lane.h+'</div></div>';
-}
-/* ───────── the shared venues ─────────
-   A venue serving two arenas or more stands once, in a group of its own at
-   the top of the board, the arenas it serves under its name in their types'
-   colours as Venues shows them; an arena's row keeps its own venues and
-   says "+2 shared" after its name (Mark, 2026-10-15). Drawn on every row it
-   served, one partner search stood seven times over the partnerships, as
-   loud each time, and nothing said the seven were one. Here it is a full
-   band in the colour of where it stands, since the row is its alone. An
-   arena in the freezer does not count. */
+/* A venue serving two arenas or more stands once, in a group of its own at
+   the head of Venues, before the types' own (Mark, 2026-10-15): listed
+   under each arena it served, one partner search stood seven times over
+   the partnerships, and nothing said the seven were one. An arena in the
+   freezer does not count. */
 function isShared(v){return v.arenas.filter(id=>{const a=arena(id);return a&&!a.frozenAt;}).length>1;}
-/* Each shared venue is one line, folded (Mark, 2026-10-15): its name, how
-   many arenas it serves, and its window drawn as on the arena rows.
-   Unfolded by its caret, the arenas stand under it
-   one to a line, each with its own calls drawn as on its own row, held to
-   the venue by a rule down the left and the venue's window shaded faintly
-   behind them, its event days a line through them, so a call can be read
-   against the event. The tags under the name, two to a line, did not
-   line up with anything. */
-function sharedRows(bg){
-  const vs=visibleVenues().filter(v=>isShared(v)&&onBoard(v));
-  if(!vs.length)return '';
-  const by=v=>{const w=vWin(v);return w&&w.from!==null?w.from:w?-1e15:1e15;};
-  vs.sort((x,y)=>by(x)-by(y)||x.name.localeCompare(y.name));
-  const col=!!S.ui.collapsed.shared,fresh=vs.some(v=>v.place==='new');
-  const now=T(todayISO()),nowLine=now>=T0&&now<=T1?'<div class="now" style="left:'+X(now)+'%"></div>':'';
-  const tyAt=new Map(S.types.map((t,i)=>[t.id,i]));
-  let h='<div class="grp shgrp'+(col?' collapsed':'')+'"><div class="ghead"><div class="gc">'+
-    '<button class="caret" data-act="toggleGroup" data-id="shared" aria-label="Collapse group">'+(col?'\u25B8':'\u25BE')+'</button>'+
-    '<span class="gname">Shared venues</span><span class="gcount">'+vs.length+'</span>'+
-    (fresh?'<i class="newdot" title="Something new from the agent here"></i>':'')+'</div></div>';
-  if(col)return h+'</div>';
-  for(const v of vs){
-    const open=!!S.ui.shOpen[v.id];
-    const as=venueArenas(v).filter(a=>!a.frozenAt)
-      .sort((x,y)=>(tyAt.has(x.typeId)?tyAt.get(x.typeId):99)-(tyAt.has(y.typeId)?tyAt.get(y.typeId):99)||boardOrder()(x,y));
-    const vt=venueTracks([v]);
-    h+='<div class="shblock'+(open?' open':'')+' st-'+v.place+'"><div class="row shrow"><div class="cell name">'+
-      '<button class="shcar" data-act="shOpen" data-v="'+v.id+'" aria-expanded="'+open+'" title="'+(open?'Fold the arenas away':'Show the arenas it serves, with their calls')+'">'+(open?'\u25BE':'\u25B8')+'</button>'+
-      vGlyph(v)+'<button class="nm" data-act="openVenue" data-v="'+v.id+'" title="'+esc(v.name)+'">'+esc(v.name)+'</button>'+
-      (v.place==='new'?'<i class="newdot"></i>':'')+
-      '<span class="shtag" title="'+esc(as.map(a=>a.name).join(', '))+'">'+as.length+' arenas</span></div>'+
-      '<div class="lane" style="height:'+Math.max(36,vt.height)+'px;background-image:'+bg+'" data-t0="'+T0+'" data-t1="'+T1+'">'+vt.h+nowLine+'</div></div>';
-    if(open){
-      const w=vWin(v);
-      let shade='';
-      if(w){
-        const a=w.from===null?T0:Math.max(T0,w.from),b=w.to===null?Math.min(T1,Math.max(now,w.from===null?now:w.from)+OPEN_RUN*DAY):Math.min(T1,w.to+DAY);
-        if(b>T0&&a<T1)shade='<i class="shwin" style="left:'+X(a).toFixed(2)+'%;width:'+(X(b)-X(a)).toFixed(2)+'%"></i>';
-        if(w.ms!==null)shade+='<i class="shday" style="left:'+X(w.ms+DAY/2).toFixed(2)+'%"></i>';
-      }
-      for(const a of as){
-        const ln=laneHTML(a,[]),tone=arenaTone(a);
-        h+='<div class="row shsub"><div class="cell name">'+
-          '<button class="cuat'+(tone?' toned':'')+'" data-act="openArena" data-id="'+a.id+'"'+(tone?' style="--tone:'+esc(tone)+'"':'')+' title="'+esc(a.name)+'">'+esc(a.name)+'</button>'+freshPill(a)+'</div>'+
-          '<div class="lane" style="height:'+ln.height+'px;background-image:'+bg+'" data-t0="'+T0+'" data-t1="'+T1+'">'+shade+ln.h+'</div></div>';
-      }
-    }
-    h+='</div>';
-  }
-  return h+'</div>';
-}
-/* ───────── the tray ─────────
-   Everything the agent finds lands on the board first, and stays marked new
-   until Mark does something with it (2026-10-15). Over the board stands a
-   tray listing what is new, each with the three things to do with it, so
-   none is missed in a long board; it goes when there is nothing new. Under
-   it, folded, what he kept on the board to think about. A new arena the
-   agent suggests still waits in Dispatches, and the tray points there. */
-function trayRow(v){
-  const as=venueArenas(v).map(a=>a.name).join(', ');
-  return '<div class="trow st-'+v.place+'">'+vGlyph(v)+
-    '<button class="tnm" data-act="openVenue" data-v="'+v.id+'" title="Open '+esc(v.name)+'">'+esc(v.name)+'</button>'+
-    '<span class="tar" title="'+esc(as)+'">'+esc(as||'no arena')+'</span>'+
-    '<span class="twhen">'+esc(vDateSay(v))+'</span>'+
-    '<span class="tact">'+(v.url?'<a class="tgo" href="'+esc(v.url)+'" target="_blank" rel="noopener" data-act="vGo" data-v="'+v.id+'" title="'+esc(v.url)+'">site ↗</a>':'')+
-      '<button class="btn primary" data-act="vPlace" data-v="'+v.id+'" data-p="venues" title="Move it to Venues">→ Venues</button>'+
-      (v.place==='new'?'<button class="btn" data-act="vPlace" data-v="'+v.id+'" data-p="board" title="Leave it on the board to think about">Keep</button>':'')+
-      '<button class="btn ghost" data-act="vRemove" data-v="'+v.id+'" title="Off the board; the agent will not bring it back">Remove</button></span></div>';
-}
-/* An arena with new dates or links stands in the tray too, under the new
-   venues, with what is new on it and the tick that marks it seen. */
-function trayDatesRow(a){
-  const xs=freshItems(a),nd=xs.filter(x=>(a.dates||[]).includes(x)).length,nl=xs.length-nd;
-  const what=[nd?nd+' date'+(nd===1?'':'s'):'',nl?nl+' link'+(nl===1?'':'s'):''].filter(Boolean).join(', ');
-  const tone=arenaTone(a);
-  return '<div class="trow st-new"><span aria-hidden="true"></span>'+
-    '<button class="tnm" data-act="openArena" data-id="'+a.id+'" title="Open '+esc(a.name)+'">'+esc(a.name)+'</button>'+
-    '<span class="tar">'+(tone?'<i class="tdot" style="background:'+esc(tone)+'"></i>':'')+esc(typeOf(a)?typeOf(a).name:'')+'</span>'+
-    '<span class="twhen">'+esc(what)+' new</span>'+
-    '<span class="tact"><button class="btn" data-act="seenArena" data-id="'+a.id+'" title="The glow on its calls goes">Seen \u2713</button></span></div>';
-}
-function trayHTML(){
-  const all=visibleVenues();
-  const fresh=all.filter(v=>v.place==='new'),kept=all.filter(v=>v.place==='board');
-  const arenasNew=finds.state==='ready'?finds.rows.filter(r=>r.kind==='arena').length:0;
-  const dated=visibleArenas().filter(a=>freshItems(a).length);
-  if(!fresh.length&&!kept.length&&!arenasNew&&!dated.length)return '';
-  const by=v=>{const w=vWin(v);return w&&w.from!==null?w.from:9e15;};
-  const order=(x,y)=>by(x)-by(y)||x.name.localeCompare(y.name);
-  const open=!!S.ui.keptOpen;
-  return '<div class="tray'+(fresh.length||dated.length?' fresh':'')+'">'+
-    (fresh.length?'<p class="thead"><i class="tglow"></i>New on the board<b>'+fresh.length+'</b>'+
-      '<span>found by the agent — move each to Venues, keep it here to think about, or remove it</span></p>'+
-      '<div class="trows">'+fresh.sort(order).map(trayRow).join('')+'</div>':'')+
-    (dated.length?'<p class="thead"><i class="tglow"></i>New dates and links<b>'+dated.length+'</b>'+
-      '<span>glowing on their arenas\u2019 rows \u2014 mark each seen when you have looked</span>'+
-      (dated.length>1?'<button class="btn ghost tall" data-act="seenAll">All seen \u2713</button>':'')+'</p>'+
-      '<div class="trows">'+dated.map(trayDatesRow).join('')+'</div>':'')+
-    (kept.length?'<button class="thead tkept" data-act="trayKept" aria-expanded="'+open+'"><span aria-hidden="true">'+(open?'▾':'▸')+'</span>'+
-      'Kept on the board<b>'+kept.length+'</b><span>to think about</span></button>'+
-      (open?'<div class="trows">'+kept.sort(order).map(trayRow).join('')+'</div>':''):'')+
-    (arenasNew?'<button class="thead tarena" data-act="setView" data-v="dispatch">New arenas suggested<b>'+arenasNew+'</b><span>waiting in Dispatches →</span></button>':'')+
-  '</div>';
-}
-function renderBoard(){keepPlace(()=>{
-  winTimes();
-  nameWidth();
-  const board=$('#board');
-  if(loadError){
-    board.innerHTML='<div class="empty"><p>The saved board could not be read.</p>'+
-      '<p class="hint" style="margin-top:6px">Nothing has been changed and nothing is being saved — '+
-      'what was stored is still in this browser, untouched.<br>'+
-      'Reload to try again, or import your most recent export.<br><br>'+
-      esc(String(loadError&&loadError.message||loadError))+'</p></div>';
-    return;
-  }
-  if(!S.arenas.length){
-    board.innerHTML='<div class="empty"><p>Nothing on the board yet.</p>'+
-      '<p class="hint" style="margin-top:6px">Add an arena, paste a batch through Quick add,<br>or load the example set to see how it reads.</p>'+
-      '<div class="btns"><button class="btn primary" data-act="addArena">+ Arena</button>'+
-      '<button class="btn" data-act="openQuick">Quick add</button>'+
-      '<button class="btn" data-act="seed">Load example set</button></div></div>';
-    return;
-  }
-  const bg=laneBG();
-  const vis=visibleArenas();
-  if(!vis.length){
-    const[head,hint]=emptyReason(true);
-    board.innerHTML='<div class="empty"><p>'+head+'</p>'+
-      '<p class="hint" style="margin-top:6px">'+hint+'</p></div>';
-    return;
-  }
-  /* the lanes' width, for packing the venues' names: the board less its
-     padding, the names and the group's indent */
-  const bw=board.clientWidth||(window.innerWidth-60);
-  laneW=Math.max(300,bw-44-13-(S.ui.nameW||236));
-  /* The heading over the names names the order the groups are in, and opens
-     the choice of the two (Mark, 2026-10-11). It stood over a status column,
-     saying "Where", which named neither the column nor what pressing it
-     did; the column went the same day, and the choice came over here. */
-  const so=BOARD_SORTS[S.ui.boardSort];
-  let h=trayHTML()+'<div class="axisrow"><div class="corner sorter">Arena<button class="whsort'+(sortOpen?' on':'')+'" data-act="boardSort" '+
-      'aria-haspopup="listbox" aria-expanded="'+sortOpen+'" title="Order of the arenas in each type: '+esc(so.long)+'">'+so.name+
-      '<i aria-hidden="true">▾</i></button>'+
-      (sortOpen?'<span class="whmenu" role="listbox" aria-label="Order of the arenas">'+
-        Object.keys(BOARD_SORTS).map(k=>'<button class="'+(k===S.ui.boardSort?'sel':'')+'" data-act="boardSortSet" data-v="'+k+'" '+
-          'role="option" aria-selected="'+(k===S.ui.boardSort)+'"><b>'+BOARD_SORTS[k].name+'</b><span>'+BOARD_SORTS[k].long+'</span></button>').join('')+
-      '</span>':'')+'</div>'+
-    '<div class="axis" style="background:'+bg+'">'+axisHTML()+'</div></div>'+sharedRows(bg);
-  for(const ty of S.types){
-    const group=vis.filter(a=>a.typeId===ty.id).sort(boardOrder());
-    if(!group.length)continue;
-    const col=!!S.ui.collapsed[ty.id];
-    const nNew=col?group.filter(a=>venuesOf(a).some(v=>v.place==='new'&&!isShared(v))||freshItems(a).length).length:0;
-    h+='<div class="grp'+(col?' collapsed':'')+'" style="--tone:'+esc(toneHex(ty.color))+'">'+
-       '<div class="ghead"><div class="gc">'+
-       '<button class="caret" data-act="toggleGroup" data-id="'+ty.id+'" aria-label="Collapse group">'+(col?'▸':'▾')+'</button>'+
-       '<span class="gname">'+esc(ty.name)+'</span><span class="gcount">'+group.length+'</span>'+
-       (nNew?'<i class="newdot" title="'+nNew+' arena'+(nNew===1?'':'s')+' here with something new"></i>':'')+'</div></div>';
-    if(col){h+='</div>';continue;}
-    for(const a of group)h+=boardRow(a,bg);
-    h+='</div>';
-  }
-  const orphans=vis.filter(a=>!S.types.some(t=>t.id===a.typeId)).sort(boardOrder());
-  if(orphans.length){
-    h+='<div class="grp"><div class="ghead"><div class="gc"><span class="gname">Untyped</span>'+
-       '<span class="gcount">'+orphans.length+'</span></div></div>';
-    for(const a of orphans)h+=boardRow(a,bg);
-    h+='</div>';
-  }
-  /* the edge of the column of names, from the axis down, to drag (see "the
-     width of the names") */
-  board.innerHTML=h+'<div class="namegrip" title="Drag to widen or narrow the arenas’ names" aria-hidden="true"></div>';
-  const ax=board.querySelector('.axisrow'),g=board.querySelector('.namegrip');
-  if(ax&&g)g.style.top=ax.offsetTop+'px';
-});}
-/* ───────── the width of the names ─────────
-   Mark asked on 2026-10-14 to drag the board so more of each arena's name
-   shows. The column's width is one variable, `--namew`, on the room, so the
-   board's rows, its heading and the freezer under it move together; the
-   grip on the column's edge sets it while dragging without a redraw, and
-   the width is kept in the ui on letting go. */
-function nameWidth(){
-  if(S.ui.nameW)document.body.style.setProperty('--namew',S.ui.nameW+'px');
-  else document.body.style.removeProperty('--namew');
-}
-let nameDrag=null;
-document.addEventListener('pointerdown',e=>{
-  const g=e.target.closest&&e.target.closest('.namegrip');
-  if(!g||e.button!==0)return;
-  e.preventDefault();
-  const c=document.querySelector('.axisrow .corner');
-  const w=c?Math.round(c.getBoundingClientRect().width):(S.ui.nameW||236);
-  nameDrag={x:e.clientX,w,now:w};
-  g.classList.add('on');
-});
-document.addEventListener('pointermove',e=>{
-  if(!nameDrag)return;
-  nameDrag.now=Math.min(NAME_MAX,Math.max(NAME_MIN,Math.round(nameDrag.w+e.clientX-nameDrag.x)));
-  document.body.style.setProperty('--namew',nameDrag.now+'px');
-});
-document.addEventListener('pointerup',()=>{
-  if(!nameDrag)return;
-  S.ui.nameW=nameDrag.now;nameDrag=null;
-  const g=document.querySelector('.namegrip.on');if(g)g.classList.remove('on');
-  save();
-});
 
 /* ============ render: freezer ============
-   The board's own footnote: it belongs to the timeline, not to the brokerage
-   views, so it shows there and nowhere else. Shut by default — the freezer is
-   somewhere to put things, not somewhere to look — and grouped by type in the
-   board's order, against the board's own name column. */
+   Where the arenas put away stand, each with Thaw. It was the Board's own
+   footnote, and stands under Venues since the Board went to the Call Board
+   (2026-10-24). Shut by default — the freezer is somewhere to put things,
+   not somewhere to look — and grouped by type in his order. */
 function renderFreezer(){
   const el=$('#freezer'),list=frozenArenas();
-  if(!list.length||S.ui.view!=='board'){el.hidden=true;el.innerHTML='';return;}
+  if(!list.length||S.ui.view!=='now'){el.hidden=true;el.innerHTML='';return;}
   el.hidden=false;
   const open=!!S.ui.freezerOpen;
   const chip=a=>'<span class="frchip">'+
       '<button class="frname" data-act="openArena" data-id="'+a.id+'" '+
         'title="Frozen '+esc(shortDay(a.frozenAt))+'">'+esc(a.name)+'</button>'+
       '<button class="frout" data-act="thaw" data-id="'+a.id+'" '+
-        'title="Put '+esc(a.name)+' back on the board" aria-label="Thaw '+esc(a.name)+'">Thaw</button>'+
+        'title="Put '+esc(a.name)+' back among the live arenas" aria-label="Thaw '+esc(a.name)+'">Thaw</button>'+
     '</span>';
   const byName=(x,y)=>x.name.localeCompare(y.name);
   const group=(name,members)=>members.length
@@ -1225,402 +702,69 @@ function renderFreezer(){
     group('Untyped',list.filter(a=>!S.types.some(t=>t.id===a.typeId)));
   el.innerHTML='<button class="frbar" data-act="toggleFreezer" aria-expanded="'+(open?'true':'false')+'">'+
       '<i class="frost"></i>Freezer<span class="frn">'+list.length+'</span>'+
-      '<span class="frcaret">'+(open?'\u25BE':'\u25B8')+'</span></button>'+
+      '<span class="frcaret">'+(open?'▾':'▸')+'</span></button>'+
     (open?'<div class="frbody">'+body+'</div>':'');
 }
 
-/* ============ dispatches ============
-   A scheduled task in the cloud reads the programmes' own pages and leaves
-   what it found in a table of its own. Nothing it says is on the board: a
-   finding is read here, and becomes a date, a link or an arena only when it
-   is accepted. That is the whole design — a website changes its layout, or a
-   page says something the agent reads too generously, and the cost of it is a
-   line you dismiss rather than a wrong date under your nose for a month.
-
-   The findings are not kept in `S`. They live in the cloud, they are read
-   when this view is opened, and what is done with one is written back there
-   before anything happens here — so two machines cannot accept the same
-   finding twice, and a board exported to a file carries no half-answered
-   inbox with it. */
-const finds={rows:[],state:'cold',error:null,busy:null,said:'',all:false};
-
-function loadFinds(){
+/* ============ new arenas, waiting to be judged ============
+   A new arena reaches the board only when Mark says so on the Call Board,
+   where every find is judged one at a time (2026-10-24). They come from
+   two places. ChatGPT's search suggests them beside its changes, and those
+   wait on the board itself (`S.suggested`), so that they ride the cloud
+   and the Ledger's Export with it and stand on every device until judged;
+   the + Add beside each in the ChatGPT box, which lost the list once the
+   box was shut, went with this. The agent, when it runs, leaves its own in
+   a table of their own in the cloud (semaphore_inbox), read from there
+   when the Call Board asks and answered there first, so that two machines
+   cannot add the same arena twice. Dispatches, the view that listed them
+   here, went with the Board; the agent's other kinds of finding it has
+   not left there since it began to change the board itself (2026-10-14),
+   so only an arena is read. */
+const inbox={rows:[],busy:false};
+function loadFinds(done){
   const api=(typeof Hub!=='undefined'&&Hub.api)?Hub.api('semaphore-inbox'):null;
-  if(!api||!api.ready()){
-    finds.state='nocloud';finds.rows=[];renderDispatch();return;
-  }
-  finds.state='reading';finds.error=null;renderDispatch();
+  if(!api||!api.ready()||inbox.busy){if(done)done();return;}
+  inbox.busy=true;
   api.list((rows,err)=>{
-    if(err){finds.state='error';finds.error=err;finds.rows=[];}
-    else{finds.state='ready';finds.rows=rows;}
-    renderDispatch();applyView();
-    if(S.ui.view==='board')renderBoard();     /* the tray points to new arenas */
+    inbox.busy=false;
+    if(!err)inbox.rows=(rows||[]).filter(r=>r&&r.kind==='arena'&&String(r.arena_name||'').trim());
+    if(done)done();
   });
 }
-
-/* What a finding would read like on the board, in the board's own words. The
-   date it describes is the same object the editor makes, so `dispDate` and the
-   grade swatches say exactly what they will say once it is accepted. */
-function findDate(r){
-  return {id:uid(),kind:r.date_kind==='call'?'call':'brokerage',
-          label:r.label||'',call:r.call||'',
-          role:ROLES[r.role]?r.role:(r.date_kind==='call'?'publication':''),
-          gran:r.gran||'none',grade:r.grade==='fixed'?'fixed':'uncertain',
-          start:r.start_date||null,end:r.end_date||r.start_date||null,note:''};
+/* An arena made from a suggestion: its name, its address as a link that
+   glows new as the agent's links do, and the reason it was suggested as
+   its About text, for Mark to reword. */
+function arenaFrom(name,typeId,url,why){
+  const a=newArena(name,S.types.some(t=>t.id===typeId)?typeId:S.types[0].id,[]);
+  if(url)a.links.push({id:uid(),label:'',url,foundAt:new Date().toISOString()});
+  a.notes=gptStr(why);
+  S.arenas.push(a);
+  return a;
+}
+const arenaNamed=name=>S.arenas.find(a=>a.name.trim().toLowerCase()===String(name||'').trim().toLowerCase())||null;
+/* The type a suggested arena most likely is, read from its name and the
+   reason given, so the choice on the Call Board starts on it: Mark's types
+   are named for the kinds of partnership, so a word of the kind finds the
+   type named with it. Anything else starts on the first of his types. */
+const TYPE_HINTS=[
+  [/joint\s*undertaking|\bJU\b/i,/\bJU\b|joint/i],[/co[\s-]*fund/i,/co[\s-]*fund/i],
+  [/co[\s-]*prog/i,/co[\s-]*prog/i],[/\bEIT\b|\bKICs?\b/i,/\bEIT\b|\bKIC/i],
+  [/eureka/i,/eureka/i],[/art(?:icle)?\.?\s*185/i,/185/]];
+function guessType(text){
+  for(const[said,named]of TYPE_HINTS)if(said.test(text||'')){
+    const t=S.types.find(t=>named.test(t.name));if(t)return t.id;
+  }
+  return S.types[0]?S.types[0].id:'';
 }
 function findHost(u){
   try{return new URL(u).hostname.replace(/^www\./,'')+new URL(u).pathname.replace(/\/$/,'');}
   catch(e){return u||'';}
-}
-function findText(r){
-  const a=arena(r.arena_id);
-  if(r.kind==='link'){
-    const ev=siteFor(r);
-    if(ev)return 'Website — <b>'+esc(ev.name)+'</b> <span class="dpwhen">'+esc(dispDate(ev))+'</span>'+
-      ' <span class="dpwas">'+esc(findHost(r.url))+'</span>';
-    return 'Link — <b>'+esc(r.label||findHost(r.url))+'</b> for the brokerage links';
-  }
-  if(r.kind==='arena')
-    return 'New arena — <b>'+esc(r.arena_name)+'</b>'+(r.note?' — '+esc(r.note):'');
-  /* a rewrite shows the text it would replace, read from the board now, since
-     that is what Accept throws away */
-  if(r.kind==='info'){
-    const old=a?String((r.date_kind==='brokerage'?(a.brokerage||{}).notes:a.notes)||'').trim():'';
-    return 'New <b>'+infoName(r)+'</b> text — '+esc(r.note||'')+
-      '<span class="dpwas dpold">'+(old?'was: '+esc(old):'was empty')+'</span>';
-  }
-  /* a general tool says which tool it would take the place of, since on an
-     arena that has one the finding is a new address for it (see takeFind) */
-  /* a removal names the date as the board holds it now, and why */
-  if(r.kind==='remove'){
-    const old=a&&(a.dates||[]).find(d=>d.id===r.replaces_date_id)||venue(r.replaces_date_id);
-    if(!old)return 'Remove a date — <span class="dpwas">no longer on the board</span>';
-    return 'Remove — <b>'+esc(old.name||dtLabel(old))+'</b> <span class="dpwhen">'+esc(dispDate(old))+'</span>'+
-      (r.note?' <span class="dpwas dpold">'+esc(r.note)+'</span>':'');
-  }
-  if(r.kind==='tool'){
-    const cur=a&&arenaTools(a).length===1?arenaTools(a)[0]:null;
-    return 'Tool — <b>'+esc(r.label||findHost(r.url))+'</b>'+
-      (!cur?' as a venue':linkKey(cur.url)===linkKey(r.url)?'<span class="dpwas dpold">already its tool</span>':
-        '<span class="dpwas dpold">was: '+esc(cur.name)+' · '+esc(findHost(cur.url))+'</span>');
-  }
-  const dt=findDate(r);
-  const when='<span class="dpwhen">'+esc(dispDate(dt))+'</span>';
-  /* a correction says what it replaces, because the old date is the thing you
-     are being asked about */
-  let was='';
-  if(r.replaces_date_id&&a){
-    const old=(a.dates||[]).find(d=>d.id===r.replaces_date_id)||venue(r.replaces_date_id);
-    if(old)was=' <span class="dpwas">was '+esc(dispDate(old))+'</span>';
-  }
-  if(dt.kind==='call')
-    return 'Call — <span class="dpcall">'+esc(dt.call||'Call')+' · '+
-           esc(roleOf(dt).short)+'</span> '+when+was;
-  return 'Brokerage — <b>'+esc(dt.label||'Event')+'</b> '+when+was;
-}
-function findSwatch(r){
-  if(r.kind==='arena'||r.kind==='link'||r.kind==='info'||r.kind==='tool'||r.kind==='remove')return '<i class="sw sw-uncertain"></i>';
-  const dt=findDate(r);
-  if(dt.kind==='call')return '<i class="sw sw-call"></i>';
-  return '<i class="sw sw-'+dt.grade+'"></i>';
-}
-function findRow(r){
-  const busy=finds.busy===r.id||finds.all;
-  return '<div class="dprow'+(busy?' gone':'')+'" data-fid="'+r.id+'">'+
-    '<span class="dpw">'+findSwatch(r)+'</span>'+
-    '<span class="dptx">'+findText(r)+
-      (r.evidence?'<span class="dpev">“'+esc(r.evidence)+'”</span>':'')+
-      '<a class="dpsrc" href="'+esc(r.source_url)+'" target="_blank" rel="noopener">'+
-        esc(findHost(r.source_url))+'</a>'+
-      /* the event's own page, when the agent found one apart from where it read
-         the date — this is the link Accept puts among the brokerage links */
-      ((r.kind==='date'||r.kind==='tool')&&r.url&&linkKey(r.url)!==linkKey(r.source_url)?
-        '<a class="dpsrc" href="'+esc(r.url)+'" target="_blank" rel="noopener" title="'+
-        (r.kind==='tool'?'The tool itself':'The event\u2019s own page')+'">'+
-        esc(findHost(r.url))+'</a>':'')+
-    '</span>'+
-    '<span class="dpa">'+
-      '<button class="nbtn" data-act="findTake" data-f="'+r.id+'"'+(busy?' disabled':'')+
-        ' title="Put this on the board">Accept</button>'+
-      '<button class="nbtn" data-act="findDrop" data-f="'+r.id+'"'+(busy?' disabled':'')+
-        ' title="Not right — and do not offer it again">Dismiss</button>'+
-    '</span>'+
-  '</div>';
-}
-function renderDispatch(){
-  const el=$('#dispatch');
-  if(!el)return;
-  const bar=body=>'<div class="dpbar">'+body+'</div>';
-  if(finds.state==='nocloud'){
-    el.innerHTML=bar('<span class="dpsay">Not connected.</span>'+
-      '<span class="spacer"></span>'+
-      '<button class="btn ghost" data-act="findRefresh">Try again</button>')+
-      '<p class="dpnote">The findings live beside this board in the cloud, so this '+
-      'view needs the connection set in the Ledger’s cloud panel.</p>';
-    return;
-  }
-  if(finds.state==='cold'||finds.state==='reading'){
-    el.innerHTML=bar('<span class="dpsay">Reading…</span>');
-    return;
-  }
-  if(finds.state==='error'){
-    el.innerHTML=bar('<span class="dpsay dperr">Could not read them — '+esc(finds.error)+'</span>'+
-      '<span class="spacer"></span>'+
-      '<button class="btn ghost" data-act="findRefresh">Try again</button>');
-    return;
-  }
-  /* grouped by arena, in the order they were found: a morning’s batch for one
-     programme is read together, and the arenas with nothing to say are absent
-     rather than listed as empty */
-  const order=[],by=new Map();
-  finds.rows.forEach(r=>{
-    const k=r.arena_id||('new:'+String(r.arena_name||'').toLowerCase());
-    if(!by.has(k)){by.set(k,[]);order.push(k);}
-    by.get(k).push(r);
-  });
-  const head=bar('<span class="dpsay">'+
-      (finds.rows.length?'<b>'+finds.rows.length+'</b> waiting — nothing is on the board '+
-        'until you accept it.':'Nothing waiting.')+'</span>'+
-      (finds.said?'<span class="dpsay">'+esc(finds.said)+'</span>':'')+
-      '<span class="spacer"></span>'+
-      /* only from two up: with one finding waiting it would be a second
-         Accept button for the same row */
-      (finds.rows.length>1?'<button class="btn ghost" data-act="findAll"'+
-        (finds.all||finds.busy!=null?' disabled':'')+
-        ' title="Put every finding below on the board">Accept all</button>':'')+
-      '<button class="btn ghost" data-act="findRefresh"'+(finds.all?' disabled':'')+
-        '>Check again</button>');
-  if(!finds.rows.length){
-    el.innerHTML=head+'<p class="dpnote">The room\u2019s agent (the task called Marketplace agent) works when you ask it to, from a Claude '+
-      'session, and changes the board itself: venues, their dates and websites, call dates, links and the '+
-      'About and Brokerage texts. What it changed is in its own report. Only a new arena it suggests waits here.</p>';
-    return;
-  }
-  const groups=order.map(k=>{
-    const rows=by.get(k),a=arena(rows[0].arena_id);
-    const name=a?a.name:rows[0].arena_name;
-    return '<div class="dpgrp"><p class="dph">'+esc(name)+
-      (a?'':' <b>· not on the board yet</b>')+
-      ' <b>· '+rows.length+'</b></p>'+rows.map(findRow).join('')+'</div>';
-  }).join('');
-  el.innerHTML=head+'<div class="dplist">'+groups+'</div>';
-}
-
-/* Accepting is the only door a finding has into the board, so every shape it
-   can arrive in is handled in one place. A date replaces the one it corrects
-   rather than standing beside it — two readings of the same deadline on one
-   lane is worse than either of them alone. */
-function takeFind(r){
-  /* everything a finding puts on the board is stamped with the moment, which is
-     what lets the card and the panel mark it new (see isFresh) */
-  const now=new Date().toISOString();
-  if(r.kind==='arena'){
-    const a=newArena(String(r.arena_name||'New arena').trim()||'New arena',S.types[0].id,[]);
-    if(r.url)a.links.push({id:uid(),label:'',url:r.url,foundAt:now});
-    else if(r.source_url)a.links.push({id:uid(),label:'',url:r.source_url,foundAt:now});
-    S.arenas.push(a);
-    save();renderAll();
-    /* Deliberately no drawer. Accepting is done in runs of five or ten, and a
-       panel opening over the list turns the run into a series of interruptions;
-       the arena is on the board and its type can be set whenever. */
-    return 'Arena added — open it to set its type.';
-  }
-  const a=findArena(r);
-  if(!a)return 'That arena is no longer on this board.';
-  /* A short rewrite of one of the arena's two texts, from the pages the
-     nightly agent read (Mark, 2026-10-10). It replaces the whole text, so that
-     what is wrong or out of date goes rather than piling up under a newer
-     line; Dispatches shows the text it replaces before Accept is pressed. */
-  if(r.kind==='info'){
-    const t=String(r.note||'').trim();
-    if(!t)return 'That text was empty, so nothing changed.';
-    if(r.date_kind==='brokerage'){a.brokerage=a.brokerage||{notes:'',links:[]};a.brokerage.notes=t;}
-    else a.notes=t;
-    save();renderAll();
-    return 'New '+infoName(r)+' text on '+a.name+'.';
-  }
-  /* An arena's general tool, found by the nightly agent (Mark, 2026-10-14).
-     An arena without one gets it: the brokerage link already at that address,
-     else a new one, becomes the tool. The agent offers one to an arena that
-     has a tool only when that tool's address has moved, so Accept puts the
-     new address on the same link, which keeps its place among the links. */
-  /* A date an agent found to be wrong with nothing to put in its place — a
-     guess the real call has overtaken, a second copy of one date (Mark,
-     2026-10-14). Until this there was no way to say so, and a correction
-     would only have made a second copy. Accept deletes it as the panel's
-     ✕ does, so a wait on it ends with it. */
-  /* A brokerage event the finding names is a venue now, under the date's
-     own id (see absorbVenues), so a removal or a correction reaches it there. */
-  if(r.kind==='remove'){
-    const dt=(a.dates||[]).find(d=>d.id===r.replaces_date_id);
-    if(!dt){
-      const v=venue(r.replaces_date_id);
-      if(!v)return 'That date is no longer on '+a.name+'.';
-      dropVenue(v.id);
-      return v.name+' removed.';
-    }
-    a.dates=a.dates.filter(d=>d!==dt);reconcile(a);
-    save();renderAll();
-    return 'Date removed from '+a.name+'.';
-  }
-  /* A tool is a venue (2026-10-14). One already standing at the same site
-     only takes this arena in; an arena with one tool is given the new
-     address, as the general tool was; otherwise it is a new tool. */
-  if(r.kind==='tool'){
-    if(!r.url)return 'That finding had no address, so nothing changed.';
-    const k=siteKey(r.url);
-    const same=(S.venues||[]).find(v=>v.url&&siteKey(v.url)===k);
-    if(same){
-      if(same.arenas.includes(a.id))return 'That is already a tool of '+a.name+'.';
-      joinVenue(same,a.id);save();renderAll();
-      return same.name+' now serves '+a.name+' too.';
-    }
-    const cur=arenaTools(a);
-    if(cur.length===1){cur[0].url=r.url;if(r.label)cur[0].name=r.label;cur[0].foundAt=now;save();renderAll();
-      return 'New address for '+cur[0].name+'.';}
-    const id=venue('vt'+hashKey(k))?uid():'vt'+hashKey(k);
-    S.venues.push(tidyVenue({id,kind:'tool',name:r.label||findHost(r.url),url:r.url,arenas:[a.id],
-      note:'',visits:[],pages:[],foundAt:now}));
-    save();renderAll();
-    return 'Tool added to '+a.name+'.';
-  }
-  if(r.kind==='link'){
-    const ev=siteFor(r);
-    if(ev){
-      ev.url=r.url;
-      save();renderAll();
-      return 'Website added to '+ev.name+'.';
-    }
-    if(hasLink(a,r.url))return 'That link is already on '+a.name+'.';
-    a.brokerage=a.brokerage||{notes:'',links:[]};
-    a.brokerage.links.push({id:uid(),label:r.label||'',url:r.url,foundAt:now});
-    absorbVenues(S);
-    save();renderAll();
-    return 'Link added to '+a.name+'.';
-  }
-  const dt=findDate(r);
-  dt.foundAt=now;
-  if(dt.kind==='brokerage'&&r.replaces_date_id){
-    const v=venue(r.replaces_date_id);
-    if(v&&v.kind==='event'){
-      if(!gradeOptions(dt.gran).includes(dt.grade))dt.grade=gradeDefault(dt.gran);
-      Object.assign(v,{gran:dt.gran,start:dt.start,end:dt.end,grade:dt.grade});
-      if(!v.url&&(r.url||r.source_url))v.url=r.url||r.source_url;
-      tidyVenue(v);save();renderAll();
-      return 'Date corrected on '+v.name+'.';
-    }
-  }
-  /* A brokerage event is something you go to, so its page comes with it into
-     the brokerage links: the event's own page when the agent gave one, else
-     the page it read the date on. Until this the page was shown in Dispatches
-     and dropped on Accept, and the card said when an event was but not where. */
-  let linked=false;
-  const page=dt.kind==='brokerage'?(r.url||r.source_url):null;
-  if(page&&!hasLink(a,page)){
-    a.brokerage=a.brokerage||{notes:'',links:[]};
-    a.brokerage.links.push({id:uid(),label:dt.label||'Event page',url:page,foundAt:now});
-    linked=true;
-  }
-  /* the editor’s own rule: only an exact day or an exact span can be called
-     fixed, whatever the agent thought it read */
-  if(!gradeOptions(dt.gran).includes(dt.grade))dt.grade=gradeDefault(dt.gran);
-  if(page)dt.url=page;
-  const i=r.replaces_date_id?(a.dates||[]).findIndex(d=>d.id===r.replaces_date_id):-1;
-  if(i>=0){dt.id=a.dates[i].id;dt.note=a.dates[i].note||'';dt.url=dt.url||a.dates[i].url||'';
-    if(a.dates[i].memo)dt.memo=a.dates[i].memo;   /* a corrected date keeps Mark's note on it */
-    if(a.dates[i].stampedAt){dt.stampedAt=a.dates[i].stampedAt;dt.stampPrev=a.dates[i].stampPrev||null;}
-    a.dates[i]=dt;}
-  else a.dates.push(dt);
-  reconcile(a);
-  absorbVenues(S);           /* a brokerage date is a venue at once */
-  save();renderAll();
-  return (i>=0?'Date corrected on ':'Date added to ')+a.name+(linked?', with its page.':'.');
-}
-/* An info finding's date_kind says which of the arena's two texts it is for,
-   named as the arena's panel names them. */
-function infoName(r){return r.date_kind==='brokerage'?'Brokerage':'About';}
-/* A link finding that names one of the brokerage events (its
-   `replaces_date_id`) is that event's website: it goes on the event's
-   venue, which carries the date's id, not among the arena's links. One
-   naming an event that has since gone is an ordinary link again. */
-function siteFor(r){
-  if(r.kind!=='link'||!r.replaces_date_id)return null;
-  const v=venue(r.replaces_date_id);
-  return v&&v.kind==='event'?v:null;
-}
-/* Two spellings of one address — a trailing slash, a www, http against https —
-   are the same page, and a second copy of it among the links is noise. */
-function linkKey(u){
-  return String(u||'').trim().toLowerCase().replace(/^https?:\/\//,'').replace(/^www\./,'').replace(/[#?].*$/,'').replace(/\/+$/,'');
 }
 function hasLink(a,u){
   const k=linkKey(u);
   if(!k)return false;
   const bk=a.brokerage||{links:[]};
   return (bk.links||[]).concat(a.links||[]).some(l=>linkKey(l.url)===k);
-}
-
-/* A finding about an arena the board did not have yet carries only the
-   arena's name. Once its "New arena" finding has been accepted the arena is
-   here under that name, and the date or link belongs on it — without this,
-   accepting the pair in order said "no longer on this board" and the date
-   was lost, marked answered in the cloud and never written. */
-function findArena(r){
-  const a=arena(r.arena_id);
-  if(a||r.arena_id)return a;
-  const n=String(r.arena_name||'').trim().toLowerCase();
-  return n?S.arenas.find(x=>String(x.name||'').trim().toLowerCase()===n):undefined;
-}
-
-/* The cloud is told first. If the row cannot be marked answered — no
-   connection, or another machine got there — nothing is written here, because
-   a finding that stays `new` in the cloud would be offered again and the same
-   date would land twice. */
-function answerFind(id,take){
-  const api=(typeof Hub!=='undefined'&&Hub.api)?Hub.api('semaphore-inbox'):null;
-  const r=finds.rows.find(x=>String(x.id)===String(id));
-  if(!r||!api)return;
-  finds.busy=r.id;finds.said='';renderDispatch();
-  api.decide(r.id,take?'accepted':'dismissed',err=>{
-    finds.busy=null;
-    if(err){finds.said='Not answered — '+err;renderDispatch();return;}
-    finds.rows=finds.rows.filter(x=>x.id!==r.id);
-    finds.said=take?takeFind(r):'Dismissed.';
-    renderDispatch();applyView();
-  });
-}
-
-/* Accept all is the same door as Accept, walked once per finding and one at a
-   time, so each is still marked answered in the cloud before it touches the
-   board. New arenas go first, so the dates found for them have somewhere to
-   land. A finding that still has no arena to go on is left waiting rather
-   than marked answered and dropped; one the cloud refuses stays too. */
-function acceptAllFinds(){
-  const api=(typeof Hub!=='undefined'&&Hub.api)?Hub.api('semaphore-inbox'):null;
-  if(!api||finds.all||!finds.rows.length)return;
-  const queue=finds.rows.filter(r=>r.kind==='arena')
-    .concat(finds.rows.filter(r=>r.kind!=='arena'));
-  let done=0,left=0,failed='';
-  finds.all=true;finds.said='';renderDispatch();
-  const next=()=>{
-    const r=queue.shift();
-    if(!r){
-      finds.all=false;
-      finds.said=done+' accepted'+(left?' — '+left+' left waiting'+
-        (failed?' ('+failed+')':' (no arena to put them on)'):'')+'.';
-      renderDispatch();applyView();return;
-    }
-    if(r.kind!=='arena'&&!findArena(r)){
-      left++;next();return;
-    }
-    api.decide(r.id,'accepted',err=>{
-      if(err){left++;failed=String(err);next();return;}
-      finds.rows=finds.rows.filter(x=>x.id!==r.id);
-      takeFind(r);done++;
-      renderDispatch();next();
-    });
-  };
-  next();
 }
 
 /* ── ChatGPT's search ──
@@ -1635,9 +779,11 @@ function acceptAllFinds(){
    plainer names, with the same refusals: nothing is deleted, no text of
    his is written over, and a venue he removed comes back only as a later
    occasion on its site (siteInWay in the gatekeeper). What lands carries
-   `foundAt`, so a call date glows on its row and a venue waits in the tray,
-   as the agent's finds do, and he judges each there. The leads, his visits
-   and his notes on venues stay out of the file. */
+   `foundAt`: a new or corrected call date goes straight on and glows on
+   its row on the Call Board until he presses Seen, and a new venue, like
+   each new arena it suggests, waits there to be judged one at a time
+   (Mark, 2026-10-24). The leads, his visits and his notes on venues stay
+   out of the file. */
 const GPT_FILE='brokerage-semaphore-for-chatgpt';
 /* Arenas per research round (Mark, 2026-10-22): a deep search asked to
    cover the whole board at once grows thin towards its end, so the file
@@ -1857,6 +1003,10 @@ function gptOp(s,op,now){
       if(['call','role','gran','start','end','grade'].every(k=>copy[k]===d[k]))return no('nothing to change');
       if(note)copy.note=note;
       if(src)copy.url=src;
+      /* the date as it stood, which the Call Board shows on the glowing
+         row until it is seen; a second correction before then keeps the
+         one he last saw */
+      if(!(isFresh(a,d)&&d.was))copy.was=was;
       copy.foundAt=now;
       Object.assign(d,copy);
       return {ok:a.name+': '+d.call+', '+ROLES[d.role].short+' corrected, '+was+' → '+dispDate(d)};
@@ -1935,37 +1085,20 @@ function gptApply(s,ans,now){
   return out;
 }
 function gptSay(html){const el=$('#gptSaid');if(el)el.innerHTML=html;}
-/* The new arenas ChatGPT suggests, each with a type and + Add beside it
-   (Mark, 2026-10-23): he had to type them in again with + Arena, and the
-   list was gone once he pressed Put on the board. Adding takes only the
-   name, the address as a link and ChatGPT's reason as the arena's text,
-   and the arena lands on the board with its link glowing new, as the
-   agent's arenas do. The list stays in the box after Put on the board, so
-   the ones still wanted can be added then. One already on the board by
-   that name says so rather than offering a second. */
+/* The new arenas ChatGPT suggests, listed under its changes so the answer
+   is read whole. They are not added here: Put on the board sets them
+   waiting with the new venues, and each is judged on the Call Board, its
+   type chosen there (see "new arenas, waiting to be judged"). One already
+   on the board by that name, or already waiting, says so and is not set
+   waiting twice. */
 function gptSuggHTML(){
   if(!gpt.sugg.length)return '';
-  const has=x=>S.arenas.some(a=>a.name.toLowerCase()===gptStr(x.name,200).toLowerCase());
-  const types=S.types.map(t=>'<option value="'+t.id+'">'+esc(t.name)+'</option>').join('');
-  return '<p class="gptno">New arenas it suggests:</p><ul class="gptlist gptout">'+
-    gpt.sugg.map((x,i)=>'<li>'+esc(gptStr(x.name,200))+(x.why?' — '+esc(gptStr(x.why,300)):'')+
+  const waits=x=>(S.suggested||[]).some(y=>y.name.toLowerCase()===gptStr(x.name,200).toLowerCase());
+  return '<p class="gptno">New arenas it suggests, to judge on the Call Board:</p><ul class="gptlist gptout">'+
+    gpt.sugg.map(x=>'<li>'+esc(gptStr(x.name,200))+(x.why?' — '+esc(gptStr(x.why,300)):'')+
       (gptHttp(x.url)?' <a href="'+esc(gptHttp(x.url))+'" target="_blank" rel="noopener">site</a>':'')+
-      '<span class="gptadd">'+(has(x)?'<i>on the board</i>':
-        '<select aria-label="Its type">'+types+'</select><button class="btn" data-act="gptAdd" data-i="'+i+'">+ Add</button>')+
-      '</span></li>').join('')+'</ul>';
-}
-function gptAdd(i,b){
-  const x=gpt.sugg[i];if(!x)return;
-  const name=gptStr(x.name,200);
-  if(!name||S.arenas.some(a=>a.name.toLowerCase()===name.toLowerCase()))return;
-  const sel=b.parentNode.querySelector('select');
-  const a=newArena(name,sel&&S.types.some(t=>t.id===sel.value)?sel.value:S.types[0].id,[]);
-  const url=gptHttp(x.url);
-  if(url)a.links.push({id:uid(),label:'',url,foundAt:new Date().toISOString()});
-  a.notes=gptStr(x.why);
-  S.arenas.push(a);
-  save();renderAll();
-  b.parentNode.innerHTML='<i>added to the board</i>';
+      (arenaNamed(gptStr(x.name,200))?' <i>on the board already</i>':waits(x)?' <i>waiting already</i>':'')+
+      '</li>').join('')+'</ul>';
 }
 /* Read and tried on a copy of the board, so he sees every change and every
    refusal before anything is put on the real one. */
@@ -1991,26 +1124,34 @@ function gptRead(text){
       esc(gptStr(r.op&&r.op.change,40)||'?')+(r.op&&(r.op.name||r.op.call)?' — '+esc(gptStr(r.op.name||r.op.call,120)):'')+': '+esc(r.why)+'</li>').join('')+'</ul>':'')+
     gptSuggHTML()
   );
-  if(put)put.disabled=!ok.length;
+  if(put)put.disabled=!ok.length&&!gpt.sugg.length;
 }
 /* Put on the real board. A restore point in the Ledger holds the board as
-   it was first (the bridge takes it), so the whole round can be undone. */
+   it was first (the bridge takes it), so the whole round can be undone.
+   The new arenas suggested are set waiting, and the room hands over to
+   the Call Board, where the finds are judged one at a time and the dates
+   glow (`semaphore:judge`, which the bridge answers by going there). */
 function gptPut(){
   if(!gpt.ans)return;
   try{Hub.emit('semaphore:keep','before ChatGPT\'s search was put on the board');}catch(e){}
-  const res=gptApply(S,gpt.ans,new Date().toISOString());
+  const at=new Date().toISOString();
+  const res=gptApply(S,gpt.ans,at);
   const n=res.filter(r=>r.ok).length;
-  S.ui.view='board';
+  let k=0;
+  for(const x of gpt.sugg){
+    const name=gptStr(x.name,200);
+    if(!name||arenaNamed(name)||S.suggested.some(y=>y.name.toLowerCase()===name.toLowerCase()))continue;
+    S.suggested.push({id:uid(),name,url:gptHttp(x.url),why:gptStr(x.why),at});k++;
+  }
   save();renderAll();
   closeModals();
-  gpt={ans:null,plan:null,sugg:gpt.sugg};
+  gpt={ans:null,plan:null,sugg:[]};
   const t=$('#gptText');if(t)t.value='';
-  gptSay(gptSuggHTML());
+  gptSay('');
   const put=$('#gptPut');if(put)put.disabled=true;
-  Ask.tell('On the board',n+' change'+(n===1?'':'s')+' from ChatGPT '+(n===1?'is':'are')+' on the board. '+
-    'New and corrected call dates glow on their rows until you press Seen; new venues wait in the tray over the board, '+
-    'to go to Venues, be kept or be removed. A restore point in the Ledger holds the board as it was before.'+
-    (gpt.sugg.length?' The new arenas it suggests are still in the ChatGPT box, to add with + Add.':''));
+  try{Hub.emit('semaphore:judge',n+' change'+(n===1?'':'s')+' from ChatGPT '+(n===1?'is':'are')+' on the board'+
+    (k?', and '+k+' new arena'+(k===1?'':'s')+' wait'+(k===1?'s':'')+' to be judged':'')+
+    '. New dates glow until you press Seen; a restore point in the Ledger holds the board as it was before.');}catch(e){}
 }
 function openGpt(){
   closeModals();
@@ -2053,19 +1194,11 @@ const inVenues=v=>v.place==='venues';
    them out of the way). The sites are read from Mark's Place's own table
    through the bridge, and kept on this device so the section is there
    before the cloud answers, and offline. A venue is in it when one of its
-   addresses is on a copied site, as Mark's Place matches them (`sameSite`
-   in partner-watch/index.html); that wins over a section chosen by hand,
+   addresses is on a copied site, as Mark's Place matches them (`sameSite`,
+   in shell/venues.js); that wins over a section chosen by hand,
    which stays stored and comes back if the site leaves Mark's Place. */
 const PLACE_LS='semaphore-place-sites';
 let placeSites=(()=>{try{const x=JSON.parse(localStorage.getItem(PLACE_LS)||'null');return Array.isArray(x)?x:[];}catch(e){return [];}})();
-/* a key on a shared host with nothing after the host names no one site;
-   otherwise one key may stand inside the other, as a partner-search page
-   inside its partnership's proposals site */
-function sameSite(a,b){
-  if(a===b)return true;
-  const s=a.length<b.length?a:b,l=s===a?b:a;
-  return s.indexOf('/')>0&&l.indexOf(s+'/')===0;
-}
 function inPlace(v){
   if(!placeSites.length||!inVenues(v))return false;
   return [v.url].concat(v.pages.map(p=>p.url)).filter(Boolean).map(siteKey)
@@ -2083,105 +1216,19 @@ function refreshPlace(){
     renderAll();renderDrawer();
   });
 }
-/* The board holds what still waits for Mark: a venue moved to Venues is
-   off it (Mark, 2026-10-23), on the arena rows and among the Shared venues
-   alike, whatever its section, Limbo and Mark's Place included. Until then
-   one stayed as a thin line on its arena's row, which he did not see, and
-   as a named row of its own among the Shared venues, which he did, and he
-   took the two for different rules. Its arena's panel still lists it, and
-   Back to the board brings it back. */
-const onBoard=v=>!inVenues(v);
+/* A venue new on the board or kept there to think about is still on
+   trial: the Call Board draws it under its calls, and its panel here
+   offers the three things to do with it. The board holds what still waits
+   for Mark, so a venue moved to Venues is off it, in any section, Limbo
+   and Mark's Place included (Mark, 2026-10-23); its arena's panel still
+   lists it, and Back to the board brings it back. */
 const onTrial=v=>v.place==='new'||v.place==='board';
-/* A venue's event days are its meeting days when they are a day or a span
-   of up to two weeks. A longer exact span is the stretch its marketplace is
-   open, and stands as its window; a month, a quarter or a year is a guess
-   at a season. */
-function isSpot(v){
-  if(!v.start)return false;
-  return v.gran==='day'||(v.gran==='range'&&T(v.end)-T(v.start)<=SPOT_MAX*DAY);
-}
-/* The window: from and to, either of which may be open (null), and the
-   meeting days inside it, ms and me, when it has any. Mark sets the two ends
-   (`opens`, `closes`) by dragging them; until he does, meeting days are
-   given three weeks before and two after, a long exact span is its own
-   window, and a season is its own stretch, marked as the guess it is. A
-   venue with no days and no ends at all has no window: it is not dated yet.
-   `set` says which ends are his. */
-function vWin(v){
-  const spot=isSpot(v);
-  const ms=spot?T(v.start):null,me=spot?T(v.end||v.start):null;
-  let from=v.opens?T(v.opens):null,to=v.closes?T(v.closes):null;
-  const set={from:from!==null,to:to!==null};
-  let season=false;
-  if(spot){
-    if(from===null)from=ms-LEAD_IN*DAY;
-    if(to===null)to=me+TAIL*DAY;
-    from=Math.min(from,ms);to=Math.max(to,me);
-  }else if(v.start){
-    season=!(v.gran==='range'&&v.grade==='fixed');
-    if(from===null)from=T(v.start);
-    if(to===null)to=T(v.end||v.start);
-  }
-  if(from===null&&to===null)return null;
-  return {from,to,ms,me,season:season&&!set.from&&!set.to,set,unc:v.start?v.grade!=='fixed':false};
-}
-/* Where a venue stands today, finely: undated, arising (its window still
-   ahead, or its season not yet dated), meeting (on its event days), active,
-   dying (past its event days, or in the last stretch of a window that has
-   none), over. The three sections of Venues are the three middle phases
-   (vPhase); over is Limbo. */
-function vState(v){
-  const w=vWin(v);if(!w)return 'undated';
-  const now=T(todayISO());
-  if(w.to!==null&&now>w.to)return 'over';
-  if(w.season||(w.from!==null&&now<w.from))return 'arising';
-  if(w.ms!==null)return now<w.ms?'active':now<=w.me?'meeting':'dying';
-  if(w.to!==null){
-    const tail=Math.min(DYING_MAX*DAY,w.from!==null?(w.to-w.from)/3:DYING_MAX*DAY);
-    return now>=w.to-tail?'dying':'active';
-  }
-  return 'active';
-}
-const PHASE={undated:'arising',arising:'arising',meeting:'active',active:'active',dying:'dying',over:'over'};
 /* The section a venue stands in. Mark can put one in another section by
    hand from its panel (2026-10-15), and there it stays (`phase`) until he
    gives it back to its dates; its window and its words keep saying what
    the dates say. */
 function vPhaseByDates(v){return PHASE[vState(v)];}
 function vPhase(v){return inPlace(v)?'place':v.phase||vPhaseByDates(v);}
-/* How much is going on at a venue at one moment, from 0 to 1: rising
-   through the window to its event days, full on them, falling away after;
-   flat where there are none, fading through the last stretch. It is the
-   shading of a window. */
-function vHeat(v,t){
-  const w=vWin(v);if(!w)return 0;
-  if((w.from!==null&&t<w.from)||(w.to!==null&&t>w.to+DAY))return 0;
-  if(w.ms!==null){
-    if(t<w.ms)return .3+.7*(t-w.from)/Math.max(DAY,w.ms-w.from);
-    if(t<=w.me+DAY)return 1;
-    return Math.max(.15,1-.85*(t-w.me-DAY)/Math.max(DAY,w.to-w.me));
-  }
-  if(w.season)return .35;
-  if(w.to!==null){
-    const tail=Math.min(DYING_MAX*DAY,w.from!==null?(w.to-w.from)/3:DYING_MAX*DAY);
-    if(t>w.to-tail)return Math.max(.15,.6-.45*(t-(w.to-tail))/Math.max(DAY,tail));
-  }
-  return .6;
-}
-/* the shading of a window drawn from x0 to x1 (times), as a gradient in
-   the colour `rgb` (three numbers), the heat at each stop as its strength */
-function heatBG(v,x0,x1,rgb){
-  const w=vWin(v);if(!w||x1<=x0)return '';
-  const pts=[x0,x1];
-  [w.from,w.ms,w.me!==null?w.me+DAY:null,w.to].forEach(t=>{if(t!==null&&t>x0&&t<x1)pts.push(t);});
-  if(w.to!==null&&w.ms===null&&!w.season){
-    const tail=Math.min(DYING_MAX*DAY,w.from!==null?(w.to-w.from)/3:DYING_MAX*DAY);
-    if(w.to-tail>x0&&w.to-tail<x1)pts.push(w.to-tail);
-  }
-  pts.sort((a,b)=>a-b);
-  return 'linear-gradient(90deg,'+pts.map(t=>'rgba('+rgb+','+(.1+.6*vHeat(v,Math.min(t,x1-1))).toFixed(2)+') '+
-    ((t-x0)/(x1-x0)*100).toFixed(1)+'%').join(',')+')';
-}
 function lastVisit(v){const n=v.visits.length;return n?v.visits[n-1]:null;}
 function vSince(v){const x=lastVisit(v);return x?daysBetween(T(x.at),T(todayISO())):null;}
 /* How often a venue wants a visit. Where it stands sets the base: on its
@@ -2232,19 +1279,6 @@ function vYieldSay(v){
   return y.n+' visit'+(y.n===1?'':'s')+(y.found?' · '+y.found+' found':'')+(y.leads?' · '+y.leads+' lead'+(y.leads===1?'':'s'):'');
 }
 function vHost(v){return v.url?linkName({url:v.url}):'';}
-const tDay=t=>shortDay(new Date(t).toISOString().slice(0,10));
-function vDateSay(v){
-  const st=vState(v),w=vWin(v);
-  const meets=v.start?(v.grade==='fixed'?'':'≈ ')+shortDate(v):'';
-  switch(st){
-    case 'undated':return 'not dated yet';
-    case 'arising':return w.season?'expected '+meets:'opens '+tDay(w.from)+(w.ms!==null?' · meets '+meets:'');
-    case 'meeting':return 'meeting now · until '+tDay(w.to);
-    case 'active':return w.ms!==null?'meets '+meets:w.to!==null?'until '+tDay(w.to):'open, no end set';
-    case 'dying':return (w.ms!==null?'met '+meets+' · ':'')+'closes '+tDay(w.to);
-    default:return 'closed '+tDay(w.to)+(w.ms!==null?' · met '+meets:'');
-  }
-}
 /* Where it stands, in the board's words: new, kept, or in Venues and in
    which section of it */
 const PLACE_SAY={new:'New on the board',board:'Kept on the board',venues:'In Venues',gone:'Removed'};
@@ -2376,7 +1410,7 @@ document.addEventListener('visibilitychange',cameBack);
 window.addEventListener('focus',cameBack);
 
 /* ── a venue's window, drawn ──
-   The same band on the board's lanes and on the Venues strip: the window
+   The same band on the Venues strip and in a venue's panel: the window
    shaded by its heat in the colour of where the venue stands (the
    brokerage red in Venues, the new hue while new, bone while kept), a
    dashed edge while it is a season's guess, its two ends to drag, and its
@@ -2384,11 +1418,8 @@ window.addEventListener('focus',cameBack);
    middle of the band in pixels, or null for the middle of the strip.
 
    A window with no end runs on six weeks past today and fades out there
-   with an arrow, rather than to the strip's edge: drawn to the edge, every
-   standing partner search was a thick bar across the whole board (Mark,
-   2026-10-15). Its end can still be dragged to give it a real one. */
-const OPEN_RUN=42;          /* days an open-ended window is drawn past today */
-const PLACE_RGB={new:'185,227,90',board:'150,140,122',venues:'239,91,76',gone:'125,116,102'};
+   with an arrow (OPEN_RUN, in shell/venues.js). Its end can still be
+   dragged to give it a real one. */
 function bandHTML(v,t0,t1,top,label){
   const w=vWin(v);if(!w)return '';
   const P=t=>(t-t0)/(t1-t0)*100,C=x=>Math.max(0,Math.min(100,x));
@@ -2415,8 +1446,8 @@ function bandHTML(v,t0,t1,top,label){
   return h;
 }
 /* ── dragging a window's ends ──
-   Mark sets how long a venue is active by its two ends (2026-10-15), on the
-   board and on Venues alike, which are one record and so stay in step. The
+   Mark sets how long a venue is active by its two ends (2026-10-15), on
+   Venues and in its panel alike, which are one record and so stay in step. The
    end follows the pointer by the day, held by the event days (a window
    cannot open after them or close before them) and by the other end; the
    day it would take is said beside the pointer, and letting go keeps it. A
@@ -2523,12 +1554,12 @@ document.addEventListener('dblclick',e=>{
 
    The order is fixed by what a venue is, never by what was done to it
    (Mark, 2026-10-15: "don't change the order upon checking"): the venues
-   serving two arenas or more first, as one block, as on the board; then
-   each type's own, in his order of types; inside each, by the start of the
-   window, those open from before the strip first and the undated last.
-   Each group stands under a thin band in its type's colour, as the board's
-   groups do, the shared ones under Shared (Mark asked for the order without
-   headings first, and for the headings the same evening, 2026-10-15). */
+   serving two arenas or more first, as one block; then each type's own,
+   in his order of types; inside each, by the start of the window, those
+   open from before the strip first and the undated last. Each group
+   stands under a thin band in its type's colour, the shared ones under
+   Shared (Mark asked for the order without headings first, and for the
+   headings the same evening, 2026-10-15). */
 function nowSpan(){const now=T(todayISO());return {now,t0:now-NOW_BACK*DAY,t1:now+NOW_AHEAD*DAY};}
 function vTrackHTML(v,sp){
   const{now,t0,t1}=sp;
@@ -2748,7 +1779,7 @@ function vFactsHTML(v){
    to Venues, keep it on the board to think about, or remove it. In Venues
    it can go back to the board. */
 function vPlaceHTML(v){
-  const found=v.foundAt?' <i>found by the agent '+esc(shortDay(v.foundAt.slice(0,10)))+'</i>':'';
+  const found=v.foundAt?' <i>found '+esc(shortDay(v.foundAt.slice(0,10)))+'</i>':'';
   if(onTrial(v))return '<div class="vplace st-'+v.place+'"><span><b>'+PLACE_SAY[v.place]+'</b>'+found+'</span>'+
     '<button class="btn primary" data-act="vPlace" data-v="'+v.id+'" data-p="venues" title="Move it to Venues, where it comes round for visits">→ Venues</button>'+
     (v.place==='new'?'<button class="btn" data-act="vPlace" data-v="'+v.id+'" data-p="board" title="Leave it on the board to think about">Keep on board</button>':'')+
@@ -2787,7 +1818,7 @@ function venueReadHTML(v){
       (v.opens||v.closes?'<button class="vreset" data-act="vWinReset" data-v="'+v.id+'" title="Give both ends back to their default">reset</button>':'')+'</p>'+
       vLifeHTML(v)+
       '<dl class="vdl">'+vFactsHTML(v)+(v.note?'<dt>basis</dt><dd>'+esc(v.note)+'</dd>':'')+'</dl>'+
-      (w?'<p class="fhint">Drag either end of the band, here, on the board or on Venues, to say how long it is active.</p>':'')+
+      (w?'<p class="fhint">Drag either end of the band, here or on Venues, to say how long it is active.</p>':'')+
     '</section>'+
     '<section class="vps"><p class="vph">Rhythm</p>'+vEveryHTML(v)+'</section>'+
     '<section class="vps"><p class="vph">Visits <i>'+esc(vYieldSay(v))+'</i></p>'+
@@ -3298,13 +2329,6 @@ function bkPos(a){return typeof a.bkPos==='number'?a.bkPos:1e9;}
 
 const daysBetween=(a,b)=>Math.round((b-a)/DAY);
 
-/* this year is understood, so it goes unsaid */
-const trimYear=s=>{const y=' '+new Date().getFullYear();return s.endsWith(y)?s.slice(0,-y.length):s;};
-const shortDay=iso=>trimYear(fmtDay(iso));
-const shortDate=dt=>(dt.gran==='range'&&dt.start&&dt.end)
-  ? shortDay(dt.start)+' \u2013 '+shortDay(dt.end)
-  : trimYear(dispDate(dt));
-
 /* What a visit turned up. A lead is open until you tick it off; a done one stays
    in the record, because "did this arena ever produce anything" is a question
    worth being able to answer. */
@@ -3335,20 +2359,27 @@ function sortedDone(a){return doneLeads(a).slice().sort((x,y)=>
   String(y.doneAt||'').localeCompare(String(x.doneAt||''))||leadName(x).localeCompare(leadName(y)));}
 function leadName(l){return l.project||(l.links[0]?linkName(l.links[0]):'')||'Untitled lead';}
 
-/* What the nightly agents brought, and whether you have looked since. A date
-   or a link that comes in through Dispatches, or in a file imported with it,
-   carries `foundAt`, the moment it was accepted, and reads as new until Mark
-   marks the arena seen (`seenAt`), with the tick on its row, in the tray or
-   in its panel. Until 2026-10-17 shutting the panel marked it seen, and a
-   glance at an arena cleared what he had meant to come back to; he asked
-   for the new to stay until he checks it off. Before any of this an
-   accepted finding simply joined the arena and looked exactly like
-   something typed by hand, so a morning's Accept all left nothing to say
-   what had changed. */
+/* What a search brought, and whether you have looked since. A date or a
+   link put on the board by ChatGPT's search or the agent carries `foundAt`,
+   the moment it landed, and reads as new until Mark marks the arena seen
+   (`seenAt`), with Seen on its call's row on the Call Board or in its
+   panel here. Dates are not judged before they land, as venues and arenas
+   are, but go straight on and glow until then (Mark, 2026-10-24). Until
+   2026-10-17 shutting the panel marked it seen, and a glance at an arena
+   cleared what he had meant to come back to; he asked for the new to stay
+   until he checks it off. Before any of this an accepted finding simply
+   joined the arena and looked exactly like something typed by hand, so a
+   morning's Accept all left nothing to say what had changed. */
 function isFresh(a,x){return !!(x&&x.foundAt)&&(!a.seenAt||x.foundAt>a.seenAt);}
 function freshItems(a){
   const bk=a.brokerage||{links:[]};
   return (a.dates||[]).concat(bk.links||[],a.links||[]).filter(x=>isFresh(a,x));
+}
+/* Seen: the glow goes, and with it the date each corrected one replaced,
+   which only the glowing row says */
+function seeArena(a){
+  a.seenAt=new Date().toISOString();
+  (a.dates||[]).forEach(d=>{delete d.was;});
 }
 function foundTitle(x){
   return 'Found by the nightly agent'+(x.foundAt?' — accepted '+shortDay(x.foundAt.slice(0,10)):'')+
@@ -3397,55 +2428,9 @@ function wallLinks(a,scope,rows){
   return '<div class="wlinks" data-a="'+a.id+'" data-lks="'+scope+'">'+rows+'</div>';
 }
 /* ---- a call's run ----
-   The stages of one call — Stage 1 and Stage 2, pre- and full proposals,
-   outline and full proposal, PO and FPP (Mark, 2026-10-18) — are one bar with a notch at each earlier
-   deadline (`callBase`), and calls with exactly the same dates are one bar,
-   because a cluster's work programme opens a dozen topics on the same two
-   days and a dozen identical bars say nothing. Drawn so on the rotation
-   cards first (Mark, 2026-10-07), and on the board since; the cards went
-   with the Marketplace (2026-10-14). */
-function callBase(n){
-  return String(n||'').replace(/\s*\(expected\)/ig,'')
-    .replace(/\s*[–—-]\s*(stage\s*\d|pre-?proposals?|full( project)? proposals?|project outline|(?:po|fpp)\b).*$/i,'')
-    .replace(/[\s\/]+stage\s*\d.*$/i,'').trim();
-}
-function callRuns(a){
-  const now=T(todayISO()),by=new Map();
-  for(const d of a.dates||[]){
-    if(d.kind!=='call'||!d.start||d.gran==='none')continue;
-    const k=callBase(dtLabel(d))||dtLabel(d);
-    if(!by.has(k))by.set(k,{all:[],opens:[],anns:[],dls:[]});
-    const r=by.get(k);
-    r.all.push(d);
-    (d.role==='deadline'?r.dls:d.role==='announcement'?r.anns:r.opens).push(d);
-  }
-  const byStart=(x,y)=>T(x.start)-T(y.start);
-  const merged=new Map();
-  for(const r of by.values()){
-    r.opens.sort(byStart);r.anns.sort(byStart);r.dls.sort(byStart);
-    /* a bar opens on the publication; the announcement window is only the
-       opening when no publication is known. It is uncertain when either of
-       its two ends is — ITEA's call was drawn dashed for a vague
-       announcement month although its publication and deadline were fixed */
-    r.open=r.opens[0]||r.anns[0]||null;
-    r.close=r.dls[r.dls.length-1]||null;
-    r.unc=[r.open,r.close].some(d=>d&&d.grade!=='fixed');
-    r.next=r.dls.find(d=>T(d.end||d.start)>=now)||null;
-    /* a publication with no deadline recorded is taken as open for a year,
-       which is longer than any call here runs, and closed after that */
-    const endT=r.close?T(r.close.end||r.close.start):T(r.open.start)+365*DAY;
-    r.state=endT<now?'closed':(r.open&&T(r.open.start)>now?'soon':'open');
-    const key=(r.open?r.open.start:'')+'|'+r.dls.map(d=>d.start).join(',')+'|'+r.unc;
-    if(merged.has(key))merged.get(key).all.push(...r.all);else merged.set(key,r);
-  }
-  const all=[...merged.values()];
-  const when=r=>r.state==='open'?(r.next?T(r.next.start):9e15):T(r.open.start);
-  const live=all.filter(r=>r.state!=='closed')
-    .sort((x,y)=>(x.state==='soon')-(y.state==='soon')||when(x)-when(y));
-  const last=all.filter(r=>r.state==='closed')
-    .sort((x,y)=>T(y.close?y.close.start:y.open.start)-T(x.close?x.close.start:x.open.start))[0]||null;
-  return {live,last,all};
-}
+   How the stages of one call, and the calls that share their dates, come
+   together as one bar is reckoned in shell/venues.js ("a call's run"),
+   which the Call Board and Mark's Place read too. */
 /* the calls on one bar, each named once, and the dates the bar runs between */
 function runTip(r){
   const names=[...new Set(r.all.map(dtLabel))];
@@ -3457,14 +2442,16 @@ function runTip(r){
   const brk=wk>=0?'\nFor brokerage: '+wk+(wk===1?' week':' weeks')+' to the first deadline':'';
   return names.join('\n')+'\n'+span+stages+brk+(r.unc?'\nUncertain':'');
 }
-/* ---- the calls, lent to the Call Board ----
+/* ---- the board, lent to the Call Board ----
    The Call Board draws every arena's calls beside the Horizon ones (Mark,
    2026-10-24), one row to a call with the arena named on its chip. It is
    handed the runs as they are worked out here, so the stages of one call
-   and the calls that share their dates come out as one bar there just as
-   they do on this board, and a second reading of the dates never drifts
-   from this one. The dates travel as stored, with how exact each is; the
-   Board writes them its own way. Frozen arenas stay put away. */
+   and the calls that share their dates come out as one bar there, and a
+   second reading of the dates never drifts from this one. The dates travel
+   as stored, with how exact each is; the Board writes them its own way. A
+   run says whether a date on it is new since the arena was last seen, and
+   what a corrected one was, so its row can glow there until Seen. Frozen
+   arenas stay put away. */
 function callsForBoard(){
   const day=d=>d?{start:d.start,end:d.end||d.start,gran:d.gran,grade:d.grade==='fixed'?'fixed':'uncertain'}:null;
   const out=[];
@@ -3477,11 +2464,80 @@ function callsForBoard(){
       names:[...new Set(r.all.map(dtLabel))],
       open:day(r.opens[0]),ann:day(r.anns[0]),dls:r.dls.map(day),
       unc:r.unc,state:r.state,
+      fresh:r.all.some(d=>isFresh(a,d)),
+      was:r.all.filter(d=>d.was&&isFresh(a,d)).map(d=>ROLES[d.role].short+' was '+d.was),
       url:(r.all.find(d=>d.url)||{}).url||'',
       note:(r.all.find(d=>d.note)||{}).note||''}));
     return {id:a.id,name:a.name,type:t?t.name:'',leads:openLeads(a).length,
       links:(a.links||[]).filter(l=>l&&l.url).map(l=>({label:l.label||'',url:l.url})),runs};
   });
+}
+/* The venues still on the board, new or kept there to think about: the
+   Call Board draws the kept ones as lanes under the calls they serve, and
+   puts each new one to Mark in turn. A venue in Venues is off the board,
+   in any section, Limbo and Mark's Place included (Mark, 2026-10-23), and
+   one whose arenas are all in the freezer is put away with them. Each goes
+   as a copy, with the fields its window is reckoned from. */
+function venuesForBoard(){
+  return (S.venues||[]).filter(v=>onTrial(v)&&liveVenue(v)).map(v=>({
+    id:v.id,name:v.name,url:v.url,place:v.place,arenas:v.arenas.slice(),
+    gran:v.gran,start:v.start,end:v.end,grade:v.grade,opens:v.opens,closes:v.closes,
+    note:v.note||'',foundAt:v.foundAt||'',visits:v.visits.length,
+    pages:v.pages.map(p=>({label:p.label||'',url:p.url}))}));
+}
+/* What waits to be judged: every new venue, then every new arena
+   suggested, ChatGPT's from the board and the agent's from its table in
+   the cloud (see "new arenas, waiting to be judged"), each with the type
+   its choice starts on. One named like an arena already on the board says
+   so, and can only be turned down. */
+function findsForBoard(){
+  const arenaFind=(key,name,url,why,from)=>({kind:'arena',key,name,url:url||'',why:why||'',from,
+    type:guessType(name+' '+(why||'')),has:!!arenaNamed(name)});
+  return {
+    types:S.types.map(t=>({id:t.id,name:t.name})),
+    finds:(S.venues||[]).filter(v=>v.place==='new'&&liveVenue(v)).map(v=>({kind:'venue',key:'venue:'+v.id,id:v.id}))
+      .concat((S.suggested||[]).map(x=>arenaFind('sugg:'+x.id,x.name,x.url,x.why,'ChatGPT’s search')))
+      .concat(inbox.rows.map(r=>arenaFind('inbox:'+r.id,String(r.arena_name).trim(),r.url||r.source_url,r.note||r.evidence,'the agent')))
+  };
+}
+/* A find, judged on the Call Board: `key` names it as findsForBoard did,
+   `verb` is what Mark pressed and `type` the type a new arena goes into.
+   A venue goes to Venues, stays on the board to think about, or is
+   removed, leaving the stub that keeps it from being brought back; an
+   arena is added or turned down, the agent's answered in the cloud first.
+   `done` hears an error, or nothing. */
+function judgeFind(key,verb,type,done){
+  const i=String(key||'').indexOf(':'),kind=key.slice(0,i),id=key.slice(i+1);
+  const end=err=>{if(done)done(err||null);};
+  if(kind==='venue'){
+    const v=venue(id);if(!v)return end('That venue is no longer on the board.');
+    if(verb==='gone'){dropVenue(v.id);return end();}
+    if(verb!=='venues'&&verb!=='board')return end('Not a place for a venue.');
+    v.place=verb;
+    if(verb==='board')delete v.phase;else S.ui.nowTab=vPhase(v);
+    save();renderAll();return end();
+  }
+  if(kind==='sugg'){
+    const x=(S.suggested||[]).find(y=>y.id===id);if(!x)return end('That suggestion has been judged already.');
+    S.suggested=S.suggested.filter(y=>y!==x);
+    if(verb==='add'&&!arenaNamed(x.name))arenaFrom(x.name,type,x.url,x.why);
+    save();renderAll();return end();
+  }
+  if(kind==='inbox'){
+    const api=(typeof Hub!=='undefined'&&Hub.api)?Hub.api('semaphore-inbox'):null;
+    const r=inbox.rows.find(x=>String(x.id)===id);
+    if(!r)return end('That suggestion has been judged already.');
+    if(!api||!api.ready())return end('Not connected: the agent’s suggestions are answered in the cloud.');
+    api.decide(r.id,verb==='add'?'accepted':'dismissed',err=>{
+      if(err)return end('Not answered — '+err);
+      inbox.rows=inbox.rows.filter(x=>x!==r);
+      const name=String(r.arena_name).trim();
+      if(verb==='add'&&!arenaNamed(name))arenaFrom(name,type,r.url||r.source_url,r.note||r.evidence);
+      save();renderAll();end();
+    });
+    return;
+  }
+  end('Not a find this room knows.');
 }
 function linkHost(lk){
   try{return new URL(lk.url).hostname.replace(/^www\./,'');}catch(e){return '';}
@@ -4275,34 +3331,16 @@ function paintWall(){
 }
 function applyView(){
   const v=S.ui.view;
-  $('#board').hidden=v!=='board';
   $('#wall').hidden=v!=='leads';
-  $('#dispatch').hidden=v!=='dispatch';
   $('#now').hidden=v!=='now';
-  document.querySelectorAll('#viewseg button, #leadsBtn, #dispatchBtn').forEach(b=>
+  document.querySelectorAll('#viewseg button, #leadsBtn').forEach(b=>
     b.classList.toggle('on',b.dataset.v===v));
-  /* how many venues are due for a visit, on the Venues tab, and how many
-     are new on the board, on the Board's, in the new hue */
+  /* how many venues are due for a visit, on the Venues tab */
   const tab=document.querySelector('#viewseg button[data-v=now]');
   if(tab){
     const n=visibleVenues().filter(vDue).length;
     tab.querySelector('.tabn')?.remove();
     if(n)tab.insertAdjacentHTML('beforeend','<span class="tabn">'+n+'</span>');
-  }
-  const btab=document.querySelector('#viewseg button[data-v=board]');
-  if(btab){
-    const n=visibleVenues().filter(v=>v.place==='new').length;
-    btab.querySelector('.tabn')?.remove();
-    if(n)btab.insertAdjacentHTML('beforeend','<span class="tabn newn" title="'+n+' new on the board">'+n+'</span>');
-  }
-  /* The findings are read from the cloud, so this count is what was last read
-     and not a promise about what is there now — which is why the tab says
-     nothing at all until the view has been opened once. */
-  const dtab=document.querySelector('#dispatchBtn');
-  if(dtab){
-    const n=finds.state==='ready'?finds.rows.length:0;
-    dtab.querySelector('.tabn')?.remove();
-    if(n)dtab.insertAdjacentHTML('beforeend','<span class="tabn dpn">'+n+'</span>');
   }
 }
 /* every change to a lead goes through here, so what shows is redrawn in one place */
@@ -4481,10 +3519,8 @@ function leadMove(card,fn){
 /* the card a press came from, found from the press */
 const cardOf=el=>el&&el.closest&&el.closest('article.lead');
 function repaint(){
-  if(S.ui.view==='now')renderNow();
-  else if(S.ui.view==='leads')renderWall();
-  else if(S.ui.view==='dispatch')renderDispatch();
-  else renderBoard();
+  if(S.ui.view==='leads')renderWall();
+  else renderNow();
 }
 function restack(){
   closeComposers();save();
@@ -4734,8 +3770,8 @@ function seed(){
   migrate(S);          /* the example set goes in in the same shape as anything else */
   const po=(S.venues||[]).find(v=>/^PO Days/.test(v.name));
   if(po&&po.start){po.opens=po.start.slice(0,8)+'01';po.closes=po.start.slice(0,8)+'28';}
-  /* and one of each place on the board, so the tray has something to show:
-     a find of the agent's still new, another kept to think about */
+  /* and one of each place on the board, so the Call Board has a find to put
+     to Mark and a lane to draw: one still new, another kept to think about */
   const found=new Date().toISOString();
   const cm=(S.venues||[]).find(v=>/^Cities Mission/.test(v.name));
   if(cm){cm.place='new';cm.foundAt=found;}
@@ -4971,7 +4007,6 @@ function mergeTypes(from,to){
     (n?to.name+', in '+to.name+'’s colour, and ':'')+from.name+' is removed.','Merge',()=>{
       S.arenas.forEach(a=>{if(a.typeId===from.id)a.typeId=to.id;});
       S.types=S.types.filter(t=>t!==from);
-      delete S.ui.collapsed[from.id];
       tyOpen.delete(from.id);if(n)tyOpen.add(to.id);
       save();typesShown();
     });
@@ -5180,7 +4215,6 @@ document.addEventListener('click',e=>{
   /* an open colour menu takes the press that shuts it, as the Ledger's does,
      unless the press is on a dot, which opens that one instead */
   if(colOpen&&!e.target.closest('.lcolpop,[data-act=typeColMenu]')){colOpen=null;typesShown();return;}
-  if(sortOpen&&!e.target.closest('.whmenu,[data-act=boardSort]')){sortOpen=false;renderBoard();return;}
   const b=e.target.closest('[data-act]');
   if(!b)return;
   const act=b.dataset.act,id=b.dataset.id,a=arena(b.dataset.a||id);
@@ -5197,7 +4231,6 @@ document.addEventListener('click',e=>{
     case 'openGpt':openGpt();break;
     case 'gptWrite':gptWrite();break;
     case 'gptPut':gptPut();break;
-    case 'gptAdd':gptAdd(+b.dataset.i,b);break;
     case 'openArena':openDrawer(id);break;
     case 'openDate':openDrawer(b.dataset.a,b.dataset.d);break;
     case 'closeDrawer':closeDrawer();break;
@@ -5299,10 +4332,7 @@ document.addEventListener('click',e=>{
     case 'thaw':{const ar=arena(id);if(!ar)break;
       ar.frozenAt=null;save();renderAll();break;}
     case 'toggleFreezer':S.ui.freezerOpen=!S.ui.freezerOpen;save();renderFreezer();break;
-    case 'trayKept':S.ui.keptOpen=!S.ui.keptOpen;save();renderBoard();break;
-    case 'seenArena':{const a=arena(b.dataset.id);if(!a)break;a.seenAt=new Date().toISOString();save();renderAll();break;}
-    case 'seenAll':{const at=new Date().toISOString();for(const a of S.arenas)if(freshItems(a).length)a.seenAt=at;save();renderAll();break;}
-    case 'shOpen':{const k=b.dataset.v;if(S.ui.shOpen[k])delete S.ui.shOpen[k];else S.ui.shOpen[k]=true;save();renderBoard();break;}
+    case 'seenArena':{const a=arena(b.dataset.id);if(!a)break;seeArena(a);save();renderAll();break;}
     /* Quick, but not one slip from gone: the first press turns the cross into
        the word, a second within three seconds removes the link. The button is
        changed in place rather than redrawn, so nothing else on the wall moves
@@ -5316,27 +4346,11 @@ document.addEventListener('click',e=>{
       const k=list.findIndex(l=>l.id===b.dataset.l);
       if(k>=0)list.splice(k,1);
       relinked();break;}
-    case 'setView':{const v=b.dataset.v;
-      S.ui.view=['now','leads','dispatch'].includes(v)?v:'board';
+    case 'setView':{
+      S.ui.view=b.dataset.v==='leads'?'leads':'now';
       save();renderAll();
-      /* the findings are asked for when you come to look at them, and again
-         every time you come back: a list read an hour ago is a list another
-         machine may have answered since */
-      if(S.ui.view==='dispatch'||S.ui.view==='board')loadFinds();
       if(S.ui.view==='now')refreshPlace();
       break;}
-    case 'findRefresh':loadFinds();break;
-    case 'findAll':{
-      const n=finds.rows.length;
-      Ask.ask('Accept all '+n+'?',
-        'Every finding in the list goes on the board: new dates, corrected dates, '+
-        'links, new arenas, and new About and Brokerage texts in place of the old. Nothing is dismissed. A single one can be taken off '+
-        'the board again afterwards, but not all at once.',
-        'Accept all '+n,acceptAllFinds);
-      break;
-    }
-    case 'findTake':answerFind(b.dataset.f,true);break;
-    case 'findDrop':answerFind(b.dataset.f,false);break;
     /* ── venues ── */
     case 'openVenue':if(venue(b.dataset.v))openVenue(b.dataset.v);break;
     /* The link opens the site by itself; the press is the visit. The room
@@ -5390,7 +4404,7 @@ document.addEventListener('click',e=>{
       save();renderAll();break;}
     /* In Limbo every venue is there to be let go, and asking each time would
        make clearing it a question per row, as on Coming up; a new one on the
-       board is a press to turn down, as Dispatches' Dismiss was. Anywhere
+       board is a quick press to turn down, nothing of his on it yet. Anywhere
        else a stray press must not lose one with its visits. */
     case 'vDrop':{const v=venue(b.dataset.v);if(v)dropVenue(v.id);break;}
     case 'vRemove':{const v=venue(b.dataset.v);if(!v)break;
@@ -5441,9 +4455,6 @@ document.addEventListener('click',e=>{
     case 'editBrokerage':{openDrawer(id);drawer.editing=true;drawer.scope='brokerage';renderDrawer();
       const ta=$('#card textarea[data-field=bknotes]');if(ta)ta.focus();break;}
     case 'openSearch':applySearchBox(true);$('#search').focus();break;
-    case 'toggleGroup':S.ui.collapsed[id]=!S.ui.collapsed[id];save();renderBoard();break;
-    case 'boardSort':sortOpen=!sortOpen;renderBoard();break;
-    case 'boardSortSet':sortOpen=false;S.ui.boardSort=b.dataset.v==='mine'?'mine':'date';save();renderBoard();break;
     case 'openQuick':$('#quickModal').classList.add('open');$('#quickText').focus();break;
     case 'openTypes':renderTypes();$('#typesModal').classList.add('open');break;
     case 'closeModals':closeModals();break;
@@ -5457,8 +4468,8 @@ document.addEventListener('click',e=>{
       if(n){Ask.tell('Still in use',
         n+' arena'+(n===1?' still uses':'s still use')+' this type. Give '+
         (n===1?'it':'them')+' another type, or merge this one into another, and it can go.');break;}
-      /* The last type stays: a new arena, typed or accepted from Dispatches,
-         is filed under the first type there is, and with none + Arena threw
+      /* The last type stays: a new arena, typed or added from a suggestion,
+         is filed under a type there is, and with none + Arena threw
          and an accepted finding was lost after the cloud had marked it taken. */
       if(S.types.length<2){Ask.tell('The last type','A board keeps at least one type. Rename this one instead.');break;}
       S.types=S.types.filter(t=>t.id!==id);save();renderTypes();renderAll();break;}
@@ -5753,7 +4764,6 @@ document.addEventListener('keydown',e=>{
   if(Cal.isOpen()){Cal.close();return;}                     /* the calendar */
   if(tdDrag){tdCancel();return;}                             /* a type or arena being dragged */
   if(colOpen){colOpen=null;typesShown();return;}             /* a colour menu */
-  if(sortOpen){sortOpen=false;renderBoard();return;}         /* the board's order */
   if(Ask.isOpen()){Ask.shut();return;}                       /* the question */
   if(document.querySelector('.modal.open')){closeModals();return;}   /* a sheet */
   if(leadEdit.a||noteEdit.a||endAsk.a){  /* a composer, put away in its own card */
@@ -5902,10 +4912,9 @@ document.addEventListener('click',e=>{
 
 renderAll();
 /* The bridge, which holds the one connection this app has, is loaded after
-   every room and the Supabase library after that. So a board that opens on
-   this view asks for its findings a moment later rather than at mount, when
+   every room and the Supabase library after that, so the sites Mark's
+   Place copies are asked for a moment later rather than at mount, when
    there would be nothing to ask. */
-if(S.ui.view==='dispatch'||S.ui.view==='board')setTimeout(loadFinds,800);
 setTimeout(refreshPlace,800);
 
 
@@ -5926,13 +4935,21 @@ try{
     leads:      function(){ return leadsForBoard(); },
     leadVerb:   function(aid,lid,op,val){ return leadVerb(aid,lid,op,val); },
     arenas:     function(){ return arenasForBoard(); },
-    /* every live arena with its calls, for the Call Board — see "the
-       calls, lent to the Call Board" */
+    /* the board as the Call Board draws it and judges it — see "the
+       board, lent to the Call Board": every live arena with its calls, the
+       venues still on the board, what waits to be judged and how it was
+       judged, and Seen on an arena's new dates */
     calls:      function(){ return callsForBoard(); },
+    venues:     function(){ return venuesForBoard(); },
+    finds:      function(){ return findsForBoard(); },
+    refreshFinds:function(done){ loadFinds(done); },
+    judge:      function(key,verb,type,done){ judgeFind(key,verb,type,done); },
+    seen:       function(aid){ const a=arena(aid); if(a){ seeArena(a); save(); renderAll(); } },
     leadAdd:    function(aid,v){ return leadAdd(aid,v); },
     /* every lead, closed ones too, for the weekly Excel the bridge writes */
     allLeads:   function(){ return leadsForExcel(); },
     openArena:  function(aid){ if(arena(aid))openDrawer(aid); },
+    openVenue:  function(vid){ if(venue(vid))openVenue(vid); },
     /* Escape, for when the drawer is lent to another room and this room's
        own key handler is not the one listening: the innermost thing first,
        as that handler does. */

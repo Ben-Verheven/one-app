@@ -57,7 +57,7 @@ const http = (v: unknown) => {
   return s && /^https?:\/\//i.test(s) ? s : null;
 };
 
-// ── venues, as the app reads them (semaphore.js, "venues"): kept the same ──
+// ── venues, as the app reads them (one-app/shell/venues.js for the site, semaphore.js, "venues", for the rest): kept the same ──
 const linkKey0 = (u: unknown) =>
   String(u ?? "").trim().toLowerCase().replace(/^https?:\/\//, "")
     .replace(/^www\./, "").replace(/[#?].*$/, "").replace(/\/+$/, "");

@@ -13,66 +13,45 @@ the end.
   formed and their leaders, partners second (2026-10-15). A **venue** is such
   a place, a brokerage event's marketplace or a partner search, serving one
   arena or several.
-- Everything lands on the Board first; Venues holds only what he moved
+- Everything lands on the board first; Venues holds only what he moved
   there; Leads holds what came of it.
 
-## The Board
+## The board
 
-Its arenas' calls are drawn on the Call Board too since 2026-10-24, and the
-Board itself is to go there; what was agreed is in
-[call-board](call-board.md). Until it goes, what follows holds.
+Since 2026-10-24 the board is drawn on the Call Board, and the Board view,
+its tray and Dispatches went there ([call-board](call-board.md)); what the
+Board itself was is summed up at the end. What still holds of it:
 
 - **The way in** (2026-10-15). What is found (brokerage events, partner
-  searches, tools) stands on the board marked new, in a lime of its own with
-  a glowing edge, and the tray over the board lists each until he acts:
-  **→ Venues**, **Keep** on the board to think about, or **Remove**, which
-  leaves a stub (`place: gone`) so it is not brought back. Published call
-  dates simply go on the board.
-- **What is new on an arena is seen on the board until he checks it off**
-  (2026-10-17): a call with a new date or stage glows on its row, the row
-  says "N new ✓", the tray lists each such arena with Seen, and Seen is the
-  only way back; closing the arena's panel does not mark it seen. A file
-  whose `foundAt` is the moment it was written shows its dates as new.
-- It always shows last month and the next twelve. There is no filter panel,
-  colour key or time-window control; all of them went on 2026-10-09, with
-  Search put in their place.
-- **Nothing overlaps and nothing clutters** (2026-10-15, after "a total
-  clutter" on his real board): each venue gets a track of its own on its
-  arena's row wherever it would touch another, its name inside its band or
-  after it. A venue serving two arenas or more stands once, in a **Shared
-  venues** group over the types: one folded line with a caret; unfolded, its
-  arenas one to a line with their calls, tied by a rule down the left, the
-  venue's window shaded behind them and its event days a line through them.
-  An arena's row says "+N shared". Tags two to a line under a shared venue's
-  name were turned down, since they lined up with nothing.
+  searches, tools) lands new and waits until he acts: **→ Venues**, **Keep**
+  on the board to think about, or **Remove**, which leaves a stub (`place:
+  gone`) so it is not brought back. Since 2026-10-24 the Call Board puts
+  each to him in turn. Published call dates simply go on the board.
+- **What is new on an arena is seen until he checks it off** (2026-10-17):
+  a call with a new date or stage glows on its row, now the Call Board's,
+  and Seen there or in the arena's panel is the only way back; closing the
+  panel does not mark it seen. A file whose `foundAt` is the moment it was
+  written shows its dates as new.
 - **A venue in Venues, in any section, Mark's Place and Limbo included, is
-  off the board** (2026-10-23), on the arena rows and among the Shared
-  venues alike; its arena's panel still lists it, and Back to the board
-  brings it back. It replaced thin nameless lines he did not notice. A board
-  of calls and marks only, with no venues at all, was turned down
-  (2026-10-15).
+  off the board** (2026-10-23); its arena's panel still lists it, and Back
+  to the board brings it back. It replaced thin nameless lines he did not
+  notice. A board of calls and marks only, with no venues at all, was turned
+  down (2026-10-15).
 - A window with no end runs six weeks past today and fades out with an
-  arrow, here and on Venues, rather than running to the edge.
-- **A call in stages is drawn full strength only up to its first deadline**
-  (2026-10-16), the pre-proposal or the full proposal, whichever comes
-  first, since publication to that deadline is what matters for brokerage;
-  a thin line runs on to the last, and the strong part goes grey once the
-  first deadline has passed. Its hover says how many weeks it leaves for
-  brokerage. He likes the board's look and wanted little else changed.
+  arrow, on Venues and under the Call Board's calls alike, rather than
+  running to the edge.
 - **Uncertain is a dashed outline**, the one way the whole room draws it
   (2026-10-07).
-- The heading over the names chooses the order: **My order** (his own order
-  of arenas, set in Types) or **By date** (the soonest deadline, opening or
-  event first). A status column (Open / Opens / Between) stood there from
-  2026-10-07 to 10-11 and went at his asking.
-- The names column is widened or narrowed by dragging its edge, kept per
-  device (`ui.nameW`).
+- His own order of the arenas within a type, set in Types, is the order the
+  Call Board's tabs list them in.
+- The freezer stands under Venues since the Board, whose footnote it was,
+  went (2026-10-24): the quietest place left for it. Mark has not chosen it.
 
 ## Venues
 
 - **A venue is a window of activity** (2026-10-15), with no difference left
   between events and tools. He sets it by dragging either end of its band,
-  on the Board or on Venues (one record, so the two agree; a double-click on
+  on Venues or in its panel (one record, so the two agree; a double-click on
   an end gives it back its default). Event days stand as diamonds inside it,
   and the window is shaded by how much goes on, rising to the event days and
   falling after. Of three first pages drawn he chose this strip of time over
@@ -83,7 +62,7 @@ Board itself is to go there; what was agreed is in
   Mark's Place copies stands there whatever its dates say and never falls
   due, since Mark's Place reads it every night (`inPlace`).
 - **A fixed order that a visit never changes** (2026-10-15): the venues
-  serving two arenas or more first, as on the board, then each type's own in
+  serving two arenas or more first, then each type's own in
   his order of types, each group under a thin band in its type's colour.
   Within a group, the venues he dragged by the small mark at the left of a
   row stand in his order (`vpos`, held across every tab), and the rest after
@@ -122,8 +101,10 @@ Board itself is to go there; what was agreed is in
   ChatGPT hands back a list of changes, not the board again, which is read
   back in the same box (pasted, or as its file), shown change by change with
   what was left out and why and how many arenas it did not reach, and put on
-  the board only on **Put on the board**, glowing new as every find does,
-  after a Ledger restore point. It can add and correct call dates and
+  the board only on **Put on the board**, after a Ledger restore point; its
+  new dates glow until Seen, and its new venues and the new arenas it
+  suggests are then judged one at a time on the Call Board (2026-10-24),
+  where the app goes by itself. It can add and correct call dates and
   venues, add an arena to a venue and add a link; it cannot delete, rename
   or rewrite his texts. The leads, his visits and his venue notes stay out
   of the file. How is at "ChatGPT's search" in semaphore.js.
@@ -152,9 +133,11 @@ Board itself is to go there; what was agreed is in
   task is turned off, not deleted, and its gatekeeper stays so that a
   session can still read the board. **Ask agent** on a venue's panel and at
   the head of an arena's (2026-10-15) still sets the ask it took first.
-- **Dispatches is an inbox, not a way of looking at the board**, so it is a
-  button of its own beside the cloud chip (2026-10-09). Only a new arena the
-  agent suggests waits there (since 2026-10-14).
+- **Dispatches was an inbox, not a way of looking at the board**, a button
+  of its own beside the cloud chip (2026-10-09), where only a new arena the
+  agent suggested waited (since 2026-10-14). It went with the Board on
+  2026-10-24: the agent's new arenas, like ChatGPT's, are judged on the Call
+  Board.
 - A wrong date is deleted, not parked far off the board: correcting it to
   12/12/99 was turned down, because the date would stay in the data, a
   venue in Limbo, a call still counted, a correction offered again
@@ -169,9 +152,9 @@ Board itself is to go there; what was agreed is in
   dropped onto another to merge (asked first), and opened to show its arenas
   one under another in his order, each dragged up or down, or onto another
   type to move there. He chose dragging over arrows and drop-down menus. One
-  order of types serves the board, Venues and Mark's Place.
+  order of types serves Venues, Mark's Place and the Call Board's tabs.
 - **Type colours are prominent**: a type's head is a band filled with its
-  colour, on the board and on Venues. 26 tones, two shades of thirteen hues,
+  colour, on Venues. 26 tones, two shades of thirteen hues,
   twice as colourful as the eighteen before them (2026-10-12), the old keys
   kept.
 - An arena's panel holds its About and Brokerage texts, its links in his own
@@ -249,6 +232,19 @@ Board itself is to go there; what was agreed is in
   colour, the score and the ending in the app's; an Email column; a Talking
   column saying who the conversation is with; the closed leads on a sheet of
   their own, latest on top.
+
+## What the Board was
+
+From 2026-10-14 to 10-24 the Board was the way in: every arena a row with
+its venues over its calls, each venue on a track of its own so nothing
+overlapped ("a total clutter" on his real board otherwise, 2026-10-15),
+the venues serving two arenas or more once in a **Shared venues** group
+over the types, a call in stages full strength only up to its first
+deadline, last month and the next twelve, two orders (My order, By date)
+chosen from the heading over the names, a names column dragged wider, and
+the tray over it all listing what was new. He liked its look. It went to
+the Call Board, where all of this is drawn the Call Board's own way; git's
+history has the Board's code.
 
 ## What the venues replaced
 

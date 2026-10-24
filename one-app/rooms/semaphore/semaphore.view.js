@@ -11,14 +11,13 @@ Hub.markup('semaphore', `
     <h1><i class="markglyph"></i>Brokerage Semaphore</h1>
   </div>
   <div class="grow"></div>
-  <!-- Venues and Board (2026-10-15). Everything lands on the Board first,
-       where what is new waits to be moved to Venues, kept or removed;
-       Venues holds what Mark moved there, in Arising, Active and Dying,
-       each on one strip of time. Venues was the Now page until then, and
-       is still "now" in the code. -->
+  <!-- Venues: what Mark moved there, in Arising, Active and Dying, each on
+       one strip of time (2026-10-15), and the way back to it from Leads.
+       It was the Now page until then, and is still "now" in the code. The
+       Board stood beside it, where what was new waited to be judged, until
+       the Board went to the Call Board (2026-10-24). -->
   <div class="viewseg" id="viewseg">
     <button data-act="setView" data-v="now">Venues</button>
-    <button data-act="setView" data-v="board">Board</button>
   </div>
   <!-- Leads is not a way of looking at the arenas but the work they turned
        up, so it stands apart from the three, in a button of its own kind,
@@ -43,18 +42,11 @@ Hub.markup('semaphore', `
          Import reads it back. What is left here is the one thing this room
          can answer for itself — whether its half of the cloud is up — and
          ChatGPT's file, which is a question put to a searcher, not a copy. -->
-    <!-- The new arenas the agent suggests. They wait in a table of their
-         own in the cloud and nothing reaches the board until it is accepted
-         here, so it is a view of its own rather than a mark on the board
-         itself. It sits beside the cloud chip and not in the view switcher:
-         the switcher holds ways of looking at the same board, and this is
-         an inbox. -->
-    <button class="btn" id="dispatchBtn" data-act="setView" data-v="dispatch">Dispatches</button>
     <!-- ChatGPT's search (Mark, 2026-10-22): a file of the board and the
          instructions for ChatGPT's deep research, and its answer read back.
          It is not the Ledger's Export, which carries the board whole: this
          file carries no leads or visits, and what comes back is a list of
-         changes, each judged on the board as the agent's finds are. -->
+         changes, its new venues and arenas judged on the Call Board. -->
     <button class="btn" data-act="openGpt"
             title="Write a file for ChatGPT to search the web for new call dates, brokerage events and tools, and read its answer back">ChatGPT</button>
     <button class="oa-cloudchip" id="semcloud" type="button" data-state="waiting"
@@ -64,10 +56,8 @@ Hub.markup('semaphore', `
   </div>
 </header>
 
-<main id="now" hidden></main>
-<main id="board"></main>
+<main id="now"></main>
 <main id="wall" hidden></main>
-<main id="dispatch" hidden></main>
 <section id="freezer" aria-label="Freezer" hidden></section>
 
 </div><!-- /#semscroll -->
@@ -97,7 +87,7 @@ ITEA 4 ; Programme ; software"></textarea>
 <div class="modal" id="typesModal">
   <div class="mbox">
     <h2>Arena types</h2>
-    <p class="sub">Drag a type by its grip to reorder — the order here is the order of the groups on the board, on Venues and in Mark’s Place — or drop it onto another type to merge the two. Open a type to see its arenas in your own order — the board's "My order" — and drag one up or down to reorder it, or onto another type to move it there. Rename in place; the dot is the type's colour. A type can be removed once it holds no arenas.</p>
+    <p class="sub">Drag a type by its grip to reorder — the order here is the order of the groups on Venues and in Mark’s Place — or drop it onto another type to merge the two. Open a type to see its arenas in your own order — the order they stand in on the Call Board — and drag one up or down to reorder it, or onto another type to move it there. Rename in place; the dot is the type's colour. A type can be removed once it holds no arenas.</p>
     <div id="tylist"></div>
     <div class="taddrow" style="margin-top:10px">
       <input type="text" id="tyNew" placeholder="New type name">
@@ -114,7 +104,7 @@ ITEA 4 ; Programme ; software"></textarea>
     <h2>ChatGPT's search</h2>
     <p class="sub"><b>1.</b> Write the file: every arena with its calls and links, every venue, and the instructions. Your leads and visits stay out. Give the file to ChatGPT with deep research on, and ask it to do what the file says.</p>
     <div class="gptrow"><button class="btn primary" data-act="gptWrite">Write the file for ChatGPT</button></div>
-    <p class="sub"><b>2.</b> Paste what ChatGPT gave back, or choose its file. Nothing changes until you press Put on the board; what it brings then glows on the board as new, as the agent's finds do.</p>
+    <p class="sub"><b>2.</b> Paste what ChatGPT gave back, or choose its file. Nothing changes until you press Put on the board. Then new and corrected call dates go straight on and glow until you press Seen, and the Call Board puts each new venue and new arena to you in turn.</p>
     <textarea id="gptText" placeholder="Paste ChatGPT's answer here"></textarea>
     <div class="gptrow"><label class="btn">Choose its file<input type="file" id="gptFile" accept=".json,.txt,.md,application/json,text/plain" hidden></label></div>
     <div id="gptSaid"></div>

@@ -398,7 +398,7 @@ if (require.main === module) (async () => {
   await shot('ledger-horizon', 'ledger');
   await shot('ledger-timeline', 'ledger', () => window.Hub.api('ledger').PL.flip());
   await page.evaluate(() => window.Hub.api('ledger').PL.home());
-  await shot('semaphore-board', 'semaphore');
+  await shot('semaphore-venues', 'semaphore');
   await shot('semaphore-scrolled', 'semaphore',
     () => { document.querySelector('#pane-semaphore #semscroll').scrollTop = 650; });
   await shot('callboard', 'callboard');

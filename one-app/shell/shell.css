@@ -293,6 +293,11 @@ html #pane-semaphore.oa-lending{
   border-radius:7px; padding:7px 12px; box-shadow:0 8px 24px rgba(0,0,0,.4);
   animation:oa-toast-in .22s cubic-bezier(.2,.8,.2,1) both;
 }
+/* The Call Board asks about one find at a time in a bar along its foot
+   (2026-10-24), and the toast saying what ChatGPT's answer put on the board
+   arrives as that bar does: it stands clear of the bar rather than over
+   the choice it asks for. */
+html:has(#pane-callboard.on.judging) #oa-toasts{bottom:150px}
 @keyframes oa-toast-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){#oa-toasts .toast{animation:none}}
 
@@ -593,14 +598,6 @@ html #pane-atlas #app > header.oa-bar .hbtn.on .dot{background:#EF5B4C}
 /* ── Semaphore: already the shape of the thing ─────────────────────── */
 
 html #pane-semaphore header.top{position:sticky; top:0; z-index:50}
-/* The board's month axis is already sticky in the room's own stylesheet,
-   where top:0 means the top of the scroller and is exactly right. Here the
-   header above it is sticky too, and one bar tall, so top:0 is the strip
-   the bar is standing on: the axis stuck faithfully, out of sight, and
-   scrolling down left the months behind. It stops at the foot of the bar
-   instead. The offset belongs here rather than in the room, because the
-   bar it clears is the shell's doing and not the room's. */
-html #pane-semaphore .axisrow{top:var(--oa-bar-h)}
 html #pane-semaphore .markglyph{display:none}
 
 /* ── the Ledger: lifted out of its board column into the full bar ───── */

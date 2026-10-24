@@ -19,7 +19,7 @@ undo it, and what was agreed and is not built yet.
   the Semaphore that is one (its type named Pillar 2, a cluster or a
   mission) gets no card or row here. A card at the head of the list and a
   strip across both columns were drawn and turned down: the tab already is
-  the arena. Its venues come in with the brokerage lanes.
+  the arena, and its venues stand in the tab's lanes.
 
 ## Tabs beyond Horizon
 
@@ -40,32 +40,66 @@ undo it, and what was agreed and is not built yet.
   the next, as the 2026 and 2027 calls are in Horizon. Dashed is a date not
   yet published to the day, as on the Semaphore's board.
 
-## Still to build, agreed 2026-10-24, in this order
+## Brokerage under the calls (built 2026-10-24)
 
 The drawings are the canvas "The Call Board, Grown"
-(https://claude.ai/artifact/JudrMHyYpNbEMrM2rUk2Zd).
+(https://claude.ai/artifact/JudrMHyYpNbEMrM2rUk2Zd), which also holds those
+of the phases still to build.
 
-1. **Brokerage on the timeline**, as lanes under the calls behind a switch
-   beside the chart's title: every venue kept on the board, not those in
-   Venues. Picking one lights the calls it is for, dims the rest and keeps
-   only their topics in the list. Chosen over drawing venues on the calls'
-   own rows. **Finds are judged one at a time before they land**: the board
-   goes to the tab where a find belongs, draws it there with a dashed edge,
-   and a bar at the foot asks (a venue: → Venues, Keep, Remove; a call
-   text: Attach, Skip; a suggested arena: Add, No). **Dates are not
-   judged**: new and changed ones go straight on and glow until Seen. The
-   Semaphore's Board, its tray and Dispatches then go, and the venue
-   calculations Mark's Place copies become one copy all three read.
-2. **Three ChatGPT searches** instead of one: calls and their dates,
+- **Lanes under the calls, behind a switch beside the chart's title**, kept
+  per device: every venue kept on the board, never one in Venues. Chosen
+  over drawing venues on the calls' own rows. Brass, so a venue never reads
+  as a call. A Horizon tab shows the venues of the Pillar 2 arena that is
+  that cluster or mission (matched by "Cluster N", "Mission", "Horizontal"
+  in its name); any other arena's venues stand in its type's tab, and a
+  venue serving arenas in several tabs stands in each. A venue whose arenas
+  are all in the freezer is put away with them.
+- **Picking a lane** lights the calls it is for and dims the rest, and the
+  list keeps only their topics: the calls of its arenas in that tab whose
+  last deadline is still ahead when the venue opens, or all of them where
+  none is. Its pill in the search row takes it off. A card at the foot of
+  the chart gives → Venues, Remove (at a second press) and Edit ▸, which
+  opens the venue's panel from the Semaphore lent over the Board; its ends
+  are dragged there or on Venues, not on the lanes.
+
+## Judging finds (built 2026-10-24)
+
+- **One at a time, before they land.** The board goes to the tab where a
+  find belongs, draws it there with a dashed edge, lights its calls, and a
+  bar at the foot asks: a venue → Venues, Keep on the board or Remove (at a
+  second press, as the tray's was); a suggested arena Add, in a type chosen
+  on the bar and guessed from its words, or No. Back and Skip go round the
+  finds still waiting, in the order of the tabs; Stop leaves them, counted
+  on the pill in the search row, which starts again, and dotted on their
+  tabs. The ring's count waits for the three searches below.
+- The finds are the new venues (those the tray listed), the new arenas
+  ChatGPT suggests, which wait on the board itself (`suggested`) until
+  judged, and the agent's, from its inbox in the cloud. A call text, the
+  third kind drawn, comes with the search for call texts.
+- **Dates are not judged**: new and changed ones go straight on and glow on
+  their call's row, on the sheet and the chart, until Seen there, which
+  marks the whole arena seen as its panel does; a changed date says on hover
+  what it was. A Pillar 2 arena has no rows of its own here, so its new
+  dates are seen in its panel until Horizon's corrections are laid over the
+  Work Programme (the three searches below).
+- ChatGPT's button stays in the Semaphore until the three searches come;
+  Put on the board now goes to the Call Board and starts judging.
+- The Semaphore's Board, its tray and Dispatches went the same day, and the
+  venue calculations Mark's Place copied became one file all three read,
+  `one-app/shell/venues.js`.
+
+## Still to build, agreed 2026-10-24, in this order
+
+1. **Three ChatGPT searches** instead of one: calls and their dates,
    brokerage, and official call texts, which read in the same reader as a
    topic, with a link to the source. Corrections to Horizon dates and the
    texts are kept apart from the Work Programme file, laid over it. The
    portal's own changes (cancelled and moved topics) come in too, and the
    finds waiting to be judged show as a count on the Board's glyph.
-3. **The Ledger**: a project, and a call chip on the beam, picks any call
+2. **The Ledger**: a project, and a call chip on the beam, picks any call
    on the Board; its dates come in as key dates, and a date that changes
    later is offered there, moving the todos tied to it.
-4. **The Topic Atlas inside the Board**: a Topics | Atlas switch by the
+3. **The Topic Atlas inside the Board**: a Topics | Atlas switch by the
    search box, the Atlas's way of searching over every call, Horizon and
    beyond. A plain program as Mark wants it, filters folded behind one
    button, the tuning left on its defaults. COPROG's rows then become the
