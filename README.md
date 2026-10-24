@@ -68,7 +68,9 @@ the top-right rail names the room that failed to load.
 | | |
 |---|---|
 | `one-app/` | the app: the page, the shell, the rooms, the data |
-| `supabase/` | the database's scripts and the two night agents' gatekeepers |
+| `partner-watch/` | Mark’s Place, and in `pocket/` its phone version |
+| `topic-atlas/` | the Topic Atlas |
+| `supabase/` | the database's scripts, the agents' gatekeepers and Mark’s Place's copier |
 | `tools/` | scripts the assistant runs in its own workspace, never you |
 | `CLAUDE.md` | how the assistant works here |
 | `PROJECT.md` | how the app works, and every rule about changing it |

@@ -110,15 +110,16 @@ the design; these are the parts only testing showed.
   mock anon/authenticated/service_role roles and an `auth.uid()` reading
   `request.jwt.claims`.
 - Headless Chromium on file:// occasionally lost ALL localStorage on a
-  reload right after writes (Pocket test, ~1 in 4); not reproducible with
+  reload right after writes (~1 in 4); not reproducible with
   plain keys — treat as harness noise, not a code bug.
 
 **Putting the Semaphore's two copies together (2026-10-11).** PROJECT.md
 owns the rule; this is what building it showed.
 - Mark asked for it after hearing how a clash went: the desk's unsent
-  change became a restore point the moment Pocket wrote, and Pocket writes
-  small, separate things — a stamp, a lead's step — so nearly every clash
-  was two changes that did not touch.
+  change became a restore point the moment Pocket, the phone companion of
+  the day, wrote; and a second writer of the board (Pocket then, Mark's
+  Place's Make lead now) writes small, separate things — a lead, a lead's
+  step — so nearly every clash was two changes that did not touch.
 - A third full copy of the board was the obvious base and was refused for
   room: `localStorage` is five megabytes for everything, and the iPad's
   Safari has less. Fingerprints of every piece measured 29% of a large
@@ -133,7 +134,7 @@ owns the rule; this is what building it showed.
   wrong side.
 - Tested end to end with the stand-in cloud described above (real
   supabase-js, a `page.route` fake) and a "phone" that changes the fake's
-  row from the Node side as Pocket's `commit` does: the desk offline (the
+  row from the Node side as Mark's Place's Make lead does: the desk offline (the
   route aborts), a change on each side, the desk back — in different
   arenas, in one arena's different fields, in the same field, across a
   reload while offline, and with a stale fingerprint. The room's chip is in

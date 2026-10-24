@@ -31,9 +31,11 @@ the way back.
   files cannot end the session as it does the OneDrive way, because the
   tools cut long output off (tried 2026-10-10). A shell command shows its
   first 2 KB and parks the rest in a file, and Grep leaves out overlong
-  lines; `head -c 300` still gives the shape. The session refuses to let the assistant
-  write its contents (as self-modification), so a change to what it says
-  is Mark's, made on GitHub's website.
+  lines; `head -c 300` still gives the shape. A session may refuse to let
+  the assistant write its contents (as self-modification), and then a
+  change to what it says is Mark's, made on GitHub's website; on 2026-10-24
+  one allowed it. Deleting a branch on GitHub is refused as destructive,
+  so stale `claude/` branches are Mark's to delete there.
 - **Everything the tools need is already in the container:** node,
   Playwright and its Chromium. `finish.py` runs as
   it stands, in about ten seconds; installing anything is wasted time.

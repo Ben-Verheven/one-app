@@ -37,9 +37,8 @@ sections, sizes — are only ever in the generated indexes.
 of one kind or another, and the narrowest of them wants about 760 points
 before it can say anything true. The stylesheets stop at 820px, because an
 iPad held upright is 768 and there is nothing under it to design for.
-There were phone layouts once; they are gone. Pocket, the Marketplace's
-phone companion, went on 2026-10-22, when Mark no longer needed it; the
-phone has only Mark’s Place's own page now. Do not add a breakpoint
+There were phone layouts once; they are gone, and the phone has only
+Mark’s Place's own page (`partner-watch/pocket/`). Do not add a breakpoint
 below 768px, and do not treat a narrow desktop window as a case to serve. `(hover:none)` and
 `(pointer:coarse)` are a different question and still matter — an iPad has
 no hover.
@@ -136,8 +135,8 @@ One event, per room that holds a store of its own: **`semaphore:saved`**,
 bridge can push that room to the cloud. And one from the Ledger,
 **`cloud:session`** (`true` or `false`), when a login starts or ends. And
 **`semaphore:project`**, with a name and links, when a lead is completed as
-having become a project, in the Marketplace or on the Ledger's lead card.
-And **`leads:excel`**, from the Excel button on the Marketplace's Leads, which
+having become a project, in the Semaphore or on the Ledger's lead card.
+And **`leads:excel`**, from the Excel button on the Semaphore's Leads, which
 the bridge answers by writing every lead (`allLeads()`), open and closed,
 into one .xlsx file — the same file again each time where the browser can
 keep hold of one; the bridge's own comment says how. And
@@ -149,14 +148,14 @@ anywhere in any room, into a link that opens the Atlas dossier over the
 top of the room you are in; lends the Call Board's reader the same way, so
 a project written for a Horizon topic reads that topic without leaving the
 Ledger, and fills the socket the Ledger picks a topic from; fills a second
-socket with the Marketplace's open leads, so the Ledger's board draws them as a
+socket with the Semaphore's open leads, so the Ledger's board draws them as a
 line of their own, every change made on a lead card there is made on
-the Marketplace's own record, a lead can be started there, a lead's arena
-opens in the Marketplace's drawer lent over the Ledger as the dossier is, and a
+the Semaphore's own record, a lead can be started there, a lead's arena
+opens in the Semaphore's drawer lent over the Ledger as the dossier is, and a
 lead that became a project opens the Ledger's new project with its name and
 links filled in; draws
 the ring of rooms and the title; runs the page-change animation; and syncs
-the Marketplace's board, the Notes room and the Atlas's edits through the
+the Semaphore's board, the Notes room and the Atlas's edits through the
 Supabase credentials the Ledger already holds.
 
 **The Notes room asks the others for nothing and is asked for nothing.**
@@ -186,7 +185,7 @@ only the cloud joins them.
 | `pj-cloud-dirty` | this device holds a change the cloud has not been told about |
 | `pj-restore-v1` | the last three restore points, each a whole Export blob |
 | `pj-projects-v1`, `pj-callinfo-v1` | legacy, read once and migrated |
-| `semaphore.v1` (+`-ts`, `-seen`, `-dirty`, `-sum`, `-base`) | the Marketplace's board: arenas, types and venues |
+| `semaphore.v1` (+`-ts`, `-seen`, `-dirty`, `-sum`, `-base`) | the Semaphore's board: arenas, types and venues |
 | `notes.v1` (+`-ts`, `-seen`, `-dirty`, `-sum`) | the Notes room: notes, book order, which of the two ways in, the tag ties, the colours chosen for tags, and what is pinned in which book |
 | `hub.room` | which room to open on |
 | `leads-excel-v1` | fingerprints of what the last weekly Excel held, so the next one can mark what is new; the file it wrote is kept as a handle in IndexedDB, `one-app-excel` |
@@ -199,8 +198,8 @@ Cloud is one Supabase table, **`app_state`**, one row per store: `main` is
 the Ledger, then `semaphore`, `notes` and `atlas`. (Mark’s Place keeps
 its scroll links, call notes and corrected readings of sentences in a row of its own, `partnerwatch`, which
 Export leaves out, and reads `semaphore` for the order and arenas of its
-venues; it writes there only the leads made from its entries, the way Pocket
-wrote one.) The Ledger's **Export**
+venues; it writes there only the leads made from its entries.) The
+Ledger's **Export**
 writes the journal and, beside it, every store in `ROOM_STORES` under its
 own name; Import merges the journal and replaces a room's store, and a
 file written before a room joined has no key for it and leaves it alone.
@@ -253,9 +252,10 @@ change to where the room was looking only — its `ui` keys — is not sent on
 its own. A device that has never synced under the two keys decides once by
 the old `-ts` stamp.
 
-**The Marketplace's two copies are put together instead** (since 2026-10-11),
-because Pocket wrote the same board from the phone: a visit stamped there
-while the desk held an unsent change used to set that change aside. The
+**The Semaphore's two copies are put together instead** (since 2026-10-11),
+because another page writes the same board, Pocket from the phone then and
+Mark’s Place's Make lead now, and a change written there while the desk
+held an unsent one used to set the desk's aside. The
 room keeps a fourth key, `-base`, a fingerprint of what the cloud said at
 the last exchange — a hash of every piece, not a third copy of the board —
 and when both copies have moved, each piece (every field of every arena and
@@ -266,7 +266,7 @@ not of the exchange `-sum` names decides nothing: the room takes the cloud's
 copy as the others do.
 
 **A venue has the same id on every device that makes it**, because the
-Marketplace makes them itself (since 2026-10-14). Its board keeps
+Semaphore makes them itself (since 2026-10-14). Its board keeps
 `venues` beside `arenas` and `types`: the places where projects in the
 making can be found — a brokerage event's marketplace, a partner search —
 each serving one arena or several. Since 2026-10-15 a venue has no kind:
@@ -275,8 +275,8 @@ or none, and a `place`: `new` on the board, kept on the `board`, in
 `venues`, or `gone`, a stub the agent reads so it does not bring back
 the occasion Mark removed (the same site for a later call or edition it
 may, with days of its own after the stub's). `kind` stays on every venue, always `event`, only
-because an older gatekeeper and an older Pocket wipe a tool's window. Pocket, an older copy of
-the desk and an agent's finding can all still put a brokerage date or
+because an older gatekeeper wipes a tool's window. An older copy of
+the desk and an agent's finding can still put a brokerage date or
 link on an arena, so every read of the board turns those into venues
 (`absorbVenues`), and two devices doing it apart would have put two
 copies of every venue on the board once their copies were put together.
@@ -286,29 +286,30 @@ site's address, and a visit's id is its day, one visit a day.
 **The Atlas's scheduled agents read the web at night and write only to an
 inbox of their own**, `atlas_inbox` (researchers' TU/e, Pure and own
 pages: left, arrived, new position, new self-description, newcomers in a
-group). The Marketplace's agent has one too, `semaphore_inbox`, where only
-a new arena it suggests waits now (see the next paragraph); until
-2026-10-14 its nightly rounds left everything there. Neither holds the
+group). The Semaphore's agent has one too, `semaphore_inbox`, where only
+a new arena it suggests waits (see the next paragraph). Neither holds the
 app's key. Each reaches Supabase through a gatekeeper edge function with a
 password of its own (`semaphore-agent`, `atlas-agent`); the Atlas's copy of
 its people is the `atlas_roster` table, seeded from the data file and
 pasted again if the file is ever rebuilt. The app reads a finding when its
-view opens — the Marketplace's **Dispatches**, the Atlas's **News** — and
+view opens — the Semaphore's **Dispatches**, the Atlas's **News** — and
 answers it in the cloud first, then makes it an ordinary edit, so two
-machines cannot accept the same finding twice. In the Marketplace,
+machines cannot accept the same finding twice. In the Semaphore,
 whatever an accepted finding puts on an arena carries `foundAt` and is
-marked new in the arena's panel until the panel is next shut; a brokerage
+marked new on the board until Mark presses Seen on it; a brokerage
 event or a tool it brings becomes a venue, as on every read. Where each
 agent is told what to do is its scheduled task; the SQL and the functions
 are in `supabase/`. The gatekeepers there are pasted into Supabase by
 hand, so the copy in the repository can be ahead of the one running; the
-Marketplace's is written so that the older one still does no harm.
+Semaphore's is written so that the older one still does no harm.
 
-**The Marketplace has one agent, on demand and at night** (since
-2026-10-14): one task, **Marketplace agent**, runs by itself every night at
-about 01:00 his time, a scan that reaches every active arena once a week
-and every frozen one about once a month, and when Mark asks a Claude
-session for something. That session starts a session of its own with the
+**The Semaphore has one agent**, the task **Marketplace agent**, and it
+is turned off: since 2026-10-23 ChatGPT's search, the room's ChatGPT
+button, does its work. The task is kept, and so is its gatekeeper, so that
+a session can still read the board through it. Turned on, it runs by
+itself every night at about 01:00 his time, a scan that reaches every
+active arena once a week and every frozen one about once a month, and when
+Mark asks a Claude session for something. That session starts a session of its own with the
 task's instruction and his request at its end: a firing with the request
 as its text runs the instruction alone first, and twice the request that
 came after was refused as untrusted. Fired by hand with nothing to do, the
@@ -401,7 +402,7 @@ a researcher's name written anywhere is `.atlas-ref`.
 | one call's block of lanes | `.hz-call`, its coloured edge `.hz-rail` |
 | one project's lane | `.hz-proj` = `.hz-proj-name` + `.hz-proj-track` |
 | a todo, its deadline, the line joining them | `.hz-mark`, `.hz-dl`, `.hz-runway` |
-| the leads line, last on the board: the Marketplace's open leads, the box of undated ones beside its name, a lead's card | `.hz-call-leads`, `.hz-lead-mark`, `.hz-leads-undated`; `.lead-card` |
+| the leads line, last on the board: the Semaphore's open leads, the box of undated ones beside its name, a lead's card | `.hz-call-leads`, `.hz-lead-mark`, `.hz-leads-undated`; `.lead-card` |
 | the effort strip under the grid | `.hz-effort`; one day is `.hz-eff`, and `.hz-eff-unplanned` closes the row |
 | the list that opens under the board | `#hz-detail`, holding `.todo-card-later` cards |
 | every deadline in date order | `#hz-agenda` |
@@ -409,12 +410,11 @@ a researcher's name written anywhere is `.atlas-ref`.
 | the contribution tracker, over the board | `.ct-sheet` |
 | any box that opens over the room | the `pf-` family — `pf-host`, `pf-box`, `pf-head`, `pf-body`, `pf-foot` |
 
-**The Brokerage Semaphore** — the Semaphore until 2026-10-14, the
-Marketplace until 2026-10-17, when Mark named it back so that it is not
-taken for Mark’s Place, and always `semaphore` in
-the code: its pane, its files, its store and its cloud row kept the name,
-so nothing stored had to move. Most documents here still say the
-Marketplace; it is the same room.
+**The Brokerage Semaphore** — the Marketplace from 2026-10-14 to 10-17,
+when Mark named it back so that it is not taken for Mark’s Place, and
+always `semaphore` in the code: its pane, its files, its store and its
+cloud row kept the name, so nothing stored had to move. Older code comments
+and the agent's task still say the Marketplace; it is the same room.
 
 | on screen | in the code |
 |---|---|

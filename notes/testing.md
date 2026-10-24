@@ -37,7 +37,7 @@ with real clicks and keystrokes, not synthetic events; and `Board.openDetail`
 a follow-up `.todo-later-row.click()` written on the old assumption that
 the row still needs opening lands wherever the bounding-box centre happens
 to fall instead, which on a todo card is one of the header's own buttons
-(`catBtn`, a blocker chip, the tie diamond…) and fires THAT control —
+(`catBtn`, a blocker chip…) and fires THAT control —
 found 2026-08-28 chasing a rendering bug that turned out to be the test
 re-clicking `openBlocker` and navigating the detail panel to a different
 todo entirely mid-script. When a card is reached through a detail-opening
@@ -52,7 +52,7 @@ each room, every element on screen that is a button, a field or wears
 pressed in random order a few hundred times, typing a hostile string
 (`<b>x</b> & "q" ${1}`) into fields and pressing Escape now and then;
 `pageerror`s are collected against the control pressed. It found the
-Marketplace calendar's crash within a hundred presses, where the smoke
+Semaphore calendar's crash within a hundred presses, where the smoke
 and every screenshot passed. Afterwards, a `<b>` holding just `x`
 anywhere in a pane means typed text reached the page as markup. The
 first version, which pressed only `button`s and took the first one each

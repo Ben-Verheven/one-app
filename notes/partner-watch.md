@@ -1,46 +1,259 @@
-- Mark’s Place (`partner-watch/index.html`; named Partner Watch until Mark renamed it Project Watch on 2026-10-16, and in turn MARK-it Place, MARKetplace, Mark'tplace, Mark 't place, Mark't place and Mark't Place on 2026-10-17, Marked Place on 2026-10-18, once its Interesting had become Marked, and Mark’s Place on 2026-10-21; the folder keeps its name so his bookmarks and home-screen icon keep working) is a page of its own while Mark tries it out; he may later move it into the One App, as a room of its own or a Marketplace view. It uses the Marketplace's type and the tones of its light sheet, and it touches nothing under `one-app/`
-- Mark's brief (2026-10-16): the brokerage sites' partner-search entries, gathered at night, browsed as site → list → entry, each flagged interesting, later or bin; later, leads made from entries that name a contact, a project and a coordinator. The Ledger's lead card is the standard for that step
-- Chose the three-column Browse (site, list, entry) and dropped the one-card-at-a-time Morning sort he was shown beside it (2026-10-16); the three columns gave way to the reader on 2026-10-17, below
-- Wanted every entry already on the sites in the app, unsorted, to go through himself, rather than only what arrives after the first night (2026-10-16)
-- Worried that sorting an entry into categories loses information. What answers it: the entry page's own label-value pairs are kept in the site's order and words, the whole page text is kept beside them, every older copy is kept when a page changes, and a binned or vanished entry stays so it never comes back as new. Nothing was ever deleted until 2026-10-22, below
-- The copier is a plain program, not an agent: Claude's web reader cut each list page off at ~100,000 characters (a third of Water4All's 268 entries never reached it) and summarises. It costs no Claude usage, and it runs from Supabase's own schedule, not a scheduled task
-- Reading what the free text says (the project's name, what partners they want, who coordinates), each with the sentence it came from and "not stated" where the page says nothing, is the planned second step, for an agent working on the copied text. Not built yet
-- On 2026-10-16 the four sites held 814 entries, 113 of them seeking partners: Sustainable Blue 132, Water4All 268, Biodiversa+ 232 (all proposals.etag.ee, one platform) and Forest Pathways 182 (PtJ). Whether the sites answer Supabase's servers as they answer a browser was not yet known on that day
-- Ideas Mark liked and kept for later: an Atlas match for what an entry seeks, a link to the Marketplace arena of its call, pre-sorting from his past flags, a keyword alert, a mark when an entry names a TU/e group. Make lead, the third of them, was built on 2026-10-21 (below)
-- Within a site the list reads New, then Interesting, then Later, then the rest, each newest first (2026-10-16). Wants several entries picked at once and flagged together. Does not want long values hidden behind a "Show all"
-- Chose an all-light page over the Marketplace's dark ground and over a dark list with a light entry, compared on full-size mock-ups (2026-10-16). In an entry he wants the project description central: the long texts down the middle, project description first, every short fact in a narrow column beside them. On 2026-10-23 he had every entry laid out as a lead's sheet instead (programme and topic, the project's title, a box of organisation, contact and dates over the other facts, then the texts); how is at "An entry reads as the sheet" in the page
-- Removed "All sites": he works one site at a time, and the page opens on the first site (2026-10-16)
-- Kept the arena names in the entry rows' type, over a bookish and a plain screen type shown beside it; what he disliked in the arena cards was the typewriter type of the counts under them (2026-10-16)
-- Wants each arena's scroll (an old-school scroll, not a booklet) to open the call text's PDF directly, not the call's web page, and to change the links himself, all arenas at once from a pencil beside "Arenas" rather than one pencil per card (2026-10-16)
-- Keeps his own notes on each call, the most important facts of it and up to a few paragraphs, behind a note icon beside the scroll (both in the venue's panel since 2026-10-21, below); they open beside the arenas in place of the entry list, and take formatting, because he pastes from the call documents and wants the bold and the lists kept (2026-10-16)
-- Asked for a phone version (2026-10-16), keeping in mind that it may later move into Pocket and that an entry is on its way to a lead and a lead to a project. It is `partner-watch/pocket/index.html`, with its own home-screen icon. Its first script is Pocket's shell, copied; the second, every name starting with `pw` and every class with `pw-`, is the watch itself. Pocket was removed on 2026-10-22, when Mark no longer needed it on the phone, so the move will not come and this page is the phone's only app; the shell stays, as it is the page's own login and request. It writes only what the desk page writes; the scrolls' links are changed at the desk, the call notes on either
-- Wanted more room for reading on the iPad (2026-10-16), first answered by folding the arenas column to a rail; the rail went when the reader became the page everywhere (2026-10-17, below)
-- Wants Interesting, Later and Bin within reach wherever he is in an entry (2026-10-16): the bar holds at the top of the entry pane, and each entry opens at its head; see `.actions` and `openEntry` in the page. The phone version already had its bar held at the foot of the sheet
-- Found the upright iPad a side view and wanted it to feel like a reader for the projects (2026-10-17); chose, over a list page and a reader page one after the other, the entry as the whole page with the arenas and list sliding in over it and arrows, ← → and a swipe to turn to the next. How is at "the reader" in the page's styles and at `step` and `drawer` in its script
-- Asked for a clearer page turn in the reader (2026-10-17): the text had swapped in place. Now the page slides off and the next slides in beside it, follows a finger while swiped, springs back from a short swipe or at the end of the list; see `turnPage` in the page
-- Asked for two b2match events as arenas (2026-10-17): DUT Call 2026 and EP PerMed. He took DUT for the one behind a login and EP PerMed for the open one; it is the other way round. DUT's marketplace (390 entries that day) is shown to anyone; only messaging and meetings need an account there. EP PerMed shows its 12 only to registered participants, and Mark chose to have the copier log in as him for those. He means to add more b2match events, so a new one, open or closed, is only a row in partner_sites. How is at "b2match" in 8-partner-copier-function.ts
-- Asked for four Horizon Europe brokerages as arenas (2026-10-17): Advanced Digital Tech, Industry 2027 and Cluster Health on b2match, and GREENET, which is on b2match's older platform at an address of its own. That day Industry showed 56 entries, Cluster Health 70 and GREENET 139 to anyone; Advanced Digital Tech (75) hides its marketplace and its menu from visitors, and the first link, guessed from the one hidden page found by counting component numbers, was its participant list. Find a hidden event's marketplace from its menu read logged in (`navigation{items{nodes{... on NavigationLink{url}}}}` in the data service), never by counting. How the older platform is read is at "older platform" in 8-partner-copier-function.ts. He wanted every entry in at once rather than forty a night-run, so Check now goes on by itself; see `checkNow` in the page
-- On 2026-10-17 he had the sites called venues, as the Marketplace calls them (arenas the day before), and wanted them in the Marketplace's Venues order with its colours: grouped Shared, then each type, under the type's band, each tagged with the arenas it serves. Mark’s Place reads the Marketplace's own data for this; how a venue here is matched to one there is at "the Marketplace's order" in the page. A venue the Marketplace does not have yet stands last, under "Others"
-- Wants some venues followed for their news only (2026-10-17): CL4 Digital 2026 (658 entries that day) and the GREENET Partner Search Tool (576) start empty and show only entries posted after the copier first read them (`new_only`). The tool is not on the GREENET event's older platform: it is a "v6" event, which b2match's central data service refuses, and its Projects, as Mark knows them, are read from the event's own address; see "v6" in 8-partner-copier-function.ts
-- Every b2match event words seeks and offers its own way (Kind or Stage; "Consortium seeks partner(s)", "Coordinator looking for partners", "Partner looking for consortium", the type Expertize): a new event wants its words checked against `b2mKind` the day it is added, or most of its entries come in as neither
+Mark’s Place (`partner-watch/`; the folder keeps its first name, Partner
+Watch, so his bookmarks and home-screen icons keep working, and the page has
+been Mark’s Place since 2026-10-21, after Project Watch and a run of
+spellings ending in Marked Place) holds the brokerage sites' partner-search
+entries, copied nightly and browsed on a page of its own, with a phone
+version in `pocket/`. It stays a page of its own while he tries it out; he
+may later move it into the One App, as a room or a Semaphore view. It is
+drawn in the Semaphore's type and the tones of its light sheet, and changes
+no file under `one-app/`. These are his choices, and what he dropped.
 
-- Made the upright iPad's reader the page on every screen (2026-10-17), choosing from a sheet of three drawn options one wide drawer with the venues and the chosen venue's entries side by side, over a drawer that turns from the venues to one venue's entries and over an overview page apart from the reader. Entries opens it and closes it again. In it each venue is one line, as on the Brokerage Semaphore's Venues tab, with its arenas in one row under it; the call is said at the head of its entries. How is at "the reader" in the page's styles
-- Wants the Cluster 2 community platform (2026-10-17; 1,159 entries going back to 2022, 56 of them posted since 1 September) from 1 September on: a venue can have a first day (`shown_from`), and entries its site says were posted before it are kept unshown, as the news-only venues' first reading is. b2match gives each entry the moment it was posted (`createdAt`), kept in `posted`
-- Wants the Brokerage Semaphore's venue and arena panels in Mark’s Place (2026-10-18): a venue's name opens its panel, sliding in from the right as on the Semaphore's Venues tab, and an arena's tag opens the arena's; each leads to the other. They only read the Semaphore, so Go is Site there and records no visit, and every change is made in the Semaphore. How is at "the Semaphore's slide-ins" in the page
-- Renamed the Interesting button Mark (2026-10-18), on the desk, in its bar for picked entries and on the phone; its key is M, and I still works. The same day the filter, the list's group, the tag on an entry and the phone's note after answering became Marked; the answer is still stored as `interesting`
-- Took the Later button away (2026-10-18), on the desk, in its bar for picked entries and on the phone, with its key L: an entry is Marked or Binned. The same day the Later filter, group and tag went too, and an entry still stored as Later reads as a plain seen one
-- Wants a short note seen at a glance, and the Marked entries counted on each venue (2026-10-18): the Why line is lit in the gold of Marked once anything is written in it, desk and phone; on the phone the Marked count follows the new ones. At the desk the count was first a badge reading "2m" in the Marked tag's colours at the end of the arenas, which read as one more arena; it gave way on 2026-10-21 (below)
-- On 2026-10-21, at the desk: the scroll and the note moved off the venue rows into the venue's panel, beside Site, and every venue's name opens a panel, one the Semaphore does not have included. In their place a venue showed three counts as plain words: "9 new" beside the name, "4 marked · 252 more" beside the arenas. He wanted them unlike the arena tags; he went through discs that day — at the end of the name, in a section of their own at the right edge, stacked — and none sat right ("not sure why"); of four ways drawn next (words on the lines, a scoreboard with labels, a bar in proportion, one row of discs) he chose the words. On 2026-10-22 he asked for the phone to show the rest too, with "unity between the apps, not similarity"; of three ways drawn on both pages (one set of signs, the same words with the phone shorter, signals apart from size) he chose the last: on both, what asks for him — Marked as the phone's star, new as its green badge (at the desk soft, a tint with a rule round it, since the solid disc stood out too much on the paper) — stands at the right of the name, and how big the venue is, "256 entries" with the binned not counted, stands quiet in grey, on the arenas' line at the desk and leading the line under the name on the phone. Arenas that do not fit a venue's line fade out instead of a "+2". The venue's panel draws the calls of its arenas under its window, as the rotation cards did, and leaves out the visits and Limbo. Drawn first on one strip with the names and dates on it, it was a mess on his real arenas, the text floating over the bars and itself; it became a table, name and date on the left, the line on the right under one row of months, with the three calls that matter now shown and the rest behind a button. Binned lists the last binned first, each with when, so a mistake is the first thing there to take back. The phone was left as it was: its bin already has an Undo after each answer
-- Asked for Make lead at the desk (2026-10-21), the leads to land in the One App: a button beside Why in the entry's bar writes a lead straight into the Brokerage Semaphore's cloud row, as Pocket writes one. Its fields as he named them: the contact person, the email address, the project's website as a link named "project", the leading organisation as the coordinator; and his Why line, the little note on each entry, as the matched researcher. It is filed under the arena of the entry's venue, and asks only when the venue serves several arenas or none. The lead remembers the entry (`entryId`, a field only Mark’s Place reads) and the venue, so the button then reads "Lead in" its arena and opens that arena's panel. Which entry-page label gives each fact is at `leadFromEntry` in the page
-- Asked on 2026-10-22 for an entry made into a lead to leave its venue for a Leads section, opened from a small button beside Entries. A lead is out of its venue's list and counts and in Leads, under its arena's name, whatever the filters say; the search still finds it. It moves over when a list is next opened, not under the cursor, so ↓ after Make lead goes on to the next entry. On the phone Leads is a row above the venues. How is at `leadMap` and `passes` in the page
-- Asked on 2026-10-23 to send a lead's project by email, laid out as he reads it. Offered an HTML file, a PDF and a paste into the message; he chose PDF and paste both, on leads only, at the desk only (not the phone page). They are PDF and Copy for email beside Open on site; how is at "a lead's sheet"
-- Asked on 2026-10-21 for the search bar at the top to rank the entries as his topic search does, kept a plain bar: terms parted by commas, each place a term is found shown with how it matched and where, the places weighing differently, and extra where the terms meet. Built first after the Atlas's own search; he corrected that the model is his Topic Atlas (now `topic-atlas/`, see [topic-atlas](topic-atlas.md)), and that neither is to be copied: their ideas, in a search made for Mark's Place. Then (2026-10-21/22) he asked for the Topic Atlas's semantic layer, its concept libraries, shared from `topic-atlas/library.js`, and for sentences to be read for what they do, because descriptions are often about the company; no Claude reading anything. Reading by phrasing was measured before building on it: two samples of real sentences, 160 and 90, read by hand, agreed nine in ten with the rules against three in four by field alone, and every sentence asking for a partner was found; the patterns are `roleOf` in the page, and changing one means measuring again. His rule for the parts: what they ask for weighs most, then the project, and what they say of themselves counts against the entry, because what they already have is what they will not need from us, unless they also ask for it. He chose the Topic Atlas's way of drawing a card's lines, the words landing in a shaded column with a bracket where two terms meet, over the three drawn on a sheet (2026-10-22); a sentence read wrongly is put right from its line, and the correction is kept in his row. Built for a day were a box of an entry's ideas over its text and each sentence underlined by its reading; he took them out the same day: an opened entry reads as it always did, and the search is to stay simple. Pressing the search box puts the venues and entries away and brings the search's page to the front. Terms are given as in the Topic Atlas, each whole, typed and given with Enter, then the next; splitting typed words into terms by themselves was tried for an hour and he did not want it. The phone's search was left as it was. On 2026-10-22 he asked for the search to find binned entries too, desk and phone: under All a search reaches the bin, and each binned entry it finds carries its Binned tag
-- Renamed the page Mark’s Place (2026-10-21), desk and phone, and asked the same day for the phone version to be made genuinely for the phone. Built without asking, as it changes nothing he reads: a 44-point reach on every control, the entry turned by a sideways swipe and put away by pulling down, the keyboard's Done key saving the Why line. Then, from a sheet of drawn options: he kept the venue cards on top as they are, over one sliding row of venues and over one button opening them in a sheet; chose the entry filling the screen, with ‹ List, the venue's name and arrows to the entry either side at its head, over the sheet that left a band of dimmed list above it; and asked for Make lead on the phone as at the desk, the "Lead in" there only saying where the lead is, since the phone has no arena panel. Seeing it on the phone the same day, he did not want the venues side by side: they became one to a line, as at the desk, and the entry's head, venue name and all, stays still while the page beneath it is swiped
-- Asked the same evening for the phone page to be "much more easy and Apple like". It became an iPhone app in its look and its steps: the system's type and dark grouped lists, venues → a venue's entries → an entry, each sliding in from the right with the way back at its top left and a swipe from the left edge, Mail's dot for unread (blue until 2026-10-22, green since) and up and down arrows for the entry either side, Mark, Bin and Next as the toolbar's icons at the foot. It stays dark, since the clock's figures of a home-screen page stay white. Pocket's charcoal and Palatino went with it. Seeing it, he wanted the entry itself back on the paper it had, and set for reading: title, then straight into the entry's own texts in a serif with no boxes, and Open on the Site, Why, Make Lead and the facts after them; only the entry's head stays dark, for the clock
-- Asked on 2026-10-22 for the phone to check the sites for new entries itself, and to pick several entries by a long press and then select all, or all of one kind. The check, first a row under the name on the first screen, became the same day at his asking an icon in the top bar beside refresh and settings (a tray with an arrow into it), and runs the desk's Check now (`pwCheck`); while it runs the line under the name says so. The same day he had new entries shown in green rather than blue: the dot, the venue's count and the New tag. A long press on an entry starts Mail's way of choosing: a tick on each row, Select All and Done in the top bar, Mark, Seen, Unsort and Bin at the foot with Undo after. "All of one kind" was read two ways, and both are there: Select All takes only what the chosen filters and search show (Unsorted, Seeks partners), and each group's header (New, Marked, Seen) takes its own group
-- Asked for NEB4All's matchmaking platform as a venue (2026-10-22). The Green Transition & Climate Resilience brokerage he asked for with it was already in: it is held on the Cluster 2 community platform. The same day the Brokerage Semaphore gave the venues copied here a section of their own on Venues; see [semaphore-decisions](semaphore-decisions.md)
-- Asked on 2026-10-22 to remove every entry two months old or older, except the Marked ones, and never to download them. The copier puts them away on every run, and an entry already that old when its list is read is never copied: its row is kept hidden so it does not come back as new, and the same evening he asked for it bare: only its number, link and date stay, everything else and its older copies deleted. Age is the site's posted day; the proposals.etag.ee sites and b2match's older platform give none, so there it is the day the copier first saw the entry, and their entries already on the sites are only put away two months after 16 October. How is at `putAwayOld` in 8-partner-copier-function.ts
-- On 2026-10-22 the three proposals.etag.ee venues failed together, "Connection refused", while Check now went on by itself through NEB4All's pages; the site itself answered a browser fine. The press now reads the lists and the runs that follow it only copy (`lists: false`); a refusing site is asked once more after a pause and then left alone for the rest of that check, its entries keeping their place. He found the raw message under each venue too big: a failed read is one small line, said in plain words, that opens on a tap (`errLine` in the page), and the check's line at the foot counts the problems the same way
-- Asked on 2026-10-23 for the MSCA, Battery and Security venues in the Semaphore's Active section. RADIANCE's MSCA platform and the Bilbao matchmaking for the 2027 battery calls are open b2match events and became sites. The Security Research Map (SeReMa, security-research-map.b2match.io) could not: it is a "v6" event that shows visitors only its Home page, and the copier has no login for v6 events; its list's page number is to be read from its menu logged in, and Mark has to be registered there
-- On 2026-10-23 the three EPSS venues failed with "list table not found": the sites had moved to epss.proposals.ee and the partner search now asks for a sign-in. Mark's EPSS account uses his b2match email and password, so the copier signs in with the B2MATCH_ secrets; see "EPSS" in 8-partner-copier-function.ts. The function in Supabase only changes when the file is pasted there again
-- Asked on 2026-10-24 for a home-screen icon made from the M that says "marked for further consideration". Of five drawn (a tick, a bookmark, an M circled in pen, a highlighter, the Marked star) he took the bookmark, turned upside down so that its notch makes the M, with no other letter on it: in the One App icon's colours and style: its brown ground, its brass lit from the top left, and floating in the middle at the ring's height rather than rising from the foot of the square. No dots: the ring's five stand for the five rooms the One App holds, and mean nothing here. It is `pocket/icon.png`, and the desk page uses the same file, so the iPad and the phone show one icon. A home screen keeps the icon it was given when the page was added, so a new one shows only after the old icon is removed and the page added again
+## What it is for
+
+- His brief (2026-10-16): the brokerage sites' partner-search entries,
+  gathered at night, browsed as site → list → entry, each one flagged; leads
+  made from the entries that name a contact, a project and a coordinator,
+  with the Ledger's lead card as the standard for that step.
+- Wanted every entry already on the sites in the app, unsorted, to go
+  through himself, rather than only what arrives after the first night.
+- Worried that sorting an entry into categories loses information. What
+  answers it: an entry page's own label-value pairs are kept in the site's
+  order and words, the whole page text beside them, every older copy when a
+  page changes, and a binned or vanished entry stays so it never comes back
+  as new. The only deletion is the two-month put-away below.
+- **An entry is Marked or Binned** (2026-10-18). Interesting became Mark,
+  its key M (I still works), its filter, group and tag Marked; the answer is
+  still stored as `interesting`. Later went the same day with its key, its
+  filter, its group and its tag, and an entry still stored as Later reads as
+  a plain seen one.
+- **Within a site**: what is new on top, then Marked, then the rest, each
+  newest first (2026-10-16). Several entries can be picked at once and
+  flagged together. No long value is hidden behind a "Show all".
+- **One site at a time**: "All sites" went, and the page opens on the first
+  site (2026-10-16).
+- **Everything two months old goes, except the Marked** (2026-10-22), and
+  is never downloaded. The copier puts such entries away on every run, and
+  one already that old when its list is read is never copied; its row
+  stays, bare (only its number, link and date), so it does not come back as
+  new. Age is the site's posted day; where a site gives none (the EPSS
+  sites, b2match's older platform) it is the day the copier first saw the
+  entry. How is at `putAwayOld` in 8-partner-copier-function.ts.
+
+## The look, and the reader
+
+- **All light** (2026-10-16), chosen on full-size mock-ups over the
+  Semaphore's dark ground and over a dark list beside a light entry. The
+  arena names keep the entry rows' type, over a bookish and a plain screen
+  type shown beside it; what he disliked in the arena cards was the
+  typewriter type of their counts.
+- **The entry is the page, on every screen** (2026-10-17), first asked for
+  on the upright iPad, which he wanted to feel like a reader for the
+  projects. The venues and a venue's entries stand side by side in one wide
+  drawer that Entries opens and closes, chosen from three drawn, over a
+  drawer that turns from the venues to one venue's entries and over an
+  overview page apart from the reader. Arrows, ← → and a swipe turn to the
+  next entry: the page slides off and the next slides in beside it, follows
+  a finger while swiped, and springs back from a short swipe or at the end
+  of the list (`turnPage`, `step` and `drawer` in the page).
+- **An entry reads as a lead's sheet** (2026-10-23): programme and topic,
+  the project's title, a box of organisation, contact and dates over the
+  other facts, then the texts. It replaced the long texts down the middle
+  with the short facts in a narrow column beside them. How is at "An entry
+  reads as the sheet" in the page.
+- **Mark, Bin and Why within reach wherever he is in an entry**
+  (2026-10-16): the bar holds at the top of the entry pane, and each entry
+  opens at its head. Why, his short note on an entry, is lit in the gold of
+  Marked once anything is written in it (2026-10-18).
+
+## Venues
+
+- **Called venues, as the Semaphore calls them** (2026-10-17), and shown in
+  the Semaphore's Venues order and colours: Shared first, then each type
+  under its band, each venue tagged with the arenas it serves. A venue the
+  Semaphore does not have stands last, under "Others". How a venue is
+  matched is at "the Marketplace's order" in the page.
+- **One line each, as on the Semaphore's Venues tab**, its arenas in one row
+  under it; arenas that do not fit fade out rather than say "+2". At the
+  right of the name stands what asks for him, Marked as a star and new as a
+  soft badge, a tint with a rule round it (a solid disc stood out too much
+  on the paper); how big the venue is, "256 entries" with the binned not
+  counted, stands quiet in grey on the arenas' line. Chosen on 2026-10-21/22
+  over discs at the end of the name, in a section at the right edge and
+  stacked, over a scoreboard with labels, a bar in proportion and a row of
+  discs, and over a "2m" badge in the Marked tag's colours, which read as
+  one more arena. His words: "unity between the apps, not similarity".
+- **A venue's name opens its panel, and an arena's tag the arena's**
+  (2026-10-18), sliding in from the right as on the Semaphore's Venues tab,
+  each leading to the other. They only read the Semaphore: Go is Site there
+  and records no visit, and every change is made in the Semaphore. Every
+  venue has a panel, even one the Semaphore lacks. It carries Site, the
+  arena's **scroll** and his **note** on the call (moved there off the
+  venue rows on 2026-10-21), and the calls of its arenas as a table under
+  its window: name and date on the left, the line on the right under one
+  row of months, the three calls that matter now shown and the rest behind
+  a button. One strip with the names and dates on it was a mess on his real
+  arenas. The panel leaves out the visits and Limbo. How is at "the
+  Semaphore's slide-ins" in the page.
+- **The scroll opens the call text's PDF**, not the call's web page, and he
+  changes the links himself, every arena at once from the pencil in the
+  column's head with one Save, rather than one pencil per card
+  (2026-10-16).
+- **His note on each call** holds its most important facts and up to a few
+  paragraphs, and keeps bold and lists, because he pastes from the call
+  documents (2026-10-16).
+- **Binned** lists the last binned first, each with when, so a mistake is
+  the first thing there to take back (2026-10-21).
+- Some venues are followed for their news only (`new_only`, 2026-10-17):
+  they start empty and show only entries posted after the copier first read
+  them. A venue can also have a first day (`shown_from`), before which its
+  entries are kept unshown. b2match gives each entry the moment it was
+  posted (`createdAt`, kept in `posted`).
+
+## Leads
+
+- **Make lead** (2026-10-21), beside Why in the entry's bar, writes a lead
+  straight into the Semaphore's cloud row: the contact person, the email
+  address, the project's website as a link named "project", the leading
+  organisation as the coordinator, and Why as the matched researcher. It is
+  filed under the arena of the entry's venue, asking only when the venue
+  serves several arenas or none. The lead remembers the entry (`entryId`, a
+  field only Mark’s Place reads) and the venue, so the button then reads
+  "Lead in" its arena and opens that arena's panel. Which entry-page label
+  gives each fact is at `leadFromEntry` in the page.
+- **A lead leaves its venue for Leads** (2026-10-22), opened from a small
+  button beside Entries: out of its venue's list and counts, under its
+  arena's name whatever the filters say, still found by the search. It
+  moves over when a list is next opened, not under the cursor, so ↓ after
+  Make lead goes on to the next entry (`leadMap` and `passes`). On the phone
+  Leads is a row above the venues.
+- **PDF and Copy for email** beside Open on site (2026-10-23), on leads
+  only and at the desk only, to send a lead's project laid out as he reads
+  it; an HTML file was offered as well and not taken. How is at "a lead's
+  sheet".
+
+## The search
+
+- **A plain bar that ranks the entries the way his Topic Atlas does**
+  (2026-10-21/22): terms given whole, each typed and given with Enter, as in
+  the Topic Atlas; each place a term is found shown with how it matched and
+  where, the places weighing differently, and extra where the terms meet.
+  Splitting typed words into terms by themselves was tried for an hour and
+  not wanted. Its ideas are the Topic Atlas's, not its code (nor the
+  Researcher Atlas's), and its concept libraries are shared from
+  `topic-atlas/library.js`. No Claude reads anything, at build or in use.
+- **Sentences are read for what they do**, because descriptions are often
+  about the company. What they ask for weighs most, then the project; what
+  they say of themselves counts against the entry, since what they already
+  have they will not need from us, unless they also ask for it. The
+  patterns (`roleOf`) were measured on two samples of real sentences read
+  by hand, 160 and 90: they agreed nine in ten, against three in four by
+  field alone, and found every sentence asking for a partner. Changing one
+  means measuring again.
+- **A card's lines are drawn the Topic Atlas's way** (2026-10-22): the words
+  landing in a shaded column, a bracket where two terms meet, chosen over
+  three others drawn on a sheet. A sentence read wrongly is put right from
+  its line, and the correction is kept in his row.
+- **The search stays simple**: a box of an entry's ideas over its text and
+  each sentence underlined by its reading were built and taken out the same
+  day (2026-10-22), so an opened entry reads as it always did. Pressing the
+  search box puts the venues and entries away and brings the search's page
+  to the front. Under All it reaches the bin too, each binned entry found
+  carrying its tag, at the desk and on the phone; the phone's search was
+  otherwise left as it was.
+
+## The phone
+
+`pocket/index.html`, with its own home-screen icon, the phone's only app
+since Pocket went (2026-10-22). Its first script is Pocket's shell, copied
+and kept as the page's own login and request; the second, every name
+starting with `pw` and every class with `pw-`, is the watch itself. It
+writes only what the desk writes; the scrolls' links are changed at the
+desk, the call notes on either.
+
+- **An iPhone app in look and steps** (2026-10-21/22, "much more easy and
+  Apple like"): the system's type and dark grouped lists; venues → a
+  venue's entries → an entry, each sliding in from the right, with the way
+  back at the top left and a swipe from the left edge; Mail's dot for
+  unread, green, as are a venue's new count and the New tag; up and down
+  arrows for the entry either side; Mark, Bin and Next as icons in the
+  toolbar at the foot. It stays dark because the clock's figures on a
+  home-screen page stay white. Only the entry's head is dark: the entry
+  itself is on paper, set for reading, the title and then straight into the
+  entry's own texts in a serif with no boxes, then Open on the Site, Why,
+  Make Lead and the facts.
+- **Made for a thumb**: a 44-point reach on every control, an entry turned
+  by a sideways swipe and put away by pulling down, the keyboard's Done
+  saving Why. The entry fills the screen, with ‹ List, the venue's name and
+  arrows at its head, which stays still while the page beneath it is
+  swiped; a sheet over a band of dimmed list was turned down. Venues stand
+  one to a line, as at the desk; side by side was tried on the phone and not
+  wanted. The venue cards stay on top, over one sliding row of venues and
+  over a button opening them in a sheet.
+- **The counts as at the desk**: Marked as a star and new as a green badge
+  at the right of the name, the size leading the line under it. Its bin has
+  an Undo after each answer.
+- **Make lead** as at the desk, its "Lead in" only saying where the lead is,
+  since the phone has no arena panel.
+- **Check now** is an icon in the top bar beside refresh and settings, a
+  tray with an arrow into it (2026-10-22), running the desk's check
+  (`pwCheck`); the line under the name says so while it runs.
+- **Choosing several, Mail's way** (2026-10-22): a long press puts a tick on
+  each row, Select All and Done in the top bar, and Mark, Seen, Unsort and
+  Bin at the foot with Undo after. Select All takes only what the filters
+  and search show; each group's header (New, Marked, Seen) takes its own
+  group.
+- **One icon for both pages** (2026-10-24): a bookmark turned upside down so
+  that its notch makes the M, "marked for further consideration", in the
+  One App icon's brown ground and brass lit from the top left, floating at
+  the ring's height, with no letter and no dots (the ring's five dots stand
+  for the One App's rooms). Chosen over a tick, an M circled in pen, a
+  highlighter and the Marked star. It is `pocket/icon.png`. A home screen
+  keeps the icon it was given, so a new one shows only after the old icon
+  is removed and the page added again.
+
+## The copier, and the sites
+
+- **The copier is a plain program, not an agent**: Claude's web reader cut
+  each list page off at about 100,000 characters (a third of one site's
+  entries never reached it) and summarises. It costs no Claude usage and
+  runs from Supabase's own schedule. How each platform is read is in
+  8-partner-copier-function.ts, and the function in Supabase changes only
+  when that file is pasted there again.
+- **A new venue is a row in `partner_sites`.** A new b2match event wants its
+  words for seeks and offers checked against `b2mKind` the day it is added
+  (Kind or Stage; "Consortium seeks partner(s)", "Coordinator looking for
+  partners", "Partner looking for consortium", the type Expertize), or most
+  of its entries come in as neither.
+- b2match's marketplaces are mostly open to anyone; only messaging and
+  meetings need an account. One that shows its entries only to registered
+  participants is read logged in as Mark (the B2MATCH_ secrets). A hidden
+  marketplace is found from the event's menu read logged in
+  (`navigation{items{nodes{... on NavigationLink{url}}}}` in the data
+  service), never by counting component numbers, which once found its
+  participant list instead. Events on b2match's older platform, at an
+  address of their own, are read their own way. A "v6" event is refused by
+  b2match's central data service and read from the event's own address;
+  one that shows visitors only its Home page cannot be read, since the
+  copier has no login for v6 events. The Security Research Map (SeReMa)
+  waits on that: its list's page number read from its menu logged in, and
+  Mark registered there (2026-10-23).
+- The EPSS sites moved to epss.proposals.ee and ask for a sign-in, made with
+  his b2match email and password (2026-10-23).
+- **Check now goes on by itself** until every entry is in (2026-10-17,
+  `checkNow`). The press reads the lists and the runs after it only copy
+  (`lists: false`). A site that refuses is asked once more after a pause and
+  then left alone for the rest of that check, its entries keeping their
+  place (2026-10-22). A failed read is one small line in plain words that
+  opens on a tap (`errLine`), and the check's line at the foot counts the
+  problems the same way.
+
+## Kept for later
+
+- Ideas he liked (2026-10-16): an Atlas match for what an entry seeks, a
+  link to the Semaphore arena of its call, pre-sorting from his past flags,
+  a keyword alert, a mark when an entry names a TU/e group. Make lead, from
+  the same list, was built on 2026-10-21.
+- Reading what the free text says (the project's name, the partners wanted,
+  who coordinates), each with the sentence it came from and "not stated"
+  where the page says nothing: planned as a second step, for an agent
+  working on the copied text. Not built.

@@ -191,7 +191,7 @@ slice. Anything new that redraws the board must go through it, not around it.
 
 **A lead card opens in place, growing with the scroll** (2026-10-16). Mark
 saw opening a lead as "blinking" in both rooms, for two different reasons.
-The Marketplace redrew the whole board to open one card, so every card was
+The Semaphore redrew the whole board to open one card, so every card was
 new and the one under the pointer lost its hover for a frame and faded it
 back in; the Ledger showed the card's new half at a stroke and then slid
 the room after it. Both now write the card's height and the scroller's

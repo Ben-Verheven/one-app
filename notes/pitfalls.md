@@ -339,8 +339,8 @@ Notes room needed it. Grep; do not trust the comment.
 paste, `selectionchange` (`DOC_GUARDED` in `hub.js`): those are gated on
 the room being the one showing, and while its drawer, dossier or reader
 is lent over another room it is not. Found 2026-10-15 in the
-Marketplace's drawer over the Ledger: dragging a venue's window end moved
-nothing and the release landed at the next press in the Marketplace,
+Semaphore's drawer over the Ledger: dragging a venue's window end moved
+nothing and the release landed at the next press in the Semaphore,
 writing a wrong date; ⌘↩ in a lead form did nothing. How to apply:
 anything a lent panel does is heard on the element (with pointer capture
 for a drag) or on `document.body`, which is the pane and is not gated;
@@ -351,7 +351,7 @@ for the mouse or key release that ends a selection.
 window's open end is a `mask-image` on the band, and the grip at that end,
 a child of the band, could be neither seen nor pressed (2026-10-15). How
 to apply: nothing pressable goes inside a masked element's faded part, or
-the press finds it by position, as `vhAt` in the Marketplace does.
+the press finds it by position, as `vhAt` in the Semaphore does.
 
 **`scrollWidth > clientWidth` on a pane is NOT a horizontal overflow bug.**
 Three rooms park a drawer at `translateX(100%)` and `overflow-x:clip`

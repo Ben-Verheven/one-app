@@ -9,7 +9,7 @@
     "allow": [
       "Bash(python3 tools/finish.py:*)", "Bash(python3 tools/lint.py:*)",
       "Bash(python3 tools/outline.py:*)", "Bash(python3 tools/names.py:*)",
-      "Bash(node tools/smoke.js:*)", "Bash(node tools/seed.js:*)", "Bash(node tools/pocket.js:*)",
+      "Bash(node tools/smoke.js:*)", "Bash(node tools/seed.js:*)",
       "Bash(git status:*)", "Bash(git diff:*)", "Bash(git log:*)", "Bash(git show:*)",
       "Bash(git ls-remote:*)", "Bash(git rev-parse:*)", "Bash(git fetch:*)", "Bash(git pull:*)",
       "Bash(git checkout main)", "Bash(git add:*)", "Bash(git commit:*)",

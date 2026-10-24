@@ -85,7 +85,7 @@ function dtSub(dt){
 
 /* ───────── a type's colour ─────────
    Every arena type wears a colour, and every lead wears its arena's type
-   colour — on the wall, on the Ledger's board and in Pocket (Mark,
+   colour — on the wall and on the Ledger's board (Mark,
    2026-10-11). Before, each arena had a colour of its own, chosen on one of
    its leads, and the leads of two Joint Undertakings looked unrelated.
 
@@ -129,9 +129,7 @@ function freeTone(types){
 }
 /* Every type comes out of here with a tone. One without is given the colour
    most of its arenas wore when colours were the arenas' own, so what Mark
-   chose then carries over, and otherwise the next free tone. Pocket reads the
-   same board, so it settles the same types the same way until the desk has
-   saved them. */
+   chose then carries over, and otherwise the next free tone. */
 function settleTones(s){
   const taken=new Set();
   s.types.forEach(t=>{if(toneHex(t.color))taken.add(t.color);else t.color=null;});
@@ -419,7 +417,7 @@ function tidyVenue(v){
   /* A tool was always open; as a venue it is one whose window opened when it
      was first visited or found, and has no end yet. `kind` stays on every
      venue, always 'event', because the gatekeeper's copy of this function
-     and an older Pocket wipe a tool's window on every write they make. */
+     wipes a tool's window on every write it makes. */
   if(v.kind==='tool'){
     const first=(Array.isArray(v.visits)?v.visits:[]).map(x=>x&&(x.at||x.id)).filter(x=>ISO_DAY.test(x||'')).sort()[0];
     const found=typeof v.foundAt==='string'?v.foundAt.slice(0,10):'';
@@ -474,8 +472,8 @@ function takeStamps(v,x){
   v.visits.sort((p,q)=>p.at.localeCompare(q.at));
 }
 /* Everything the room used to keep about events and tools is turned into
-   venues here, on every read of the board and not once: Pocket, an older
-   copy of the desk and the agent's Dispatches can all still put a
+   venues here, on every read of the board and not once: an older copy of
+   the desk and the agent's Dispatches can still put a
    brokerage date or link on an arena, and each is taken in the moment it
    arrives. A brokerage date becomes an event venue under its own id, or
    joins the event already standing at the same site on the same day. The
@@ -4066,7 +4064,7 @@ function leadEditAll(l,v){
    contact person, both plain words and both optional (Mark, 2026-10-14), and
    the contact's email address, kept bare (2026-10-16). A
    field left out of `v` is left alone, so a caller that knows nothing of
-   them — an older Pocket — cannot wipe them; an emptied one takes the key
+   them cannot wipe them; an emptied one takes the key
    off, so a lead that never had them stays as it was. */
 function leadWhoSet(l,v){
   ['coordinator','contact','email'].forEach(k=>{
@@ -4095,7 +4093,7 @@ function leadEditRead(card){
 }
 /* The list itself, in the arena's panel. It was on the back of every card on
    the wall as well, until Mark took the leads off the rotation cards
-   (2026-10-11): they are worked here, on Leads, on the Ledger and in Pocket. */
+   (2026-10-11): they are worked here, on Leads and on the Ledger. */
 function leadListHTML(a,hits){
   const hit=new Set(hits.map(l=>l.id));
   const row=l=>leadRowHTML(a,l,hit.has(l.id));
@@ -4897,8 +4895,8 @@ $('#askNo').addEventListener('click',Ask.shut);
 function typesShown(){renderTypes();renderAll();}
 /* ───────── the types, managed ─────────
    Everything about the types in one place, opened from the Types button
-   beside + Arena (Mark, 2026-10-11): their order, which the cards, the board
-   and Pocket all follow; their names and colours; merging one into another;
+   beside + Arena (Mark, 2026-10-11): their order, which the board, Venues
+   and Mark’s Place all follow; their names and colours; merging one into another;
    and moving an arena from one type to another. All of it by dragging, as
    he asked the same day, over a first version of arrows and drop-down
    menus: a type is dragged by its grip up or down to order it, or onto

@@ -1,4 +1,4 @@
-/* The Marketplace (the Brokerage Semaphore until 2026-10-14) — the room's own furniture. Plain HTML; Hub puts it in the
+/* The Brokerage Semaphore — the room's own furniture. Plain HTML; Hub puts it in the
    pane before the room is mounted. Two characters must not appear
    here, because the markup travels as a template literal: a
    backtick, and a dollar immediately followed by a brace. */

@@ -1,79 +1,258 @@
-- Went with a Supabase inbox for the Semaphore update agent: suggestions only, which he accepts or dismisses in the Semaphore room
-- Chose the combined schedule: a daily run of ~3 arenas (cut from ~10 to ~5 on 2026-09-18, to ~3 on 2026-09-30, to save usage) plus a weekly run looking for new calls and brokerage events (~35 min, at most 2 new arenas since 2026-09-30)
-- The daily watch looks only for real brokerage/matchmaking opportunities (and partner-search tools); no plain info days or call webinars unless they have a matchmaking part, and no call dates (2026-09-30); from 2026-10-06 to 2026-10-11 it brought only links to those events and tools, no dates; since 2026-10-11 it brings brokerage events as dates again (with the event's page as their website) and corrects brokerage dates already on the board, while the weekly hunt also corrects call dates already on the board (a moved deadline, an uncertain date become exact); since 2026-10-10 also short rewrites of the About ("arena info") and Brokerage texts of the arenas it looked at, which on Accept replace the old text, so bad or outdated lines go; he chose this over adding sentences under his text, which he turned down the same day
-- Wants all scheduled agents (Semaphore and Atlas) to run at night, so they do not start and eat into his morning 5-hour usage window
-- Chose to allow Supabase in his organisation's network settings so the cloud agent can reach it, over the Supabase connector or a folder route
-- Chose a gatekeeper with a password of its own over handing the agent the app's Supabase key, so the agent can only read a trimmed board and add suggestions
-- Chose **Dispatches**, a third view beside Board and Brokerage, over findings inside the arena panel or cards on the brokerage wall
-- Chose that accepting an uncertain date puts it straight on the board marked uncertain, rather than opening the date editor prefilled
-- Built and running from 2026-09-18 until 2026-10-14 (when the Semaphore's tasks were switched off, see the last line): the Dispatches view, the `semaphore_inbox` table, the `semaphore-agent` edge function, and two scheduled tasks (weekly Mon 01:00, daily 01:30 his time, every night since 2026-10-10; the Atlas tasks follow at 02:00 Mon/Wed/Fri and Tue 02:30; all set in UTC, so an hour earlier after the October clock change)
-- Wants a lead presented the same way everywhere; chose the Ledger's lead card as the standard, shut until pressed in both rooms (over always-open in the Semaphore, or due-ones-open), with each room keeping its own colours (2026-10-06) — except the lead colour, which the Ledger, the Semaphore and Pocket all wear (2026-10-10); since 2026-10-11 it is the colour of the arena's type, chosen only where types are (see below), no longer per arena from a lead
-- Wants a lead's steps drawn as a "ruit": Spotted splits into two contact paths (researchers contacted / lead contacted) that merge again at Talking; keep the name "Talking"; the shut lead card shows the match, with match and date less prominent than the name; chose the layout with the ruit at the left of both lines (2026-10-06)
-- A lead's day no longer raises its arena card on the Semaphore wall; the Ledger's board carries lead days now (2026-10-06)
-- Wants what the agents brought marked subtly as new, on both the rotation card and the slide-in, kept in sync; and wants to reorder links on both (2026-10-06)
-- Chose for the rotation cards a phase line ("Open · next deadline … · in N d") over a strip of time (calls as bars, brokerage diamonds, today line), with links in a separate band; card fronts sized to content (2026-10-07)
-- Chose for the Board a status column beside the names (Open / Opens / Between), word only with no day count; brokerage marks a bit smaller (2026-10-07). The column went on 2026-10-11 at his asking; its heading, once "Where" and a sort by status, moved over the names and chooses between two orders: My order (his own order of arenas, set in the Types window) and By date (the soonest deadline, call opening or brokerage event first)
-- Chose a dashed outline as the one way to draw "uncertain" across the whole Semaphore (cards, board, legend), replacing the board's haze (2026-10-07)
-- The view switcher reads Rotation · Coming up · Board since 2026-10-12 (Coming up added 2026-10-08; Cards, renamed Rotation, held Rotation · Pinned · Leads as a switch of its own until then), with Leads to the right of it in a button of another kind — rounded, in the leads' clay, the ruit drawn small before the word; Dispatches is not in it — chose to place it as its own button on the right, beside the cloud chip, since it is an inbox and not a way of looking at the board (2026-10-09)
-- Removed the Semaphore's Filters panel and everything in it (type/tag/certainty/layer filters, the time-window controls, the colour key), plus the Quick add and Types header buttons; added a Search button in their place. Chose that the board always shows last month plus the next 12 months (2026-10-09)
-- "Both contacted" leads are the most important and go on top of the stack (2026-10-08); Talking goes above even those (2026-10-16), so a list of leads reads Talking, Contacted, Spotted — on the desk's Leads, the Ledger's list, Pocket and the weekly Excel. An arena's own panel still stacks them spotted-first. The Excel's Talking column says who the conversation is with: to the lead, to researchers, to both
-- Wants a day's leads shown when clicking a day in the Ledger's todo overview, but not at once — behind an expandable button or line (2026-10-08)
-- Chose Pocket's spine shape for the Semaphore's Coming up, as a top-level view beside Board rather than a Cards sub-tab; removing an event there must remove it from the whole app (2026-10-08)
-- Wants every brokerage event linked to its own website (a `url` on the date); chose a nightly catch-up task doing 2 events a night, soonest first, which deletes itself when done ("Semaphore event websites catch-up"); the websites arrive in Dispatches as link findings carrying `replaces_date_id` (2026-10-08)
-- Pressing a brokerage diamond (on the Board or a card) goes to Coming up and shows that event there, rather than opening the arena panel; brokerage events can be added from Coming up and then show everywhere (2026-10-08)
-- Wants events in Coming up stampable with days-since, the stamp kept in sync with links of the same site; website buttons there must show the whole address, never cut off (2026-10-09)
-- Wants a card that waits for a date flagged for the nightly agent the day before it wakes, so it comes back with its info brought up to date; and wants Pocket to set and stop a wait as the desk does, from the arena's sheet (2026-10-10)
-- Wants to score each lead 1 to 5 for how valuable he thinks it is, on the shut lead card in both rooms. First built as five dots; he chose instead one dot with the number in it, coloured red (1, worst) to green (5, best), edited from a menu, and the dots of a list standing in one column under each other. Leads are not sorted by score — not asked for. Pocket shows the same dot on each lead and sets it from the lead's sheet (2026-10-10)
-- Merged the Cards view's Rotation and By type into one Rotation (2026-10-11): a row for every arena type, in his own order of types, and inside each row the cards in rotation order, so each type has a first card of its own rather than one ranking over all arenas. Shown options with big, middle and small cards per type; he chose instead every card one size, the row trailing off to the right and scrolling, a card stamped today going to the far right of its row. His own card order within a type (dragging) went with By type. Pocket follows: a row per type, swiped sideways; Look around takes the types in turn
-- Wants to colour-code the types, and the leads in the Semaphore, the Ledger and Pocket to wear their arena type's colour, replacing the per-arena lead colour; chose 18 soft earth tones, two shades of nine hues, over the old ten; on 2026-10-12 asked for more and harder ones: 26, two shades of thirteen hues, twice as colourful, the old keys kept. Pocket shows type colours but cannot change them
-- Wants everything about types in one place: a Types button beside + Arena opens the type manager, where types are ordered (one order for the cards, the board and Pocket), renamed, coloured, merged into one another, and where an arena is moved from one type to another; the dot and the arrows on the rows' own heads went (2026-10-11). The same day he chose dragging for all of it over arrows and drop-down menus: a type dragged by its grip to reorder, dropped onto another to merge (asked first); a type opened to show its arenas one under another in his own order, each dragged up or down to reorder it or onto any type to move there. Wants the type colours prominent: a type's head on the cards, the board and Pocket is a band filled with its colour (2026-10-11)
-- On the rotation cards (2026-10-11): no "Links" heading on the links band, at most three links with "+ N more in the arena" (Pocket too); the stamp always in sight, not only on hover, and carrying the days since it was last pressed (0 on the day; nothing on a card never stamped), on the desk and in Pocket; a card that waits says so in its foot, where "Wait for…" stands otherwise, and Pocket's card in short; a card asleep until its date always stands at the far right of its row, past the stamped ones, faded all but its wait line (full again on the desk when reached for), on the desk and in Pocket; and a "Reset all stamps" button beside "How the order works" that takes the stamp off every card in the rotation, asked first
-- Wants to edit an arena in Pocket: its name, its About and Brokerage notes and both lists of links, from a pencil on the arena's sheet; chose to leave type, weight, dates, the freezer and deleting on the desk, the last two because a thumb takes an arena out of sight too easily (2026-10-11)
-- A card that wakes from its wait (three weeks before its date) leaves its type's row for a row of its own over all the others, "Back from waiting", shown only while it holds a card; stamping a card there ends its wait and sends it back to its row (a same-day undo of the stamp brings the wait back), on the desk and in Pocket (2026-10-11)
-- Took Pinned away altogether (2026-10-12), on the desk and in Pocket: no Pinned view or tab, no pin beside a link, and every link once pinned back on its card; a whole card had been unpinnable since 2026-10-11
-- Took the leads off the rotation cards (2026-10-11): a card is one face, with no side of leads to turn to and no count of them in its head, on the desk and in Pocket; leads are worked in the arena's panel (Pocket: its sheet), on Leads, on the Ledger and in Pocket's Leads tab, and a search that finds a lead opens its arena's panel
-- Wants Pocket's Coming up to do what the desk's does (2026-10-11): the stamp with its days, one stamp to a site; the event's own website or "add website"; "+ Brokerage event"; and ✕ to remove an event from the whole app, which he chose although dates had stayed on the desk until then. In place of the desk's hidden fortnight, a brokerage event that is over goes to a Limbo at the top and stays until he removes it by hand, where ✕ does not ask; the same day he had the desk made the same, Limbo replacing its fortnight. On 2026-10-12 he had Limbo drawn spooky, on both: a misty box with drifting fog, a bobbing ghost, wisps, a cobweb and a flickering glowing word, holding its events when open; and the Brokerage / Everything switch went, so Coming up holds brokerage events only, with no count over it of the year's events or of those without a website
-- Wants to know what each lead came to (2026-10-11): Complete asks how it ended — Became a project, Went nowhere, They declined (his word is project, never proposal) — in place of the lead's action row, in the Semaphore, on the Ledger's lead card and in Pocket; a project opens the Ledger's new project with the lead's name and links filled in (Pocket only records it); a closed lead says how it ended where its day stood, and under an arena's Closed line its count: leads so far, how many reached talking, how many became projects
-- Coming up, on the desk and in Pocket (2026-10-12): no count of the days to an event (only "on now"); the stamp is a white disc with the days since inside it in place of the tick, reddening to the brokerage red over 14 days, and an event never stamped keeps the empty ring and its tick; the arena's name in a box of its type's colour; a ▾ on each brokerage event unfolds the arena's strip of time, as its card draws it, under the row, with that event marked on it (a larger diamond in a ring of ink); and a brokerage event pressed on a card's phase line goes to Coming up, as its diamonds on the cards and the board already did (Pocket: the diamonds and the phase line)
-- A brokerage event stands once in the whole Semaphore, under one arena, and so once in Coming up (2026-10-12): the weekly hunt had sent one event under four arenas the night before. Both scheduled tasks now check a new event against every arena's brokerage dates and links and every arena's past findings, not only the arena in hand, and send it for the one arena it fits best — the arena whose own pages announce it, else the broadest it serves (the cluster over each partnership under it); an event already on another arena is not new. Only the tasks' prompts enforce it; the gatekeeper does not
-- On the rotation cards (2026-10-12): a link shows its name only, not its address (still in the hover title), and carries a stamp with the days since, on the desk and in Pocket. The stamp belongs to the site, not the link: stamping one stamps every link and event that reaches the same event or tool, on every card, whatever each is called and whichever page of it each points at. He means the event's or tool's own site, not the platform's: an-event.b2match.io is one site, but b2match.com/e/an-event and b2match.com/e/another are two (`siteKey`, with `SHARED_HOSTS` naming the hosts that carry many events side by side). Coming up shares the same stamp
-- Wants to start a lead from Leads itself, not only from an arena's panel (2026-10-12): a + Lead at the end of its head opens the panel's new-lead form with the arena chosen in front, in the rotation's order and the last one kept; the lead lands open in Spotted
-- Removing an event from Coming up removes its links from the rotation cards too (2026-10-12), on the desk and in Pocket: every card's link to the same site, as the stamp counts a site, on whichever arena
-- Wants his own notes on Coming up's brokerage events (2026-10-12), on the desk and in Pocket. Shown three ways (books opened in place; books with the note's first line showing; no books and the note always shown); he chose a mix: a book left of the date only where an event holds a note, pressed to open the note in a box under the row, and "+ note" in the row's end where it has none — no empty books. The same afternoon he had the desk's "+ note" replaced: an event's diamond on the spine turns into a book under the pointer (animated), and pressed opens the note to be written; the iPad presses it without the hover. Pocket likewise: the diamond tapped turns into the book and opens the note's sheet, and its "+ note" went too. Kept in the date's `memo`, apart from its one-line `note` (basis, source), which the board, the panel and the agent's "extrapolated from" use; next year's copy of a date does not take it, an agent's correction keeps it. Calls have none
-- Wants each lead to say who is behind the project (its coordinator, the organisation that started it) and its main contact person, in the Semaphore and on the Ledger's lead card, shown in a "Who" band over the links (2026-10-14). On 2026-10-16 he added the contact's email address (`email`, kept bare) and wanted the open card to give oversight at a glance and be easy to use. Of three drawn — two boxes side by side, the person first as a little contact card with links as tiles, compact labelled rows with links as chips — he chose the two boxes: Who (coordinator, main contact, the address as a button that writes to it, with Copy) and Links (each with a mark for page, letter or document and its host or address at the far end), side by side where the card is wide and stacked in an arena's panel, in both rooms. The Excel has an Email column. Pocket does not show any of these yet. And wants one Excel of every lead, open and closed, with its updates, brought up to date once a week; he left the way of updating open, and it was built as the same file written over each time, a lead new or changed since the last export marked yellow, rather than a file that keeps adding rows; the button is Excel on Leads. On seeing the first file (same day) he took out its front sheet, its sheet of updates, its closed todos and the next date, and asked for: the step as the app's ruit, or else four columns that fill up (built as four columns, a lit cell per dot); every row one line high, long texts and notes opened by a press (built as Excel's + beside a lead, opening its links and updates in full, one to a row); real links; more colour (each group of columns its own colour, the arena in its type's colour, the score and the ending in the app's); the closed leads on a sheet of their own, latest on top
-- On the Board (2026-10-14): the column of arena names is widened or narrowed by dragging its edge, kept per device (`ui.nameW`). And an arena can have one general brokerage tool — a brokerage link without a date, chosen in the arena's panel by the diamond beside the link (`toolId`) — standing as a diamond at the right of the name column, against its drag line (moved there the same day from right after the name); a press opens the tool's site and marks it gone through (a second press that day only opens it), and the diamond then carries the days since, reddening over a fortnight as Coming up's stamps do. It is the link's own stamp, so it agrees with the rotation cards' stamp for that site. Pocket does not show it
-- Wants the nightly agent to keep each arena's general tool up to date (2026-10-14): chose that a tool it finds for an arena without one comes as a General tool finding in Dispatches, which on Accept adds the link and marks it the tool in one go, over sending it as a plain link for him to mark himself. On an arena that has a tool, it offers one only when the tool's address has moved, so Accept never swaps a tool he chose for another
-- Wants the agents to be able to take a date off the board, not only correct it (2026-10-14): a Remove finding in Dispatches, deleted on Accept as the panel's ✕ deletes. He had asked whether a wrong date could instead be corrected to one far off the board (12/12/99); turned down because the date would stay in the data — a brokerage event in Limbo, a call still counted, an agent offering to correct it again
-- Wants the Semaphore agent on demand rather than at night, and doing the work rather than suggesting it (2026-10-14): it reads the whole board but the leads and adds, changes and deletes dates (calls, brokerage events, their websites), a card's links and brokerage links, the general tool and the About and Brokerage texts itself; it may never delete an arena, and new arenas still wait in Dispatches. Chose to call it by telling Claude what to check over a button in the app, which would need an API key billed per use; chose to see what it did in its own report only, over a list with Undo in Dispatches or a new-mark on the board. The nightly watch, the weekly hunt and the websites catch-up are switched off, not deleted
-- Wanted a grip on the brokerage events and tools that are open now, and to drop by them now and then for new projects (2026-10-14). Chose, from three sizes drawn, the largest: the room is kept around **venues** (an event's marketplace, or a partner-search tool), each serving one or more arenas and listed once, with a life (coming, open, meeting days, still open, over), a rhythm of visits, and visits answering "anything?" — nothing new, something (a line), or a lead, which remembers its venue. He named the room the **Marketplace** and the things venues. Of three shapes for the first page he chose the strip of time (every venue a bar across four weeks back and twelve ahead, due ones ringed on today's line) over one list in bands and three columns. He retired the arena cards of the Rotation, and with them the arena's sweep, the ring that asked the agent and the wait for a date; Coming up became the strip, Limbo staying. He wanted "anything?" asked both when he comes back to the app after Go and when he presses a stamp. Every bullet above about the rotation cards, Coming up, a card's wait, the ask ring, the general tool and the stamps on links and events describes what this replaced. He wanted only one agent for the room, put to work on whatever he asks: the three switched-off tasks were deleted the same day
-- Wants only what is fixed and current among the venues (2026-10-15): an event venue carries a date an official page states to the day, or it goes; a venue that is over, or serves only a closed call round, goes when he asks for a cleanup, his visits on it with it; names short and notes a few words of fact. The agent's task prompt carries this as a standing rule, so it deletes a guessed venue itself instead of keeping it as a guess on purpose; call dates on the arenas keep their uncertain dates. It also takes the request a Claude session passes on when firing it as his own words, after a first cleanup round refused to delete on a passed-on request
-- Wants the agent to look for newly published brokerage events and tools for every arena (2026-10-15): chose, of a weekly full scan, a small nightly scan, or choosing a type himself each week, the nightly scan, as the agent's own schedule rather than a second task: about ten arenas a night, active ones once a week (twice when a call is near) and frozen ones about once a month
-- Wants to mark a venue so the agent looks at that one at least (2026-10-15): an Ask agent button on the venue's panel beside Go and the stamp, lit as Agent asked until the agent has been, pressed again to take the ask back; the nightly scan takes asked venues first. Pocket does not show it
-- Wants Now's events and tools on two tabs rather than one under the other (2026-10-15): an Events · Tools switch at the head of Now, each with its count and how many are due, Limbo and Later on the events tab, the tab kept per device (`ui.nowTab`); Pocket has the same two tabs since the same day, the tab kept on the phone (`pocket.nowTab`)
-- Wants a venue kept only when shown to bear on matchmaking still ahead (2026-10-15), not merely because nothing proves it over: after a cleanup left 2026-looking tools (the Clean Industrial Deal platform, the Agroecology partnering tool), he had the agent's rule turned round and told it to check not only the venue but the arena it serves and the call it is tied to (a deadline still ahead, or a next round it serves); a kept venue is reported with the call or date that keeps it
-- Had the agent rewritten from scratch (2026-10-15) after it deleted NCBR Partfinder, which four co-funded health partnerships name as their partner search: what he looks for is projects being formed and their leaders, partners second. Its venue rules are lettered A–F: what belongs, what does not, three checks before any delete (the venue's page, each arena it serves on the board with his own Brokerage text, and the call's own site), keep a standing tool while any arena it serves has a call ahead, delete only when all three checks found nothing ahead and never on an unchecked assumption, names short. Its report gives the call that keeps each venue and what each check found for each deleted one
-- Wants a venue the agent is unsure about kept, not deleted, and marked (2026-10-15): rule G, keep it and set a few words on why (`doubt`); the desk shows a small ? by its name on Now and the reason in its panel with Keep it, which takes the mark off; Pocket shows the ? and the reason only, Keep it staying at the desk
-- Had the Marketplace redone around the board as its way in (2026-10-15). **Everything lands on the Board first**: what the agent finds — brokerage events, partner searches, tools — stands there marked new, in a lime of its own with a glowing edge and a tray over the board listing each, until he acts on it: **→ Venues**, **Keep** on the board to think about, or **Remove**; Remove is remembered as a stub (`place: gone`) so the agent does not bring it back. A venue moved to Venues stays on the board too. Published call dates simply go on the board; nothing to act on (until 2026-10-17, below). He asked that the board not get cluttered and nothing overlap: each venue has a track of its own on its arena's row wherever it would touch another, its name inside its band or after it, rows growing a track rather than piling marks. **Venues** (Now until then) holds only what he moved there, with **no distinction left between events and tools**: every venue is a window of activity he sets by **dragging either end of its band**, on the board or on Venues (one record, so the two agree; double-click an end to give it back its default), the event days kept as diamonds inside it because activity clusters round them; the window is shaded by how much goes on, rising to the event days and falling after. Venues is in **Arising · Active · Dying** tabs — he was unsure between tabs and sections and tabs were chosen — with **Limbo** apart for what is over; Active is in order of how much is going on. The visits, the stamp and its days, Go and the question after it stayed as they were, at his asking. The agent's job became placing things on the board: it deletes only its own finds still new, and never what he kept, moved or removed. This replaced the Events · Tools tabs, Later, the arena's tool diamond on the board, and the agent's own deleting under rules A–G above
-- The same evening (2026-10-15), seeing that everything now waits on the board for him: the agent's ? went (`doubt`, on the desk, in Pocket and in its instruction), since he judges every find himself; and the agent was told to lean to completeness — anything involving matchmaking (events and tools) goes on the board, events known only to a month among them, shown dashed until their days are known; about 5–10% misfires is acceptable if it makes the board more complete, but nothing irrelevant: plain info days and conferences with no sign of matchmaking, lists of organisations and expected call dates stay off. Rule G above, the doubt, describes what this replaced
-- On seeing his real board zoomed out (2026-10-15: "a total clutter"), chose from four drawn versions (as now; A, quiet what is handled; B, shared venues on one row; C, calls and marks only) A and B together: a venue serving two arenas or more stands once, in a **Shared venues** group over the types, the arenas under its name as the same coloured tags Venues shows, and an arena's row says "+N shared"; on the arena rows a venue already in Venues is a thin line with its diamonds and no name (hover says it), so the new and kept ones stand out; a window with no end runs six weeks past today and fades out with an arrow, on the board and on Venues, rather than to the edge. C, windows only on Venues, was turned down
-- The same evening (2026-10-15): Venues in a fixed order that a visit never changes — the venues serving two arenas or more first as one block (as the board's Shared venues), then each type's own in his order of types, each by the start of its window; he chose no headings between them, the arena tags' colours saying the type. And the stamp went, on the desk and in Pocket: pressing **Go** is the visit, recorded at once as the tick on the venue's strip, the button then reading **Visited** for the rest of the day; coming back still asks what it gave, with "Not a visit" to take back a stray Go
-- The same evening (2026-10-15), on the Shared venues: each venue is one line, folded by default, with a caret to unfold it; unfolded, the arenas it serves stand under it one to a line, each with its calls as on its own row, tied to the venue by a rule down the left and the venue's window shaded behind them with its event days as a line through them. The tags two to a line under the name went, since they lined up with nothing. Asked why the shared venues' bars were so big: there was no good reason (they had been drawn full because the row was theirs alone), so a venue in Venues is a thin line there too, as on every arena row
-- Later the same evening he asked for the headings after all: on Venues, and in Pocket, each group (Shared, then each type) stands under a thin band in its type's colour, as the board's groups do
-- Wants to ask the agent about an arena too, not only a venue (2026-10-15), above all for its call dates: an Ask agent button at the head of the arena's panel, lit as Agent asked until the agent's log shows it has been; the nightly scan takes asked arenas first and goes through every round's published dates and stages, then its links, texts and venues. Pocket does not show it
-- Wants to put a venue in another section of Venues by hand (2026-10-15): in its panel, beside Back to the board, Arising · Active · Dying · Limbo with the one it stands in lit; one chosen by hand stays there (`phase`) until "by its dates" gives it back, and the panel says where its dates would put it. Its window and its words keep saying what the dates say; its rhythm follows the section chosen. Pocket shows the section, but the choosing is at the desk
-- Wants to order the venues within their group on Venues by hand (2026-10-15): dragged by the small mark at the left of a row, up or down within its group; the order holds for the group across all four tabs and in Pocket (`vpos`); a venue never dragged stands after those that were, by the start of its window
-- The days that matter most for brokerage are a call's publication to its first deadline, the pre-proposal or the full proposal, whichever comes first (2026-10-16); he likes the board's look and wanted little changed. So a call in stages is drawn full strength on the Board only up to its first deadline, a thin line on to the last, the strong part grey once that first deadline is past; a call's hover says how many weeks it leaves for brokerage. A call with one deadline looks as before. Pocket draws no call bars
-- Wanted the venues in Limbo off the board, and to delete them from Limbo (2026-10-17): a venue in Limbo is no longer drawn on the board, neither on its arena's row nor among the Shared venues, and its arena's panel still lists it; Limbo's faint ✕, which he had not found as the way to delete, became a Delete button that deletes at once, as the ✕ did, leaving the stub that keeps the agent from bringing it back
-- Wants the agent to bring back a brokerage site or partner search he deleted or removed when it is used again for a new call or edition (2026-10-17): a removed venue now stands in the way only of its own occasion. The gatekeeper (`siteInWay`) takes a find on the same site when its own days begin after the last day of every venue already there, gone or over, and the agent's instruction says to add such a round as a new venue, noting it is a site he had before, and never to re-date the old venue onto it
-- Renamed the room the Brokerage Semaphore (2026-10-17), the Marketplace until then, so that it is not taken for Mark't Place (Marked Place from 2026-10-18, Mark’s Place since 2026-10-21), the brokerage entries' page. Only what is on screen changed; the code still says `semaphore`, and the nightly task is still called Marketplace agent
-- Wants what is new on an arena seen on the board itself, clearly, until he checks it off (2026-10-17), when he meant to import a file of call dates and venues another assistant had updated: a call with a new date or stage glows in the new colour on its row, the row says "N new ✓", the tray lists each such arena with Seen, and Seen is the only way back; closing the arena's panel no longer marks it seen. The markers did not change (`foundAt` on the date or link, `seenAt` on the arena), so a file that sets `foundAt` to the moment it was written shows its dates as new. How is at "what the agents brought" in semaphore.js
-- Found Leads still gave no overview (2026-10-21) and asked for more colour; of three drawn beside it (coloured steps, three columns left to right, one table) he chose the table, with the step said by the ruit at the head of each line rather than a coloured box. So Leads is one table: a heading of columns that sort each step (Arena, Project, Match, Who, Last update, Score, Next), each step under a band of its own colour (Talking green, Contacted amber, Spotted blue-grey), the arena as a tag in its type's colour, the last update on the line, and the day coloured by how near it is. The Ledger's list, which Leads had copied since 2026-10-06, keeps its own look. How is at "the leads table" in semaphore.js
-- The same day, on the open lead in both of the room's places: each button stands on what it changes, as drawn for him — + Add update on the head of an Updates box, with the line written straight under it; + Link or email on the Links box (taken off on 2026-10-22, below); Edit and Complete at the card's head. The one row of buttons between the head and the boxes went. The Ledger's lead card keeps its row
-- Pressing Talking, the ruit's last dot, lights the two contact paths as well (2026-10-21), at the desk, on the Ledger's card and in Pocket; going back to Contacted keeps them lit
-- Lost track of leads that moved, opened or shut (2026-10-21: they "got transported or blinked into or out of view"). A lead sent elsewhere by its ruit, its day, its score, an update or Complete now slides to its new place with the view following it, and glows where it lands; opening a composer, or putting one away, redraws only that lead. See notes/animation.md
-- On the open lead (2026-10-22), asked as a list with "understand the intention": the ruit's dots in the colour of the step the lead has reached (the Leads bands' blue-grey, amber, green) instead of the arena's; the venue line left off a lead Mark’s Place made, its venue being the arena's own just above; Who and Links always both there, so a lead with only links keeps the two boxes, each box's name standing over it as a title; the contact person and the address grouped as one; a Copy on every link, as the address has; no + Link or email — Edit, made a proper button, is the single way to add links and addresses, and while editing every field stands in the box where its fact is read. A lead's move or change glows wherever it lands, and the view keeps it clear of the room's bar (notes/animation.md)
-- Removed Pocket, the room's phone companion (2026-10-22): he no longer needs its functionality on the phone. Every "in Pocket" above is history; the phone keeps only Mark’s Place (`partner-watch/pocket/`), and Pocket's file is in git's history should it ever be wanted back
-- Wants the venues Mark’s Place copies in a section of their own on Venues, put there by themselves (2026-10-22): he had put many of them in Limbo by hand to have them out of the way. **Mark’s Place** is a tab in a box of its own between the three and Limbo; a venue in Venues on a site Mark’s Place copies stands there whatever its dates or a section chosen by hand say, and never falls due for a visit, since Mark’s Place reads it every night. How is at `inPlace` in semaphore.js
-- Wants ChatGPT's deep research as a second searcher beside the agent (2026-10-22): a ChatGPT button in the header writes one file holding every arena (its calls, links and two texts), every venue (the removed ones as stubs, so it does not bring them back) and the instructions, so that ChatGPT given the file simply hands back the result; it is told to go through every arena, frozen ones lightly, for call dates and for actual brokerage only — matchmaking events and partner-search tools, now or announced, never plain info days. The leads, his visits and his venue notes stay out. Its answer is a list of changes, not the board again, read back in the same box (pasted or as its file), shown change by change with what was left out and why and how many arenas it did not reach, and put on the board only on Put on the board, glowing new as the agent's finds do, after a Ledger restore point. It can add and correct call dates, add and correct venues, add an arena to a venue and add a link; it cannot delete, rename or rewrite his texts. The same day he had ChatGPT work in rounds of at most 15 arenas (`GPT_BATCH`), so the last arenas are searched as carefully as the first. On 2026-10-23, when rounds run in one chat still carried everything before them, he had each round given to a fresh research agent of its own, one after another, the coordinating agent merging them into one answer, and ChatGPT told to say so before starting if it cannot, rather than run the rounds in one chat. The same day he had it check, where it can, whether organisations in the Netherlands can take part and be funded, and leave out what they clearly cannot, keeping what it cannot find out about. And he told it that the purpose is project descriptions, matchmaking done through them: a site listing only partner profiles, or an event or tool about meeting people rather than projects, is not wanted; nor is an event or tool open only to paying members, more than a simple registration. Every such rule gives way to doubt: he would rather have ten false finds than lose one real one, so ChatGPT leaves out only what plainly fails. How is at "ChatGPT's search" in semaphore.js
-- Wants a venue moved to Venues off the board (2026-10-23), believing it already was: on its arena's row it had stood as a thin nameless line he did not notice, but among the Shared venues it kept a named row of its own. Now a venue in Venues, whatever its section (Mark's Place included), is drawn neither on an arena's row nor among the Shared venues; its arena's panel still lists it, and Back to the board brings it back. This replaced the thin lines of 2026-10-15 and "a venue moved to Venues stays on the board too", and takes in the Limbo rule of 2026-10-17. How is at `onBoard` in semaphore.js
-- Had the nightly agent stopped on 2026-10-23, since he uses the ChatGPT button for that search now: its scheduled task ("Marketplace agent") is turned off, not deleted, and its gatekeeper stays in Supabase so that a session can still read his board through it
+Mark's decisions for the Brokerage Semaphore: `semaphore` in the code, called
+the Semaphore, then the Marketplace (2026-10-14), then the Brokerage
+Semaphore again (2026-10-17) so that it is not taken for Mark’s Place.
+PROJECT.md says how the room works; this says what he chose and what he
+turned down, so a later session does not quietly undo it. The room was
+rebuilt around venues on 2026-10-14/15; what that replaced is summed up at
+the end.
+
+## What it is for
+
+- Wants a grip on where projects in the making can be found, and to drop by
+  those places now and then (2026-10-14). What he looks for is projects being
+  formed and their leaders, partners second (2026-10-15). A **venue** is such
+  a place, a brokerage event's marketplace or a partner search, serving one
+  arena or several.
+- Everything lands on the Board first; Venues holds only what he moved
+  there; Leads holds what came of it.
+
+## The Board
+
+- **The way in** (2026-10-15). What is found (brokerage events, partner
+  searches, tools) stands on the board marked new, in a lime of its own with
+  a glowing edge, and the tray over the board lists each until he acts:
+  **→ Venues**, **Keep** on the board to think about, or **Remove**, which
+  leaves a stub (`place: gone`) so it is not brought back. Published call
+  dates simply go on the board.
+- **What is new on an arena is seen on the board until he checks it off**
+  (2026-10-17): a call with a new date or stage glows on its row, the row
+  says "N new ✓", the tray lists each such arena with Seen, and Seen is the
+  only way back; closing the arena's panel does not mark it seen. A file
+  whose `foundAt` is the moment it was written shows its dates as new.
+- It always shows last month and the next twelve. There is no filter panel,
+  colour key or time-window control; all of them went on 2026-10-09, with
+  Search put in their place.
+- **Nothing overlaps and nothing clutters** (2026-10-15, after "a total
+  clutter" on his real board): each venue gets a track of its own on its
+  arena's row wherever it would touch another, its name inside its band or
+  after it. A venue serving two arenas or more stands once, in a **Shared
+  venues** group over the types: one folded line with a caret; unfolded, its
+  arenas one to a line with their calls, tied by a rule down the left, the
+  venue's window shaded behind them and its event days a line through them.
+  An arena's row says "+N shared". Tags two to a line under a shared venue's
+  name were turned down, since they lined up with nothing.
+- **A venue in Venues, in any section, Mark's Place and Limbo included, is
+  off the board** (2026-10-23), on the arena rows and among the Shared
+  venues alike; its arena's panel still lists it, and Back to the board
+  brings it back. It replaced thin nameless lines he did not notice. A board
+  of calls and marks only, with no venues at all, was turned down
+  (2026-10-15).
+- A window with no end runs six weeks past today and fades out with an
+  arrow, here and on Venues, rather than running to the edge.
+- **A call in stages is drawn full strength only up to its first deadline**
+  (2026-10-16), the pre-proposal or the full proposal, whichever comes
+  first, since publication to that deadline is what matters for brokerage;
+  a thin line runs on to the last, and the strong part goes grey once the
+  first deadline has passed. Its hover says how many weeks it leaves for
+  brokerage. He likes the board's look and wanted little else changed.
+- **Uncertain is a dashed outline**, the one way the whole room draws it
+  (2026-10-07).
+- The heading over the names chooses the order: **My order** (his own order
+  of arenas, set in Types) or **By date** (the soonest deadline, opening or
+  event first). A status column (Open / Opens / Between) stood there from
+  2026-10-07 to 10-11 and went at his asking.
+- The names column is widened or narrowed by dragging its edge, kept per
+  device (`ui.nameW`).
+
+## Venues
+
+- **A venue is a window of activity** (2026-10-15), with no difference left
+  between events and tools. He sets it by dragging either end of its band,
+  on the Board or on Venues (one record, so the two agree; a double-click on
+  an end gives it back its default). Event days stand as diamonds inside it,
+  and the window is shaded by how much goes on, rising to the event days and
+  falling after. Of three first pages drawn he chose this strip of time over
+  one list in bands and over three columns.
+- **Arising · Active · Dying, as tabs** (he was unsure between tabs and
+  sections), **Limbo** apart for what is over, and **Mark's Place** in a box
+  of its own between the three and Limbo (2026-10-22): a venue on a site
+  Mark's Place copies stands there whatever its dates say and never falls
+  due, since Mark's Place reads it every night (`inPlace`).
+- **A fixed order that a visit never changes** (2026-10-15): the venues
+  serving two arenas or more first, as on the board, then each type's own in
+  his order of types, each group under a thin band in its type's colour.
+  Within a group, the venues he dragged by the small mark at the left of a
+  row stand in his order (`vpos`, held across every tab), and the rest after
+  them by the start of their window.
+- A venue can be put in a section by hand from its panel (Arising · Active ·
+  Dying · Limbo, the current one lit) and stays there (`phase`) until "by its
+  dates" gives it back; the panel says where its dates would put it, and its
+  rhythm follows the section chosen.
+- **Go is the visit** (2026-10-15): recorded at once as the tick on the
+  venue's strip, the button then reading **Visited** for the rest of the
+  day. Coming back to the app asks what it gave (nothing new, something,
+  written as a line, or a lead, which remembers its venue), with **Not a
+  visit** to take back a stray Go.
+- **Limbo is spooky** (2026-10-12): a misty box with drifting fog, a bobbing
+  ghost, wisps, a cobweb and a flickering word. Its Delete deletes at once
+  and leaves the stub; the faint ✕ it replaced went unfound (2026-10-17).
+- A venue's **memo** is his own note on it, which no tool may write. Its
+  name is short, and what a find notes on it a few words of fact
+  (2026-10-15).
+- **A site is the event's or the tool's own, not the platform's**
+  (2026-10-12): an-event.b2match.io is one site, but b2match.com/e/an-event
+  and b2match.com/e/another are two (`siteKey`, with `SHARED_HOSTS` naming
+  the hosts that carry many events side by side). Mark's Place matches its
+  venues to these by the same rule.
+- **A removed venue stands in the way only of its own occasion**
+  (2026-10-17): the same site for a later call or edition comes back as a
+  new venue, with days of its own after the old one's, and the stub is never
+  re-dated onto it (`siteInWay` in the gatekeeper).
+
+## Finding things: ChatGPT, and the agent before it
+
+- **ChatGPT's deep research is the searcher** (2026-10-22, and the only one
+  since the agent stopped on 2026-10-23). A ChatGPT button writes one file
+  holding every arena (its calls, links and two texts), every venue (the
+  removed ones as stubs, so they are not brought back) and the instructions.
+  ChatGPT hands back a list of changes, not the board again, which is read
+  back in the same box (pasted, or as its file), shown change by change with
+  what was left out and why and how many arenas it did not reach, and put on
+  the board only on **Put on the board**, glowing new as every find does,
+  after a Ledger restore point. It can add and correct call dates and
+  venues, add an arena to a venue and add a link; it cannot delete, rename
+  or rewrite his texts. The leads, his visits and his venue notes stay out
+  of the file. How is at "ChatGPT's search" in semaphore.js.
+- **He would rather have ten false finds than lose one real one**, and every
+  rule he gave ChatGPT gives way to doubt: every arena, frozen ones lightly;
+  call dates, and actual brokerage only (matchmaking events and
+  partner-search tools, now or announced; never plain info days, conferences
+  with no matchmaking, lists of organisations or expected call dates); since
+  the purpose is project descriptions, no site listing only partner
+  profiles, no event about meeting people rather than projects, none open
+  only to paying members beyond a simple registration; and, where it can
+  find out, nothing organisations in the Netherlands clearly cannot take
+  part in and be funded by (2026-10-23). It works in rounds of at most 15
+  arenas (`GPT_BATCH`), each given to a fresh research agent of its own and
+  merged by a coordinating one, and says before starting if it cannot work
+  that way.
+- **Anything involving matchmaking goes on the board, a few misfires
+  accepted** (2026-10-15), an event known only to its month dashed until its
+  days are known: he judges every find himself, so completeness beats
+  caution. The agent's ? for a venue it doubted went for the same reason.
+- **The agent**, one task called Marketplace agent, ran from 2026-10-14 to
+  2026-10-23: it did the work rather than suggesting it, on demand from a
+  Claude session and in a nightly scan. He chose to call it by telling
+  Claude over a button in the app, which would need an API key billed per
+  use, and to see what it did in its own report over a list with Undo. Its
+  task is turned off, not deleted, and its gatekeeper stays so that a
+  session can still read the board. **Ask agent** on a venue's panel and at
+  the head of an arena's (2026-10-15) still sets the ask it took first.
+- **Dispatches is an inbox, not a way of looking at the board**, so it is a
+  button of its own beside the cloud chip (2026-10-09). Only a new arena the
+  agent suggests waits there (since 2026-10-14).
+- A wrong date is deleted, not parked far off the board: correcting it to
+  12/12/99 was turned down, because the date would stay in the data, a
+  venue in Limbo, a call still counted, a correction offered again
+  (2026-10-14).
+- Wants every scheduled agent, the Atlas's too, to run at night, so it does
+  not eat into his morning usage window.
+
+## Arenas and types
+
+- **Everything about types is in one place** (2026-10-11): Types, beside
+  + Arena, opens the manager. A type is dragged by its grip to reorder,
+  dropped onto another to merge (asked first), and opened to show its arenas
+  one under another in his order, each dragged up or down, or onto another
+  type to move there. He chose dragging over arrows and drop-down menus. One
+  order of types serves the board, Venues and Mark's Place.
+- **Type colours are prominent**: a type's head is a band filled with its
+  colour, on the board and on Venues. 26 tones, two shades of thirteen hues,
+  twice as colourful as the eighteen before them (2026-10-12), the old keys
+  kept.
+- An arena's panel holds its About and Brokerage texts, its links in his own
+  order (dragged), its venues, its leads and its call dates, with **Ask
+  agent** at its head. Under its Closed line, its count: leads so far, how
+  many reached Talking, how many became projects.
+
+## Leads
+
+- **One lead, the same everywhere** (2026-10-06): the Ledger's lead card was
+  the standard, shut until pressed, each room keeping its own colours except
+  the lead's, which is its arena type's (since 2026-10-11). The shut card
+  shows the match, with the match and the day quieter than the name. Since
+  the rework of 2026-10-21/22 the Semaphore's open lead, below, is ahead of
+  the Ledger's card, which keeps its row of buttons.
+- **Leads is not one of the views**: it stands beside the switcher in a
+  button of another kind, rounded, in the leads' clay, the ruit drawn small
+  before the word (2026-10-09).
+- **The ruit**: Spotted splits into two contact paths (researchers
+  contacted, lead contacted) that merge again at Talking, a name to keep,
+  drawn at the left of both lines. Pressing Talking lights both paths, and
+  going back to Contacted keeps them lit (2026-10-21). On the open lead its
+  dots wear the colour of the step reached (the Leads bands' blue-grey,
+  amber, green) rather than the arena's (2026-10-22).
+- **Furthest along first**: Talking, then Contacted (both ways contacted on
+  top of it), then Spotted, on Leads, on the Ledger's list and in the Excel
+  (2026-10-16). An arena's panel stacks them Spotted first.
+- **A score from 1 to 5** for how valuable a lead is: one dot with the
+  number in it, red (1) to green (5), set from a menu, the dots of a list in
+  one column (2026-10-10). Five dots was turned down. Leads are not sorted
+  by it.
+- **Complete asks how it ended** (2026-10-11): Became a project, Went
+  nowhere, They declined. His word is project, never proposal. A project
+  opens the Ledger's new project with the lead's name and links filled in.
+  A closed lead says how it ended where its day stood.
+- **Who and Links, side by side** (2026-10-16; stacked in an arena's
+  panel). Who holds the coordinator (the organisation behind the project),
+  the main contact and the email address, kept bare, as a button that
+  writes to it with Copy, the contact and the address grouped as one. Links
+  each carry a mark for page, letter or document and their host at the far
+  end. Chosen over a little contact card with links as tiles, and over
+  compact labelled rows. Both boxes are always there, each titled, with a
+  Copy on every link (2026-10-22).
+- **Each button stands on what it changes** (2026-10-21/22): + Add update on
+  the Updates box's head, the line written straight under it; Edit, a
+  proper button, and Complete at the card's head; no row of buttons in
+  between. Edit is the single way to add links and addresses (+ Link or
+  email went), and while editing, every field stands in the box where its
+  fact is read. A lead Mark's Place made leaves out its venue line, the
+  venue being its arena's own.
+- **Leads is one table** (2026-10-21), chosen over coloured steps and over
+  three columns: columns that sort within each step (Arena, Project, Match,
+  Who, Last update, Score, Next), each step under a band of its own colour
+  (Talking green, Contacted amber, Spotted blue-grey), the step said by the
+  ruit at the head of each line, the arena as a tag in its type's colour,
+  the day coloured by how near it is. **+ Lead** at the end of its head
+  opens the new-lead form with an arena chosen in front, the last one kept,
+  and the lead lands open in Spotted. The Ledger's list keeps its own look.
+- **A lead that moves slides there and glows**, the view following it
+  (2026-10-21); see [animation](animation.md).
+- A search that finds a lead opens its arena's panel.
+- On the Ledger, a day's leads show when the day is clicked, behind a line
+  to unfold rather than at once (2026-10-08).
+
+## The weekly Excel
+
+- One file of every lead, open and closed, with its updates, written over
+  each time and what is new or changed since the last one marked yellow,
+  rather than a file that keeps adding rows; the button is Excel on Leads
+  (2026-10-14). On seeing the first file he took out its front sheet, its
+  sheet of updates, the closed todos and the next date, and asked for: the
+  step as four columns, a lit cell per dot of the ruit; every row one line
+  high, Excel's + beside a lead opening its links and updates one to a row;
+  real links; each group of columns its own colour, the arena in its type's
+  colour, the score and the ending in the app's; an Email column; a Talking
+  column saying who the conversation is with; the closed leads on a sheet of
+  their own, latest on top.
+
+## What the venues replaced
+
+Until 2026-10-14 the room was built around **arena cards**: a Rotation of
+cards by type, stamps on cards and links, a wait for a date and its "Back
+from waiting" row, Pinned, a Coming up spine of brokerage events with notes
+and a Limbo, Events · Tools tabs, an arena's general-tool diamond on the
+board, and three nightly tasks leaving suggestions in Dispatches. **Pocket**,
+the room's phone companion, followed every one of them, and went on
+2026-10-22 when Mark no longer needed it on the phone. None of it is to come
+back unasked; git's history has every detail, Pocket's file included.
