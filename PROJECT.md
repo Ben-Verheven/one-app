@@ -112,10 +112,11 @@ Everything cross-room lives in `shell/bridge.js`. Nowhere else.
 Hub.api('ledger')          → { PL, projects(), calls(), save,
                                setTopics, setLeads, leadsChanged(),
                                snapshot(why), signedIn(), token() }
-Hub.api('callboard')       → { topics(), openReader(), closeReader() }
+Hub.api('callboard')       → { topics(), openReader(), closeReader(),
+                               setArenas(o), arenasChanged() }
 Hub.api('semaphore')       → { state(), save(), renderAll(),
                                applyState(obj), leads(),
-                               leadVerb(aid, lid, op, val), arenas(),
+                               leadVerb(aid, lid, op, val), arenas(), calls(),
                                leadAdd(aid, v), allLeads(),
                                openArena(aid), escape() }
 Hub.api('atlas')           → { openDossier(), G, state(), applyState(obj) }
@@ -141,7 +142,9 @@ the bridge answers by writing every lead (`allLeads()`), open and closed,
 into one .xlsx file — the same file again each time where the browser can
 keep hold of one; the bridge's own comment says how. And
 **`semaphore:keep`**, with a reason, just before ChatGPT's answer is put on
-the board, which the bridge answers with a Ledger restore point.
+the board, which the bridge answers with a Ledger restore point. And
+**`callboard:ready`**, once, when the lazy Call Board has been built, which
+is when the bridge hands it the Semaphore's arenas.
 
 What the bridge actually does: turns any researcher's name, written
 anywhere in any room, into a link that opens the Atlas dossier over the
@@ -153,7 +156,9 @@ line of their own, every change made on a lead card there is made on
 the Semaphore's own record, a lead can be started there, a lead's arena
 opens in the Semaphore's drawer lent over the Ledger as the dossier is, and a
 lead that became a project opens the Ledger's new project with its name and
-links filled in; draws
+links filled in; hands the Call Board every arena's calls as the Semaphore
+works them out, and again on every save there, with the arena's drawer lent
+over the Board; draws
 the ring of rooms and the title; runs the page-change animation; and syncs
 the Semaphore's board, the Notes room and the Atlas's edits through the
 Supabase credentials the Ledger already holds.
@@ -438,6 +443,11 @@ and the agent's task still say the Marketplace; it is the same room.
 **The Call Board** — the cluster row is the bar, `#hdr` › `.tabs`; the
 controls under it are `.hd-controls` and `#ovbar`; the chronological chart
 on the right is `#tl` inside `.tl-sticky`; a topic opens in `#reader`.
+After the clusters come the arenas' tabs, JU, COFUND, COPROG and OTHER,
+set apart by a `.tabsep` on either side; there an arena's call is a row
+whose chip, `.achip`, names the arena, the first of each arena's rows
+`.afirst`. The decisions behind them are in
+[call-board](notes/call-board.md).
 
 **The Atlas** — `#app` › `header` carries `#tab-search`, `#tab-browse`,
 `#tab-walk` and `#tab-news`; the two columns are `#rail` and `#main`; `#dossier` is the

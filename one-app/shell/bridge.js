@@ -400,6 +400,34 @@
     if (esc) esc(); else returnArena();
   }, true);
 
+  /* ── Semaphore's arenas and their calls, on the Call Board ─────────── */
+
+  /* The Call Board draws every arena's calls in tabs of their own after the
+     Horizon clusters (Mark, 2026-10-24), each call one row with its arena
+     named on the chip. It is handed a socket as the Ledger is: a read, and
+     the arena's drawer lent over the Board. The Board is the lazy room, so
+     the socket cannot be handed over at load, when there is nothing yet to
+     hand it to; the Board says when it has been built, and that is when it
+     gets it — whether it was opened or only built for a topic the Ledger
+     asked about. A change on the Semaphore's side reaches it by the same
+     two roads the Ledger's leads take: the save, and coming back into view
+     after a board was replaced from the cloud without one. */
+  (function () {
+    var S = Hub.api('semaphore');
+    if (!S.calls) return;
+    function changed() {
+      var B = Hub.api('callboard');
+      if (B.arenasChanged) B.arenasChanged();
+    }
+    Hub.on('callboard:ready', function () {
+      var B = Hub.api('callboard');
+      if (!B.setArenas) return;
+      B.setArenas({ list: function () { return S.calls(); }, open: showArena });
+    });
+    Hub.on('semaphore:saved', changed);
+    Hub.onRoom(function (now) { if (now === 'callboard') changed(); });
+  })();
+
   /* ── Semaphore's leads, on the Ledger's board ─────────────────────── */
 
   /* The Ledger draws a line of leads under its board, and the cards it opens
@@ -460,7 +488,7 @@
      the width shell.css reserves for it: adding a room here means moving
      the two numbers named at #oa-ring. */
 
-  var ROOMS = [{"id": "ledger", "label": "Proposal Ledger", "sub": "proposals in flight"}, {"id": "semaphore", "label": "Brokerage Semaphore", "sub": "venues, visits and leads"}, {"id": "callboard", "label": "Call Board", "sub": "Horizon Europe 2026\u201327"}, {"id": "atlas", "label": "Researcher Atlas", "sub": "researcher atlas"}, {"id": "notes", "label": "Notes", "sub": "a shelf that files itself"}];
+  var ROOMS = [{"id": "ledger", "label": "Proposal Ledger", "sub": "proposals in flight"}, {"id": "semaphore", "label": "Brokerage Semaphore", "sub": "venues, visits and leads"}, {"id": "callboard", "label": "Call Board", "sub": "every call, Horizon and beyond"}, {"id": "atlas", "label": "Researcher Atlas", "sub": "researcher atlas"}, {"id": "notes", "label": "Notes", "sub": "a shelf that files itself"}];
   /* what each room calls itself in the bar now */
   var TITLES = {
     ledger: 'Proposal Ledger', semaphore: 'Brokerage Semaphore',

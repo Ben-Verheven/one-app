@@ -3457,6 +3457,32 @@ function runTip(r){
   const brk=wk>=0?'\nFor brokerage: '+wk+(wk===1?' week':' weeks')+' to the first deadline':'';
   return names.join('\n')+'\n'+span+stages+brk+(r.unc?'\nUncertain':'');
 }
+/* ---- the calls, lent to the Call Board ----
+   The Call Board draws every arena's calls beside the Horizon ones (Mark,
+   2026-10-24), one row to a call with the arena named on its chip. It is
+   handed the runs as they are worked out here, so the stages of one call
+   and the calls that share their dates come out as one bar there just as
+   they do on this board, and a second reading of the dates never drifts
+   from this one. The dates travel as stored, with how exact each is; the
+   Board writes them its own way. Frozen arenas stay put away. */
+function callsForBoard(){
+  const day=d=>d?{start:d.start,end:d.end||d.start,gran:d.gran,grade:d.grade==='fixed'?'fixed':'uncertain'}:null;
+  const out=[];
+  S.types.map(t=>t.id).concat([null]).forEach(id=>
+    out.push(...liveArenas().filter(a=>id?a.typeId===id:!typeOf(a)).sort(mineOrder)));
+  return out.map(a=>{
+    const {live,last}=callRuns(a),t=typeOf(a);
+    const runs=(last?[last]:[]).concat(live).map(r=>({
+      name:callBase(dtLabel(r.all[0]))||dtLabel(r.all[0]),
+      names:[...new Set(r.all.map(dtLabel))],
+      open:day(r.opens[0]),ann:day(r.anns[0]),dls:r.dls.map(day),
+      unc:r.unc,state:r.state,
+      url:(r.all.find(d=>d.url)||{}).url||'',
+      note:(r.all.find(d=>d.note)||{}).note||''}));
+    return {id:a.id,name:a.name,type:t?t.name:'',leads:openLeads(a).length,
+      links:(a.links||[]).filter(l=>l&&l.url).map(l=>({label:l.label||'',url:l.url})),runs};
+  });
+}
 function linkHost(lk){
   try{return new URL(lk.url).hostname.replace(/^www\./,'');}catch(e){return '';}
 }
@@ -5900,6 +5926,9 @@ try{
     leads:      function(){ return leadsForBoard(); },
     leadVerb:   function(aid,lid,op,val){ return leadVerb(aid,lid,op,val); },
     arenas:     function(){ return arenasForBoard(); },
+    /* every live arena with its calls, for the Call Board — see "the
+       calls, lent to the Call Board" */
+    calls:      function(){ return callsForBoard(); },
     leadAdd:    function(aid,v){ return leadAdd(aid,v); },
     /* every lead, closed ones too, for the weekly Excel the bridge writes */
     allLeads:   function(){ return leadsForExcel(); },

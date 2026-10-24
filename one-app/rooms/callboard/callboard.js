@@ -32,7 +32,7 @@ PAGES.forEach(p=>{
    through the bridge, and the two must not drift. */
 const shortTopicId=id=>String(id).replace(/^HORIZON-(CL\d-|HLTH-)?/,'');
 const ALLTOPICS=ALLCALLS.reduce((a,c)=>a+TOPICS_BY_CALL[c.id].length,0);
-const OV={from:null,to:null,sel:new Set(),clusters:new Set(PAGES.map(p=>p.key)),
+const OV={from:null,to:null,sel:new Set(),clusters:new Set(PAGES.map(p=>p.key)),known:new Set(PAGES.map(p=>p.key)),
           arrange:'cluster',group:'deadline',q:'',type:null,preset:'6m'};
 const inSpan=c=>c.d1>=OV.from&&c.d1<=OV.to;   /* stage 2 is not an entry point */
 /* The day as the clock on the wall reads it. It was toISOString's, which is
@@ -99,12 +99,13 @@ const yy =s=>s.slice(2,4);
 
 /* ---------- tabs ---------- */
 const tabsEl=document.getElementById('tabs');
-PAGES.forEach((p,i)=>{
+const htabEls=PAGES.map((p,i)=>{
   const b=document.createElement('button'); b.className='tab'; b.setAttribute('role','tab');
   b.setAttribute('aria-selected', String(i===0));
   b.innerHTML=`<span class="ck">${p.key}</span><span class="cn">${p.label}</span><span class="cc">${Object.keys(p.meta).length}</span>`;
   b.addEventListener('click',()=>selectPage(i));
   tabsEl.appendChild(b);
+  return b;
 });
 const ovTab=document.createElement('button');
 ovTab.className='tab'; ovTab.setAttribute('role','tab'); ovTab.setAttribute('aria-selected','false');
@@ -112,27 +113,255 @@ ovTab.innerHTML=`<span class="ck">ALL</span><span class="cn">Deadline planner</s
 ovTab.addEventListener('click',()=>selectPage(PAGES.length));
 tabsEl.appendChild(ovTab);
 
+/* The arenas' tabs stand between the clusters and ALL and come and go
+   with the arenas, so a tab is marked live by which element it is rather
+   than by its place in the row, which is what the row's own index was. */
+function markTab(el){ tabsEl.querySelectorAll('.tab').forEach(t=>t.setAttribute('aria-selected',String(t===el))); }
 function selectPage(i){
-  const tabs=[...tabsEl.children];
-  tabs.forEach((t,k)=>t.setAttribute('aria-selected',String(k===i)));
-  if(i===PAGES.length){ MODE='overview'; location.hash='all'; }
-  else { MODE='cluster'; P=PAGES[i]; location.hash=P.key.toLowerCase(); }
+  if(i===PAGES.length){ MODE='overview'; location.hash='all'; markTab(ovTab); }
+  else { MODE='cluster'; P=PAGES[i]; location.hash=P.key.toLowerCase(); markTab(htabEls[i]); }
+  afterSelect();
+}
+function selectArenaTab(key, openId){
+  const p=APAGES.find(x=>x.key===key&&x.tabEl);
+  if(!p) return;
+  MODE='arena'; P=p; location.hash=key.toLowerCase(); markTab(p.tabEl);
+  afterSelect();
+  if(openId){ const t=topicEls.find(x=>x.call===openId); if(t&&!t.row.classList.contains('sel')) t.row.click(); }
+}
+function afterSelect(){
   document.getElementById('ovbar').classList.toggle('on', MODE==='overview');
+  document.getElementById('hdr').classList.toggle('arena', MODE==='arena');
+  document.getElementById('q').placeholder=MODE==='arena'?'Search arenas and calls…':'Search topic ID or title…';
   render(); setHdrH(); window.scrollTo({top:0});
+}
+
+/* ---------- the arenas' calls ----------
+   Every arena on the Brokerage Semaphore that is not a Horizon cluster or
+   mission has its calls drawn here (Mark, 2026-10-24), in a tab for each
+   of Mark's three big types, Joint Undertakings, co-funded and
+   co-programmed partnerships, and one more for every other arena. A
+   Pillar 2 arena is a cluster or mission already, and its tab is the
+   cluster's own, so it gets none. The types are told apart by their
+   names, which are Mark's own.
+
+   One row to a call, on the sheet and on the chart alike, the arena named
+   on the call's chip and the call in the text beside it, which is the shape
+   a Horizon topic already has here. Of the three ways drawn Mark chose this
+   over the arena's name once beside all its calls and over a light line
+   heading each arena; the dark heading of a destination was turned down
+   for arenas, because most hold a call or two and a heading for each
+   cluttered the sheet and took a row of the chart.
+
+   The rows come from the Semaphore through the bridge, which hands over
+   the runs the Semaphore itself works out, so the stages of one call are
+   one bar here as there. An arena wears a colour of its own on the chip
+   and the bar, saturated for the round it is in and pale for the next, as
+   the 2026 and 2027 calls are in Horizon; a date not yet published to the
+   day is dashed, as it is on the Semaphore's board. */
+const TYPE_TABS=[
+  {key:'JU',full:'Joint Undertakings',color:'#7D71B0',test:/\bJU\b|joint\s*undertaking/i},
+  {key:'COFUND',full:'Co-funded partnerships',color:'#3C8D6D',test:/co[\s-]*fund/i},
+  {key:'COPROG',full:'Co-programmed partnerships',color:'#A96B45',test:/co[\s-]*prog/i},
+  {key:'OTHER',full:'Every other arena',color:'#6F7F8F',test:null}];
+const HORIZON_TYPE=/pillar\s*(2|ii)\b|\bclusters?\b|\bmissions?\b/i;
+/* saturated, pale, and an ink for the chip, in the work programme's own manner */
+const ARENA_TONES=[
+  ['#4A88CA','#A6C1F9','#002E59'],['#DD7666','#F5B5A9','#56160F'],['#21A17C','#86D0B3','#03392A'],
+  ['#8B78C8','#C3B6EE','#2A1C58'],['#D2893D','#F0C390','#4A2600'],['#1295AB','#7FCBD8','#033A44'],
+  ['#C2668F','#EDB2CB','#4A1230'],['#8A9A3B','#C9D48A','#2C3308'],['#5F7DB0','#AFC2E2','#16284A'],
+  ['#A8794A','#D9BC98','#3A2410'],['#3BA3A0','#9FD8D5','#0A3735'],['#B0638F','#E0B0CC','#3E1530']];
+let ARENA_SRC=null, APAGES=[], ACALLS=[], pendingTab=null;
+const allPages=()=>PAGES.concat(APAGES);
+const everyCall=()=>ALLCALLS.concat(ACALLS);
+const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+/* A date as exactly as it is known: a day, or only its month, quarter,
+   half or year. Written short on the chart and in a row, long in a card. */
+function whenShort(d){
+  if(!d||!d.start) return '';
+  const y='’'+d.start.slice(2,4), m=MON[+d.start.slice(5,7)-1];
+  switch(d.gran){
+    case 'month': return m+' '+y;
+    case 'quarter': return 'Q'+(Math.floor((+d.start.slice(5,7)-1)/3)+1)+' '+y;
+    case 'half': return 'H'+(+d.start.slice(5,7)<7?1:2)+' '+y;
+    case 'year': return d.start.slice(0,4);
+    case 'range': return dm(d.start)+' – '+dm(d.end)+' '+y;
+    default: return dm(d.start)+' '+y;
+  }
+}
+function whenLong(d){
+  if(!d||!d.start) return '';
+  const y=d.start.slice(0,4), m=MON[+d.start.slice(5,7)-1];
+  switch(d.gran){
+    case 'month': return m+' '+y;
+    case 'quarter': return 'Q'+(Math.floor((+d.start.slice(5,7)-1)/3)+1)+' '+y;
+    case 'half': return 'H'+(+d.start.slice(5,7)<7?1:2)+' '+y;
+    case 'year': return y;
+    case 'range': return dmy(d.start)+' – '+dmy(d.end);
+    default: return dmy(d.start);
+  }
+}
+/* where a deadline known only to its month falls on the chart: its last
+   day, the latest it can be; an opening falls on its first */
+const dlDay=d=>(d.gran==='day'||d.gran==='range')?d.start:(d.end||d.start);
+function tabOfType(name){
+  if(HORIZON_TYPE.test(name||'')) return null;
+  return TYPE_TABS.find(t=>t.test&&t.test.test(name||''))||TYPE_TABS[TYPE_TABS.length-1];
+}
+function readArenas(){
+  let list=[];
+  try{ list=(ARENA_SRC&&ARENA_SRC.list())||[]; }catch(e){ console.error(e); list=[]; }
+  const before=new Map(APAGES.map(p=>[p.key,p.state]));
+  APAGES=TYPE_TABS.map(t=>({key:t.key,label:t.full,full:t.full,clusterColor:t.color,arena:true,unit:'calls',
+    arenas:[],calls:[],callById:{},families:[],destinations:[],meta:{},nTopics:0,
+    state:before.get(t.key)||{sel:new Set(),selTopicCall:null,q:'',type:null,closed:new Set()}}));
+  const q=(PAGES[0]&&PAGES[0].state.q)||'';
+  list.forEach(a=>{
+    const tt=tabOfType(a.type); if(!tt) return;
+    const p=APAGES.find(x=>x.key===tt.key), tone=ARENA_TONES[p.arenas.length%ARENA_TONES.length];
+    p.arenas.push(a);
+    const start=r=>((r.open||r.ann||(r.dls||[])[0]||{}).start)||'';
+    let live=0;
+    (a.runs||[]).slice().sort((x,y)=>start(x).localeCompare(start(y))).forEach((r,i)=>{
+      const dls=r.dls||[], pale=r.state!=='closed'&&(live++>0);
+      const color=pale?tone[1]:tone[0], from=r.open||r.ann||null, annOnly=!r.open&&!!r.ann&&!dls.length;
+      const c={id:'arena:'+a.id+':'+i, arena:a, arenaId:a.id, run:r, first:i===0,
+        short:a.name, name:r.name, color, ink:tone[2], ovColor:color, ovInk:tone[2],
+        cluster:p.key, clusterLabel:p.label, nTopics:0, budget:0, unc:!!r.unc,
+        opening:from?from.start:null, annEnd:annOnly?r.ann.end:null,
+        d1:dls.length?dlDay(dls[0]):null, d2:dls.length>1?dlDay(dls[dls.length-1]):null, twoStage:dls.length>1};
+      c.tagOpen=from?whenShort(from):'';
+      c.tagEnd=annOnly?'expected '+whenShort(r.ann)
+        :dls.length>1?whenShort(dls[0])+' → '+whenShort(dls[dls.length-1])
+        :dls.length?whenShort(dls[0]):(from?'opens '+whenShort(from):'');
+      p.calls.push(c); p.callById[c.id]=c;
+    });
+  });
+  APAGES.forEach(p=>{ p.nTopics=p.calls.length; p.state.q=q; });
+  ACALLS=APAGES.flatMap(p=>p.calls);
+  APAGES.forEach(p=>{ if(!OV.known.has(p.key)){ OV.known.add(p.key); OV.clusters.add(p.key); } });
+  buildArenaTabs();
+}
+let atabEls=[];
+function buildArenaTabs(){
+  atabEls.forEach(el=>el.remove()); atabEls=[];
+  const shown=APAGES.filter(p=>p.arenas.length);
+  APAGES.forEach(p=>{ p.tabEl=null; });
+  if(!shown.length) return;
+  const sep=()=>{ const s=document.createElement('span'); s.className='tabsep'; s.setAttribute('aria-hidden','true');
+    tabsEl.insertBefore(s,ovTab); atabEls.push(s); };
+  sep();
+  shown.forEach(p=>{
+    const b=document.createElement('button'); b.className='tab'; b.setAttribute('role','tab'); b.title=p.full;
+    b.setAttribute('aria-selected',String(MODE==='arena'&&P.key===p.key));
+    b.innerHTML=`<span class="ck">${p.key}</span><span class="cn">${p.label}</span><span class="cc">${p.calls.length}</span>`;
+    b.addEventListener('click',()=>selectArenaTab(p.key));
+    tabsEl.insertBefore(b,ovTab); atabEls.push(b); p.tabEl=b;
+  });
+  sep();
+}
+/* the socket the bridge fills, and again on every change on the other side */
+function arenasArrived(){
+  readArenas();
+  if(pendingTab){ const k=pendingTab; pendingTab=null; if(APAGES.some(p=>p.key===k&&p.tabEl)) return selectArenaTab(k); }
+  if(MODE==='arena'){
+    const p=APAGES.find(x=>x.key===P.key&&x.tabEl);
+    if(!p) return selectPage(0);
+    P=p; markTab(p.tabEl); render();
+  } else if(MODE==='overview') renderOverview();
+  else markTab(htabEls[PAGES.indexOf(P)]);
+}
+
+function arenaRow(c){
+  const row=document.createElement('div'); row.className='topic'+(c.first?' afirst':''); row.tabIndex=0; row.setAttribute('role','button');
+  row.dataset.call=c.id; row.dataset.type=''; row.dataset.id=c.id;
+  row.dataset.search=(c.arena.name+' '+c.run.names.join(' ')).toLowerCase();
+  row.title=c.arena.name+' — '+c.run.names.join(', ');
+  row.innerHTML=`<span class="bar" style="background:${c.color}"></span>
+    <span class="cchip w achip" style="background:${c.color};color:${fg(c)}">${esc(c.arena.name)}</span>
+    <span class="ttl">${esc(c.name)}</span>
+    <span class="adl${c.unc?' unc':''}">${esc(c.tagEnd)}</span>`;
+  return row;
+}
+function arenaDetail(c){
+  const r=c.run, a=c.arena, dls=r.dls||[];
+  const tr=(k,v,mono)=>v?`<tr><td>${k}</td><td${mono?' class="full"':''}>${v}</td></tr>`:'';
+  const dl=dls.length>1?dls.map((d,i)=>whenLong(d)+' (stage '+(i+1)+')').join(' → '):(dls.length?whenLong(dls[0]):'');
+  const det=document.createElement('div'); det.className='tdetail';
+  det.innerHTML=`<table>
+    ${tr('Arena',esc(a.name)+(a.leads?` <span style="color:var(--muted)">· ${a.leads} open lead${a.leads===1?'':'s'}</span>`:''))}
+    ${tr('Call',esc(r.names.join(' · ')))}
+    ${tr('Opens',r.open?whenLong(r.open):(r.ann?'expected '+whenLong(r.ann)+(r.ann.end&&r.ann.end!==r.ann.start?' – '+whenLong({start:r.ann.end,gran:r.ann.gran}):''):''),1)}
+    ${tr('Deadline',dl,1)}
+    ${tr('Dates',r.unc?'not all published to the day yet':'as published')}
+    ${tr('Note',esc(r.note))}</table>`;
+  const row=document.createElement('div'); row.className='btnrow';
+  const b=document.createElement('button'); b.className='readbtn';
+  b.innerHTML='Open arena <span style="opacity:.6">▸</span>';
+  b.addEventListener('click',e=>{ e.stopPropagation(); if(ARENA_SRC&&ARENA_SRC.open) ARENA_SRC.open(a.id); });
+  row.appendChild(b);
+  const web=u=>/^https?:\/\//i.test(u||'');
+  if(web(r.url)) row.appendChild(portalLink(r.url,'Call page','Open the call’s own page'));
+  (a.links||[]).filter(l=>web(l.url)).slice(0,3).forEach(l=>row.appendChild(portalLink(l.url,esc(l.label||'Link'),l.url)));
+  det.appendChild(row);
+  return det;
+}
+function buildArenaList(){
+  const ledger=document.getElementById('ledger'); ledger.innerHTML=''; topicEls=[];
+  P.arenas.forEach(a=>{
+    const calls=P.calls.filter(c=>c.arenaId===a.id);
+    if(!calls.length){
+      /* an arena whose calls are not on the Semaphore's board yet still
+         stands here, so its absence from the chart says something */
+      const row=document.createElement('div'); row.className='topic afirst';
+      row.dataset.search=a.name.toLowerCase(); row.dataset.type='';
+      row.innerHTML=`<span class="bar" style="background:var(--line-strong)"></span>
+        <span class="cchip w achip" style="background:#E6DDC9;color:var(--ink2)">${esc(a.name)}</span>
+        <span class="ttl anone">no call dates on the board yet</span>`;
+      ledger.appendChild(row);
+      topicEls.push({row,det:document.createElement('div'),call:null,type:'',theme:null,dest:null});
+      return;
+    }
+    calls.forEach(c=>{
+      const row=arenaRow(c), det=arenaDetail(c);
+      const act=()=>toggleTopic(row,det,c.id,c.color);
+      row.addEventListener('click',act);
+      row.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();act();}});
+      ledger.appendChild(row); ledger.appendChild(det);
+      topicEls.push({row,det,call:c.id,type:'',theme:null,dest:null});
+    });
+  });
+  elsewhereEl=document.createElement('div'); ledger.appendChild(elsewhereEl);
 }
 
 /* ---------- render ---------- */
 let topicEls=[], T0, T1, SPAN;
 const X=d=>(d3(d)-T0)/SPAN*100;
 
+const SRC_HORIZON=document.querySelector('.src').innerHTML;
+const SRC_ARENAS='Source: your arenas’ call dates on the Brokerage Semaphore, found by ChatGPT’s search or written by hand. A dashed date is not yet published to the day — confirm on the call’s own page before acting.';
 function render(){
   if(MODE==='overview') return renderOverview();
-  document.getElementById('legcolour').textContent='colour = call series · saturated tone = 2026 call, pale tone = 2027 call';
+  const arena=MODE==='arena';
+  document.getElementById('legcolour').textContent=arena
+    ?'colour = the arena · saturated tone = the round it is in, pale tone = the next · dashed = not yet published to the day'
+    :'colour = call series · saturated tone = 2026 call, pale tone = 2027 call';
   document.querySelector('.tl-title').textContent='Calls · chronological';
-  buildLedger(); buildTimeline(); buildFamKey();
+  document.querySelector('.src').innerHTML=arena?SRC_ARENAS:SRC_HORIZON;
+  if(arena) buildArenaList(); else buildLedger();
+  buildTimeline(); buildFamKey();
   const qEl=document.getElementById('q'); qEl.value=P.state.q;
   document.getElementById('qclr').style.display=P.state.q?'block':'none';
   document.querySelectorAll('.tchip').forEach(x=>x.setAttribute('aria-pressed',String(x.textContent===P.state.type)));
+  /* An arena's tab is drawn again whenever the Semaphore saves, which may
+     be a change made in its drawer lent over this very tab, so the call
+     that was open is opened again rather than shut under the change. */
+  if(arena) P.state.sel.forEach(id=>{ if(!P.callById[id]) P.state.sel.delete(id); });
+  if(arena&&P.state.selTopicCall){
+    const t=topicEls.find(x=>x.call===P.state.selTopicCall);
+    if(t){ t.row.classList.add('sel'); t.row.style.setProperty('--selcol',P.callById[t.call].color); t.det.classList.add('open'); }
+    else P.state.selTopicCall=null;
+  }
   applyFilters(); paintTimeline(); paintPills(); showCard([...P.state.sel]);
 }
 
@@ -208,9 +437,43 @@ function toggleTopic(row,det,callId,color){
   paintTimeline();
 }
 
+/* Every day a call's bar reaches, for the chart's span. An arena's call
+   may be no more than an expected window, or an opening with no deadline
+   recorded yet; a Horizon call is always an opening and one or two. */
+const callDates=c=>[c.opening,c.d1,c.d2,c.annEnd].filter(Boolean);
+const rgba=(h,a)=>/^#[0-9a-f]{6}$/i.test(h)?'rgba('+[1,3,5].map(i=>parseInt(h.substr(i,2),16)).join(',')+','+a+')':h;
+/* One call's bar, its stages and its two date tags, in the colours the
+   chart asks for: a cluster's own chart wears the call series' colours,
+   the overview the cluster's. The opening's tag is the cluster chart's
+   alone. An arena's call adds three looks a Horizon call never needs: a
+   dashed bar for dates not yet published to the day, a dashed band for a
+   call only expected, and a bar fading out where no deadline is known. */
+function barsHTML(c,X,col,ink,withOpen){
+  let b='';
+  if(c.annEnd){
+    const a=X(c.opening), w=Math.max(X(c.annEnd)-a,.8);
+    return `<span class="cann" style="left:${a}%;width:${w}%;border-color:${ink}"></span>
+      <span class="dtag r" style="left:${a+w}%;color:${ink}">${c.tagEnd}</span>`;
+  }
+  const x0=c.opening?X(c.opening):null, x1=c.d1?X(c.d1):null;
+  if(x0!==null&&x1!==null)
+    b+=`<span class="cbar${c.unc?' unc':''}" style="left:${x0}%;width:${Math.max(x1-x0,.8)}%;${c.unc?`background:${rgba(col,.3)};border-color:${ink}`:`background:${col}`}"></span>`;
+  else if(x0!==null) b+=`<span class="cbar fade" style="left:${x0}%;width:9%;--fc:${col}"></span>`;
+  if(x0!==null) b+=`<span class="dot" style="left:${x0}%;background:${col};box-shadow:0 0 0 1px ${ink}"></span>`;
+  if(x1!==null) b+=`<span class="cap" style="left:${x1}%;background:${ink}"></span>`;
+  if(c.twoStage) b+=`<span class="cbar2" style="left:${x1}%;width:${Math.max(X(c.d2)-x1,.8)}%;background-color:${col}"></span>
+    <span class="cap" style="left:${X(c.d2)}%;background:${ink}"></span>`;
+  const last=c.twoStage?X(c.d2):(x1!==null?x1:x0);
+  if(withOpen&&x0!==null) b+=`<span class="dtag" style="left:${x0}%;color:${ink||col}">${c.tagOpen||(dm(c.opening)+' ’'+yy(c.opening))}</span>`;
+  b+=`<span class="dtag r" style="left:${last}%;color:${ink||col}">${c.tagEnd||(c.twoStage? dm(c.d1)+' → '+dm(c.d2)+' ’'+yy(c.d2) : dm(c.d1)+' ’'+yy(c.d1))}</span>`;
+  return b;
+}
+
 function buildTimeline(){
   document.getElementById('tl').classList.remove('ov','windowed');
-  const dates=P.calls.flatMap(c=>[c.opening,c.d1,c.d2].filter(Boolean)).sort();
+  /* a tab whose arenas have no dates yet still gets an axis: the year round today */
+  const dates=P.calls.flatMap(callDates).sort();
+  if(!dates.length){ const t=todayISO(); dates.push(t.slice(0,4)+'-01-01',t.slice(0,4)+'-12-31'); }
   const first=d3(dates[0]), last=d3(dates[dates.length-1]);
   T0=new Date(first.getFullYear(), first.getMonth(), 1);
   T1=new Date(last.getFullYear(), last.getMonth()+1, 15);
@@ -227,24 +490,20 @@ function buildTimeline(){
       years.add(d.getFullYear());firstJan=Math.min(firstJan,x);}
   }
   /* the same rule as the overview: name the opening year only when the
-     first January leaves room for it */
-  if(!years.has(T0.getFullYear())&&firstJan>YEAR_LABEL_GAP)
+     first January leaves room for it — and when today's tag does too. An
+     arena's tab often opens the month before this one, and the year and
+     "today" were printed over each other at the chart's left edge. */
+  const todayAt=(new Date()-T0)/SPAN*100;
+  if(!years.has(T0.getFullYear())&&firstJan>YEAR_LABEL_GAP&&!(todayAt>=0&&todayAt<YEAR_LABEL_GAP*1.6))
     axl+=`<div class="ylabel" style="left:0%">${T0.getFullYear()}</div>`;
   tl.innerHTML=`<div class="tl-axis"><div class="plot" style="top:0;bottom:0">${axl}</div></div><div class="tl-rows" id="tlrows"></div>`;
   tl.insertAdjacentHTML('afterbegin',`<div class="plot">${grid}</div>`);
   const rowsEl=document.getElementById('tlrows');
   P.calls.forEach(c=>{
-    const r=document.createElement('div'); r.className='crow'; r.tabIndex=0; r.setAttribute('role','button');
-    r.dataset.call=c.id; r.title=c.id;
-    const x0=X(c.opening), x1=X(c.d1), last=c.twoStage?X(c.d2):x1;
-    let b=`<span class="cbar" style="left:${x0}%;width:${Math.max(x1-x0,.8)}%;background:${c.color}"></span>
-      <span class="dot" style="left:${x0}%;background:${c.color};box-shadow:0 0 0 1px ${c.ink}"></span>
-      <span class="cap" style="left:${x1}%;background:${c.ink}"></span>`;
-    if(c.twoStage) b+=`<span class="cbar2" style="left:${x1}%;width:${Math.max(X(c.d2)-x1,.8)}%;background-color:${c.color}"></span>
-      <span class="cap" style="left:${X(c.d2)}%;background:${c.ink}"></span>`;
-    b+=`<span class="dtag" style="left:${x0}%;color:${c.ink||c.color}">${dm(c.opening)} ’${yy(c.opening)}</span>`;
-    b+=`<span class="dtag r" style="left:${last}%;color:${c.ink||c.color}">${c.twoStage? dm(c.d1)+' → '+dm(c.d2)+' ’'+yy(c.d2) : dm(c.d1)+' ’'+yy(c.d1)}</span>`;
-    r.innerHTML=`<span class="lbl"><span class="cchip w" style="background:${c.color};color:${fg(c)}">${c.short}</span><span class="nm">${c.name}</span></span><span class="track">${b}</span>`;
+    const r=document.createElement('div'); r.className='crow'+(c.arena&&c.first?' afirst':''); r.tabIndex=0; r.setAttribute('role','button');
+    r.dataset.call=c.id; r.title=c.arena?c.arena.name+' — '+c.run.names.join(', '):c.id;
+    const b=barsHTML(c,X,c.color,c.ink,true);
+    r.innerHTML=`<span class="lbl"><span class="cchip w${c.arena?' achip':''}" style="background:${c.color};color:${fg(c)}">${esc(c.short)}</span><span class="nm">${esc(c.name)}</span></span><span class="track">${b}</span>`;
     const act=()=>toggleCall(c.id);
     r.addEventListener('click',act);
     r.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();act();}});
@@ -278,6 +537,7 @@ function applyFilters(){
     t.row.classList.toggle('hidden',!show); t.row.classList.remove('dim');
     if(!show) t.det.classList.remove('open');
     if(show) visible++;
+    if(!t.dest) return;   /* an arena's calls stand under no destination */
     const a=perDest.get(t.dest)||[0,0]; a[1]++; if(show)a[0]++; perDest.set(t.dest,a);
   });
   new Set(topicEls.map(t=>t.theme).filter(Boolean)).forEach(th=>
@@ -291,7 +551,7 @@ function applyFilters(){
   /* Only while something narrows the list: unfiltered, "38 of 38 topics"
      repeated the count already on the cluster's tab. */
   document.getElementById('count').textContent=(st.sel.size||st.type||st.q)
-    ?`${visible} of ${P.nTopics} topics`+(away?` · ${away} in other clusters`:''):'';
+    ?`${visible} of ${P.nTopics} ${P.unit||'topics'}`+(away?` · ${away} in other tabs`:''):'';
 }
 
 /* ── the other clusters, while a search is typed ──
@@ -322,7 +582,7 @@ function paintElsewhere(visible){
                    dest:d.name,call:p.callById[m.call]});
     })));
     if(!hits.length) return;
-    if(!n){const cap=document.createElement('div'); cap.className='theme-h'; cap.textContent='In the other clusters';
+    if(!n){const cap=document.createElement('div'); cap.className='theme-h'; cap.textContent='In the other tabs';
       elsewhereEl.appendChild(cap);}
     n+=hits.length;
     const h=document.createElement('div'); h.className='dest-h'; h.tabIndex=0; h.setAttribute('role','button');
@@ -364,8 +624,33 @@ function paintElsewhere(visible){
       elsewhereEl.appendChild(row); elsewhereEl.appendChild(det);
     });
   });
+  /* The arenas' calls are found by the arena's name and the call's. A type
+     of action says nothing about them, so a type chip leaves them out. A
+     press opens their tab with the same words in the box, the call open. */
+  if(!st.type) APAGES.forEach(p=>{
+    if(p===P||!p.tabEl) return;
+    const hits=p.calls.filter(c=>(c.arena.name+' '+c.run.names.join(' ')).toLowerCase().includes(st.q));
+    if(!hits.length) return;
+    if(!n){const cap=document.createElement('div'); cap.className='theme-h'; cap.textContent='In the other tabs';
+      elsewhereEl.appendChild(cap);}
+    n+=hits.length;
+    const h=document.createElement('div'); h.className='dest-h'; h.tabIndex=0; h.setAttribute('role','button');
+    h.innerHTML=`<span class="dnum" style="opacity:1"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${p.clusterColor}"></span></span>
+      <span class="dname">${p.key} · ${p.label}</span><span class="dcount">${hits.length} of ${p.calls.length} calls</span>`;
+    h.title='Open '+p.full;
+    h.addEventListener('click',()=>selectArenaTab(p.key));
+    h.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();selectArenaTab(p.key);}});
+    elsewhereEl.appendChild(h);
+    hits.forEach(c=>{
+      const row=arenaRow(Object.assign({},c,{first:false}));
+      const go=()=>selectArenaTab(p.key,c.id);
+      row.addEventListener('click',go);
+      row.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+      elsewhereEl.appendChild(row);
+    });
+  });
   if(!n&&!visible){const e=document.createElement('div'); e.className='empty';
-    e.textContent='No topic in any cluster matches this search.'; elsewhereEl.appendChild(e);}
+    e.textContent='Nothing in any tab matches this search.'; elsewhereEl.appendChild(e);}
   return n;
 }
 function paintTimeline(){
@@ -378,9 +663,10 @@ function paintTimeline(){
 }
 function paintPills(){
   const p=document.getElementById('pills'); p.innerHTML='';
-  [...P.state.sel].map(id=>P.callById[id]).sort((a,b)=>a.opening.localeCompare(b.opening)).forEach(c=>{
+  [...P.state.sel].map(id=>P.callById[id]).filter(Boolean).sort((a,b)=>(a.opening||'').localeCompare(b.opening||'')).forEach(c=>{
     const el=document.createElement('span'); el.className='pill'; el.style.background=c.color; el.style.color=fg(c);
-    el.innerHTML=`${c.short}<button aria-label="Remove ${c.short}">✕</button>`;
+    el.innerHTML=`${esc(c.short)}<button>✕</button>`;
+    el.querySelector('button').setAttribute('aria-label','Remove '+c.short);
     el.querySelector('button').addEventListener('click',()=>toggleCall(c.id));
     p.appendChild(el);
   });
@@ -393,7 +679,22 @@ function paintPills(){
 function showCard(ids){
   const el=document.getElementById('selcard');
   if(!ids.length){el.innerHTML='';return;}
-  const list=ids.map(id=>P.callById[id]).sort((a,b)=>a.opening.localeCompare(b.opening));
+  const list=ids.map(id=>P.callById[id]).filter(Boolean).sort((a,b)=>(a.opening||'').localeCompare(b.opening||''));
+  if(!list.length){el.innerHTML='';return;}
+  /* an arena's call has no topics or budget here, only its dates */
+  if(list[0].arena){
+    if(list.length===1){
+      const c=list[0];
+      el.innerHTML=`<span><span class="k">${esc(c.arena.name)}</span> · ${esc(c.name)}</span>
+        ${c.tagOpen?`<span>${c.annEnd?'expected':'opens'} <span class="k">${esc(c.tagOpen)}</span></span>`:''}
+        ${c.annEnd?'':`<span>deadline <span class="k">${esc(c.tagEnd)}</span></span>`}`;
+    } else {
+      const next=list.map(c=>c.d1).filter(Boolean).sort()[0];
+      el.innerHTML=`<span><span class="k">${list.length}</span> calls selected</span>
+        ${next?`<span>earliest deadline <span class="k">${dmy(next)}</span></span>`:''}`;
+    }
+    return;
+  }
   if(list.length===1){
     const c=list[0];
     el.innerHTML=`<span><span class="k">${c.id}</span></span>
@@ -579,9 +880,11 @@ function readerButton(topic, call){
 let OT0,OT1,OSPAN; const OX=d=>(d3(d)-OT0)/OSPAN*100;
 
 function ovScope(){                       /* calls currently driving the topic list */
-  if(OV.sel.size) return ALLCALLS.filter(c=>OV.sel.has(c.id));
-  return ALLCALLS.filter(c=>OV.clusters.has(c.cluster) && inSpan(c));
+  if(OV.sel.size) return everyCall().filter(c=>OV.sel.has(c.id));
+  return everyCall().filter(c=>OV.clusters.has(c.cluster) && inSpan(c));
 }
+const topicsOf=c=>TOPICS_BY_CALL[c.id]||[];   /* an arena's call has none here */
+const callKey=c=>c.d1||c.opening||c.annEnd||'';
 
 function renderOverview(){
   const qEl=document.getElementById('q'); qEl.value=OV.q;
@@ -602,25 +905,27 @@ function buildOvControls(){
         pr.appendChild(b);
       });
     pr.dataset.built='1';
-    const cc=document.getElementById('cchips');
-    PAGES.forEach((p,i)=>{
-      const b=document.createElement('button'); b.className='clchip'; b.dataset.k=p.key;
-      b.innerHTML=`<i style="background:${p.clusterColor}"></i>${p.key}`;
-      b.title=p.full+' — click to filter, double-click to open that cluster';
-      b.addEventListener('click',()=>{
-        OV.clusters.has(p.key)?OV.clusters.delete(p.key):OV.clusters.add(p.key);
-        if(!OV.clusters.size) PAGES.forEach(x=>OV.clusters.add(x.key));
-        renderOverview();
-      });
-      b.addEventListener('dblclick',()=>selectPage(i));
-      cc.appendChild(b);
-    });
     document.querySelectorAll('#arrangeseg button').forEach(b=>b.addEventListener('click',()=>{
       OV.arrange=b.dataset.v; renderOverview();}));
     document.querySelectorAll('#groupseg button').forEach(b=>b.addEventListener('click',()=>{
       OV.group=b.dataset.v; buildOvControls(); buildOvLedger(); paintOv();}));
   }
   document.querySelectorAll('#presets .pchip').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.k===OV.preset)));
+  /* A chip for every tab with calls in it, the arenas' tabs after the
+     clusters; drawn afresh each time, as the arenas' tabs come and go. */
+  const cc=document.getElementById('cchips'); cc.innerHTML='';
+  allPages().filter(p=>!p.arena||p.tabEl).forEach(p=>{
+    const b=document.createElement('button'); b.className='clchip'; b.dataset.k=p.key;
+    b.innerHTML=`<i style="background:${p.clusterColor}"></i>${p.key}`;
+    b.title=p.full+' — click to filter, double-click to open that tab';
+    b.addEventListener('click',()=>{
+      OV.clusters.has(p.key)?OV.clusters.delete(p.key):OV.clusters.add(p.key);
+      if(!OV.clusters.size) allPages().forEach(x=>OV.clusters.add(x.key));
+      renderOverview();
+    });
+    b.addEventListener('dblclick',()=>p.arena?selectArenaTab(p.key):selectPage(PAGES.indexOf(p)));
+    cc.appendChild(b);
+  });
   document.querySelectorAll('#cchips .clchip').forEach(b=>{
     const on=OV.clusters.has(b.dataset.k);
     b.setAttribute('aria-pressed',String(on)); b.classList.toggle('off',!on);
@@ -628,7 +933,7 @@ function buildOvControls(){
   document.querySelectorAll('#arrangeseg button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v===OV.arrange)));
   document.querySelectorAll('#groupseg button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v===OV.group)));
   const scope=ovScope();
-  const nT=scope.reduce((a,c)=>a+TOPICS_BY_CALL[c.id].length,0);
+  const nT=scope.reduce((a,c)=>a+topicsOf(c).length,0);
   const bud=scope.reduce((a,c)=>a+c.budget,0);
   document.getElementById('spanread').innerHTML=
     `${dmy(OV.from)} → ${dmy(OV.to)} <span class="sub">· ${scope.length} calls · ${nT} topics · €${bud.toFixed(0)}M</span>`;
@@ -636,7 +941,7 @@ function buildOvControls(){
 
 /* ---------- the chronological chart, and dragging its ends ---------- */
 function buildOvTimeline(){
-  const dates=ALLCALLS.flatMap(c=>[c.opening,c.d1,c.d2].filter(Boolean)).concat([OV.from,OV.to]).sort();
+  const dates=everyCall().flatMap(callDates).concat([OV.from,OV.to]).sort();
   const f=d3(dates[0]), l=d3(dates[dates.length-1]);
   OT0=new Date(f.getFullYear(),f.getMonth(),1); OT1=new Date(l.getFullYear(),l.getMonth()+1,15); OSPAN=OT1-OT0;
   const tl=document.getElementById('tl'); tl.classList.add('ov');
@@ -658,9 +963,9 @@ function buildOvTimeline(){
   const rowsEl=document.getElementById('tlrows');
 
   const groups = OV.arrange==='cluster'
-    ? PAGES.map(p=>({label:p.key+' · '+p.label, color:p.clusterColor, page:p,
-                     calls:p.calls.slice().sort((a,b)=>a.d1.localeCompare(b.d1))}))
-    : [{label:null, calls:ALLCALLS.slice().sort((a,b)=>a.d1.localeCompare(b.d1)||a.id.localeCompare(b.id))}];
+    ? allPages().filter(p=>p.calls.length&&(!p.arena||p.tabEl)).map(p=>({label:p.key+' · '+p.label, color:p.clusterColor, page:p,
+                     calls:p.calls.slice().sort((a,b)=>callKey(a).localeCompare(callKey(b)))}))
+    : [{label:null, calls:everyCall().slice().sort((a,b)=>callKey(a).localeCompare(callKey(b))||a.id.localeCompare(b.id))}];
 
   groups.forEach(g=>{
     if(g.label){
@@ -752,17 +1057,11 @@ function startEdgeDrag(e){
 /* ---------- the topic list under the chart ---------- */
 function ovRow(c){
   const r=document.createElement('div'); r.className='crow'; r.tabIndex=0; r.setAttribute('role','button');
-  r.dataset.call=c.id; r.title=c.id+' — '+c.name;
-  const x0=OX(c.opening), x1=OX(c.d1), lastx=c.twoStage?OX(c.d2):x1;
-  let b=`<span class="cbar" style="left:${x0}%;width:${Math.max(x1-x0,.8)}%;background:${c.ovColor}"></span>
-    <span class="dot" style="left:${x0}%;background:${c.ovColor};box-shadow:0 0 0 1px ${c.ovInk}"></span>
-    <span class="cap" style="left:${x1}%;background:${c.ovInk}"></span>`;
-  if(c.twoStage) b+=`<span class="cbar2" style="left:${x1}%;width:${Math.max(OX(c.d2)-x1,.8)}%;background-color:${c.ovColor}"></span>
-    <span class="cap" style="left:${OX(c.d2)}%;background:${c.ovInk}"></span>`;
-  b+=`<span class="dtag r" style="left:${lastx}%;color:${c.ovInk}">${c.twoStage? dm(c.d1)+' → '+dm(c.d2)+' ’'+yy(c.d2) : dm(c.d1)+' ’'+yy(c.d1)}</span>`;
+  r.dataset.call=c.id; r.title=c.arena?c.arena.name+' — '+c.run.names.join(', '):c.id+' — '+c.name;
+  const b=barsHTML(c,OX,c.ovColor,c.ovInk,false);
   const lbl = OV.arrange==='cluster'
-    ? `<span class="cchip w" style="background:${c.ovColor};color:${ovFg(c)}">${c.short}</span><span class="nm">${c.name}</span>`
-    : `<span class="cchip" style="background:${c.ovColor};color:${ovFg(c)}">${c.cluster} ${c.short}</span><span class="nm">${c.name}</span>`;
+    ? `<span class="cchip w${c.arena?' achip':''}" style="background:${c.ovColor};color:${ovFg(c)}">${esc(c.short)}</span><span class="nm">${esc(c.name)}</span>`
+    : `<span class="cchip${c.arena?' achip':''}" style="background:${c.ovColor};color:${ovFg(c)}">${c.cluster} ${esc(c.short)}</span><span class="nm">${esc(c.name)}</span>`;
   r.innerHTML=`<span class="lbl">${lbl}</span><span class="track">${b}</span>`;
   r.addEventListener('click',()=>{
     OV.sel.has(c.id)?OV.sel.delete(c.id):OV.sel.add(c.id);
@@ -778,8 +1077,23 @@ function buildOvLedger(){
   const inScope=new Set(scope.map(c=>c.id));
   const match=t=>(!OV.type||t.type===OV.type)&&
     (!OV.q||(t.id+' '+t.title).toLowerCase().includes(OV.q)||(FULLTEXT&&inFull(t.id,OV.q)));
-  const keyDate=c=>c.d1;
-  let shown=0;
+  const keyDate=callKey;
+  let shown=0, shownCalls=0;
+  /* An arena's call has no topics under it here, so it stands as its
+     heading alone, and opens its own tab with the call open. A type of
+     action says nothing about it, so a type chip leaves it out. */
+  const arenaHdr=c=>{
+    if(OV.type) return;
+    if(OV.q&&!(c.arena.name+' '+c.run.names.join(' ')).toLowerCase().includes(OV.q)) return;
+    const hd=document.createElement('div'); hd.className='callhdr';
+    hd.innerHTML=`<span class="clk" style="background:${c.ovColor};color:${ovFg(c)}">${c.cluster} ${esc(c.short)}</span>
+      <span class="cname">${esc(c.name)}</span>
+      <span class="cdl${c.unc?' unc':''}">${esc(c.tagEnd)}</span>
+      <span class="cmeta">${c.tagOpen?(c.annEnd?'expected ':'opens ')+esc(c.tagOpen):''}</span>`;
+    hd.title='Open '+c.cluster+' — '+c.arena.name;
+    hd.addEventListener('click',()=>selectArenaTab(c.cluster,c.id));
+    ledger.appendChild(hd); shownCalls++;
+  };
 
   const topicRow=(t,c)=>{
     const shortId=shortTopicId(t.id);
@@ -814,6 +1128,7 @@ function buildOvLedger(){
   if(OV.group==='deadline'){
     /* one block per call, in the order they close */
     scope.slice().sort((a,b)=>keyDate(a).localeCompare(keyDate(b))||a.cluster.localeCompare(b.cluster)).forEach(c=>{
+      if(c.arena) return arenaHdr(c);
       const tops=TOPICS_BY_CALL[c.id].filter(match);
       if(!tops.length) return;
       shown+=tops.length;
@@ -859,9 +1174,21 @@ function buildOvLedger(){
         tops.forEach(([t,c])=>topicRow(t,c));
       });
     });
+    APAGES.forEach(p=>{
+      const cs=p.calls.filter(c=>inScope.has(c.id)); if(!cs.length) return;
+      const h=document.createElement('div'); h.className='dest-h';
+      h.innerHTML=`<span class="dnum" style="opacity:1"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${p.clusterColor}"></span></span>
+        <span class="dname">${p.key} · ${p.label}</span><span class="dcount">${cs.length} calls closing</span>`;
+      h.title='Open '+p.full; h.style.cursor='pointer';
+      h.addEventListener('click',()=>selectArenaTab(p.key));
+      ledger.appendChild(h);
+      const before=shownCalls;
+      cs.sort((a,b)=>keyDate(a).localeCompare(keyDate(b))).forEach(arenaHdr);
+      if(shownCalls===before) h.remove();
+    });
   }
 
-  if(!shown){
+  if(!shown&&!shownCalls){
     const e=document.createElement('div'); e.className='empty';
     e.textContent = OV.sel.size? 'No topics match the current filters in the pinned calls.'
       : 'No submission deadlines fall in this window. Widen the window, or pick a preset above.';
@@ -873,8 +1200,9 @@ function buildOvLedger(){
 /* ---------- repainting what is already drawn ---------- */
 function paintOv(quick){
   const pinned=OV.sel;
+  const every=everyCall();
   document.querySelectorAll('#tlrows .crow').forEach(r=>{
-    const c=ALLCALLS.find(x=>x.id===r.dataset.call);
+    const c=every.find(x=>x.id===r.dataset.call); if(!c) return;
     const cluOn=OV.clusters.has(c.cluster);
     const on = pinned.size ? pinned.has(c.id) : (cluOn && inSpan(c));
     r.classList.toggle('on', !!pinned.size && pinned.has(c.id));
@@ -882,9 +1210,9 @@ function paintOv(quick){
   });
   if(quick) return;
   const p=document.getElementById('pills'); p.innerHTML='';
-  [...pinned].map(id=>ALLCALLS.find(c=>c.id===id)).sort((a,b)=>a.d1.localeCompare(b.d1)).forEach(c=>{
+  [...pinned].map(id=>every.find(c=>c.id===id)).filter(Boolean).sort((a,b)=>callKey(a).localeCompare(callKey(b))).forEach(c=>{
     const el=document.createElement('span'); el.className='pill'; el.style.background=c.ovColor; el.style.color=c.ovInk;
-    el.innerHTML=`${c.cluster} ${c.short}<button aria-label="Unpin">✕</button>`;
+    el.innerHTML=`${c.cluster} ${esc(c.short)}<button aria-label="Unpin">✕</button>`;
     el.querySelector('button').addEventListener('click',()=>{OV.sel.delete(c.id);buildOvControls();buildOvLedger();paintOv();});
     p.appendChild(el);
   });
@@ -894,12 +1222,12 @@ function paintOv(quick){
     p.appendChild(ca);
   }
   const scope=ovScope();
-  const nT=scope.reduce((a,c)=>a+TOPICS_BY_CALL[c.id].length,0);
-  const first=scope.map(c=>c.d1).sort()[0];
+  const nT=scope.reduce((a,c)=>a+topicsOf(c).length,0);
+  const first=scope.map(c=>c.d1).filter(Boolean).sort()[0];
   const el=document.getElementById('selcard');
   el.innerHTML = scope.length
     ? `<span><span class="k">${scope.length}</span> calls take submissions in this window</span>
-       <span>next deadline <span class="k">${dmy(first)}</span></span>
+       ${first?`<span>next deadline <span class="k">${dmy(first)}</span></span>`:''}
        <span><span class="k">${nT}</span> topics</span>
        <span><span class="k">€${scope.reduce((a,c)=>a+c.budget,0).toFixed(0)}M</span></span>
        ${pinned.size?'<span>pinned calls override the window</span>':''}`
@@ -932,21 +1260,21 @@ ftEl.addEventListener('click',()=>{
 const qEl=document.getElementById('q'), qClr=document.getElementById('qclr');
 qEl.addEventListener('input',()=>{
   const v=qEl.value.trim().toLowerCase(); qClr.style.display=v?'block':'none';
-  if(MODE==='overview'){OV.q=v;buildOvLedger();} else {PAGES.forEach(p=>p.state.q=v);applyFilters();}
+  if(MODE==='overview'){OV.q=v;buildOvLedger();} else {allPages().forEach(p=>p.state.q=v);applyFilters();}
 });
 qClr.addEventListener('click',()=>{
   qEl.value=''; qClr.style.display='none';
-  if(MODE==='overview'){OV.q='';buildOvLedger();} else {PAGES.forEach(p=>p.state.q='');applyFilters();}
+  if(MODE==='overview'){OV.q='';buildOvLedger();} else {allPages().forEach(p=>p.state.q='');applyFilters();}
   qEl.focus();
 });
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'&&document.getElementById('reader').classList.contains('open')){ closeReader(); return; }
   if(e.key==='Escape'&&MODE==='overview'){
     OV.sel.clear(); OV.type=null; OV.q=''; qEl.value=''; qClr.style.display='none';
-    PAGES.forEach(p=>OV.clusters.add(p.key)); setPreset('6m'); renderOverview(); return;
+    allPages().forEach(p=>OV.clusters.add(p.key)); setPreset('6m'); renderOverview(); return;
   }
   if(e.key==='Escape'){
-    P.state.sel.clear(); P.state.selTopicCall=null; P.state.type=null; PAGES.forEach(p=>p.state.q='');
+    P.state.sel.clear(); P.state.selTopicCall=null; P.state.type=null; allPages().forEach(p=>p.state.q='');
     qEl.value=''; qClr.style.display='none';
     tc.querySelectorAll('.tchip').forEach(x=>x.setAttribute('aria-pressed','false'));
     topicEls.forEach(t=>{t.row.classList.remove('sel');t.det.classList.remove('open');});
@@ -960,6 +1288,10 @@ document.addEventListener('keydown',e=>{
 
 const hash=(location.hash||'').replace('#','').toLowerCase();
 const start = hash==='all' ? PAGES.length : Math.max(0, PAGES.findIndex(p=>p.key.toLowerCase()===hash));
+/* An arena's tab named in the address cannot open yet: the arenas arrive
+   from the bridge a moment after the room is built. It is opened then. */
+const atab=TYPE_TABS.find(t=>t.key.toLowerCase()===hash);
+if(atab) pendingTab=atab.key;
 selectPage(start);
 
 
@@ -989,7 +1321,15 @@ function topicRow(id){
 Hub.expose('callboard',{
   topics:function(){ return Object.keys(TOPIC_BY_ID).map(topicRow); },
   openReader:function(id){ return openReader(id); },
-  closeReader:closeReader
+  closeReader:closeReader,
+  /* the socket for the Semaphore's arenas: a read of them, and their
+     drawer to lend over this room — filled by the bridge, then told of
+     every change on the other side */
+  setArenas:function(o){ ARENA_SRC=o||null; arenasArrived(); },
+  arenasChanged:function(){ if(ARENA_SRC) arenasArrived(); }
 });
+/* The room is built late and only once; the bridge waits for this to
+   hand it the arenas. */
+Hub.emit('callboard:ready');
 
 });

@@ -18,6 +18,10 @@ the end.
 
 ## The Board
 
+Its arenas' calls are drawn on the Call Board too since 2026-10-24, and the
+Board itself is to go there; what was agreed is in
+[call-board](call-board.md). Until it goes, what follows holds.
+
 - **The way in** (2026-10-15). What is found (brokerage events, partner
   searches, tools) stands on the board marked new, in a lime of its own with
   a glowing edge, and the tray over the board lists each until he acts:

@@ -675,10 +675,17 @@ html #pane-callboard .tabs{align-items:stretch !important; padding-right:22px !i
 /* CL1…CL6, MISS, HORIZ and ALL carry it; the full cluster name is on
    hover. They stay flat with an underline rather than taking the slab
    face, because the live one has to be marked at the floor of the bar. */
+/* 8px a side, not 10: the arenas' four tabs joined the row on 2026-10-24,
+   and at 10 the row ran into the room's name on the iPad held sideways. */
 html #pane-callboard .tab{
   color:var(--oa-ctl); background:none; border:0; border-bottom:2px solid transparent;
-  border-radius:0; min-height:0; padding:5px 10px 4px; gap:6px;
+  border-radius:0; min-height:0; padding:5px 8px 4px; gap:6px;
   align-self:stretch; align-items:center; box-shadow:none;
+}
+/* the rule standing between the clusters, the arenas' tabs and ALL */
+html #pane-callboard .tabs .tabsep{
+  flex:0 0 1px; width:1px; height:24px; align-self:center; margin:0 7px;
+  background:rgba(205,176,105,.34);
 }
 html #pane-callboard .tab .cn{display:none}
 html #pane-callboard .tab .ck{font-size:11px; opacity:1; letter-spacing:.08em}

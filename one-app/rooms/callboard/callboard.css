@@ -349,3 +349,24 @@
 #pane-callboard .rd-body dt{font-family:var(--font);font-size:9.5px;text-transform:uppercase;letter-spacing:.09em;color:var(--brass2);padding-top:4px}
 #pane-callboard .rd-body dd{margin:0}
 #pane-callboard .rd-body mark{background:rgba(212,166,58,.34);color:inherit;border-radius:2px;padding:0 2px}
+/* ══ 9. THE ARENAS' CALLS ══
+   One row to a call, the arena named on its chip (Mark, 2026-10-24); see
+   "the arenas' calls" in callboard.js. The chip carries a name rather than
+   a code, so it may be wider than a code's and stops short of the title. */
+#pane-callboard .cchip.achip{min-width:104px;max-width:168px;overflow:hidden;text-overflow:ellipsis}
+#pane-callboard .crow .lbl .cchip.achip{min-width:0;max-width:96px;flex-shrink:1}
+#pane-callboard .callhdr .clk{max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* a rule where one arena's calls end and the next one's begin */
+#pane-callboard .topic.afirst{border-top:1.5px solid var(--line-strong)}
+#pane-callboard .crow.afirst{box-shadow:inset 0 1px 0 rgba(120,96,58,.24)}
+#pane-callboard .adl{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--ink);white-space:nowrap;flex:0 0 auto}
+#pane-callboard .adl.unc,#pane-callboard .callhdr .cdl.unc{font-weight:400;font-style:italic;color:var(--ink2)}
+#pane-callboard .ttl.anone{font-style:italic;color:var(--ink3)}
+/* not yet published to the day: dashed, as on the Semaphore's board */
+#pane-callboard .cbar.unc{box-shadow:none;border:1.5px dashed}
+/* a call open with no deadline known fades out rather than ending */
+#pane-callboard .cbar.fade{box-shadow:none;border-radius:2px 0 0 2px;background:linear-gradient(90deg,var(--fc) 35%,transparent)}
+/* a call only expected: the window it is expected in */
+#pane-callboard .cann{position:absolute;top:13px;height:10px;border-radius:999px;border:1.5px dashed;min-width:6px}
+/* a type of action and the full text say nothing about an arena's call */
+#pane-callboard header.arena .typechips,#pane-callboard header.arena .ftchip{display:none}
