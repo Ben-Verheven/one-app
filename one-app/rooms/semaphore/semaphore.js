@@ -662,7 +662,7 @@ function applySearchBox(open){
    beside it for the agent's new arenas. Mark moved it to the Call Board,
    where every call he follows is drawn (notes/call-board.md): an arena's
    calls stand in the tab of its type there, the venues kept on the board
-   as lanes under the calls, and whatever a search found is judged there
+   as lanes over the calls, and whatever a search found is judged there
    one find at a time before it lands. This room still holds the board and
    does what is judged there; "the board, lent to the Call Board" says
    what it hands over. Of the Board's two orders the one left is his own
@@ -1217,7 +1217,7 @@ function refreshPlace(){
   });
 }
 /* A venue new on the board or kept there to think about is still on
-   trial: the Call Board draws it under its calls, and its panel here
+   trial: the Call Board draws it over its calls, and its panel here
    offers the three things to do with it. The board holds what still waits
    for Mark, so a venue moved to Venues is off it, in any section, Limbo
    and Mark's Place included (Mark, 2026-10-23); its arena's panel still
@@ -1734,26 +1734,96 @@ function renderNow(){keepPlace(()=>{
 });}
 
 /* ── a venue, opened ──
-   Its panel takes the arena's place in the drawer: where it stands, and
-   for one still on the board the three things to do with it; its window,
-   the rhythm, every visit, the leads it gave, the arenas it serves, its
-   other pages and Mark's own note. Edit changes what it is and when. */
+   Its panel takes the arena's place in the drawer, wider than an arena's
+   (Mark, 2026-10-24), and opens on a piece of the Call Board: the venue's
+   window on one strip of time with the calls it is for, as they stand
+   there when the venue is picked. Under it, in a grid, where it stands,
+   with the things to do with it, its window, its event days, the arenas it
+   serves and the basis of its dates; then the rest folded, each fold
+   saying in a word what is in it: the visits, the leads it gave, its other
+   pages, Mark's own note and the rhythm. Chosen over the narrow panel with
+   the strip of time inside, and over every part laid open one under the
+   other, which put what the venue is for at the foot of a long scroll.
+   Edit changes what it is and when. */
 const VENUE_LEAD='venue-lead';     /* leadEdit.a while a lead is being started from a venue's panel */
 let vNoteT=null;
-/* the window on a strip of its own, a week either side, with today */
-function vLifeHTML(v){
-  const w=vWin(v);
-  if(!w)return '';
-  const now=T(todayISO());
-  const a=w.from===null?Math.min(now,w.to)-42*DAY:w.from,b=w.to===null?Math.max(now,w.from)+42*DAY:w.to;
-  const t0=Math.min(a,now)-7*DAY,t1=Math.max(b,now)+7*DAY;
-  const P=t=>((t-t0)/(t1-t0)*100).toFixed(2);
-  let h='<div class="vlife" data-t0="'+t0+'" data-t1="'+t1+'"><i class="vax"></i>'+bandHTML(v,t0,t1,null,'');
-  if(w.ms!==null)h+='<span class="vlt up" style="left:'+P(w.ms+DAY/2)+'%">meets '+esc(shortDate(v))+'</span>';
-  if(w.from!==null)h+='<span class="vlt" style="left:'+P(w.from)+'%">opens<br>'+tDay(w.from)+'</span>';
-  if(w.to!==null)h+='<span class="vlt" style="left:'+P(w.to+DAY)+'%">closes<br>'+tDay(w.to)+'</span>';
-  h+='<i class="vnow" style="left:'+P(now+DAY/2)+'%"></i><span class="vlt up now" style="left:'+P(now+DAY/2)+'%">today</span>';
-  return h+'</div>';
+/* the folds opened, which stay open for the session from venue to venue */
+const vFolds=new Set();
+/* The calls a venue is for, as the Call Board reckons them when it is
+   picked: those of its arenas whose last deadline is still ahead when it
+   opens, since a brokerage event is for proposals still to be written, or
+   all of them where none is. Each arena wears its type's colour, its round
+   in force full and the next ones pale, as on the Call Board. */
+function vSnipHTML(v){
+  const w=vWin(v),now=T(todayISO());
+  const dl=d=>T((d.gran==='day'||d.gran==='range')?d.start:(d.end||d.start));
+  const lastT=r=>r.close?dl(r.close):T(r.open.end||r.open.start);
+  const rows=[];
+  venueArenas(v).filter(a=>!a.frozenAt).forEach(a=>{
+    const {live,last}=callRuns(a),tone=arenaTone(a)||'#9C8B66';
+    (last?[last]:[]).concat(live).forEach(r=>rows.push({a,r,tone,pale:live.indexOf(r)>0}));
+  });
+  const from=w?(w.from!==null?w.from:w.ms!==null?w.ms:w.to):now;
+  const hit=rows.filter(x=>lastT(x.r)>=from),calls=hit.length?hit:rows;
+  /* the strip runs from the earliest of them to the latest, in whole
+     months, with today on it when today is near */
+  const ts=[];
+  if(w){
+    ts.push(w.from!==null?w.from:w.to-42*DAY,w.to!==null?w.to+DAY:Math.max(now,w.from)+OPEN_RUN*DAY);
+    if(w.ms!==null)ts.push(w.ms,w.me+DAY);
+  }
+  calls.forEach(({r})=>{if(r.open)ts.push(T(r.open.start));r.dls.forEach(d=>ts.push(dl(d)));if(!r.dls.length&&r.anns[0])ts.push(T(r.anns[0].end||r.anns[0].start));});
+  let lo=ts.length?Math.min(...ts):now-30*DAY,hi=ts.length?Math.max(...ts):now+120*DAY;
+  if(now<lo&&lo-now<120*DAY)lo=now;
+  if(now>hi&&now-hi<60*DAY)hi=now;
+  const m0=new Date(lo),m1=new Date(hi);
+  const t0=new Date(m0.getFullYear(),m0.getMonth(),1).getTime();
+  let t1=new Date(m1.getFullYear(),m1.getMonth()+1,1).getTime();
+  if(t1-t0<120*DAY)t1=new Date(new Date(t0).getFullYear(),new Date(t0).getMonth()+4,1).getTime();
+  const X=t=>Math.max(0,Math.min(100,(t-t0)/(t1-t0)*100)),pc=t=>X(t).toFixed(2)+'%',wd=(a,b)=>Math.max(X(b)-X(a),.6).toFixed(2)+'%';
+  let axis='',grid='',n=0;
+  for(let d=new Date(t0);d.getTime()<t1;d=new Date(d.getFullYear(),d.getMonth()+1,1))n++;
+  const every=n>20?3:1;
+  for(let d=new Date(t0),i=0;d.getTime()<t1;d=new Date(d.getFullYear(),d.getMonth()+1,1),i++){
+    const a=d.getTime(),b=new Date(d.getFullYear(),d.getMonth()+1,1).getTime();
+    if(i)grid+='<i'+(d.getMonth()===0?' class="y"':'')+' style="left:'+pc(a)+'"></i>';
+    if(i%every===0)axis+='<span class="sm" style="left:'+((X(a)+X(b))/2).toFixed(2)+'%">'+MONTHS[d.getMonth()][0]+'</span>';
+    if(d.getMonth()===0||i===0)axis+='<span class="sy" style="left:'+pc(a)+'">'+d.getFullYear()+'</span>';
+  }
+  if(now>=t0&&now<t1)grid+='<b style="left:'+pc(now+DAY/2)+'" title="today"></b>';
+  const bars=({r,tone,pale})=>{
+    const col=pale?'color-mix(in srgb,'+tone+' 42%,#F7F3E9)':tone,o=r.open?T(r.open.start):null;
+    const d1=r.dls.length?dl(r.dls[0]):null,d2=r.dls.length>1?dl(r.dls[r.dls.length-1]):null;
+    let h='';
+    if(!r.dls.length&&!r.opens.length&&r.anns[0])
+      return '<i class="sann" style="left:'+pc(T(r.anns[0].start))+';width:'+wd(T(r.anns[0].start),T(r.anns[0].end||r.anns[0].start)+DAY)+';border-color:'+tone+'"></i>';
+    if(o!==null&&d1!==null)h+='<i class="sbar'+(r.unc?' unc':'')+'" style="left:'+pc(o)+';width:'+wd(o,d1)+';background:'+col+';border-color:'+tone+'"></i>';
+    else if(o!==null)h+='<i class="sbar fade" style="left:'+pc(o)+';width:'+wd(o,o+120*DAY)+';--fc:'+col+'"></i>';
+    if(d2!==null&&d2>d1)h+='<i class="sbar2" style="left:'+pc(d1)+';width:'+wd(d1,d2)+';--fc:'+col+'"></i>';
+    if(o!==null)h+='<i class="sdot" style="left:'+pc(o)+';background:'+col+';border-color:'+tone+'"></i>';
+    if(d1!==null)h+='<i class="scap" style="left:'+pc(d1)+';background:'+tone+'"></i>';
+    if(d2!==null&&d2>d1)h+='<i class="scap" style="left:'+pc(d2)+';background:'+tone+'"></i>';
+    return h;
+  };
+  const say=r=>[r.open?(r.opens.length?'opens ':'expected ')+tDay(T(r.open.start)):'',
+    r.dls.length?(r.dls.length>1?'deadlines ':'deadline ')+r.dls.map(d=>tDay(dl(d))).join(' → '):''].filter(Boolean).join(' · ');
+  /* the words a call's name shares with its arena's, on the chip beside
+     it, are left off, so two calls of one arena are told apart in the
+     room there is; a name that would be left a word or less stays whole */
+  const own=(nm,an)=>{const a=an.toLowerCase().split(/\s+/),w=nm.split(/\s+/);let i=0;
+    while(i<w.length&&i<a.length&&w[i].toLowerCase()===a[i])i++;return w.length-i>1?w.slice(i).join(' '):nm;};
+  const callRow=x=>{const nm=callBase(dtLabel(x.r.all[0]))||dtLabel(x.r.all[0]);
+    return '<div class="sr" title="'+esc(x.a.name+' — '+nm+(say(x.r)?'\n'+say(x.r):''))+'"><span class="sl"><span class="schip" style="--tone:'+esc(x.tone)+'">'+esc(x.a.name)+'</span>'+
+      '<span class="sn">'+esc(own(nm,x.a.name))+'</span></span><span class="st">'+bars(x)+'</span></div>';};
+  const none=!venueArenas(v).length?'It serves no arena yet: add one under Serves.':!rows.length?'Its arenas have no call dates on the board yet.':'';
+  return '<div class="vsnip">'+
+    '<div class="sax"><span class="sl"></span><span class="st">'+axis+'</span></div>'+
+    '<div class="sbody"><div class="sgrid">'+grid+'</div>'+
+      '<div class="sr lane"><span class="sl"><i class="sdia"></i><b class="sn">'+esc(v.name)+'</b></span>'+
+        '<span class="st" data-t0="'+t0+'" data-t1="'+t1+'">'+(w?bandHTML(v,t0,t1,null,''):'<span class="snone">not dated yet</span>')+'</span></div>'+
+      calls.map(callRow).join('')+
+    '</div>'+(none?'<p class="snote">'+none+'</p>':'')+
+  '</div>';
 }
 function vEveryHTML(v){
   const auto=v.every?null:vEvery(v);
@@ -1764,16 +1834,18 @@ function vEveryHTML(v){
       (n?'every '+n+' day'+(n===1?'':'s'):(auto?'by itself — now every '+auto+' day'+(auto===1?'':'s'):'by itself — none while '+why))+
     '</option>').join('')+'</select>';
 }
-/* The window and the event days in words, and whose each end is: Mark's,
-   or the one given round the event days until he moves it. */
+/* The window and the event days in words, and whose the window's ends
+   are: Mark's, or given round the event days until he moves them. */
 function vFactsHTML(v){
-  const w=vWin(v);
-  const row=(k,x)=>'<dt>'+k+'</dt><dd>'+x+'</dd>';
-  const end=(k,t,set)=>row(k,t===null?'<i>no end set</i>':esc(fmtDay(new Date(t).toISOString().slice(0,10)))+
-    (set?'':' <i>'+(w.season?'— the season, a guess':'— round the event days, until you drag it')+'</i>'));
-  return (w?end('opens',w.from,w.set.from):row('window','<i>not set — Edit, or give it event days</i>'))+
-    row('event days',v.start?esc((v.grade==='fixed'?'':'≈ ')+dispDate(v)):'<i>none</i>')+
-    (w?end('closes',w.to,w.set.to):'');
+  const w=vWin(v),day=t=>esc(fmtDay(new Date(t).toISOString().slice(0,10)));
+  const f=(k,x,cls)=>'<div class="vf'+(cls?' '+cls:'')+'"><span class="vfk">'+k+'</span><span class="vfv">'+x+'</span></div>';
+  const whose=!w?'':w.set.from&&w.set.to?'':w.season?'the season, a guess':
+    (w.set.from?'its end ':w.set.to?'its opening ':'')+'round the event days';
+  return f('Window',w?(w.from!==null?day(w.from):'<i>open before</i>')+' → '+(w.to!==null?day(w.to):'<i>no end set</i>')+
+      (whose?' <i>'+whose+'</i>':'')+
+      (v.opens||v.closes?' <button class="vreset" data-act="vWinReset" data-v="'+v.id+'" title="Give both ends back to their default">reset</button>':'')
+      :'<i>not set — Edit, or give it event days</i>')+
+    f('Event days',v.start?esc((v.grade==='fixed'?'':'≈ ')+dispDate(v)):'<i>none</i>');
 }
 /* What to do with a venue still on the board (Mark, 2026-10-15): move it
    to Venues, keep it on the board to think about, or remove it. In Venues
@@ -1804,54 +1876,57 @@ function venueReadHTML(v){
   const leads=vLeads(v);
   const addable=liveArenas().filter(a=>!v.arenas.includes(a.id)).sort((x,y)=>x.name.localeCompare(y.name));
   const adding=leadEdit.a===VENUE_LEAD;
-  const w=vWin(v);
+  const fold=(k,title,said,body)=>{const open=vFolds.has(k)||(k==='leads'&&adding);
+    return '<section class="vfold'+(open?' open':'')+'"><button class="vfh" data-act="vFold" data-f="'+k+'" aria-expanded="'+open+'">'+
+      '<span class="car" aria-hidden="true">▸</span>'+title+(said?' <i>'+esc(said)+'</i>':'')+'</button>'+(open?'<div class="vfb">'+body+'</div>':'')+'</section>';};
   return '<div class="cbody vpanel">'+
     '<div class="chead vchead">'+
       '<button class="x" data-act="closeDrawer" aria-label="Close">✕</button>'+
       '<p class="vkind">Venue'+(vHost(v)?' · '+esc(vHost(v)):'')+'</p>'+
       '<h2 id="aname">'+esc(v.name)+'</h2>'+
-      '<div class="vchrow">'+vGoHTML(v)+(v.url?'':'<button class="vgo none" data-act="vVisit" data-v="'+v.id+'" title="Record today\u2019s visit">Visited today</button>')+vAgentHTML(v)+
+      '<div class="vchrow">'+vGoHTML(v)+(v.url?'':'<button class="vgo none" data-act="vVisit" data-v="'+v.id+'" title="Record today’s visit">Visited today</button>')+vAgentHTML(v)+
         '<span class="vlast">'+(d===null?'not visited yet':'last visit '+(d<=0?'today':d===1?'yesterday':d+' days ago'))+
           (vEvery(v)?' · every '+vEvery(v)+' d':'')+'</span></div>'+
-    '</div>'+vPlaceHTML(v)+
-    '<section class="vps"><p class="vph">Its window <i>'+esc(vDateSay(v))+'</i>'+
-      (v.opens||v.closes?'<button class="vreset" data-act="vWinReset" data-v="'+v.id+'" title="Give both ends back to their default">reset</button>':'')+'</p>'+
-      vLifeHTML(v)+
-      '<dl class="vdl">'+vFactsHTML(v)+(v.note?'<dt>basis</dt><dd>'+esc(v.note)+'</dd>':'')+'</dl>'+
-      (w?'<p class="fhint">Drag either end of the band, here or on Venues, to say how long it is active.</p>':'')+
-    '</section>'+
-    '<section class="vps"><p class="vph">Rhythm</p>'+vEveryHTML(v)+'</section>'+
-    '<section class="vps"><p class="vph">Visits <i>'+esc(vYieldSay(v))+'</i></p>'+
-      (visits.length?visits.map(x=>{
+    '</div>'+
+    vSnipHTML(v)+
+    '<div class="vsnipf">'+(vWin(v)?'<i>Drag either end of its band, here or on Venues, to say how long it is active.</i>':'<span></span>')+
+      (v.place==='board'?'<button class="vtoboard" data-act="vBoard" data-v="'+v.id+'" title="Its tab on the Call Board, with only these calls under it">Open it on the Call Board ▸</button>':'')+'</div>'+
+    '<div class="vfacts">'+
+      '<div class="vf wide"><span class="vfk">Where</span><span class="vfv">'+vPlaceHTML(v)+'</span></div>'+
+      vFactsHTML(v)+
+      '<div class="vf wide"><span class="vfk">Serves</span><span class="vfv">'+
+        '<span class="vserves">'+venueArenas(v).map(a=>{const tone=arenaTone(a);
+          return '<span class="vsv"><button class="cuat'+(tone?' toned':'')+'" data-act="openArena" data-id="'+a.id+'"'+(tone?' style="--tone:'+esc(tone)+'"':'')+'>'+esc(a.name)+'</button>'+
+            '<button class="lx" data-act="vArenaDel" data-v="'+v.id+'" data-id="'+a.id+'" title="It does not serve '+esc(a.name)+'" aria-label="Remove '+esc(a.name)+'">✕</button></span>';}).join('')+
+        '</span>'+
+        (addable.length?'<select class="vaddar" data-vaddarena="'+v.id+'" aria-label="Another arena it serves"><option value="">+ Another arena it serves</option>'+
+          addable.map(a=>'<option value="'+a.id+'">'+esc(a.name)+'</option>').join('')+'</select>':'')+
+      '</span></div>'+
+      (v.note?'<div class="vf wide"><span class="vfk">Basis</span><span class="vfv vbasis">'+esc(v.note)+'</span></div>':'')+
+    '</div>'+
+    '<div class="vfolds">'+
+    fold('visits','Visits',vYieldSay(v),
+      visits.length?visits.map(x=>{
         const ld=x.leadId&&leads.find(y=>y.l.id===x.leadId);
         return '<div class="vvis"><span class="vvd">'+esc(shortDay(x.at))+'</span>'+
           '<span class="vgot '+(x.got||'none')+'">'+(x.got?VGOT[x.got]:'visited')+'</span>'+
           '<span class="vvt">'+(ld?'→ <button class="vld" data-act="openArena" data-id="'+ld.a.id+'">'+esc(leadName(ld.l))+'</button>':esc(x.text||''))+'</span>'+
           '<button class="lx" data-act="vVisitDel" data-v="'+v.id+'" data-at="'+x.at+'" title="Take this visit out" aria-label="Remove visit">✕</button></div>';
       }).join(''):'<p class="vnone">None yet. Go records each one.</p>')+
-    '</section>'+
-    '<section class="vps"><p class="vph">Leads from here</p>'+
+    fold('leads','Leads from here',leads.length?leads.length+(leads.length===1?' lead':' leads'):'none',
       (leads.length?leads.map(({a,l})=>'<p class="vlead"><button data-act="openArena" data-id="'+a.id+'">'+esc(leadName(l))+'</button>'+
         '<i>'+esc(a.name)+' · '+(l.doneAt?(isOutcome(l.outcome)?OUTCOMES[l.outcome].said:'closed'):STAGE_NAME[stageOf(l)])+'</i></p>').join(''):'')+
-      (adding?leadFormHTML(null,v):'<div class="leadadd"><button data-act="vLeadNew" data-v="'+v.id+'">+ Lead from here</button></div>')+
-    '</section>'+
-    '<section class="vps"><p class="vph">Serves</p>'+
-      '<div class="vserves">'+venueArenas(v).map(a=>{const tone=arenaTone(a);
-        return '<span class="vsv"><button class="cuat'+(tone?' toned':'')+'" data-act="openArena" data-id="'+a.id+'"'+(tone?' style="--tone:'+esc(tone)+'"':'')+'>'+esc(a.name)+'</button>'+
-          '<button class="lx" data-act="vArenaDel" data-v="'+v.id+'" data-id="'+a.id+'" title="It does not serve '+esc(a.name)+'" aria-label="Remove '+esc(a.name)+'">✕</button></span>';}).join('')+
-      '</div>'+
-      (addable.length?'<select class="vaddar" data-vaddarena="'+v.id+'" aria-label="Another arena it serves"><option value="">+ Another arena it serves</option>'+
-        addable.map(a=>'<option value="'+a.id+'">'+esc(a.name)+'</option>').join('')+'</select>':'')+
-    '</section>'+
-    '<section class="vps"><p class="vph">Other pages</p>'+
+      (adding?leadFormHTML(null,v):'<div class="leadadd"><button data-act="vLeadNew" data-v="'+v.id+'">+ Lead from here</button></div>'))+
+    fold('pages','Other pages',v.pages.length?String(v.pages.length):'none',
       v.pages.map(p=>'<div class="vpg"><a href="'+esc(p.url)+'" target="_blank" rel="noopener" title="'+esc(p.url)+'">↗ '+esc(p.label||linkName(p))+'</a>'+
         '<span class="vpgh">'+esc(linkHost(p))+'</span>'+
         '<button class="lx" data-act="vPageDel" data-v="'+v.id+'" data-p="'+p.id+'" title="Take this page off" aria-label="Remove page">✕</button></div>').join('')+
       '<form class="vpageform" data-v="'+v.id+'"><input name="url" placeholder="https://… another page of it" aria-label="Address" autocomplete="off">'+
-        '<input name="label" placeholder="Name it — optional" aria-label="Name" autocomplete="off"><button type="submit" class="ib" title="Add" aria-label="Add page">✓</button></form>'+
-    '</section>'+
-    '<section class="vps"><p class="vph">Your note</p>'+
-      '<textarea class="vmemo" data-vmemo="'+v.id+'" rows="2" placeholder="Anything worth remembering about it">'+esc(v.memo||'')+'</textarea></section>'+
+        '<input name="label" placeholder="Name it — optional" aria-label="Name" autocomplete="off"><button type="submit" class="ib" title="Add" aria-label="Add page">✓</button></form>')+
+    fold('note','Your note',v.memo?v.memo.replace(/\s+/g,' ').slice(0,60)+(v.memo.length>60?'…':''):'empty',
+      '<textarea class="vmemo" data-vmemo="'+v.id+'" rows="2" placeholder="Anything worth remembering about it">'+esc(v.memo||'')+'</textarea>')+
+    fold('rhythm','Rhythm',vEvery(v)?'every '+vEvery(v)+' day'+(vEvery(v)===1?'':'s'):inVenues(v)?'none now':'none until it is in Venues',vEveryHTML(v))+
+    '</div>'+
   '</div>'+
   '<div class="cfoot">'+
     '<button class="btn" data-act="vEdit" data-v="'+v.id+'">Edit</button>'+
@@ -2294,6 +2369,7 @@ function renderDrawer(){
   if(typing&&v&&c.contains(typing))return;
   c.innerHTML=drawer.vnew?venueEditHTML(null,drawer.vnew.aid):
     v?(drawer.editing?venueEditHTML(v):venueReadHTML(v)):(drawer.editing?editHTML(a):readHTML(a));
+  c.classList.toggle('vwide',!!v&&!drawer.editing);
   c.querySelectorAll('textarea.vmemo').forEach(autoGrow);
   if(v||drawer.vnew){growAll(c);sc.classList.add('open');c.classList.add('open');
     const nb=c.querySelector('.cbody');if(nb)nb.scrollTop=top;return;}
@@ -2468,12 +2544,17 @@ function callsForBoard(){
       was:r.all.filter(d=>d.was&&isFresh(a,d)).map(d=>ROLES[d.role].short+' was '+d.was),
       url:(r.all.find(d=>d.url)||{}).url||'',
       note:(r.all.find(d=>d.note)||{}).note||''}));
-    return {id:a.id,name:a.name,type:t?t.name:'',leads:openLeads(a).length,
-      links:(a.links||[]).filter(l=>l&&l.url).map(l=>({label:l.label||'',url:l.url})),runs};
+    /* and what the Call Board shows when the arena is opened there: its
+       two texts, its type's colour, and every venue serving it */
+    return {id:a.id,name:a.name,type:t?t.name:'',tone:arenaTone(a),leads:openLeads(a).length,
+      about:a.notes||'',brokerage:(a.brokerage&&a.brokerage.notes)||'',fresh:freshItems(a).length,
+      links:(a.links||[]).filter(l=>l&&l.url).map(l=>({label:l.label||'',url:l.url})),runs,
+      venues:venuesOf(a).map(v=>({id:v.id,name:v.name,place:v.place,gran:v.gran,start:v.start,end:v.end,
+        grade:v.grade,opens:v.opens,closes:v.closes}))};
   });
 }
 /* The venues still on the board, new or kept there to think about: the
-   Call Board draws the kept ones as lanes under the calls they serve, and
+   Call Board draws the kept ones as lanes over the calls they serve, and
    puts each new one to Mark in turn. A venue in Venues is off the board,
    in any section, Limbo and Mark's Place included (Mark, 2026-10-23), and
    one whose arenas are all in the freezer is put away with them. Each goes
@@ -4398,6 +4479,13 @@ document.addEventListener('click',e=>{
       if(!k||k===vPhaseByDates(v))delete v.phase;else v.phase=k;
       S.ui.nowTab=vPhase(v);
       save();renderAll();break;}
+    case 'vFold':{const k=b.dataset.f;if(vFolds.has(k))vFolds.delete(k);else vFolds.add(k);renderDrawer();
+      const f=$('#card .vfh[data-f="'+k+'"]');if(f)f.focus({preventScroll:true});break;}
+    /* the Call Board, where the bridge has it picked in its tab */
+    case 'vBoard':{const v=venue(b.dataset.v);if(!v)break;
+      closeDrawer();
+      try{Hub.emit('semaphore:showVenue',v.id);}catch(e){}
+      break;}
     case 'vWinReset':{const v=venue(b.dataset.v);if(!v)break;
       v.opens=null;v.closes=null;
       if(!v.start)v.opens=todayISO();

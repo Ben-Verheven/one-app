@@ -370,9 +370,73 @@
 #pane-callboard .cann{position:absolute;top:13px;height:10px;border-radius:999px;border:1.5px dashed;min-width:6px}
 /* a type of action and the full text say nothing about an arena's call */
 #pane-callboard header.arena .typechips,#pane-callboard header.arena .ftchip{display:none}
-/* ══ 10. BROKERAGE, UNDER THE CALLS ══
-   The venues kept on the board, a lane each under the calls, behind the
-   switch beside the chart's title (Mark, 2026-10-24); see "brokerage, under
+/* An arena's tab is the chart alone (see clearArenaList), which takes the
+   width, and its names column grows so the arenas and their calls are
+   spelt out: each chip as long as its arena's name, the call beside it. */
+#pane-callboard header.arena ~ .wrap{grid-template-columns:minmax(0,1fr)}
+#pane-callboard header.arena ~ .wrap .ledger{display:none}
+#pane-callboard header.arena ~ .wrap .tl{--gutter:min(500px,42%)}
+#pane-callboard .tlaway:not(:empty){margin-top:16px}
+#pane-callboard .crow.arow .lbl{gap:9px}
+#pane-callboard .crow.arow .lbl .cchip.achip{max-width:68%;flex-shrink:0}
+#pane-callboard .crow.arow .lbl .nm{font-size:13.5px;color:var(--ink2)}
+#pane-callboard .crow.arow.on .lbl .nm{color:var(--ink)}
+#pane-callboard .crow .nm.anone{font-style:italic;color:var(--ink3)}
+#pane-callboard .cchip.anon{color:var(--ink2);background:transparent;border:1px solid var(--line-strong)}
+#pane-callboard .crow .seen{margin-left:auto}
+#pane-callboard .crow.hidden,#pane-callboard .aopen.hidden,#pane-callboard .crow.folded,#pane-callboard .tyh.folded{display:none}
+/* Where a tab holds arenas of more than one type, as OTHER does, each
+   type is named once over its arenas, with a slim rule in its colour down
+   their left (Mark, 2026-10-24). */
+#pane-callboard .tyh{display:flex;align-items:center;gap:7px;height:22px;margin-top:8px;font-family:var(--font);font-size:9px;
+  font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3)}
+#pane-callboard .tyh i{width:8px;height:8px;border-radius:2px;background:var(--ty)}
+#pane-callboard .crow.typed{box-shadow:inset 3px 0 0 var(--ty)}
+#pane-callboard .crow.typed .lbl{padding-left:9px}
+#pane-callboard .aopen.typed{border-left:4px solid var(--ty)}
+/* An arena opened where it stands (see openArena). Its edge sits outside
+   the chart's own by exactly its border, so its bars stand under the same
+   days as everyone else's. */
+#pane-callboard .aopen{position:relative;margin:6px -1.5px 8px;padding:10px 0 8px;border:1.5px solid var(--umber);border-radius:9px;
+  background:#F3EAD3;box-shadow:0 6px 18px rgba(74,58,30,.16)}
+#pane-callboard .aoh{display:flex;align-items:center;gap:12px;padding:0 14px 8px;cursor:pointer}
+#pane-callboard .aoh .cchip{font-size:11px;padding:3px 9px;max-width:none}
+#pane-callboard .aoty{font-family:var(--font);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--brass2);white-space:nowrap}
+#pane-callboard .aomt{font-family:var(--mono);font-size:11px;color:var(--ink3);white-space:nowrap}
+#pane-callboard .aosp{flex:1}
+#pane-callboard .aoln{display:flex;gap:12px;min-width:0;overflow:hidden}
+#pane-callboard .aoln a{font-family:var(--font);font-size:10px;letter-spacing:.06em;color:var(--brass2);white-space:nowrap;
+  text-decoration:underline;text-underline-offset:3px}
+#pane-callboard .aobt{display:flex;gap:7px;align-items:center}
+#pane-callboard .aox{width:28px;padding:0}
+#pane-callboard .aotx{display:grid;grid-template-columns:1fr 1fr;gap:22px;padding:6px 14px 10px;border-top:1px solid var(--line);
+  border-bottom:1px solid var(--line)}
+#pane-callboard .aotx>div:only-child{grid-column:1 / -1}
+#pane-callboard .aotx h4{font-family:var(--font);font-size:9.5px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--brass2);margin:4px 0 3px}
+#pane-callboard .aotx p{margin:0;font-size:14px;line-height:1.42;color:var(--ink2);white-space:pre-line;
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+#pane-callboard .aopen .crow,#pane-callboard .aopen .blane{cursor:default}
+#pane-callboard .aopen .blane{cursor:pointer}
+/* the call's name over its dates, so neither is cut short; the bar stays
+   in the middle of the taller row */
+#pane-callboard .aopen .crow{height:46px}
+#pane-callboard .aopen .crow .track{align-self:center;height:37px}
+#pane-callboard .aopen .lbl{flex-direction:column;align-items:stretch;justify-content:center;gap:1px;padding:0 14px}
+#pane-callboard .aopen .blane .lbl{flex-direction:row;align-items:center;justify-content:space-between;gap:12px}
+#pane-callboard .aocn{min-width:0;display:flex;align-items:center;gap:8px;font-family:var(--body);font-size:14px;color:var(--ink);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#pane-callboard .aocn>span{overflow:hidden;text-overflow:ellipsis}
+#pane-callboard .aocd{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#pane-callboard .aocd.unc{font-weight:400;font-style:italic;color:var(--ink2)}
+#pane-callboard .aocd.aopl{font-weight:400;color:var(--ink3)}
+#pane-callboard .aopen .crow:hover .track{background:none}
+#pane-callboard .aovh{margin:8px 14px 2px;padding-top:6px;border-top:1px solid var(--line);font-family:var(--font);font-size:9.5px;
+  font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--brass2)}
+#pane-callboard .aonone{padding:6px 14px;font-family:var(--body);font-style:italic;font-size:13px;color:var(--ink3)}
+/* ══ 10. BROKERAGE, OVER THE CALLS ══
+   The venues kept on the board, a lane each over the calls, behind the
+   switch beside the chart's title (Mark, 2026-10-24); see "brokerage, over
    the calls" in callboard.js. Brass, so a venue never reads as a call. */
 #pane-callboard .tl-title{display:flex;align-items:center;gap:10px}
 #pane-callboard #tltxt{flex:1}
@@ -388,12 +452,14 @@
 #pane-callboard .bk[aria-pressed="true"]{color:var(--ink);border-color:var(--brass);background:linear-gradient(180deg,#FBF4E2,#EEE2C4)}
 #pane-callboard .bk[aria-pressed="true"] .sw{background:var(--brass)}
 #pane-callboard .bk[aria-pressed="true"] .sw i{left:12px}
-#pane-callboard .bhead{display:flex;align-items:baseline;gap:8px;margin-top:14px;padding:6px 0 4px;border-top:1px solid var(--line-strong);
+#pane-callboard .bhead{display:flex;align-items:baseline;gap:8px;margin-top:4px;padding:4px 0 2px;
   font-family:var(--font);font-size:9.5px;font-weight:600;text-transform:uppercase;letter-spacing:.13em;color:var(--brass2)}
 #pane-callboard .bhead span{font-family:var(--body);font-style:italic;text-transform:none;letter-spacing:.02em;font-weight:400;
   font-size:12.5px;color:var(--ink3)}
 #pane-callboard .bnone{padding:4px 0 8px;font-family:var(--body);font-style:italic;font-size:12.5px;color:var(--ink3)}
-#pane-callboard .blane{position:relative;display:flex;align-items:stretch;height:31px;cursor:pointer}
+#pane-callboard .bend{margin:6px 0 4px;border-top:1px solid var(--line-strong)}
+/* two presses are a lane's own (see pressLane), not an iPad's zoom */
+#pane-callboard .blane{position:relative;display:flex;align-items:stretch;height:31px;cursor:pointer;touch-action:manipulation}
 #pane-callboard .blane .lbl{width:var(--gutter);flex:0 0 var(--gutter);display:flex;align-items:center;gap:7px;padding-right:8px;min-width:0}
 #pane-callboard .dia{display:block;width:7px;height:7px;flex:0 0 7px;background:var(--brass);transform:rotate(45deg)}
 #pane-callboard .blane .nm{font-family:var(--body);font-size:12.5px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -429,21 +495,7 @@
   background:#E8DAB8;border:1px solid var(--brass);box-shadow:none;max-width:320px}
 #pane-callboard .pill.vpill .dia{background:var(--umber);flex:0 0 8px;width:8px;height:8px}
 #pane-callboard .pill.vpill button{flex:0 0 17px;background:rgba(51,41,26,.14)}
-/* the card of the venue picked, at the foot of the chart */
-#pane-callboard .vcard{display:flex;flex-direction:column;gap:7px;margin-bottom:11px;padding:11px 14px;
-  background:#F3EAD3;border:1px solid rgba(154,123,58,.45);border-radius:9px}
-#pane-callboard .vcard[hidden]{display:none}
-#pane-callboard .vcard .vt{display:flex;align-items:center;gap:8px;font-family:var(--font);font-size:12px;font-weight:600;
-  letter-spacing:.05em;color:var(--ink)}
-#pane-callboard .vcard .vt .dia{width:9px;height:9px;flex-basis:9px;background:var(--umber)}
-#pane-callboard .vcard .vt span{margin-left:auto;font-family:var(--body);font-style:italic;font-weight:400;font-size:13px;
-  letter-spacing:0;color:var(--ink2);white-space:nowrap}
-#pane-callboard .vcard .vm{display:flex;flex-wrap:wrap;gap:4px 18px;font-family:var(--mono);font-size:11px;color:var(--ink3)}
-#pane-callboard .vcard .vm b{color:var(--ink);font-weight:600}
-#pane-callboard .vcard .vn{font-size:14px;color:var(--ink2);line-height:1.4}
-#pane-callboard .vcard .va{display:flex;gap:7px;align-items:center}
-#pane-callboard .vcard .va>:first-child{margin-right:auto;font-family:var(--font);font-size:10px;letter-spacing:.06em;color:var(--brass2)}
-#pane-callboard .vbtn{height:28px;padding:0 10px;border-radius:var(--radius);cursor:pointer;font-family:var(--font);font-size:10px;
+#pane-callboard .vbtn{height:28px;padding:0 10px;white-space:nowrap;border-radius:var(--radius);cursor:pointer;font-family:var(--font);font-size:10px;
   letter-spacing:.07em;color:var(--ink2);border:1px solid rgba(120,96,58,0.3);background:linear-gradient(180deg,#FDFAF3,#F0EADB)}
 #pane-callboard .vbtn:hover{color:var(--brass2);border-color:var(--brass)}
 #pane-callboard .vbtn.dark{color:#F6F1E4;border-color:var(--umber);background:linear-gradient(180deg,#463823,#2E2415)}
@@ -461,7 +513,7 @@
 #pane-callboard .seen:hover{color:#3E5418;border-color:#6C8E1C}
 /* ══ 11. JUDGING THE FINDS ══
    A find waiting to be judged: its pill in the search row, a dot on its
-   tab, the new arena dashed in its tab's list, and the bar at the foot of
+   tab, the new arena dashed on its tab's chart, and the bar at the foot of
    the room; see "judging the finds, one at a time" in callboard.js. The bar
    is the shell's own dark band, so it reads as the room asking. */
 #pane-callboard .jpill{display:inline-flex;align-items:center;gap:7px;padding:5px 12px;border-radius:999px;cursor:pointer;
@@ -472,9 +524,9 @@
 #pane-callboard .jpill.on{cursor:default}
 #pane-callboard .tab .fd{align-self:center;width:6px;height:6px;border-radius:50%;background:var(--brass);
   box-shadow:0 0 0 1.5px var(--panel)}
-#pane-callboard .topic.ghost{cursor:default;background:rgba(154,123,58,.08);box-shadow:inset 0 0 0 1.5px var(--brass)}
-#pane-callboard .topic.ghost .bar{background:transparent;border-left:2px dashed var(--umber)}
-#pane-callboard .topic.ghost .achip{color:var(--ink);background:transparent;border:1.5px dashed var(--umber);box-shadow:none}
+#pane-callboard .crow.ghost{cursor:default}
+#pane-callboard .crow.ghost .track{background:rgba(154,123,58,.10);box-shadow:inset 0 0 0 1.5px var(--brass)}
+#pane-callboard .crow.ghost .lbl .cchip.achip{color:var(--ink);background:transparent;border:1.5px dashed var(--umber);max-width:68%;flex-shrink:0}
 #pane-callboard.judging .wrap{padding-bottom:150px}
 #pane-callboard.judging .tl-sticky{max-height:calc(100vh - var(--hdr-h,96px) - 140px)}
 #pane-callboard .jbar{position:fixed;left:0;right:0;bottom:0;z-index:60;display:flex;align-items:stretch;gap:28px;

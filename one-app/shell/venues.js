@@ -4,7 +4,7 @@
    together as bars: one copy, read by the Brokerage Semaphore, the Call
    Board and Mark's Place alike (Mark, 2026-10-24). Until then Mark's Place
    held a copy of the Semaphore's own, each change there wanting copying by
-   hand, and the Call Board, drawing the venues under its calls, was about
+   hand, and the Call Board, drawing the venues over its calls, was about
    to need a third.
 
    It is not a room: it keeps nothing and draws nothing, and every function

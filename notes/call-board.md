@@ -12,6 +12,12 @@ undo it, and what was agreed and is not built yet.
   choosing a Horizon cluster in one press and wants the same for the rest.
 - Nothing may clutter it: every addition was drawn first and chosen
   against at least one quieter way.
+- **The tabs are a roll** (2026-10-24): one group's tabs in the bar at a
+  time, Horizon, the arenas and All calls, the next group peeking under the
+  bar and the one before over it; the wheel over the bar or a swipe rolls
+  them, and the three words at its left say where it stands and go there in
+  one press. Chosen over the three words alone choosing the row, with no
+  roll, and over the thirteen tabs side by side it replaced.
 
 ## Horizon tabs
 
@@ -30,8 +36,8 @@ undo it, and what was agreed and is not built yet.
   their names (`TYPE_TABS` in callboard.js), so a type renamed away from
   those words moves to OTHER.
 - **The arena is the chip** (2026-10-24): one row to a call, the arena's
-  name on the coloured chip and the call in the text beside it, on the
-  sheet and on the chart alike, the shape a Horizon topic has. Chosen over
+  name on the coloured chip and the call in the text beside it, the shape a
+  Horizon topic has. Chosen over
   the arena's name once beside all its calls, like a merged table cell,
   and over a light line heading each arena. A dark heading per arena, as
   a destination has, was turned down: most arenas hold a call or two, and
@@ -39,28 +45,52 @@ undo it, and what was agreed and is not built yet.
 - Colour is the arena's own, saturated for the round it is in and pale for
   the next, as the 2026 and 2027 calls are in Horizon. Dashed is a date not
   yet published to the day, as on the Semaphore's board.
+- **An arena's tab is the chart alone** (2026-10-24): the list beside it
+  went, as it only said again what the chart says, cut short. The chart
+  takes the width, each chip as long as its arena's name, which tells one
+  arena from another at a glance, and the call named more fully beside it;
+  the dates stand on the chart and on hover. What a search finds in the
+  other tabs stands under the chart.
+- **Pressing a call or its arena opens the whole arena where it stands**
+  (2026-10-24): its type, open leads, venues and links, its About and
+  Brokerage (cut at three lines; all of it is in its panel), every call
+  under one another with its dates in words, and the venues serving it;
+  the other arenas dim. ✕, Esc or another press shuts it. Chosen over
+  opening it alone with the others put away, which lost its place among
+  them.
+- **Types in OTHER, named once** (2026-10-24): where a tab holds arenas of
+  more than one type, each type's name in small capitals over its arenas,
+  and a slim rule in its colour from Types down their left. Chosen over the
+  chip edged in the type's colour, which left the type to colour alone,
+  and over a faint wash behind each type's rows, where two close colours
+  stayed close.
 
-## Brokerage under the calls (built 2026-10-24)
+## Brokerage over the calls (built 2026-10-24)
 
 The drawings are the canvas "The Call Board, Grown"
 (https://claude.ai/artifact/JudrMHyYpNbEMrM2rUk2Zd), which also holds those
 of the phases still to build.
 
-- **Lanes under the calls, behind a switch beside the chart's title**, kept
+- **Lanes over the calls, behind a switch beside the chart's title**, kept
   per device: every venue kept on the board, never one in Venues. Chosen
-  over drawing venues on the calls' own rows. Brass, so a venue never reads
-  as a call. A Horizon tab shows the venues of the Pillar 2 arena that is
+  over drawing venues on the calls' own rows. They stood under the calls
+  first, out of sight below a long tab, and went over them the same day.
+  Brass, so a venue never reads as a call. A Horizon tab shows the venues of the Pillar 2 arena that is
   that cluster or mission (matched by "Cluster N", "Mission", "Horizontal"
   in its name); any other arena's venues stand in its type's tab, and a
   venue serving arenas in several tabs stands in each. A venue whose arenas
   are all in the freezer is put away with them.
-- **Picking a lane** lights the calls it is for and dims the rest, and the
-  list keeps only their topics: the calls of its arenas in that tab whose
-  last deadline is still ahead when the venue opens, or all of them where
-  none is. Its pill in the search row takes it off. A card at the foot of
-  the chart gives → Venues, Remove (at a second press) and Edit ▸, which
-  opens the venue's panel from the Semaphore lent over the Board; its ends
-  are dragged there or on Venues, not on the lanes.
+- **One press on a lane** lights the calls it is for and folds the others
+  away, on the chart and in the list, so only those stand under it (Mark,
+  2026-10-24, over the drawn proposal of only lighting them): the calls of
+  its arenas in that tab whose last deadline is still ahead when the venue
+  opens, or all of them where none is. Its pill in the search row, another
+  press or Esc takes it off.
+- **Two presses open the venue's card**, the Semaphore's panel lent over the
+  Board (see notes/semaphore-decisions.md), where it is moved, removed and
+  its ends dragged; not on the lanes. A card at the foot of the chart came
+  with one press until then, and went: it said in a heap what the panel
+  says in order.
 
 ## Judging finds (built 2026-10-24)
 
@@ -77,7 +107,7 @@ of the phases still to build.
   judged, and the agent's, from its inbox in the cloud. A call text, the
   third kind drawn, comes with the search for call texts.
 - **Dates are not judged**: new and changed ones go straight on and glow on
-  their call's row, on the sheet and the chart, until Seen there, which
+  their call's row until Seen there, which
   marks the whole arena seen as its panel does; a changed date says on hover
   what it was. A Pillar 2 arena has no rows of its own here, so its new
   dates are seen in its panel until Horizon's corrections are laid over the

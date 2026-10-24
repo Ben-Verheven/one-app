@@ -1230,22 +1230,6 @@
   font:12px var(--body);color:var(--muted);white-space:nowrap;cursor:pointer}
 #pane-semaphore .vagent:hover{border-color:var(--key);color:var(--ink)}
 #pane-semaphore .vagent.on{border-style:solid;border-color:transparent;background:var(--todo-bg);color:var(--todo-ink)}
-#pane-semaphore .vps{margin-top:18px}
-#pane-semaphore .vph{display:flex;align-items:baseline;gap:9px;margin-bottom:7px;padding-bottom:5px;border-bottom:1px solid var(--grid);
-  font:600 9.5px var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
-#pane-semaphore .vph i{font:italic 12.5px var(--body);letter-spacing:0;text-transform:none;color:var(--faint)}
-#pane-semaphore .vlife{position:relative;height:62px;margin:6px 6px 2px}
-#pane-semaphore .vlife>*{position:absolute}
-#pane-semaphore .vlife .vax{left:0;right:0;top:28px;height:1px;background:var(--line)}
-#pane-semaphore .vlife .vband,#pane-semaphore .vlife .vdia,#pane-semaphore .vlife .vmeet{top:28px}
-#pane-semaphore .vlife .vnow{top:16px;bottom:16px}
-#pane-semaphore .vlt{top:38px;transform:translateX(-50%);font:10.5px/1.25 var(--mono);color:var(--muted);text-align:center;white-space:nowrap}
-#pane-semaphore .vlt.up{top:0}
-#pane-semaphore .vlt.now{color:var(--today)}
-#pane-semaphore .vdl{display:grid;grid-template-columns:96px minmax(0,1fr);gap:4px 12px;margin:10px 0 0;font-size:13.5px}
-#pane-semaphore .vdl dt{font:11px var(--mono);color:var(--muted);padding-top:2px}
-#pane-semaphore .vdl dd{margin:0;color:var(--ink)}
-#pane-semaphore .vdl dd i{color:var(--faint)}
 #pane-semaphore .vreset{margin-left:auto;font:italic 12px var(--body);letter-spacing:0;text-transform:none;color:var(--muted);
   text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}
 #pane-semaphore .vreset:hover{color:var(--ink)}
@@ -1267,6 +1251,69 @@
 #pane-semaphore .vphseg button:hover{color:var(--ink);background:rgba(42,38,32,.06)}
 #pane-semaphore .vphseg button.on{background:var(--ink);color:#F4EFE3}
 #pane-semaphore .vplace.st-venues .vreset{margin-left:0}
+/* The drawer is wider while it holds a venue (see "a venue, opened" in
+   semaphore.js), so the piece of the Call Board at its head has room for
+   the names and the months. */
+#pane-semaphore #card.vwide{width:640px}
+#pane-semaphore .vsnip{margin-top:16px;padding:6px 12px 8px;border:1px solid rgba(154,123,58,.5);border-radius:9px;background:#F7F3E9;
+  box-shadow:inset 0 1px 0 #fff}
+#pane-semaphore .vsnip .sax,#pane-semaphore .vsnip .sr{display:flex;align-items:stretch}
+#pane-semaphore .vsnip .sl{flex:0 0 250px;display:flex;align-items:center;gap:7px;min-width:0;padding-right:10px}
+#pane-semaphore .vsnip .st{position:relative;flex:1 1 auto;min-width:0}
+#pane-semaphore .vsnip .sax{height:30px;border-bottom:1.5px solid rgba(120,96,58,.4)}
+#pane-semaphore .vsnip .sm{position:absolute;bottom:3px;transform:translateX(-50%);font:9.5px var(--mono);color:var(--muted)}
+#pane-semaphore .vsnip .sy{position:absolute;top:1px;font:600 10px var(--mono);color:var(--ink)}
+#pane-semaphore .vsnip .sbody{position:relative}
+#pane-semaphore .vsnip .sgrid{position:absolute;left:250px;right:0;top:0;bottom:0;pointer-events:none}
+#pane-semaphore .vsnip .sgrid i{position:absolute;top:0;bottom:0;width:1px;background:rgba(120,96,58,.13)}
+#pane-semaphore .vsnip .sgrid i.y{background:rgba(120,96,58,.34)}
+#pane-semaphore .vsnip .sgrid b{position:absolute;top:0;bottom:0;border-left:1.5px dashed var(--today)}
+#pane-semaphore .vsnip .sr{height:30px}
+#pane-semaphore .vsnip .sr.lane{min-height:36px;height:auto;padding:3px 0;border-bottom:1px solid var(--grid)}
+#pane-semaphore .vsnip .sn{min-width:0;font:13px var(--body);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#pane-semaphore .vsnip .lane .sn{font-weight:600;line-height:1.25;color:var(--ink);white-space:normal;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+#pane-semaphore .vsnip .sdia{flex:0 0 8px;width:8px;height:8px;background:var(--brok);transform:rotate(45deg)}
+#pane-semaphore .vsnip .schip{flex:0 1 auto;max-width:100px;padding:2px 6px;border-radius:3px;font:600 9.5px var(--mono);color:var(--ink);
+  background:color-mix(in srgb,var(--tone) 55%,#FBF8F1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#pane-semaphore .vsnip .st>i{position:absolute}
+#pane-semaphore .vsnip .sbar{top:10px;height:11px;border-radius:2px;border:1px solid;min-width:4px}
+#pane-semaphore .vsnip .sbar.unc{border-style:dashed;border-width:1.5px}
+#pane-semaphore .vsnip .sbar.fade{border:0;border-radius:2px 0 0 2px;background:linear-gradient(90deg,var(--fc) 35%,transparent)}
+#pane-semaphore .vsnip .sbar2{top:10px;height:11px;background:repeating-linear-gradient(135deg,var(--fc) 0 3px,transparent 3px 6px)}
+#pane-semaphore .vsnip .sdot{top:11px;width:9px;height:9px;margin-left:-4.5px;border-radius:50%;border:1.5px solid}
+#pane-semaphore .vsnip .scap{top:6px;width:2px;height:19px;margin-left:-1px;border-radius:1px}
+#pane-semaphore .vsnip .sann{top:10px;height:10px;border-radius:99px;border:1.5px dashed;min-width:6px}
+#pane-semaphore .vsnip .snone{position:absolute;left:6px;top:50%;transform:translateY(-50%);font:italic 12.5px var(--body);color:var(--faint)}
+#pane-semaphore .vsnip .snote{margin:6px 0 0;font:italic 13px var(--body);color:var(--faint)}
+#pane-semaphore .vsnipf{display:flex;align-items:baseline;gap:12px;margin:6px 2px 0}
+#pane-semaphore .vsnipf i{flex:1;font:italic 12.5px var(--body);color:var(--faint)}
+#pane-semaphore .vtoboard{flex:0 0 auto;font:600 9.5px var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--ink);
+  text-decoration:underline;text-decoration-color:var(--line2);text-underline-offset:3px}
+#pane-semaphore .vtoboard:hover{text-decoration-color:currentColor}
+/* under it, the facts in a grid of two columns, the long ones across */
+#pane-semaphore .vfacts{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:24px;margin-top:14px}
+#pane-semaphore .vf{display:grid;grid-template-columns:86px minmax(0,1fr);gap:10px;align-items:baseline;padding:8px 0;
+  border-bottom:1px solid var(--grid)}
+#pane-semaphore .vf.wide{grid-column:1 / -1}
+#pane-semaphore .vfk{font:600 9.5px var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+#pane-semaphore .vfv{min-width:0;font:14px/1.45 var(--body);color:var(--ink)}
+#pane-semaphore .vfv i{color:var(--faint)}
+#pane-semaphore .vfv .vreset{margin-left:6px}
+#pane-semaphore .vbasis{color:var(--muted)}
+#pane-semaphore .vf .vplace{margin:0;padding:0;border:0;background:none}
+#pane-semaphore .vf .vplace>span{flex:0 1 auto;margin-right:4px}
+#pane-semaphore .vf .vserves{margin-bottom:6px}
+/* and the rest folded, each fold saying what is in it */
+#pane-semaphore .vfolds{margin-top:10px}
+#pane-semaphore .vfold{border-bottom:1px solid var(--grid)}
+#pane-semaphore .vfh{display:flex;align-items:baseline;gap:8px;width:100%;padding:10px 0;text-align:left;cursor:pointer;
+  font:600 9.5px var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--ink)}
+#pane-semaphore .vfh i{min-width:0;font:italic 13px var(--body);letter-spacing:0;text-transform:none;color:var(--muted);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#pane-semaphore .vfh .car{display:inline-block;font-size:9px;color:var(--muted);transition:transform .15s}
+#pane-semaphore .vfold.open .car{transform:rotate(90deg)}
+#pane-semaphore .vfb{padding:0 0 12px 17px}
 #pane-semaphore .avplace{font:600 8.5px var(--sans);font-style:normal;letter-spacing:.12em;text-transform:uppercase;color:var(--new-ink)}
 #pane-semaphore .avrow.st-board .avplace{color:var(--key2)}
 #pane-semaphore .vevery{width:100%;height:32px;padding:0 8px;border:1px solid var(--line);border-radius:var(--radius);

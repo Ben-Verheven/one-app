@@ -113,7 +113,8 @@ Hub.api('ledger')          → { PL, projects(), calls(), save,
                                setTopics, setLeads, leadsChanged(),
                                snapshot(why), signedIn(), token() }
 Hub.api('callboard')       → { topics(), openReader(), closeReader(),
-                               setArenas(o), arenasChanged(), judge() }
+                               setArenas(o), arenasChanged(), judge(),
+                               showVenue(vid) }
 Hub.api('semaphore')       → { state(), save(), renderAll(),
                                applyState(obj), leads(),
                                leadVerb(aid, lid, op, val), arenas(), calls(),
@@ -149,7 +150,9 @@ the board, which the bridge answers with a Ledger restore point. And
 is when the bridge hands it the Semaphore's board. And **`semaphore:judge`**,
 with a sentence saying what landed, once ChatGPT's answer is on the board,
 which the bridge answers by going to the Call Board and starting to judge
-what it found.
+what it found. And **`semaphore:showVenue`**, with a venue's id, from Open
+it on the Call Board in a venue's panel, which the bridge answers by going
+to the Call Board and picking that venue in its tab.
 
 What the bridge actually does: turns any researcher's name, written
 anywhere in any room, into a link that opens the Atlas dossier over the
@@ -198,7 +201,7 @@ only the cloud joins them.
 | `pj-restore-v1` | the last three restore points, each a whole Export blob |
 | `pj-projects-v1`, `pj-callinfo-v1` | legacy, read once and migrated |
 | `semaphore.v1` (+`-ts`, `-seen`, `-dirty`, `-sum`, `-base`) | the Semaphore's board: arenas, types and venues, and the new arenas ChatGPT suggested that wait to be judged (`suggested`) |
-| `callboard.brokerage` | whether the Call Board draws the venues kept on the board under its calls, on this device |
+| `callboard.brokerage` | whether the Call Board draws the venues kept on the board over its calls, on this device |
 | `notes.v1` (+`-ts`, `-seen`, `-dirty`, `-sum`) | the Notes room: notes, book order, which of the two ways in, the tag ties, the colours chosen for tags, and what is pinned in which book |
 | `hub.room` | which room to open on |
 | `leads-excel-v1` | fingerprints of what the last weekly Excel held, so the next one can mark what is new; the file it wrote is kept as a handle in IndexedDB, `one-app-excel` |
@@ -441,20 +444,24 @@ and the agent's task still say the Marketplace; it is the same room.
 | the visit question, at the foot of the room after Go | `#vbar` › `.vask.bar` |
 | Leads: the table, its heading of columns that sort, a step's coloured band, one lead's line, and open, its Who, Links and Updates boxes | `.ltable` › `.lthead` (`.ltc`), `.lgrp` › `.lgh`, `article.lead.wide`; `.lpane`, `.lupdpane` |
 | the types, managed — opened by Types: a type's line and its grip, its arenas one per row, its colour dot, the copy that follows a drag | `#typesModal` › `#tylist` › `.tyblock` (`.tyline` › `.tygrip`, `.tyarenas` › `.tyrow`); `.lcolwrap.tycol`; `.tyghost` |
+| a venue's panel, wider (`#card.vwide`): the Call Board's view of it at its head, its facts two to a row, the rest folded | `.vsnip` (its lane `.sr.lane`, a call `.sr`), `.vfacts` › `.vf`, `.vfolds` › `.vfold` › `.vfh` |
 | the drawer, holding an arena or a venue; an arena's venues in it; a link's cross, and the press that makes a brokerage link a venue; where a venue stands, with its three buttons, or in Venues the section it stands in, chosen by hand if he likes (`.vphseg`); a venue's ask to the agent | `#card` and its `.scrim`; `.avlist` › `.avrow`; `.ldel`, `.lmake`; `.vplace`; `.vagent` |
 
-**The Call Board** — the cluster row is the bar, `#hdr` › `.tabs`; the
-controls under it are `.hd-controls` and `#ovbar`; the chronological chart
-on the right is `#tl` inside `.tl-sticky`; a topic opens in `#reader`.
-After the clusters come the arenas' tabs, JU, COFUND, COPROG and OTHER,
-set apart by a `.tabsep` on either side; there an arena's call is a row
-whose chip, `.achip`, names the arena, the first of each arena's rows
-`.afirst`, and one with a new date glows (`.fresh`) until its `.seen` is
-pressed. Beside the chart's title, `.tl-title`, the switch `#bkswitch`
-draws the venues kept on the board under the calls: the heading `.bhead`,
-a lane each, `.blane` (its band `.vb`, event days `.vd`), the one picked
-`.on`, its pill `.vpill` in the controls and its card `#vcard` at the foot
-of the chart. What waits to be judged is counted on `#jpill` and dotted on
+**The Call Board** — the tabs are the bar, `#hdr` › `.tabs`, a roll of
+three rows, `.drum` › `.trow`, Horizon's clusters, the arenas' tabs (JU,
+COFUND, COPROG and OTHER) and All calls, with the three words beside it,
+`.dial`, saying which row stands; the controls under it are `.hd-controls`
+and `#ovbar`; the chronological chart is `#tl` inside `.tl-sticky`, on the
+right of the topic list on a Horizon tab and alone on an arena's tab, with
+what a search finds elsewhere under it in `#tlaway`; a topic opens in
+`#reader`. On an arena's tab a call is a row, `.arow`, whose chip,
+`.achip`, names the arena, the first of each arena's rows `.afirst`, and
+one with a new date glows (`.fresh`) until its `.seen` is pressed; an arena
+opened there is `.aopen`, and where a tab holds several types each is named
+over its arenas by a `.tyh`. Beside the chart's title, `.tl-title`, the
+switch `#bkswitch` draws the venues kept on the board over the calls: the
+heading `.bhead`, a lane each, `.blane` (its band `.vb`, event days `.vd`),
+the one picked `.on`, and its pill `.vpill` in the controls. What waits to be judged is counted on `#jpill` and dotted on
 its tab (`.fd`); while judging, the find stands dashed in its tab, a
 venue's lane or an arena's row `.ghost`, and the bar along the foot of the
 room is `#jbar`. The decisions behind them are in

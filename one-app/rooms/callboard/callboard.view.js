@@ -39,12 +39,14 @@ Hub.markup('callboard', `
   <main class="ledger" id="ledger" aria-label="Topics by destination"></main>
   <aside class="tl-sticky">
     <!-- The chart's title, and beside it the switch that draws the venues
-         kept on the board as lanes under the calls (Mark, 2026-10-24). -->
+         kept on the board as lanes over the calls (Mark, 2026-10-24). -->
     <div class="tl-title"><span id="tltxt">Calls · chronological</span>
-      <button class="bk" id="bkswitch" aria-pressed="false" title="Draw the venues kept on the board under the calls"><span class="sw" aria-hidden="true"><i></i></span>Brokerage</button></div>
+      <button class="bk" id="bkswitch" aria-pressed="false" title="Draw the venues kept on the board over the calls"><span class="sw" aria-hidden="true"><i></i></span>Brokerage</button></div>
     <div class="tl" id="tl"></div>
+    <!-- On an arena's tab, which has no list, what a search finds in the
+         other tabs stands here, under the chart. -->
+    <div class="tlaway" id="tlaway"></div>
     <div class="tl-foot">
-      <div class="vcard" id="vcard" hidden></div>
       <div class="selcard" id="selcard"></div>
       <div class="famkey" id="famkey"></div>
       <div class="legend">

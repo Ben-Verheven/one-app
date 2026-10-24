@@ -97,26 +97,92 @@ const dmy=s=>d3(s).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:
 const dm =s=>d3(s).toLocaleDateString('en-GB',{day:'2-digit',month:'short'});
 const yy =s=>s.slice(2,4);
 
-/* ---------- tabs ---------- */
+/* ---------- tabs ----------
+   The tabs stand in a roll (Mark, 2026-10-24): the clusters and missions,
+   the arenas' tabs and ALL each have a row of their own, one row in the
+   bar at a time, the next one peeking under it and the one before over
+   it. The mouse wheel over the bar, or a swipe on the iPad, rolls from
+   Horizon to the arenas to all the calls, and the three words at the
+   left say where the roll stands and take it there in one press. All
+   thirteen side by side in one row was what it replaced; three words
+   choosing the row, with no roll, was drawn and turned down. Rolling only
+   shows another row: the room changes when a tab in it is pressed, and
+   the roll follows whichever tab is live. */
 const tabsEl=document.getElementById('tabs');
+const ROLL=[{key:'hz',name:'Horizon'},{key:'ar',name:'Arenas'},{key:'all',name:'All calls'}];
+tabsEl.innerHTML='<div class="dial" role="group" aria-label="Which calls the row shows">'
+  +ROLL.map(g=>`<button data-g="${g.key}">${g.name}</button>`).join('')+'</div>'
+  +'<div class="drum">'+ROLL.map(g=>`<div class="trow" data-g="${g.key}" role="tablist" aria-label="${g.name}"></div>`).join('')+'</div>';
+const rowOf=g=>tabsEl.querySelector(`.trow[data-g="${g}"]`);
 const htabEls=PAGES.map((p,i)=>{
   const b=document.createElement('button'); b.className='tab'; b.setAttribute('role','tab');
   b.setAttribute('aria-selected', String(i===0));
   b.innerHTML=`<span class="ck">${p.key}</span><span class="cn">${p.label}</span><span class="cc">${Object.keys(p.meta).length}</span>`;
   b.addEventListener('click',()=>selectPage(i));
-  tabsEl.appendChild(b);
+  rowOf('hz').appendChild(b);
   return b;
 });
 const ovTab=document.createElement('button');
 ovTab.className='tab'; ovTab.setAttribute('role','tab'); ovTab.setAttribute('aria-selected','false');
 ovTab.innerHTML=`<span class="ck">ALL</span><span class="cn">Deadline planner</span><span class="cc">${ALLTOPICS}</span>`;
 ovTab.addEventListener('click',()=>selectPage(PAGES.length));
-tabsEl.appendChild(ovTab);
+rowOf('all').appendChild(ovTab);
+let rollAt='hz';
+/* where each row stands: the one showing near the top of the bar when a
+   row follows it, low when one comes before it only, and between them
+   when both do, so that the neighbours have room to peek */
+function paintRoll(){
+  const groups=ROLL.filter(g=>rowOf(g.key).children.length).map(g=>g.key);
+  if(!groups.includes(rollAt)) rollAt=groups[0];
+  const at=groups.indexOf(rollAt), y=at===0?(groups.length>1?1:11):at===groups.length-1?21:11;
+  ROLL.forEach(g=>{
+    const r=rowOf(g.key), i=groups.indexOf(g.key), d=i<0?9:i-at;
+    r.classList.toggle('cur',d===0); r.classList.toggle('prev',d===-1); r.classList.toggle('next',d===1);
+    r.style.transform=`translateY(${y+(d===0?0:d<0?-27+(d+1)*40:34+(d-1)*40)}px)`+(d?' scale(.84)':'');
+    r.querySelectorAll('.tab').forEach(t=>t.tabIndex=d===0?0:-1);
+  });
+  tabsEl.querySelectorAll('.dial button').forEach(b=>{
+    b.hidden=!groups.includes(b.dataset.g); b.classList.toggle('on',b.dataset.g===rollAt);
+    b.setAttribute('aria-pressed',String(b.dataset.g===rollAt));
+  });
+  const drum=tabsEl.querySelector('.drum');
+  drum.style.width=Math.max(...groups.map(g=>rowOf(g).scrollWidth))+'px';
+}
+function roll(d){
+  const groups=ROLL.filter(g=>rowOf(g.key).children.length).map(g=>g.key);
+  const i=Math.max(0,Math.min(groups.length-1,groups.indexOf(rollAt)+d));
+  if(groups[i]!==rollAt){ rollAt=groups[i]; paintRoll(); }
+}
+tabsEl.querySelectorAll('.dial button').forEach(b=>b.addEventListener('click',()=>{
+  rollAt=b.dataset.g; paintRoll();
+  /* All calls is a single tab, so the word that rolls to it opens it */
+  if(rollAt==='all'&&MODE!=='overview') selectPage(PAGES.length);
+}));
+/* One step of the wheel is one row, however hard the wheel is turned, and
+   a sideways scroll is left alone; on the iPad a short swipe up or down. */
+let wheelAcc=0, wheelUntil=0;
+tabsEl.addEventListener('wheel',e=>{
+  if(Math.abs(e.deltaY)<=Math.abs(e.deltaX)) return;
+  e.preventDefault();
+  if(Date.now()<wheelUntil) return;
+  wheelAcc+=e.deltaY;
+  if(Math.abs(wheelAcc)>=30){ roll(wheelAcc>0?1:-1); wheelAcc=0; wheelUntil=Date.now()+380; }
+},{passive:false});
+let swipeY=null;
+tabsEl.addEventListener('touchstart',e=>{ swipeY=e.touches.length===1?e.touches[0].clientY:null; },{passive:true});
+tabsEl.addEventListener('touchend',e=>{
+  if(swipeY===null) return;
+  const dy=e.changedTouches[0].clientY-swipeY; swipeY=null;
+  if(Math.abs(dy)>=24) roll(dy<0?1:-1);
+},{passive:true});
 
-/* The arenas' tabs stand between the clusters and ALL and come and go
-   with the arenas, so a tab is marked live by which element it is rather
-   than by its place in the row, which is what the row's own index was. */
-function markTab(el){ tabsEl.querySelectorAll('.tab').forEach(t=>t.setAttribute('aria-selected',String(t===el))); }
+/* The arenas' tabs come and go with the arenas, so a tab is marked live by
+   which element it is rather than by its place in a row; the roll follows
+   it to its row. */
+function markTab(el){
+  tabsEl.querySelectorAll('.tab').forEach(t=>t.setAttribute('aria-selected',String(t===el)));
+  const r=el&&el.closest('.trow'); if(r){ rollAt=r.dataset.g; paintRoll(); }
+}
 function selectPage(i){
   if(i===PAGES.length){ MODE='overview'; location.hash='all'; markTab(ovTab); }
   else { MODE='cluster'; P=PAGES[i]; location.hash=P.key.toLowerCase(); markTab(htabEls[i]); }
@@ -126,8 +192,8 @@ function selectArenaTab(key, openId){
   const p=APAGES.find(x=>x.key===key&&x.tabEl);
   if(!p) return;
   MODE='arena'; P=p; location.hash=key.toLowerCase(); markTab(p.tabEl);
+  if(openId&&p.callById[openId]) p.state.openArena=p.callById[openId].arenaId;
   afterSelect();
-  if(openId){ const t=topicEls.find(x=>x.call===openId); if(t&&!t.row.classList.contains('sel')) t.row.click(); }
 }
 function afterSelect(){
   document.getElementById('ovbar').classList.toggle('on', MODE==='overview');
@@ -243,25 +309,20 @@ function readArenas(){
   APAGES.forEach(p=>{ if(!OV.known.has(p.key)){ OV.known.add(p.key); OV.clusters.add(p.key); } });
   buildArenaTabs();
 }
-let atabEls=[];
 function buildArenaTabs(){
-  atabEls.forEach(el=>el.remove()); atabEls=[];
+  const row=rowOf('ar'); row.innerHTML='';
   /* and a tab with none yet while a new arena of its type is judged there */
   const jf=judgedFind();
   const shown=APAGES.filter(p=>p.arenas.length||(jf&&jf.tab===p.key));
   APAGES.forEach(p=>{ p.tabEl=null; });
-  if(!shown.length) return;
-  const sep=()=>{ const s=document.createElement('span'); s.className='tabsep'; s.setAttribute('aria-hidden','true');
-    tabsEl.insertBefore(s,ovTab); atabEls.push(s); };
-  sep();
   shown.forEach(p=>{
     const b=document.createElement('button'); b.className='tab'; b.setAttribute('role','tab'); b.title=p.full;
     b.setAttribute('aria-selected',String(MODE==='arena'&&P.key===p.key));
     b.innerHTML=`<span class="ck">${p.key}</span><span class="cn">${p.label}</span><span class="cc">${p.calls.length}</span>`;
     b.addEventListener('click',()=>selectArenaTab(p.key));
-    tabsEl.insertBefore(b,ovTab); atabEls.push(b); p.tabEl=b;
+    row.appendChild(b); p.tabEl=b;
   });
-  sep();
+  paintRoll();
 }
 /* the socket the bridge fills, and again on every change on the other side */
 function arenasArrived(){
@@ -279,7 +340,7 @@ function arenasArrived(){
        are, is drawn again */
     markTab(htabEls[PAGES.indexOf(P)]);
     if(P.state.venue&&!venueById(P.state.venue)){ P.state.venue=null; P.state.sel.clear(); applyFilters(); paintPills(); showCard([]); }
-    buildTimeline(); paintTimeline(); paintLanes(); paintVcard();
+    buildTimeline(); paintTimeline(); paintLanes();
   }
 }
 
@@ -299,69 +360,140 @@ function arenaRow(c){
   if(c.run.fresh){
     row.classList.add('fresh');
     row.title+='\nNew since you last looked'+(c.run.was.length?' — '+c.run.was.join('; '):'');
-    const b=document.createElement('button'); b.className='seen'; b.textContent='Seen ✓';
-    b.title='The glow on '+c.arena.name+'’s new dates goes';
-    b.addEventListener('click',e=>{ e.stopPropagation(); if(ARENA_SRC&&ARENA_SRC.seen) ARENA_SRC.seen(c.arenaId); });
-    row.appendChild(b);
+    row.appendChild(seenButton(c));
   }
   return row;
 }
-function arenaDetail(c){
-  const r=c.run, a=c.arena, dls=r.dls||[];
-  const tr=(k,v,mono)=>v?`<tr><td>${k}</td><td${mono?' class="full"':''}>${v}</td></tr>`:'';
-  const dl=dls.length>1?dls.map((d,i)=>whenLong(d)+' (stage '+(i+1)+')').join(' → '):(dls.length?whenLong(dls[0]):'');
-  const det=document.createElement('div'); det.className='tdetail';
-  det.innerHTML=`<table>
-    ${tr('Arena',esc(a.name)+(a.leads?` <span style="color:var(--muted)">· ${a.leads} open lead${a.leads===1?'':'s'}</span>`:''))}
-    ${tr('Call',esc(r.names.join(' · ')))}
-    ${tr('Opens',r.open?whenLong(r.open):(r.ann?'expected '+whenLong(r.ann)+(r.ann.end&&r.ann.end!==r.ann.start?' – '+whenLong({start:r.ann.end,gran:r.ann.gran}):''):''),1)}
-    ${tr('Deadline',dl,1)}
-    ${tr('Dates',r.unc?'not all published to the day yet':'as published')}
-    ${tr('Note',esc(r.note))}</table>`;
-  const row=document.createElement('div'); row.className='btnrow';
-  const b=document.createElement('button'); b.className='readbtn';
-  b.innerHTML='Open arena <span style="opacity:.6">▸</span>';
-  b.addEventListener('click',e=>{ e.stopPropagation(); if(ARENA_SRC&&ARENA_SRC.open) ARENA_SRC.open(a.id); });
-  row.appendChild(b);
-  const web=u=>/^https?:\/\//i.test(u||'');
-  if(web(r.url)) row.appendChild(portalLink(r.url,'Call page','Open the call’s own page'));
-  (a.links||[]).filter(l=>web(l.url)).slice(0,3).forEach(l=>row.appendChild(portalLink(l.url,esc(l.label||'Link'),l.url)));
-  det.appendChild(row);
-  return det;
+/* An arena's tab is the chart alone (Mark, 2026-10-24): the list beside it
+   only said again what the chart says, cut short, so it went, and the
+   chart takes the width. Each arena's chip is as long as its name, which
+   tells one from another at a glance, and its calls are named more fully
+   beside it; their dates stand on the chart and on hover. What a search
+   finds in the other tabs goes under the chart instead. */
+function clearArenaList(){
+  document.getElementById('ledger').innerHTML=''; topicEls=[];
+  elsewhereEl=document.getElementById('tlaway');
 }
-function buildArenaList(){
-  const ledger=document.getElementById('ledger'); ledger.innerHTML=''; topicEls=[];
-  P.arenas.forEach(a=>{
-    const calls=P.calls.filter(c=>c.arenaId===a.id);
-    if(!calls.length){
-      /* an arena whose calls are not on the Semaphore's board yet still
-         stands here, so its absence from the chart says something */
-      const row=document.createElement('div'); row.className='topic afirst';
-      row.dataset.search=a.name.toLowerCase(); row.dataset.type='';
-      row.innerHTML=`<span class="bar" style="background:var(--line-strong)"></span>
-        <span class="cchip w achip" style="background:#E6DDC9;color:var(--ink2)">${esc(a.name)}</span>
-        <span class="ttl anone">no call dates on the board yet</span>`;
-      ledger.appendChild(row);
-      topicEls.push({row,det:document.createElement('div'),call:null,type:'',theme:null,dest:null});
-      return;
-    }
-    calls.forEach(c=>{
-      const row=arenaRow(c), det=arenaDetail(c);
-      const act=()=>toggleTopic(row,det,c.id,c.color);
-      row.addEventListener('click',act);
-      row.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();act();}});
-      ledger.appendChild(row); ledger.appendChild(det);
-      topicEls.push({row,det,call:c.id,type:'',theme:null,dest:null});
-    });
+/* a call's dates in words, for the arena opened */
+const dateWords=c=>c.annEnd?c.tagEnd
+  :[c.tagOpen&&c.d1?'opens '+c.tagOpen:'',c.d1?(c.twoStage?'deadlines ':'deadline ')+c.tagEnd:c.tagEnd].filter(Boolean).join(' · ');
+const PLACE_WORDS={new:'new, waiting to be judged',board:'kept on the board',venues:'in Venues'};
+/* Seen, on a row whose call has a new date (see arenaRow) */
+function seenButton(c){
+  const b=document.createElement('button'); b.className='seen'; b.textContent='Seen ✓';
+  b.title='The glow on '+c.arena.name+'’s new dates goes';
+  b.addEventListener('click',e=>{ e.stopPropagation(); if(ARENA_SRC&&ARENA_SRC.seen) ARENA_SRC.seen(c.arenaId); });
+  return b;
+}
+function arenaChartRow(c,a){
+  const r=document.createElement('div');
+  r.className='crow arow'+(c.first?' afirst':'')+(c.run.fresh?' fresh':''); r.tabIndex=0; r.setAttribute('role','button');
+  r.dataset.call=c.id; r.dataset.arena=a.id; r.dataset.search=(a.name+' '+c.run.names.join(' ')).toLowerCase();
+  r.title=a.name+' — '+c.run.names.join(', ')+(c.run.fresh?'\nNew since you last looked'+(c.run.was.length?' — '+c.run.was.join('; '):''):'');
+  r.innerHTML=`<span class="lbl"><span class="cchip w achip" style="background:${c.color};color:${fg(c)}">${esc(a.name)}</span><span class="nm">${esc(c.name)}</span></span><span class="track">${barsHTML(c,X,c.color,c.ink,true)}</span>`;
+  if(c.run.fresh) r.querySelector('.lbl').appendChild(seenButton(c));
+  const act=()=>openArena(a.id);
+  r.addEventListener('click',act);
+  r.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();act();}});
+  r.addEventListener('mouseenter',()=>showCard([c.id]));
+  r.addEventListener('mouseleave',()=>showCard([]));
+  return r;
+}
+/* An arena whose calls are not on the Semaphore's board yet still stands,
+   so its absence from the chart says something. */
+function arenaEmptyRow(a){
+  const r=document.createElement('div'); r.className='crow arow afirst'; r.tabIndex=0; r.setAttribute('role','button');
+  r.dataset.arena=a.id; r.dataset.search=a.name.toLowerCase(); r.title=a.name+' — no call dates on the board yet';
+  r.innerHTML=`<span class="lbl"><span class="cchip w achip anon">${esc(a.name)}</span><span class="nm anone">no call dates on the board yet</span></span><span class="track"></span>`;
+  r.addEventListener('click',()=>openArena(a.id));
+  r.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openArena(a.id);}});
+  return r;
+}
+/* Pressing a call or its arena opens the whole arena where it stands
+   (Mark, 2026-10-24): its type, leads and venues, its links, its About and
+   Brokerage texts, every call under one another with its dates in words,
+   and the venues serving it, drawn as lanes; the other arenas dim. Chosen
+   over opening it alone, the others put away, which lost its place among
+   them. The texts stop at three lines; all of it is in its panel. */
+function openArena(id){
+  P.state.openArena=P.state.openArena===id?null:id;
+  if(P.state.venue){ P.state.venue=null; P.state.sel.clear(); paintPills(); paintLanes(); }
+  buildTimeline(); paintTimeline(); applyFilters();
+  const b=document.querySelector('#tl .aopen');
+  if(b){ const top=b.getBoundingClientRect().top; if(top<120||top>window.innerHeight-200) b.scrollIntoView({block:'center'}); }
+}
+function arenaOpenBlock(a,calls){
+  const blk=document.createElement('div'); blk.className='aopen'; blk.dataset.arena=a.id;
+  blk.dataset.search=(a.name+' '+calls.map(c=>c.run.names.join(' ')).join(' ')).toLowerCase();
+  const tone=calls[0]||{color:'#E6DDC9',ink:'#5C5140'};
+  const vs=a.venues||[], web=u=>/^https?:\/\//i.test(u||'');
+  const links=(a.links||[]).filter(l=>web(l.url)).slice(0,4)
+    .map(l=>`<a href="${attr(l.url)}" target="_blank" rel="noopener" title="${attr(l.url)}">${esc(l.label||hostOf(l.url))} ↗</a>`).join('');
+  const fresh=calls.some(c=>c.run.fresh);
+  blk.innerHTML=`<div class="aoh">
+      <span class="cchip achip" style="background:${tone.color};color:${calls[0]?fg(calls[0]):'var(--ink2)'}">${esc(a.name)}</span>
+      <span class="aoty">${esc(a.type||'')}</span>
+      <span class="aomt">${a.leads} open lead${a.leads===1?'':'s'} · ${vs.length} venue${vs.length===1?'':'s'}</span>
+      <span class="aosp"></span>${links?`<span class="aoln">${links}</span>`:''}
+      <span class="aobt"></span></div>
+    ${a.about||a.brokerage?`<div class="aotx">${a.about?`<div><h4>About</h4><p>${esc(a.about)}</p></div>`:''}${a.brokerage?`<div><h4>Brokerage</h4><p>${esc(a.brokerage)}</p></div>`:''}</div>`:''}`;
+  const bt=blk.querySelector('.aobt');
+  if(fresh&&calls[0]) bt.appendChild(seenButton(calls[0]));
+  const panel=document.createElement('button'); panel.className='vbtn dark'; panel.textContent='Its panel ▸';
+  panel.title='Everything about '+a.name+', in the Semaphore';
+  panel.addEventListener('click',e=>{ e.stopPropagation(); if(ARENA_SRC&&ARENA_SRC.open) ARENA_SRC.open(a.id); });
+  const x=document.createElement('button'); x.className='vbtn aox'; x.textContent='✕'; x.setAttribute('aria-label','Close '+a.name);
+  x.addEventListener('click',e=>{ e.stopPropagation(); openArena(a.id); });
+  bt.append(panel,x);
+  blk.querySelector('.aoh').addEventListener('click',e=>{ if(!e.target.closest('a,button')) openArena(a.id); });
+  calls.forEach(c=>{
+    const r=document.createElement('div'); r.className='crow aorow'+(c.run.fresh?' fresh':''); r.dataset.call=c.id;
+    r.title=c.run.names.join(', ')+(c.run.was.length?'\n'+c.run.was.join('; '):'');
+    r.innerHTML=`<span class="lbl"><span class="aocn">${esc(c.run.names.join(' · '))}</span><span class="aocd${c.unc?' unc':''}">${esc(dateWords(c))}</span></span><span class="track">${barsHTML(c,X,c.color,c.ink,false)}</span>`;
+    blk.appendChild(r);
   });
-  elsewhereEl=document.createElement('div'); ledger.appendChild(elsewhereEl);
+  if(!calls.length) blk.insertAdjacentHTML('beforeend','<div class="aonone">No call dates on the board yet.</div>');
+  if(vs.length){
+    blk.insertAdjacentHTML('beforeend','<div class="aovh">Its venues</div>');
+    vs.forEach(v=>{
+      const r=document.createElement('div'); r.className='blane aov'; r.dataset.venue=v.id; r.tabIndex=0; r.setAttribute('role','button');
+      r.title=v.name+' — '+VM.vDateSay(v)+' — its card';
+      r.innerHTML=`<span class="lbl"><span class="aocn"><i class="dia"></i>${esc(v.name)}</span><span class="aocd aopl">${PLACE_WORDS[v.place]||''}</span></span><span class="track">${bandMarks(v)}</span>`;
+      const card=()=>{ if(ARENA_SRC&&ARENA_SRC.openVenue) ARENA_SRC.openVenue(v.id); };
+      r.addEventListener('click',card);
+      r.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();card();}});
+      blk.appendChild(r);
+    });
+  }
+  return blk;
+}
+/* The arenas in their order, each type's under its name when the tab holds
+   more than one type, as OTHER does (Mark, 2026-10-24): the name once, in
+   small capitals, over a slim rule in the type's own colour from Types.
+   Chosen over edging each chip in it and over a wash behind the rows. */
+function buildArenaRows(rowsEl){
+  const types=new Set(P.arenas.map(a=>a.type||''));
+  let ty=null;
+  P.arenas.forEach(a=>{
+    if(types.size>1&&(a.type||'')!==ty){
+      ty=a.type||'';
+      rowsEl.insertAdjacentHTML('beforeend',`<div class="tyh" style="--ty:${attr(a.tone||'#9C8B66')}" data-ty="${attr(ty)}"><i></i>${esc(ty||'No type')}</div>`);
+    }
+    const calls=P.calls.filter(c=>c.arenaId===a.id);
+    const add=el=>{ if(types.size>1){ el.classList.add('typed'); el.style.setProperty('--ty',a.tone||'#9C8B66'); el.dataset.ty=ty; } rowsEl.appendChild(el); };
+    if(P.state.openArena===a.id) add(arenaOpenBlock(a,calls));
+    else if(!calls.length) add(arenaEmptyRow(a));
+    else calls.forEach(c=>add(arenaChartRow(c,a)));
+  });
 }
 
-/* ---------- brokerage, under the calls ----------
-   The venues kept on the Semaphore's board are drawn under the calls they
+/* ---------- brokerage, over the calls ----------
+   The venues kept on the Semaphore's board are drawn over the calls they
    serve, a lane each, behind the Brokerage switch beside the chart's title
    (Mark, 2026-10-24), the switch kept per device. Chosen over drawing the
    venues on the calls' own rows, which put two kinds of thing on one line.
+   They stood under the calls at first, out of sight below a long tab, and
+   moved up the same day.
    A venue in Venues is not drawn: the board holds what still waits for
    him, and Venues is where he follows the rest. Brass, so a venue never
    reads as a call; its window shaded by how much goes on in it, its event
@@ -372,13 +504,15 @@ function buildArenaList(){
    other type has its venues in its type's tab, and a venue serving arenas
    in several tabs stands in each.
 
-   Picking a lane lights the calls it is for and dims the rest, and the
-   list keeps only their topics: the calls of its arenas in that tab whose
-   last deadline is still ahead when the venue opens, since a brokerage
-   event is for proposals still to be written, or all of them where none
-   is. Its pill in the search row takes it off again, and a card at the
-   foot of the chart says what it is and offers what can be done with it
-   from here; the rest is in its panel, lent over the room. */
+   One press on a lane lights the calls it is for and folds the rest away
+   (see paintTimeline), and the list keeps only their topics: the calls of
+   its arenas in that tab whose last deadline is still ahead when the
+   venue opens, since a brokerage event is for proposals still to be
+   written, or all of them where none is. Its pill in the search row takes
+   it off again. A second press opens its card, the Semaphore's panel lent
+   over the room (Mark, 2026-10-24); one press used to bring a card at the
+   foot of the chart as well, which said in a heap what the panel says in
+   order. */
 const VM=VenueMaths;
 const BK_LS='callboard.brokerage';
 let BK=(()=>{try{return localStorage.getItem(BK_LS)==='1';}catch(e){return false;}})();
@@ -450,20 +584,32 @@ function buildLanes(rowsEl){
   const f=judgedFind(), judging=!!(f&&f.kind==='venue'&&(!f.tab||f.tab===P.key));
   if(!BK&&!judging) return;
   const vs=lanesHere();
-  rowsEl.insertAdjacentHTML('beforeend','<div class="bhead">Brokerage <span>— kept on the board; those in Venues are not drawn here</span></div>');
+  rowsEl.insertAdjacentHTML('beforeend','<div class="bhead">Brokerage <span>— kept on the board · press once for its calls, twice for its card</span></div>');
   if(!vs.length) rowsEl.insertAdjacentHTML('beforeend','<div class="bnone">No venue is kept on the board for this tab.</div>');
   vs.forEach(v=>{
     const ghost=v.place==='new';
     const r=document.createElement('div'); r.className='blane'+(ghost?' ghost':''); r.dataset.venue=v.id;
-    r.title=v.name+' — '+VM.vDateSay(v)+(ghost?' — not on the board yet':'');
+    r.title=v.name+' — '+VM.vDateSay(v)+(ghost?' — not on the board yet':'\nOnce: only its calls · twice: its card');
     r.innerHTML=`<span class="lbl"><i class="dia"></i><span class="nm">${esc(v.name)}</span></span><span class="track">${bandMarks(v)}${ghost?'<span class="notyet">not on the board yet</span>':''}</span>`;
     if(!ghost){
       r.tabIndex=0; r.setAttribute('role','button');
-      r.addEventListener('click',()=>pickVenue(v.id));
-      r.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();pickVenue(v.id);}});
+      r.addEventListener('click',()=>pressLane(v.id));
+      r.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();pressLane(v.id);}});
     }
     rowsEl.appendChild(r);
   });
+  rowsEl.insertAdjacentHTML('beforeend','<div class="bend"></div>');
+}
+/* Two presses are counted here rather than left to the browser's double
+   click, which an iPad's tap does not give, and the second keeps the venue
+   picked rather than taking it off again. */
+let lastPress={id:null,at:0};
+function pressLane(id){
+  const now=Date.now(), twice=lastPress.id===id&&now-lastPress.at<450;
+  lastPress={id:twice?null:id,at:now};
+  if(!twice) return pickVenue(id);
+  if(P.state.venue!==id) pickVenue(id);
+  if(ARENA_SRC&&ARENA_SRC.openVenue) ARENA_SRC.openVenue(id);
 }
 function paintLanes(){
   document.querySelectorAll('#tl .blane').forEach(r=>r.classList.toggle('on',r.dataset.venue===P.state.venue));
@@ -484,12 +630,27 @@ function pickVenue(id,keep){
   if(st.venue===id&&!keep) return unpickVenue();
   st.venue=id; st.sel=new Set(venueCalls(v)); st.selTopicCall=null;
   topicEls.forEach(t=>{t.row.classList.remove('sel');t.det.classList.remove('open');});
-  applyFilters(); paintTimeline(); paintPills(); showCard([...st.sel]); paintLanes(); paintVcard();
+  if(st.openArena){ st.openArena=null; buildTimeline(); }
+  applyFilters(); paintTimeline(); paintPills(); showCard([...st.sel]); paintLanes();
+}
+/* "Open it on the Call Board" in a venue's panel: its first tab, or the
+   one open when it stands there too, the lanes drawn, and it picked */
+function showVenue(id){
+  readVenues();
+  const v=venueById(id); if(!v||v.place!=='board') return;
+  const ks=[...venueTabs(v)].sort((a,b)=>tabOrder(a)-tabOrder(b));
+  if(!ks.length) return;
+  const k=MODE!=='overview'&&ks.includes(P.key)?P.key:ks[0], i=PAGES.findIndex(p=>p.key===k);
+  if(!BK) setBK(true);
+  if(i>=0) selectPage(i); else selectArenaTab(k);
+  pickVenue(id,true);
+  const lane=document.querySelector('#tl .blane[data-venue="'+CSS.escape(id)+'"]');
+  if(lane) lane.scrollIntoView({block:'nearest'});
 }
 function unpickVenue(){
   const st=P.state; if(!st.venue) return;
   st.venue=null; st.sel.clear();
-  applyFilters(); paintTimeline(); paintPills(); showCard([]); paintLanes(); paintVcard();
+  applyFilters(); paintTimeline(); paintPills(); showCard([]); paintLanes();
 }
 const shortCalls=ids=>{
   const cs=ids.map(id=>P.callById[id]).filter(Boolean), nm=c=>c.arena?c.name:c.short;
@@ -503,26 +664,6 @@ function venueFacts(v,ids){
     arenas.length?`<span>arena${arenas.length===1?'':'s'} <b>${esc(arenas.join(', '))}</b></span>`:'<span>serves no arena yet</span>',
     win?`<span>window <b>${esc(win)}</b></span>`:'<span><b>not dated yet</b></span>',
     v.start?`<span>event <b>${esc((v.grade==='fixed'?'':'≈ ')+VM.shortDate(v))}</b></span>`:''].join('');
-}
-/* the card of the venue picked: where it stands in words, what it is for,
-   Mark's three verbs for a venue on the board, and its panel for the rest */
-function paintVcard(){
-  const el=document.getElementById('vcard'), v=MODE!=='overview'&&venueById(P.state.venue);
-  if(!v||v.place!=='board'){ el.hidden=true; el.innerHTML=''; return; }
-  el.hidden=false;
-  el.innerHTML=`<div class="vt"><i class="dia"></i>${esc(v.name)}<span>${esc(VM.vDateSay(v))}</span></div>
-    <div class="vm">${venueFacts(v,[...P.state.sel])}</div>
-    ${v.note?`<div class="vn">${esc(v.note)}</div>`:''}
-    <div class="va">${/^https?:\/\//i.test(v.url||'')?`<a href="${attr(v.url)}" target="_blank" rel="noopener">Open its site ↗</a>`:'<span></span>'}
-      <button class="vbtn dark" data-v="venues" title="Move it to Venues, where it comes round for visits">→ Venues</button>
-      <button class="vbtn" data-v="gone" title="Off the board; it is not brought back">Remove</button>
-      <button class="vbtn" data-v="edit" title="Its panel: its window, pages, arenas and your note">Edit ▸</button></div>`;
-  el.querySelectorAll('.vbtn').forEach(b=>b.addEventListener('click',()=>{
-    const verb=b.dataset.v;
-    if(verb==='edit'){ if(ARENA_SRC&&ARENA_SRC.openVenue) ARENA_SRC.openVenue(v.id); return; }
-    if(verb==='gone'&&!armed(b)) return;
-    judge('venue:'+v.id,verb);
-  }));
 }
 /* Remove at a second press, as a link's cross is in the Semaphore: the
    first turns the word into the question */
@@ -689,13 +830,11 @@ function paintTabDots(){
   PAGES.forEach((p,i)=>mark(htabEls[i],p.key));
   APAGES.forEach(p=>mark(p.tabEl,p.key));
 }
-/* the new arena being judged, as a row of its tab's list, dashed */
-function ghostArenaRow(){
+/* the new arena being judged, as a row of its tab's chart, dashed */
+function ghostArenaRow(rowsEl){
   const f=judgedFind();
   if(!f||f.kind!=='arena'||MODE==='overview'||(f.tab&&f.tab!==P.key)) return;
-  const row=document.createElement('div'); row.className='topic ghost afirst';
-  row.innerHTML=`<span class="bar"></span><span class="cchip w achip">${esc(f.name)}</span><span class="ttl anone">a new arena, not on the board yet</span>`;
-  document.getElementById('ledger').prepend(row);
+  rowsEl.insertAdjacentHTML('beforeend',`<div class="crow ghost afirst"><span class="lbl"><span class="cchip w achip">${esc(f.name)}</span><span class="nm anone">a new arena, not on the board yet</span></span><span class="track"></span></div>`);
 }
 
 /* ---------- render ---------- */
@@ -705,6 +844,7 @@ const X=d=>(d3(d)-T0)/SPAN*100;
 const SRC_HORIZON=document.querySelector('.src').innerHTML;
 const SRC_ARENAS='Source: your arenas’ call dates on the Brokerage Semaphore, found by ChatGPT’s search or written by hand. A dashed date is not yet published to the day — confirm on the call’s own page before acting.';
 function render(){
+  document.getElementById('tlaway').innerHTML='';
   if(MODE==='overview') return renderOverview();
   const arena=MODE==='arena';
   document.getElementById('legcolour').textContent=arena
@@ -713,25 +853,20 @@ function render(){
   document.getElementById('tltxt').textContent='Calls · chronological';
   document.getElementById('bkswitch').hidden=false;
   document.querySelector('.src').innerHTML=arena?SRC_ARENAS:SRC_HORIZON;
-  if(arena) buildArenaList(); else buildLedger();
-  ghostArenaRow();
+  if(arena) clearArenaList(); else buildLedger();
+  if(arena&&P.state.openArena&&!P.arenas.some(a=>a.id===P.state.openArena)) P.state.openArena=null;
   buildTimeline(); buildFamKey();
   const qEl=document.getElementById('q'); qEl.value=P.state.q;
   document.getElementById('qclr').style.display=P.state.q?'block':'none';
   document.querySelectorAll('.tchip').forEach(x=>x.setAttribute('aria-pressed',String(x.textContent===P.state.type)));
   /* An arena's tab is drawn again whenever the Semaphore saves, which may
-     be a change made in its drawer lent over this very tab, so the call
-     that was open is opened again rather than shut under the change. */
+     be a change made in its drawer lent over this very tab, so the arena
+     that was open stays open rather than shut under the change. */
   if(arena) P.state.sel.forEach(id=>{ if(!P.callById[id]) P.state.sel.delete(id); });
   /* a venue picked keeps its calls as they now are, or goes with it */
   if(P.state.venue){ const v=venueById(P.state.venue);
     if(v) P.state.sel=new Set(venueCalls(v)); else { P.state.venue=null; P.state.sel.clear(); } }
-  if(arena&&P.state.selTopicCall){
-    const t=topicEls.find(x=>x.call===P.state.selTopicCall);
-    if(t){ t.row.classList.add('sel'); t.row.style.setProperty('--selcol',P.callById[t.call].color); t.det.classList.add('open'); }
-    else P.state.selTopicCall=null;
-  }
-  applyFilters(); paintTimeline(); paintPills(); showCard([...P.state.sel]); paintLanes(); paintVcard();
+  applyFilters(); paintTimeline(); paintPills(); showCard([...P.state.sel]); paintLanes();
 }
 
 function buildFamKey(){
@@ -868,11 +1003,15 @@ function buildTimeline(){
   tl.innerHTML=`<div class="tl-axis"><div class="plot" style="top:0;bottom:0">${axl}</div></div><div class="tl-rows" id="tlrows"></div>`;
   tl.insertAdjacentHTML('afterbegin',`<div class="plot">${grid}</div>`);
   const rowsEl=document.getElementById('tlrows');
-  P.calls.forEach(c=>{
-    const r=document.createElement('div'); r.className='crow'+(c.arena&&c.first?' afirst':'')+(c.arena&&c.run.fresh?' fresh':''); r.tabIndex=0; r.setAttribute('role','button');
-    r.dataset.call=c.id; r.title=c.arena?c.arena.name+' — '+c.run.names.join(', ')+(c.run.fresh?'\nNew since you last looked'+(c.run.was.length?' — '+c.run.was.join('; '):''):''):c.id;
+  /* the venues stand over the calls they serve (Mark, 2026-10-24) */
+  buildLanes(rowsEl);
+  ghostArenaRow(rowsEl);
+  if(MODE==='arena') buildArenaRows(rowsEl);
+  else P.calls.forEach(c=>{
+    const r=document.createElement('div'); r.className='crow'; r.tabIndex=0; r.setAttribute('role','button');
+    r.dataset.call=c.id; r.title=c.id;
     const b=barsHTML(c,X,c.color,c.ink,true);
-    r.innerHTML=`<span class="lbl"><span class="cchip w${c.arena?' achip':''}" style="background:${c.color};color:${fg(c)}">${esc(c.short)}</span><span class="nm">${esc(c.name)}</span></span><span class="track">${b}</span>`;
+    r.innerHTML=`<span class="lbl"><span class="cchip w" style="background:${c.color};color:${fg(c)}">${esc(c.short)}</span><span class="nm">${esc(c.name)}</span></span><span class="track">${b}</span>`;
     const act=()=>toggleCall(c.id);
     r.addEventListener('click',act);
     r.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();act();}});
@@ -880,7 +1019,6 @@ function buildTimeline(){
     r.addEventListener('mouseleave',()=>{if(!P.state.sel.size&&!P.state.selTopicCall)soft(null);showCard([...P.state.sel]);});
     rowsEl.appendChild(r);
   });
-  buildLanes(rowsEl);
   const now=new Date();
   if(now>T0&&now<T1){
     const x=(now-T0)/SPAN*100;
@@ -891,7 +1029,7 @@ function buildTimeline(){
 }
 
 function toggleCall(id){
-  if(P.state.venue){ P.state.venue=null; P.state.sel.clear(); paintLanes(); paintVcard(); }
+  if(P.state.venue){ P.state.venue=null; P.state.sel.clear(); paintLanes(); }
   const s=P.state.sel;
   s.has(id)?s.delete(id):s.add(id);
   if(s.size){topicEls.forEach(t=>{t.row.classList.remove('sel');t.det.classList.remove('open');});P.state.selTopicCall=null;}
@@ -901,6 +1039,22 @@ function soft(id){topicEls.forEach(t=>t.row.classList.toggle('dim', !!id && t.ca
 
 function applyFilters(){
   const st=P.state; let visible=0; const perDest=new Map();
+  if(P.arena){
+    /* An arena's tab has no list (see clearArenaList): the words typed
+       keep the chart's rows whose arena or call they name. */
+    document.querySelectorAll('#tlrows > .arow, #tlrows > .aopen').forEach(r=>{
+      const hit=!st.q||r.dataset.search.includes(st.q);
+      r.classList.toggle('hidden',!hit);
+      if(!hit) return;
+      if(r.classList.contains('aopen')) visible+=r.querySelectorAll('.aorow').length;
+      else if(r.dataset.call&&(!st.sel.size||st.sel.has(r.dataset.call))) visible++;
+    });
+    paintTypeHeads();
+    const away=paintElsewhere(visible);
+    document.getElementById('count').textContent=(st.sel.size||st.q)
+      ?`${visible} of ${P.nTopics} calls`+(away?` · ${away} in other tabs`:''):'';
+    return;
+  }
   topicEls.forEach(t=>{
     const hit=!st.q||t.row.dataset.search.includes(st.q)||(FULLTEXT&&inFull(t.row.dataset.id,st.q));
     const show=(!st.sel.size||st.sel.has(t.call)) && (!st.type||t.type===st.type) && hit;
@@ -1024,13 +1178,31 @@ function paintElsewhere(visible){
     e.textContent='Nothing in any tab matches this search.'; elsewhereEl.appendChild(e);}
   return n;
 }
+/* A venue picked folds the other calls away, on the chart as in the list,
+   so only those it is for stand under it (Mark, 2026-10-24); calls picked
+   by hand light and the rest only dim, as before. An arena opened dims the
+   rows outside it. */
 function paintTimeline(){
-  const st=P.state;
+  const st=P.state, fold=!!st.venue, open=MODE==='arena'&&!!st.openArena;
   const focus=st.sel.size?st.sel:(st.selTopicCall?new Set([st.selTopicCall]):null);
-  document.querySelectorAll('.crow').forEach(r=>{
-    const on=focus&&focus.has(r.dataset.call);
-    r.classList.toggle('on',!!on); r.classList.toggle('dim',!!focus&&!on);
+  document.querySelectorAll('#tl .crow').forEach(r=>{
+    if(r.classList.contains('ghost')) return;
+    const on=!!focus&&focus.has(r.dataset.call);
+    r.classList.toggle('on',on);
+    r.classList.toggle('dim',(!!focus&&!on&&!fold)||(open&&r.classList.contains('arow')));
+    r.classList.toggle('folded',fold&&!on);
   });
+  paintTypeHeads();
+}
+/* a type's name over the arenas of that type goes when none of them shows */
+function paintTypeHeads(){
+  let h=null, any=false;
+  const end=()=>{ if(h) h.classList.toggle('folded',!any); };
+  document.querySelectorAll('#tlrows > .tyh, #tlrows > .typed').forEach(el=>{
+    if(el.classList.contains('tyh')){ end(); h=el; any=false; return; }
+    if(!el.classList.contains('hidden')&&!el.classList.contains('folded')) any=true;
+  });
+  end();
 }
 function paintPills(){
   const p=document.getElementById('pills'); p.innerHTML='';
@@ -1277,7 +1449,6 @@ function renderOverview(){
   document.getElementById('legcolour').textContent='colour = cluster · saturated tone = 2026 call, pale tone = 2027 call · window matches first-stage deadlines; stage-2 tails are shown but never selected';
   document.getElementById('tltxt').innerHTML='All calls · <span>drag the date axis to set a window</span>';
   document.getElementById('bkswitch').hidden=true;
-  document.getElementById('vcard').hidden=true;
   buildOvControls(); buildOvTimeline(); buildOvLedger(); paintOv();
 }
 
@@ -1665,7 +1836,8 @@ document.addEventListener('keydown',e=>{
     qEl.value=''; qClr.style.display='none';
     tc.querySelectorAll('.tchip').forEach(x=>x.setAttribute('aria-pressed','false'));
     topicEls.forEach(t=>{t.row.classList.remove('sel');t.det.classList.remove('open');});
-    applyFilters(); paintTimeline(); paintPills(); showCard([]); paintLanes(); paintVcard();
+    if(P.state.openArena){ P.state.openArena=null; buildTimeline(); }
+    applyFilters(); paintTimeline(); paintPills(); showCard([]); paintLanes();
   }
   /* A bare digit only. Alt and a digit is the shell's way between rooms,
      and it used to turn this room's page over on the way past. */
@@ -1716,7 +1888,9 @@ Hub.expose('callboard',{
   arenasChanged:function(){ if(ARENA_SRC) arenasArrived(); },
   /* go through what waits to be judged, from the first find, as ChatGPT's
      answer put on the board asks */
-  judge:function(){ if(ARENA_SRC) startJudging(); }
+  judge:function(){ if(ARENA_SRC) startJudging(); },
+  /* a venue on the board, named from its panel in the Semaphore */
+  showVenue:function(id){ if(ARENA_SRC) showVenue(id); }
 });
 /* The room is built late and only once; the bridge waits for this to
    hand it the arenas. */

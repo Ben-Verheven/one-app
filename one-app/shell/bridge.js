@@ -408,7 +408,7 @@
 
   /* The Call Board draws every arena's calls in tabs of their own after the
      Horizon clusters (Mark, 2026-10-24), each call one row with its arena
-     named on the chip, the venues kept on the board as lanes under them,
+     named on the chip, the venues kept on the board as lanes over them,
      and it is where whatever a search found is judged, one find at a time.
      The Semaphore's own Board, its tray and Dispatches went there the same
      day. It is handed a socket as the Ledger is: reads of the arenas'
@@ -457,6 +457,14 @@
       var B = Hub.api('callboard');
       if (B.judge) B.judge();
       if (said) Hub.note(said, 9000);
+    });
+    /* "Open it on the Call Board", in a venue's panel: the app goes there
+       and the venue is picked in its tab, its calls alone under it. */
+    Hub.on('semaphore:showVenue', function (vid) {
+      Hub.ensure('callboard');
+      Hub.go('callboard');
+      var B = Hub.api('callboard');
+      if (B.showVenue) B.showVenue(vid);
     });
   })();
 

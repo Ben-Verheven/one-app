@@ -38,7 +38,7 @@ Board itself was is summed up at the end. What still holds of it:
   notice. A board of calls and marks only, with no venues at all, was turned
   down (2026-10-15).
 - A window with no end runs six weeks past today and fades out with an
-  arrow, on Venues and under the Call Board's calls alike, rather than
+  arrow, on Venues and over the Call Board's calls alike, rather than
   running to the edge.
 - **Uncertain is a dashed outline**, the one way the whole room draws it
   (2026-10-07).
@@ -67,6 +67,17 @@ Board itself was is summed up at the end. What still holds of it:
   Within a group, the venues he dragged by the small mark at the left of a
   row stand in his order (`vpos`, held across every tab), and the rest after
   them by the start of their window.
+- **A venue's panel opens on the Call Board's view of it** (2026-10-24),
+  wider than an arena's: its window as a lane over the calls it is for, on
+  one month axis, the band dragged there as on Venues, and, for a venue
+  kept on the board, Open it on the Call Board, which picks it in its tab
+  there; one in Venues is off the Call Board, so it is not offered. Then
+  where it stands, its window, event days, the arenas it serves and the
+  basis, two to a row, and the rest folded, each fold saying in a word what
+  is in it: visits, leads from here, other pages, his note, the rhythm. One
+  card everywhere, from Venues here and from two presses on a lane there.
+  Of the two widths drawn he chose the wider; the narrow one shortened the
+  arenas' names on its timeline.
 - A venue can be put in a section by hand from its panel (Arising · Active ·
   Dying · Limbo, the current one lit) and stays there (`phase`) until "by its
   dates" gives it back; the panel says where its dates would put it, and its
