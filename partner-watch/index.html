@@ -847,6 +847,7 @@ function load(){
     /* a device the search has read pages on before takes the new ones in */
     var used = false; try { used = !!localStorage.getItem(SXKEY); } catch(e){}
     if (found || used) syncIndex();
+    tidyLeadLinks();
     warm();
   }).catch(function(e){
     if (String(e.message) === 'logged out' || e.status === 401) return;
@@ -2985,6 +2986,35 @@ function makeLead(e, aid){
     });
   }).then(function(){ mkBusy = null; drawSites(); drawDetail(); },
     function(err){ mkBusy = null; drawDetail(); $('#banner').textContent = 'The lead was not made: ' + err.message; $('#banner').hidden = false; });
+}
+/* Leads made here before 2026-10-23 carry the brokerage page twice: once
+   as "project", taken from the site's own "website", and once as the
+   entry. Mark asked for the twin gone. Each such lead keeps the entry's
+   link alone, named "project", as a lead made now has it. Asked on every
+   load and written only when a lead still needs it, read fresh first and
+   written back as Make lead writes, so the Semaphore takes it in. */
+function twinLinks(l){
+  var ls = l.entryId && l.links || [], p = ls.findIndex(function(k){ return k.label === 'project'; });
+  if (p < 0) return null;
+  var host = function(u){ try { return new URL(u).hostname.replace(/^www\./, ''); } catch(err){ return ''; } };
+  var twin = ls.findIndex(function(k, i){ return i !== p && / entry$/.test(k.label || '') && host(k.url) === host(ls[p].url); });
+  return twin < 0 ? null : { p:p, twin:twin };
+}
+function tidyLeadLinks(){
+  var needs = function(s){ return ((s && s.arenas) || []).some(function(a){ return (a.leads || []).some(twinLinks); }); };
+  if (!needs(market)) return;
+  api('/rest/v1/app_state?id=eq.semaphore&select=data').then(function(rows){
+    var s = rows[0] && rows[0].data;
+    if (typeof s === 'string') s = JSON.parse(s);
+    if (!needs(s)) return;
+    s.arenas.forEach(function(a){ (a.leads || []).forEach(function(l){
+      var t = twinLinks(l); if (!t) return;
+      l.links[t.twin].label = 'project';
+      l.links.splice(t.p, 1);
+    }); });
+    return api('/rest/v1/app_state', { method:'POST', body:[{ id:'semaphore', data:s, updated_at:new Date().toISOString() }],
+      headers:{ Prefer:'resolution=merge-duplicates,return=representation' } }).then(function(){ market = s; regroup(); draw(); });
+  }).catch(function(err){ $('#banner').textContent = 'The doubled lead links were not tidied: ' + err.message; $('#banner').hidden = false; });
 }
 function editLinks(){ editingLinks = true; drawSites(); }
 function cancelLinks(){ editingLinks = false; drawSites(); }
