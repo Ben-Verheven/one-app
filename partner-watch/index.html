@@ -210,36 +210,33 @@ body.drawer .veil{display:block;position:absolute;inset:0;z-index:3;background:r
 .empty{padding:22px 16px;color:var(--muted);font-size:14px}
 .det{padding:18px 28px 40px;max-width:1120px;container-type:inline-size;container-name:entry}
 #detwrap{background:var(--sheet)}
-/* The text column takes all the room beside the facts, up to a line of
-   about ninety characters: on a full wide screen it was held to seventy
-   and left a gulf before the facts, and Mark wanted longer lines there. */
-.read{display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:32px;margin-top:6px}
-.texts{min-width:0}
+/* The programme and topic over the title, their names set apart from
+   what they name, as on a lead's sheet */
+.where{display:grid;grid-template-columns:92px minmax(0,1fr);gap:1px 0;margin:8px 0 0;align-items:baseline}
+.where dt{font:11px var(--serif);letter-spacing:.07em;text-transform:uppercase;color:var(--faint)}
+.where dd{margin:0;font-size:14px;color:var(--ink)}
+/* The box: the organisation, the contact and the dates side by side, the
+   site's other facts under a rule in the same three columns */
+.ebox{border:1px solid var(--line);border-radius:var(--radius);background:var(--field);margin-top:20px;font-size:13.5px}
+.ebox .l{font:11px var(--serif);letter-spacing:.07em;text-transform:uppercase;color:var(--faint);margin-bottom:3px}
+.egroups,.erest{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+.egroups{padding:12px 0}
+.eg{padding:2px 16px;min-width:0;overflow-wrap:anywhere}
+.eg + .eg{border-left:1px solid var(--line)}
+.eg .main{font-size:15.5px;line-height:1.35;margin-bottom:2px}
+.eg .em{font-style:italic;color:var(--muted)}
+.eg a,.erest a{color:var(--key2)}
+.erest{gap:10px 0;padding:10px 0 12px}
+.egroups + .erest{border-top:1px solid var(--line)}
+.erest .f{padding:0 16px;min-width:0}
+.erest .v{white-space:pre-wrap;overflow-wrap:anywhere}
+.erest .v.none{color:var(--faint);font-style:italic}
 .sec{margin-top:20px}
 .sec h3{font:400 13px var(--serif);letter-spacing:.07em;text-transform:uppercase;color:var(--faint);margin:0 0 6px}
 .sec .txt{font-size:16.5px;line-height:1.62;overflow-wrap:anywhere}
 .sec .txt p{margin:0 0 .7em}
 .sec .txt p.none{color:var(--faint);font-style:italic}
 .sec.lead .txt{font-size:17px}
-.facts{border-left:1px solid var(--line);padding-left:18px;margin-top:20px;font-size:13.5px;min-width:0}
-.facts .f + .f{margin-top:12px}
-.facts .fbreak{border-top:1px solid var(--line);margin:16px 0}
-.facts .l{font:11px var(--serif);letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
-/* When the entry pane is narrow (a half-screen window, or an iPad), a
-   side column would squeeze the text to a few words a line; there the
-   facts become a box above the text, several to a row, and the text gets
-   the full width. Measured on the entry itself, not the window, because its
-   width is what decides: 644 px inside the padding is a pane of 700. The
-   upright iPad's reader holds the entry narrower than that on purpose. */
-@container entry (max-width: 644px){
-  .read{grid-template-columns:minmax(0,1fr);gap:0}
-  .facts{order:-1;border:1px solid var(--line);border-radius:var(--radius);background:var(--field);padding:12px 14px;
-         display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px 18px}
-  .facts .f + .f{margin-top:0}
-  .facts .fbreak{grid-column:1/-1;margin:2px 0}
-}
-.facts .v{white-space:pre-wrap;overflow-wrap:anywhere}
-.facts .v.none{color:var(--faint);font-style:italic}
 .dhead{display:flex;gap:14px;align-items:flex-start}
 .dtitle{font:400 23px/1.25 var(--serif);margin:6px 0 0;text-wrap:balance}
 .dsub{color:var(--muted);font-size:14px;margin-top:3px}
@@ -332,10 +329,9 @@ body.drawer.leads .rd-leads{background:rgba(141,85,69,.12)}
 .rd-step{gap:2px;font:12.5px var(--mono);color:var(--muted);white-space:nowrap}
 .rd-step button{display:flex;background:none;border:0;border-radius:5px;color:var(--key2);padding:6px;cursor:pointer}
 .rd-step button:disabled{color:var(--line2);cursor:default}
-/* The entry runs down the middle of the page: on a wide screen the long
-   texts and the facts beside them, about ninety characters a line, as
-   Mark wanted there; held upright, a line of about seventy-five, the facts
-   in a box above and the type a size up, as on the reader he chose then. */
+/* The entry runs down the middle of the page: on a wide screen a line of
+   about ninety characters, as Mark wanted there; held upright, a line of
+   about seventy-five and the type a size up, as on the reader he chose then. */
 .det{margin:0 auto;padding-top:26px}
 #callNote{max-width:none}
 @media (orientation:portrait){
@@ -2507,20 +2503,17 @@ function bulk(what){
   sel.clear();
   drawSites(); drawRows(); drawDetail();
 }
-/* An entry as Mark chose to read it (2026-10-16): the long texts down the
-   middle, whole, with the project description first because it says what
-   they are after, and every short fact in a narrow column beside them, so
-   who and where stay in view without scrolling. Nothing is sorted into
-   boxes of ours: every pair the site gives is shown, in the site's own
-   words and, within each column, in the site's own order. Only a pair the
-   page repeats word for word (EPSS prints "Looking for" twice) is shown once.
-   Long values are never cut short behind a "Show all": he turned that down.
-   The one exception to the site's order is the top of the facts column
-   (Mark, 2026-10-16): who it is comes first, in his words for it whatever
-   the site calls it, then a break, then the rest with the call topic first,
-   kept in the column even when it runs long. */
-/* A b2match entry's title is its headline (DUT, 2026-10-17): in the side
-   column it read as one more fact, so it heads the middle instead. */
+/* An entry reads as the sheet a lead is sent out on (Mark, 2026-10-23,
+   see "a lead's sheet"): its programme and topic, the project's title, a
+   box with the organisation, the contact and the dates side by side and
+   the site's other facts under it, then the long texts whole, the project
+   description first because it says what they are after. Until then the
+   facts stood in a narrow column beside the texts (his choice of
+   2026-10-16), and in a box above them only on a narrow pane. Every pair
+   the site gives is still shown, empty ones too, in the site's own words
+   and order; only a pair the page repeats word for word (EPSS prints
+   "Looking for" twice) is shown once. Long values are never cut short
+   behind a "Show all": he turned that down. */
 var MIDDLE = /description|cooperation interest|^title$/i;
 var WHO = [[/^(organisation name|name of organisation\/institution\/company)$/i, 'Name of organisation'],
            [/^country$/i, 'Country'], [/^(name|contact name)$/i, 'Contact name'], [/^(email|email address)$/i, 'Email']];
@@ -2540,19 +2533,22 @@ function entryParts(fields){
   short = short.filter(function(f){ return TOPIC.test(f[0]); }).concat(short.filter(function(f){ return !TOPIC.test(f[0]); }));
   return { long:long, who:who, short:short };
 }
-function entryBody(fields){
-  var p = entryParts(fields), long = p.long, who = p.who, short = p.short;
-  var empty = function(v){ return !v || /^[-–—\s]*$/.test(v); };
+function entryBox(e){
+  var p = sheetParts(e, true), empty = function(v){ return !v || /^[-–—\s]*$/.test(v); };
+  var line = function(l){
+    var v = l[1] === 'mail' ? '<a href="mailto:' + esc(l[0]) + '">' + esc(l[0]) + '</a>'
+      : l[1] === 'web' ? '<a href="' + esc(/^https?:/i.test(l[0]) ? l[0] : 'https://' + l[0]) + '" target="_blank" rel="noopener">' + esc(l[0].replace(/^https?:\/\/(www\.)?/i, '').replace(/\/$/, '')) + '</a>'
+      : esc(l[0]);
+    return '<div class="' + (l[1] || 'x') + '">' + v + '</div>'; };
   var fact = function(f){
     return '<div class="f"><div class="l">' + esc(f[0].replace(/^Link to 'research gate' or equivalent$/i, 'Research profile')) + '</div>'
          + '<div class="v' + (empty(f[1]) ? ' none' : '') + '">' + (empty(f[1]) ? 'empty on the site' : esc(f[1])) + '</div></div>'; };
-  return '<div class="read"><div class="texts">'
-    + (long.length ? long.map(function(f, i){
-        return '<section class="sec' + (i === 0 ? ' lead' : '') + '"><h3>' + esc(f[0]) + '</h3><div class="txt">' + (f[1] ? paras(f[1]) : '<p class="none">empty on the site</p>') + '</div></section>'; }).join('')
-      : '<p class="note">This entry has no long text; everything it says is in the column beside.</p>')
-    + '</div><aside class="facts">' + who.map(fact).join('')
-    + (who.length && short.length ? '<div class="fbreak"></div>' : '') + short.map(fact).join('')
-    + '</aside></div>';
+  return (p.groups.length || p.rest.length ? '<div class="ebox">'
+      + (p.groups.length ? '<div class="egroups">' + p.groups.map(function(g){ return '<div class="eg"><div class="l">' + g.head + '</div>' + g.lines.map(line).join('') + '</div>'; }).join('') + '</div>' : '')
+      + (p.rest.length ? '<div class="erest">' + p.rest.map(fact).join('') + '</div>' : '') + '</div>' : '')
+    + (p.long.length ? p.long.map(function(f, i){
+        return '<section class="sec' + (i === 0 ? ' lead' : '') + '"><h3>' + esc(f[0]) + '</h3><div class="txt">' + (empty(f[1]) ? '<p class="none">empty on the site</p>' : paras(f[1])) + '</div></section>'; }).join('')
+      : '<p class="note">This entry has no long text; everything it says is in the box above.</p>');
 }
 function diff(oldT, newT){
   var a = String(oldT || '').split('\n'), b = String(newT || '').split('\n');
@@ -2574,12 +2570,14 @@ function drawDetail(){
   if (view.note) return drawNote();
   var e = byId[view.id];
   if (!e){ $('#det').innerHTML = entries.length ? '<div class="empty">Press Entries, at the top left, to choose an entry.</div>' : ''; return; }
-  var s = siteOf(e), d = detail[e.id];
-  var meta = [s.name, e.country, e.posted ? 'posted ' + e.posted.slice(0, 10) : null, 'first seen ' + day(e.first_seen)].filter(Boolean).join(' · ');
-  var h = '<div class="dhead"><div style="flex:1;min-width:0"><div class="tags">' + kindTag(e.kind)
-    + (!e.opened_at ? '<span class="st newtag">New</span>' : '') + stateTags(e) + '<span class="meta">' + esc(meta) + '</span></div>'
-    + '<h2 class="dtitle">' + esc(title(e)) + '</h2>'
-    + '<div class="dsub">' + esc([e.org ? e.contact : null, e.topic].filter(Boolean).join(' · ')) + '</div></div>'
+  var d = detail[e.id];
+  /* The head as the sheet's (see "An entry reads as the sheet"), with the
+     tags only Mark reads above it; an entry the site gives no project
+     title is headed by its organisation, as its row in the list is. */
+  var sp = sheetParts(e, true), tags = kindTag(e.kind) + (!e.opened_at ? '<span class="st newtag">New</span>' : '') + stateTags(e);
+  var h = '<div class="dhead"><div style="flex:1;min-width:0">' + (tags ? '<div class="tags">' + tags + '</div>' : '')
+    + '<dl class="where">' + sp.where.map(function(w){ return '<dt>' + w[0] + '</dt><dd>' + esc(w[1]) + '</dd>'; }).join('') + '</dl>'
+    + '<h2 class="dtitle">' + esc(sp.head || title(e)) + '</h2></div>'
     + (leadOf(e) && d ? '<span class="dshare"><button class="btn" data-sheet="pdf" title="A PDF of this project, laid out as here, to attach to an email">PDF</button>'
       + '<button class="btn" data-sheet="copy" title="Copy this project, laid out as here, to paste into an email">Copy for email</button></span>' : '')
     + '<a class="btn" style="text-decoration:none" href="' + esc(e.url) + '" target="_blank" rel="noopener">Open on site ↗</a></div>'
@@ -2597,7 +2595,7 @@ function drawDetail(){
   } else if (!d){
     h += '<p class="note">Loading the entry…</p>';
   } else if (view.tab === 'fields'){
-    h += entryBody(d.fields || []);
+    h += entryBox(e);
   } else if (view.tab === 'orig'){
     h += '<div class="orig">' + esc(d.page_text || '') + '</div>'
       + '<p class="note">Copied ' + esc(stamp(e.fetched_at)) + ' from ' + esc(e.url) + '. A newer copy goes beside this one, never over it: older copies are under History.</p>';
@@ -2828,7 +2826,9 @@ function sheetLinks(e){
   var had = leadOf(e), web = had && (had.l.links || []).filter(function(k){ return k.label === 'project' && offSite(k.url, e); })[0];
   return [['Direct link to the project description', e.url]].concat(web ? [['Project website', web.url]] : []).filter(function(k){ return k[1]; });
 }
-function sheetParts(e){
+/* The sheet leaves out what the site left empty; the reader, asked with
+   all, keeps it, and says when the copier first saw the entry. */
+function sheetParts(e, all){
   var p = entryParts((detail[e.id] && detail[e.id].fields) || []), full = function(f){ return !/^[-–—\s]*$/.test(f[1] || ''); };
   /* The top of the sheet is three groups side by side, each about one
      thing (Mark, 2026-10-23): the organisation and where it is, the
@@ -2836,9 +2836,10 @@ function sheetParts(e){
      changed. The job had read as one more fact about the organisation
      when it stood apart from the name. Whatever else the site gives
      follows under a rule, three to a row. */
-  var pool = p.who.concat(p.short).filter(full), take = function(re){
+  var pool = p.who.concat(p.short).filter(all ? Boolean : full), take = function(re){
     var i = pool.findIndex(function(f){ return re.test(f[0]); });
-    return i < 0 ? '' : String(pool.splice(i, 1)[0][1]).trim();
+    var f = i < 0 ? null : pool.splice(i, 1)[0];
+    return f && full(f) ? String(f[1]).trim() : '';
   };
   var org = take(/^(name of organisation|organisation name)$/i) || e.org || '', type = take(/^(organisation type|type of organisation)$/i);
   var city = take(/^city$/i), country = take(/^country$/i) || e.country || '', web = take(/^(web ?site|homepage)$/i);
@@ -2849,12 +2850,12 @@ function sheetParts(e){
   var groups = [
     { head:'Organisation', lines:[[org, 'main'], [type, 'em'], [[city, country].filter(Boolean).join(', '), ''], [offSite(web, e) ? web : '', 'web']] },
     { head:'Contact', lines:[[name, 'main'], [job, 'em'], [mail, 'mail'], [phone, '']] },
-    { head:'Dates', lines:[[updated ? 'Updated ' + updated : '', 'main'], [posted ? 'Posted ' + posted : '', '']] }
+    { head:'Dates', lines:[[updated ? 'Updated ' + updated : '', 'main'], [posted ? 'Posted ' + posted : '', ''], [all && e.first_seen ? 'First seen ' + day(e.first_seen) : '', '']] }
   ].map(function(g){ g.lines = g.lines.filter(function(l){ return l[0]; }); return g; }).filter(function(g){ return g.lines.length; });
   /* The organisation's name and the contact's no longer head the sheet
      (Mark, 2026-10-23): the box under it already says both. The project's
      own title heads it instead, where the site gives one. */
-  var long = p.long.filter(full), t = long.findIndex(function(f){ return /^title$/i.test(f[0]); });
+  var long = p.long.filter(all ? Boolean : full), t = long.findIndex(function(f){ return /^title$/i.test(f[0]); });
   var head = take(/^(project (title|name|acronym)|acronym|project)$/i) || (t >= 0 ? String(long.splice(t, 1)[0][1]).trim() : '');
   /* What the project answers, in words someone outside Mark's own can
      read (Mark, 2026-10-23): the venue as the programme, then the topic,
