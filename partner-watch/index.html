@@ -2593,7 +2593,7 @@ function drawDetail(){
       + (e.keywords ? '<dt>Keywords</dt><dd>' + esc(e.keywords) + '</dd>' : '') + '</dl>'
       + '<p class="note">Only the list line is in so far. The full entry page is copied at the next night\'s run.</p>';
   } else if (!d){
-    h += '<p class="note">Loading the entry…</p>';
+    h += '<p class="note">' + (d === null ? 'The entry could not be loaded. Choose it again in the list to try again.' : 'Loading the entry…') + '</p>';
   } else if (view.tab === 'fields'){
     h += entryBox(e);
   } else if (view.tab === 'orig'){
@@ -2705,6 +2705,8 @@ function drawer(open){
 function openEntry(id){
   view.id = id; view.note = null; view.results = false; saveView();
   var e = byId[id];
+  /* null is a load that failed; opening the entry again asks once more */
+  if (detail[id] === null) delete detail[id];
   if (e && !e.opened_at) patch(e, { opened_at:new Date().toISOString() });
   /* Each entry starts at its head: with the answers held at the top, Mark
      bins from far down a description, and the next entry opened where the
@@ -2718,6 +2720,11 @@ function openEntry(id){
       api('/rest/v1/partner_entry_versions?select=page_text,saved_at,copied_at&order=saved_at.desc&entry_id=eq.' + encodeURIComponent(id))
     ]).then(function(r){
       detail[id] = { fields:(r[0][0] || {}).fields, page_text:(r[0][0] || {}).page_text, versions:r[1] };
+      if (view.id === id) drawDetail();
+    }, function(){
+      /* It said "Loading the entry…" for good when the line dropped (found
+         2026-10-24), where the phone already said it could not; now both say so. */
+      detail[id] = null;
       if (view.id === id) drawDetail();
     });
   }
