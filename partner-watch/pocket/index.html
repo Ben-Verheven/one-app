@@ -657,7 +657,7 @@ function pwDocs(id){ return Object.prototype.hasOwnProperty.call(pwLinks, id) ? 
 
 /* ── reading ──────────────────────────────────────────────────────── */
 
-var PW_COLS = 'id,site,ext_id,url,kind,contact,org,country,topic,keywords,posted,list_text,first_seen,fetched_at,changed_at,removed_at,opened_at,verdict,why,decided_at';
+var PW_COLS = 'id,site,ext_id,url,kind,contact,org,country,topic,keywords,posted,list_text,first_seen,fetched_at,changed_at,removed_at,opened_at,verdict,why,decided_at,needs_fetch';
 /* The database hands out a thousand rows a request at most, and the four
    arenas held past eight hundred on their first night. */
 function pwAll(path){
@@ -1134,7 +1134,7 @@ function pwBody(host, e){
   var d = pwDetail[e.id];
   if (!e.fetched_at){
     pwFacts(host, 'On the list', [['The line on the list', e.list_text || '']].concat(e.keywords ? [['Keywords', e.keywords]] : []));
-    host.appendChild(el('p', 'pw-plain', 'Only the list line is in so far. The full entry page is copied at the next night\'s run.'));
+    host.appendChild(el('p', 'pw-plain', e.needs_fetch ? 'Only the list line is in so far. The full entry page is copied at the next night\'s run.' : 'Only the list line is in: the site would not give the full entry page. The check at the top asks for it again.'));
     return;
   }
   if (!d){ host.appendChild(el('p', 'pw-plain', d === null ? 'The entry could not be loaded. Go back and pull down on the list to try again.' : 'Loading the entry…')); return; }
@@ -1489,10 +1489,14 @@ function pwDrawCheck(){
   $('#pw-checknow').disabled = !!pwChecking;
   pwStamp();
 }
-function pwCopier(){
+/* The runs that follow the press only copy (`more`), as the desk's do. Had
+   each counted as a press, each would ask again for the pages the copier
+   gave up on, and a page that is truly broken would never stop counting as
+   still to copy. */
+function pwCopier(more){
   return token().then(function(tok){
     return fetch(cfg.url.replace(/\/+$/,'') + '/functions/v1/partner-copier', { method:'POST',
-      headers:{ 'apikey':cfg.key, 'Authorization':'Bearer ' + tok, 'Content-Type':'application/json' }, body:'{}' })
+      headers:{ 'apikey':cfg.key, 'Authorization':'Bearer ' + tok, 'Content-Type':'application/json' }, body: more ? '{"lists":false}' : '{}' })
       .then(null, function(){ throw Object.assign(new Error('the connection dropped'), { dropped:true }); });
   }).then(function(r){
     return r.text().then(function(t){
@@ -1502,15 +1506,15 @@ function pwCopier(){
     });
   });
 }
-function pwCheck(){
+function pwCheck(again){
   pwChecking = pwChecking || '(up to two minutes)';
   pwDrawCheck();
-  pwCopier().then(function(r){
+  pwCopier(again).then(function(r){
     pwCheckAdded += r.added || 0;
     var more = r.waiting && r.fetched;
     pwChecking = more ? 'Copying… ' + r.waiting + ' entry pages to go' : '';
     return pwLoad().then(function(){
-      if (more) return pwCheck();
+      if (more) return pwCheck(true);
       pwDrawCheck();
       toast(pwCheckAdded ? pwCheckAdded + ' new entr' + (pwCheckAdded === 1 ? 'y' : 'ies') + ' found' : 'Checked: nothing new on the venues');
     });

@@ -752,6 +752,18 @@ async function run(byMark, lists) {
 
   const cols = "id, site, ext_id, url, page_hash, fields, page_text, fetched_at, fetch_errors";
   const active = Object.keys(platformOf);
+  // An entry whose page failed three times before it was ever copied left
+  // the queue for good: the fortnightly turn below takes only entries with
+  // a copy, so the page said "25 entry pages still to copy" for days
+  // (2026-10-24, most of them the EPSS pages that failed while those sites
+  // moved). Mark's own press gives each of them three more tries; the
+  // nightly runs leave them be, so a page that is truly broken costs no
+  // more than his presses.
+  if (byMark && lists !== false) {
+    const { error: r } = await db.from("partner_entries").update({ needs_fetch: true, fetch_errors: 0 })
+      .eq("needs_fetch", false).eq("before_watch", false).is("fetched_at", null).is("removed_at", null).in("site", active);
+    if (r) errors.push(`asking again for the pages that failed: ${r.message}`);
+  }
   const { data: due } = await db.from("partner_entries").select(cols)
     .eq("needs_fetch", true).is("removed_at", null).in("site", active)
     .order("first_seen").order("id").limit(PER_RUN);
@@ -773,8 +785,9 @@ async function run(byMark, lists) {
       // A host that refused is the site's doing, not the entry's: the entry
       // keeps its place and is not counted a failure.
       if (refusal(err) || /^skipped:/.test(String(err?.message))) continue;
-      // Three failures in a row and the entry waits for its fortnightly
-      // turn instead of blocking the front of the queue every night.
+      // Three failures in a row and the entry leaves the front of the
+      // queue: one with a copy waits for its fortnightly turn, one without
+      // for Mark's next press of Check now.
       const n = (e.fetch_errors ?? 0) + 1;
       await db.from("partner_entries").update({ fetch_errors: n, needs_fetch: n < 3 }).eq("id", e.id);
       if (errors.length < 10) errors.push(`${e.id}: ${err.message ?? err}`);

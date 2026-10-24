@@ -809,7 +809,7 @@ function stamp(iso){ if (!iso) return ''; var d = new Date(iso);
 function siteOf(e){ return sites.find(function(s){ return s.id === e.site; }) || { name:e.site }; }
 function title(e){ return e.org || e.contact || ('Entry ' + e.ext_id); }
 
-var COLS = 'id,site,ext_id,url,kind,contact,org,country,topic,keywords,posted,list_text,first_seen,fetched_at,changed_at,removed_at,opened_at,verdict,why,decided_at,page_hash';
+var COLS = 'id,site,ext_id,url,kind,contact,org,country,topic,keywords,posted,list_text,first_seen,fetched_at,changed_at,removed_at,opened_at,verdict,why,decided_at,page_hash,needs_fetch';
 function load(){
   return Promise.all([
     api('/rest/v1/partner_sites?select=*&order=sort'),
@@ -2405,12 +2405,17 @@ function drawSites(){
   $('.editlinks').innerHTML = PENCIL;
   $('.editlinks').hidden = editingLinks;
   if (editingLinks && !Object.keys(typed).length){ var first = $('[data-linkfor]'); if (first) first.focus(); }
-  var waiting = entries.filter(function(e){ return !e.fetched_at && !e.removed_at; }).length;
+  /* An entry page the copier gave up on after three tries is not waiting:
+     counted as waiting, it read "25 entry pages still to copy" for days
+     (2026-10-24). It is said apart, with what brings it back. */
+  var waiting = entries.filter(function(e){ return e.needs_fetch && !e.removed_at; }).length;
+  var failed = entries.filter(function(e){ return !e.fetched_at && !e.needs_fetch && !e.removed_at; }).length;
   $('#runbox').innerHTML = '<span class="say">' + (lastRun
       ? '<b>Last check ' + esc(stamp(lastRun.ran_at)) + '</b> · ' + lastRun.added + ' new · ' + lastRun.changed + ' changed · ' + lastRun.removed + ' gone'
         + (lastRun.errors ? '<br>' + errLine('run', lastRun.errors.split('\n').length + (lastRun.errors.split('\n').length === 1 ? ' problem' : ' problems'), lastRun.errors.split('\n').map(plainErr).join('\n')) : '')
       : '<b>Not checked yet.</b> The copier runs every night.')
-    + (waiting ? '<br>' + waiting + ' entry pages still to copy' : '') + '</span>'
+    + (waiting ? '<br>' + waiting + ' entry pages still to copy' : '')
+    + (failed ? '<br>' + failed + (failed === 1 ? ' entry page' : ' entry pages') + ' the sites would not give; Check now asks again' : '') + '</span>'
     + '<button class="btn" id="checkNow"' + (checking ? ' disabled>' + esc(checking) : '>Check now') + '</button>';
   var nl = entries.filter(function(e){ return L[e.id]; }).length;
   $('.rd-leads').hidden = !market;
@@ -2591,7 +2596,7 @@ function drawDetail(){
   if (!e.fetched_at){
     h += '<dl class="fields"><dt>On the list</dt><dd>' + esc(e.list_text || '') + '</dd>'
       + (e.keywords ? '<dt>Keywords</dt><dd>' + esc(e.keywords) + '</dd>' : '') + '</dl>'
-      + '<p class="note">Only the list line is in so far. The full entry page is copied at the next night\'s run.</p>';
+      + '<p class="note">' + (e.needs_fetch ? 'Only the list line is in so far. The full entry page is copied at the next night\'s run.' : 'Only the list line is in: the site would not give the full entry page. Check now asks for it again.') + '</p>';
   } else if (!d){
     h += '<p class="note">' + (d === null ? 'The entry could not be loaded. Choose it again in the list to try again.' : 'Loading the entry…') + '</p>';
   } else if (view.tab === 'fields'){
