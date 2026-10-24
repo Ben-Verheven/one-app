@@ -35,7 +35,11 @@ const ALLTOPICS=ALLCALLS.reduce((a,c)=>a+TOPICS_BY_CALL[c.id].length,0);
 const OV={from:null,to:null,sel:new Set(),clusters:new Set(PAGES.map(p=>p.key)),
           arrange:'cluster',group:'deadline',q:'',type:null,preset:'6m'};
 const inSpan=c=>c.d1>=OV.from&&c.d1<=OV.to;   /* stage 2 is not an entry point */
-const iso=d=>d.toISOString().slice(0,10);
+/* The day as the clock on the wall reads it. It was toISOString's, which is
+   the day in Greenwich: a local midnight in the Netherlands is the evening before
+   there, so the window and today both came out a day early, and a call whose
+   deadline was yesterday still stood in the six months ahead. */
+const iso=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 function setPreset(k){
   const now=new Date(); const t0=new Date(now.getFullYear(),now.getMonth(),now.getDate());
   const add=m=>{const d=new Date(t0);d.setMonth(d.getMonth()+m);return d;};
