@@ -366,5 +366,17 @@ Mark found the panels unstyled a day later. How to apply: before
 committing a removal, read the diff's deleted lines to their last one,
 and open whatever the lost names drew.
 
+**`toISOString()` gives the day in Greenwich, not the day on the wall.**
+Midnight in the Netherlands is the evening before in UTC, so
+`.toISOString().slice(0,10)` on a date made from local parts names the
+day before, every day of the year, and on `new Date()` it does so for the
+first hour or two after midnight. The Call Board's window and its today
+were a day early that way until 2026-10-24. How to apply: write a local
+day from `getFullYear`, `getMonth` and `getDate`, as the Ledger's `isoOf`
+and the Semaphore's `todayISO` do; `toISOString` is right for an instant
+kept to be compared, and for a day built at local noon (`T()` in the
+Semaphore and Mark's Place), which no European zone moves. A new one is
+found by grepping every file for `toISOString` at once.
+
 See also [animation](animation.md), [todo-card](todo-card.md), [tools](tools.md),
 [working-here](working-here.md), [notes-room](notes-room.md) and [testing](testing.md).

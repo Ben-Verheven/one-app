@@ -22,7 +22,7 @@ From the home screen, One App and Mark’s Place open full screen, with their ow
 icons and without Safari's bars.
 
 **Log in once in each place.** The first time, the app asks for your email
-and password: press the cloud chip in the Ledger, or Pocket asks by
+and password: press the cloud chip in the Ledger; Mark’s Place asks by
 itself. After that it stays logged in until you press Log out. A
 home-screen app counts as a place of its own, separate from Safari, so it
 asks once more.

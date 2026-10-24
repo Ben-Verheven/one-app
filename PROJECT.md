@@ -121,8 +121,10 @@ Hub.api('semaphore')       → { state(), save(), renderAll(),
                                openArena(aid), escape() }
 Hub.api('atlas')           → { openDossier(), G, state(), applyState(obj) }
 Hub.api('notes')           → { state(), applyState(obj) }
-Hub.api('semaphore-inbox') → { ready(), list(cb), decide(id, status, cb) }
-Hub.api('atlas-inbox')     → the same three verbs over the Atlas's inbox
+Hub.api('semaphore-inbox') → { ready(), list(cb), decide(id, status, cb),
+                               visits(since, cb) }
+Hub.api('atlas-inbox')     → the same first three verbs over the Atlas's inbox
+Hub.api('partner-sites')   → { ready(), list(cb) }, the addresses Mark's Place copies
 ```
 
 A room offers what another room or a tool actually asks for, and nothing
@@ -197,8 +199,8 @@ Cloud is one Supabase table, **`app_state`**, one row per store: `main` is
 the Ledger, then `semaphore`, `notes` and `atlas`. (Mark’s Place keeps
 its scroll links, call notes and corrected readings of sentences in a row of its own, `partnerwatch`, which
 Export leaves out, and reads `semaphore` for the order and arenas of its
-venues; it writes there only a lead made from an entry, the way Pocket
-writes one.) The Ledger's **Export**
+venues; it writes there only the leads made from its entries, the way Pocket
+wrote one.) The Ledger's **Export**
 writes the journal and, beside it, every store in `ROOM_STORES` under its
 own name; Import merges the journal and replaces a room's store, and a
 file written before a room joined has no key for it and leaves it alone.
@@ -210,7 +212,7 @@ device; now the database's rules (`supabase/5-lock-to-owner.sql`,
 undone by `6-unlock.sql`) let the key alone read and write nothing, and a
 request has to carry the session of the project's one user. That is also
 why the url and the key can be written into the page — they are, in the
-Ledger and in Pocket — and why the repository can be public. **Undoing the
+Ledger and in Mark’s Place — and why the repository can be public. **Undoing the
 lock and keeping the key in a public page do not go together**: run
 `6-unlock.sql` and the key is the password again, to everyone. The login is
 an email and a password in the Ledger's cloud panel, once per device — not
@@ -252,7 +254,7 @@ its own. A device that has never synced under the two keys decides once by
 the old `-ts` stamp.
 
 **The Marketplace's two copies are put together instead** (since 2026-10-11),
-because Pocket writes the same board from the phone: a visit stamped there
+because Pocket wrote the same board from the phone: a visit stamped there
 while the desk held an unsent change used to set that change aside. The
 room keeps a fourth key, `-base`, a fingerprint of what the cloud said at
 the last exchange — a hash of every piece, not a third copy of the board —
@@ -329,7 +331,7 @@ that venue or arena after it. The gatekeeper's `board` gives it the whole board 
 the leads, venues and all, and `edit` lets it add and correct venues, add
 an arena or a page to one, add, change and delete call dates, and change
 the arenas' links and two texts, straight on the board, which the room
-then takes in as it takes Pocket's. The gatekeeper reads the board through
+then takes in as it takes Mark’s Place's leads. The gatekeeper reads the board through
 a copy of the room's own `absorbVenues`, so what it writes is in the
 venues' shape with the venues' own ids. What `edit` has no op for it
 cannot do: delete an arena, change an arena's name, type, tags, weight or

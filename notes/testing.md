@@ -59,4 +59,22 @@ first version, which pressed only `button`s and took the first one each
 time, found nothing: most controls here are delegated, and a modal left
 open covers the rest.
 
+**Mark's Place is driven over http, against a stand-in cloud**
+(2026-10-24). It reads `../topic-atlas/library.js`, so serve the
+repository root (`python3 -m http.server`) and open `/partner-watch/` and
+`/partner-watch/pocket/`. A `page.route` on the project's host answers
+`/auth/v1/token`, `/functions/v1/partner-copier` and, under `/rest/v1/`,
+`partner_sites`, `partner_entries` (the desk pages its list with a `Range`
+header, the phone with `limit` and `offset`; one entry is `id=eq.`, a batch
+`id=in.(…)`, an answer a PATCH), `partner_entry_versions`,
+`partner_watch_log` and `app_state` (`partnerwatch` and `semaphore`, a POST
+to write). Abort every other host, or Open on site goes out to the real
+one. The desk logs in through `#email` and `#pass`, the phone through the
+fields of `#setup`. The desk's lists stand in a drawer that is shut when
+the page opens, so press them with `element.click()` inside the page:
+Playwright's own click waits for them to be visible and times out. The
+crawler above, pointed at both pages so, found nothing; a script for one
+case each found what it did not: an entry that could not be fetched, and
+venues at an address the matching had never seen.
+
 See also [check-the-app-first](check-the-app-first.md).

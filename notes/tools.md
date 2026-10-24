@@ -66,5 +66,12 @@ Two more that neither of those can see (2026-10-07): **every `Hub.expose`
 member checked against its callers** in `bridge.js`, `ledger.js`'s
 `ROOM_STORES` loop and `tools/` — nine were offered and never asked for —
 and **every `--custom-property` and `@keyframes` checked for a use**.
+And one that does both of the first two at once (2026-10-24): **ESLint**,
+which is in the container, with `no-undef` and `no-unused-vars` over every
+script, the browser's globals read from Playwright's own `window` and the
+app's few added (`Hub`, `supabase`, the data files' functions). Mark's
+Place's two pages are not in `index.html` and so in no index or lint here:
+cut their inline scripts and styles out and give them the same pass. It
+found the Semaphore's link form two days after its last button had gone.
 
 See also [working-here](working-here.md) and [pitfalls](pitfalls.md).
