@@ -4,8 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="apple-mobile-web-app-title" content="Mark’s Place">
-<link rel="icon" type="image/png" href="pocket/icon.png">
-<link rel="apple-touch-icon" href="pocket/icon.png">
+<link rel="icon" type="image/png" href="pocket/icon.png?v=3">
+<!-- The query is the icon's version: Safari on the iPad kept giving the page a grey
+     letter after the icon was added, from what it had stored of the page before, and a
+     new address makes it fetch the picture afresh. Raise it when the icon changes. -->
+<link rel="apple-touch-icon" sizes="180x180" href="pocket/icon.png?v=3">
 <title>Mark’s Place</title>
 <!--
   Mark’s Place (Partner Watch until 2026-10-16, then Project Watch, and
