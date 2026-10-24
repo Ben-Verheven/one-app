@@ -61,10 +61,10 @@ const http = (v: unknown) => {
 const linkKey0 = (u: unknown) =>
   String(u ?? "").trim().toLowerCase().replace(/^https?:\/\//, "")
     .replace(/^www\./, "").replace(/[#?].*$/, "").replace(/\/+$/, "");
-const SHARED_HOSTS = /^(?:b2match\.(?:io|com|eu)|(?:.+\.)?(?:europa\.eu|google\.com|linkedin\.com|youtube\.com|github\.com|eventbrite\.[a-z.]+|meetup\.com|lu\.ma|zoom\.us|microsoft\.com|sharepoint\.com|gov\.pl|horizoneuropencpportal\.eu|eurekanetwork\.org)|proposals\.etag\.ee)$/;
+const SHARED_HOSTS = /^(?:b2match\.(?:io|com|eu)|(?:.+\.)?(?:europa\.eu|google\.com|linkedin\.com|youtube\.com|github\.com|eventbrite\.[a-z.]+|meetup\.com|lu\.ma|zoom\.us|microsoft\.com|sharepoint\.com|gov\.pl|horizoneuropencpportal\.eu|eurekanetwork\.org)|epss\.proposals\.ee)$/;
 function siteKey(u: unknown): string {
   const k = linkKey0(u), i = k.indexOf("/");
-  const host = (i < 0 ? k : k.slice(0, i)).replace(/:\d+$/, "");
+  const host = (i < 0 ? k : k.slice(0, i)).replace(/:\d+$/, "").replace(/^proposals\.etag\.ee$/, "epss.proposals.ee");
   if (!SHARED_HOSTS.test(host)) return host;
   const segs = (i < 0 ? "" : k.slice(i + 1)).split("/").filter((x) => x && !/^[a-z]{2}(?:[-_][a-z]{2})?$/.test(x));
   const e = segs.findIndex((x) => /^(?:e|event|events)$/.test(x));

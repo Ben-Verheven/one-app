@@ -871,10 +871,10 @@ var PW_TONES = { blush:'#e19292', terracotta:'#db9973', sand:'#cda364', straw:'#
   rosewood:'#ad6464', rust:'#a96b45', umber:'#9c7334', ochre:'#8d7b32', moss:'#6f8644', fern:'#3c8d6d', teal:'#1b8e88',
   slate:'#218a9f', cobalt:'#4183ae', twilight:'#617ab5', violet:'#7d71b0', plum:'#9469a0', berry:'#a66384' };
 function pwLinkKey(u){ return String(u || '').trim().toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/[#?].*$/, '').replace(/\/+$/, ''); }
-var PW_SHARED_HOSTS = /^(?:b2match\.(?:io|com|eu)|(?:.+\.)?(?:europa\.eu|google\.com|linkedin\.com|youtube\.com|github\.com|eventbrite\.[a-z.]+|meetup\.com|lu\.ma|zoom\.us|microsoft\.com|sharepoint\.com|gov\.pl|horizoneuropencpportal\.eu|eurekanetwork\.org)|proposals\.etag\.ee)$/;
+var PW_SHARED_HOSTS = /^(?:b2match\.(?:io|com|eu)|(?:.+\.)?(?:europa\.eu|google\.com|linkedin\.com|youtube\.com|github\.com|eventbrite\.[a-z.]+|meetup\.com|lu\.ma|zoom\.us|microsoft\.com|sharepoint\.com|gov\.pl|horizoneuropencpportal\.eu|eurekanetwork\.org)|epss\.proposals\.ee)$/;
 function pwSiteKey(u){
   var k = pwLinkKey(u), i = k.indexOf('/');
-  var host = (i < 0 ? k : k.slice(0, i)).replace(/:\d+$/, '');
+  var host = (i < 0 ? k : k.slice(0, i)).replace(/:\d+$/, '').replace(/^proposals\.etag\.ee$/, 'epss.proposals.ee');
   if (!PW_SHARED_HOSTS.test(host)) return host;
   var segs = (i < 0 ? '' : k.slice(i + 1)).split('/').filter(function(x){ return x && !/^[a-z]{2}(?:[-_][a-z]{2})?$/.test(x); });
   var e = segs.findIndex(function(x){ return /^(?:e|event|events)$/.test(x); });

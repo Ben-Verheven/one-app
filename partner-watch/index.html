@@ -1886,10 +1886,10 @@ var TONES = { blush:'#e19292', terracotta:'#db9973', sand:'#cda364', straw:'#bda
 /* linkKey, SHARED_HOSTS and siteKey are the Marketplace's own
    (one-app/rooms/semaphore/semaphore.js), so the two read a site alike. */
 function linkKey(u){ return String(u || '').trim().toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/[#?].*$/, '').replace(/\/+$/, ''); }
-var SHARED_HOSTS = /^(?:b2match\.(?:io|com|eu)|(?:.+\.)?(?:europa\.eu|google\.com|linkedin\.com|youtube\.com|github\.com|eventbrite\.[a-z.]+|meetup\.com|lu\.ma|zoom\.us|microsoft\.com|sharepoint\.com|gov\.pl|horizoneuropencpportal\.eu|eurekanetwork\.org)|proposals\.etag\.ee)$/;
+var SHARED_HOSTS = /^(?:b2match\.(?:io|com|eu)|(?:.+\.)?(?:europa\.eu|google\.com|linkedin\.com|youtube\.com|github\.com|eventbrite\.[a-z.]+|meetup\.com|lu\.ma|zoom\.us|microsoft\.com|sharepoint\.com|gov\.pl|horizoneuropencpportal\.eu|eurekanetwork\.org)|epss\.proposals\.ee)$/;
 function siteKey(u){
   var k = linkKey(u), i = k.indexOf('/');
-  var host = (i < 0 ? k : k.slice(0, i)).replace(/:\d+$/, '');
+  var host = (i < 0 ? k : k.slice(0, i)).replace(/:\d+$/, '').replace(/^proposals\.etag\.ee$/, 'epss.proposals.ee');
   if (!SHARED_HOSTS.test(host)) return host;
   var segs = (i < 0 ? '' : k.slice(i + 1)).split('/').filter(function(x){ return x && !/^[a-z]{2}(?:[-_][a-z]{2})?$/.test(x); });
   var e = segs.findIndex(function(x){ return /^(?:e|event|events)$/.test(x); });

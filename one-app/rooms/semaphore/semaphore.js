@@ -545,11 +545,16 @@ function absorbVenues(s){
    unrelated links turn out to share a stamp, or a venue: the Estonian
    research council's proposals site carries three partnerships' partner
    searches side by side, and the Polish centres' sites several more
-   (found when the Marketplace made venues of them, 2026-10-14). */
-const SHARED_HOSTS=/^(?:b2match\.(?:io|com|eu)|(?:.+\.)?(?:europa\.eu|google\.com|linkedin\.com|youtube\.com|github\.com|eventbrite\.[a-z.]+|meetup\.com|lu\.ma|zoom\.us|microsoft\.com|sharepoint\.com|gov\.pl|horizoneuropencpportal\.eu|eurekanetwork\.org)|proposals\.etag\.ee)$/;
+   (found when the Marketplace made venues of them, 2026-10-14). That site
+   moved from proposals.etag.ee to epss.proposals.ee on 2026-10-23, and the
+   new host was not on the list: Water4All's, Biodiversa+'s and Sustainable
+   Blue's partner searches at the new address read as one site, and became
+   one venue serving all three arenas. The old host is read as the new, so
+   a link to either address of the same partner search is the same site. */
+const SHARED_HOSTS=/^(?:b2match\.(?:io|com|eu)|(?:.+\.)?(?:europa\.eu|google\.com|linkedin\.com|youtube\.com|github\.com|eventbrite\.[a-z.]+|meetup\.com|lu\.ma|zoom\.us|microsoft\.com|sharepoint\.com|gov\.pl|horizoneuropencpportal\.eu|eurekanetwork\.org)|epss\.proposals\.ee)$/;
 function siteKey(u){
   const k=linkKey(u),i=k.indexOf('/');
-  const host=(i<0?k:k.slice(0,i)).replace(/:\d+$/,'');
+  const host=(i<0?k:k.slice(0,i)).replace(/:\d+$/,'').replace(/^proposals\.etag\.ee$/,'epss.proposals.ee');
   if(!SHARED_HOSTS.test(host))return host;
   const segs=(i<0?'':k.slice(i+1)).split('/').filter(x=>x&&!/^[a-z]{2}(?:[-_][a-z]{2})?$/.test(x));
   const e=segs.findIndex(x=>/^(?:e|event|events)$/.test(x));
