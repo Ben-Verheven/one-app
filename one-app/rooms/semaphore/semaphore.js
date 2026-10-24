@@ -2931,7 +2931,7 @@ const drawer={id:null,vid:null,vnew:null,edit:null,hi:null,editing:false,scope:n
    an arena's panel; no arena's id can be that word. */
 const BOARD='leads-board';
 let leadLastArena=null;
-let lkEdit={a:null,l:null},leadEdit={a:null,l:null};
+let leadEdit={a:null,l:null};
 /* the lead whose Complete is asking how it ended, which is about the moment */
 let endAsk={a:null,l:null};
 /* the update being written, and the leads showing their whole history —
@@ -3462,16 +3462,6 @@ function runTip(r){
 function linkHost(lk){
   try{return new URL(lk.url).hostname.replace(/^www\./,'');}catch(e){return '';}
 }
-function lkFormHTML(a,leadId){
-  return '<form class="lkform" data-lka="'+a.id+'"'+(leadId?' data-lkl="'+esc(leadId)+'"':'')+'>'+
-    '<input class="lu" name="url" placeholder="'+(leadId?'https://\u2026 or name@\u2026':'https://\u2026')+'" '+
-      'aria-label="'+(leadId?'Link or email address':'Link address')+'" autocomplete="off">'+
-    '<input class="lx" name="label" placeholder="'+(leadId?'Whose, or what \u2014 optional':'Name it \u2014 optional')+'" '+
-      'aria-label="Link name" autocomplete="off">'+
-    '<button type="submit" class="ib" title="Add" aria-label="Add link">\u2713</button>'+
-    '<button type="button" class="ib" data-act="lkCancel" title="Done" aria-label="Done">\u2715</button>'+
-  '</form>';
-}
 /* ───────── leads ─────────
    The links above are the arena's standing infrastructure: the platform, the
    programme page, the things you sweep. A lead is what the sweeping turned up —
@@ -3906,7 +3896,6 @@ function leadRowHTML(a,l,hit,say){
   const st=stageOf(l);
   const ups=l.updates||[];
   const writing=noteEdit.a===a.id&&noteEdit.l===l.id;
-  const adding=lkEdit.a===a.id&&lkEdit.l===l.id;
   /* Editing happens in the card itself (Mark, 2026-10-06): the card keeps
      its look and every fact on it becomes the field that holds it — the name,
      the match, each link's address and name, each update. It used to be swapped
@@ -3914,7 +3903,7 @@ function leadRowHTML(a,l,hit,say){
   const editing=!done&&leadEdit.a===a.id&&leadEdit.l===l.id;
   /* Complete asks how the lead ended before it closes it (see OUTCOMES) */
   const ending=!done&&endAsk.a===a.id&&endAsk.l===l.id;
-  const open=leadOpen.has(l.id)||writing||adding||editing||ending;
+  const open=leadOpen.has(l.id)||writing||editing||ending;
   const ids='data-id="'+a.id+'" data-l="'+l.id+'"';
   /* the day, set where it is read; the invisible field over the label opens
      the calendar. Short on the quiet line of a card a few hundred pixels
@@ -4379,12 +4368,12 @@ function leadUnfold(lid,pressed){
    only what is inside it — a composer opened or put away, a line or a link
    taken out, more of its history — so the rest of the list stays where it
    is under the pointer, as opening it does. A composer open on another lead
-   is put away by redrawing that lead too; the two forms that belong to no
-   card (a new lead, an arena's own link) still need the room drawn again. */
+   is put away by redrawing that lead too; the form that belongs to no
+   card, a new lead, still needs the room drawn again. */
 function leadRedo(card,set){
   const lid=card&&card.dataset.lid;
-  const loose=leadEdit.l==='new'||(lkEdit.a&&!lkEdit.l);
-  const was=[noteEdit.l,lkEdit.l,leadEdit.l,endAsk.l].filter(k=>k&&k!=='new'&&k!==lid);
+  const loose=leadEdit.l==='new';
+  const was=[noteEdit.l,leadEdit.l,endAsk.l].filter(k=>k&&k!=='new'&&k!==lid);
   closeComposers();if(set)set();
   if(!card||!card.isConnected||loose){repaint();renderDrawer();return;}
   was.forEach(k=>{
@@ -4476,13 +4465,6 @@ function repaint(){
 function restack(){
   closeComposers();save();
   repaint();renderDrawer();applyView();
-}
-/* Focusing a freshly painted composer asks the browser to bring it into view,
-   which scrolls the room out from under the card you are working in. The
-   composer is already where you clicked, so it needs the cursor, not the trip. */
-function focusLk(){
-  const el=document.querySelector('.lkform input[name=url]');
-  if(el)el.focus({preventScroll:true});
 }
 /* The calendar: the Ledger's, drawn again in this room's paint. A
    type="date" field opens the browser's own picker, which cannot be marked
@@ -4597,7 +4579,7 @@ function focusNote(){
   const el=document.querySelector('.noteform textarea[name=text]');
   if(el)el.focus({preventScroll:true});
 }
-function closeComposers(){lkEdit={a:null,l:null};leadEdit={a:null,l:null};
+function closeComposers(){leadEdit={a:null,l:null};
   noteEdit={a:null,l:null};endAsk={a:null,l:null};}
 function renderAll(){
   repaint();
@@ -5279,14 +5261,6 @@ document.addEventListener('click',e=>{
       if(!Array.isArray(l.updates)||!(i>=0&&i<l.updates.length))break;
       l.updates.splice(i,1);
       save();leadUnfold(l.id,cardOf(b));break;}
-    case 'lkAdd':{
-      if(b.dataset.l)leadRedo(cardOf(b),()=>{lkEdit={a:id,l:b.dataset.l};leadOpen.add(b.dataset.l);});
-      else{closeComposers();lkEdit={a:id,l:null};repaint();renderDrawer();}
-      focusLk();break;}
-    case 'lkCancel':{
-      if(lkEdit.l)leadRedo(cardOf(b));
-      else{closeComposers();repaint();renderDrawer();}
-      break;}
     case 'leadSort':{const k=b.dataset.v;
       if(leadSort.k===k)leadSort.rev=!leadSort.rev;else leadSort={k,rev:false};
       renderWall();break;}
@@ -5561,28 +5535,6 @@ function typedAddr(url){
   return url;
 }
 document.addEventListener('submit',e=>{
-  const lf=e.target.closest('.lkform');
-  if(lf){
-    e.preventDefault();
-    const a=arena(lf.dataset.lka);if(!a)return;
-    const url=typedAddr(lf.elements.url.value);
-    const label=lf.elements.label.value.trim();
-    if(!url&&!label){
-      if(lf.dataset.lkl)leadRedo(cardOf(lf));else{closeComposers();repaint();renderDrawer();}
-      return;}
-    const lead=lf.dataset.lkl?(a.leads||[]).find(x=>x.id===lf.dataset.lkl):null;
-    if(lf.dataset.lkl&&!lead)return;
-    if(lead)lead.links.push({id:uid(),label,url});
-    else{
-      a.brokerage=a.brokerage||{notes:'',links:[]};
-      a.brokerage.links=a.brokerage.links||[];
-      a.brokerage.links.push({id:uid(),label,url});
-    }
-    save();
-    if(lead)leadUnfold(lead.id,cardOf(lf));else{repaint();renderDrawer();}
-    focusLk();            /* the composer stays up: these tend to come in twos and threes */
-    return;
-  }
   const nf=e.target.closest('.noteform');
   if(nf){
     e.preventDefault();
@@ -5780,8 +5732,8 @@ document.addEventListener('keydown',e=>{
   if(sortOpen){sortOpen=false;renderBoard();return;}         /* the board's order */
   if(Ask.isOpen()){Ask.shut();return;}                       /* the question */
   if(document.querySelector('.modal.open')){closeModals();return;}   /* a sheet */
-  if(lkEdit.a||leadEdit.a||noteEdit.a||endAsk.a){  /* a composer, put away in its own card */
-    const k=noteEdit.l||lkEdit.l||leadEdit.l||endAsk.l;
+  if(leadEdit.a||noteEdit.a||endAsk.a){  /* a composer, put away in its own card */
+    const k=noteEdit.l||leadEdit.l||endAsk.l;
     leadRedo(k&&k!=='new'&&document.querySelector('#pane-semaphore article.lead[data-lid="'+CSS.escape(k)+'"]'));return;
   }
   if(drawer.vnew){drawer.vnew=null;closeDrawer();return;}    /* a venue being made */

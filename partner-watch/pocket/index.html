@@ -44,7 +44,7 @@
   --label:#FFF; --label2:#A1A1A8; --label3:#8E8E93;
   --sep:#38383A;
   --tint:#0A84FF; --tint-ink:#409CFF;
-  --orange:#FF9F0A; --red:#FF453A; --red-ink:#FF6961; --green:#30D158; --indigo-ink:#8E8CFF; --yellow:#FFD60A;
+  --orange:#FF9F0A; --red-ink:#FF6961; --green:#30D158; --indigo-ink:#8E8CFF; --yellow:#FFD60A;
   --clay:#E0866B;
   --ui:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',Arial,sans-serif;
   --read:ui-serif,'New York','Iowan Old Style',Georgia,serif;
@@ -549,12 +549,6 @@ function sheet(build){
   $('#sheet').classList.add('up');
 }
 function shut(){ $('#sheet').classList.remove('up'); }
-function closeBtn(bar){
-  var x = el('button', 'x', '✕');
-  x.setAttribute('aria-label', 'Close');
-  x.addEventListener('click', shut);
-  bar.appendChild(x);
-}
 
 var fitSaid = 'not on the home screen';
 function topInset(){
@@ -901,7 +895,6 @@ function pwVenueArenas(v){
     .filter(function(a){ return a && !a.frozenAt; });
 }
 function pwTypes(){ return (pwMarket && pwMarket.types) || []; }
-function pwArenaTone(a){ var t = pwTypes().filter(function(t){ return t.id === a.typeId; })[0]; return t ? PW_TONES[t.color] || '' : ''; }
 function pwBlock(v){
   var tys = pwTypes();
   if (!v) return tys.length + 2;

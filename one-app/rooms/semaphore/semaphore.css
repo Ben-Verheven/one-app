@@ -327,17 +327,6 @@
   padding:4px 9px;border-radius:99px;border:1px solid var(--notice-line);color:var(--notice-ink);
   transition:background-color .14s,border-color .14s,color .14s}
 #pane-semaphore .nbtn:hover{background:var(--notice-line);border-color:var(--notice);color:var(--notice-ink)}
-/* the link composer, opened in place wherever links live */
-#pane-semaphore .lkform{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:7px;margin:3px 0 0 8px;
-  background:var(--field);border:1px solid var(--line);border-radius:var(--radius)}
-#pane-semaphore .lkform input{border:1px solid var(--line);border-radius:var(--radius);background:var(--field);color:var(--ink);
-  padding:5px 8px;font-family:var(--body);font-size:13px;min-width:0}
-#pane-semaphore .lkform .lu{flex:1 1 100%;font:12px var(--mono)}
-/* the name box shares its class with a lead's cross (.lx, further down),
-   which is hidden until its row is hovered and 19px tall: the box took both,
-   and the name could be typed into but never seen (found 2026-10-11) */
-#pane-semaphore .lkform .lx{flex:1 1 auto;height:auto;opacity:1}
-#pane-semaphore .lkform .ib{font-size:12px}
 #pane-semaphore .tabn{margin-left:7px;font:9.5px var(--mono);padding:1px 5px;border-radius:99px;
   background:rgba(42,38,32,.16);color:var(--ink)}
 #pane-semaphore .tabn.newn{background:var(--new);color:#191713}
@@ -708,7 +697,6 @@
 #pane-semaphore .lead .lcopy{flex:0 0 auto;min-height:26px;padding:0 8px;border:1px solid transparent;border-radius:6px;
   font:11px var(--sans);letter-spacing:.08em;color:var(--key);transition:color .14s,border-color .14s}
 #pane-semaphore .lead .lcopy:hover{color:var(--key2);border-color:var(--line)}
-#pane-semaphore .lead .lpane .lkform{margin-top:4px}
 /* the button that adds to a box, on the box's own head (Mark, 2026-10-21) */
 #pane-semaphore .lead .lph .lphb{margin-left:auto;padding:3px 8px;text-transform:none;letter-spacing:.06em;font-weight:400}
 #pane-semaphore .lead .lph .lphb.prim{font-weight:600}
@@ -946,7 +934,6 @@
 #pane-semaphore .lfhint{font-family:var(--body);font-size:11px;font-style:italic;color:var(--faint)}
 #pane-semaphore .lfbtn .ib{font-size:12px}
 #pane-semaphore .lfbtn .ib.ok:hover{color:var(--key2)}
-#pane-semaphore .lead .lkform{margin:5px 0 1px}
 /* the working side */
 #pane-semaphore .lnone{margin:12px 8px;font-family:var(--body);font-size:12.5px;font-style:italic;
        color:var(--faint);text-align:center;line-height:1.5}
@@ -1619,9 +1606,6 @@
   background:color-mix(in srgb,var(--tone) 30%,var(--paper));border-left:3px solid var(--tone);border-radius:0 var(--radius) var(--radius) 0}
 #pane-semaphore .cuat{text-align:left;text-decoration:underline;text-decoration-color:transparent;text-underline-offset:3px;transition:text-decoration-color .14s}
 #pane-semaphore .cuat:hover{text-decoration-color:currentColor}
-#pane-semaphore .cudel{width:26px;height:26px;border-radius:var(--radius);font-size:11px;color:var(--faint);
-  transition:color .14s,background-color .14s}
-#pane-semaphore .cudel:hover{color:var(--brok-deep);background:var(--brok-soft)}
 /* Limbo: the venues that are over, kept until each is let go, on a tab of
    their own apart from the three sections (see "Venues: three sections and
    Limbo"). Its cross is always in sight, since taking them off is what

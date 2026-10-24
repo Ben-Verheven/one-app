@@ -9497,8 +9497,7 @@ var Leads=(function(){
     path:path,score:score,due:due,done:done,end:end,endCancel:endCancel,arena:arenaOf,openBox:openBox,
     beginEdit:beginEdit,cancelEdit:cancelEdit,saveEdit:saveEdit,editDrop:editDrop,
     addNote:addNote,noteKey:noteKey,noteDel:noteDel,
-    addLink:addLink,linkKey:linkKey,linkDel:linkDel,copyMail:copyMail,
-    hexOf:hexOf};
+    addLink:addLink,linkKey:linkKey,linkDel:linkDel,copyMail:copyMail};
 })();
 
 /* ══ THE CHECKLIST ═══════════════════════════════════════════════════

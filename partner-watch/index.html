@@ -411,8 +411,6 @@ body.drawer.leads .rd-leads{background:rgba(141,85,69,.12)}
 .pw{padding:0 6px;border-radius:5px;background:var(--lv-soft);color:var(--lv-ink);font-weight:600}
 .pw.lv-own{box-shadow:inset 0 0 0 1px var(--warn-line)}
 .prel{font:10.5px var(--mono);color:var(--faint);padding:0 3px}
-.psrc{background:none;border:0;border-bottom:1px dashed var(--line2);padding:0 1px;margin-left:5px;font:12.5px var(--body);color:var(--muted);cursor:pointer}
-.psrc:hover{color:var(--ink)}
 .against{font:italic 12px var(--body);color:var(--warn-ink);margin-left:6px}
 .arith{margin-left:auto;padding-left:14px;font:11.5px var(--mono);color:var(--faint);white-space:nowrap}
 .arith b{color:var(--ink);font-weight:500}
@@ -451,7 +449,6 @@ button.idea:hover{box-shadow:inset 0 0 0 1px currentColor}
 .nbrs{flex-basis:100%;display:flex;flex-wrap:wrap;gap:4px 12px;margin:3px 0 4px 18px;padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--field)}
 .nbrs .nb{display:inline-flex;align-items:center;gap:3px}
 .sweights .lbl{font-size:13.5px}
-.sweights .steps{display:flex;gap:5px}
 .against.waived{color:var(--muted)}
 button.badge{border:0;cursor:pointer}
 button.badge:hover{box-shadow:inset 0 0 0 1.5px var(--lv)}
@@ -963,7 +960,7 @@ function isNew(e){ return !e.opened_at && !e.verdict; }
    under Weights, and kept on the device. */
 var SWDEF = { title:3, seek:3, proj:2, frame:1, own:1, near:0.5, hops:1 }, SW = Object.assign({}, SWDEF), SWKEY = 'partnerwatch.weights.v2';
 try { Object.assign(SW, JSON.parse(localStorage.getItem(SWKEY) || '{}')); } catch(e){}
-var PARTS = ['title','seek','proj','frame','own'], CAP = 2, WINDOW = 8;
+var CAP = 2, WINDOW = 8;
 var LV = { title:['headline','the headline'], seek:['asks','what they ask for'], proj:['project','the project'], frame:['keywords','keywords and topics'], own:['theirs','who they are, what they bring'] };
 /* how a word of the text answers the words of a term no idea answers to;
    such a line counts half again, as the Topic Atlas counts the words
@@ -3318,8 +3315,6 @@ document.addEventListener('click', function(ev){
   view.chips.splice(+u.dataset.unchip, 1); setQuery(); $('#search').focus();
 });
 $('#sbox').addEventListener('click', function(ev){ if (ev.target === this) $('#search').focus(); });
-/* Pressing the box opens the search's page (Mark, 2026-10-22); leaving
-   it empty goes back to the entry. */
 /* Pressing the box puts the venues and entries away and brings the
    search's page to the front (Mark, 2026-10-22); leaving it with no term
    goes back to the entry. */
