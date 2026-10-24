@@ -1826,7 +1826,7 @@ function openDossier(rid) {
     b += `<div class="sect an-since"><h3>Since the database</h3>` + facts.slice().reverse().map(e => {
       const said = e.detail || e.quote;
       return `<div class="an-fact"><div class="w">${e.kind === "left" ? "<b>Left TU/e.</b> " : ""}${esc(e.text)}</div>
-        <div class="m">accepted ${esc(asOfText(new Date(e.ts).toISOString().slice(0, 10), "day"))}${e.asOf ? ` · happened ${esc(asOfText(e.asOf, e.gran))}` : ""}
+        <div class="m">accepted ${esc(new Date(e.ts).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }))}${e.asOf ? ` · happened ${esc(asOfText(e.asOf, e.gran))}` : ""}
           · <a href="${esc(e.url)}" target="_blank" rel="noopener">${esc(hostOf(e.url))} ↗</a>
           ${said ? `· <button class="ebtn" data-fquote="${e.id}">quote</button>` : ""}
           ${e.kind === "info" && e.detail ? `· <button class="ebtn" data-fdesc="${e.id}" title="Open the description editor with this passage added, for you to reword">add to description</button>` : ""}
