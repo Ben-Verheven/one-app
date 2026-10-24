@@ -2856,16 +2856,18 @@ function sheetParts(e){
      own title heads it instead, where the site gives one. */
   var long = p.long.filter(full), t = long.findIndex(function(f){ return /^title$/i.test(f[0]); });
   var head = take(/^(project (title|name|acronym)|acronym|project)$/i) || (t >= 0 ? String(long.splice(t, 1)[0][1]).trim() : '');
-  return { meta:siteOf(e).name, head:head, sub:e.topic || '', groups:groups,
+  /* What the project answers, in words someone outside Mark's own can
+     read (Mark, 2026-10-23): the venue as the programme, then the topic,
+     each named, the names set apart from what they name; the kind of
+     entry ("Seeks partners") is his sorting and stays off. */
+  return { where:[['Programme', siteOf(e).name], ['Topic', e.topic || '']].filter(function(w){ return w[1]; }), head:head, groups:groups,
            long:long, rest:pool.filter(function(f){ return !(e.topic && /^topics?$/i.test(f[0]) && f[1].trim() === e.topic.trim()); }) };
 }
 function sheetHTML(e){
   var p = sheetParts(e), C = { sheet:'#FAF7F0', field:'#FCFAF3', ink:'#282420', muted:'#5E574B', faint:'#6A6250', key2:'#3A342C', line:'#D5D1CB', line2:'#B7B4AD' };
   var serif = "font-family:Optima,'Palatino Linotype','Book Antiqua',Georgia,serif;", body = "font-family:'Iowan Old Style','Palatino Linotype','Book Antiqua',Georgia,serif;";
-  var mono = "font-family:ui-monospace,'Cascadia Mono','SF Mono',Consolas,Menlo,monospace;";
   var a = function(u, t){ return '<a href="' + u + '" style="color:' + C.key2 + ';text-decoration:underline;text-underline-offset:2px">' + t + '</a>'; };
   var linked = function(t){ return esc(t).replace(/https?:\/\/[^\s<]+/g, function(u){ return a(u, u); }); };
-  var kind = e.kind === 'seeks' ? ['Seeks partners', '#F3DED7', '#8E241B'] : e.kind === 'offers' ? ['Offers expertise', '#E3E0E9', '#33338F'] : null;
   var label = function(t){ return '<div style="' + serif + 'font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:' + C.faint + ';margin-bottom:3px">' + esc(t) + '</div>'; };
   var line = function(l){
     var v = l[1] === 'mail' ? a('mailto:' + esc(l[0]), esc(l[0])) : l[1] === 'web' ? a(esc(/^https?:/i.test(l[0]) ? l[0] : 'https://' + l[0]), esc(l[0].replace(/^https?:\/\/(www\.)?/i, '').replace(/\/$/, ''))) : esc(l[0]);
@@ -2893,10 +2895,10 @@ function sheetHTML(e){
       + String(f[1]).split(/\n\s*\n/).map(function(t){
           return '<p style="' + body + 'margin:0 0 .7em;font-size:' + (i === 0 ? 16 : 15.5) + 'px;line-height:1.6;color:' + C.ink + '">' + linked(t).replace(/\n/g, '<br>') + '</p>'; }).join('') + '</div>'; }).join('');
   return '<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;max-width:700px;border-collapse:collapse;background:' + C.sheet + '"><tr><td style="padding:22px 26px 14px">'
-    + '<div style="line-height:20px">' + (kind ? '<span style="' + serif + 'font-size:11.5px;background:' + kind[1] + ';color:' + kind[2] + ';border-radius:4px;padding:1px 7px;margin-right:8px;white-space:nowrap">' + kind[0] + '</span>' : '')
-    + '<span style="' + mono + 'font-size:12px;color:' + C.faint + '">' + esc(p.meta) + '</span></div>'
-    + (p.head ? '<div style="' + serif + 'font-weight:400;font-size:25px;line-height:1.25;color:' + C.ink + ';margin:7px 0 0">' + esc(p.head) + '</div>' : '')
-    + (p.sub ? '<div style="' + body + 'font-size:14px;color:' + C.muted + ';margin-top:3px">' + esc(p.sub) + '</div>' : '')
+    + '<table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse">' + p.where.map(function(w){
+        return '<tr><td style="vertical-align:baseline;width:92px;padding:1px 0;' + serif + 'font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:' + C.faint + '">' + esc(w[0]) + '</td>'
+          + '<td style="vertical-align:baseline;' + body + 'font-size:14px;line-height:1.45;color:' + C.ink + ';padding:1px 0">' + esc(w[1]) + '</td></tr>'; }).join('') + '</table>'
+    + (p.head ? '<div style="' + serif + 'font-weight:400;font-size:25px;line-height:1.25;color:' + C.ink + ';margin:12px 0 0">' + esc(p.head) + '</div>' : '')
     + facts + texts
     + '<div style="' + body + 'font-size:12px;color:' + C.faint + ';border-top:1px solid ' + C.line + ';margin-top:18px;padding-top:9px;overflow-wrap:anywhere">'
     + sheetLinks(e).map(function(k){ return esc(k[0]) + ': ' + a(esc(k[1]), esc(k[1])); }).join('<br>') + '</div>'
@@ -2904,7 +2906,7 @@ function sheetHTML(e){
 }
 function sheetText(e){
   var p = sheetParts(e);
-  return [p.head, p.meta, p.sub].filter(Boolean).join('\n') + '\n\n'
+  return p.where.map(function(w){ return w[0] + ': ' + w[1]; }).concat(p.head ? ['', p.head] : []).join('\n') + '\n\n'
     + p.groups.map(function(g){ return g.head.toUpperCase() + '\n' + g.lines.map(function(l){ return l[0]; }).join('\n'); }).join('\n\n') + '\n\n'
     + p.rest.map(function(f){ return f[0] + ': ' + f[1]; }).join('\n') + '\n\n'
     + p.long.map(function(f){ return f[0].toUpperCase() + '\n' + f[1]; }).join('\n\n') + '\n\n'
