@@ -361,6 +361,7 @@
      redraws the Ledger's line underneath. */
   var semPane = document.getElementById('pane-semaphore');
   var semCard = semPane && semPane.querySelector('#card');
+  var semGpt = semPane && semPane.querySelector('#gptModal');
   var lendingArena = false;
 
   function lendArena() {
@@ -373,17 +374,32 @@
     lendingArena = false;
     if (semPane) semPane.classList.remove('oa-lending');
   }
-  if (semCard) {
-    new MutationObserver(function () {
-      if (!semCard.classList.contains('open')) returnArena();
-    }).observe(semCard, { attributes: true, attributeFilter: ['class'] });
+  /* Lent is over once neither the drawer nor ChatGPT's box is open, so
+     that the room drawing its drawer again, shut, while the box stands
+     lent does not take the box away with it. */
+  function lentShut() {
+    if (!(semCard && semCard.classList.contains('open')) &&
+        !(semGpt && semGpt.classList.contains('open'))) returnArena();
   }
+  [semCard, semGpt].forEach(function (el) {
+    if (el) new MutationObserver(lentShut).observe(el, { attributes: true, attributeFilter: ['class'] });
+  });
   Hub.onRoom(function () { returnArena(); });
 
   function showArena(aid) { lendDrawer('openArena', aid); }
-  /* A venue stands in the same drawer, and the Call Board's lanes open it
-     there to change what the board cannot (2026-10-24). */
-  function showVenue(vid) { lendDrawer('openVenue', vid); }
+  /* ChatGPT's search for calls has its button on the Call Board, where
+     what it finds lands, and its box here, where the board it changes is
+     kept (2026-10-25): the box is lent as the drawer is. */
+  function showGpt() {
+    var api = Hub.api('semaphore');
+    if (!Hub.pane('semaphore') || !api.gpt) {
+      Hub.note('The Brokerage Semaphore did not start — see the console'); return;
+    }
+    lendArena();
+    try { api.gpt('calls'); }
+    catch (e) { console.error(e); returnArena(); }
+    lentShut();
+  }
   function lendDrawer(verb, id) {
     var api = Hub.api('semaphore');
     if (!Hub.pane('semaphore') || !api[verb]) {
@@ -408,13 +424,14 @@
 
   /* The Call Board draws every arena's calls in tabs of their own after the
      Horizon clusters (Mark, 2026-10-24), each call one row with its arena
-     named on the chip, the venues kept on the board as lanes over them,
-     and it is where whatever a search found is judged, one find at a time.
-     The Semaphore's own Board, its tray and Dispatches went there the same
-     day. It is handed a socket as the Ledger is: reads of the arenas'
-     calls, the venues and the finds waiting, the arenas in the freezer,
-     the verbs that judge a find, mark an arena's new dates seen and thaw
-     one, and the drawer lent over the Board for an arena or a venue. The Board is the lazy room, so the socket
+     named on the chip, and it is where a new arena a search found is
+     judged, one find at a time. The Semaphore's own Board and Dispatches
+     went there the same day; its venues came back to the Semaphore the
+     next. It is handed a socket as the Ledger is: reads of the arenas'
+     calls and the finds waiting, the arenas in the freezer, the verbs that
+     judge a find, mark an arena's new dates seen and thaw one, the drawer
+     lent over the Board for an arena, and ChatGPT's box for its search for
+     calls. The Board is the lazy room, so the socket
      cannot be handed over at load, when there is nothing yet to hand it
      to; the Board says when it has been built, and that is when it gets
      it — whether it was opened or only built for a topic the Ledger asked
@@ -436,37 +453,28 @@
       if (!B.setArenas) return;
       B.setArenas({
         list: function () { return S.calls(); },
-        venues: function () { return S.venues(); },
         finds: function () { return S.finds(); },
         judge: function (key, verb, type, done) { S.judge(key, verb, type, done); },
         seen: function (aid) { S.seen(aid); },
         frozen: function () { return S.frozen ? S.frozen() : []; },
         thaw: function (aid) { if (S.thaw) S.thaw(aid); },
         open: showArena,
-        openVenue: showVenue
+        gpt: showGpt
       });
       refresh();
     });
     Hub.on('semaphore:saved', changed);
     Hub.on('cloud:session', function (on) { if (on && Hub.started('callboard')) refresh(); });
     Hub.onRoom(function (now) { if (now === 'callboard') { changed(); refresh(); } });
-    /* ChatGPT's answer put on the board: the finds it brought are judged
-       on the Call Board, so the app goes there and starts, and says what
-       landed. */
+    /* ChatGPT's answer to the search for calls put on the board: the new
+       arenas it brought are judged on the Call Board, so the app goes there
+       and starts, and says what landed. */
     Hub.on('semaphore:judge', function (said) {
       Hub.ensure('callboard');
       Hub.go('callboard');
       var B = Hub.api('callboard');
       if (B.judge) B.judge();
       if (said) Hub.note(said, 9000);
-    });
-    /* "Open it on the Call Board", in a venue's panel: the app goes there
-       and the venue is picked in its tab, its calls alone under it. */
-    Hub.on('semaphore:showVenue', function (vid) {
-      Hub.ensure('callboard');
-      Hub.go('callboard');
-      var B = Hub.api('callboard');
-      if (B.showVenue) B.showVenue(vid);
     });
   })();
 

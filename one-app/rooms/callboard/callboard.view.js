@@ -16,6 +16,10 @@ Hub.markup('callboard', `
     <!-- what waits to be judged, and a press to begin; while judging, how far
          along (see "judging the finds, one at a time" in callboard.js) -->
     <button class="jpill" id="jpill" hidden></button>
+    <!-- ChatGPT's search for calls (Mark, 2026-10-25): the arenas' call
+         dates, here where they are drawn; the search for brokerage stays in
+         the Semaphore. Its box is the Semaphore's, lent over this room. -->
+    <button class="gptb" id="gptb" title="Write a file for ChatGPT to search the web for the arenas' call dates and new arenas, and read its answer back">ChatGPT</button>
   </div>
   <div class="ovbar" id="ovbar">
     <span class="seglabel">Submission deadline between</span>
@@ -38,10 +42,7 @@ Hub.markup('callboard', `
 <div class="wrap">
   <main class="ledger" id="ledger" aria-label="Topics by destination"></main>
   <aside class="tl-sticky">
-    <!-- The chart's title, and beside it the switch that draws the venues
-         kept on the board as lanes over the calls (Mark, 2026-10-24). -->
-    <div class="tl-title"><span id="tltxt">Calls · chronological</span>
-      <button class="bk" id="bkswitch" aria-pressed="false" title="Draw the venues kept on the board over the calls"><span class="sw" aria-hidden="true"><i></i></span>Brokerage<span class="bkn" id="bkn"></span></button></div>
+    <div class="tl-title"><span id="tltxt">Calls · chronological</span></div>
     <div class="tl" id="tl"></div>
     <!-- On an arena's tab, which has no list, what a search finds in the
          other tabs stands here, under the chart. -->

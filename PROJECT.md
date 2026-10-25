@@ -113,15 +113,14 @@ Hub.api('ledger')          → { PL, projects(), calls(), save,
                                setTopics, setLeads, leadsChanged(),
                                snapshot(why), signedIn(), token() }
 Hub.api('callboard')       → { topics(), openReader(), closeReader(),
-                               setArenas(o), arenasChanged(), judge(),
-                               showVenue(vid) }
+                               setArenas(o), arenasChanged(), judge() }
 Hub.api('semaphore')       → { state(), save(), renderAll(),
                                applyState(obj), leads(),
                                leadVerb(aid, lid, op, val), arenas(), calls(),
-                               venues(), finds(), refreshFinds(cb),
+                               finds(), refreshFinds(cb),
                                judge(key, verb, type, cb), seen(aid),
-                               leadAdd(aid, v), allLeads(),
-                               openArena(aid), openVenue(vid), escape() }
+                               frozen(), thaw(aid), leadAdd(aid, v), allLeads(),
+                               openArena(aid), gpt(kind), escape() }
 Hub.api('atlas')           → { openDossier(), G, state(), applyState(obj) }
 Hub.api('notes')           → { state(), applyState(obj) }
 Hub.api('semaphore-inbox') → { ready(), list(cb), decide(id, status, cb),
@@ -148,11 +147,9 @@ keep hold of one; the bridge's own comment says how. And
 the board, which the bridge answers with a Ledger restore point. And
 **`callboard:ready`**, once, when the lazy Call Board has been built, which
 is when the bridge hands it the Semaphore's board. And **`semaphore:judge`**,
-with a sentence saying what landed, once ChatGPT's answer is on the board,
-which the bridge answers by going to the Call Board and starting to judge
-what it found. And **`semaphore:showVenue`**, with a venue's id, from Open
-it on the Call Board in a venue's panel, which the bridge answers by going
-to the Call Board and picking that venue in its tab.
+with a sentence saying what landed, once the answer to ChatGPT's search for
+calls is on the board, which the bridge answers by going to the Call Board
+and starting to judge the new arenas it found.
 
 What the bridge actually does: turns any researcher's name, written
 anywhere in any room, into a link that opens the Atlas dossier over the
@@ -165,10 +162,10 @@ the Semaphore's own record, a lead can be started there, a lead's arena
 opens in the Semaphore's drawer lent over the Ledger as the dossier is, and a
 lead that became a project opens the Ledger's new project with its name and
 links filled in; hands the Call Board the Semaphore's board as it works it
-out — every arena's calls, the venues still on the board, and the finds
-waiting to be judged, with the verbs that judge them and mark an arena's
-new dates seen — and again on every save there, with the drawer lent over
-the Board for an arena or a venue; draws
+out — every arena's calls and the new arenas waiting to be judged, with
+the verbs that judge them and mark an arena's new dates seen — and again
+on every save there, with the drawer lent over the Board for an arena and
+ChatGPT's box for the search for calls; draws
 the ring of rooms and the title; runs the page-change animation; and syncs
 the Semaphore's board, the Notes room and the Atlas's edits through the
 Supabase credentials the Ledger already holds.
@@ -201,7 +198,6 @@ only the cloud joins them.
 | `pj-restore-v1` | the last three restore points, each a whole Export blob |
 | `pj-projects-v1`, `pj-callinfo-v1` | legacy, read once and migrated |
 | `semaphore.v1` (+`-ts`, `-seen`, `-dirty`, `-sum`, `-base`) | the Semaphore's board: arenas, types and venues, and the new arenas ChatGPT suggested that wait to be judged (`suggested`) |
-| `callboard.brokerage` | whether the Call Board draws the venues kept on the board over its calls, on this device |
 | `notes.v1` (+`-ts`, `-seen`, `-dirty`, `-sum`) | the Notes room: notes, book order, which of the two ways in, the tag ties, the colours chosen for tags, and what is pinned in which book |
 | `hub.room` | which room to open on |
 | `leads-excel-v1` | fingerprints of what the last weekly Excel held, so the next one can mark what is new; the file it wrote is kept as a handle in IndexedDB, `one-app-excel` |
@@ -309,7 +305,7 @@ password of its own (`semaphore-agent`, `atlas-agent`); the Atlas's copy of
 its people is the `atlas_roster` table, seeded from the data file and
 pasted again if the file is ever rebuilt. The app reads a finding when its
 view opens — the Atlas's **News**, and for the Semaphore's the Call Board,
-where every find is judged one at a time (until 2026-10-24 the
+where every new arena is judged one at a time (until 2026-10-24 the
 Semaphore's **Dispatches**) — and answers it in the cloud first, then makes
 it an ordinary edit, so two machines cannot accept the same finding twice.
 In the Semaphore, whatever a search puts on an arena carries `foundAt`
@@ -320,8 +316,9 @@ hand, so the copy in the repository can be ahead of the one running; the
 Semaphore's is written so that the older one still does no harm.
 
 **The Semaphore has one agent**, the task **Marketplace agent**, and it
-is turned off: since 2026-10-23 ChatGPT's search, the room's ChatGPT
-button, does its work. The task is kept, and so is its gatekeeper, so that
+is turned off: since 2026-10-23 ChatGPT's search does its work, since
+2026-10-25 as two searches, each behind a ChatGPT button where what it
+finds lands: the Call Board's for calls, the Semaphore's for brokerage. The task is kept, and so is its gatekeeper, so that
 a session can still read the board through it. Turned on, it runs by
 itself every night at about 01:00 his time, a scan that reaches every
 active arena once a week and every frozen one about once a month, and when
@@ -332,8 +329,9 @@ came after was refused as untrusted. Fired by hand with nothing to do, the
 agent waits. **Its job is to put things on the board** (since 2026-10-15):
 call dates as published, which simply stand there, and venues — brokerage
 events and partner searches where projects in the making and their
-leaders can be found — which land as `new` and wait on the Call Board
-until Mark moves each to Venues, keeps it on the board, or removes it. It keeps what
+leaders can be found — which land as `new` and wait in the Semaphore's
+tab On the board until Mark, in each one's card, moves it to Venues,
+keeps it on the board, or removes it. It keeps what
 is on the board correct, but where a venue stands is his: it deletes only
 a venue still new, its own find gone wrong, and never one he removed
 (the gatekeeper refuses both). Since Mark judges everything it brings, it
@@ -370,7 +368,7 @@ is what you cannot reach.
 ## The four rules
 
 1. **Order in `index.html` is load order.** Hub, then the venue maths
-   (`shell/venues.js`, which three readers share), then data, then each
+   (`shell/venues.js`, which two readers share), then data, then each
    room's view before its script, then the bridge, then boot.
 
 2. **Never `type="module"`.** Modules are fetched and a browser will not
@@ -437,36 +435,31 @@ and the agent's task still say the Marketplace; it is the same room.
 |---|---|
 | the room's scroller — the page itself does not scroll | `#semscroll` |
 | the header: Venues, Leads beside it, Search, Types, + Venue, + Arena, ChatGPT and the cloud chip | `header.top`; `#viewseg`, `#leadsBtn`, `#searchBtn` and its box `#search`, `#semcloud` |
-| ChatGPT's search, opened by ChatGPT: the file out, the answer pasted or chosen, what it would change, Put on the board | `#gptModal` › `#gptText`, `#gptFile`, `#gptSaid`, `#gptPut` |
+| ChatGPT's search, opened by ChatGPT here for brokerage and lent over the Call Board for calls: the file out, the answer pasted or chosen, what it would change, Put on the board | `#gptModal` › `#gptText`, `#gptFile`, `#gptSaid`, `#gptPut` |
 | Venues (the Now page until 2026-10-15), Leads (on the wall) | `#now`, `#wall` |
-| Venues: its three tabs, Arising · Active · Dying, and Limbo's apart; the axis over them, sticky; the heading of each group, Shared then each type; one venue's row, its mark the grip it is dragged by into his own order, its name and the arenas it serves, its strip, and Go, which is the visit (Visited once pressed today) | `.vtabs` › `.vtab`, `.culimbo.vlimbotab`; `.vaxis`; `.vgrp`; `.vgl`, `.vrow.vdragging`; `.vrow` = `.vname` (`.vnmrow` › `.vnm`, `.vchips`) + `.vtrack` + `.vend` (`.vgo`, `.vgo.done`) |
+| Venues: On the board before the three, where what a search found waits new beside what is kept to think about; its three tabs, Arising · Active · Dying, and Limbo's apart; a venue new or changed, and the press that goes through them one card at a time; the axis over them, sticky; the heading of each group, Shared then each type; one venue's row, its mark the grip it is dragged by into his own order, its name and the arenas it serves, its strip, and Go, which is the visit (Visited once pressed today) | `.vtabs` › `.vtab` (`.t-board`), `.culimbo.vlimbotab`; `.vfnd`, `.vchk`; `.vaxis`; `.vgrp`; `.vgl`, `.vrow.vdragging`; `.vrow` = `.vname` (`.vnmrow` › `.vnm`, `.vchips`) + `.vtrack` + `.vend` (`.vgo`, `.vgo.done`) |
 | a venue's window, on Venues and in its panel: the band, its two ends to drag, the event days, the visits, today, due | `.vband` (`.st-new`, `.st-board`, `.st-venues`), `.vh`, `.vmeet` and `.vdia`, `.vtick`, `.vnow`, `.vpulse` |
 | the visit question, at the foot of the room after Go | `#vbar` › `.vask.bar` |
 | Leads: the table, its heading of columns that sort, a step's coloured band, one lead's line, and open, its Who, Links and Updates boxes | `.ltable` › `.lthead` (`.ltc`), `.lgrp` › `.lgh`, `article.lead.wide`; `.lpane`, `.lupdpane` |
 | the types, managed — opened by Types: a type's line and its grip, its arenas one per row, its colour dot, the copy that follows a drag | `#typesModal` › `#tylist` › `.tyblock` (`.tyline` › `.tygrip`, `.tyarenas` › `.tyrow`); `.lcolwrap.tycol`; `.tyghost` |
-| a venue's panel, wider (`#card.vwide`): the Call Board's view of it at its head, its facts two to a row, the rest folded | `.vsnip` (its lane `.sr.lane`, a call `.sr`), `.vfacts` › `.vf`, `.vfolds` › `.vfold` › `.vfh` |
+| a venue's panel, wider (`#card.vwide`): what a search found or changed and what to do with it, the Call Board's view of it under that, its facts two to a row, the rest folded; going through what was found, the band over it all | `.vfound` (`.vfch`), `.vsnip` (its lane `.sr.lane`, a call `.sr`), `.vfacts` › `.vf`, `.vfolds` › `.vfold` › `.vfh`; `.vwalk` |
 | the drawer, holding an arena or a venue; an arena's venues in it; a link's cross, and the press that makes a brokerage link a venue; where a venue stands, with its three buttons, or in Venues the section it stands in, chosen by hand if he likes (`.vphseg`); a venue's ask to the agent | `#card` and its `.scrim`; `.avlist` › `.avrow`; `.ldel`, `.lmake`; `.vplace`; `.vagent` |
 
 **The Call Board** — the tabs are the bar, `#hdr` › `.tabs`, two rows in
 `.tgrid`, each named at its left by a `.tglab`: Horizon's clusters on the
 first `.trow`, the arenas' tabs (JU, COFUND, COPROG and OTHER) and All
 calls (`.trow.tall`) on the second; the controls under it are `.hd-controls`
-and `#ovbar`; the chronological chart is `#tl` inside `.tl-sticky`, on the
+and `#ovbar`, ChatGPT's search for calls `#gptb` among them; the chronological chart is `#tl` inside `.tl-sticky`, on the
 right of the topic list on a Horizon tab and alone on an arena's tab, with
 what a search finds elsewhere under it in `#tlaway`; a topic opens in
 `#reader`. On an arena's tab a call is a row, `.arow`, whose chip,
 `.achip`, names the arena, the first of each arena's rows `.afirst`, and
 one with a new date glows (`.fresh`) until its `.seen` is pressed; an arena
 opened there is `.aopen`, and where a tab holds several types each is named
-over its arenas by a `.tyh`. Beside the chart's title, `.tl-title`, the
-switch `#bkswitch`, with how many the tab holds in `#bkn`, draws the
-venues kept on the board over the calls: the heading `.bhead`, a lane
-each, `.blane` (its band `.vb`, event days `.vd`), the one picked `.on`
-with its `.vcard`, and its pill `.vpill` in the controls. Under a tab's
+over its arenas by a `.tyh`. Under a tab's
 calls stands its freezer, `.frz`, the arenas put away as `.frzchip`s. What waits to be judged is counted on `#jpill` and dotted on
-its tab (`.fd`); while judging, the find stands dashed in its tab, a
-venue's lane or an arena's row `.ghost`, and the bar along the foot of the
-room is `#jbar`. The decisions behind them are in
+its tab (`.fd`); while judging, the new arena stands dashed in its tab, a
+row `.ghost`, and the bar along the foot of the room is `#jbar`. The decisions behind them are in
 [call-board](notes/call-board.md).
 
 **The Atlas** — `#app` › `header` carries `#tab-search`, `#tab-browse`,
@@ -546,7 +539,7 @@ one-app/
     shell.css         the chrome: ribbon, panes, each room's tuning
     hub.js            the scoped document and window; mounting; the bus
     venues.js         the venue maths: a venue's window, a site, a call's runs —
-                      read by the Semaphore, the Call Board and Mark's Place
+                      read by the Semaphore and Mark's Place
     bridge.js         everything the rooms say to each other
     boot.js           says out loud when a room fails to load
 
@@ -650,10 +643,9 @@ build-step split mechanical if it is ever wanted; it is not wanted yet,
 and the indexes have taken most of the reason for wanting it away.
 
 **`semaphore.js` is still one file, logic and DOM together.** The venue
-maths three readers need — `vWin()`, `vState()`, `vHeat()`, the site's
-reading and `callRuns()` — went to `shell/venues.js` on 2026-10-24, when
-the Call Board began to draw venues and Mark's Place stopped keeping a
-copy. What the room alone uses stays beside its rendering: `vPhase()`,
+maths it shares with Mark's Place — `vWin()`, `vState()`, `vHeat()`, the
+site's reading and `callRuns()` — went to `shell/venues.js` on 2026-10-24,
+when Mark's Place stopped keeping a copy. What the room alone uses stays beside its rendering: `vPhase()`,
 which knows Mark's Place's sites, the rhythm (`vEvery()`), and reading the
 board itself (`tidyVenue`, `absorbVenues`). The gatekeeper keeps its own
 copy of those last two and of the site's reading, since it runs in the

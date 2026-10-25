@@ -227,7 +227,6 @@ function tabOfType(name){
 function readArenas(){
   let list=[];
   try{ list=(ARENA_SRC&&ARENA_SRC.list())||[]; }catch(e){ console.error(e); list=[]; }
-  ARENA_BY_ID=new Map(list.map(a=>[a.id,a]));
   try{ FROZEN=(ARENA_SRC&&ARENA_SRC.frozen&&ARENA_SRC.frozen())||[]; }catch(e){ console.error(e); FROZEN=[]; }
   const before=new Map(APAGES.map(p=>[p.key,p.state]));
   APAGES=TYPE_TABS.map(t=>({key:t.key,label:t.full,full:t.full,clusterColor:t.color,arena:true,unit:'calls',
@@ -277,7 +276,7 @@ function buildArenaTabs(){
 }
 /* the socket the bridge fills, and again on every change on the other side */
 function arenasArrived(){
-  readArenas(); readVenues(); readFinds();
+  readArenas(); readFinds();
   if(JUDGE.on) return showFind();
   paintJudge();
   if(pendingTab){ const k=pendingTab; pendingTab=null; if(APAGES.some(p=>p.key===k&&p.tabEl)) return selectArenaTab(k); }
@@ -287,11 +286,10 @@ function arenasArrived(){
     P=p; markTab(p.tabEl); render();
   } else if(MODE==='overview') renderOverview();
   else {
-    /* a cluster's sheet stays as it is; only the chart, where the lanes
-       are, is drawn again */
+    /* a cluster's sheet stays as it is; only the chart, where its
+       freezer stands, is drawn again */
     markTab(htabEls[PAGES.indexOf(P)]);
-    if(P.state.venue&&!venueById(P.state.venue)){ P.state.venue=null; P.state.sel.clear(); applyFilters(); paintPills(); showCard([]); }
-    buildTimeline(); paintTimeline(); paintLanes();
+    buildTimeline(); paintTimeline();
   }
 }
 
@@ -325,7 +323,6 @@ function clearArenaList(){
   document.getElementById('ledger').innerHTML=''; topicEls=[];
   elsewhereEl=document.getElementById('tlaway');
 }
-const PLACE_WORDS={new:'new, waiting to be judged',board:'kept on the board',venues:'in Venues'};
 /* Seen, on a row whose call has a new date (see arenaRow) */
 function seenButton(c){
   const b=document.createElement('button'); b.className='seen'; b.textContent='Seen ✓';
@@ -358,16 +355,17 @@ function arenaEmptyRow(a){
   return r;
 }
 /* Pressing a call or its arena opens the whole arena where it stands
-   (Mark, 2026-10-24): its type, leads and venues, its links, its About and
-   Brokerage texts, every call under one another with its dates standing
-   on its bar, and the venues serving it, drawn as lanes; the other arenas
-   dim. The dates were written out in words beside each call at first,
-   while the bars said nothing (2026-10-25). Chosen
-   over opening it alone, the others put away, which lost its place among
-   them. The texts stop at three lines; all of it is in its panel. */
+   (Mark, 2026-10-24): its type, open leads, its links, its About text and
+   every call under one another with its dates standing on its bar; the
+   other arenas dim. The dates were written out in words beside each call
+   at first, while the bars said nothing (2026-10-25). Chosen over opening
+   it alone, the others put away, which lost its place among them. Its
+   brokerage, the text and the venues serving it drawn as lanes, stood here
+   too until the venues went back to the Semaphore (2026-10-25); its panel
+   there has both. The text stops at three lines; all of it is in its
+   panel. */
 function openArena(id){
   P.state.openArena=P.state.openArena===id?null:id;
-  if(P.state.venue){ P.state.venue=null; P.state.sel.clear(); paintPills(); paintLanes(); }
   buildTimeline(); paintTimeline(); applyFilters();
   const b=document.querySelector('#tl .aopen');
   if(b){ const top=b.getBoundingClientRect().top; if(top<120||top>window.innerHeight-200) b.scrollIntoView({block:'center'}); }
@@ -376,17 +374,17 @@ function arenaOpenBlock(a,calls){
   const blk=document.createElement('div'); blk.className='aopen'; blk.dataset.arena=a.id;
   blk.dataset.search=(a.name+' '+calls.map(c=>c.run.names.join(' ')).join(' ')).toLowerCase();
   const tone=calls[0]||{color:'#E6DDC9',ink:'#5C5140'};
-  const vs=a.venues||[], web=u=>/^https?:\/\//i.test(u||'');
+  const web=u=>/^https?:\/\//i.test(u||'');
   const links=(a.links||[]).filter(l=>web(l.url)).slice(0,4)
     .map(l=>`<a href="${attr(l.url)}" target="_blank" rel="noopener" title="${attr(l.url)}">${esc(l.label||hostOf(l.url))} ↗</a>`).join('');
   const fresh=calls.some(c=>c.run.fresh);
   blk.innerHTML=`<div class="aoh">
       <span class="cchip achip" style="background:${tone.color};color:${calls[0]?fg(calls[0]):'var(--ink2)'}">${esc(a.name)}</span>
       <span class="aoty">${esc(a.type||'')}</span>
-      <span class="aomt">${a.leads} open lead${a.leads===1?'':'s'} · ${vs.length} venue${vs.length===1?'':'s'}</span>
+      <span class="aomt">${a.leads} open lead${a.leads===1?'':'s'}</span>
       <span class="aosp"></span>${links?`<span class="aoln">${links}</span>`:''}
       <span class="aobt"></span></div>
-    ${a.about||a.brokerage?`<div class="aotx">${a.about?`<div><h4>About</h4><p>${esc(a.about)}</p></div>`:''}${a.brokerage?`<div><h4>Brokerage</h4><p>${esc(a.brokerage)}</p></div>`:''}</div>`:''}`;
+    ${a.about?`<div class="aotx"><div><h4>About</h4><p>${esc(a.about)}</p></div></div>`:''}`;
   const bt=blk.querySelector('.aobt');
   if(fresh&&calls[0]) bt.appendChild(seenButton(calls[0]));
   const panel=document.createElement('button'); panel.className='vbtn dark'; panel.textContent='Its panel ▸';
@@ -403,18 +401,6 @@ function arenaOpenBlock(a,calls){
     blk.appendChild(r);
   });
   if(!calls.length) blk.insertAdjacentHTML('beforeend','<div class="aonone">No call dates on the board yet.</div>');
-  if(vs.length){
-    blk.insertAdjacentHTML('beforeend','<div class="aovh">Its venues</div>');
-    vs.forEach(v=>{
-      const r=document.createElement('div'); r.className='blane aov'; r.dataset.venue=v.id; r.tabIndex=0; r.setAttribute('role','button');
-      r.title=v.name+' — '+VM.vDateSay(v)+' — its card';
-      r.innerHTML=`<span class="lbl"><span class="aocn"><i class="dia"></i>${esc(v.name)}</span><span class="aocd aopl">${PLACE_WORDS[v.place]||''}</span></span><span class="track">${bandMarks(v)}</span>`;
-      const card=()=>{ if(ARENA_SRC&&ARENA_SRC.openVenue) ARENA_SRC.openVenue(v.id); };
-      r.addEventListener('click',card);
-      r.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();card();}});
-      blk.appendChild(r);
-    });
-  }
   return blk;
 }
 /* The arenas in their order, each type's under its name when the tab holds
@@ -437,43 +423,13 @@ function buildArenaRows(rowsEl){
   });
 }
 
-/* ---------- brokerage, over the calls ----------
-   The venues kept on the Semaphore's board are drawn over the calls they
-   serve, a lane each, behind the Brokerage switch beside the chart's title
-   (Mark, 2026-10-24), the switch kept per device. Chosen over drawing the
-   venues on the calls' own rows, which put two kinds of thing on one line.
-   They stood under the calls at first, out of sight below a long tab, and
-   moved up the same day.
-   A venue in Venues is not drawn: the board holds what still waits for
-   him, and Venues is where he follows the rest. Brass, so a venue never
-   reads as a call; its window shaded by how much goes on in it, its event
-   days a diamond, an open end faded with an arrow, as on the Semaphore.
-
-   A cluster or mission tab is its own arena, so the venues of the Pillar 2
-   arena that is that cluster or mission stand in its tab; an arena of any
-   other type has its venues in its type's tab, and a venue serving arenas
-   in several tabs stands in each.
-
-   One press on a lane lights the calls it is for and folds the rest away
-   (see paintTimeline), and the list keeps only their topics: the calls of
-   its arenas in that tab whose last deadline is still ahead when the
-   venue opens, since a brokerage event is for proposals still to be
-   written, or all of them where none is. Its pill in the search row takes
-   it off again. The lane picked shows Its card, which opens the
-   Semaphore's panel lent over the room (2026-10-25). A second press within
-   a moment did that until then, and was missed more often than not: too
-   slow a second press took the venue off instead, and nothing on screen
-   said the card was there. */
-const VM=VenueMaths;
-const BK_LS='callboard.brokerage';
-let BK=(()=>{try{return localStorage.getItem(BK_LS)==='1';}catch(e){return false;}})();
-const BRASS_RGB='154,123,58';
-let VENUES=[], ARENA_BY_ID=new Map();
-function readVenues(){
-  let list=[];
-  try{ list=(ARENA_SRC&&ARENA_SRC.venues&&ARENA_SRC.venues())||[]; }catch(e){ console.error(e); list=[]; }
-  VENUES=list;
-}
+/* ---------- the tab an arena belongs to ----------
+   A new arena waiting to be judged and an arena in the freezer stand in
+   the tab of its type, and a Pillar 2 arena in the cluster or mission tab
+   that it is. The venues serving the arenas stood in those tabs too, as
+   lanes over the calls behind a Brokerage switch (2026-10-24), until Mark
+   sent them back to the Semaphore (2026-10-25): the Call Board is for
+   calls, and a venue's card there still shows the calls it is for. */
 /* the Horizon page a Pillar 2 arena is, by its name: Cluster 4 is CL4, the
    missions and the horizontal activities their own pages */
 function pageOfArena(name){
@@ -488,155 +444,23 @@ function arenaTabKey(name,type){
   if(HORIZON_TYPE.test(type||'')){ const p=pageOfArena(name); return p?p.key:null; }
   return tabOfType(type).key;
 }
-function venueTabs(v){
-  const out=new Set();
-  (v.arenas||[]).forEach(id=>{ const a=ARENA_BY_ID.get(id); if(a){ const k=arenaTabKey(a.name,a.type); if(k) out.add(k); } });
-  return out;
-}
 const tabOrder=k=>{ const i=PAGES.findIndex(p=>p.key===k); if(i>=0) return i;
   const j=TYPE_TABS.findIndex(t=>t.key===k); return j>=0?PAGES.length+j:999; };
-const venueById=id=>VENUES.find(v=>v.id===id)||null;
-const vStart=v=>{ const w=VM.vWin(v); return w?(w.from!==null?w.from:w.ms!==null?w.ms:w.to):9e15; };
-/* the calls of this tab a venue is for (see above) */
-function venueCalls(v){
-  if(MODE==='overview'||!venueTabs(v).has(P.key)) return [];
-  const own=P.arena?P.calls.filter(c=>(v.arenas||[]).includes(c.arenaId)):P.calls;
-  const w=VM.vWin(v), from=w?vStart(v):VM.T(todayISO());
-  const last=c=>c.d2||c.d1||c.annEnd||c.opening;
-  const hit=own.filter(c=>{ const l=last(c); return l&&VM.T(l)>=from; });
-  return (hit.length?hit:own).map(c=>c.id);
-}
-/* the lanes of this tab: the venues kept on the board, and the one being
-   judged when it is one of this tab's, or of none */
-function lanesHere(){
-  const f=judgedFind();
-  return VENUES.filter(v=>(v.place==='board'&&venueTabs(v).has(P.key))||(f&&f.kind==='venue'&&f.id===v.id&&(!f.tab||f.tab===P.key)))
-    .sort((x,y)=>vStart(x)-vStart(y)||x.name.localeCompare(y.name));
-}
-function bandMarks(v){
-  const w=VM.vWin(v), t0=+T0, t1=+T1, now=VM.T(todayISO());
-  const at=t=>(t-t0)/(t1-t0)*100, clip=x=>Math.max(0,Math.min(100,x));
-  if(!w) return `<span class="vund" style="left:${clip(at(now)).toFixed(2)}%">not dated yet</span>`;
-  const from=w.from===null?t0:Math.max(t0,w.from);
-  const to=w.to===null?Math.min(t1,Math.max(now,w.from===null?now:w.from)+VM.OPEN_RUN*VM.DAY):Math.min(t1,w.to+VM.DAY);
-  if(to<t0||from>t1) return `<span class="vund" style="left:${from>t1?'auto;right:0':'0'}">${from>t1?'after':'before'} the chart</span>`;
-  const L=clip(at(from)), R=clip(at(to)), past=w.to!==null&&w.to+VM.DAY<now;
-  let h=`<span class="vb${w.to===null?' open':''}${w.from===null?' openl':''}${w.season?' season':''}${past?' past':''}" style="left:${L.toFixed(2)}%;width:${Math.max(R-L,.5).toFixed(2)}%;background:${VM.heatBG(v,from,to,past?VM.PLACE_RGB.gone:BRASS_RGB)}"></span>`;
-  if(w.to===null&&R<99) h+=`<span class="vrun" style="left:${R.toFixed(2)}%" aria-hidden="true">→</span>`;
-  if(w.ms!==null){
-    if(w.me>w.ms){ const a=clip(at(w.ms)), b=clip(at(w.me+VM.DAY)); h+=`<span class="vmeet" style="left:${a.toFixed(2)}%;width:${Math.max(b-a,.4).toFixed(2)}%"></span>`; }
-    const x=at(w.ms+VM.DAY/2);
-    if(x>=0&&x<=100) h+=`<span class="vd${w.unc?' unc':''}${past?' past':''}" style="left:${x.toFixed(2)}%"></span>`;
-  }
-  return h;
-}
-/* whether the lanes are drawn in this tab: the switch on, or a venue of
-   this tab being judged */
-function lanesShown(){
-  if(MODE==='overview') return false;
-  const f=judgedFind();
-  return BK||!!(f&&f.kind==='venue'&&(!f.tab||f.tab===P.key));
-}
-function buildLanes(rowsEl){
-  if(!lanesShown()) return;
-  const vs=lanesHere();
-  rowsEl.insertAdjacentHTML('beforeend','<div class="bhead">Brokerage <span>— kept on the board · press one for only its calls</span></div>');
-  if(!vs.length) rowsEl.insertAdjacentHTML('beforeend','<div class="bnone">No venue is kept on the board for this tab.</div>');
-  vs.forEach(v=>{
-    const ghost=v.place==='new';
-    const r=document.createElement('div'); r.className='blane'+(ghost?' ghost':''); r.dataset.venue=v.id;
-    r.title=v.name+' — '+VM.vDateSay(v)+(ghost?' — not on the board yet':'');
-    r.innerHTML=`<span class="lbl"><i class="dia"></i><span class="nm">${esc(v.name)}</span></span><span class="track">${bandMarks(v)}${ghost?'<span class="notyet">not on the board yet</span>':''}</span>`;
-    if(!ghost){
-      r.tabIndex=0; r.setAttribute('role','button');
-      r.addEventListener('click',()=>pickVenue(v.id));
-      r.addEventListener('keydown',e=>{if(e.target===r&&(e.key==='Enter'||e.key===' ')){e.preventDefault();pickVenue(v.id);}});
-      const card=document.createElement('button'); card.className='vbtn vcard'; card.textContent='Its card ▸';
-      card.title='Everything about '+v.name+', where it is moved, removed and its window set';
-      card.addEventListener('click',e=>{ e.stopPropagation(); if(ARENA_SRC&&ARENA_SRC.openVenue) ARENA_SRC.openVenue(v.id); });
-      r.querySelector('.lbl').appendChild(card);
-    }
-    rowsEl.appendChild(r);
-  });
-  rowsEl.insertAdjacentHTML('beforeend','<div class="bend"></div>');
-}
-function paintLanes(){
-  document.querySelectorAll('#tl .blane').forEach(r=>r.classList.toggle('on',r.dataset.venue===P.state.venue));
-}
-function setBK(on){
-  BK=!!on; try{ localStorage.setItem(BK_LS,BK?'1':'0'); }catch(e){}
-  const b=document.getElementById('bkswitch'); b.setAttribute('aria-pressed',String(BK));
-  if(!BK&&P.state.venue&&!(judgedFind()&&judgedFind().id===P.state.venue)) unpickVenue();
-  if(MODE!=='overview'){ buildTimeline(); paintTimeline(); paintLanes(); }
-}
-document.getElementById('bkswitch').addEventListener('click',()=>setBK(!BK));
-document.getElementById('bkswitch').setAttribute('aria-pressed',String(BK));
-/* A venue picked: its calls are the chart's selection, so the list, the
-   dimming and the counts follow as they do for calls picked by hand. */
-function pickVenue(id,keep){
-  const st=P.state, v=venueById(id);
-  if(!v) return;
-  if(st.venue===id&&!keep) return unpickVenue();
-  st.venue=id; st.sel=new Set(venueCalls(v)); st.selTopicCall=null;
-  topicEls.forEach(t=>{t.row.classList.remove('sel');t.det.classList.remove('open');});
-  if(st.openArena){ st.openArena=null; buildTimeline(); }
-  applyFilters(); paintTimeline(); paintPills(); showCard([...st.sel]); paintLanes();
-}
-/* "Open it on the Call Board" in a venue's panel: its first tab, or the
-   one open when it stands there too, the lanes drawn, and it picked */
-function showVenue(id){
-  readVenues();
-  const v=venueById(id); if(!v||v.place!=='board') return;
-  const ks=[...venueTabs(v)].sort((a,b)=>tabOrder(a)-tabOrder(b));
-  if(!ks.length) return;
-  const k=MODE!=='overview'&&ks.includes(P.key)?P.key:ks[0], i=PAGES.findIndex(p=>p.key===k);
-  if(!BK) setBK(true);
-  if(i>=0) selectPage(i); else selectArenaTab(k);
-  pickVenue(id,true);
-  const lane=document.querySelector('#tl .blane[data-venue="'+CSS.escape(id)+'"]');
-  if(lane) lane.scrollIntoView({block:'nearest'});
-}
-function unpickVenue(){
-  const st=P.state; if(!st.venue) return;
-  st.venue=null; st.sel.clear();
-  applyFilters(); paintTimeline(); paintPills(); showCard([]); paintLanes();
-}
-const shortCalls=ids=>{
-  const cs=ids.map(id=>P.callById[id]).filter(Boolean), nm=c=>c.arena?c.name:c.short;
-  const names=[...new Set(cs.map(nm))];
-  return names.slice(0,4).map(n=>'<b>'+esc(n)+'</b>').join(' · ')+(names.length>4?' and '+(names.length-4)+' more':'');
-};
-/* What the bar says of a venue beside its name and dates: the calls it is
-   for and the arenas it serves. Its window and event day were said again
-   here, a third time beside the name and the lane, and went (2026-10-25). */
-function venueFacts(v,ids){
-  const arenas=(v.arenas||[]).map(id=>ARENA_BY_ID.get(id)).filter(Boolean).map(a=>a.name);
-  return [ids.length?`<span>for ${shortCalls(ids)}</span>`:'',
-    arenas.length?`<span>arena${arenas.length===1?'':'s'} <b>${esc(arenas.join(', '))}</b></span>`:'<span>serves no arena yet</span>'].join('');
-}
-/* Remove at a second press, as a link's cross is in the Semaphore: the
-   first turns the word into the question */
-function armed(b){
-  if(b.classList.contains('armed')) return true;
-  b.classList.add('armed'); const was=b.textContent; b.textContent='Sure?';
-  setTimeout(()=>{ if(b.isConnected){ b.classList.remove('armed'); b.textContent=was; } },3000);
-  return false;
-}
-
 /* ---------- judging the finds, one at a time ----------
-   Whatever a search found waits here to be judged before it lands (Mark,
-   2026-10-24): a new venue, and a new arena suggested, by ChatGPT's search
-   or the agent. The Semaphore's tray did the venues' part until then, one
-   list over its whole board, and its Dispatches the arenas'. Here the
-   board goes to the tab where a find belongs and draws it in place with a
-   dashed edge, not on the board yet, its calls lit so its place among them
-   is seen, and a bar at the foot says what it is and asks: a venue to
-   Venues, kept on the board or removed; an arena added, in the type chosen
-   there, or not. Then the next, in the order of the tabs. Stop leaves the
-   rest waiting, counted on the pill in the search row, which starts again.
-   Dates are not judged: a new or changed one goes straight on and glows on
-   its call's row until Seen (see arenaRow). A call text, the third kind of
-   find drawn, comes with the search for official call texts. */
+   Whatever a search for calls found waits here to be judged before it
+   lands (Mark, 2026-10-24): a new arena suggested, by ChatGPT's search
+   for calls or the agent. The Semaphore's Dispatches did this until then.
+   Here the board goes to the tab where a find belongs and draws it in
+   place with a dashed edge, not on the board yet, and a bar at the foot
+   says what it is and asks: added, in the type chosen there, or not. Then
+   the next, in the order of the tabs. Stop leaves the rest waiting,
+   counted on the pill in the search row, which starts again. New venues
+   were judged here too, drawn on their lanes, until they went back to the
+   Semaphore with the lanes (2026-10-25), where each is put to Mark in its
+   own card. Dates are not judged: a new or changed one goes straight on
+   and glows on its call's row until Seen (see arenaRow). A call text, the
+   third kind of find drawn, comes with the search for official call
+   texts. */
 const JUDGE={on:false,key:null,pos:0,done:0,types:{}};
 let FINDS=[], FTYPES=[];
 function readFinds(){
@@ -644,15 +468,10 @@ function readFinds(){
   try{ o=ARENA_SRC&&ARENA_SRC.finds&&ARENA_SRC.finds(); }catch(e){ console.error(e); }
   o=o||{finds:[],types:[]};
   FTYPES=o.types||[];
-  FINDS=(o.finds||[]).map(f=>{
-    if(f.kind==='venue'){
-      const v=venueById(f.id); if(!v) return null;
-      const ks=[...venueTabs(v)].sort((a,b)=>tabOrder(a)-tabOrder(b));
-      return Object.assign({},f,{v,name:v.name,tab:ks[0]||null,at:vStart(v)});
-    }
+  FINDS=(o.finds||[]).filter(f=>f.kind==='arena').map(f=>{
     const type=JUDGE.types[f.key]||f.type, t=FTYPES.find(x=>x.id===type);
-    return Object.assign({},f,{type,tab:t?arenaTabKey(f.name,t.name):null,at:9e15});
-  }).filter(Boolean).sort((x,y)=>tabOrder(x.tab)-tabOrder(y.tab)||x.at-y.at||x.name.localeCompare(y.name));
+    return Object.assign({},f,{type,tab:t?arenaTabKey(f.name,t.name):null});
+  }).sort((x,y)=>tabOrder(x.tab)-tabOrder(y.tab)||x.name.localeCompare(y.name));
 }
 /* the find on the bar: the one named, or, once that one is judged, the one
    now standing in its place, and after the last the first again */
@@ -668,39 +487,23 @@ function startJudging(){
 }
 function stopJudging(){
   JUDGE.on=false; JUDGE.key=null;
-  clearGhost(null);
   if(MODE==='overview') renderOverview(); else render();
   paintJudge();
-}
-/* The venue last put to Mark is picked in its tab while he judges it, and
-   no longer once he has moved on from it, or stopped. */
-let lastGhost=null;
-function clearGhost(keep){
-  if(!lastGhost||lastGhost.id===keep) return;
-  const p=allPages().find(x=>x.key===lastGhost.tab);
-  if(p&&p.state.venue===lastGhost.id){ p.state.venue=null; p.state.sel.clear(); }
-  lastGhost=null;
 }
 function showFind(){
   const f=judgedFind();
   if(!f){
     if(JUDGE.on&&JUDGE.done) Hub.note('Everything found is judged.',4000);
-    JUDGE.on=false; JUDGE.key=null; clearGhost(null);
+    JUDGE.on=false; JUDGE.key=null;
     if(MODE==='overview') renderOverview(); else render(); paintJudge(); return;
   }
   JUDGE.key=f.key; JUDGE.pos=FINDS.indexOf(f);
-  clearGhost(f.id);
   const tab=f.tab||(MODE==='overview'?PAGES[0].key:P.key);
   if(tab!==P.key||MODE==='overview'){
     const i=PAGES.findIndex(p=>p.key===tab);
     if(i>=0) selectPage(i); else { buildArenaTabs(); selectArenaTab(tab); }
   } else render();
-  if(f.kind==='venue'){ pickVenue(f.id,true); lastGhost={id:f.id,tab:P.key}; }
   paintJudge();
-  /* the chart scrolls on its own, and the lanes stand under every call:
-     the find's lane is brought into sight above the bar */
-  const g=document.querySelector('#tl .blane.ghost'), sc=document.querySelector('.tl-sticky');
-  if(g&&sc){ const d=g.getBoundingClientRect().bottom-sc.getBoundingClientRect().bottom+24; if(d>0) sc.scrollTop+=d; }
 }
 function stepFind(d){
   if(!FINDS.length) return;
@@ -732,27 +535,14 @@ function paintJudge(){
   bar.hidden=false;
   const total=JUDGE.done+n, cur=JUDGE.done+JUDGE.pos;
   const dots=Array.from({length:Math.min(total,40)},(_,i)=>`<i class="${i<JUDGE.done?'done':i===cur?'cur':''}"></i>`).join('');
-  let mid='', btns='';
-  if(f.kind==='venue'){
-    const v=f.v, web=p=>p&&/^https?:\/\//i.test(p.url||'')?p:null;
-    const src=web((v.pages||[]).find(p=>/source/i.test(p.label||'')))||web({url:v.url});
-    mid=`<span class="jtag">New venue</span>
-      <div class="jname">${esc(v.name)} <span>${esc(VM.vDateSay(v))}</span></div>
-      <div class="jfor">${venueFacts(v,venueCalls(v))}</div>
-      ${v.note||src?`<div class="jev">${v.note?'“'+esc(v.note)+'”':''}${src?`<a href="${attr(src.url)}" target="_blank" rel="noopener">${esc(hostOf(src.url))} ↗</a>`:''}</div>`:''}`;
-    btns=`<button class="jb pri" data-v="venues" title="Move it to Venues, where it comes round for visits">→ Venues</button>
-      <button class="jb" data-v="board" title="Leave it on the board to think about">Keep on the board</button>
-      <button class="jb rem" data-v="gone" title="Off the board; it is not brought back">Remove</button>`;
-  } else {
-    const opts=FTYPES.map(t=>`<option value="${attr(t.id)}"${t.id===f.type?' selected':''}>${esc(t.name)}</option>`).join('');
-    mid=`<span class="jtag">New arena</span>
+  const opts=FTYPES.map(t=>`<option value="${attr(t.id)}"${t.id===f.type?' selected':''}>${esc(t.name)}</option>`).join('');
+  const mid=`<span class="jtag">New arena</span>
       <div class="jname">${esc(f.name)} <span>suggested by ${esc(f.from)}</span></div>
       <div class="jfor">${f.has?'<b>an arena by this name is on the board already</b>'
         :`goes into <select class="jsel" aria-label="Its type">${opts}</select>`}</div>
       ${f.why||f.url?`<div class="jev">${f.why?'“'+esc(f.why)+'”':''}${/^https?:\/\//i.test(f.url)?`<a href="${attr(f.url)}" target="_blank" rel="noopener">${esc(hostOf(f.url))} ↗</a>`:''}</div>`:''}`;
-    btns=(f.has?'':`<button class="jb pri" data-v="add" title="Put it on the board as an arena of the type chosen">Add as an arena</button>`)+
+  const btns=(f.has?'':`<button class="jb pri" data-v="add" title="Put it on the board as an arena of the type chosen">Add as an arena</button>`)+
       `<button class="jb rem" data-v="no" title="${f.has?'Let the suggestion go':'Not an arena for the board'}">No</button>`;
-  }
   bar.innerHTML=`<div class="jl"><div class="jk">Judging what was found</div>
       <div class="jprog"><b>${cur+1}</b> of ${total}</div><div class="jdots" aria-hidden="true">${dots}</div></div>
     <div class="jm">${mid}</div>
@@ -760,17 +550,17 @@ function paintJudge(){
       <div class="jnav"><button data-n="-1"${n>1?'':' disabled'}>‹ Back</button><button data-n="1"${n>1?'':' disabled'}>Skip for now ›</button><button data-n="0">Stop: the rest waits</button></div></div>`;
   const sel=bar.querySelector('.jsel');
   if(sel) sel.addEventListener('change',()=>{ JUDGE.types[f.key]=sel.value; readFinds(); showFind(); });
-  bar.querySelectorAll('.jb').forEach(b=>b.addEventListener('click',()=>{
-    const verb=b.dataset.v;
-    if(verb==='gone'&&!armed(b)) return;
-    judge(f.key,verb,sel?sel.value:f.type);
-  }));
+  bar.querySelectorAll('.jb').forEach(b=>b.addEventListener('click',()=>judge(f.key,b.dataset.v,sel?sel.value:f.type)));
   bar.querySelectorAll('.jnav button').forEach(b=>b.addEventListener('click',()=>{
     const d=+b.dataset.n; if(d) stepFind(d); else stopJudging();
   }));
 }
 const hostOf=u=>{ try{ return new URL(u).hostname.replace(/^www\./,''); }catch(e){ return String(u||''); } };
 document.getElementById('jpill').addEventListener('click',()=>{ if(!JUDGE.on) startJudging(); });
+/* ChatGPT's search for calls, whose answer brings the finds judged here:
+   the Semaphore holds the arenas' calls and reads the answer, so its box
+   is lent over this room (see "ChatGPT's search" in semaphore.js) */
+document.getElementById('gptb').addEventListener('click',()=>{ if(ARENA_SRC&&ARENA_SRC.gpt) ARENA_SRC.gpt(); });
 /* a dot on every tab where a find waits */
 function paintTabDots(){
   const by=new Map(); FINDS.forEach(f=>{ if(f.tab) by.set(f.tab,(by.get(f.tab)||0)+1); });
@@ -800,7 +590,6 @@ function render(){
     ?'colour = the arena · saturated tone = the round it is in, pale tone = the next · dashed = not yet published to the day'
     :'colour = call series · saturated tone = 2026 call, pale tone = 2027 call';
   document.getElementById('tltxt').textContent='Calls · chronological';
-  document.getElementById('bkswitch').hidden=false;
   document.querySelector('.src').innerHTML=arena?SRC_ARENAS:SRC_HORIZON;
   if(arena) clearArenaList(); else buildLedger();
   if(arena&&P.state.openArena&&!P.arenas.some(a=>a.id===P.state.openArena)) P.state.openArena=null;
@@ -812,10 +601,7 @@ function render(){
      be a change made in its drawer lent over this very tab, so the arena
      that was open stays open rather than shut under the change. */
   if(arena) P.state.sel.forEach(id=>{ if(!P.callById[id]) P.state.sel.delete(id); });
-  /* a venue picked keeps its calls as they now are, or goes with it */
-  if(P.state.venue){ const v=venueById(P.state.venue);
-    if(v) P.state.sel=new Set(venueCalls(v)); else { P.state.venue=null; P.state.sel.clear(); } }
-  applyFilters(); paintTimeline(); paintPills(); showCard([...P.state.sel]); paintLanes();
+  applyFilters(); paintTimeline(); paintPills(); showCard([...P.state.sel]);
 }
 
 function buildFamKey(){
@@ -926,7 +712,7 @@ function barsHTML(c,X,col,ink,withOpen){
 function buildTimeline(){
   document.getElementById('tl').classList.remove('ov','windowed');
   /* a tab whose arenas have no dates yet still gets an axis: the year round today */
-  const dates=P.calls.flatMap(callDates).concat(venuesHere().flatMap(venueDates)).sort();
+  const dates=P.calls.flatMap(callDates).sort();
   if(!dates.length){ const t=todayISO(); dates.push(t.slice(0,4)+'-01-01',t.slice(0,4)+'-12-31'); }
   const first=d3(dates[0]), last=d3(dates[dates.length-1]);
   T0=new Date(first.getFullYear(), first.getMonth(), 1);
@@ -953,10 +739,6 @@ function buildTimeline(){
   tl.innerHTML=`<div class="tl-axis"><div class="plot" style="top:0;bottom:0">${axl}</div></div><div class="tl-rows" id="tlrows"></div>`;
   tl.insertAdjacentHTML('afterbegin',`<div class="plot">${grid}</div>`);
   const rowsEl=document.getElementById('tlrows');
-  /* the venues stand over the calls they serve (Mark, 2026-10-24) */
-  buildLanes(rowsEl);
-  const bkn=document.getElementById('bkn'), nb=VENUES.filter(v=>v.place==='board'&&venueTabs(v).has(P.key)).length;
-  bkn.textContent=nb||''; bkn.title=nb+(nb===1?' venue':' venues')+' kept on the board for this tab';
   ghostArenaRow(rowsEl);
   if(MODE==='arena') buildArenaRows(rowsEl);
   else P.calls.forEach(c=>{
@@ -979,22 +761,6 @@ function buildTimeline(){
     pl.innerHTML=`<div class="today" style="left:${x}%"></div><div class="today-tag" style="left:${x}%">today</div>`;
     tl.appendChild(pl);
   }
-}
-/* The venues that stand on this tab's chart: its lanes when they are
-   drawn, and on an arena's tab the venues of its arenas, which an arena
-   opened lists. The chart reaches far enough for their windows, so a venue
-   no longer stands as "after the chart" off its edge; one whose window
-   has ended is left out, or a venue long over would stretch the chart
-   back to it. */
-function venuesHere(){
-  const out=lanesShown()?lanesHere():[];
-  if(MODE==='arena') P.arenas.forEach(a=>(a.venues||[]).forEach(v=>out.push(v)));
-  return out;
-}
-function venueDates(v){
-  const w=VM.vWin(v), now=VM.T(todayISO());
-  if(!w||(w.to!==null&&w.to<now)) return [];
-  return [w.from,w.to,w.ms,w.me].filter(t=>t!==null&&t!==undefined).map(t=>iso(new Date(t)));
 }
 /* An opening's tag and its deadline's, on a short bar, were printed over
    one another ("14 Oc 17 Feb ’27"). The opening's gives way, its dot
@@ -1030,14 +796,13 @@ function buildFreezer(rowsEl){
   const box=document.createElement('div'); box.className='frz'+(FRZ_OPEN?' open':'');
   box.innerHTML=`<button class="frzbar" aria-expanded="${FRZ_OPEN}"><i class="frost"></i>Freezer<span>${list.length} arena${list.length===1?'':'s'} put away</span><b>${FRZ_OPEN?'▾':'▸'}</b></button>`
     +(FRZ_OPEN?'<div class="frzchips">'+list.map(a=>`<span class="frzchip" style="--ty:${attr(a.tone||'#9C8B66')}"><button class="frzname" data-id="${attr(a.id)}" title="${attr(a.name)} — its panel">${esc(a.name)}</button><button class="frzout" data-id="${attr(a.id)}" title="Put ${attr(a.name)} back among the live arenas">Thaw</button></span>`).join('')+'</div>':'');
-  box.querySelector('.frzbar').addEventListener('click',()=>{ FRZ_OPEN=!FRZ_OPEN; buildTimeline(); paintTimeline(); applyFilters(); paintLanes(); });
+  box.querySelector('.frzbar').addEventListener('click',()=>{ FRZ_OPEN=!FRZ_OPEN; buildTimeline(); paintTimeline(); applyFilters(); });
   box.querySelectorAll('.frzname').forEach(b=>b.addEventListener('click',()=>{ if(ARENA_SRC&&ARENA_SRC.open) ARENA_SRC.open(b.dataset.id); }));
   box.querySelectorAll('.frzout').forEach(b=>b.addEventListener('click',()=>{ if(ARENA_SRC&&ARENA_SRC.thaw) ARENA_SRC.thaw(b.dataset.id); }));
   rowsEl.appendChild(box);
 }
 
 function toggleCall(id){
-  if(P.state.venue){ P.state.venue=null; P.state.sel.clear(); paintLanes(); }
   const s=P.state.sel;
   s.has(id)?s.delete(id):s.add(id);
   if(s.size){topicEls.forEach(t=>{t.row.classList.remove('sel');t.det.classList.remove('open');});P.state.selTopicCall=null;}
@@ -1186,19 +951,16 @@ function paintElsewhere(visible){
     e.textContent='Nothing in any tab matches this search.'; elsewhereEl.appendChild(e);}
   return n;
 }
-/* A venue picked folds the other calls away, on the chart as in the list,
-   so only those it is for stand under it (Mark, 2026-10-24); calls picked
-   by hand light and the rest only dim, as before. An arena opened dims the
+/* Calls picked by hand light and the rest dim; an arena opened dims the
    rows outside it. */
 function paintTimeline(){
-  const st=P.state, fold=!!st.venue, open=MODE==='arena'&&!!st.openArena;
+  const st=P.state, open=MODE==='arena'&&!!st.openArena;
   const focus=st.sel.size?st.sel:(st.selTopicCall?new Set([st.selTopicCall]):null);
   document.querySelectorAll('#tl .crow').forEach(r=>{
     if(r.classList.contains('ghost')) return;
     const on=!!focus&&focus.has(r.dataset.call);
     r.classList.toggle('on',on);
-    r.classList.toggle('dim',(!!focus&&!on&&!fold)||(open&&r.classList.contains('arow')));
-    r.classList.toggle('folded',fold&&!on);
+    r.classList.toggle('dim',(!!focus&&!on)||(open&&r.classList.contains('arow')));
     if(on||r.classList.contains('aorow')) untangle(r);
   });
   paintTypeHeads();
@@ -1209,21 +971,12 @@ function paintTypeHeads(){
   const end=()=>{ if(h) h.classList.toggle('folded',!any); };
   document.querySelectorAll('#tlrows > .tyh, #tlrows > .typed').forEach(el=>{
     if(el.classList.contains('tyh')){ end(); h=el; any=false; return; }
-    if(!el.classList.contains('hidden')&&!el.classList.contains('folded')) any=true;
+    if(!el.classList.contains('hidden')) any=true;
   });
   end();
 }
 function paintPills(){
   const p=document.getElementById('pills'); p.innerHTML='';
-  const v=P.state.venue&&venueById(P.state.venue);
-  if(v){
-    const el=document.createElement('span'); el.className='pill vpill';
-    el.innerHTML=`<i class="dia"></i>${esc(v.name)}<button>✕</button>`;
-    el.querySelector('button').setAttribute('aria-label','Show every call again');
-    el.querySelector('button').addEventListener('click',()=>{ if(judgedFind()&&judgedFind().id===v.id) return stopJudging(); unpickVenue(); });
-    p.appendChild(el);
-    return;
-  }
   [...P.state.sel].map(id=>P.callById[id]).filter(Boolean).sort((a,b)=>(a.opening||'').localeCompare(b.opening||'')).forEach(c=>{
     const el=document.createElement('span'); el.className='pill'; el.style.background=c.color; el.style.color=fg(c);
     el.innerHTML=`${esc(c.short)}<button>✕</button>`;
@@ -1240,7 +993,6 @@ function paintPills(){
 function showCard(ids){
   const el=document.getElementById('selcard');
   if(!ids.length){el.innerHTML='';return;}
-  if(P.state.venue&&ids.length===P.state.sel.size&&ids.every(id=>P.state.sel.has(id))){el.innerHTML='';return;}
   const list=ids.map(id=>P.callById[id]).filter(Boolean).sort((a,b)=>(a.opening||'').localeCompare(b.opening||''));
   if(!list.length){el.innerHTML='';return;}
   /* An arena's call has no topics or budget here, only its dates, and
@@ -1447,7 +1199,6 @@ function renderOverview(){
   document.querySelectorAll('#typechips .tchip').forEach(x=>x.setAttribute('aria-pressed',String(x.textContent===OV.type)));
   document.getElementById('legcolour').textContent='colour = cluster · saturated tone = 2026 call, pale tone = 2027 call · window matches first-stage deadlines; stage-2 tails are shown but never selected';
   document.getElementById('tltxt').innerHTML='All calls · <span>drag the date axis to set a window</span>';
-  document.getElementById('bkswitch').hidden=true;
   buildOvControls(); buildOvTimeline(); buildOvLedger(); paintOv();
 }
 
@@ -1831,12 +1582,12 @@ document.addEventListener('keydown',e=>{
     allPages().forEach(p=>OV.clusters.add(p.key)); setPreset('6m'); renderOverview(); return;
   }
   if(e.key==='Escape'){
-    P.state.sel.clear(); P.state.venue=null; P.state.selTopicCall=null; P.state.type=null; allPages().forEach(p=>p.state.q='');
+    P.state.sel.clear(); P.state.selTopicCall=null; P.state.type=null; allPages().forEach(p=>p.state.q='');
     qEl.value=''; qClr.style.display='none';
     tc.querySelectorAll('.tchip').forEach(x=>x.setAttribute('aria-pressed','false'));
     topicEls.forEach(t=>{t.row.classList.remove('sel');t.det.classList.remove('open');});
     if(P.state.openArena){ P.state.openArena=null; buildTimeline(); }
-    applyFilters(); paintTimeline(); paintPills(); showCard([]); paintLanes();
+    applyFilters(); paintTimeline(); paintPills(); showCard([]);
   }
   /* A bare digit only. Alt and a digit is the shell's way between rooms,
      and it used to turn this room's page over on the way past. */
@@ -1887,9 +1638,7 @@ Hub.expose('callboard',{
   arenasChanged:function(){ if(ARENA_SRC) arenasArrived(); },
   /* go through what waits to be judged, from the first find, as ChatGPT's
      answer put on the board asks */
-  judge:function(){ if(ARENA_SRC) startJudging(); },
-  /* a venue on the board, named from its panel in the Semaphore */
-  showVenue:function(id){ if(ARENA_SRC) showVenue(id); }
+  judge:function(){ if(ARENA_SRC) startJudging(); }
 });
 /* The room is built late and only once; the bridge waits for this to
    hand it the arenas. */

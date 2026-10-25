@@ -1,11 +1,10 @@
 /* ══════════ The venue maths ══════════
    How a venue's window, the state it is in and its shading are reckoned,
    how a site is told from its address, and how an arena's call dates come
-   together as bars: one copy, read by the Brokerage Semaphore, the Call
-   Board and Mark's Place alike (Mark, 2026-10-24). Until then Mark's Place
-   held a copy of the Semaphore's own, each change there wanting copying by
-   hand, and the Call Board, drawing the venues over its calls, was about
-   to need a third.
+   together as bars: one copy, read by the Brokerage Semaphore and Mark's
+   Place alike (Mark, 2026-10-24), the Call Board drawing the bars the
+   Semaphore reckons here. Until then Mark's Place held a copy of the
+   Semaphore's own, each change there wanting copying by hand.
 
    It is not a room: it keeps nothing and draws nothing, and every function
    here answers from what it is handed. So it is loaded once, straight after

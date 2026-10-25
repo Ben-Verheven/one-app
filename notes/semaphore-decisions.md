@@ -18,15 +18,31 @@ the end.
 
 ## The board
 
-Since 2026-10-24 the board is drawn on the Call Board, and the Board view,
-its tray and Dispatches went there ([call-board](call-board.md)); what the
-Board itself was is summed up at the end. What still holds of it:
+Since 2026-10-24 the arenas' calls are drawn on the Call Board, and the
+Board view, its tray and Dispatches went there ([call-board](call-board.md));
+what the Board itself was is summed up at the end. Its venues came back
+the next day (2026-10-25): brokerage lands here, its proper house, and
+calls land on the Call Board. What still holds of the board:
 
 - **The way in** (2026-10-15). What is found (brokerage events, partner
   searches, tools) lands new and waits until he acts: **→ Venues**, **Keep**
   on the board to think about, or **Remove**, which leaves a stub (`place:
-  gone`) so it is not brought back. Since 2026-10-24 the Call Board puts
-  each to him in turn. Published call dates simply go on the board.
+  gone`) so it is not brought back. Published call dates simply go on the
+  board.
+- **On the board is a tab at the head of Venues** (2026-10-25), before
+  Arising, Active and Dying: what a search found, new, over what he keeps
+  to think about, each a row on the same strip of time. It is the board's
+  third house: the Semaphore's own Board until 2026-10-24, then for a day
+  lanes over the Call Board's calls.
+- **Checked off in its own card** (Mark, 2026-10-25): a new venue says so
+  at the head of its card and asks where it goes (→ Venues, Keep on the
+  board, Remove); a venue already placed that a search changed is marked
+  changed, on its row and its tab, its card saying what was and what is,
+  until he presses Seen, which keeps the change, or Put back as it was.
+  Check what was found, on Venues, goes through them one card at a time,
+  the new first, with Back, Skip and Stop, and so does Put on the board
+  after ChatGPT's search for brokerage. For that day the Call Board put
+  each new venue to him on its lane.
 - **What is new on an arena is seen until he checks it off** (2026-10-17):
   a call with a new date or stage glows on its row, now the Call Board's,
   and Seen there or in the arena's panel is the only way back; closing the
@@ -38,8 +54,7 @@ Board itself was is summed up at the end. What still holds of it:
   notice. A board of calls and marks only, with no venues at all, was turned
   down (2026-10-15).
 - A window with no end runs six weeks past today and fades out with an
-  arrow, on Venues and over the Call Board's calls alike, rather than
-  running to the edge.
+  arrow, on Venues and in its card alike, rather than running to the edge.
 - **Uncertain is a dashed outline**, the one way the whole room draws it
   (2026-10-07).
 - His own order of the arenas within a type, set in Types, is the order the
@@ -70,13 +85,12 @@ Board itself was is summed up at the end. What still holds of it:
   them by the start of their window.
 - **A venue's panel opens on the Call Board's view of it** (2026-10-24),
   wider than an arena's: its window as a lane over the calls it is for, on
-  one month axis, the band dragged there as on Venues, and, for a venue
-  kept on the board, Open it on the Call Board, which picks it in its tab
-  there; one in Venues is off the Call Board, so it is not offered. Then
-  where it stands, its window, event days, the arenas it serves and the
-  basis, two to a row, and the rest folded, each fold saying in a word what
-  is in it: visits, leads from here, other pages, his note, the rhythm. One
-  card everywhere, from Venues here and from Its card on a lane there.
+  one month axis, the band dragged there as on Venues, and kept when the
+  venues left the Call Board (2026-10-25). Then where it stands, its
+  window, event days, the arenas it serves and the basis, two to a row,
+  and the rest folded, each fold saying in a word what is in it: visits,
+  leads from here, other pages, his note, the rhythm. One card everywhere,
+  from Venues and from an arena's panel.
   Of the two widths drawn he chose the wider; the narrow one shortened the
   arenas' names on its timeline.
 - A venue can be put in a section by hand from its panel (Arising · Active ·
@@ -107,19 +121,28 @@ Board itself was is summed up at the end. What still holds of it:
 ## Finding things: ChatGPT, and the agent before it
 
 - **ChatGPT's deep research is the searcher** (2026-10-22, and the only one
-  since the agent stopped on 2026-10-23). A ChatGPT button writes one file
-  holding every arena (its calls, links and two texts), every venue (the
-  removed ones as stubs, so they are not brought back) and the instructions.
-  ChatGPT hands back a list of changes, not the board again, which is read
-  back in the same box (pasted, or as its file), shown change by change with
-  what was left out and why and how many arenas it did not reach, and put on
-  the board only on **Put on the board**, after a Ledger restore point; its
-  new dates glow until Seen, and its new venues and the new arenas it
-  suggests are then judged one at a time on the Call Board (2026-10-24),
-  where the app goes by itself. It can add and correct call dates and
-  venues, add an arena to a venue and add a link; it cannot delete, rename
-  or rewrite his texts. The leads, his visits and his venue notes stay out
-  of the file. How is at "ChatGPT's search" in semaphore.js.
+  since the agent stopped on 2026-10-23), **as two searches since
+  2026-10-25, each behind a ChatGPT button where what it finds lands**:
+  the Call Board's for calls (call dates, the calls' own pages, new arenas)
+  and this room's for brokerage (venues and brokerage pages, the call dates
+  given only to go by). Each button writes a file holding every arena,
+  with what its search needs, the venues for brokerage (the removed ones
+  as stubs, so they are not brought back), and the instructions. ChatGPT
+  hands back a list of changes, not the board again, which is read back
+  in the same box (pasted, or as its file), shown change by change with
+  what was left out and why, the other search's changes among them, and
+  how many arenas it did not reach, and put on the board only on **Put on
+  the board**, after a Ledger restore point. After the search for calls
+  the new dates glow until Seen and the new arenas it suggests are judged
+  one at a time on the Call Board (2026-10-24); after the search for
+  brokerage each new or changed venue is checked in its card here. The
+  app goes there by itself. Together they can add and correct call dates
+  and venues, add an arena to a venue and add a link; they cannot delete,
+  rename or rewrite his texts. The leads, his visits and his venue notes
+  stay out of both files. The box is this room's for both, the Call Board
+  borrowing it, since the board both change is kept here. How is at
+  "ChatGPT's search" in semaphore.js; the third search agreed, for
+  official call texts, is in [call-board](call-board.md).
 - **He would rather have ten false finds than lose one real one**, and every
   rule he gave ChatGPT gives way to doubt: every arena, frozen ones lightly;
   call dates, and actual brokerage only (matchmaking events and
@@ -255,8 +278,9 @@ over the types, a call in stages full strength only up to its first
 deadline, last month and the next twelve, two orders (My order, By date)
 chosen from the heading over the names, a names column dragged wider, and
 the tray over it all listing what was new. He liked its look. It went to
-the Call Board, where all of this is drawn the Call Board's own way; git's
-history has the Board's code.
+the Call Board, where the calls are drawn the Call Board's own way, and
+its venues came back a day later to On the board; git's history has the
+Board's code.
 
 ## What the venues replaced
 

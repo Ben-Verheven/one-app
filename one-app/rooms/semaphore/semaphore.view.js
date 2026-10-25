@@ -11,11 +11,10 @@ Hub.markup('semaphore', `
     <h1><i class="markglyph"></i>Brokerage Semaphore</h1>
   </div>
   <div class="grow"></div>
-  <!-- Venues: what Mark moved there, in Arising, Active and Dying, each on
-       one strip of time (2026-10-15), and the way back to it from Leads.
-       It was the Now page until then, and is still "now" in the code. The
-       Board stood beside it, where what was new waited to be judged, until
-       the Board went to the Call Board (2026-10-24). -->
+  <!-- Venues: what is on the board, and what Mark moved to Venues, in
+       Arising, Active and Dying, each on one strip of time (2026-10-15),
+       and the way back to it from Leads. It was the Now page until then,
+       and is still "now" in the code. -->
   <div class="viewseg" id="viewseg">
     <button data-act="setView" data-v="now">Venues</button>
   </div>
@@ -42,13 +41,14 @@ Hub.markup('semaphore', `
          Import reads it back. What is left here is the one thing this room
          can answer for itself — whether its half of the cloud is up — and
          ChatGPT's file, which is a question put to a searcher, not a copy. -->
-    <!-- ChatGPT's search (Mark, 2026-10-22): a file of the board and the
-         instructions for ChatGPT's deep research, and its answer read back.
-         It is not the Ledger's Export, which carries the board whole: this
-         file carries no leads or visits, and what comes back is a list of
-         changes, its new venues and arenas judged on the Call Board. -->
+    <!-- ChatGPT's search for brokerage (Mark, 2026-10-22; the calls went to
+         the Call Board's own button on 2026-10-25): a file of the board and
+         the instructions for ChatGPT's deep research, and its answer read
+         back. It is not the Ledger's Export, which carries the board whole:
+         this file carries no leads or visits, and what comes back is a list
+         of changes, each new or changed venue checked in its card. -->
     <button class="btn" data-act="openGpt"
-            title="Write a file for ChatGPT to search the web for new call dates, brokerage events and tools, and read its answer back">ChatGPT</button>
+            title="Write a file for ChatGPT to search the web for brokerage events and partner-search tools, and read its answer back">ChatGPT</button>
     <button class="oa-cloudchip" id="semcloud" type="button" data-state="waiting"
             title="Cloud sync">
       <i aria-hidden="true"></i><span>cloud</span>
@@ -97,13 +97,19 @@ ITEA 4 ; Programme ; software"></textarea>
 </div>
 
 <!-- ChatGPT's search: the file out, the answer in (see "ChatGPT's search"
-     in semaphore.js). Nothing reaches the board before Put on the board. -->
+     in semaphore.js), for brokerage from here and for calls from the Call
+     Board, which borrows this box. What differs between the two searches
+     is written for each, and the one opened is shown. Nothing reaches the
+     board before Put on the board. -->
 <div class="modal" id="gptModal">
   <div class="mbox">
-    <h2>ChatGPT's search</h2>
-    <p class="sub"><b>1.</b> Write the file: every arena with its calls and links, every venue, and the instructions. Your leads and visits stay out. Give the file to ChatGPT with deep research on, and ask it to do what the file says.</p>
+    <h2 data-gk="venues">ChatGPT's search for brokerage</h2>
+    <h2 data-gk="calls" hidden>ChatGPT's search for calls</h2>
+    <p class="sub" data-gk="venues"><b>1.</b> Write the file: every arena with its brokerage and links, and its call dates to go by; every venue; and the instructions. Your leads, visits and notes stay out. Give the file to ChatGPT with deep research on, and ask it to do what the file says.</p>
+    <p class="sub" data-gk="calls" hidden><b>1.</b> Write the file: every arena with its call dates and links, and the instructions. Brokerage is the Brokerage Semaphore's own search. Give the file to ChatGPT with deep research on, and ask it to do what the file says.</p>
     <div class="gptrow"><button class="btn primary" data-act="gptWrite">Write the file for ChatGPT</button></div>
-    <p class="sub"><b>2.</b> Paste what ChatGPT gave back, or choose its file. Nothing changes until you press Put on the board. Then new and corrected call dates go straight on and glow until you press Seen, and the Call Board puts each new venue and new arena to you in turn.</p>
+    <p class="sub" data-gk="venues"><b>2.</b> Paste what ChatGPT gave back, or choose its file. Nothing changes until you press Put on the board. Then each new venue, and each venue it changed, is put to you in its card, one at a time.</p>
+    <p class="sub" data-gk="calls" hidden><b>2.</b> Paste what ChatGPT gave back, or choose its file. Nothing changes until you press Put on the board. Then new and corrected call dates go straight on and glow on the Call Board until you press Seen, and each new arena it suggests is put to you there in turn.</p>
     <textarea id="gptText" placeholder="Paste ChatGPT's answer here"></textarea>
     <div class="gptrow"><label class="btn">Choose its file<input type="file" id="gptFile" accept=".json,.txt,.md,application/json,text/plain" hidden></label></div>
     <div id="gptSaid"></div>

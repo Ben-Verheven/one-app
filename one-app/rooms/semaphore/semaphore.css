@@ -1094,6 +1094,15 @@
 #pane-semaphore .vrows.limbo{--lg-line:rgba(170,215,205,.22)}
 #pane-semaphore .vrows.limbo .vnm{color:#C9DDD6}
 #pane-semaphore .vtabdue{font:italic 11.5px var(--body);letter-spacing:0;text-transform:none;color:var(--notice-ink)}
+/* On the board, the tab before the three: what a search found waits in
+   it in the lime of everything new, and a venue a search changed says so
+   in its own tab (see "what a search found, checked in its card") */
+#pane-semaphore .vtab.t-board::before{background:var(--new-soft);box-shadow:inset 0 0 0 1.5px var(--new-line)}
+#pane-semaphore .vtabnew{font:italic 11.5px var(--body);letter-spacing:0;text-transform:none;color:var(--new-ink)}
+#pane-semaphore .vchk{align-self:center}
+#pane-semaphore .vfnd{flex:0 0 auto;margin-left:8px;padding:0 7px;border-radius:99px;border:1px solid var(--new-line);
+  background:var(--new-soft);font:italic 11.5px/1.5 var(--body);color:var(--new-ink)}
+#pane-semaphore .vfnd.upd{border-style:dashed;background:none}
 #pane-semaphore .vtabnone{margin:16px 2px}
 /* a group on Venues: Shared, then each type, a thin band in its colour as
    the board's group heads are */
@@ -1229,6 +1238,35 @@
 #pane-semaphore .vphseg button:hover{color:var(--ink);background:rgba(42,38,32,.06)}
 #pane-semaphore .vphseg button.on{background:var(--ink);color:#F4EFE3}
 #pane-semaphore .vplace.st-venues .vreset{margin-left:0}
+/* What a search found, at the head of its card: new, and where it goes,
+   or what it changed, kept or put back; in the lime of everything new */
+#pane-semaphore .vfound{margin:14px 0 4px;padding:10px 12px;border-radius:var(--radius);border:1px solid var(--new-line);background:var(--new-soft)}
+#pane-semaphore .vfq{display:flex;align-items:baseline;flex-wrap:wrap;gap:8px;margin:0 0 9px;font:italic 13px/1.4 var(--body);color:var(--ink)}
+#pane-semaphore .vfq b{font:600 9.5px var(--sans);font-style:normal;letter-spacing:.16em;text-transform:uppercase;color:var(--new-ink)}
+#pane-semaphore .vfq i{font-size:12.5px;color:var(--muted)}
+#pane-semaphore .vfbtns{display:flex;flex-wrap:wrap;gap:8px}
+#pane-semaphore .vfound .btn.armed{color:var(--brok-deep);border-color:var(--brok)}
+#pane-semaphore .vfch{list-style:none;margin:0 0 10px;padding:0;display:grid;gap:3px}
+#pane-semaphore .vfch li{display:flex;align-items:baseline;flex-wrap:wrap;gap:8px;font:14px/1.45 var(--body);color:var(--ink)}
+#pane-semaphore .vfck{flex:0 0 86px;font:600 9.5px var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+#pane-semaphore .vfch s{color:var(--muted);text-decoration-thickness:1px}
+#pane-semaphore .vfch b{font-weight:400}
+#pane-semaphore .vfar{color:var(--muted)}
+/* going through them one card at a time: the shell's own dark band at
+   the top of the card, so it reads as the room asking */
+#pane-semaphore .vwalk{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin:-8px -8px 16px;padding:8px 10px 8px 14px;
+  border-radius:var(--radius);background:linear-gradient(180deg,#3B352C,#282420);color:#F4EFE3}
+#pane-semaphore .vwk{font:600 9px var(--sans);letter-spacing:.16em;text-transform:uppercase;color:#D8CDB8}
+#pane-semaphore .vwp{font:12px var(--mono);color:#D8CDB8}
+#pane-semaphore .vwp b{font-weight:400;color:#FFF}
+#pane-semaphore .vwdots{display:flex;gap:3px}
+#pane-semaphore .vwdots i{width:6px;height:6px;border-radius:50%;background:#5E574B}
+#pane-semaphore .vwdots i.done{background:#B9E35A}
+#pane-semaphore .vwdots i.cur{background:#F4EFE3}
+#pane-semaphore .vwalk .sp{flex:1}
+#pane-semaphore .vwalk button{padding:4px 10px;border:1px solid #5E574B;border-radius:var(--radius);font:12.5px var(--body);color:#EDE7DC;white-space:nowrap}
+#pane-semaphore .vwalk button:hover{border-color:#B3A897;color:#FFF}
+#pane-semaphore .vwalk button:disabled{color:#9A9080;border-color:#4A443A;cursor:default}
 /* The drawer is wider while it holds a venue (see "a venue, opened" in
    semaphore.js), so the piece of the Call Board at its head has room for
    the names and the months. */
@@ -1266,9 +1304,6 @@
 #pane-semaphore .vsnip .snote{margin:6px 0 0;font:italic 13px var(--body);color:var(--faint)}
 #pane-semaphore .vsnipf{display:flex;align-items:baseline;gap:12px;margin:6px 2px 0}
 #pane-semaphore .vsnipf i{flex:1;font:italic 12.5px var(--body);color:var(--faint)}
-#pane-semaphore .vtoboard{flex:0 0 auto;font:600 9.5px var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--ink);
-  text-decoration:underline;text-decoration-color:var(--line2);text-underline-offset:3px}
-#pane-semaphore .vtoboard:hover{text-decoration-color:currentColor}
 /* under it, the facts in a grid of two columns, the long ones across */
 #pane-semaphore .vfacts{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:24px;margin-top:14px}
 #pane-semaphore .vf{display:grid;grid-template-columns:86px minmax(0,1fr);gap:10px;align-items:baseline;padding:8px 0;
@@ -1425,6 +1460,8 @@
    list of changes in ink, the refusals in the muted grey the box's own
    words wear on the same ground. */
 #pane-semaphore #gptModal .mbox{width:640px}
+/* the wording of the search not opened (see openGpt) */
+#pane-semaphore #gptModal [hidden]{display:none}
 #pane-semaphore .gptrow{display:flex;gap:8px;margin:0 0 14px}
 #pane-semaphore #gptModal textarea{min-height:90px;margin-bottom:8px}
 #pane-semaphore #gptSaid p{font-family:var(--body);font-size:13.5px;line-height:1.5;margin:8px 0 4px}

@@ -94,14 +94,14 @@
 /* ══ 4. CONTROL FAMILY ══
    One face for everything pressable, as in the Ledger: a slab with a
    light top edge, a sepia rule, and the umber press for the live state. */
-#pane-callboard .tchip,#pane-callboard .ftchip,#pane-callboard .pchip,#pane-callboard .clchip,#pane-callboard .seg button,#pane-callboard .readbtn,#pane-callboard .portalink,#pane-callboard .pill.clearall,#pane-callboard .rd-close{
+#pane-callboard .tchip,#pane-callboard .ftchip,#pane-callboard .gptb,#pane-callboard .pchip,#pane-callboard .clchip,#pane-callboard .seg button,#pane-callboard .readbtn,#pane-callboard .portalink,#pane-callboard .pill.clearall,#pane-callboard .rd-close{
   font-family:var(--font);letter-spacing:.07em;cursor:pointer;color:var(--ink2);
   background:linear-gradient(180deg,#FDFAF3,#F0EADB);
   border:1px solid rgba(120,96,58,0.3);
   box-shadow:inset 0 1px 0 rgba(255,255,255,0.9),0 1px 2px rgba(74,58,30,0.06);
   transition:transform .14s ease,background-color .14s ease,border-color .14s ease,color .14s ease,box-shadow .14s ease}
-#pane-callboard .tchip,#pane-callboard .ftchip,#pane-callboard .pchip,#pane-callboard .clchip{font-size:10px;padding:6px 12px;border-radius:999px}
-#pane-callboard .tchip:hover,#pane-callboard .ftchip:hover,#pane-callboard .pchip:hover,#pane-callboard .clchip:hover,#pane-callboard .seg button:hover,#pane-callboard .readbtn:hover,#pane-callboard .portalink:hover,#pane-callboard .pill.clearall:hover{
+#pane-callboard .tchip,#pane-callboard .ftchip,#pane-callboard .gptb,#pane-callboard .pchip,#pane-callboard .clchip{font-size:10px;padding:6px 12px;border-radius:999px}
+#pane-callboard .tchip:hover,#pane-callboard .ftchip:hover,#pane-callboard .gptb:hover,#pane-callboard .pchip:hover,#pane-callboard .clchip:hover,#pane-callboard .seg button:hover,#pane-callboard .readbtn:hover,#pane-callboard .portalink:hover,#pane-callboard .pill.clearall:hover{
   color:var(--brass2);border-color:var(--brass);background:linear-gradient(180deg,#FFFCF5,#F3EDDE);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.95),0 4px 10px rgba(74,58,30,.10)}
 #pane-callboard .tchip[aria-pressed="true"],#pane-callboard .ftchip[aria-pressed="true"],#pane-callboard .pchip[aria-pressed="true"],#pane-callboard .seg button[aria-pressed="true"]{
@@ -384,7 +384,7 @@
 #pane-callboard .crow .nm.anone{font-style:italic;color:var(--ink3)}
 #pane-callboard .cchip.anon{color:var(--ink2);background:transparent;border:1px solid var(--line-strong)}
 #pane-callboard .crow .seen{margin-left:auto}
-#pane-callboard .crow.hidden,#pane-callboard .aopen.hidden,#pane-callboard .crow.folded,#pane-callboard .tyh.folded{display:none}
+#pane-callboard .crow.hidden,#pane-callboard .aopen.hidden,#pane-callboard .tyh.folded{display:none}
 /* Where a tab holds arenas of more than one type, as OTHER does, each
    type is named once over its arenas, with a slim rule in its colour down
    their left (Mark, 2026-10-24). */
@@ -416,99 +416,25 @@
   color:var(--brass2);margin:4px 0 3px}
 #pane-callboard .aotx p{margin:0;font-size:14px;line-height:1.42;color:var(--ink2);white-space:pre-line;
   display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
-#pane-callboard .aopen .crow,#pane-callboard .aopen .blane{cursor:default}
-#pane-callboard .aopen .blane{cursor:pointer}
+#pane-callboard .aopen .crow{cursor:default}
 /* the call's name over its dates, so neither is cut short; the bar stays
    in the middle of the taller row */
 #pane-callboard .aopen .crow{height:46px}
 #pane-callboard .aopen .crow .track{align-self:center;height:37px}
 #pane-callboard .aopen .lbl{flex-direction:column;align-items:stretch;justify-content:center;gap:1px;padding:0 14px}
-#pane-callboard .aopen .blane .lbl{flex-direction:row;align-items:center;justify-content:space-between;gap:12px}
 #pane-callboard .aocn{min-width:0;display:flex;align-items:center;gap:8px;font-family:var(--body);font-size:14px;color:var(--ink);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #pane-callboard .aocn>span{overflow:hidden;text-overflow:ellipsis}
-#pane-callboard .aocd{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#pane-callboard .aocd.aopl{font-weight:400;color:var(--ink3)}
 #pane-callboard .aopen .crow:hover .track{background:none}
 /* an arena opened says its calls' dates on their bars, not beside them */
 #pane-callboard .aopen .crow .dtag{opacity:1}
 #pane-callboard .dtag.clash{display:none}
-#pane-callboard .aovh{margin:8px 14px 2px;padding-top:6px;border-top:1px solid var(--line);font-family:var(--font);font-size:9.5px;
-  font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--brass2)}
 #pane-callboard .aonone{padding:6px 14px;font-family:var(--body);font-style:italic;font-size:13px;color:var(--ink3)}
-/* ══ 10. BROKERAGE, OVER THE CALLS ══
-   The venues kept on the board, a lane each over the calls, behind the
-   switch beside the chart's title (Mark, 2026-10-24); see "brokerage, over
-   the calls" in callboard.js. Brass, so a venue never reads as a call. */
-#pane-callboard .tl-title{display:flex;align-items:center;gap:10px}
-#pane-callboard #tltxt{flex:1}
-#pane-callboard .bk{display:inline-flex;align-items:center;gap:7px;padding:3px 10px 3px 4px;cursor:pointer;
-  font-family:var(--font);font-size:9.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--ink2);
-  border:1px solid rgba(120,96,58,0.3);border-radius:999px;background:linear-gradient(180deg,#FDFAF3,#F0EADB)}
-#pane-callboard .bk[hidden]{display:none}
-#pane-callboard .bk:hover{color:var(--brass2);border-color:var(--brass)}
-#pane-callboard .bk .sw{position:relative;width:24px;height:14px;border-radius:999px;background:#CDBF9F;
-  box-shadow:inset 0 1px 2px rgba(74,58,30,.25);transition:background-color .15s}
-#pane-callboard .bk .sw i{position:absolute;top:2px;left:2px;width:10px;height:10px;border-radius:50%;background:#FDFAF3;
-  box-shadow:0 1px 2px rgba(74,58,30,.35);transition:left .15s}
-#pane-callboard .bk[aria-pressed="true"]{color:var(--ink);border-color:var(--brass);background:linear-gradient(180deg,#FBF4E2,#EEE2C4)}
-#pane-callboard .bk[aria-pressed="true"] .sw{background:var(--brass)}
-#pane-callboard .bk[aria-pressed="true"] .sw i{left:12px}
-/* how many venues this tab holds, so a switch left off still says so */
-#pane-callboard .bkn{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:0;color:var(--brass2)}
-#pane-callboard .bkn:empty{display:none}
-#pane-callboard .bhead{display:flex;align-items:baseline;gap:8px;margin-top:4px;padding:4px 0 2px;
-  font-family:var(--font);font-size:9.5px;font-weight:600;text-transform:uppercase;letter-spacing:.13em;color:var(--brass2)}
-#pane-callboard .bhead span{font-family:var(--body);font-style:italic;text-transform:none;letter-spacing:.02em;font-weight:400;
-  font-size:12.5px;color:var(--ink3)}
-#pane-callboard .bnone{padding:4px 0 8px;font-family:var(--body);font-style:italic;font-size:12.5px;color:var(--ink3)}
-#pane-callboard .bend{margin:6px 0 4px;border-top:1px solid var(--line-strong)}
-/* a press on a lane is not an iPad's double-tap zoom */
-#pane-callboard .blane{position:relative;display:flex;align-items:stretch;height:31px;cursor:pointer;touch-action:manipulation}
-#pane-callboard .blane .lbl{width:var(--gutter);flex:0 0 var(--gutter);display:flex;align-items:center;gap:7px;padding-right:8px;min-width:0}
-#pane-callboard .dia{display:block;width:7px;height:7px;flex:0 0 7px;background:var(--brass);transform:rotate(45deg)}
-#pane-callboard .blane .nm{font-family:var(--body);font-size:12.5px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#pane-callboard .blane .track{position:relative;flex:1 1 auto;border-radius:3px}
-#pane-callboard .blane:hover .track{background:rgba(154,123,58,0.09)}
-#pane-callboard .blane.on .track{background:rgba(154,123,58,.14);box-shadow:inset 0 0 0 1.5px var(--umber)}
-#pane-callboard .blane.on .nm{color:var(--ink);font-weight:600}
-#pane-callboard .blane.on .dia{background:var(--umber)}
-/* Its card, on the lane picked (see buildLanes) */
-#pane-callboard .blane .vcard{display:none;flex:0 0 auto;height:24px;margin-left:auto}
-#pane-callboard .blane.on .vcard{display:inline-block}
-#pane-callboard .vb{position:absolute;top:10px;height:11px;min-width:5px;border-radius:6px;border:1px solid rgba(107,82,32,.6)}
-#pane-callboard .vb.open{border-right:0;border-radius:6px 0 0 6px}
-#pane-callboard .vb.openl{border-left:0;border-radius:0 6px 6px 0}
-#pane-callboard .vb.season{border-style:dashed}
-#pane-callboard .vb.past{border-color:var(--line-strong)}
-#pane-callboard .vrun{position:absolute;top:7px;margin-left:3px;font-family:var(--mono);font-size:11px;color:var(--brass2);pointer-events:none}
-#pane-callboard .vmeet{position:absolute;top:13px;height:5px;background:var(--umber);border-radius:2px}
-#pane-callboard .vd{position:absolute;top:10px;width:11px;height:11px;margin-left:-5.5px;background:var(--umber);
-  transform:rotate(45deg);box-shadow:0 0 0 1.5px var(--panel)}
-#pane-callboard .vd.unc{background:var(--panel);border:1.5px dashed var(--umber);box-shadow:none}
-#pane-callboard .vd.past{background:var(--ink3)}
-#pane-callboard .vund{position:absolute;top:7px;margin-left:6px;font-family:var(--body);font-style:italic;font-size:12px;
-  color:var(--ink3);white-space:nowrap}
-/* the venue being judged: drawn in place, dashed, not on the board yet */
-#pane-callboard .blane.ghost{cursor:default}
-#pane-callboard .blane.ghost .dia{background:transparent;border:1.5px dashed var(--umber)}
-#pane-callboard .blane.ghost .vb{border:1.5px dashed var(--umber)}
-#pane-callboard .blane.ghost .vd{background:var(--panel);border:1.5px dashed var(--umber);box-shadow:none}
-#pane-callboard .blane.ghost .nm{color:var(--ink);font-weight:600}
-#pane-callboard .blane.ghost .track{background:rgba(154,123,58,.10);box-shadow:inset 0 0 0 1.5px var(--brass)}
-#pane-callboard .notyet{position:absolute;right:6px;top:7px;font-family:var(--body);font-style:italic;font-size:12px;color:var(--brass2);
-  background:rgba(247,243,233,.92);padding:0 4px;border-radius:3px;white-space:nowrap}
-/* its pill in the search row, which takes it off */
-#pane-callboard .pill.vpill{gap:7px;font-family:var(--font);font-size:10px;font-weight:400;letter-spacing:.06em;color:var(--ink);
-  background:#E8DAB8;border:1px solid var(--brass);box-shadow:none;max-width:320px}
-#pane-callboard .pill.vpill .dia{background:var(--umber);flex:0 0 8px;width:8px;height:8px}
-#pane-callboard .pill.vpill button{flex:0 0 17px;background:rgba(51,41,26,.14)}
 #pane-callboard .vbtn{height:28px;padding:0 10px;white-space:nowrap;border-radius:var(--radius);cursor:pointer;font-family:var(--font);font-size:10px;
   letter-spacing:.07em;color:var(--ink2);border:1px solid rgba(120,96,58,0.3);background:linear-gradient(180deg,#FDFAF3,#F0EADB)}
 #pane-callboard .vbtn:hover{color:var(--brass2);border-color:var(--brass)}
 #pane-callboard .vbtn.dark{color:#F6F1E4;border-color:var(--umber);background:linear-gradient(180deg,#463823,#2E2415)}
 #pane-callboard .vbtn.dark:hover{color:#FFF8E6;background:linear-gradient(180deg,#54432A,#3A2E1C)}
-#pane-callboard .vbtn.armed{color:#8E241B;border-color:#8E241B}
 /* An arena's call with a new date glows until Seen (see arenaRow), in the
    green the Semaphore gave everything new, ringed in the sheet's own ground
    so it reads on any call's colour. */
@@ -538,7 +464,7 @@
 #pane-callboard .frzout{padding:5px 11px 5px 9px;font-family:var(--font);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;
   color:var(--brass2);border-left:1px solid var(--line) !important}
 #pane-callboard .frzout:hover{color:var(--ink);background:rgba(154,123,58,.12)}
-/* ══ 11. JUDGING THE FINDS ══
+/* ══ 10. JUDGING THE FINDS ══
    A find waiting to be judged: its pill in the search row, a dot on its
    tab, the new arena dashed on its tab's chart, and the bar at the foot of
    the room; see "judging the finds, one at a time" in callboard.js. The bar
