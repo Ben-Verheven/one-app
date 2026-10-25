@@ -25,18 +25,21 @@ the next day (2026-10-25): brokerage lands here, its proper house, and
 calls land on the Call Board. What still holds of the board:
 
 - **The way in** (2026-10-15). What is found (brokerage events, partner
-  searches, tools) lands new and waits until he acts: **→ Venues**, **Keep**
-  on the board to think about, or **Remove**, which leaves a stub (`place:
+  searches, tools) lands new and waits until he acts: **→ Venues**, **Keep
+  in Limbo** to think about, or **Remove**, which leaves a stub (`place:
   gone`) so it is not brought back. Published call dates simply go on the
   board.
-- **On the board is a tab at the head of Venues** (2026-10-25), before
-  Arising, Active and Dying: what a search found, new, over what he keeps
-  to think about, each a row on the same strip of time. It is the board's
-  third house: the Semaphore's own Board until 2026-10-24, then for a day
-  lanes over the Call Board's calls.
+- **The board's venues live in Limbo** (Mark, 2026-10-25): what a search
+  found, new, then what he keeps on the board to think about, then what is
+  over in Venues, each a row on the same strip of time; Delete only on the
+  last, the others being decided in their card. The words follow: Keep in
+  Limbo, Back to Limbo. A tab of their own at the head of Venues, On the
+  board, stood for an hour and went. Before that they stood on the
+  Semaphore's own Board until 2026-10-24, then for a day as lanes over the
+  Call Board's calls.
 - **Checked off in its own card** (Mark, 2026-10-25): a new venue says so
-  at the head of its card and asks where it goes (→ Venues, Keep on the
-  board, Remove); a venue already placed that a search changed is marked
+  at the head of its card and asks where it goes (→ Venues, Keep in
+  Limbo, Remove); a venue already placed that a search changed is marked
   changed, on its row and its tab, its card saying what was and what is,
   until he presses Seen, which keeps the change, or Put back as it was.
   Check what was found, on Venues, goes through them one card at a time,
@@ -50,7 +53,7 @@ calls land on the Call Board. What still holds of the board:
   written shows its dates as new.
 - **A venue in Venues, in any section, Mark's Place and Limbo included, is
   off the board** (2026-10-23); its arena's panel still lists it, and Back
-  to the board brings it back. It replaced thin nameless lines he did not
+  to Limbo puts it back on the board. It replaced thin nameless lines he did not
   notice. A board of calls and marks only, with no venues at all, was turned
   down (2026-10-15).
 - A window with no end runs six weeks past today and fades out with an
@@ -73,7 +76,8 @@ calls land on the Call Board. What still holds of the board:
   falling after. Of three first pages drawn he chose this strip of time over
   one list in bands and over three columns.
 - **Arising · Active · Dying, as tabs** (he was unsure between tabs and
-  sections), **Limbo** apart for what is over, and **Mark's Place** in a box
+  sections), **Limbo** apart for what is over (and, since 2026-10-25, for
+  the board's venues too), and **Mark's Place** in a box
   of its own between the three and Limbo (2026-10-22): a venue on a site
   Mark's Place copies stands there whatever its dates say and never falls
   due, since Mark's Place reads it every night (`inPlace`).
@@ -279,7 +283,7 @@ deadline, last month and the next twelve, two orders (My order, By date)
 chosen from the heading over the names, a names column dragged wider, and
 the tray over it all listing what was new. He liked its look. It went to
 the Call Board, where the calls are drawn the Call Board's own way, and
-its venues came back a day later to On the board; git's history has the
+its venues came back a day later, to Limbo; git's history has the
 Board's code.
 
 ## What the venues replaced

@@ -330,8 +330,8 @@ agent waits. **Its job is to put things on the board** (since 2026-10-15):
 call dates as published, which simply stand there, and venues — brokerage
 events and partner searches where projects in the making and their
 leaders can be found — which land as `new` and wait in the Semaphore's
-tab On the board until Mark, in each one's card, moves it to Venues,
-keeps it on the board, or removes it. It keeps what
+Limbo until Mark, in each one's card, moves it to Venues, keeps it in
+Limbo on the board, or removes it. It keeps what
 is on the board correct, but where a venue stands is his: it deletes only
 a venue still new, its own find gone wrong, and never one he removed
 (the gatekeeper refuses both). Since Mark judges everything it brings, it
@@ -437,7 +437,7 @@ and the agent's task still say the Marketplace; it is the same room.
 | the header: Venues, Leads beside it, Search, Types, + Venue, + Arena, ChatGPT and the cloud chip | `header.top`; `#viewseg`, `#leadsBtn`, `#searchBtn` and its box `#search`, `#semcloud` |
 | ChatGPT's search, opened by ChatGPT here for brokerage and lent over the Call Board for calls: the file out, the answer pasted or chosen, what it would change, Put on the board | `#gptModal` › `#gptText`, `#gptFile`, `#gptSaid`, `#gptPut` |
 | Venues (the Now page until 2026-10-15), Leads (on the wall) | `#now`, `#wall` |
-| Venues: On the board before the three, where what a search found waits new beside what is kept to think about; its three tabs, Arising · Active · Dying, and Limbo's apart; a venue new or changed, and the press that goes through them one card at a time; the axis over them, sticky; the heading of each group, Shared then each type; one venue's row, its mark the grip it is dragged by into his own order, its name and the arenas it serves, its strip, and Go, which is the visit (Visited once pressed today) | `.vtabs` › `.vtab` (`.t-board`), `.culimbo.vlimbotab`; `.vfnd`, `.vchk`; `.vaxis`; `.vgrp`; `.vgl`, `.vrow.vdragging`; `.vrow` = `.vname` (`.vnmrow` › `.vnm`, `.vchips`) + `.vtrack` + `.vend` (`.vgo`, `.vgo.done`) |
+| Venues: its three tabs, Arising · Active · Dying, and Limbo's apart, which holds what a search found, new, then what is kept on the board to think about, then what is over; a venue new or changed, and the press that goes through them one card at a time; the axis over them, sticky; the heading of each group, Shared then each type; one venue's row, its mark the grip it is dragged by into his own order, its name and the arenas it serves, its strip, and Go, which is the visit (Visited once pressed today) | `.vtabs` › `.vtab`, `.culimbo.vlimbotab`; `.vfnd`, `.vchk`; `.vaxis`; `.vgrp`; `.vgl`, `.vrow.vdragging`; `.vrow` = `.vname` (`.vnmrow` › `.vnm`, `.vchips`) + `.vtrack` + `.vend` (`.vgo`, `.vgo.done`) |
 | a venue's window, on Venues and in its panel: the band, its two ends to drag, the event days, the visits, today, due | `.vband` (`.st-new`, `.st-board`, `.st-venues`), `.vh`, `.vmeet` and `.vdia`, `.vtick`, `.vnow`, `.vpulse` |
 | the visit question, at the foot of the room after Go | `#vbar` › `.vask.bar` |
 | Leads: the table, its heading of columns that sort, a step's coloured band, one lead's line, and open, its Who, Links and Updates boxes | `.ltable` › `.lthead` (`.ltc`), `.lgrp` › `.lgh`, `article.lead.wide`; `.lpane`, `.lupdpane` |

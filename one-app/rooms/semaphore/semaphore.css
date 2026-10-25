@@ -1094,10 +1094,9 @@
 #pane-semaphore .vrows.limbo{--lg-line:rgba(170,215,205,.22)}
 #pane-semaphore .vrows.limbo .vnm{color:#C9DDD6}
 #pane-semaphore .vtabdue{font:italic 11.5px var(--body);letter-spacing:0;text-transform:none;color:var(--notice-ink)}
-/* On the board, the tab before the three: what a search found waits in
-   it in the lime of everything new, and a venue a search changed says so
-   in its own tab (see "what a search found, checked in its card") */
-#pane-semaphore .vtab.t-board::before{background:var(--new-soft);box-shadow:inset 0 0 0 1.5px var(--new-line)}
+/* what a search found waits in Limbo in the lime of everything new, and a
+   venue a search changed says so in its own tab (see "what a search
+   found, checked in its card") */
 #pane-semaphore .vtabnew{font:italic 11.5px var(--body);letter-spacing:0;text-transform:none;color:var(--new-ink)}
 #pane-semaphore .vchk{align-self:center}
 #pane-semaphore .vfnd{flex:0 0 auto;margin-left:8px;padding:0 7px;border-radius:99px;border:1px solid var(--new-line);
