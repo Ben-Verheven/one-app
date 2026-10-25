@@ -330,8 +330,8 @@ agent waits. **Its job is to put things on the board** (since 2026-10-15):
 call dates as published, which simply stand there, and venues — brokerage
 events and partner searches where projects in the making and their
 leaders can be found — which land as `new` and wait in the Semaphore's
-Limbo until Mark, in each one's card, moves it to Venues, keeps it in
-Limbo on the board, or removes it. It keeps what
+Venues, in the section its dates give and marked new, until Mark, in each
+one's card, puts it in a section or removes it. It keeps what
 is on the board correct, but where a venue stands is his: it deletes only
 a venue still new, its own find gone wrong, and never one he removed
 (the gatekeeper refuses both). Since Mark judges everything it brings, it
@@ -437,13 +437,13 @@ and the agent's task still say the Marketplace; it is the same room.
 | the header: Venues, Leads beside it, Search, Types, + Venue, + Arena, ChatGPT and the cloud chip | `header.top`; `#viewseg`, `#leadsBtn`, `#searchBtn` and its box `#search`, `#semcloud` |
 | ChatGPT's search, opened by ChatGPT here for brokerage and lent over the Call Board for calls: the file out, the answer pasted or chosen, what it would change, Put on the board | `#gptModal` › `#gptText`, `#gptFile`, `#gptSaid`, `#gptPut` |
 | Venues (the Now page until 2026-10-15), Leads (on the wall) | `#now`, `#wall` |
-| Venues: its three tabs, Arising · Active · Dying, and Limbo's apart, which holds what a search found, new, then what is kept on the board to think about, then what is over; a venue new or changed, and the press that goes through them one card at a time; the axis over them, sticky; the heading of each group, Shared then each type; one venue's row, its mark the grip it is dragged by into his own order, its name and the arenas it serves, its strip, and Go, which is the visit (Visited once pressed today) | `.vtabs` › `.vtab`, `.culimbo.vlimbotab`; `.vfnd`, `.vchk`; `.vaxis`; `.vgrp`; `.vgl`, `.vrow.vdragging`; `.vrow` = `.vname` (`.vnmrow` › `.vnm`, `.vchips`) + `.vtrack` + `.vend` (`.vgo`, `.vgo.done`) |
+| Venues: its three tabs, Arising · Active · Dying, and Limbo's apart, for what is over or put there; a venue new or changed, and the press that goes through them one card at a time; the axis over them, sticky; the heading of each group, Shared then each type; one venue's row, its mark the grip it is dragged by into his own order, its name and the arenas it serves, its strip, and Go, which is the visit (Visited once pressed today) | `.vtabs` › `.vtab`, `.culimbo.vlimbotab`; `.vfnd`, `.vchk`; `.vaxis`; `.vgrp`; `.vgl`, `.vrow.vdragging`; `.vrow` = `.vname` (`.vnmrow` › `.vnm`, `.vchips`) + `.vtrack` + `.vend` (`.vgo`, `.vgo.done`) |
 | a venue's window, on Venues and in its panel: the band, its two ends to drag, the event days, the visits, today, due | `.vband` (`.st-new`, `.st-board`, `.st-venues`), `.vh`, `.vmeet` and `.vdia`, `.vtick`, `.vnow`, `.vpulse` |
 | the visit question, at the foot of the room after Go | `#vbar` › `.vask.bar` |
 | Leads: the table, its heading of columns that sort, a step's coloured band, one lead's line, and open, its Who, Links and Updates boxes | `.ltable` › `.lthead` (`.ltc`), `.lgrp` › `.lgh`, `article.lead.wide`; `.lpane`, `.lupdpane` |
 | the types, managed — opened by Types: a type's line and its grip, its arenas one per row, its colour dot, the copy that follows a drag | `#typesModal` › `#tylist` › `.tyblock` (`.tyline` › `.tygrip`, `.tyarenas` › `.tyrow`); `.lcolwrap.tycol`; `.tyghost` |
 | a venue's panel, wider (`#card.vwide`): what a search found or changed and what to do with it, the Call Board's view of it under that, its facts two to a row, the rest folded; going through what was found, the band over it all | `.vfound` (`.vfch`), `.vsnip` (its lane `.sr.lane`, a call `.sr`), `.vfacts` › `.vf`, `.vfolds` › `.vfold` › `.vfh`; `.vwalk` |
-| the drawer, holding an arena or a venue; an arena's venues in it; a link's cross, and the press that makes a brokerage link a venue; where a venue stands, with its three buttons, or in Venues the section it stands in, chosen by hand if he likes (`.vphseg`); a venue's ask to the agent | `#card` and its `.scrim`; `.avlist` › `.avrow`; `.ldel`, `.lmake`; `.vplace`; `.vagent` |
+| the drawer, holding an arena or a venue; an arena's venues in it; a link's cross, and the press that makes a brokerage link a venue; where a venue stands, the four sections tied together with Remove beside them (`.vphseg`); a venue's ask to the agent | `#card` and its `.scrim`; `.avlist` › `.avrow`; `.ldel`, `.lmake`; `.vplace`; `.vagent` |
 
 **The Call Board** — the tabs are the bar, `#hdr` › `.tabs`, two rows in
 `.tgrid`, each named at its left by a `.tglab`: Horizon's clusters on the

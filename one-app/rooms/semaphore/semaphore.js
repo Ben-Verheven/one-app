@@ -412,6 +412,9 @@ function tidyVenue(v){
   }
   v.kind='event';
   if(!PLACES.includes(v.place))v.place=typeof v.foundAt==='string'&&v.foundAt>=PLACES_SINCE?'new':'venues';
+  /* Kept on the board to think about is Limbo since 2026-10-25, when Mark
+     made the two one: a venue is new, or in one of Venues' four sections */
+  if(v.place==='board'){v.place='venues';v.phase='over';}
   if(v.place==='gone'){if(!ISO_DAY.test(v.goneAt||''))v.goneAt=todayISO();}else delete v.goneAt;
   v.name=String(v.name==null?'':v.name).trim()||'Unnamed venue';
   v.url=typeof v.url==='string'?v.url.trim():'';
@@ -785,8 +788,7 @@ const GPT_KINDS={
    the file asks ChatGPT to say so rather than fall back to that. */
 const GPT_BATCH=15;
 const GPT_GRANS=['day','month','quarter','half','year','range','none'];
-const GPT_PLACE={new:'new on the board, not judged yet',board:'kept on the board to think about',
-  venues:'in Venues: Mark follows it',gone:'removed_by_mark'};
+const GPT_PLACE={new:'new on the board, not judged yet',venues:'in Venues: Mark follows it',gone:'removed_by_mark'};
 let gpt={kind:'venues',ans:null,plan:null,sugg:[]};
 
 /* The search for brokerage is given each arena's call dates too, without
@@ -1317,7 +1319,7 @@ function refreshPlace(){
    for Mark, so a venue moved to Venues is off it, in any section, Limbo
    and Mark's Place included (Mark, 2026-10-23); its arena's panel still
    lists it, and Back to the board brings it back. */
-const onTrial=v=>v.place==='new'||v.place==='board';
+const onTrial=v=>v.place==='new';
 /* The section a venue stands in. Mark can put one in another section by
    hand from its panel (2026-10-15), and there it stays (`phase`) until he
    gives it back to its dates; its window and its words keep saying what
@@ -1376,7 +1378,7 @@ function vYieldSay(v){
 function vHost(v){return v.url?linkName({url:v.url}):'';}
 /* Where it stands, in the board's words: new, kept, or in Venues and in
    which section of it */
-const PLACE_SAY={new:'New, in Limbo',board:'Kept in Limbo',venues:'In Venues',gone:'Removed'};
+const PLACE_SAY={new:'New',venues:'In Venues',gone:'Removed'};
 const PHASE_SAY={arising:'Arising',active:'Active',dying:'Dying',over:'Limbo',place:'Mark\u2019s Place'};
 function vPlaceSay(v){return PLACE_SAY[v.place]+(inVenues(v)?' · '+PHASE_SAY[vPhase(v)]:'');}
 /* a venue's mark: a diamond where it has event days, dashed while they are
@@ -1709,7 +1711,7 @@ function nowEmptyHTML(){
       '<button class="btn" data-act="seed">Load example set</button></div></div>';
   const q=S.ui.q.trim();
   return '<div class="empty"><p>'+(q?'No venue matches the search.':'No venue in Venues yet.')+'</p>'+
-    '<p class="hint" style="margin-top:6px">'+(q?'Clear it, or try a shorter word.':'Move one here from the board with → Venues, or press + Venue.')+'</p></div>';
+    '<p class="hint" style="margin-top:6px">'+(q?'Clear it, or try a shorter word.':'What ChatGPT\'s search finds lands here, or press + Venue.')+'</p></div>';
 }
 const NOW_TABS={arising:{name:'Arising',none:'Nothing arising: no venue in Venues whose window is still ahead.'},
   active:{name:'Active',none:'Nothing active. A venue is active from its window’s opening through its event days.'},
@@ -1751,19 +1753,16 @@ function venueOrder(x,y){
   return vBlock(x)-vBlock(y)||(pos(x)===pos(y)?0:pos(x)<pos(y)?-1:1)||
     (from(x)===from(y)?0:from(x)<from(y)?-1:1)||x.name.localeCompare(y.name);
 }
-/* Limbo holds what Mark does not follow (2026-10-25): what a search
-   found, new, waiting for him to say where it goes, then what he keeps on
-   the board to think about, then what is over in Venues. The first two
-   had a tab of their own at the head of Venues for an hour, On the board,
-   and he put them here instead; before that they stood over the Call
-   Board's calls as lanes for a day, and on the Semaphore's own Board. */
+/* One category (Mark, 2026-10-25): Limbo holds what is put there, and a
+   new find stands in the section its dates give, marked new, until Mark
+   picks its section in its card. It stood apart for a day, in a tab On the
+   board and then at the head of Limbo, beside the venues kept on the board
+   to think about, which are Limbo now. */
 function nowSections(){
-  const vis=visibleVenues(),all=vis.filter(inVenues);
+  const vis=visibleVenues(),all=vis.filter(v=>inVenues(v)||onTrial(v));
   const by={arising:[],active:[],dying:[],over:[],place:[]};
   for(const v of all)by[vPhase(v)].push(v);
   for(const k in by)by[k].sort(venueOrder);
-  const nw=vis.filter(v=>v.place==='new').sort(venueOrder),kept=vis.filter(v=>v.place==='board').sort(venueOrder);
-  by.over=nw.concat(kept,by.over);
   return {all,by};
 }
 /* ── dragging a venue into place ──
@@ -1811,7 +1810,7 @@ function renderNow(){keepPlace(()=>{
   const el=$('#now');if(!el)return;
   const sp=nowSpan();
   const{all,by}=nowSections();
-  if(!all.length&&!by.over.length){el.innerHTML=nowEmptyHTML();return;}
+  if(!all.length){el.innerHTML=nowEmptyHTML();return;}
   const tab=NOW_TABS[S.ui.nowTab]?S.ui.nowTab:'active';
   const tabDue=xs=>xs.filter(vDue).length;
   /* what waits to be checked in each tab: the new in Limbo, and anywhere
@@ -1829,27 +1828,17 @@ function renderNow(){keepPlace(()=>{
     /* Mark's Place stands apart too: not a stage of a venue's life, but
        where its partner search is read */
     '<div class="vtabs" role="group" aria-label="Copied by Mark\u2019s Place">'+tabHTML('place')+'</div>'+
-    /* Limbo stands apart from the three, in its fog: what is not followed,
-       found, kept or over, is not a stage of the work */
+    /* Limbo stands apart from the three, in its fog: what is over, or put
+       there, is not a stage of the work but what is left of it */
     '<button class="culimbo vlimbotab'+(tab==='over'?' on':'')+'" data-act="nowTab" data-t="over" aria-pressed="'+(tab==='over')+'">'+
       '<span class="culfog" aria-hidden="true"></span>'+LIMBO_GHOST+'<span class="culc">Limbo</span><b>'+by.over.length+'</b>'+tabFound(by.over)+'</button>'+
-    '<span class="wsay">'+(tab==='place'?(by.place.length?'Copied every night by Mark\u2019s Place, so none of them comes due for a visit here.':''):tab==='over'?(by.over.length?'What a search found and what you keep to think about wait here until you say where each goes; what is over, until you delete it \u2014 or drag its end on, or put it in another section from its panel.':'Nothing in Limbo.'):
+    '<span class="wsay">'+(tab==='place'?(by.place.length?'Copied every night by Mark\u2019s Place, so none of them comes due for a visit here.':''):tab==='over'?(by.over.length?'Over, or put here by you, each waiting until you delete it \u2014 or drag its end on, or put it in another section from its card.':'Nothing in Limbo.'):
       due?'<b>'+due+'</b> '+(due===1?'venue here is':'venues here are')+' due for a visit.':'Nothing here is due for a visit.')+'</span>'+
     (found?'<button class="btn primary vchk" data-act="walkStart" title="Each new or changed venue in its card, one at a time">Check what was found · '+found+'</button>':'')+
     '<span class="vkey"><i class="vgl ev"></i>event days<i class="vkbar"></i>window, by how much goes on<i class="vkp"></i>due</span></div>';
   h+='<div class="vaxis"><span class="vaxl">'+NOW_TABS[tab].name+'</span><div class="vaxt">'+nowAxisHTML(sp)+'</div><span></span></div>';
   if(!shown.length){h+=tab==='over'?'':'<p class="vnone vtabnone">'+NOW_TABS[tab].none+'</p>';el.innerHTML=h;return;}
-  /* in Limbo, the new and the kept first, each said in its card where it
-     goes, and no Delete on their rows */
-  let rest=shown;
-  if(tab==='over'){
-    const nw=shown.filter(v=>v.place==='new'),kept=shown.filter(v=>v.place==='board');
-    rest=shown.filter(inVenues);
-    if(nw.length)h+='<p class="vsec">New, waiting for you to say where it goes</p>'+blockRows(nw,sp,false);
-    if(kept.length)h+='<p class="vsec">Kept to think about</p>'+blockRows(kept,sp,false);
-    if(rest.length&&(nw.length||kept.length))h+='<p class="vsec">Over</p>';
-  }
-  const dated=rest.filter(v=>vWin(v)),undated=rest.filter(v=>!vWin(v));
+  const dated=shown.filter(v=>vWin(v)),undated=shown.filter(v=>!vWin(v));
   h+=blockRows(dated,sp,tab==='over');
   if(undated.length)h+='<p class="vsec">Not dated yet</p>'+blockRows(undated,sp,false);
   el.innerHTML=h;
@@ -1939,7 +1928,7 @@ function walkShow(){
     return;
   }
   walk.id=v.id;walk.pos=foundVenues().indexOf(v);
-  S.ui.view='now';S.ui.nowTab=onTrial(v)?'over':vPhase(v);
+  S.ui.view='now';S.ui.nowTab=vPhase(v);
   applyView();renderNow();
   openVenue(v.id);
 }
@@ -1972,10 +1961,7 @@ function vWalkHTML(v){
 function vFoundHTML(v){
   const day=x=>esc(shortDay(String(x||'').slice(0,10)));
   if(v.place==='new')return '<div class="vfound"><p class="vfq"><b>New</b>'+
-      (v.foundAt?'<i>found '+day(v.foundAt)+'</i>':'')+'<span>Where does it go?</span></p>'+
-    '<div class="vfbtns"><button class="btn primary" data-act="vPlace" data-v="'+v.id+'" data-p="venues" title="Move it to Venues, where it comes round for visits">→ Venues</button>'+
-      '<button class="btn" data-act="vPlace" data-v="'+v.id+'" data-p="board" title="Leave it in Limbo to think about">Keep in Limbo</button>'+
-      '<button class="btn ghost" data-act="vRemove" data-v="'+v.id+'" title="Off the board; a search will not bring it back">Remove</button></div></div>';
+      (v.foundAt?'<i>found '+day(v.foundAt)+'</i>':'')+'<span>Where does it go?</span></p>'+vPlaceHTML(v)+'</div>';
   const ls=newsLines(v);
   if(!ls.length)return '';
   return '<div class="vfound"><p class="vfq"><b>Changed by a search</b><i>'+day(v.news.at)+'</i></p>'+
@@ -2100,27 +2086,21 @@ function vFactsHTML(v){
       :'<i>not set — Edit, or give it event days</i>')+
     f('Event days',v.start?esc((v.grade==='fixed'?'':'≈ ')+dispDate(v)):'<i>none</i>');
 }
-/* What to do with a venue kept on the board (Mark, 2026-10-15): move it
-   to Venues, or remove it; a new one is asked at the card's head (see
-   vFoundHTML). In Venues it can go back to the board. */
+/* Where a venue stands: the four sections tied together, the one it
+   stands in lit, and Remove beside them, the same for every venue (Mark,
+   2026-10-25). A new find has none lit yet, the one its dates give marked;
+   choosing the one its dates give lets its dates decide. One on a site
+   Mark's Place copies stands in Mark's Place whichever is chosen. */
 function vPlaceHTML(v){
-  const found=v.foundAt?' <i>found '+esc(shortDay(v.foundAt.slice(0,10)))+'</i>':'';
-  if(onTrial(v))return '<div class="vplace st-'+v.place+'"><span><b>'+PLACE_SAY[v.place]+'</b>'+found+'</span>'+
-    '<button class="btn primary" data-act="vPlace" data-v="'+v.id+'" data-p="venues" title="Move it to Venues, where it comes round for visits">→ Venues</button>'+
-    '<button class="btn ghost" data-act="vRemove" data-v="'+v.id+'" title="Off the board; a search will not bring it back">Remove</button></div>';
-  /* in Venues: the section it stands in, any of which can be chosen by
-     hand, and the way back to the board; one Mark's Place copies stands
-     in that section by itself */
-  if(inPlace(v))return '<div class="vplace st-venues"><span><b>In Venues</b><i>in Mark\u2019s Place, which copies its partner search every night</i></span>'+
-    '<button class="btn ghost" data-act="vPlace" data-v="'+v.id+'" data-p="board" title="Take it out of Venues: it waits in Limbo with what you keep to think about">Back to Limbo</button></div>';
-  const ph=vPhase(v),nat=vPhaseByDates(v);
-  return '<div class="vplace st-venues"><span><b>In Venues</b>'+
-      (v.phase&&v.phase!==nat?'<i>put here by you; its dates say '+PHASE_SAY[nat]+'</i>':'')+'</span>'+
+  const ph=onTrial(v)?null:vPhase(v),nat=vPhaseByDates(v);
+  const said=inPlace(v)?'<i>in Mark\u2019s Place, which copies its partner search every night</i>':
+    v.phase&&v.phase!==nat?'<i>put here by you; its dates say '+PHASE_SAY[nat]+'</i>':'';
+  return '<div class="vplace">'+
     '<span class="vphseg" role="group" aria-label="Section in Venues">'+['arising','active','dying','over'].map(k=>
-      '<button class="'+(k===ph?'on':'')+'" data-act="vPhase" data-v="'+v.id+'" data-ph="'+k+'" aria-pressed="'+(k===ph)+'" title="'+
+      '<button class="'+(k===ph?'on':k===nat&&!ph?'nat':'')+'" data-act="vPhase" data-v="'+v.id+'" data-ph="'+k+'" aria-pressed="'+(k===ph)+'" title="'+
         (k===nat?'Where its dates put it':'Put it in '+PHASE_SAY[k]+' by hand')+'">'+PHASE_SAY[k]+'</button>').join('')+'</span>'+
-    (v.phase?'<button class="vreset" data-act="vPhase" data-v="'+v.id+'" data-ph="" title="Let its dates decide again">by its dates</button>':'')+
-    '<button class="btn ghost" data-act="vPlace" data-v="'+v.id+'" data-p="board" title="Take it out of Venues: it waits in Limbo with what you keep to think about">Back to Limbo</button></div>';
+    '<button class="btn ghost" data-act="vRemove" data-v="'+v.id+'" title="Off the board altogether; a search will not bring it back">Remove</button>'+
+    (said?'<span class="vplsay">'+said+'</span>':'')+'</div>';
 }
 function venueReadHTML(v){
   const d=vSince(v);
@@ -2183,8 +2163,6 @@ function venueReadHTML(v){
   '</div>'+
   '<div class="cfoot">'+
     '<button class="btn" data-act="vEdit" data-v="'+v.id+'">Edit</button>'+
-    '<span class="sp"></span>'+
-    '<button class="btn ghost" data-act="vRemove" data-v="'+v.id+'" title="Off the board altogether; the agent will not bring it back">Remove</button>'+
   '</div>';
 }
 /* The form a venue is made and changed in. Its event days are written the
@@ -2271,7 +2249,7 @@ function arenaVenuesHTML(a){
   const rows=vs.slice().sort((x,y)=>by(x)-by(y)||x.name.localeCompare(y.name)).map(v=>
     '<div class="avrow st-'+v.place+(vState(v)==='over'?' over':'')+(vDue(v)?' due':'')+'">'+vGlyph(v)+
       '<span class="avt"><button class="vnm" data-act="openVenue" data-v="'+v.id+'">'+esc(v.name)+'</button>'+
-        '<i>'+(onTrial(v)?'<b class="avplace">'+(v.place==='new'?'new':'in Limbo')+'</b> · ':'')+esc(vDateSay(v))+'</i></span>'+
+        '<i>'+(onTrial(v)?'<b class="avplace">new</b> · ':'')+esc(vDateSay(v))+'</i></span>'+
       '<span class="vend">'+vGoHTML(v)+'</span></div>').join('');
   return '<section class="card pcard brok"><div class="chd"><span class="ctitle">Venues</span>'+
       '<button class="ib cact" data-act="vNew" data-id="'+a.id+'" title="A new venue for '+esc(a.name)+'">+</button></div>'+
@@ -4103,13 +4081,12 @@ function seed(){
   migrate(S);          /* the example set goes in in the same shape as anything else */
   const po=(S.venues||[]).find(v=>/^PO Days/.test(v.name));
   if(po&&po.start){po.opens=po.start.slice(0,8)+'01';po.closes=po.start.slice(0,8)+'28';}
-  /* and one of each place on the board, so Limbo has a find to put to
-     Mark and one kept to think about */
+  /* and a find still new, to put to Mark, and one put in Limbo by hand */
   const found=new Date().toISOString();
   const cm=(S.venues||[]).find(v=>/^Cities Mission/.test(v.name));
   if(cm){cm.place='new';cm.foundAt=found;}
   const ec=(S.venues||[]).find(v=>/^EC info days/.test(v.name));
-  if(ec)ec.place='board';
+  if(ec)ec.phase='over';
   save();renderAll();
 }
 
@@ -4717,14 +4694,6 @@ document.addEventListener('click',e=>{
       save();repaint();renderDrawer();applyView();break;}
     case 'vAskOff':vAsking=null;renderAsk();break;
     case 'nowTab':S.ui.nowTab=NOW_TABS[b.dataset.t]?b.dataset.t:'active';save();renderNow();break;
-    /* Where a venue stands (see "venues"): to Venues, kept on the board, or
-       back to the board from Venues. Moving one to Venues shows the tab it
-       landed in, so it is seen where it went. */
-    case 'vPlace':{const v=venue(b.dataset.v);if(!v||!['board','venues'].includes(b.dataset.p))break;
-      v.place=b.dataset.p;
-      if(v.place==='board')delete v.phase;
-      if(v.place==='venues'){const ph=vPhase(v);S.ui.nowTab=ph;}
-      save();renderAll();walkNext(v.id);break;}
     /* a change a search made, kept or put back (see "what a search found,
        checked in its card") */
     case 'vSeen':{const v=venue(b.dataset.v);if(!v)break;
@@ -4734,13 +4703,15 @@ document.addEventListener('click',e=>{
     case 'walkStart':walkStart();break;
     case 'walkStep':walkStep(+b.dataset.n||1);break;
     case 'walkStop':walkStop();break;
-    /* a section chosen by hand; the one its dates give, or "by its dates",
-       hands it back to them. The tab follows it, so it is seen where it went. */
+    /* a section chosen, which also places a new find; the one its dates
+       give hands it back to them. The tab follows it, so it is seen where
+       it went. */
     case 'vPhase':{const v=venue(b.dataset.v);if(!v)break;
       const k=b.dataset.ph;
+      v.place='venues';
       if(!k||k===vPhaseByDates(v))delete v.phase;else v.phase=k;
       S.ui.nowTab=vPhase(v);
-      save();renderAll();break;}
+      save();renderAll();walkNext(v.id);break;}
     case 'vFold':{const k=b.dataset.f;if(vFolds.has(k))vFolds.delete(k);else vFolds.add(k);renderDrawer();
       const f=$('#card .vfh[data-f="'+k+'"]');if(f)f.focus({preventScroll:true});break;}
     case 'vWinReset':{const v=venue(b.dataset.v);if(!v)break;

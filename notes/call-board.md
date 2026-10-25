@@ -86,7 +86,7 @@ undo it, and what was agreed and is not built yet.
 Venues kept on the board stood over the calls as brass lanes, behind a
 Brokerage switch beside the chart's title, and a new venue was judged
 here drawn dashed on its lane. Mark moved them back to the Semaphore the
-next day (2026-10-25): brokerage has its house there, in Limbo, and new and changed venues are checked in their card (see
+next day (2026-10-25): brokerage has its house there, in Venues, and new and changed venues are checked in their card (see
 [semaphore-decisions](semaphore-decisions.md)). The drawings are on the
 canvas "The Call Board, Grown"
 (https://claude.ai/artifact/JudrMHyYpNbEMrM2rUk2Zd), which also holds

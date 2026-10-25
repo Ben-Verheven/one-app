@@ -25,21 +25,25 @@ the next day (2026-10-25): brokerage lands here, its proper house, and
 calls land on the Call Board. What still holds of the board:
 
 - **The way in** (2026-10-15). What is found (brokerage events, partner
-  searches, tools) lands new and waits until he acts: **→ Venues**, **Keep
-  in Limbo** to think about, or **Remove**, which leaves a stub (`place:
-  gone`) so it is not brought back. Published call dates simply go on the
+  searches, tools) lands new and waits until he puts it in a section of
+  Venues or **Remove**s it, which leaves a stub (`place: gone`) so it is
+  not brought back. Published call dates simply go on the
   board.
-- **The board's venues live in Limbo** (Mark, 2026-10-25): what a search
-  found, new, then what he keeps on the board to think about, then what is
-  over in Venues, each a row on the same strip of time; Delete only on the
-  last, the others being decided in their card. The words follow: Keep in
-  Limbo, Back to Limbo. A tab of their own at the head of Venues, On the
-  board, stood for an hour and went. Before that they stood on the
-  Semaphore's own Board until 2026-10-24, then for a day as lanes over the
-  Call Board's calls.
+- **One category** (Mark, 2026-10-25): Arising, Active, Dying and Limbo,
+  and Limbo holds whatever is put there or is over. Kept on the board to
+  think about is Limbo now (`place: board` is read as Limbo with `phase:
+  over`). A new find stands in the section its dates give, marked new,
+  until he picks one in its card. Before that day the board's venues had
+  houses of their own: the Semaphore's own Board until 2026-10-24, lanes
+  over the Call Board's calls for a day, then for an hour a tab On the
+  board, then the head of Limbo.
+- **Where, on every venue's card: the four sections tied together, and
+  Remove beside them** (Mark, 2026-10-25), so any venue can be removed
+  from anywhere. For a new find none is lit, the one its dates give ringed.
+  The Remove at the card's foot went, as it said the same.
 - **Checked off in its own card** (Mark, 2026-10-25): a new venue says so
-  at the head of its card and asks where it goes (→ Venues, Keep in
-  Limbo, Remove); a venue already placed that a search changed is marked
+  at the head of its card and asks where it goes, the four sections and
+  Remove; a venue already placed that a search changed is marked
   changed, on its row and its tab, its card saying what was and what is,
   until he presses Seen, which keeps the change, or Put back as it was.
   Check what was found, on Venues, goes through them one card at a time,
@@ -52,8 +56,7 @@ calls land on the Call Board. What still holds of the board:
   panel does not mark it seen. A file whose `foundAt` is the moment it was
   written shows its dates as new.
 - **A venue in Venues, in any section, Mark's Place and Limbo included, is
-  off the board** (2026-10-23); its arena's panel still lists it, and Back
-  to Limbo puts it back on the board. It replaced thin nameless lines he did not
+  off the board** (2026-10-23); its arena's panel still lists it. It replaced thin nameless lines he did not
   notice. A board of calls and marks only, with no venues at all, was turned
   down (2026-10-15).
 - A window with no end runs six weeks past today and fades out with an
@@ -76,8 +79,8 @@ calls land on the Call Board. What still holds of the board:
   falling after. Of three first pages drawn he chose this strip of time over
   one list in bands and over three columns.
 - **Arising · Active · Dying, as tabs** (he was unsure between tabs and
-  sections), **Limbo** apart for what is over (and, since 2026-10-25, for
-  the board's venues too), and **Mark's Place** in a box
+  sections), **Limbo** apart for what is over or put there, and **Mark's
+  Place** in a box
   of its own between the three and Limbo (2026-10-22): a venue on a site
   Mark's Place copies stands there whatever its dates say and never falls
   due, since Mark's Place reads it every night (`inPlace`).
@@ -98,9 +101,9 @@ calls land on the Call Board. What still holds of the board:
   Of the two widths drawn he chose the wider; the narrow one shortened the
   arenas' names on its timeline.
 - A venue can be put in a section by hand from its panel (Arising · Active ·
-  Dying · Limbo, the current one lit) and stays there (`phase`) until "by its
-  dates" gives it back; the panel says where its dates would put it, and its
-  rhythm follows the section chosen.
+  Dying · Limbo, the current one lit) and stays there (`phase`) until the
+  section its dates give is chosen again; the panel says where its dates
+  would put it, and its rhythm follows the section chosen.
 - **Go is the visit** (2026-10-15): recorded at once as the tick on the
   venue's strip, the button then reading **Visited** for the rest of the
   day. Coming back to the app asks what it gave (nothing new, something,
