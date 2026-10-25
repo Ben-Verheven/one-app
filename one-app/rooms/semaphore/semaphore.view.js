@@ -58,7 +58,6 @@ Hub.markup('semaphore', `
 
 <main id="now"></main>
 <main id="wall" hidden></main>
-<section id="freezer" aria-label="Freezer" hidden></section>
 
 </div><!-- /#semscroll -->
 

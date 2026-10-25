@@ -98,21 +98,21 @@ const dm =s=>d3(s).toLocaleDateString('en-GB',{day:'2-digit',month:'short'});
 const yy =s=>s.slice(2,4);
 
 /* ---------- tabs ----------
-   The tabs stand in a roll (Mark, 2026-10-24): the clusters and missions,
-   the arenas' tabs and ALL each have a row of their own, one row in the
-   bar at a time, the next one peeking under it and the one before over
-   it. The mouse wheel over the bar, or a swipe on the iPad, rolls from
-   Horizon to the arenas to all the calls, and the three words at the
-   left say where the roll stands and take it there in one press. All
-   thirteen side by side in one row was what it replaced; three words
-   choosing the row, with no roll, was drawn and turned down. Rolling only
-   shows another row: the room changes when a tab in it is pressed, and
-   the roll follows whichever tab is live. */
+   The tabs stand in two rows that stay put (Mark, 2026-10-25): the
+   clusters and missions on the first, the arenas' tabs and ALL on the
+   second, each row named at its left, so every tab is one press away and
+   in sight. They replaced a roll that showed one row at a time, the
+   others peeking over and under the bar, turned by the wheel or a swipe:
+   the peeking rows were cut off at the bar's edges and read as broken,
+   and a tab in another row was two moves away. All thirteen side by side
+   in one row, before the roll, ran into the room's name on the iPad held
+   sideways. */
 const tabsEl=document.getElementById('tabs');
-const ROLL=[{key:'hz',name:'Horizon'},{key:'ar',name:'Arenas'},{key:'all',name:'All calls'}];
-tabsEl.innerHTML='<div class="dial" role="group" aria-label="Which calls the row shows">'
-  +ROLL.map(g=>`<button data-g="${g.key}">${g.name}</button>`).join('')+'</div>'
-  +'<div class="drum">'+ROLL.map(g=>`<div class="trow" data-g="${g.key}" role="tablist" aria-label="${g.name}"></div>`).join('')+'</div>';
+tabsEl.innerHTML='<div class="tgrid">'
+  +'<span class="tglab">Horizon</span><div class="trow" data-g="hz" role="tablist" aria-label="Horizon"></div>'
+  +'<span class="tglab" data-g="ar">Arenas</span><div class="tline">'
+  +'<div class="trow" data-g="ar" role="tablist" aria-label="Arenas"></div>'
+  +'<div class="trow tall" data-g="all" role="tablist" aria-label="All calls"></div></div></div>';
 const rowOf=g=>tabsEl.querySelector(`.trow[data-g="${g}"]`);
 const htabEls=PAGES.map((p,i)=>{
   const b=document.createElement('button'); b.className='tab'; b.setAttribute('role','tab');
@@ -127,61 +127,11 @@ ovTab.className='tab'; ovTab.setAttribute('role','tab'); ovTab.setAttribute('ari
 ovTab.innerHTML=`<span class="ck">ALL</span><span class="cn">Deadline planner</span><span class="cc">${ALLTOPICS}</span>`;
 ovTab.addEventListener('click',()=>selectPage(PAGES.length));
 rowOf('all').appendChild(ovTab);
-let rollAt='hz';
-/* where each row stands: the one showing near the top of the bar when a
-   row follows it, low when one comes before it only, and between them
-   when both do, so that the neighbours have room to peek */
-function paintRoll(){
-  const groups=ROLL.filter(g=>rowOf(g.key).children.length).map(g=>g.key);
-  if(!groups.includes(rollAt)) rollAt=groups[0];
-  const at=groups.indexOf(rollAt), y=at===0?(groups.length>1?1:11):at===groups.length-1?21:11;
-  ROLL.forEach(g=>{
-    const r=rowOf(g.key), i=groups.indexOf(g.key), d=i<0?9:i-at;
-    r.classList.toggle('cur',d===0); r.classList.toggle('prev',d===-1); r.classList.toggle('next',d===1);
-    r.style.transform=`translateY(${y+(d===0?0:d<0?-27+(d+1)*40:34+(d-1)*40)}px)`+(d?' scale(.84)':'');
-    r.querySelectorAll('.tab').forEach(t=>t.tabIndex=d===0?0:-1);
-  });
-  tabsEl.querySelectorAll('.dial button').forEach(b=>{
-    b.hidden=!groups.includes(b.dataset.g); b.classList.toggle('on',b.dataset.g===rollAt);
-    b.setAttribute('aria-pressed',String(b.dataset.g===rollAt));
-  });
-  const drum=tabsEl.querySelector('.drum');
-  drum.style.width=Math.max(...groups.map(g=>rowOf(g).scrollWidth))+'px';
-}
-function roll(d){
-  const groups=ROLL.filter(g=>rowOf(g.key).children.length).map(g=>g.key);
-  const i=Math.max(0,Math.min(groups.length-1,groups.indexOf(rollAt)+d));
-  if(groups[i]!==rollAt){ rollAt=groups[i]; paintRoll(); }
-}
-tabsEl.querySelectorAll('.dial button').forEach(b=>b.addEventListener('click',()=>{
-  rollAt=b.dataset.g; paintRoll();
-  /* All calls is a single tab, so the word that rolls to it opens it */
-  if(rollAt==='all'&&MODE!=='overview') selectPage(PAGES.length);
-}));
-/* One step of the wheel is one row, however hard the wheel is turned, and
-   a sideways scroll is left alone; on the iPad a short swipe up or down. */
-let wheelAcc=0, wheelUntil=0;
-tabsEl.addEventListener('wheel',e=>{
-  if(Math.abs(e.deltaY)<=Math.abs(e.deltaX)) return;
-  e.preventDefault();
-  if(Date.now()<wheelUntil) return;
-  wheelAcc+=e.deltaY;
-  if(Math.abs(wheelAcc)>=30){ roll(wheelAcc>0?1:-1); wheelAcc=0; wheelUntil=Date.now()+380; }
-},{passive:false});
-let swipeY=null;
-tabsEl.addEventListener('touchstart',e=>{ swipeY=e.touches.length===1?e.touches[0].clientY:null; },{passive:true});
-tabsEl.addEventListener('touchend',e=>{
-  if(swipeY===null) return;
-  const dy=e.changedTouches[0].clientY-swipeY; swipeY=null;
-  if(Math.abs(dy)>=24) roll(dy<0?1:-1);
-},{passive:true});
 
 /* The arenas' tabs come and go with the arenas, so a tab is marked live by
-   which element it is rather than by its place in a row; the roll follows
-   it to its row. */
+   which element it is rather than by its place in a row. */
 function markTab(el){
   tabsEl.querySelectorAll('.tab').forEach(t=>t.setAttribute('aria-selected',String(t===el)));
-  const r=el&&el.closest('.trow'); if(r){ rollAt=r.dataset.g; paintRoll(); }
 }
 function selectPage(i){
   if(i===PAGES.length){ MODE='overview'; location.hash='all'; markTab(ovTab); }
@@ -278,6 +228,7 @@ function readArenas(){
   let list=[];
   try{ list=(ARENA_SRC&&ARENA_SRC.list())||[]; }catch(e){ console.error(e); list=[]; }
   ARENA_BY_ID=new Map(list.map(a=>[a.id,a]));
+  try{ FROZEN=(ARENA_SRC&&ARENA_SRC.frozen&&ARENA_SRC.frozen())||[]; }catch(e){ console.error(e); FROZEN=[]; }
   const before=new Map(APAGES.map(p=>[p.key,p.state]));
   APAGES=TYPE_TABS.map(t=>({key:t.key,label:t.full,full:t.full,clusterColor:t.color,arena:true,unit:'calls',
     arenas:[],calls:[],callById:{},families:[],destinations:[],meta:{},nTopics:0,
@@ -313,7 +264,7 @@ function buildArenaTabs(){
   const row=rowOf('ar'); row.innerHTML='';
   /* and a tab with none yet while a new arena of its type is judged there */
   const jf=judgedFind();
-  const shown=APAGES.filter(p=>p.arenas.length||(jf&&jf.tab===p.key));
+  const shown=APAGES.filter(p=>p.arenas.length||frozenIn(p.key).length||(jf&&jf.tab===p.key));
   APAGES.forEach(p=>{ p.tabEl=null; });
   shown.forEach(p=>{
     const b=document.createElement('button'); b.className='tab'; b.setAttribute('role','tab'); b.title=p.full;
@@ -322,7 +273,7 @@ function buildArenaTabs(){
     b.addEventListener('click',()=>selectArenaTab(p.key));
     row.appendChild(b); p.tabEl=b;
   });
-  paintRoll();
+  tabsEl.querySelector('.tglab[data-g="ar"]').hidden=!shown.length;
 }
 /* the socket the bridge fills, and again on every change on the other side */
 function arenasArrived(){
@@ -374,9 +325,6 @@ function clearArenaList(){
   document.getElementById('ledger').innerHTML=''; topicEls=[];
   elsewhereEl=document.getElementById('tlaway');
 }
-/* a call's dates in words, for the arena opened */
-const dateWords=c=>c.annEnd?c.tagEnd
-  :[c.tagOpen&&c.d1?'opens '+c.tagOpen:'',c.d1?(c.twoStage?'deadlines ':'deadline ')+c.tagEnd:c.tagEnd].filter(Boolean).join(' · ');
 const PLACE_WORDS={new:'new, waiting to be judged',board:'kept on the board',venues:'in Venues'};
 /* Seen, on a row whose call has a new date (see arenaRow) */
 function seenButton(c){
@@ -411,8 +359,10 @@ function arenaEmptyRow(a){
 }
 /* Pressing a call or its arena opens the whole arena where it stands
    (Mark, 2026-10-24): its type, leads and venues, its links, its About and
-   Brokerage texts, every call under one another with its dates in words,
-   and the venues serving it, drawn as lanes; the other arenas dim. Chosen
+   Brokerage texts, every call under one another with its dates standing
+   on its bar, and the venues serving it, drawn as lanes; the other arenas
+   dim. The dates were written out in words beside each call at first,
+   while the bars said nothing (2026-10-25). Chosen
    over opening it alone, the others put away, which lost its place among
    them. The texts stop at three lines; all of it is in its panel. */
 function openArena(id){
@@ -449,7 +399,7 @@ function arenaOpenBlock(a,calls){
   calls.forEach(c=>{
     const r=document.createElement('div'); r.className='crow aorow'+(c.run.fresh?' fresh':''); r.dataset.call=c.id;
     r.title=c.run.names.join(', ')+(c.run.was.length?'\n'+c.run.was.join('; '):'');
-    r.innerHTML=`<span class="lbl"><span class="aocn">${esc(c.run.names.join(' · '))}</span><span class="aocd${c.unc?' unc':''}">${esc(dateWords(c))}</span></span><span class="track">${barsHTML(c,X,c.color,c.ink,false)}</span>`;
+    r.innerHTML=`<span class="lbl"><span class="aocn">${esc(c.run.names.join(' · '))}</span></span><span class="track">${barsHTML(c,X,c.color,c.ink,true)}</span>`;
     blk.appendChild(r);
   });
   if(!calls.length) blk.insertAdjacentHTML('beforeend','<div class="aonone">No call dates on the board yet.</div>');
@@ -509,10 +459,11 @@ function buildArenaRows(rowsEl){
    its arenas in that tab whose last deadline is still ahead when the
    venue opens, since a brokerage event is for proposals still to be
    written, or all of them where none is. Its pill in the search row takes
-   it off again. A second press opens its card, the Semaphore's panel lent
-   over the room (Mark, 2026-10-24); one press used to bring a card at the
-   foot of the chart as well, which said in a heap what the panel says in
-   order. */
+   it off again. The lane picked shows Its card, which opens the
+   Semaphore's panel lent over the room (2026-10-25). A second press within
+   a moment did that until then, and was missed more often than not: too
+   slow a second press took the venue off instead, and nothing on screen
+   said the card was there. */
 const VM=VenueMaths;
 const BK_LS='callboard.brokerage';
 let BK=(()=>{try{return localStorage.getItem(BK_LS)==='1';}catch(e){return false;}})();
@@ -579,37 +530,35 @@ function bandMarks(v){
   }
   return h;
 }
+/* whether the lanes are drawn in this tab: the switch on, or a venue of
+   this tab being judged */
+function lanesShown(){
+  if(MODE==='overview') return false;
+  const f=judgedFind();
+  return BK||!!(f&&f.kind==='venue'&&(!f.tab||f.tab===P.key));
+}
 function buildLanes(rowsEl){
-  if(MODE==='overview') return;
-  const f=judgedFind(), judging=!!(f&&f.kind==='venue'&&(!f.tab||f.tab===P.key));
-  if(!BK&&!judging) return;
+  if(!lanesShown()) return;
   const vs=lanesHere();
-  rowsEl.insertAdjacentHTML('beforeend','<div class="bhead">Brokerage <span>— kept on the board · press once for its calls, twice for its card</span></div>');
+  rowsEl.insertAdjacentHTML('beforeend','<div class="bhead">Brokerage <span>— kept on the board · press one for only its calls</span></div>');
   if(!vs.length) rowsEl.insertAdjacentHTML('beforeend','<div class="bnone">No venue is kept on the board for this tab.</div>');
   vs.forEach(v=>{
     const ghost=v.place==='new';
     const r=document.createElement('div'); r.className='blane'+(ghost?' ghost':''); r.dataset.venue=v.id;
-    r.title=v.name+' — '+VM.vDateSay(v)+(ghost?' — not on the board yet':'\nOnce: only its calls · twice: its card');
+    r.title=v.name+' — '+VM.vDateSay(v)+(ghost?' — not on the board yet':'');
     r.innerHTML=`<span class="lbl"><i class="dia"></i><span class="nm">${esc(v.name)}</span></span><span class="track">${bandMarks(v)}${ghost?'<span class="notyet">not on the board yet</span>':''}</span>`;
     if(!ghost){
       r.tabIndex=0; r.setAttribute('role','button');
-      r.addEventListener('click',()=>pressLane(v.id));
-      r.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();pressLane(v.id);}});
+      r.addEventListener('click',()=>pickVenue(v.id));
+      r.addEventListener('keydown',e=>{if(e.target===r&&(e.key==='Enter'||e.key===' ')){e.preventDefault();pickVenue(v.id);}});
+      const card=document.createElement('button'); card.className='vbtn vcard'; card.textContent='Its card ▸';
+      card.title='Everything about '+v.name+', where it is moved, removed and its window set';
+      card.addEventListener('click',e=>{ e.stopPropagation(); if(ARENA_SRC&&ARENA_SRC.openVenue) ARENA_SRC.openVenue(v.id); });
+      r.querySelector('.lbl').appendChild(card);
     }
     rowsEl.appendChild(r);
   });
   rowsEl.insertAdjacentHTML('beforeend','<div class="bend"></div>');
-}
-/* Two presses are counted here rather than left to the browser's double
-   click, which an iPad's tap does not give, and the second keeps the venue
-   picked rather than taking it off again. */
-let lastPress={id:null,at:0};
-function pressLane(id){
-  const now=Date.now(), twice=lastPress.id===id&&now-lastPress.at<450;
-  lastPress={id:twice?null:id,at:now};
-  if(!twice) return pickVenue(id);
-  if(P.state.venue!==id) pickVenue(id);
-  if(ARENA_SRC&&ARENA_SRC.openVenue) ARENA_SRC.openVenue(id);
 }
 function paintLanes(){
   document.querySelectorAll('#tl .blane').forEach(r=>r.classList.toggle('on',r.dataset.venue===P.state.venue));
@@ -657,13 +606,13 @@ const shortCalls=ids=>{
   const names=[...new Set(cs.map(nm))];
   return names.slice(0,4).map(n=>'<b>'+esc(n)+'</b>').join(' · ')+(names.length>4?' and '+(names.length-4)+' more':'');
 };
+/* What the bar says of a venue beside its name and dates: the calls it is
+   for and the arenas it serves. Its window and event day were said again
+   here, a third time beside the name and the lane, and went (2026-10-25). */
 function venueFacts(v,ids){
-  const w=VM.vWin(v), arenas=(v.arenas||[]).map(id=>ARENA_BY_ID.get(id)).filter(Boolean).map(a=>a.name);
-  const win=w?(w.from!==null?VM.tDay(w.from):'…')+' → '+(w.to!==null?VM.tDay(w.to):'open'):'';
+  const arenas=(v.arenas||[]).map(id=>ARENA_BY_ID.get(id)).filter(Boolean).map(a=>a.name);
   return [ids.length?`<span>for ${shortCalls(ids)}</span>`:'',
-    arenas.length?`<span>arena${arenas.length===1?'':'s'} <b>${esc(arenas.join(', '))}</b></span>`:'<span>serves no arena yet</span>',
-    win?`<span>window <b>${esc(win)}</b></span>`:'<span><b>not dated yet</b></span>',
-    v.start?`<span>event <b>${esc((v.grade==='fixed'?'':'≈ ')+VM.shortDate(v))}</b></span>`:''].join('');
+    arenas.length?`<span>arena${arenas.length===1?'':'s'} <b>${esc(arenas.join(', '))}</b></span>`:'<span>serves no arena yet</span>'].join('');
 }
 /* Remove at a second press, as a link's cross is in the Semaphore: the
    first turns the word into the question */
@@ -968,7 +917,8 @@ function barsHTML(c,X,col,ink,withOpen){
   if(c.twoStage) b+=`<span class="cbar2" style="left:${x1}%;width:${Math.max(X(c.d2)-x1,.8)}%;background-color:${col}"></span>
     <span class="cap" style="left:${X(c.d2)}%;background:${ink}"></span>`;
   const last=c.twoStage?X(c.d2):(x1!==null?x1:x0);
-  if(withOpen&&x0!==null) b+=`<span class="dtag" style="left:${x0}%;color:${ink||col}">${c.tagOpen||(dm(c.opening)+' ’'+yy(c.opening))}</span>`;
+  /* with no deadline known, the one tag already says when it opens */
+  if(withOpen&&x0!==null&&x1!==null) b+=`<span class="dtag" style="left:${x0}%;color:${ink||col}">${c.tagOpen||(dm(c.opening)+' ’'+yy(c.opening))}</span>`;
   b+=`<span class="dtag r" style="left:${last}%;color:${ink||col}">${c.tagEnd||(c.twoStage? dm(c.d1)+' → '+dm(c.d2)+' ’'+yy(c.d2) : dm(c.d1)+' ’'+yy(c.d1))}</span>`;
   return b;
 }
@@ -976,7 +926,7 @@ function barsHTML(c,X,col,ink,withOpen){
 function buildTimeline(){
   document.getElementById('tl').classList.remove('ov','windowed');
   /* a tab whose arenas have no dates yet still gets an axis: the year round today */
-  const dates=P.calls.flatMap(callDates).sort();
+  const dates=P.calls.flatMap(callDates).concat(venuesHere().flatMap(venueDates)).sort();
   if(!dates.length){ const t=todayISO(); dates.push(t.slice(0,4)+'-01-01',t.slice(0,4)+'-12-31'); }
   const first=d3(dates[0]), last=d3(dates[dates.length-1]);
   T0=new Date(first.getFullYear(), first.getMonth(), 1);
@@ -1005,6 +955,8 @@ function buildTimeline(){
   const rowsEl=document.getElementById('tlrows');
   /* the venues stand over the calls they serve (Mark, 2026-10-24) */
   buildLanes(rowsEl);
+  const bkn=document.getElementById('bkn'), nb=VENUES.filter(v=>v.place==='board'&&venueTabs(v).has(P.key)).length;
+  bkn.textContent=nb||''; bkn.title=nb+(nb===1?' venue':' venues')+' kept on the board for this tab';
   ghostArenaRow(rowsEl);
   if(MODE==='arena') buildArenaRows(rowsEl);
   else P.calls.forEach(c=>{
@@ -1019,6 +971,7 @@ function buildTimeline(){
     r.addEventListener('mouseleave',()=>{if(!P.state.sel.size&&!P.state.selTopicCall)soft(null);showCard([...P.state.sel]);});
     rowsEl.appendChild(r);
   });
+  buildFreezer(rowsEl);
   const now=new Date();
   if(now>T0&&now<T1){
     const x=(now-T0)/SPAN*100;
@@ -1026,6 +979,61 @@ function buildTimeline(){
     pl.innerHTML=`<div class="today" style="left:${x}%"></div><div class="today-tag" style="left:${x}%">today</div>`;
     tl.appendChild(pl);
   }
+}
+/* The venues that stand on this tab's chart: its lanes when they are
+   drawn, and on an arena's tab the venues of its arenas, which an arena
+   opened lists. The chart reaches far enough for their windows, so a venue
+   no longer stands as "after the chart" off its edge; one whose window
+   has ended is left out, or a venue long over would stretch the chart
+   back to it. */
+function venuesHere(){
+  const out=lanesShown()?lanesHere():[];
+  if(MODE==='arena') P.arenas.forEach(a=>(a.venues||[]).forEach(v=>out.push(v)));
+  return out;
+}
+function venueDates(v){
+  const w=VM.vWin(v), now=VM.T(todayISO());
+  if(!w||(w.to!==null&&w.to<now)) return [];
+  return [w.from,w.to,w.ms,w.me].filter(t=>t!==null&&t!==undefined).map(t=>iso(new Date(t)));
+}
+/* An opening's tag and its deadline's, on a short bar, were printed over
+   one another ("14 Oc 17 Feb ’27"). The opening's gives way, its dot
+   still marking it. Measured, since a tag's width is the font's; a row
+   measured while the room is out of sight has no width yet and is
+   measured again when it is next lit or hovered. */
+function untangle(row){
+  if(row.dataset.tg) return;
+  const g=row.querySelectorAll('.track .dtag');
+  if(g.length<2) return;
+  const a=g[0].getBoundingClientRect(), b=g[g.length-1].getBoundingClientRect();
+  if(!b.width) return;
+  row.dataset.tg='1';
+  g[0].classList.toggle('clash',a.right+4>b.left);
+}
+document.getElementById('tl').addEventListener('mouseover',e=>{
+  const r=e.target.closest&&e.target.closest('.crow'); if(r) untangle(r);
+});
+
+/* ---------- the freezer ----------
+   The arenas put away stand under the calls of the tab they belong to,
+   behind one line that says how many (Mark, 2026-10-25): the Semaphore
+   kept the freezer under Venues once its Board was gone, a long way from
+   the calls the arenas were put away from. Shut until pressed, since it
+   is somewhere to put things, not somewhere to look. A name opens the
+   arena's panel, which says since when; Thaw puts it back among the
+   live ones. */
+let FROZEN=[], FRZ_OPEN=false;
+const frozenIn=k=>FROZEN.filter(a=>arenaTabKey(a.name,a.type)===k);
+function buildFreezer(rowsEl){
+  const list=frozenIn(P.key);
+  if(!list.length) return;
+  const box=document.createElement('div'); box.className='frz'+(FRZ_OPEN?' open':'');
+  box.innerHTML=`<button class="frzbar" aria-expanded="${FRZ_OPEN}"><i class="frost"></i>Freezer<span>${list.length} arena${list.length===1?'':'s'} put away</span><b>${FRZ_OPEN?'▾':'▸'}</b></button>`
+    +(FRZ_OPEN?'<div class="frzchips">'+list.map(a=>`<span class="frzchip" style="--ty:${attr(a.tone||'#9C8B66')}"><button class="frzname" data-id="${attr(a.id)}" title="${attr(a.name)} — its panel">${esc(a.name)}</button><button class="frzout" data-id="${attr(a.id)}" title="Put ${attr(a.name)} back among the live arenas">Thaw</button></span>`).join('')+'</div>':'');
+  box.querySelector('.frzbar').addEventListener('click',()=>{ FRZ_OPEN=!FRZ_OPEN; buildTimeline(); paintTimeline(); applyFilters(); paintLanes(); });
+  box.querySelectorAll('.frzname').forEach(b=>b.addEventListener('click',()=>{ if(ARENA_SRC&&ARENA_SRC.open) ARENA_SRC.open(b.dataset.id); }));
+  box.querySelectorAll('.frzout').forEach(b=>b.addEventListener('click',()=>{ if(ARENA_SRC&&ARENA_SRC.thaw) ARENA_SRC.thaw(b.dataset.id); }));
+  rowsEl.appendChild(box);
 }
 
 function toggleCall(id){
@@ -1191,6 +1199,7 @@ function paintTimeline(){
     r.classList.toggle('on',on);
     r.classList.toggle('dim',(!!focus&&!on&&!fold)||(open&&r.classList.contains('arow')));
     r.classList.toggle('folded',fold&&!on);
+    if(on||r.classList.contains('aorow')) untangle(r);
   });
   paintTypeHeads();
 }
@@ -1234,20 +1243,10 @@ function showCard(ids){
   if(P.state.venue&&ids.length===P.state.sel.size&&ids.every(id=>P.state.sel.has(id))){el.innerHTML='';return;}
   const list=ids.map(id=>P.callById[id]).filter(Boolean).sort((a,b)=>(a.opening||'').localeCompare(b.opening||''));
   if(!list.length){el.innerHTML='';return;}
-  /* an arena's call has no topics or budget here, only its dates */
-  if(list[0].arena){
-    if(list.length===1){
-      const c=list[0];
-      el.innerHTML=`<span><span class="k">${esc(c.arena.name)}</span> · ${esc(c.name)}</span>
-        ${c.tagOpen?`<span>${c.annEnd?'expected':'opens'} <span class="k">${esc(c.tagOpen)}</span></span>`:''}
-        ${c.annEnd?'':`<span>deadline <span class="k">${esc(c.tagEnd)}</span></span>`}`;
-    } else {
-      const next=list.map(c=>c.d1).filter(Boolean).sort()[0];
-      el.innerHTML=`<span><span class="k">${list.length}</span> calls selected</span>
-        ${next?`<span>earliest deadline <span class="k">${dmy(next)}</span></span>`:''}`;
-    }
-    return;
-  }
+  /* An arena's call has no topics or budget here, only its dates, and
+     those stand on its bar as it is hovered; said again under the chart
+     they were only said twice (2026-10-25). */
+  if(list[0].arena){el.innerHTML='';return;}
   if(list.length===1){
     const c=list[0];
     el.innerHTML=`<span><span class="k">${c.id}</span></span>

@@ -151,7 +151,7 @@ function defaultTypes(){
 }
 function blank(){
   return {v:1,types:defaultTypes(),arenas:[],venues:[],suggested:[],
-    ui:{q:'',view:'now',freezerOpen:false,nowTab:'active'}};
+    ui:{q:'',view:'now',nowTab:'active'}};
 }
 /* An arena remembers which of its own dates it is waiting for. That goes stale
    the moment the dates change, so this puts it straight — a wait ends when the
@@ -321,7 +321,6 @@ function migrate(s){
        land on Venues too; Leads was the wall in its leads arrangement
        until then. */
     ui.view     = u.view==='leads'||u.view==='brokerage'&&u.wallSort==='leads' ? 'leads' : 'now';
-    ui.freezerOpen = u.freezerOpen===true;
     /* which of Venues' tabs is showing (Mark, 2026-10-15): the three
        sections or Limbo; the Events and Tools of the Now page before land
        on Active */
@@ -619,7 +618,7 @@ function visibleArenas(){
 function emptyReason(){
   const frozen=S.arenas.length-liveArenas().length;
   return frozen&&frozen===S.arenas.length
-    ?['Every arena is in the freezer.','Thaw one from the freezer under Venues.']
+    ?['Every arena is in the freezer.','Thaw one from the freezer on the Call Board.']
     :['Nothing matches the search.','Clear it, or try a shorter word.'];
 }
 /* Tags match case-insensitively. The first spelling entered is the one kept,
@@ -676,35 +675,6 @@ function mineOrder(x,y){return bkPos(x)-bkPos(y)||x.name.localeCompare(y.name);}
    the partnerships, and nothing said the seven were one. An arena in the
    freezer does not count. */
 function isShared(v){return v.arenas.filter(id=>{const a=arena(id);return a&&!a.frozenAt;}).length>1;}
-
-/* ============ render: freezer ============
-   Where the arenas put away stand, each with Thaw. It was the Board's own
-   footnote, and stands under Venues since the Board went to the Call Board
-   (2026-10-24). Shut by default — the freezer is somewhere to put things,
-   not somewhere to look — and grouped by type in his order. */
-function renderFreezer(){
-  const el=$('#freezer'),list=frozenArenas();
-  if(!list.length||S.ui.view!=='now'){el.hidden=true;el.innerHTML='';return;}
-  el.hidden=false;
-  const open=!!S.ui.freezerOpen;
-  const chip=a=>'<span class="frchip">'+
-      '<button class="frname" data-act="openArena" data-id="'+a.id+'" '+
-        'title="Frozen '+esc(shortDay(a.frozenAt))+'">'+esc(a.name)+'</button>'+
-      '<button class="frout" data-act="thaw" data-id="'+a.id+'" '+
-        'title="Put '+esc(a.name)+' back among the live arenas" aria-label="Thaw '+esc(a.name)+'">Thaw</button>'+
-    '</span>';
-  const byName=(x,y)=>x.name.localeCompare(y.name);
-  const group=(name,members)=>members.length
-    ? '<div class="frgrp"><span class="frty">'+esc(name)+'<i>'+members.length+'</i></span>'+
-        '<div class="frchips">'+members.sort(byName).map(chip).join('')+'</div></div>'
-    : '';
-  const body=S.types.map(t=>group(t.name,list.filter(a=>a.typeId===t.id))).join('')+
-    group('Untyped',list.filter(a=>!S.types.some(t=>t.id===a.typeId)));
-  el.innerHTML='<button class="frbar" data-act="toggleFreezer" aria-expanded="'+(open?'true':'false')+'">'+
-      '<i class="frost"></i>Freezer<span class="frn">'+list.length+'</span>'+
-      '<span class="frcaret">'+(open?'▾':'▸')+'</span></button>'+
-    (open?'<div class="frbody">'+body+'</div>':'');
-}
 
 /* ============ new arenas, waiting to be judged ============
    A new arena reaches the board only when Mark says so on the Call Board,
@@ -3724,7 +3694,7 @@ function closeComposers(){leadEdit={a:null,l:null};
   noteEdit={a:null,l:null};endAsk={a:null,l:null};}
 function renderAll(){
   repaint();
-  renderFreezer();renderDrawer();renderAsk();applySearchBox(false);applyView();
+  renderDrawer();renderAsk();applySearchBox(false);applyView();
 }
 
 function newArena(name,typeId,tags){
@@ -4408,11 +4378,12 @@ document.addEventListener('click',e=>{
       ar.weight=b.dataset.v;save();renderDrawer();repaint();applyView();break;}
     case 'freeze':{const ar=arena(id);if(!ar)break;
       ar.frozenAt=todayISO();
-      S.ui.freezerOpen=true;                 /* show where it went */
-      closeComposers();save();renderAll();break;}
+      closeComposers();save();renderAll();
+      /* the freezer stands on the Call Board, under its tab's calls */
+      try{Hub.note(ar.name+' is in the freezer, under its tab’s calls on the Call Board.',5000);}catch(e){}
+      break;}
     case 'thaw':{const ar=arena(id);if(!ar)break;
       ar.frozenAt=null;save();renderAll();break;}
-    case 'toggleFreezer':S.ui.freezerOpen=!S.ui.freezerOpen;save();renderFreezer();break;
     case 'seenArena':{const a=arena(b.dataset.id);if(!a)break;seeArena(a);save();renderAll();break;}
     /* Quick, but not one slip from gone: the first press turns the cross into
        the word, a second within three seconds removes the link. The button is
@@ -5033,6 +5004,10 @@ try{
     refreshFinds:function(done){ loadFinds(done); },
     judge:      function(key,verb,type,done){ judgeFind(key,verb,type,done); },
     seen:       function(aid){ const a=arena(aid); if(a){ seeArena(a); save(); renderAll(); } },
+    /* the arenas put away, for the freezer the Call Board keeps under each
+       tab's calls, and Thaw there */
+    frozen:     function(){ return frozenArenas().map(a=>({id:a.id,name:a.name,type:(typeOf(a)||{}).name||'',tone:arenaTone(a),frozenAt:a.frozenAt})); },
+    thaw:       function(aid){ const a=arena(aid); if(a&&a.frozenAt){ a.frozenAt=null; save(); renderAll(); } },
     leadAdd:    function(aid,v){ return leadAdd(aid,v); },
     /* every lead, closed ones too, for the weekly Excel the bridge writes */
     allLeads:   function(){ return leadsForExcel(); },

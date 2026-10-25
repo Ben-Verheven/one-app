@@ -412,9 +412,9 @@
      and it is where whatever a search found is judged, one find at a time.
      The Semaphore's own Board, its tray and Dispatches went there the same
      day. It is handed a socket as the Ledger is: reads of the arenas'
-     calls, the venues and the finds waiting, the verbs that judge a find
-     and mark an arena's new dates seen, and the drawer lent over the Board
-     for an arena or a venue. The Board is the lazy room, so the socket
+     calls, the venues and the finds waiting, the arenas in the freezer,
+     the verbs that judge a find, mark an arena's new dates seen and thaw
+     one, and the drawer lent over the Board for an arena or a venue. The Board is the lazy room, so the socket
      cannot be handed over at load, when there is nothing yet to hand it
      to; the Board says when it has been built, and that is when it gets
      it — whether it was opened or only built for a topic the Ledger asked
@@ -440,6 +440,8 @@
         finds: function () { return S.finds(); },
         judge: function (key, verb, type, done) { S.judge(key, verb, type, done); },
         seen: function (aid) { S.seen(aid); },
+        frozen: function () { return S.frozen ? S.frozen() : []; },
+        thaw: function (aid) { if (S.thaw) S.thaw(aid); },
         open: showArena,
         openVenue: showVenue
       });

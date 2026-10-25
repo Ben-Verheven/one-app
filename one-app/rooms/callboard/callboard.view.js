@@ -41,7 +41,7 @@ Hub.markup('callboard', `
     <!-- The chart's title, and beside it the switch that draws the venues
          kept on the board as lanes over the calls (Mark, 2026-10-24). -->
     <div class="tl-title"><span id="tltxt">Calls · chronological</span>
-      <button class="bk" id="bkswitch" aria-pressed="false" title="Draw the venues kept on the board over the calls"><span class="sw" aria-hidden="true"><i></i></span>Brokerage</button></div>
+      <button class="bk" id="bkswitch" aria-pressed="false" title="Draw the venues kept on the board over the calls"><span class="sw" aria-hidden="true"><i></i></span>Brokerage<span class="bkn" id="bkn"></span></button></div>
     <div class="tl" id="tl"></div>
     <!-- On an arena's tab, which has no list, what a search finds in the
          other tabs stands here, under the chart. -->

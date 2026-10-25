@@ -12,12 +12,15 @@ undo it, and what was agreed and is not built yet.
   choosing a Horizon cluster in one press and wants the same for the rest.
 - Nothing may clutter it: every addition was drawn first and chosen
   against at least one quieter way.
-- **The tabs are a roll** (2026-10-24): one group's tabs in the bar at a
-  time, Horizon, the arenas and All calls, the next group peeking under the
-  bar and the one before over it; the wheel over the bar or a swipe rolls
-  them, and the three words at its left say where it stands and go there in
-  one press. Chosen over the three words alone choosing the row, with no
-  roll, and over the thirteen tabs side by side it replaced.
+- **The tabs stand in two rows** (2026-10-25): Horizon's on the first,
+  the arenas' and All calls on the second, each row named at its left,
+  every tab in sight and one press away. Mark asked for a sweep after the
+  roll of 2026-10-24 (one group's row in the bar at a time, the others
+  peeking over and under it, turned by the wheel or a swipe) did "not at
+  all work nicely": the peeking rows were cut off at the bar's edges. The
+  thirteen side by side in one row, before the roll, ran into the room's
+  name on the iPad held sideways; three words choosing the row, with no
+  roll, was turned down.
 
 ## Horizon tabs
 
@@ -54,10 +57,22 @@ undo it, and what was agreed and is not built yet.
 - **Pressing a call or its arena opens the whole arena where it stands**
   (2026-10-24): its type, open leads, venues and links, its About and
   Brokerage (cut at three lines; all of it is in its panel), every call
-  under one another with its dates in words, and the venues serving it;
-  the other arenas dim. ✕, Esc or another press shuts it. Chosen over
-  opening it alone with the others put away, which lost its place among
-  them.
+  under one another with its dates on its bar, and the venues serving it;
+  the other arenas dim. Its dates were written in words beside each call
+  at first, the bars bare, and Mark found it annoying (2026-10-25). ✕,
+  Esc or another press shuts it. Chosen over opening it alone with the
+  others put away, which lost its place among them.
+- **Dates said once** (2026-10-25): Mark found them "often superfluous".
+  A call's dates stand on its bar, on hover, lit or in an arena opened,
+  and nowhere else beside it; the line under the chart that said them
+  again for an arena's call went, as did a venue's window and event day
+  on the judging bar, already beside its name and on its lane. Where an
+  opening's tag and a deadline's would overlap on a short bar, the
+  opening's gives way.
+- **The freezer stands under the calls of each tab** (2026-10-25), shut
+  behind one line, a Thaw on each arena, since Mark found it most at home
+  here once the Call Board drew every arena; it stood under the
+  Semaphore's Venues after its Board went.
 - **Types in OTHER, named once** (2026-10-24): where a tab holds arenas of
   more than one type, each type's name in small capitals over its arenas,
   and a slim rule in its colour from Types down their left. Chosen over the
@@ -79,18 +94,23 @@ of the phases still to build.
   that cluster or mission (matched by "Cluster N", "Mission", "Horizontal"
   in its name); any other arena's venues stand in its type's tab, and a
   venue serving arenas in several tabs stands in each. A venue whose arenas
-  are all in the freezer is put away with them.
+  are all in the freezer is put away with them. The switch counts the
+  venues the tab holds, and the chart reaches far enough for their windows
+  (2026-10-25), after Mark found them out of sight: a window past the
+  calls stood only as "after the chart".
 - **One press on a lane** lights the calls it is for and folds the others
   away, on the chart and in the list, so only those stand under it (Mark,
   2026-10-24, over the drawn proposal of only lighting them): the calls of
   its arenas in that tab whose last deadline is still ahead when the venue
   opens, or all of them where none is. Its pill in the search row, another
   press or Esc takes it off.
-- **Two presses open the venue's card**, the Semaphore's panel lent over the
-  Board (see notes/semaphore-decisions.md), where it is moved, removed and
-  its ends dragged; not on the lanes. A card at the foot of the chart came
-  with one press until then, and went: it said in a heap what the panel
-  says in order.
+- **Its card, a button on the lane picked**, opens the Semaphore's panel
+  lent over the Board (see notes/semaphore-decisions.md), where it is
+  moved, removed and its ends dragged; not on the lanes (2026-10-25). Two
+  presses within a moment did it before, and Mark found the venue buttons
+  not working: a slower second press took the venue off. A card at the
+  foot of the chart came with one press before that, and went: it said in
+  a heap what the panel says in order.
 
 ## Judging finds (built 2026-10-24)
 

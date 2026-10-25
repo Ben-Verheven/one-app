@@ -813,34 +813,12 @@
        line-height:1.45;color:var(--faint)}
 #pane-semaphore .lctally b{font-style:normal;font-weight:400;color:var(--ink)}
 /* ---------- freezer ----------
-   Out of rotation, not out of the record. The strip exists only once something
-   is in it, and a frozen arena wears the wordmark's diamond with the colour
-   taken out — the shape of a live thing, drained. */
-#pane-semaphore #freezer{margin:0 22px 46px;border-top:1px solid var(--grid)}
-#pane-semaphore .frbar{display:flex;align-items:center;gap:10px;width:100%;padding:12px 2px;border-radius:0;
-       font:600 9.5px var(--sans);letter-spacing:.18em;text-transform:uppercase;color:var(--faint)}
-#pane-semaphore .frbar:hover{color:var(--key2)}
-#pane-semaphore .frbar .frn{font:10px var(--mono);letter-spacing:0}
-#pane-semaphore .frbar .frcaret{font-size:9px;letter-spacing:0;margin-left:-3px}
+   Out of rotation, not out of the record. The freezer itself stands on the
+   Call Board since 2026-10-25; here a frozen arena's panel wears the
+   wordmark's diamond with the colour taken out — the shape of a live
+   thing, drained. */
 #pane-semaphore .frost{flex:0 0 9px;width:9px;height:9px;transform:rotate(45deg);border-radius:1.5px;
        border:1px solid currentColor;opacity:.8}
-#pane-semaphore .frbody{padding:1px 2px 18px}
-#pane-semaphore .frgrp{display:grid;grid-template-columns:236px 1fr;align-items:baseline;gap:9px;padding:8px 0}
-#pane-semaphore .frgrp+.frgrp{border-top:1px solid var(--grid)}
-#pane-semaphore .frty{font:600 9.5px var(--sans);letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
-#pane-semaphore .frty i{margin-left:8px;font:10px var(--mono);font-style:normal;letter-spacing:0;color:var(--faint)}
-#pane-semaphore .frchips{display:flex;flex-wrap:wrap;gap:7px}
-#pane-semaphore .frchip{display:inline-flex;align-items:stretch;border:1px solid var(--line);border-radius:99px;
-        background:var(--slab);overflow:hidden;box-shadow:inset 0 1px 0 rgba(255,255,255,.04)}
-#pane-semaphore .frchip:hover{border-color:var(--line2)}
-#pane-semaphore .frchip .frname{padding:5px 9px 5px 14px;font-family:var(--body);font-size:13.5px;color:var(--muted)}
-#pane-semaphore .frchip .frname:hover{color:var(--ink)}
-/* the way out is dimmed, not hidden: fading opacity keeps the pill from
-   changing width under the cursor */
-#pane-semaphore .frchip .frout{padding:5px 13px 5px 9px;font-family:var(--sans);font-size:9px;letter-spacing:.13em;
-               text-transform:uppercase;color:var(--faint);opacity:.5;transition:opacity .14s,color .14s}
-#pane-semaphore .frchip:hover .frout,#pane-semaphore .frchip .frout:focus-visible{opacity:1}
-#pane-semaphore .frchip .frout:hover{color:var(--key2);background:rgba(216,205,184,.1)}
 /* in the panel: the one banner that outranks everything else on the card */
 #pane-semaphore .frozenbar{display:flex;align-items:center;gap:11px;margin-top:16px;padding:9px 10px 9px 13px;
            border:1px dashed var(--line2);border-radius:var(--radius-lg);background:var(--sink)}
@@ -1532,5 +1510,4 @@
 #pane-semaphore #tip{position:fixed;z-index:50;max-width:280px;background:var(--surface2);
      color:var(--ink);border:1px solid var(--line2);box-shadow:var(--shadow);border-radius:var(--radius);
      padding:8px 11px;font-family:var(--body);font-size:13px;line-height:1.5;pointer-events:none;display:none;white-space:pre-line}
-@media(max-width:860px){#pane-semaphore .frgrp{grid-template-columns:1fr;gap:6px}
-#pane-semaphore header.top{flex-wrap:wrap}}
+@media(max-width:860px){#pane-semaphore header.top{flex-wrap:wrap}}

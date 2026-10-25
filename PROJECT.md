@@ -438,7 +438,7 @@ and the agent's task still say the Marketplace; it is the same room.
 | the room's scroller — the page itself does not scroll | `#semscroll` |
 | the header: Venues, Leads beside it, Search, Types, + Venue, + Arena, ChatGPT and the cloud chip | `header.top`; `#viewseg`, `#leadsBtn`, `#searchBtn` and its box `#search`, `#semcloud` |
 | ChatGPT's search, opened by ChatGPT: the file out, the answer pasted or chosen, what it would change, Put on the board | `#gptModal` › `#gptText`, `#gptFile`, `#gptSaid`, `#gptPut` |
-| Venues (the Now page until 2026-10-15), Leads (on the wall), the freezer under Venues | `#now`, `#wall`, `#freezer` |
+| Venues (the Now page until 2026-10-15), Leads (on the wall) | `#now`, `#wall` |
 | Venues: its three tabs, Arising · Active · Dying, and Limbo's apart; the axis over them, sticky; the heading of each group, Shared then each type; one venue's row, its mark the grip it is dragged by into his own order, its name and the arenas it serves, its strip, and Go, which is the visit (Visited once pressed today) | `.vtabs` › `.vtab`, `.culimbo.vlimbotab`; `.vaxis`; `.vgrp`; `.vgl`, `.vrow.vdragging`; `.vrow` = `.vname` (`.vnmrow` › `.vnm`, `.vchips`) + `.vtrack` + `.vend` (`.vgo`, `.vgo.done`) |
 | a venue's window, on Venues and in its panel: the band, its two ends to drag, the event days, the visits, today, due | `.vband` (`.st-new`, `.st-board`, `.st-venues`), `.vh`, `.vmeet` and `.vdia`, `.vtick`, `.vnow`, `.vpulse` |
 | the visit question, at the foot of the room after Go | `#vbar` › `.vask.bar` |
@@ -447,10 +447,10 @@ and the agent's task still say the Marketplace; it is the same room.
 | a venue's panel, wider (`#card.vwide`): the Call Board's view of it at its head, its facts two to a row, the rest folded | `.vsnip` (its lane `.sr.lane`, a call `.sr`), `.vfacts` › `.vf`, `.vfolds` › `.vfold` › `.vfh` |
 | the drawer, holding an arena or a venue; an arena's venues in it; a link's cross, and the press that makes a brokerage link a venue; where a venue stands, with its three buttons, or in Venues the section it stands in, chosen by hand if he likes (`.vphseg`); a venue's ask to the agent | `#card` and its `.scrim`; `.avlist` › `.avrow`; `.ldel`, `.lmake`; `.vplace`; `.vagent` |
 
-**The Call Board** — the tabs are the bar, `#hdr` › `.tabs`, a roll of
-three rows, `.drum` › `.trow`, Horizon's clusters, the arenas' tabs (JU,
-COFUND, COPROG and OTHER) and All calls, with the three words beside it,
-`.dial`, saying which row stands; the controls under it are `.hd-controls`
+**The Call Board** — the tabs are the bar, `#hdr` › `.tabs`, two rows in
+`.tgrid`, each named at its left by a `.tglab`: Horizon's clusters on the
+first `.trow`, the arenas' tabs (JU, COFUND, COPROG and OTHER) and All
+calls (`.trow.tall`) on the second; the controls under it are `.hd-controls`
 and `#ovbar`; the chronological chart is `#tl` inside `.tl-sticky`, on the
 right of the topic list on a Horizon tab and alone on an arena's tab, with
 what a search finds elsewhere under it in `#tlaway`; a topic opens in
@@ -459,9 +459,11 @@ what a search finds elsewhere under it in `#tlaway`; a topic opens in
 one with a new date glows (`.fresh`) until its `.seen` is pressed; an arena
 opened there is `.aopen`, and where a tab holds several types each is named
 over its arenas by a `.tyh`. Beside the chart's title, `.tl-title`, the
-switch `#bkswitch` draws the venues kept on the board over the calls: the
-heading `.bhead`, a lane each, `.blane` (its band `.vb`, event days `.vd`),
-the one picked `.on`, and its pill `.vpill` in the controls. What waits to be judged is counted on `#jpill` and dotted on
+switch `#bkswitch`, with how many the tab holds in `#bkn`, draws the
+venues kept on the board over the calls: the heading `.bhead`, a lane
+each, `.blane` (its band `.vb`, event days `.vd`), the one picked `.on`
+with its `.vcard`, and its pill `.vpill` in the controls. Under a tab's
+calls stands its freezer, `.frz`, the arenas put away as `.frzchip`s. What waits to be judged is counted on `#jpill` and dotted on
 its tab (`.fd`); while judging, the find stands dashed in its tab, a
 venue's lane or an arena's row `.ghost`, and the bar along the foot of the
 room is `#jbar`. The decisions behind them are in

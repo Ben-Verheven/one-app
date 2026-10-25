@@ -428,9 +428,11 @@
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #pane-callboard .aocn>span{overflow:hidden;text-overflow:ellipsis}
 #pane-callboard .aocd{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#pane-callboard .aocd.unc{font-weight:400;font-style:italic;color:var(--ink2)}
 #pane-callboard .aocd.aopl{font-weight:400;color:var(--ink3)}
 #pane-callboard .aopen .crow:hover .track{background:none}
+/* an arena opened says its calls' dates on their bars, not beside them */
+#pane-callboard .aopen .crow .dtag{opacity:1}
+#pane-callboard .dtag.clash{display:none}
 #pane-callboard .aovh{margin:8px 14px 2px;padding-top:6px;border-top:1px solid var(--line);font-family:var(--font);font-size:9.5px;
   font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--brass2)}
 #pane-callboard .aonone{padding:6px 14px;font-family:var(--body);font-style:italic;font-size:13px;color:var(--ink3)}
@@ -452,13 +454,16 @@
 #pane-callboard .bk[aria-pressed="true"]{color:var(--ink);border-color:var(--brass);background:linear-gradient(180deg,#FBF4E2,#EEE2C4)}
 #pane-callboard .bk[aria-pressed="true"] .sw{background:var(--brass)}
 #pane-callboard .bk[aria-pressed="true"] .sw i{left:12px}
+/* how many venues this tab holds, so a switch left off still says so */
+#pane-callboard .bkn{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:0;color:var(--brass2)}
+#pane-callboard .bkn:empty{display:none}
 #pane-callboard .bhead{display:flex;align-items:baseline;gap:8px;margin-top:4px;padding:4px 0 2px;
   font-family:var(--font);font-size:9.5px;font-weight:600;text-transform:uppercase;letter-spacing:.13em;color:var(--brass2)}
 #pane-callboard .bhead span{font-family:var(--body);font-style:italic;text-transform:none;letter-spacing:.02em;font-weight:400;
   font-size:12.5px;color:var(--ink3)}
 #pane-callboard .bnone{padding:4px 0 8px;font-family:var(--body);font-style:italic;font-size:12.5px;color:var(--ink3)}
 #pane-callboard .bend{margin:6px 0 4px;border-top:1px solid var(--line-strong)}
-/* two presses are a lane's own (see pressLane), not an iPad's zoom */
+/* a press on a lane is not an iPad's double-tap zoom */
 #pane-callboard .blane{position:relative;display:flex;align-items:stretch;height:31px;cursor:pointer;touch-action:manipulation}
 #pane-callboard .blane .lbl{width:var(--gutter);flex:0 0 var(--gutter);display:flex;align-items:center;gap:7px;padding-right:8px;min-width:0}
 #pane-callboard .dia{display:block;width:7px;height:7px;flex:0 0 7px;background:var(--brass);transform:rotate(45deg)}
@@ -468,6 +473,9 @@
 #pane-callboard .blane.on .track{background:rgba(154,123,58,.14);box-shadow:inset 0 0 0 1.5px var(--umber)}
 #pane-callboard .blane.on .nm{color:var(--ink);font-weight:600}
 #pane-callboard .blane.on .dia{background:var(--umber)}
+/* Its card, on the lane picked (see buildLanes) */
+#pane-callboard .blane .vcard{display:none;flex:0 0 auto;height:24px;margin-left:auto}
+#pane-callboard .blane.on .vcard{display:inline-block}
 #pane-callboard .vb{position:absolute;top:10px;height:11px;min-width:5px;border-radius:6px;border:1px solid rgba(107,82,32,.6)}
 #pane-callboard .vb.open{border-right:0;border-radius:6px 0 0 6px}
 #pane-callboard .vb.openl{border-left:0;border-radius:0 6px 6px 0}
@@ -511,6 +519,25 @@
   font-family:var(--font);font-size:10px;letter-spacing:.07em;color:var(--ink2);
   border:1px solid rgba(120,96,58,.3);background:linear-gradient(180deg,#FDFAF3,#F0EADB)}
 #pane-callboard .seen:hover{color:#3E5418;border-color:#6C8E1C}
+/* The freezer, under the calls of the tab its arenas belong to (see "the
+   freezer" in callboard.js): one quiet line, and the arenas as chips when
+   it is opened, each edged in its type's colour. */
+#pane-callboard .frz{margin-top:10px;border-top:1px solid var(--line)}
+#pane-callboard .frzbar{display:flex;align-items:center;gap:9px;width:100%;padding:9px 2px;cursor:pointer;background:none;border:0;
+  font-family:var(--font);font-size:9.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3)}
+#pane-callboard .frzbar span{font-family:var(--body);font-style:italic;font-size:12.5px;font-weight:400;letter-spacing:.02em;text-transform:none}
+#pane-callboard .frzbar b{font-size:9px;font-weight:400}
+#pane-callboard .frzbar:hover{color:var(--brass2)}
+#pane-callboard .frost{flex:0 0 9px;width:9px;height:9px;transform:rotate(45deg);border-radius:1.5px;border:1px solid currentColor}
+#pane-callboard .frzchips{display:flex;flex-wrap:wrap;gap:7px;padding:2px 2px 10px}
+#pane-callboard .frzchip{display:inline-flex;align-items:stretch;border:1px solid var(--line-strong);border-left:3px solid var(--ty);
+  border-radius:7px;background:#F3ECDC;overflow:hidden}
+#pane-callboard .frzchip button{background:none;border:0;cursor:pointer}
+#pane-callboard .frzname{padding:5px 9px 5px 11px;font-family:var(--body);font-size:13.5px;color:var(--ink2)}
+#pane-callboard .frzname:hover{color:var(--ink)}
+#pane-callboard .frzout{padding:5px 11px 5px 9px;font-family:var(--font);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--brass2);border-left:1px solid var(--line) !important}
+#pane-callboard .frzout:hover{color:var(--ink);background:rgba(154,123,58,.12)}
 /* ══ 11. JUDGING THE FINDS ══
    A find waiting to be judged: its pill in the search row, a dot on its
    tab, the new arena dashed on its tab's chart, and the bar at the foot of

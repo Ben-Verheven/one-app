@@ -44,8 +44,9 @@ Board itself was is summed up at the end. What still holds of it:
   (2026-10-07).
 - His own order of the arenas within a type, set in Types, is the order the
   Call Board's tabs list them in.
-- The freezer stands under Venues since the Board, whose footnote it was,
-  went (2026-10-24): the quietest place left for it. Mark has not chosen it.
+- The freezer went to the Call Board (2026-10-25), under each tab's calls,
+  where Mark found it most at home; it stood under Venues for a day after
+  the Board, whose footnote it was, went.
 
 ## Venues
 
@@ -75,7 +76,7 @@ Board itself was is summed up at the end. What still holds of it:
   where it stands, its window, event days, the arenas it serves and the
   basis, two to a row, and the rest folded, each fold saying in a word what
   is in it: visits, leads from here, other pages, his note, the rhythm. One
-  card everywhere, from Venues here and from two presses on a lane there.
+  card everywhere, from Venues here and from Its card on a lane there.
   Of the two widths drawn he chose the wider; the narrow one shortened the
   arenas' names on its timeline.
 - A venue can be put in a section by hand from its panel (Arising · Active ·

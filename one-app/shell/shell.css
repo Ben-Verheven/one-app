@@ -674,42 +674,25 @@ html #pane-callboard .tabs{align-items:stretch !important; padding-right:22px !i
    face, because the live one has to be marked at the floor of the bar. */
 /* 8px a side, not 10: when the arenas' four tabs joined the one row
    (2026-10-24) it ran into the room's name on the iPad held sideways at 10.
-   The roll below has given each group a row of its own since. */
+   They have stood in two rows since (see "tabs" in callboard.js). */
 html #pane-callboard .tab{
   color:var(--oa-ctl); background:none; border:0; border-bottom:2px solid transparent;
-  border-radius:0; min-height:0; padding:5px 8px 4px; gap:6px;
+  border-radius:0; min-height:0; padding:3px 8px 2px; gap:6px;
   align-self:stretch; align-items:center; box-shadow:none;
 }
-/* The roll (see "tabs" in callboard.js): the three words at the left, and
-   the drum the three rows turn in, the row showing at full size and its
-   neighbours smaller, fading into the bar's edge they peek over. */
-html #pane-callboard .tabs .dial{
-  display:flex; flex-direction:column; justify-content:center; gap:1px;
-  padding:0 14px 0 12px; margin-right:8px;
-  border-left:1px solid rgba(205,176,105,.34); border-right:1px solid rgba(205,176,105,.34);
+/* The two rows, each named at its left, the arenas' tabs and ALL sharing
+   the second with a rule between them. */
+html #pane-callboard .tabs .tgrid{
+  display:grid; grid-template-columns:auto auto; grid-template-rows:1fr 1fr;
+  column-gap:12px; align-self:stretch; padding-top:2px;
 }
-html #pane-callboard .tabs .dial button{
-  background:none; border:0; border-radius:0; box-shadow:none; min-height:0; height:13px;
-  padding:0 2px; text-align:left; cursor:pointer; line-height:13px; transform:none;
+html #pane-callboard .tabs .tglab{
+  align-self:center; justify-self:end; padding-top:1px;
   font:400 9px var(--sc-serif); letter-spacing:.16em; text-transform:uppercase; color:var(--oa-ctl);
 }
-html #pane-callboard .tabs .dial button:hover,html #pane-callboard .tabs .dial button.on{background:none; border:0; transform:none}
-html #pane-callboard .tabs .dial button[hidden]{display:none}
-html #pane-callboard .tabs .dial button:hover{color:var(--oa-title-hi)}
-html #pane-callboard .tabs .dial button.on{color:var(--oa-title-hi); font-weight:600}
-html #pane-callboard .tabs .dial button.on::before{content:'\25B8\00A0'; color:var(--sc-gilt)}
-html #pane-callboard .tabs .drum{position:relative; align-self:stretch; overflow:hidden; flex:0 0 auto}
-html #pane-callboard .tabs .trow{
-  position:absolute; top:0; right:0; height:38px; display:flex; align-items:stretch;
-  transform-origin:right center; transition:transform .32s cubic-bezier(.2,.8,.2,1), opacity .32s;
-}
-html #pane-callboard .tabs .trow:not(.cur){opacity:.55}
-html #pane-callboard .tabs .trow.next{transform-origin:right top;
-  -webkit-mask-image:linear-gradient(180deg,#000 35%,transparent 72%); mask-image:linear-gradient(180deg,#000 35%,transparent 72%)}
-html #pane-callboard .tabs .trow.prev{transform-origin:right bottom;
-  -webkit-mask-image:linear-gradient(0deg,#000 35%,transparent 72%); mask-image:linear-gradient(0deg,#000 35%,transparent 72%)}
-html #pane-callboard .tabs .trow:not(.cur):not(.prev):not(.next){opacity:0; pointer-events:none}
-@media (prefers-reduced-motion:reduce){html #pane-callboard .tabs .trow{transition:none}}
+html #pane-callboard .tabs .tglab[hidden]{visibility:hidden; display:block}
+html #pane-callboard .tabs .tline,html #pane-callboard .tabs .trow{display:flex; align-items:stretch}
+html #pane-callboard .tabs .trow.tall{margin-left:8px; padding-left:8px; border-left:1px solid rgba(205,176,105,.34)}
 html #pane-callboard .tab .cn{display:none}
 html #pane-callboard .tab .ck{font-size:11px; opacity:1; letter-spacing:.08em}
 /* How many topics stand behind each code. It is a number you read, not a
