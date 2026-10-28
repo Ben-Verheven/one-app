@@ -1554,6 +1554,74 @@
         })
         .catch(function (e) { cb(null, e.message); });
     }
+
+    /* ── a lead's sheet ──
+       A lead Mark's Place made (`entryId`) is sent on from the Semaphore as
+       Mark's Place sends its entry (Mark, 2026-10-28): a PDF to attach,
+       and the same laid out for an email. The entry is not on the board,
+       so it is read here, on the same terms as the sites, and laid out by
+       the same file as there, shell/leadsheet.js. A press copies before
+       the entry has come: the clipboard is handed the sheet as a promise
+       inside the press, which a write begun after the fetch would not be
+       allowed, and an entry read once is kept for the session. */
+    var entries = {}, read = {};
+    function entryOf(id) {
+      if (entries[id]) return entries[id];
+      var c = open();
+      if (!c) return Promise.reject(new Error('Log in first'));
+      return (entries[id] = Promise.resolve(c.from('partner_entries')
+        .select('id,site,ext_id,url,contact,org,country,topic,posted,first_seen,fields').eq('id', id).maybeSingle())
+        .then(function (r) {
+          if (r.error || !r.data) throw new Error(r.error ? 'Could not reach it' : 'Entry gone');
+          var e = r.data;
+          return c.from('partner_sites').select('name').eq('id', e.site).maybeSingle().then(function (s) {
+            return (read[id] = { e: e, site: (s && s.data && s.data.name) || e.site });
+          });
+        })
+        .catch(function (err) { delete entries[id]; throw err; }));
+    }
+    function sheetArgs(x, links) { return [x.e, x.e.fields || [], x.site, links]; }
+    /* Printed alone, as Mark's Place prints it: the shell's print rule
+       puts away everything but #oa-sheet, and the page's title is the
+       name the PDF is offered under while the box is open. */
+    function printSheet(x, links) {
+      var box = document.getElementById('oa-sheet');
+      if (!box) { box = document.createElement('div'); box.id = 'oa-sheet'; document.body.appendChild(box); }
+      box.innerHTML = LeadSheet.html.apply(null, sheetArgs(x, links));
+      var was = document.title, root = document.documentElement;
+      document.title = LeadSheet.title(x.e) + ' \u2014 ' + x.site;
+      root.classList.add('oa-sheeting');
+      /* the page's margin is the sheet's own padding; an @page rule cannot
+         wait on a class, so it is put in for the print and taken out after */
+      var page = document.createElement('style');
+      page.textContent = '@page{margin:0}';
+      document.head.appendChild(page);
+      window.addEventListener('afterprint', function () { document.title = was; root.classList.remove('oa-sheeting'); page.remove(); }, { once: true });
+      window.print();
+    }
+    Hub.on('lead:sheet', function (o) {
+      if (!o || !o.entryId || typeof LeadSheet === 'undefined') return;
+      var done = o.done || function () {};
+      var why = function (err) { return (err && err.message) || 'Could not'; };
+      if (o.how === 'pdf') {
+        entryOf(o.entryId).then(function (x) { printSheet(x, o.links); done(true); }, function (err) { done(false, why(err)); });
+        return;
+      }
+      var x = read[o.entryId];
+      if (x) { LeadSheet.copy(LeadSheet.html.apply(null, sheetArgs(x, o.links)), LeadSheet.text.apply(null, sheetArgs(x, o.links)), done); return; }
+      var got = entryOf(o.entryId), failed = null;
+      got.catch(function (err) { failed = err; });
+      var html = got.then(function (y) { return LeadSheet.html.apply(null, sheetArgs(y, o.links)); });
+      var text = got.then(function (y) { return LeadSheet.text.apply(null, sheetArgs(y, o.links)); });
+      html.catch(function () {}); text.catch(function () {});
+      LeadSheet.copy(html, text, function (ok) {
+        if (ok) return done(true);
+        /* an entry that came only after the browser gave up can be copied
+           at once the next time */
+        got.then(function () { done(false, 'Press again'); }, function () { done(false, why(failed)); });
+      });
+    });
+
     return { ready: function () { return !!open(); }, list: list };
   })());
 

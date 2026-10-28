@@ -785,3 +785,22 @@ html :is(#pane-semaphore,#pane-notes,#pane-atlas,#pane-ledger) .oa-cloudchip[dat
    The patch that used to bolt a second hover language and a bolted-on
    updates row onto it has been folded into the card itself. */
 
+
+/* ── a lead's sheet, printed ────────────────────────────────────────── */
+
+/* The PDF of a lead Mark's Place made, from the Semaphore (see "a lead's
+   sheet" in bridge.js), printed as Mark's Place prints it: everything else
+   is put away, the page wears the sheet's own ground edge to edge, its
+   colours printed even where the browser's background setting is off, and
+   the page's margin is the sheet's padding, repeated on every page. The
+   page itself never scrolls (the rooms do), so it is let run on for the
+   print, or the sheet would stop at the first page. All of it only while
+   the sheet is what is printing (`oa-sheeting`), so the Ledger's own print
+   still prints the Ledger. */
+#oa-sheet{display:none}
+@media print{
+  html.oa-sheeting,html.oa-sheeting body{height:auto!important;overflow:visible!important;background:#FAF7F0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  html.oa-sheeting body > :not(#oa-sheet){display:none!important}
+  html.oa-sheeting #oa-sheet{display:block;padding:12mm 10mm;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+  html.oa-sheeting #oa-sheet > table{max-width:none!important}
+}

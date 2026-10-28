@@ -142,7 +142,10 @@ having become a project, in the Semaphore or on the Ledger's lead card.
 And **`leads:excel`**, from the Excel button on the Semaphore's Leads, which
 the bridge answers by writing every lead (`allLeads()`), open and closed,
 into one .xlsx file — the same file again each time where the browser can
-keep hold of one; the bridge's own comment says how. And
+keep hold of one; the bridge's own comment says how. And **`lead:sheet`**,
+from PDF and Copy for email on a lead Mark's Place made, which the bridge
+answers by reading that entry from Mark's Place's table and laying it out
+as Mark's Place does. And
 **`semaphore:keep`**, with a reason, just before ChatGPT's answer is put on
 the board, which the bridge answers with a Ledger restore point. And
 **`callboard:ready`**, once, when the lazy Call Board has been built, which
@@ -368,7 +371,8 @@ is what you cannot reach.
 ## The four rules
 
 1. **Order in `index.html` is load order.** Hub, then the venue maths
-   (`shell/venues.js`, which two readers share), then data, then each
+   (`shell/venues.js`) and a lead's sheet (`shell/leadsheet.js`), each
+   shared with Mark's Place, then data, then each
    room's view before its script, then the bridge, then boot.
 
 2. **Never `type="module"`.** Modules are fetched and a browser will not
@@ -542,6 +546,8 @@ one-app/
     hub.js            the scoped document and window; mounting; the bus
     venues.js         the venue maths: a venue's window, a site, a call's runs —
                       read by the Semaphore and Mark's Place
+    leadsheet.js      a brokerage entry laid out to send, as a PDF or for an
+                      email — read by the bridge and Mark's Place
     bridge.js         everything the rooms say to each other
     boot.js           says out loud when a room fails to load
 

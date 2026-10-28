@@ -138,7 +138,8 @@ no file under `one-app/`. These are his choices, and what he dropped.
 - **PDF and Copy for email** beside Open on site (2026-10-23), on leads
   only and at the desk only, to send a lead's project laid out as he reads
   it; an HTML file was offered as well and not taken. How is at "a lead's
-  sheet".
+  sheet", since 2026-10-28 in `one-app/shell/leadsheet.js`, so that the
+  Semaphore's leads made here send the same sheet.
 
 ## The search
 

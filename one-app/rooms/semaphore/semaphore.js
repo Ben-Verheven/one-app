@@ -3060,10 +3060,19 @@ function leadPanesHTML(a,l,shut,editing){
      keeps its Who box beside them and the two never become one box the
      card's width (Mark, 2026-10-22). */
   if(shut&&!editing&&!n&&!coord&&!person)return '';
+  /* A lead Mark's Place made can be sent on as that page sends its entry,
+     a PDF to attach and the same laid out for an email (Mark, 2026-10-28);
+     the bridge fetches the entry and makes both (see "a lead's sheet" in
+     bridge.js) */
+  const ids='data-id="'+a.id+'" data-l="'+l.id+'"';
+  const sheet=l.entryId&&!editing
+    ? '<button class="lact lphb" data-act="leadSheet" data-v="pdf" '+ids+' title="A PDF of this project, laid out as in Mark\u2019s Place, to attach to an email">PDF</button>'+
+      '<button class="lact lphb" data-act="leadSheet" data-v="copy" '+ids+' title="Copy this project, laid out as in Mark\u2019s Place, to paste into an email">Copy for email</button>'
+    : '';
   return '<div class="lpanes">'+
     leadBoxHTML('Who',0,editing?'<div class="lwho">'+coord+person+'</div>':
       coord+person||'<p class="lnil">Nobody named yet</p>')+
-    leadBoxHTML('Links',editing?0:n,links)+
+    leadBoxHTML('Links',editing?0:n,links,sheet)+
   '</div>';
 }
 /* What has happened, newest first, in a box of its own under the two, with
@@ -4665,6 +4674,15 @@ document.addEventListener('click',e=>{
       if(l.outcome==='project')leadToProject(ar,l);
       break;}
     case 'leadEndCancel':{leadRedo(cardOf(b));break;}
+    case 'leadSheet':{const ar=arena(id);if(!ar)break;
+      const l=(ar.leads||[]).find(x=>x.id===b.dataset.l);if(!l||!l.entryId)break;
+      if(typeof Hub==='undefined'||!Hub.emit)break;
+      const was=b.textContent;
+      const say=t=>{b.textContent=t;setTimeout(()=>{b.textContent=was;},2200);};
+      if(b.dataset.v==='pdf')say('Opening\u2026');
+      Hub.emit('lead:sheet',{entryId:l.entryId,links:l.links||[],how:b.dataset.v,
+        done:(ok,why)=>{if(!ok)say(why||'Could not');else if(b.dataset.v==='copy')say('Copied');}});
+      break;}
     case 'leadLimbo':{const ar=arena(id);if(!ar)break;
       const l=(ar.leads||[]).find(x=>x.id===b.dataset.l);if(!l||l.doneAt)break;
       leadMove(cardOf(b),()=>{if(l.limbo)delete l.limbo;else l.limbo=todayISO();restack();});break;}

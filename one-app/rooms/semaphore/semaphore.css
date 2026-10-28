@@ -569,6 +569,7 @@
 /* the button that adds to a box, on the box's own head (Mark, 2026-10-21) */
 #pane-semaphore .lead .lph .lphb{margin-left:auto;padding:3px 8px;text-transform:none;letter-spacing:.06em;font-weight:400}
 #pane-semaphore .lead .lph .lphb.prim{font-weight:600}
+#pane-semaphore .lead .lph .lphb+.lphb{margin-left:0}
 #pane-semaphore .lead .lph{min-height:24px;align-items:center}
 /* While editing: each field on the line of the fact it holds, behind its
    mark, and the links' empty pair keeping the cross's column */

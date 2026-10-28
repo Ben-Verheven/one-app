@@ -270,6 +270,9 @@ calls land on the Call Board. What still holds of the board:
   Complete, keeping its step and going back to it with Bring back. It is
   owed nothing and leaves the Ledger's board, as he asked; the Excel lists
   it in a Limbo section of its own after Spotted.
+- **A lead Mark's Place made can be sent on as an entry is there**
+  (2026-10-28): PDF and Copy for email on its Links box, the same sheet as
+  Mark's Place's.
 - **A lead that moves slides there and glows**, the view following it
   (2026-10-21); see [animation](animation.md).
 - A search that finds a lead opens its arena's panel.
