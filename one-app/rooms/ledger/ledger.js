@@ -8979,12 +8979,16 @@ var Leads=(function(){
       +'<select aria-label="How valuable this lead is, 1 to 5" '
         +'onchange="PL.leadScore(\''+jsq(key)+'\',this.value,event)">'+opts+'</select></label>';
   }
-  /* the day as a todo card writes it: weekday, then the full date */
+  /* the day as a todo card writes it: weekday, then the full date — and
+     beside it the Semaphore's short form, which the stylesheet shows instead
+     on an upright iPad, where the long one alone held 200px of the row */
   function dueLabelHTML(iso){
     if(!iso)return 'No date';
     var dt=new Date(iso+'T00:00:00');
-    return '<span style="margin-right:8px">'+DAYS[dt.getDay()]+'</span>'
-      +'<span>'+dt.getDate()+' '+MONTHS[dt.getMonth()]+' '+dt.getFullYear()+'</span>';
+    return '<span class="lead-due-full" style="margin-right:8px">'+DAYS[dt.getDay()]+'</span>'
+      +'<span class="lead-due-full">'+dt.getDate()+' '+MONTHS[dt.getMonth()]+' '+dt.getFullYear()+'</span>'
+      +'<span class="lead-due-short">'+DAYS[dt.getDay()].slice(0,3)+' '+dt.getDate()+' '
+        +MONTHS[dt.getMonth()].slice(0,3)+'</span>';
   }
   function html(l){
     var key=keyOf(l),lid=esc(l.id),k=jsq(key);

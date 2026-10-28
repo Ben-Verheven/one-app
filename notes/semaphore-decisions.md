@@ -260,7 +260,10 @@ calls land on the Call Board. What still holds of the board:
   ruit at the head of each line, the arena as a tag in its type's colour,
   the day coloured by how near it is. **+ Lead** at the end of its head
   opens the new-lead form with an arena chosen in front, the last one kept,
-  and the lead lands open in Spotted. The Ledger's list keeps its own look.
+  and the lead lands open in Spotted. The Ledger's list keeps its own look,
+  except a shut lead on an upright iPad, which wears this table's line:
+  arena tag, title and match cut to a line each, score, day as a pill
+  (2026-10-28, chosen over the same card fitted and over two lines).
 - **A lead that moves slides there and glows**, the view following it
   (2026-10-21); see [animation](animation.md).
 - A search that finds a lead opens its arena's panel.

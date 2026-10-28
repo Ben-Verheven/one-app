@@ -1298,6 +1298,40 @@
 #pane-ledger .lead-card .todo-later-due{min-width:200px}
 /* it waits while the card is edited, as the ruit does, for the same reason */
 #pane-ledger .lead-card.lead-editing .lead-score{opacity:0.55;pointer-events:none}
+#pane-ledger .lead-due-short{display:none}
+/* ── A shut lead on an upright iPad: the Semaphore's line ──
+   At this width the ruit's slot, the dot, the arena's 170px, the score and
+   the date's 200px took the row first and left the title about 80px, so a
+   long title stood a word or half a word to a line and one lead filled the
+   screen (issue #9). Mark chose, from a sheet of three, the one line the
+   Semaphore's Leads draws: the arena as a tag in its type's colour, which
+   makes the dot beside it a second saying of the same colour and so it goes;
+   the title and the match side by side, each cut to one line; the day as a
+   pill in its short form, red when owed and amber within the week, as there.
+   An open card goes back to the title over the match, both whole, and
+   keeps everything else it had. The desk keeps its card: it has the room. */
+@media (max-width:900px){
+  #pane-ledger .lead-card:not(.open) .lead-col{display:none}
+  #pane-ledger .lead-card:not(.open) button.todo-later-proj{width:auto;min-width:0;max-width:130px;
+    padding:3px 9px;border-radius:99px;font-size:11px;letter-spacing:.04em;
+    background-image:none;background-color:color-mix(in srgb,var(--lead) 24%,transparent);
+    border:1px solid color-mix(in srgb,var(--lead) 55%,transparent);
+    color:color-mix(in srgb,var(--lead) 45%,#fff)}
+  #pane-ledger .lead-card:not(.open) .lead-text{flex-direction:row;align-items:baseline;gap:12px}
+  #pane-ledger .lead-card:not(.open) .lead-nm{flex:1 1 55%;min-width:0;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #pane-ledger .lead-card:not(.open) .lead-sub{flex:1 1 45%;min-width:0}
+  #pane-ledger .lead-card:not(.open) .lead-score{margin:0 4px}
+  #pane-ledger .lead-card .todo-later-due{min-width:0}
+  #pane-ledger .lead-card:not(.open) .todo-later-due{padding:2px 8px;border-radius:99px;
+    border:1px solid rgba(180,155,90,0.3);font-style:normal;font-size:12px;color:var(--text2)!important}
+  #pane-ledger .lead-card:not(.open) .lead-due-full{display:none}
+  #pane-ledger .lead-card:not(.open) .lead-due-short{display:inline}
+  #pane-ledger .lead-card:not(.open) .todo-later-due.todo-due-overdue{color:#ff9a8c!important;
+    border-color:rgba(239,91,76,0.5);background:rgba(239,91,76,0.2)}
+  #pane-ledger .lead-card:not(.open) .todo-later-due.todo-due-today,
+  #pane-ledger .lead-card:not(.open) .todo-later-due.todo-due-soon{color:#f3cc6e!important;
+    border-color:rgba(240,180,41,0.4);background:rgba(240,180,41,0.12)}}
 /* The links are a band on the open card, labelled in the gutter. #bca070 for the label: nine pixels of --text3 on this ground is
    3.5:1, and these are read. */
 #pane-ledger .lead-band{display:flex;gap:12px;align-items:baseline;
