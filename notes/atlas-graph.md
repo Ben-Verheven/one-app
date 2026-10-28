@@ -59,8 +59,9 @@ database say this or did you*, so it had to be a hue none of the layers had
 taken. It overrides a chip's wash and never its shape: a keyword Mark
 assigned is a declared keyword and belongs on the same line as the rest.
 Keep it clear of `--con`, the room's only other violet — they are not drawn
-together today (the hand's colour lives on the dossier, `--con` on the walk
-rail) and that is the only reason the pair is safe.
+together today (the hand's colour lives on keyword chips — the dossier,
+Browse, the map's card — and `--con` on the walk rail) and that is the
+only reason the pair is safe.
 An attachment carries its edit id in the last slot, `a[10]`, which is how
 the dossier tells a keyword he assigned from one the database declared —
 it was already there so that the chip could offer undo rather than a cut.

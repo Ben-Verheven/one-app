@@ -393,13 +393,16 @@ html #pane-atlas{
   --k1:#7A5E24; --k2:#41705C; --k3:#9E5B24; --con:#6B5F7E;
   --k1w:#EDE3CB; --k2w:#DFEAE2; --k3w:#F2E2D0; --conw:#E7E2EC;
   --dm:#8A4A7A; --dc:#4C5B77; --dd:#5E6E3E;
+  /* each department's wash: the ground of a group opened under it in
+     Browse, and its territory on the map — ink stays --ink on all three */
+  --dmw:#EADDE2; --dcw:#DFE2E6; --ddw:#E3E6D4;
   --danger:#A33A2C;
   /* The hand's own colour is warmed with the rest of them. It arrived a
      cool violet, which on vellum read as a sticker from another app — and
      it has to stay clear of --con, the only other violet here, which is
      desaturated where this one is not. It is never drawn beside a concept
-     chip in any case: the hand's colour lives on the dossier, --con on the
-     walk rail. */
+     chip in any case: the hand's colour lives on keyword chips (the
+     dossier, Browse, the map's card), --con on the walk rail. */
   --mine:#6B4E8C; --minew:#E8DFEE; --minei:#573C77;
   --serif:'Cinzel',serif;
   --sans:'Crimson Text',serif;

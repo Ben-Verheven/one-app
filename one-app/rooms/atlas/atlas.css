@@ -5,6 +5,7 @@
   --k1:#2F53C4; --k2:#0E8A66; --k3:#C2721B; --con:#756F91;
   --k1w:#E9EDFA; --k2w:#E4F3EE; --k3w:#F8EFE1; --conw:#EEECF4;
   --dm:#A4589B; --dc:#5D6B87; --dd:#6E7F45;
+  --dmw:#F3E6F1; --dcw:#E7EAF1; --ddw:#ECF0E1;
   --danger:#B4372F;
   /* The hand's own colour. Every other hue in this room answers "which
      layer did this come from"; this one answers a different question —
@@ -232,10 +233,31 @@
 #pane-atlas .trow.grp{margin-left:34px;color:#3A4048}
 #pane-atlas .trow .cnt{font-family:var(--mono);font-size:10.5px;color:var(--ghost)}
 #pane-atlas .rrow{display:grid;grid-template-columns:230px 1fr;gap:14px;margin-left:58px;
-  padding:5px 10px;border-radius:7px;cursor:pointer;align-items:baseline}
+  padding:6px 10px;border-radius:7px;cursor:pointer;align-items:start}
+#pane-atlas .rrow + .rrow{border-top:1px solid var(--line)}
 #pane-atlas .rrow:hover{background:var(--wash)}
-#pane-atlas .rrow.sel{background:var(--k1w)}
-#pane-atlas .rrow .nm{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#pane-atlas .rrow.sel{background:var(--panel);box-shadow:inset 0 0 0 1px var(--line2)}
+#pane-atlas .rrow .nm{font-weight:500;overflow:hidden;text-overflow:ellipsis;padding-top:1px}
+#pane-atlas .rrow .nm .rk{display:block;font-weight:400;font-size:12px;color:var(--faint)}
+#pane-atlas .rrow .kwline{margin-top:0;gap:5px}
+#pane-atlas .rrow .chip{white-space:normal}
+/* Each block holds its own children, so opening a row can slide it open.
+   A department's block carries its colour down its left side, under the
+   heading's twisty, and washes the groups opened inside it. */
+#pane-atlas #tree{padding:10px 30px 60px;max-width:1100px}
+#pane-atlas .tkids.tdom{position:relative}
+#pane-atlas .tkids.tdom::before{content:"";position:absolute;left:12px;top:2px;bottom:2px;width:3px;
+  border-radius:2px;background:var(--dcol)}
+#pane-atlas .tdom .trow.grp.open{background:var(--dwash)}
+/* Where you are, held at the top of the scroll. Its ground is the room's
+   paper so the rows pass under it rather than through it. */
+#pane-atlas .tcrumbs{position:sticky;top:0;z-index:3;background:var(--paper);display:flex;flex-wrap:wrap;
+  align-items:center;gap:6px;padding:12px 30px 10px;border-bottom:1px solid var(--line);min-height:47px}
+#pane-atlas .tcrumb{padding:1px 10px;border-radius:99px;border:1px solid var(--line);background:var(--panel);
+  font-size:12.5px;color:var(--ink)}
+#pane-atlas .tcrumb:hover{border-color:var(--line2)}
+#pane-atlas .tcrumb.d{background:var(--dwash);border-color:transparent}
+#pane-atlas .tsep{color:var(--ghost)}
 #pane-atlas .rrow .nm .lead{font-size:10px;color:var(--ghost);border:1px solid var(--line);
   border-radius:4px;padding:0 4px;margin-left:6px;vertical-align:1px}
 #pane-atlas .rrow .kw{color:var(--faint);font-size:12.3px;white-space:nowrap;overflow:hidden;
@@ -252,6 +274,14 @@
 #pane-atlas .mapdot text{font:10.5px var(--sans);fill:var(--faint);pointer-events:none;opacity:0}
 #pane-atlas .mapdot:hover text,#pane-atlas .mapdot.lab text{opacity:1}
 #pane-atlas .mapdot.hl circle.core{stroke:var(--ink);stroke-width:2}
+#pane-atlas .mwash{fill-opacity:.55;pointer-events:none}
+#pane-atlas .mapcard{position:absolute;z-index:5;width:310px;background:var(--panel);border:1px solid var(--line2);
+  border-radius:9px;padding:10px 12px;box-shadow:0 8px 24px rgba(30,35,45,.16);pointer-events:none}
+#pane-atlas .mapcard .nm{font-weight:600;font-size:14.5px}
+#pane-atlas .mapcard .sub{font-size:12px;color:var(--faint);margin-bottom:7px}
+#pane-atlas .mapcard .chip{white-space:normal}
+#pane-atlas .mapcard .kw{font-size:12.3px;color:var(--faint)}
+#pane-atlas .selkw .chip{white-space:normal}
 #pane-atlas .wnode{cursor:pointer}
 #pane-atlas .wnode text{font:11px var(--sans);fill:var(--ink)}
 #pane-atlas .wnode:hover text{font-weight:600}

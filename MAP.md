@@ -66,7 +66,7 @@ Boot check  boot.js:1
 
 ## `shell/shell.css`
 
-784 lines · 40 KB
+787 lines · 41 KB
 
 ```
 Shell — the chrome that holds the five rooms.              shell.css:1
@@ -79,14 +79,14 @@ the page change                                            shell.css:267
 stage & panes                                              shell.css:304
 the researcher link, wherever a name is written            shell.css:360
 Palette harmonisation.                                     shell.css:374
-faint was #9D8458                                          shell.css:417
-The ribbon.                                                shell.css:445
-one bar: one height, one control face                      shell.css:461
-the ribbon's ink, said louder than each room says its own  shell.css:527
-Semaphore: already the shape of the thing                  shell.css:598
-the Ledger                                                 shell.css:603
-the Atlas: a 21px italic wordmark                          shell.css:645
-the Call Board: the cluster row is the bar                 shell.css:667
+faint was #9D8458                                          shell.css:420
+The ribbon.                                                shell.css:448
+one bar: one height, one control face                      shell.css:464
+the ribbon's ink, said louder than each room says its own  shell.css:530
+Semaphore: already the shape of the thing                  shell.css:601
+the Ledger                                                 shell.css:606
+the Atlas: a 21px italic wordmark                          shell.css:648
+the Call Board: the cluster row is the bar                 shell.css:670
 ```
 
 ## `rooms/ledger/ledger.view.js`
@@ -513,7 +513,7 @@ _No section banners._
 
 ## `rooms/atlas/atlas.js`
 
-2543 lines · 124 KB
+2676 lines · 131 KB
 
 ```
 Researcher Atlas                                          atlas.js:1
@@ -536,34 +536,34 @@ edit actions                                              atlas.js:750
 rail                                                      atlas.js:952
 search mode                                               atlas.js:1115
 BROWSE — the department as it organizes itself            atlas.js:1394
-NEWS — what the scheduled people-agent found on the web   atlas.js:1489
-DOSSIER — one researcher                                  atlas.js:1681
-MAP & WALK — one canvas, two readings                     atlas.js:2045
-canvas                                                    atlas.js:2118
-concentric walk                                           atlas.js:2153
-canvas interaction                                        atlas.js:2282
-walk rail                                                 atlas.js:2343
-SHELL — tabs, edit toggle, about, init.                   atlas.js:2421
-exposed to the hub                                        atlas.js:2503
+NEWS — what the scheduled people-agent found on the web   atlas.js:1590
+DOSSIER — one researcher                                  atlas.js:1782
+MAP & WALK — one canvas, two readings                     atlas.js:2146
+canvas                                                    atlas.js:2219
+concentric walk                                           atlas.js:2280
+canvas interaction                                        atlas.js:2409
+walk rail                                                 atlas.js:2476
+SHELL — tabs, edit toggle, about, init.                   atlas.js:2554
+exposed to the hub                                        atlas.js:2636
 ```
 
 ## `rooms/atlas/atlas.css`
 
-401 lines · 26 KB
+431 lines · 28 KB
 
 ```
 Researcher Atlas  atlas.css:1
-chrome            atlas.css:35
-narrow            atlas.css:82
-shared bits       atlas.css:106
-sliders           atlas.css:150
-search            atlas.css:160
-browse            atlas.css:224
-map & walk        atlas.css:246
-dossier           atlas.css:271
-popover / modal   atlas.css:322
-edits list        atlas.css:339
-news              atlas.css:352
+chrome            atlas.css:36
+narrow            atlas.css:83
+shared bits       atlas.css:107
+sliders           atlas.css:151
+search            atlas.css:161
+browse            atlas.css:225
+map & walk        atlas.css:268
+dossier           atlas.css:301
+popover / modal   atlas.css:352
+edits list        atlas.css:369
+news              atlas.css:382
 ```
 
 ## `rooms/notes/notes.view.js`
@@ -663,4 +663,4 @@ Generated data. Never open, never edit, never upload.
 
 ---
 
-**39134 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.
+**39300 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.

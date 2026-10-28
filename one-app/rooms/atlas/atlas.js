@@ -1398,7 +1398,19 @@ function findStart(pc, h) {
 const val = s => (s && s !== "nan" ? s : null);
 const trim = (s, n) => (s = String(s || ""), s.length > n ? s.slice(0, n - 1) + "…" : s);
 
-function renderBrowse() {
+/* Browse is drawn as nested blocks — a row, then its children in a `.tkids`
+   of their own — so that opening a row can slide its block open and the
+   rows under it travel down with it. It used to be one flat list redrawn
+   whole on every press, and everything under the row jumped to its new
+   place in a single frame; Mark asked for moving around the Atlas to feel
+   smoother (#20). The department's colour runs down the side of its block
+   and washes its open groups, so which department you are in reads at a
+   glance rather than only from the dot on its own heading. */
+const DOMW = { "Mathematics": "var(--dmw)", "Computer Science": "var(--dcw)", "Data Science": "var(--ddw)" };
+const SLIDE_MS = 320;
+let browseBusy = false;
+
+function renderBrowse(opened) {
   const main = $("#main");
   main.classList.remove("nopad");
   const f = State.treeFilter.trim().toLowerCase();
@@ -1410,6 +1422,7 @@ function renderBrowse() {
            (r.group || "").toLowerCase().includes(f);
   };
   const open = k => (f ? true : State.treeOpen.has(k));
+  const kids = (k, inner, style) => `<div class="tkids${style ? " tdom" : ""}" data-kids="${esc(k)}"${style ? ` style="${style}"` : ""}>${inner}</div>`;
 
   /* A newcomer sits under the group the agent read them in; one whose group
      the tree does not have is listed above it rather than lost. */
@@ -1417,7 +1430,7 @@ function renderBrowse() {
   const ncHit = e => !f || e.name.toLowerCase().includes(f) || (e.grp || "").toLowerCase().includes(f);
   const ncIn = gn => newcomers().filter(e => Core.norm(e.grp || "") === Core.norm(gn) && ncHit(e));
   const loose = newcomers().filter(e => !gnames.has(Core.norm(e.grp || "")) && ncHit(e));
-  let html = `<div id="tree" style="padding:22px 30px 60px;max-width:1020px">`;
+  let html = `<div class="tcrumbs" id="tcrumbs"></div><div id="tree">`;
   if (loose.length) html += `<div class="trow grp" style="margin-left:0">Not in the Atlas yet, group not in the tree</div>`
     + loose.map(newcomerRow).join("");
   for (const d of G.hierarchy) {
@@ -1426,54 +1439,142 @@ function renderBrowse() {
     const nHit = members.filter(hit).length;
     const nNew = d.clusters.reduce((t, c) => t + c.groups.reduce((u, g) => u + ncIn(g.name).length, 0), 0);
     if (f && !nHit && !nNew) continue;
-    html += `<div class="trow dom" data-tk="${esc(dk)}">
+    html += `<div class="trow dom${open(dk) ? " open" : ""}" data-tk="${esc(dk)}">
       <span class="tw">${open(dk) ? "▾" : "▸"}</span>
       <span class="dot" style="background:${DOMC[d.name]}"></span>${esc(d.name)}
       <span class="cnt">${f ? nHit + " of " : ""}${members.length}</span></div>`;
     if (!open(dk)) continue;
+    let dIn = "";
     for (const c of d.clusters) {
       const ck = "c:" + d.name + "|" + c.name;
       const cm = c.groups.flatMap(g => g.members);
       const cHit = cm.filter(hit).length;
       if (f && !cHit && !c.groups.some(g => ncIn(g.name).length)) continue;
-      html += `<div class="trow clu" data-tk="${esc(ck)}">
+      dIn += `<div class="trow clu${open(ck) ? " open" : ""}" data-tk="${esc(ck)}">
         <span class="tw">${open(ck) ? "▾" : "▸"}</span>${esc(c.name)}
         <span class="cnt">${cm.length}</span></div>`;
       if (!open(ck)) continue;
+      let cIn = "";
       for (const g of c.groups) {
         const gk = "g:" + d.name + "|" + c.name + "|" + g.name;
         const gHit = g.members.filter(hit);
         if (f && !gHit.length && !ncIn(g.name).length) continue;
-        html += `<div class="trow grp" data-tk="${esc(gk)}">
+        cIn += `<div class="trow grp${open(gk) ? " open" : ""}" data-tk="${esc(gk)}">
           <span class="tw">${open(gk) ? "▾" : "▸"}</span>${esc(g.name)}
           <span class="cnt">${g.members.length}</span></div>`;
         if (!open(gk)) continue;
-        for (const ri of (f ? gHit : g.members)) {
-          const r = R[ri];
-          html += `<div class="rrow ${State.browseSel === ri ? "sel" : ""}" data-rid="${ri}">
-            <span class="nm">${esc(r.name)}${r.leader ? `<span class="lead">leader</span>` : ""}${leftOf(r.name) ? `<span class="an-left">left TU/e · ${yearOf(leftOf(r.name))}</span>` : ""}</span>
-            <span class="kw">${esc(val(r.kwRaw) || "— no declared keywords —")}</span></div>`;
-        }
-        for (const e of ncIn(g.name)) html += newcomerRow(e);
+        cIn += kids(gk, (f ? gHit : g.members).map(researcherRow).join("") + ncIn(g.name).map(newcomerRow).join(""));
       }
+      dIn += kids(ck, cIn);
     }
+    html += kids(dk, dIn, `--dcol:${DOMC[d.name]};--dwash:${DOMW[d.name]}`);
   }
   html += `</div>`;
   main.innerHTML = html;
+  crumbs();
+  main.onscroll = () => {
+    if (State.mode !== "browse" || crumbs._raf) return;
+    crumbs._raf = requestAnimationFrame(() => { crumbs._raf = 0; crumbs(); });
+  };
+  if (opened) slideKids([...main.querySelectorAll("[data-kids]")].find(el => el.dataset.kids === opened), true);
 
   main.querySelectorAll("[data-tk]").forEach(row => row.onclick = () => {
-    if (State.treeFilter.trim()) return;               // filter forces open
+    if (State.treeFilter.trim() || browseBusy) return;  // filter forces open
     const k = row.dataset.tk;
-    State.treeOpen.has(k) ? State.treeOpen.delete(k) : State.treeOpen.add(k);
-    renderBrowse();
+    if (!State.treeOpen.has(k)) { State.treeOpen.add(k); renderBrowse(k); return; }
+    browseBusy = true;
+    row.querySelector(".tw").textContent = "▸";
+    slideKids([...main.querySelectorAll("[data-kids]")].find(el => el.dataset.kids === k), false, () => {
+      browseBusy = false; State.treeOpen.delete(k); renderBrowse();
+    });
   });
   main.querySelectorAll("[data-ncundo]").forEach(b => b.onclick = ev => {
     ev.stopPropagation(); removeEdit(b.dataset.ncundo); toast("Taken off the list");
   });
   main.querySelectorAll("[data-rid]").forEach(row => row.onclick = () => {
+    main.querySelectorAll(".rrow.sel").forEach(x => x.classList.remove("sel"));
+    row.classList.add("sel");
     State.browseSel = +row.dataset.rid;
-    renderBrowse();
     openDossier(+row.dataset.rid);
+  });
+}
+
+/* One researcher's line: every declared keyword whole, in the chips the
+   dossier draws, where it used to be the raw spreadsheet cell cut off with
+   an ellipsis at the column's edge — "all keywords from a researcher
+   should be visible instead of the dots" (#20). */
+function researcherRow(ri) {
+  const r = R[ri], rk = rankOf(r.name);
+  return `<div class="rrow ${State.browseSel === ri ? "sel" : ""}" data-rid="${ri}">
+    <span class="nm">${esc(r.name)}${r.leader ? `<span class="lead">leader</span>` : ""}${leftOf(r.name) ? `<span class="an-left">left TU/e · ${yearOf(leftOf(r.name))}</span>` : ""}${rk ? `<span class="rk">${esc(rk.rank)}</span>` : ""}</span>
+    ${kwChips(ri)}</div>`;
+}
+/* The keywords as the researcher declared them — their spreadsheet cell
+   cut at its commas, a comma inside brackets kept — and then the ones Mark
+   assigned himself, in his colour. Not the declared layer's attachments:
+   those also hold every shorter term the build found inside a keyword, so
+   "numerical linear algebra" came with "numerical linear", "linear algebra"
+   and "algebra", three chips that say nothing new. */
+function kwChips(ri) {
+  const out = [];
+  let depth = 0, cur = "";
+  for (const ch of val(R[ri].kwRaw) || "") {
+    if (ch === "(") depth++;
+    if (ch === ")") depth = Math.max(0, depth - 1);
+    if (ch === "," && !depth) { out.push(cur); cur = ""; } else cur += ch;
+  }
+  out.push(cur);
+  const said = out.map(k => k.trim().replace(/\.$/, "")).filter(Boolean);
+  const mine = Core.attachmentsOfR(ri).filter(([, a]) => a[3] === "kw" && a[10]).map(([, a]) => T[a[0]].label);
+  return said.length || mine.length
+    ? `<span class="kwline">${said.map(k => `<span class="chip l1">${esc(k)}</span>`).join("")}${mine.map(k => `<span class="chip l1 mine" title="assigned by you">${esc(k)}</span>`).join("")}</span>`
+    : `<span class="kw">— no declared keywords —</span>`;
+}
+
+/* Slides a block open from nothing or shut to nothing. The start height is
+   written, then a style pass forced, then the end height: written in the
+   same tick as the start, the browser never computes the start state and
+   the block simply appears — the trap in notes/animation.md. The end is a
+   timer rather than transitionend, which never fires when reduced motion
+   has taken the transition away. */
+function slideKids(el, opening, done) {
+  if (!el || matchMedia("(prefers-reduced-motion:reduce)").matches) { if (done) done(); return; }
+  const h = el.scrollHeight;
+  el.style.overflow = "hidden";
+  el.style.height = (opening ? 0 : h) + "px";
+  void el.offsetHeight;
+  el.style.transition = `height ${SLIDE_MS}ms cubic-bezier(0.65,0,0.35,1)`;
+  el.style.height = (opening ? h : 0) + "px";
+  setTimeout(() => {
+    if (opening) el.style.height = el.style.overflow = el.style.transition = "";
+    if (done) done();
+  }, SLIDE_MS);
+}
+
+/* The line held at the top of Browse saying where you are: the path of the
+   last heading scrolled past. Pressing a step brings its heading back up to
+   the top. With nothing open it says how the tree is ordered instead. */
+function crumbs() {
+  const bar = $("#tcrumbs"), main = $("#main");
+  if (!bar) return;
+  const edge = bar.getBoundingClientRect().bottom + 2;
+  let at = null;
+  for (const row of main.querySelectorAll(".trow[data-tk]")) {
+    if (row.getBoundingClientRect().top > edge) break;
+    at = row.dataset.tk;
+  }
+  if (!at) { const first = main.querySelector(".trow.open[data-tk]"); at = first ? first.dataset.tk : null; }
+  if (crumbs._at === at && bar.firstChild) return;
+  crumbs._at = at;
+  if (!at) { bar.innerHTML = `<span class="hint">Department → cluster → group → researcher. Press a row to open it, a researcher for the dossier.</span>`; return; }
+  const parts = at.slice(2).split("|");
+  const keys = parts.map((_, i) => "dcg"[i] + ":" + parts.slice(0, i + 1).join("|"));
+  bar.innerHTML = parts.map((p, i) => `<button class="tcrumb${i ? "" : " d"}" type="button" data-crumb="${esc(keys[i])}"${i ? "" : ` style="--dwash:${DOMW[p] || "var(--wash)"}"`}>${esc(p)}</button>`).join(`<span class="tsep">›</span>`);
+  bar.querySelectorAll("[data-crumb]").forEach(b => b.onclick = () => {
+    const row = [...main.querySelectorAll(".trow[data-tk]")].find(x => x.dataset.tk === b.dataset.crumb);
+    if (!row) return;
+    const top = row.getBoundingClientRect().top - main.getBoundingClientRect().top + main.scrollTop - bar.offsetHeight - 4;
+    main.scrollTo({ top: Math.max(0, top), behavior: matchMedia("(prefers-reduced-motion:reduce)").matches ? "auto" : "smooth" });
   });
 }
 
@@ -2081,7 +2182,7 @@ function locateOnMap(rid) {
 function renderWalk() {
   const main = $("#main");
   main.classList.add("nopad");
-  main.innerHTML = `<div id="canvasWrap"></div>${trailHTML()}${State.walk.focus.kind === "map" ? legendHTML() : ""}`;
+  main.innerHTML = `<div id="canvasWrap"></div>${trailHTML()}${State.walk.focus.kind === "map" ? legendHTML() + `<div class="mapcard" id="mapcard" hidden></div>` : ""}`;
   drawCanvas();
   main.querySelectorAll("[data-crumb]").forEach(ch => ch.onclick = () => {
     const i = +ch.dataset.crumb;
@@ -2135,12 +2236,38 @@ function drawCanvas() {
   wrap.innerHTML = `<svg viewBox="0 0 ${W} ${H}">
     <g id="world" transform="translate(${v.tx},${v.ty}) scale(${v.k})">${inner}</g></svg>`;
   wireCanvas(wrap);
+  if (f.kind === "map") mapCard(State.walk.sel);
+}
+
+/* The card a dot answers with: the name and every declared keyword, beside
+   the dot, so reading what someone works on no longer needs a zoom and a
+   trip to the rail (#20). It follows the pointer at the desk; the dot
+   chosen with a press keeps it, which is the iPad's way to it. Pass null to
+   put it away, unless a dot is chosen. */
+function mapCard(ri) {
+  const c = $("#mapcard"), wrap = $("#canvasWrap");
+  if (!c || !wrap) return;
+  const g = ri == null ? null : [...wrap.querySelectorAll(".mapdot")].find(x => +x.dataset.r === ri);
+  if (!g) { c.hidden = true; return; }
+  const r = R[ri];
+  c.innerHTML = `<div class="nm">${esc(r.name)}</div>
+    <div class="sub">${esc(r.group || "(group unlisted)")} · ${esc(r.domain)}</div>${kwChips(ri)}`;
+  c.hidden = false;
+  const box = wrap.getBoundingClientRect(), d = g.querySelector("circle").getBoundingClientRect();
+  let x = d.right - box.left + 12;
+  if (x + c.offsetWidth > box.width - 12) x = d.left - box.left - 12 - c.offsetWidth;
+  const y = Math.max(10, Math.min(d.top - box.top - 12, box.height - c.offsetHeight - 10));
+  c.style.left = Math.max(10, x) + "px"; c.style.top = y + "px";
 }
 
 function mapSVG(W, H) {
   const v = State.view, m = 60;
   const fs = 10.5 / v.k, rr = 5.5 / Math.sqrt(v.k), lab = v.k >= 1.9;
-  return R.map((r, i) => {
+  /* Each department's territory, washed in its colour under the dots and
+     sized in the plane's own units, so it widens as you zoom in on it.
+     Where two departments meet, both washes show. */
+  const washes = R.map(r => `<circle class="mwash" cx="${(m + r.x * (W - 2 * m)).toFixed(1)}" cy="${(m + r.y * (H - 2 * m)).toFixed(1)}" r="24" fill="${DOMW[r.domain] || "var(--wash)"}"></circle>`).join("");
+  return washes + R.map((r, i) => {
     const x = m + r.x * (W - 2 * m), y = m + r.y * (H - 2 * m);
     const sel = State.walk.sel === i, hl = State.walk.hl === i || sel;
     return `<g class="mapdot${lab || hl ? " lab" : ""}${hl ? " hl" : ""}" data-r="${i}"
@@ -2304,6 +2431,7 @@ function wireCanvas(wrap) {
   };
 
   wrap.onpointerdown = e => {
+    if (isMap) mapCard(null);
     _drag = { x: e.clientX, y: e.clientY, tx: State.view.tx, ty: State.view.ty };
     _moved = false;
     wrap.classList.add("dragging");
@@ -2319,7 +2447,12 @@ function wireCanvas(wrap) {
   wrap.onpointerup = wrap.onpointercancel = () => {
     _drag = null;
     wrap.classList.remove("dragging");
+    if (isMap) mapCard(State.walk.sel);
   };
+  if (isMap) wrap.querySelectorAll(".mapdot").forEach(g => {
+    g.onpointerenter = e => { if (e.pointerType === "mouse" && !_drag) mapCard(+g.dataset.r); };
+    g.onpointerleave = () => { if (!_drag) mapCard(State.walk.sel); };
+  });
 
   const click = (el, fn) => el.onclick = e => { if (_moved) return; e.stopPropagation(); fn(); };
 
@@ -2353,7 +2486,7 @@ function walkRailHTML() {
       h += `<div class="sect"><h3>Selected</h3>
         <div style="font:600 15px var(--serif)">${esc(r.name)}</div>
         <div class="hint" style="margin:3px 0 8px">${esc(r.group || "(group unlisted)")} · ${esc(r.domain)}${r.leader ? " · group leader" : ""}</div>
-        <div class="hint" style="color:#3A4048">${esc(trim(val(r.kwRaw) || "no declared keywords", 130))}</div>
+        <div class="selkw">${kwChips(State.walk.sel)}</div>
         <div class="rowbtns" style="margin-top:10px">
           <button class="sbtn" data-walkact="doss" data-rid="${State.walk.sel}">Dossier</button>
           <button class="sbtn" data-walkact="walkr" data-rid="${State.walk.sel}">Walk from here</button>
