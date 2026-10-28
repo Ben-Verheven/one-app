@@ -1063,7 +1063,12 @@
 #pane-semaphore .vaxis,#pane-semaphore .vrow{display:grid;grid-template-columns:minmax(220px,330px) minmax(0,1fr) 168px;column-gap:16px}
 #pane-semaphore .vaxis{position:sticky;top:0;z-index:6;align-items:end;background:var(--paper);border-bottom:1px solid var(--line2)}
 #pane-semaphore .vaxl{padding:0 0 5px 2px;font:9.5px var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--faint)}
-#pane-semaphore .vaxt{position:relative;height:30px}
+#pane-semaphore .vaxt{position:relative;height:30px;container-type:inline-size}
+/* a date is some forty pixels wide and needs fifty, so eight of them want
+   four hundred; under that every four weeks, and under two hundred every
+   eight (see nowAxisHTML) */
+@container (max-width:420px){#pane-semaphore .vaxt span.w2{display:none}}
+@container (max-width:210px){#pane-semaphore .vaxt span.w4{display:none}}
 #pane-semaphore .vaxt span{position:absolute;bottom:5px;padding-left:5px;font:10px var(--mono);color:var(--faint);white-space:nowrap}
 #pane-semaphore .vaxt .vwk{position:absolute;bottom:0;width:1px;height:6px;background:var(--line)}
 #pane-semaphore .vaxt .vnowc{position:absolute;bottom:-1px;width:0;height:0;transform:translateX(-50%);

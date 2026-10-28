@@ -1712,12 +1712,16 @@ function nowAxisHTML(sp){
   const{now,t0,t1}=sp;
   const P=t=>((t-t0)/(t1-t0)*100);
   let h='';
-  /* a Monday every two weeks, and the first of each month marked apart */
+  /* a Monday every two weeks, named. On an iPad held upright the strip is
+     about two hundred pixels, and eight of these ran over each other (Mark,
+     2026-10-25), so each says how often it comes, every two, four or eight
+     weeks, and the stylesheet keeps only as many as the strip has room for
+     (`.vaxt`, measured by itself rather than the window) */
   const d=new Date(t0);d.setDate(d.getDate()+((8-d.getDay())%7));
   for(let i=0;d.getTime()<t1;i++,d.setDate(d.getDate()+7)){
     const x=P(d.getTime());
     h+='<i class="vwk" style="left:'+x.toFixed(2)+'%"></i>';
-    if(i%2===0&&x<96)h+='<span style="left:'+x.toFixed(2)+'%">'+d.getDate()+' '+MONTHS[d.getMonth()]+'</span>';
+    if(i%2===0&&x<96)h+='<span'+(i%8===0?'':i%4===0?' class="w4"':' class="w2"')+' style="left:'+x.toFixed(2)+'%">'+d.getDate()+' '+MONTHS[d.getMonth()]+'</span>';
   }
   return h+'<b class="vnowc" style="left:'+P(now+DAY/2).toFixed(2)+'%"></b>';
 }
