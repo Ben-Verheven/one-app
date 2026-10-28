@@ -258,7 +258,7 @@ WHAT THE OTHER ROOMS MAY ASK FOR                           ledger.js:14418
 
 ## `rooms/ledger/ledger.css`
 
-4187 lines · 286 KB
+4198 lines · 287 KB
 
 ```
 Proposal Ledger                                            ledger.css:1
@@ -302,62 +302,62 @@ A day, braced                                              ledger.css:1552
 11. THE TIMELINE FACE                                      ledger.css:1588
 12. THE TODO CARD                                          ledger.css:1685
 The project name, in a day, is a press                     ledger.css:1714
-Cards travelling                                           ledger.css:1745
-The rest of the day, leaving                               ledger.css:1769
-The category, a dot on the row and a word in the brace     ledger.css:1859
-Waiting on                                                 ledger.css:1891
-Finding the blocker in the list                            ledger.css:1946
-One rhythm down the open card                              ledger.css:1991
-The one picker still on the action row                     ledger.css:2006
-Three weights, so that six controls are not a rank of six  ledger.css:2026
-Done, which is a box you tick                              ledger.css:2047
-Where an update gets written                               ledger.css:2087
-The checklist                                              ledger.css:2118
-The calendar popup                                         ledger.css:2226
-13. THE CALL CARD                                          ledger.css:2254
-The call info table (the card's back face)                 ledger.css:2357
-14. THE NOTE STRIP                                         ledger.css:2434
-The tab                                                    ledger.css:2446
-The panel                                                  ledger.css:2476
-The editable body                                          ledger.css:2500
-Delta: the call info table                                 ledger.css:2519
-Delta: the project dossier                                 ledger.css:2556
-15. THE PROJECT CARD                                       ledger.css:2612
-The grip                                                   ledger.css:2636
-The controls                                               ledger.css:2666
-The controls on the band                                   ledger.css:2677
-The band's right-hand end                                  ledger.css:2707
-The head band                                              ledger.css:2754
-The person-month total                                     ledger.css:2797
-The three columns under the band                           ledger.css:2808
-The rest of the consortium                                 ledger.css:2891
-Mailing the consortium                                     ledger.css:2916
-Positions                                                  ledger.css:2962
-The groups                                                 ledger.css:2975
-Positions & partners editors (forms)                       ledger.css:3069
-One researcher, one row                                    ledger.css:3071
-A PI and the posts under them                              ledger.css:3140
-The block's head                                           ledger.css:3149
-16. THE DOSSIER                                            ledger.css:3230
-17. THE CONTRIBUTION TRACKER                               ledger.css:3335
-The top row                                                ledger.css:3358
-Rows. Work packages read as headers: a lit band            ledger.css:3444
-Notes: one flat strip of tabs, no sections.                ledger.css:3507
-Body: two stacked layers — detail by default               ledger.css:3552
-Editing, in the rows themselves                            ledger.css:3583
-Board mode                                                 ledger.css:3649
-Verticals: use cases and demonstrators                     ledger.css:3668
-18. TOASTS & THE SEARCH PALETTE                            ledger.css:3776
-The dialog                                                 ledger.css:3793
-The backbone shelf                                         ledger.css:3814
-The backbone picker, in the new-call form                  ledger.css:3832
-The backbone editor                                        ledger.css:3842
-The pane shell                                             ledger.css:3903
-the pane's own spacing                                     ledger.css:3954
-The new-todo pane                                          ledger.css:4036
-19. RESPONSIVE                                             ledger.css:4111
-20. MOTION PREFERENCE                                      ledger.css:4145
-21. PRINT                                                  ledger.css:4156
+Cards travelling                                           ledger.css:1756
+The rest of the day, leaving                               ledger.css:1780
+The category, a dot on the row and a word in the brace     ledger.css:1870
+Waiting on                                                 ledger.css:1902
+Finding the blocker in the list                            ledger.css:1957
+One rhythm down the open card                              ledger.css:2002
+The one picker still on the action row                     ledger.css:2017
+Three weights, so that six controls are not a rank of six  ledger.css:2037
+Done, which is a box you tick                              ledger.css:2058
+Where an update gets written                               ledger.css:2098
+The checklist                                              ledger.css:2129
+The calendar popup                                         ledger.css:2237
+13. THE CALL CARD                                          ledger.css:2265
+The call info table (the card's back face)                 ledger.css:2368
+14. THE NOTE STRIP                                         ledger.css:2445
+The tab                                                    ledger.css:2457
+The panel                                                  ledger.css:2487
+The editable body                                          ledger.css:2511
+Delta: the call info table                                 ledger.css:2530
+Delta: the project dossier                                 ledger.css:2567
+15. THE PROJECT CARD                                       ledger.css:2623
+The grip                                                   ledger.css:2647
+The controls                                               ledger.css:2677
+The controls on the band                                   ledger.css:2688
+The band's right-hand end                                  ledger.css:2718
+The head band                                              ledger.css:2765
+The person-month total                                     ledger.css:2808
+The three columns under the band                           ledger.css:2819
+The rest of the consortium                                 ledger.css:2902
+Mailing the consortium                                     ledger.css:2927
+Positions                                                  ledger.css:2973
+The groups                                                 ledger.css:2986
+Positions & partners editors (forms)                       ledger.css:3080
+One researcher, one row                                    ledger.css:3082
+A PI and the posts under them                              ledger.css:3151
+The block's head                                           ledger.css:3160
+16. THE DOSSIER                                            ledger.css:3241
+17. THE CONTRIBUTION TRACKER                               ledger.css:3346
+The top row                                                ledger.css:3369
+Rows. Work packages read as headers: a lit band            ledger.css:3455
+Notes: one flat strip of tabs, no sections.                ledger.css:3518
+Body: two stacked layers — detail by default               ledger.css:3563
+Editing, in the rows themselves                            ledger.css:3594
+Board mode                                                 ledger.css:3660
+Verticals: use cases and demonstrators                     ledger.css:3679
+18. TOASTS & THE SEARCH PALETTE                            ledger.css:3787
+The dialog                                                 ledger.css:3804
+The backbone shelf                                         ledger.css:3825
+The backbone picker, in the new-call form                  ledger.css:3843
+The backbone editor                                        ledger.css:3853
+The pane shell                                             ledger.css:3914
+the pane's own spacing                                     ledger.css:3965
+The new-todo pane                                          ledger.css:4047
+19. RESPONSIVE                                             ledger.css:4122
+20. MOTION PREFERENCE                                      ledger.css:4156
+21. PRINT                                                  ledger.css:4167
 ```
 
 ## `rooms/semaphore/semaphore.view.js`
@@ -662,4 +662,4 @@ Generated data. Never open, never edit, never upload.
 
 ---
 
-**38996 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.
+**39007 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.

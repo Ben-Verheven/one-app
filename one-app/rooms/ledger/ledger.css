@@ -1742,6 +1742,17 @@
 @media (hover:hover) and (pointer:fine){
   #pane-ledger button.todo-proj-btn:hover{color:var(--gold2);
     background-size:calc(100% - 12px) 1px}}
+/* On a touch screen the name is as wide as its own words, up to 150px, and
+   the category's dot follows it at the row's own 10px. Mark found the
+   fixed 170px column wrong on an upright iPad (issue #11): the press
+   reached across the blank ground after a short name, so a finger meant
+   for the card gathered the day instead, and that blank stood between the
+   name and the dot it belongs to. A finger has no hover to find the
+   column's edge with, so the column there is only a gap. */
+@media (hover:none),(pointer:coarse){
+  #pane-ledger .todo-later-proj{width:auto;min-width:0;max-width:150px;padding-right:0;
+    overflow:hidden;text-overflow:ellipsis}
+  #pane-ledger button.todo-proj-btn{padding-right:0}}
 /* ── Cards travelling ──
    The two halves of the FLIP in `playMove`. A card being put back where it
    started gets `todo-moving` with an inline transform and `transition:none`
