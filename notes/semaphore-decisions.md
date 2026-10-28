@@ -150,8 +150,13 @@ calls land on the Call Board. What still holds of the board:
   borrowing it, since the board both change is kept here. How is at
   "ChatGPT's search" in semaphore.js; the third search agreed, for
   official call texts, is in [call-board](call-board.md).
-- **He would rather have ten false finds than lose one real one**, and every
-  rule he gave ChatGPT gives way to doubt: every arena, frozen ones lightly;
+- **Fewer and better** (2026-10-26, reversing "ten false finds rather than
+  one real one lost" of 2026-10-23): he would much rather have far fewer
+  results that are accurate and relevant, since each costs him usage, so
+  doubt now leaves a find out. Both files say first who it is for (TU/e's
+  researchers, seeking calls for international consortia TU/e can join or
+  lead) and that the dates of every call and arena come before all else.
+  The rest stands: every arena, frozen ones lightly;
   call dates, and actual brokerage only (matchmaking events and
   partner-search tools, now or announced; never plain info days, conferences
   with no matchmaking, lists of organisations or expected call dates); since
@@ -160,7 +165,8 @@ calls land on the Call Board. What still holds of the board:
   only to paying members beyond a simple registration; and, where it can
   find out, nothing organisations in the Netherlands clearly cannot take
   part in and be funded by (2026-10-23). It works in rounds of at most 15
-  arenas (`GPT_BATCH`), each given to a fresh research agent of its own and
+  arenas (`GPT_BATCH`), each given to a fresh research agent of its own,
+  all run in parallel and asked for in so many words (2026-10-25), and
   merged by a coordinating one, and says before starting if it cannot work
   that way.
 - **Anything involving matchmaking goes on the board, a few misfires

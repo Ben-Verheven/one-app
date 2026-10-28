@@ -785,7 +785,10 @@ const GPT_KINDS={
    splits the arenas into rounds of this many. Each round goes to a fresh
    agent of its own, because rounds run one after another in the same chat
    still started each round with everything before it in mind (2026-10-23);
-   the file asks ChatGPT to say so rather than fall back to that. */
+   the file asks ChatGPT to say so rather than fall back to that. The
+   agents are asked for in so many words to run in parallel, because below
+   ChatGPT's highest setting subagents not asked for that way run one after
+   another (Mark, 2026-10-25). */
 const GPT_BATCH=15;
 const GPT_GRANS=['day','month','quarter','half','year','range','none'];
 const GPT_PLACE={new:'new on the board, not judged yet',venues:'in Venues: Mark follows it',gone:'removed_by_mark'};
@@ -828,7 +831,7 @@ roundList.join('\n'),
 '',
 '### Run each round with a fresh agent',
 '',
-'Use '+rounds+' separate research agents, one newly created agent per round. This explicitly authorises delegation to subagents.',
+'Split this research over '+rounds+' parallel subagents, one per round. Give each agent its own group of arenas, its round. Let them research the official sources independently. Wait for all their results and combine them into one checked overview. Make sure each agent has a context of its own. This explicitly authorises delegation to subagents, and asks for them to run at the same time.',
 '',
 'Each agent must start with fresh conversation context, without inheriting the accumulated research conversation or previous agents\' histories. Use `fork_turns="none"` or the equivalent where supported.',
 '',
@@ -840,11 +843,11 @@ venues?'- access to the full original venues list, including removed venues, so 
 '',
 'Each agent researches only its assigned round, following every research and evidence rule below. It must return that round\'s changes, an audit entry for every assigned arena, and any unresolved issues. Save its complete result before proceeding.',
 '',
-'Run the rounds sequentially. After one agent finishes, create a new agent for the next round and continue automatically until all '+rounds+' rounds are complete.',
+'Run the rounds in parallel, all '+rounds+' agents at the same time, not one after another. Wait until all '+rounds+' rounds are complete before merging.',
 '',
 'The coordinating agent must then merge the '+rounds+' results, resolve conflicting changes using the sources, '+(venues?'deduplicate shared venues':'deduplicate the suggested new arenas')+', preserve original ids, and validate coverage of all '+n+' arenas. Deliver one final JSON file in the format under "What to give back".',
 '',
-'If independent agents with fresh context are unavailable, tell Mark before starting and explain that separate chats are needed. Do not silently substitute '+rounds+' batches in the same conversation.'
+'If independent agents with fresh context are unavailable, tell Mark before starting and explain that separate chats are needed. Do not silently substitute '+rounds+' batches in the same conversation. If they cannot run in parallel, say so before starting too.'
   ].filter(x=>x!==null).join('\n');
 }
 const GPT_DAY_RULES=[
@@ -866,6 +869,14 @@ function gptFileText(kind){
 '',
 'Today is '+day+'. Read all of this before you start. The data is at the end.',
 '',
+'## Who this is for',
+'',
+'Mark works at a university, Eindhoven University of Technology (TU/e), and supports its researchers. He is looking for calls for **international consortia** in which TU/e can take part as a contributing member, and sometimes as the leader.',
+'',
+'**The most important thing is the dates.** Check the dates of every call and every arena on the board: that each is still right, complete and from an official page. Everything else comes after that.',
+'',
+'**Fewer and better.** Mark would much rather have fewer results, even far fewer, that are accurate and relevant, than many that are only somewhat relevant; every result costs him time and usage. Leave out what you cannot back with an official page, and what is only loosely relevant to university researchers in such consortia.',
+'',
 '## What this is',
 '',
 'The Call Board is a research manager\'s map of the calls of European research-funding **arenas**: partnerships, joint undertakings, programmes and their calls ('+n+' arenas). Each arena has its **call dates**. This search keeps them correct and complete, and finds the arenas that are missing. Brokerage events and partner-search tools are a separate search with a file of its own: leave them out of this one.',
@@ -876,7 +887,7 @@ function gptFileText(kind){
 '- each call\'s own official page or call document;',
 '- arenas not on the board: partnerships, joint undertakings and programmes whose calls fit it.',
 '',
-'**Not wanted**: brokerage, matchmaking and partner search (the other search), news items, general information pages, and expected call dates no official page gives. **When in doubt, keep it**: ten false finds are better than one real one lost. This holds for every rule in this file, Netherlands eligibility included; leave something out only when it plainly fails.',
+'**Not wanted**: brokerage, matchmaking and partner search (the other search), news items, general information pages, and expected call dates no official page gives. When in doubt about relevance, leave it out: fewer and better (above).',
 '',
 '**Netherlands eligibility.** The board is kept from the Netherlands. Where you can, check whether organisations based in the Netherlands can take part and be funded: the Netherlands among the participating countries, or a Dutch funder (such as NWO, ZonMw or RVO) in the call. A call date, or a suggested new arena, that Dutch organisations clearly cannot join or be funded in does not need to be taken up: leave it out, and say so in that arena\'s line in `arenas_checked`. When it cannot be found out, keep it as usual.',
 '',
@@ -926,6 +937,14 @@ F,
 '',
 'Today is '+day+'. Read all of this before you start. The data is at the end.',
 '',
+'## Who this is for',
+'',
+'Mark works at a university, Eindhoven University of Technology (TU/e), and supports its researchers. He is looking for calls for **international consortia** in which TU/e can take part as a contributing member, and sometimes as the leader.',
+'',
+'**The most important thing is the dates.** Check the dates of every call and every arena on the board: that each is still right, complete and from an official page. Everything else comes after that.',
+'',
+'**Fewer and better.** Mark would much rather have fewer results, even far fewer, that are accurate and relevant, than many that are only somewhat relevant; every result costs him time and usage. Leave out what you cannot back with an official page, and what is only loosely relevant to university researchers in such consortia.',
+'',
 '## What this is',
 '',
 'The Brokerage Semaphore is a research manager\'s board of European research-funding **arenas**: partnerships, joint undertakings, programmes and their calls ('+n+' arenas). Beside the arenas are **venues**: brokerage events and partner-search tools, each serving one arena or several. Each arena\'s **call dates** are in the data so that you know which calls are current or coming; another search keeps them correct, so do not change them here.',
@@ -935,7 +954,7 @@ F,
 '- brokerage or matchmaking events where projects are presented or posted: project-idea pitch sessions, consortium-building sessions, an event\'s matchmaking marketplace with project ideas in it (b2match and the like), and partnering days or arranged one-to-one (B2B) meetings when they go with project descriptions;',
 '- partner-search tools and platforms tied to an arena or its calls that hold project descriptions: a partnership\'s own partner search, project-idea or consortium-building databases, the Funding & Tenders portal\'s partner search for a topic, national contact point or Enterprise Europe Network matchmaking for those calls.',
 '',
-'**Not wanted**: sites that list only partner profiles (organisations or people offering their expertise, with no project described), events and tools about meeting people rather than projects, events and tools open only to paying members (a membership fee, not merely a free sign-up or a simple registration), general information days, call webinars or launch events with no matchmaking part, conferences with no sign of matchmaking, lists of organisations, newsletters, and the call dates themselves (the other search). An info day **with** a real matchmaking, pitch or B2B part does count; say in its note what that part is. Lean to completeness: anything with real matchmaking goes in, even when only its month is known. **When in doubt, keep it**: ten false finds are better than one real one lost. This holds for every rule in this file, Netherlands eligibility, project descriptions and membership included; leave something out only when it plainly fails.',
+'**Not wanted**: sites that list only partner profiles (organisations or people offering their expertise, with no project described), events and tools about meeting people rather than projects, events and tools open only to paying members (a membership fee, not merely a free sign-up or a simple registration), general information days, call webinars or launch events with no matchmaking part, conferences with no sign of matchmaking, lists of organisations, newsletters, and the call dates themselves (the other search). An info day **with** a real matchmaking, pitch or B2B part does count; say in its note what that part is. Real matchmaking for this arena\'s calls goes in even when only its month is known, but when in doubt about relevance, leave it out: fewer and better (above).',
 '',
 '**Netherlands eligibility.** The board is kept from the Netherlands. Where you can, check whether organisations based in the Netherlands can take part and be funded: the Netherlands among the participating countries, or a Dutch funder (such as NWO, ZonMw or RVO) in the call. A venue or brokerage opportunity that Dutch organisations clearly cannot join or be funded through does not need to be taken up: leave it out, and say so in that arena\'s line in `arenas_checked`. When it cannot be found out, keep it as usual.',
 '',
