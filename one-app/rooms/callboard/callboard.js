@@ -117,14 +117,14 @@ const rowOf=g=>tabsEl.querySelector(`.trow[data-g="${g}"]`);
 const htabEls=PAGES.map((p,i)=>{
   const b=document.createElement('button'); b.className='tab'; b.setAttribute('role','tab');
   b.setAttribute('aria-selected', String(i===0));
-  b.innerHTML=`<span class="ck">${p.key}</span><span class="cn">${p.label}</span><span class="cc">${Object.keys(p.meta).length}</span>`;
+  b.innerHTML=`<span class="ck">${p.key}</span><span class="cn">${p.label}</span>`;
   b.addEventListener('click',()=>selectPage(i));
   rowOf('hz').appendChild(b);
   return b;
 });
 const ovTab=document.createElement('button');
 ovTab.className='tab'; ovTab.setAttribute('role','tab'); ovTab.setAttribute('aria-selected','false');
-ovTab.innerHTML=`<span class="ck">ALL</span><span class="cn">Deadline planner</span><span class="cc">${ALLTOPICS}</span>`;
+ovTab.innerHTML=`<span class="ck">ALL</span><span class="cn">Deadline planner</span>`;
 ovTab.addEventListener('click',()=>selectPage(PAGES.length));
 rowOf('all').appendChild(ovTab);
 
@@ -224,6 +224,19 @@ function tabOfType(name){
   if(HORIZON_TYPE.test(name||'')) return null;
   return TYPE_TABS.find(t=>t.test&&t.test.test(name||''))||TYPE_TABS[TYPE_TABS.length-1];
 }
+/* The name on an arena's chip, without the words that say what kind of
+   arena it is (Mark, 2026-10-28): "European Partnership for", "Co-funded
+   Partnership", "Joint Undertaking" and the like stood on nearly every
+   chip, told no partnership from another and pushed the words that do off
+   its end. The full name stays on hover, in a search and in its panel. A
+   name that is nothing but such words keeps them. */
+const KIND_WORDS=/\b(?:the\s+)?(?:co[\s-]*(?:funded|programmed)\s+)?(?:european\s+)?(?:partnerships?|joint\s+undertaking)\b(?:\s+(?:on|for|in|of))?/gi;
+function tagName(name){
+  const n=String(name||'');
+  const s=n.replace(KIND_WORDS,' ').replace(/\(\s*\)/g,' ').replace(/\s{2,}/g,' ')
+    .replace(/^[\s–—:·,-]+|[\s–—:·,-]+$/g,'');
+  return s?s.charAt(0).toUpperCase()+s.slice(1):n;
+}
 function readArenas(){
   let list=[];
   try{ list=(ARENA_SRC&&ARENA_SRC.list())||[]; }catch(e){ console.error(e); list=[]; }
@@ -243,7 +256,7 @@ function readArenas(){
       const dls=r.dls||[], pale=r.state!=='closed'&&(live++>0);
       const color=pale?tone[1]:tone[0], from=r.open||r.ann||null, annOnly=!r.open&&!!r.ann&&!dls.length;
       const c={id:'arena:'+a.id+':'+i, arena:a, arenaId:a.id, run:r, first:i===0,
-        short:a.name, name:r.name, color, ink:tone[2], ovColor:color, ovInk:tone[2],
+        short:tagName(a.name), name:r.name, color, ink:tone[2], ovColor:color, ovInk:tone[2],
         cluster:p.key, clusterLabel:p.label, nTopics:0, budget:0, unc:!!r.unc,
         opening:from?from.start:null, annEnd:annOnly?r.ann.end:null,
         d1:dls.length?dlDay(dls[0]):null, d2:dls.length>1?dlDay(dls[dls.length-1]):null, twoStage:dls.length>1};
@@ -268,7 +281,7 @@ function buildArenaTabs(){
   shown.forEach(p=>{
     const b=document.createElement('button'); b.className='tab'; b.setAttribute('role','tab'); b.title=p.full;
     b.setAttribute('aria-selected',String(MODE==='arena'&&P.key===p.key));
-    b.innerHTML=`<span class="ck">${p.key}</span><span class="cn">${p.label}</span><span class="cc">${p.calls.length}</span>`;
+    b.innerHTML=`<span class="ck">${p.key}</span><span class="cn">${p.label}</span>`;
     b.addEventListener('click',()=>selectArenaTab(p.key));
     row.appendChild(b); p.tabEl=b;
   });
@@ -299,7 +312,7 @@ function arenaRow(c){
   row.dataset.search=(c.arena.name+' '+c.run.names.join(' ')).toLowerCase();
   row.title=c.arena.name+' — '+c.run.names.join(', ');
   row.innerHTML=`<span class="bar" style="background:${c.color}"></span>
-    <span class="cchip w achip" style="background:${c.color};color:${fg(c)}">${esc(c.arena.name)}</span>
+    <span class="cchip w achip" style="background:${c.color};color:${fg(c)}">${esc(c.short)}</span>
     <span class="ttl">${esc(c.name)}</span>
     <span class="adl${c.unc?' unc':''}">${esc(c.tagEnd)}</span>`;
   /* A new or changed date, put on the board by a search, is not judged:
@@ -335,7 +348,7 @@ function arenaChartRow(c,a){
   r.className='crow arow'+(c.first?' afirst':'')+(c.run.fresh?' fresh':''); r.tabIndex=0; r.setAttribute('role','button');
   r.dataset.call=c.id; r.dataset.arena=a.id; r.dataset.search=(a.name+' '+c.run.names.join(' ')).toLowerCase();
   r.title=a.name+' — '+c.run.names.join(', ')+(c.run.fresh?'\nNew since you last looked'+(c.run.was.length?' — '+c.run.was.join('; '):''):'');
-  r.innerHTML=`<span class="lbl"><span class="cchip w achip" style="background:${c.color};color:${fg(c)}">${esc(a.name)}</span><span class="nm">${esc(c.name)}</span></span><span class="track">${barsHTML(c,X,c.color,c.ink,true)}</span>`;
+  r.innerHTML=`<span class="lbl"><span class="cchip w achip" style="background:${c.color};color:${fg(c)}">${esc(c.short)}</span><span class="nm">${esc(c.name)}</span></span><span class="track">${barsHTML(c,X,c.color,c.ink,true)}</span>`;
   if(c.run.fresh) r.querySelector('.lbl').appendChild(seenButton(c));
   const act=()=>openArena(a.id);
   r.addEventListener('click',act);
@@ -349,7 +362,7 @@ function arenaChartRow(c,a){
 function arenaEmptyRow(a){
   const r=document.createElement('div'); r.className='crow arow afirst'; r.tabIndex=0; r.setAttribute('role','button');
   r.dataset.arena=a.id; r.dataset.search=a.name.toLowerCase(); r.title=a.name+' — no call dates on the board yet';
-  r.innerHTML=`<span class="lbl"><span class="cchip w achip anon">${esc(a.name)}</span><span class="nm anone">no call dates on the board yet</span></span><span class="track"></span>`;
+  r.innerHTML=`<span class="lbl"><span class="cchip w achip anon">${esc(tagName(a.name))}</span><span class="nm anone">no call dates on the board yet</span></span><span class="track"></span>`;
   r.addEventListener('click',()=>openArena(a.id));
   r.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openArena(a.id);}});
   return r;
@@ -379,7 +392,7 @@ function arenaOpenBlock(a,calls){
     .map(l=>`<a href="${attr(l.url)}" target="_blank" rel="noopener" title="${attr(l.url)}">${esc(l.label||hostOf(l.url))} ↗</a>`).join('');
   const fresh=calls.some(c=>c.run.fresh);
   blk.innerHTML=`<div class="aoh">
-      <span class="cchip achip" style="background:${tone.color};color:${calls[0]?fg(calls[0]):'var(--ink2)'}">${esc(a.name)}</span>
+      <span class="cchip achip" style="background:${tone.color};color:${calls[0]?fg(calls[0]):'var(--ink2)'}" title="${attr(a.name)}">${esc(tagName(a.name))}</span>
       <span class="aoty">${esc(a.type||'')}</span>
       <span class="aomt">${a.leads} open lead${a.leads===1?'':'s'}</span>
       <span class="aosp"></span>${links?`<span class="aoln">${links}</span>`:''}
@@ -795,7 +808,7 @@ function buildFreezer(rowsEl){
   if(!list.length) return;
   const box=document.createElement('div'); box.className='frz'+(FRZ_OPEN?' open':'');
   box.innerHTML=`<button class="frzbar" aria-expanded="${FRZ_OPEN}"><i class="frost"></i>Freezer<span>${list.length} arena${list.length===1?'':'s'} put away</span><b>${FRZ_OPEN?'▾':'▸'}</b></button>`
-    +(FRZ_OPEN?'<div class="frzchips">'+list.map(a=>`<span class="frzchip" style="--ty:${attr(a.tone||'#9C8B66')}"><button class="frzname" data-id="${attr(a.id)}" title="${attr(a.name)} — its panel">${esc(a.name)}</button><button class="frzout" data-id="${attr(a.id)}" title="Put ${attr(a.name)} back among the live arenas">Thaw</button></span>`).join('')+'</div>':'');
+    +(FRZ_OPEN?'<div class="frzchips">'+list.map(a=>`<span class="frzchip" style="--ty:${attr(a.tone||'#9C8B66')}"><button class="frzname" data-id="${attr(a.id)}" title="${attr(a.name)} — its panel">${esc(tagName(a.name))}</button><button class="frzout" data-id="${attr(a.id)}" title="Put ${attr(a.name)} back among the live arenas">Thaw</button></span>`).join('')+'</div>':'');
   box.querySelector('.frzbar').addEventListener('click',()=>{ FRZ_OPEN=!FRZ_OPEN; buildTimeline(); paintTimeline(); applyFilters(); });
   box.querySelectorAll('.frzname').forEach(b=>b.addEventListener('click',()=>{ if(ARENA_SRC&&ARENA_SRC.open) ARENA_SRC.open(b.dataset.id); }));
   box.querySelectorAll('.frzout').forEach(b=>b.addEventListener('click',()=>{ if(ARENA_SRC&&ARENA_SRC.thaw) ARENA_SRC.thaw(b.dataset.id); }));
@@ -847,7 +860,8 @@ function applyFilters(){
   });
   const away=paintElsewhere(visible);
   /* Only while something narrows the list: unfiltered, "38 of 38 topics"
-     repeated the count already on the cluster's tab. */
+     is a count Mark does not want in the beam, the tabs having lost theirs
+     on his word (2026-10-28). */
   document.getElementById('count').textContent=(st.sel.size||st.type||st.q)
     ?`${visible} of ${P.nTopics} ${P.unit||'topics'}`+(away?` · ${away} in other tabs`:''):'';
 }

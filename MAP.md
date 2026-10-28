@@ -463,31 +463,31 @@ _No section banners._
 
 ## `rooms/callboard/callboard.js`
 
-1647 lines · 90 KB
+1661 lines · 91 KB
 
 ```
 Call Board                                      callboard.js:1
 the ink on a coloured chip                      callboard.js:62
 tabs                                            callboard.js:100
 the arenas' calls                               callboard.js:155
-the tab an arena belongs to                     callboard.js:426
-judging the finds, one at a time                callboard.js:449
-render                                          callboard.js:579
-the freezer                                     callboard.js:783
-the other clusters, while a search is typed     callboard.js:855
-full topic text                                 callboard.js:1023
-why the slide is started two frames late        callboard.js:1126
-overview page                                   callboard.js:1186
-the chronological chart, and dragging its ends  callboard.js:1249
-the topic list under the chart                  callboard.js:1364
-repainting what is already drawn                callboard.js:1507
-controls                                        callboard.js:1545
-what the other rooms may ask for                callboard.js:1607
+the tab an arena belongs to                     callboard.js:439
+judging the finds, one at a time                callboard.js:462
+render                                          callboard.js:592
+the freezer                                     callboard.js:796
+the other clusters, while a search is typed     callboard.js:869
+full topic text                                 callboard.js:1037
+why the slide is started two frames late        callboard.js:1140
+overview page                                   callboard.js:1200
+the chronological chart, and dragging its ends  callboard.js:1263
+the topic list under the chart                  callboard.js:1378
+repainting what is already drawn                callboard.js:1521
+controls                                        callboard.js:1559
+what the other rooms may ask for                callboard.js:1621
 ```
 
 ## `rooms/callboard/callboard.css`
 
-524 lines · 43 KB
+523 lines · 42 KB
 
 ```
 Call Board                                       callboard.css:1
@@ -495,13 +495,13 @@ THE CALL BOARD — the Ledger's daylight sibling.  callboard.css:2
 1. TOKENS                                        callboard.css:9
 2. RESET & PAGE                                  callboard.css:49
 3. THE BEAM                                      callboard.css:75
-4. CONTROL FAMILY                                callboard.css:94
-5. LAYOUT                                        callboard.css:140
-6. THE SHEET (left)                              callboard.css:155
-7. THE BOARD (right)                             callboard.css:220
-8. THE SHEET DRAWN OUT (full topic text)         callboard.css:305
-9. THE ARENAS' CALLS                             callboard.css:352
-10. JUDGING THE FINDS                            callboard.css:467
+4. CONTROL FAMILY                                callboard.css:93
+5. LAYOUT                                        callboard.css:139
+6. THE SHEET (left)                              callboard.css:154
+7. THE BOARD (right)                             callboard.css:219
+8. THE SHEET DRAWN OUT (full topic text)         callboard.css:304
+9. THE ARENAS' CALLS                             callboard.css:351
+10. JUDGING THE FINDS                            callboard.css:466
 ```
 
 ## `rooms/atlas/atlas.view.js`
@@ -662,4 +662,4 @@ Generated data. Never open, never edit, never upload.
 
 ---
 
-**39007 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.
+**39020 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.

@@ -86,7 +86,6 @@
   transition:color .15s,background-color .15s,border-color .15s}
 #pane-callboard .tab .ck{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.06em;opacity:.75}
 #pane-callboard .tab .cn{font-weight:500}
-#pane-callboard .tab .cc{font-family:var(--mono);font-size:9.5px;opacity:.6}
 #pane-callboard .tab:hover{color:var(--brass2);background:rgba(154,123,58,0.08)}
 #pane-callboard .tab[aria-selected="true"]{color:#241C10;border-bottom-color:var(--umber);background:var(--panel)}
 #pane-callboard .tab[aria-selected="true"] .cn{font-weight:600}

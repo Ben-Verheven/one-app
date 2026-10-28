@@ -24,6 +24,9 @@ undo it, and what was agreed and is not built yet.
   thirteen side by side in one row, before the roll, ran into the room's
   name on the iPad held sideways; three words choosing the row, with no
   roll, was turned down.
+- **No counts on the tabs** (2026-10-28): the number of topics or calls
+  on each tab went from the beam, on Mark's word. The count under the
+  search still stands while a search or a choice narrows the list.
 
 ## Horizon tabs
 
@@ -48,6 +51,11 @@ undo it, and what was agreed and is not built yet.
   and over a light line heading each arena. A dark heading per arena, as
   a destination has, was turned down: most arenas hold a call or two, and
   a heading each cluttered the sheet and cost the chart a row.
+- **The chip names the arena, not its kind** (2026-10-28): "European
+  Partnership for", "Co-funded Partnership", "Joint Undertaking" and the
+  like are left off the chips (`tagName` in callboard.js), since they told
+  no partnership from another and were in the way. The full name stays on
+  hover, in a search and in its panel.
 - Colour is the arena's own, saturated for the round it is in and pale for
   the next, as the 2026 and 2027 calls are in Horizon. Dashed is a date not
   yet published to the day, as on the Semaphore's board.
