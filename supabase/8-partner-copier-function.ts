@@ -601,14 +601,7 @@ const tooOld = (posted) => !!(posted && posted.slice(0, 10) <= oldDay());
 // the rest, and its older copies (Mark, 2026-10-22: "make it even
 // shorter"). Marked entries are never put away.
 const BARE = { kind: null, contact: null, org: null, country: null, topic: null, keywords: null, list_text: null };
-async function putAwayOld() {
-  const day = oldDay();
-  const notMarked = "verdict.is.null,verdict.neq.interesting";
-  const ids = (await all(() => db.from("partner_entries").select("id")
-    .eq("before_watch", false).or(notMarked).not("posted", "is", null).lte("posted", day + " 99").order("id")))
-    .concat(await all(() => db.from("partner_entries").select("id")
-    .eq("before_watch", false).or(notMarked).is("posted", null).lt("first_seen", day + "T23:59:59Z").order("id")))
-    .map((e) => e.id);
+async function putAway(ids) {
   for (const c of chunks(ids, 150)) {
     const { error: v } = await db.from("partner_entry_versions").delete().in("entry_id", c);
     if (v) throw v;
@@ -618,6 +611,31 @@ async function putAwayOld() {
     if (error) throw error;
   }
   return ids.length;
+}
+async function putAwayOld() {
+  const day = oldDay();
+  const notMarked = "verdict.is.null,verdict.neq.interesting";
+  const ids = (await all(() => db.from("partner_entries").select("id")
+    .eq("before_watch", false).or(notMarked).not("posted", "is", null).lte("posted", day + " 99").order("id")))
+    .concat(await all(() => db.from("partner_entries").select("id")
+    .eq("before_watch", false).or(notMarked).is("posted", null).lt("first_seen", day + "T23:59:59Z").order("id")))
+    .map((e) => e.id);
+  return putAway(ids);
+}
+// Mark, 2026-10-28: the entries that offer expertise are not wanted, only
+// those seeking partners, so the choice between the two kinds went from
+// the page. A new one is taken as an old one is (`unwanted` in readList),
+// and the ones copied before are put away here, except the Marked and
+// those already made into a lead, which the Semaphore's row names by
+// `entryId`: a lead's entry put away would vanish from Leads.
+async function putAwayOffers() {
+  const { data: sem, error } = await db.from("app_state").select("data").eq("id", "semaphore").maybeSingle();
+  if (error) throw error;
+  const leads = new Set((sem?.data?.arenas ?? []).flatMap((a) => (a.leads ?? []).map((l) => l.entryId)).filter(Boolean));
+  const ids = (await all(() => db.from("partner_entries").select("id")
+    .eq("before_watch", false).eq("kind", "offers").or("verdict.is.null,verdict.neq.interesting").order("id")))
+    .map((e) => e.id).filter((id) => !leads.has(id));
+  return putAway(ids);
 }
 
 async function readList(site, now) {
@@ -641,8 +659,10 @@ async function readList(site, now) {
   // was posted before it the same way, at any reading (Mark, 2026-10-17,
   // for the Cluster 2 platform's 1,159 entries going back to 2022: "from
   // September 1, not before"). An entry whose site gives no date is shown.
-  // An entry two months old or older (`tooOld`) is taken the same way.
+  // An entry two months old or older (`tooOld`) is taken the same way,
+  // and so is one offering expertise (see `putAwayOffers`).
   const early = (r) => !!(site.shown_from && r.posted && r.posted.slice(0, 10) < site.shown_from) || tooOld(r.posted);
+  const unwanted = (r) => r.kind === "offers";
 
   const added = [], changed = [], seen = [], ids = new Set();
   for (const r of rows) {
@@ -656,7 +676,7 @@ async function readList(site, now) {
       if (r[k] != null && r[k] !== "") base[k] = r[k];
     const old = have.get(id);
     if (!old) {
-      const before = baseline || early(r);
+      const before = baseline || early(r) || unwanted(r);
       added.push(before
         ? { id, site: site.id, ext_id: r.ext_id, url: r.url, posted: r.posted ?? null, ...BARE, first_seen: now, last_seen: now, needs_fetch: false, before_watch: true }
         : { id, ...base, first_seen: now, last_seen: now, needs_fetch: true, before_watch: false });
@@ -749,6 +769,8 @@ async function run(byMark, lists) {
 
   try { tally.aged = await putAwayOld(); }
   catch (err) { errors.push(`putting away old entries: ${err.message ?? err}`); }
+  try { tally.offers = await putAwayOffers(); }
+  catch (err) { errors.push(`putting away the entries offering expertise: ${err.message ?? err}`); }
 
   const cols = "id, site, ext_id, url, page_hash, fields, page_text, fetched_at, fetch_errors";
   const active = Object.keys(platformOf);
@@ -798,7 +820,7 @@ async function run(byMark, lists) {
   const { count } = await db.from("partner_entries").select("id", { count: "exact", head: true })
     .eq("needs_fetch", true).is("removed_at", null);
   tally.waiting = count ?? 0;
-  const { aged, ...logged } = tally;
+  const { aged, offers, ...logged } = tally;
   await db.from("partner_watch_log").insert({ ...logged, errors: errors.length ? errors.join("\n") : null });
   return { ...tally, errors };
 }

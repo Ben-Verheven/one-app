@@ -180,7 +180,6 @@ body.drawer .veil{display:block;position:absolute;inset:0;z-index:3;background:r
 .filters{display:flex;flex-wrap:wrap;gap:6px;padding:0 14px 10px;flex:none}
 .chip{font:12px var(--serif);color:var(--muted);border:1px solid var(--line);border-radius:99px;padding:2px 9px;background:none;cursor:pointer}
 .chip.on{color:var(--ink);border-color:var(--line2);background:var(--sel)}
-.sep{width:100%;height:0}
 .row{display:grid;grid-template-columns:18px 8px minmax(0,1fr);gap:9px;padding:9px 14px 9px 10px;border-top:1px solid var(--grid);cursor:pointer}
 .row.picked{background:var(--gold-soft)}
 .row.on.picked{background:rgba(154,106,0,.2)}
@@ -837,14 +836,14 @@ function all(path){
 
 /* ── state ─────────────────────────────────────────────────────────── */
 var sites = [], entries = [], lastRun = null, byId = {};
-var view = { site:null, leads:false, kind:'all', state:'open', q:'', chips:[], id:null, tab:'fields', scope:'all', any:false, sums:false, results:false, hits:false };
+var view = { site:null, leads:false, state:'open', q:'', chips:[], id:null, tab:'fields', scope:'all', any:false, sums:false, results:false, hits:false };
 try { Object.assign(view, JSON.parse(localStorage.getItem(VIEW) || '{}'), { q:'', chips:[] }); } catch(e){}
 /* a device last left on Later, which went on 2026-10-18, comes back to All */
 if (view.state === 'later') view.state = 'open';
 var detail = {};          // id → { fields, page_text, versions }
 var $ = function(s){ return document.querySelector(s); };
 function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]; }); }
-function saveView(){ try { localStorage.setItem(VIEW, JSON.stringify({ site:view.site, leads:view.leads, kind:view.kind, state:view.state, id:view.id, tab:view.tab, scope:view.scope, any:view.any, sums:view.sums })); } catch(e){} }
+function saveView(){ try { localStorage.setItem(VIEW, JSON.stringify({ site:view.site, leads:view.leads, state:view.state, id:view.id, tab:view.tab, scope:view.scope, any:view.any, sums:view.sums })); } catch(e){} }
 function day(iso){ if (!iso) return ''; var d = new Date(iso);
   return d.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' }); }
 /* The copier's errors in words Mark reads, the site's own message after
@@ -916,7 +915,6 @@ function load(){
    are kept so the copier never brings them back as new, not so they are
    seen again. */
 var STATES = [['open','All'],['unsorted','Unsorted'],['interesting','Marked'],['bin','Binned']];
-var KINDS = [['all','Both kinds'],['seeks','Seeks partners'],['offers','Offers expertise']];
 function stateOk(e){
   if (view.state === 'open' && e.verdict === 'bin') return false;
   if (view.state === 'unsorted' && e.verdict) return false;
@@ -930,7 +928,6 @@ function passes(e){
   if (view.leads) return !!e._lead && (!found || reaches(found.per[e.id]));
   if (e._lead) return false;
   if (e.site !== view.site) return false;
-  if (view.kind !== 'all' && e.kind !== view.kind) return false;
   if (!stateOk(e)) return false;
   if (found && !reaches(found.per[e.id])) return false;
   return true;
@@ -938,8 +935,8 @@ function passes(e){
 /* Within a site: what is new on top, then Marked, then the rest (Mark,
    2026-10-16; Later went on 2026-10-18, and what was Later is in the
    rest), each newest first. The group is fixed when
-   the list is drawn afresh — on loading, or on choosing a site, a filter or
-   a kind — and not when an entry is opened or flagged: an entry that jumped
+   the list is drawn afresh — on loading, or on choosing a site or a
+   filter — and not when an entry is opened or flagged: an entry that jumped
    to another group under the cursor would make ↓ skip or repeat entries. */
 var GROUPS = ['New', 'Marked', 'Seen', 'Binned'];
 function groupOf(e){
@@ -1602,7 +1599,7 @@ function reaches(r){
   return view.any || found.terms.every(function(t, i){ return r.terms[i]; });
 }
 /* What the results page lists: the venue chosen or all of them, the
-   kind and the state chosen in the list, best first, and after the rest
+   state chosen in the list, best first, and after the rest
    the entries found only in what they already have. */
 function results(){
   if (!found) return [];
@@ -1610,7 +1607,6 @@ function results(){
   Object.keys(found.per).forEach(function(id){
     var r = found.per[id], e = byId[id] || r.e;
     if (view.scope === 'site' && e.site !== view.site) return;
-    if (view.kind !== 'all' && e.kind !== view.kind) return;
     /* The search reaches into the bin under All (Mark, 2026-10-22): an
        entry binned in haste is still the one he remembers a word of, and
        its Binned tag says where it lies. */
@@ -1646,7 +1642,6 @@ function drawResults(){
         + ' · ' + (counts[i] || 'none') + '</span>'; }).join('')
     + '<span class="scount"><b>' + list.length + '</b> entr' + (list.length === 1 ? 'y' : 'ies') + '</span></div>'
     + '<div class="sopts">' + chipsOf([['all','All venues'], ['site', site ? site.name : 'This venue']], 'scope', view.scope || 'all')
-    + '<span class="gap"></span>' + chipsOf(KINDS, 'kind', view.kind)
     + (terms.length > 1 ? '<span class="gap"></span>' + chipsOf([['every','Every term'], ['any','Any term']], 'any', view.any ? 'any' : 'every') : '')
     + '<button class="linkbtn" data-weigh="1">' + (weighing ? 'Less' : 'More') + '</button></div>';
   /* the rest, folded: what the words became, the sums, the weights */
@@ -2399,7 +2394,7 @@ function drawSites(){
 function drawFilters(){
   function chips(list, key){ return list.map(function(c){
     return '<button class="chip' + (view[key] === c[0] ? ' on' : '') + '" data-' + key + '="' + c[0] + '">' + c[1] + '</button>'; }).join(''); }
-  $('#filters').innerHTML = chips(STATES, 'state') + '<span class="sep"></span>' + chips(KINDS, 'kind');
+  $('#filters').innerHTML = chips(STATES, 'state');
 }
 function drawRows(){
   var s = sites.find(function(x){ return x.id === view.site; }), ranked = !!(view.hits && found);
@@ -2416,7 +2411,7 @@ function drawRows(){
     return;
   }
   if (!list.length && view.leads && !ranked){ $('#rows').innerHTML = '<div class="empty">No leads yet. <b>Make lead</b>, in an entry\'s bar, files the entry in the Brokerage Semaphore and moves it here from its venue.</div>'; return; }
-  if (!list.length){ $('#rows').innerHTML = '<div class="empty">No entries match. Try All, Both kinds, or clear the search.</div>'; return; }
+  if (!list.length){ $('#rows').innerHTML = '<div class="empty">No entries match. Try All, or clear the search.</div>'; return; }
   /* Drawn in one go: eight hundred rows of plain markup is quicker than any
      scheme for drawing only the visible ones, and keeps Find in page working. */
   var leads = view.leads && !ranked, gk = function(e){ return leads ? e._lead.a.name : GROUPS[e._g]; };
@@ -2700,26 +2695,15 @@ function setVerdict(v){
   /* A binned entry leaves the list at once, so the next one is opened in
      its place; otherwise ↓ would start again from the top. The last one
      of a venue left the reader on an entry already gone from its list
-     (Mark, 2026-10-28), so then the next venue that still has entries
-     under the same filters is chosen and its first entry opened, or the
-     one before it at the end of the venues, and the reader is cleared
-     when none is left anywhere. */
+     (Mark, 2026-10-28), so then the reader is cleared and the drawer of
+     venues and entries opened, for Mark to choose where to go next. Going
+     straight on to the next venue's first entry was tried the same day
+     and not wanted. */
   var binning = nv === 'bin' && view.state !== 'bin';
   var list = shown(), i = list.indexOf(e), next = binning ? (list[i + 1] || list[i - 1]) : null;
   patch(e, { verdict:nv, decided_at:nv ? new Date().toISOString() : null });
   if (next) return openEntry(next.id);
-  if (binning && !view.leads && !(view.hits && found)) return nextVenue();
-  drawSites(); drawRows(); drawDetail();
-}
-function nextVenue(){
-  var at = sites.findIndex(function(s){ return s.id === view.site; }), was = view.site;
-  var order = sites.slice(at + 1).concat(sites.slice(0, Math.max(at, 0)).reverse());
-  for (var k = 0; k < order.length; k++){
-    view.site = order[k].id;
-    var first = shown()[0];
-    if (first){ view.note = null; view.hits = view.results = false; sel.clear(); regroup(); return openEntry(first.id); }
-  }
-  view.site = was; view.id = null; saveView();
+  if (binning && !view.leads && !(view.hits && found)){ view.id = null; saveView(); drawSites(); drawDetail(); return drawer(true); }
   drawSites(); drawRows(); drawDetail();
 }
 /* Writing to Mark's row: read it first and change only the part asked,
@@ -3086,7 +3070,7 @@ document.addEventListener('click', function(ev){
   }
   var ex = ev.target.closest('[data-errx]');
   if (ex){ ev.preventDefault(); errOpen[ex.dataset.errx] = !errOpen[ex.dataset.errx]; return drawSites(); }
-  var t = ev.target.closest('[data-pick],[data-bulk],[data-site],[data-id],[data-state],[data-kind],[data-tab],[data-verdict],[data-editlinks],[data-savelinks],[data-cancellinks],[data-callnote],[data-drawer],[data-step],#checkNow');
+  var t = ev.target.closest('[data-pick],[data-bulk],[data-site],[data-id],[data-state],[data-tab],[data-verdict],[data-editlinks],[data-savelinks],[data-cancellinks],[data-callnote],[data-drawer],[data-step],#checkNow');
   if (!t) return;
   if (t.dataset.drawer) return drawer(t.dataset.drawer === 'toggle' || t.dataset.drawer === 'leads' ? t.dataset.drawer : t.dataset.drawer === '1');
   if (t.dataset.step) return step(+t.dataset.step);
@@ -3102,7 +3086,6 @@ document.addEventListener('click', function(ev){
   else if (t.dataset.site){ view.site = t.dataset.site; view.leads = false; document.body.classList.remove('leads'); $('.rd-list').setAttribute('aria-expanded', 'true'); $('.rd-leads').setAttribute('aria-expanded', 'false'); view.note = null; view.hits = view.results = false; sel.clear(); regroup(); saveView(); draw(); }
   else if (t.dataset.id){ if (ev.ctrlKey || ev.metaKey || ev.shiftKey) pick(t.dataset.id, ev.shiftKey); else openEntry(t.dataset.id); }
   else if (t.dataset.state){ view.state = t.dataset.state; sel.clear(); regroup(); saveView(); drawFilters(); drawRows(); if (view.results) drawResults(); }
-  else if (t.dataset.kind){ view.kind = t.dataset.kind; sel.clear(); regroup(); saveView(); drawFilters(); drawRows(); if (view.results) drawResults(); }
   else if (t.dataset.tab){ view.tab = t.dataset.tab; saveView(); drawDetail(); }
   else if (t.dataset.verdict) setVerdict(t.dataset.verdict);
 });

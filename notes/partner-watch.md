@@ -26,6 +26,11 @@ no file under `one-app/`. These are his choices, and what he dropped.
   still stored as `interesting`. Later went the same day with its key, its
   filter, its group and its tag, and an entry still stored as Later reads as
   a plain seen one.
+- **Only entries seeking partners** (2026-10-28): those offering expertise
+  are not copied, and the choice between the two kinds went from the desk
+  and the phone. The copier takes a new one as it takes one too old, and
+  puts away the ones already in, except the Marked and those made into a
+  lead (`putAwayOffers`).
 - **Within a site**: what is new on top, then Marked, then the rest, each
   newest first (2026-10-16). Several entries can be picked at once and
   flagged together. No long value is hidden behind a "Show all".
@@ -65,9 +70,11 @@ no file under `one-app/`. These are his choices, and what he dropped.
   opens at its head. Why, his short note on an entry, is lit in the gold of
   Marked once anything is written in it (2026-10-18). Bin wears the phone's
   bin, large and in the brokerage red (2026-10-28).
-- **Binning goes on to the next entry**, and after the last of a venue to
-  the first of the next venue that has any under the same filters, rather
-  than staying on the entry just binned (2026-10-28, `nextVenue`).
+- **Binning goes on to the next entry**, rather than staying on the entry
+  just binned; after the last of a venue the reader empties and the drawer
+  of venues and entries opens, for him to choose where next (2026-10-28,
+  `setVerdict`). Going straight on to the next venue's first entry was built
+  the same day and not wanted.
 
 ## Venues
 

@@ -403,7 +403,6 @@ a.pw-cell{text-decoration:none}
              autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></label>
     </div>
     <div class="pw-seg" id="pw-states"></div>
-    <div class="pw-seg" id="pw-kinds"></div>
     <div id="pw-rows"></div>
   </section>
 </main>
@@ -636,11 +635,11 @@ $('#s-pass').addEventListener('keydown', function(e){ if (e.key === 'Enter') $('
 var PW_VIEW = 'partnerwatch.pocket.view', PW_ROW = 'partnerwatch';
 var pwSites = [], pwEntries = [], pwById = {}, pwRun = null, pwLoaded = false;
 var pwLinks = {}, pwNotes = {}, pwDetail = {}, pwOpenId = null;
-var pwView = { site:null, leads:false, state:'open', kind:'all', q:'' };
+var pwView = { site:null, leads:false, state:'open', q:'' };
 try { Object.assign(pwView, JSON.parse(localStorage.getItem(PW_VIEW) || '{}'), { q:'' }); } catch(e){}
 /* a phone last left on Later, which went on 2026-10-18, comes back to All */
 if (pwView.state === 'later') pwView.state = 'open';
-function pwSaveView(){ try { localStorage.setItem(PW_VIEW, JSON.stringify({ site:pwView.site, state:pwView.state, kind:pwView.kind })); } catch(e){} }
+function pwSaveView(){ try { localStorage.setItem(PW_VIEW, JSON.stringify({ site:pwView.site, state:pwView.state })); } catch(e){} }
 
 /* Where each arena's scroll points until Mark sets it at the desk: the
    desk page's DOCS, copied as they stand there (partner-watch/index.html,
@@ -726,7 +725,6 @@ function pwWhen(iso){ if (!iso) return ''; var d = new Date(iso);
    fixed when the list is drawn afresh, not when an entry is answered, so
    going to the next entry never skips or repeats one. */
 var PW_STATES = [['open','All'],['unsorted','Unsorted'],['interesting','Marked'],['bin','Binned']];
-var PW_KINDS = [['all','Both kinds'],['seeks','Seeks partners'],['offers','Offers expertise']];
 var PW_GROUPS = ['New', 'Marked', 'Seen', 'Binned'];
 function pwIsNew(e){ return !e.opened_at && !e.verdict; }
 function pwGroupOf(e){
@@ -739,7 +737,6 @@ function pwPasses(e){
   var v = pwView;
   if (v.leads ? !e._lead : e._lead || e.site !== v.site) return false;
   if (!v.leads){
-  if (v.kind !== 'all' && e.kind !== v.kind) return false;
   /* a search under All reaches the binned too, as at the desk */
   if (v.state === 'open' && e.verdict === 'bin' && !v.q) return false;
   if (v.state === 'unsorted' && e.verdict) return false;
@@ -987,8 +984,7 @@ function pwDrawChips(){
     });
   }
   row($('#pw-states'), PW_STATES, 'state');
-  row($('#pw-kinds'), PW_KINDS, 'kind');
-  $('#pw-states').hidden = $('#pw-kinds').hidden = pwView.leads;
+  $('#pw-states').hidden = pwView.leads;
 }
 function pwKindTag(k){
   return k === 'seeks' ? el('span', 'seeks', 'Seeks partners')
@@ -1019,7 +1015,7 @@ function pwDrawRows(){
   var list = pwShown();
   if (!list.length){
     host.appendChild(pwView.leads && !pwView.q ? pwNote('No leads yet', 'Make Lead, under an entry, files it in the Brokerage Semaphore and moves it here from its venue.')
-      : pwNote('No entries', 'Try All and Both kinds, or clear the search.'));
+      : pwNote('No entries', 'Try All, or clear the search.'));
     return;
   }
   var gk = function(e){ return pwView.leads ? e._lead.a.name : PW_GROUPS[e._g]; };
@@ -1366,7 +1362,7 @@ function pwAnswer(e, v){
    together, as the tick boxes do at the desk (2026-10-22). A long press on
    an entry starts the choosing with that entry picked, as in Mail and
    Photos; a tap then picks or lets go. Select All takes every entry the
-   list shows, so with Unsorted, Seeks partners or a search chosen it takes
+   list shows, so with Unsorted or a search chosen it takes
    only those; a group's header takes only that group, all the New ones
    say. What is acted on is what is picked and still shown, so changing
    the filters on the way never answers an entry out of sight. */
