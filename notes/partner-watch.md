@@ -92,12 +92,17 @@ no file under `one-app/`. These are his choices, and what he dropped.
   and records no visit, and every change is made in the Semaphore. Every
   venue has a panel, even one the Semaphore lacks. It carries Site, the
   arena's **scroll** and his **note** on the call (moved there off the
-  venue rows on 2026-10-21), and the calls of its arenas as a table under
-  its window: name and date on the left, the line on the right under one
-  row of months, the three calls that matter now shown and the rest behind
-  a button. One strip with the names and dates on it was a mess on his real
-  arenas. The panel leaves out the visits and Limbo. How is at "the
-  Semaphore's slide-ins" in the page.
+  venue rows on 2026-10-21). **A venue's panel is the Semaphore's**, the one
+  the Call Board lends over itself (2026-10-28, issue #7): as wide, its
+  window and its arenas' calls on one strip, then where it stands, its
+  window, event days and arenas two to a row, and the visits, leads, other
+  pages and his note folded, all to be read and nothing to be pressed but
+  the folds and the arenas. Its drawing is a copy of the Semaphore's, since
+  this page reads nothing of the One App but the venue maths; a change to
+  that panel is a change to this one. It replaced a narrower table of the
+  page's own (2026-10-21) that showed three calls and left out the visits
+  and where the venue stands. How is at "the Semaphore's slide-ins" in the
+  page.
 - **The scroll opens the call text's PDF**, not the call's web page, and he
   changes the links himself, every arena at once from the pencil in the
   column's head with one Save, rather than one pencil per card

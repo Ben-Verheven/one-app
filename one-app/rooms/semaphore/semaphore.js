@@ -2006,7 +2006,8 @@ function vFoundHTML(v){
    pages, Mark's own note and the rhythm. Chosen over the narrow panel with
    the strip of time inside, and over every part laid open one under the
    other, which put what the venue is for at the foot of a long scroll.
-   Edit changes what it is and when. */
+   Edit changes what it is and when. Mark's Place draws a read-only copy
+   of this panel (see notes/partner-watch.md, "Venues"). */
 const VENUE_LEAD='venue-lead';     /* leadEdit.a while a lead is being started from a venue's panel */
 let vNoteT=null;
 /* the folds opened, which stay open for the session from venue to venue */

@@ -368,7 +368,7 @@ _No section banners._
 
 ## `rooms/semaphore/semaphore.js`
 
-5340 lines · 302 KB
+5341 lines · 302 KB
 
 ```
 Brokerage Semaphore                         semaphore.js:1
@@ -392,33 +392,33 @@ Venues: three sections and Limbo            semaphore.js:1659
 dragging a venue into place                 semaphore.js:1791
 what a search found, checked in its card    semaphore.js:1870
 a venue, opened                             semaphore.js:1997
-drawer                                      semaphore.js:2283
-read view: one stream, in time order        semaphore.js:2387
-edit view                                   semaphore.js:2512
-actions                                     semaphore.js:2681
-a call's run                                semaphore.js:2784
-the board, lent to the Call Board           semaphore.js:2799
-leads                                       semaphore.js:2879
-the ruit                                    semaphore.js:3121
-the score                                   semaphore.js:3177
-one lead card, in both rooms                semaphore.js:3230
-a type's colour dot                         semaphore.js:3279
-who and the links, side by side             semaphore.js:3377
-the leads table                             semaphore.js:3394
-leads: one board, three sections            semaphore.js:3584
-a lead opening in place                     semaphore.js:3694
-a lead moving, and the view moving with it  semaphore.js:3801
-leads, lent to the Ledger's board           semaphore.js:4136
-modals                                      semaphore.js:4267
-asking, and saying                          semaphore.js:4270
-the types, managed                          semaphore.js:4311
-dragging in the list of types               semaphore.js:4367
-tooltip                                     semaphore.js:4528
-events                                      semaphore.js:4566
-venues                                      semaphore.js:4708
-typing, and the forms it goes into          semaphore.js:4906
-escape, and closing by clicking away        semaphore.js:5110
-putting links in your own order             semaphore.js:5145
+drawer                                      semaphore.js:2284
+read view: one stream, in time order        semaphore.js:2388
+edit view                                   semaphore.js:2513
+actions                                     semaphore.js:2682
+a call's run                                semaphore.js:2785
+the board, lent to the Call Board           semaphore.js:2800
+leads                                       semaphore.js:2880
+the ruit                                    semaphore.js:3122
+the score                                   semaphore.js:3178
+one lead card, in both rooms                semaphore.js:3231
+a type's colour dot                         semaphore.js:3280
+who and the links, side by side             semaphore.js:3378
+the leads table                             semaphore.js:3395
+leads: one board, three sections            semaphore.js:3585
+a lead opening in place                     semaphore.js:3695
+a lead moving, and the view moving with it  semaphore.js:3802
+leads, lent to the Ledger's board           semaphore.js:4137
+modals                                      semaphore.js:4268
+asking, and saying                          semaphore.js:4271
+the types, managed                          semaphore.js:4312
+dragging in the list of types               semaphore.js:4368
+tooltip                                     semaphore.js:4529
+events                                      semaphore.js:4567
+venues                                      semaphore.js:4709
+typing, and the forms it goes into          semaphore.js:4907
+escape, and closing by clicking away        semaphore.js:5111
+putting links in your own order             semaphore.js:5146
 ```
 
 ## `rooms/semaphore/semaphore.css`
@@ -662,4 +662,4 @@ Generated data. Never open, never edit, never upload.
 
 ---
 
-**39056 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.
+**39057 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.

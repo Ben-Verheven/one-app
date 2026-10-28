@@ -511,7 +511,8 @@ button.badge:hover{box-shadow:inset 0 0 0 1.5px var(--lv)}
 /* ── the Semaphore's slide-ins (see openPanel) ───────────────────────
    The venue's name and the arena's tags say they open something of their
    own, apart from the row that chooses the venue. The panel is the
-   Semaphore's: 404 px from the right edge, over the drawer and the entry
+   Semaphore's: 404 px from the right edge for an arena and 640 for a
+   venue (see .mwide), over the drawer and the entry
    alike, the rest veiled; a press on the veil, ✕ or Esc puts it away. */
 .site .nm[data-msite]:hover{text-decoration:underline;text-decoration-color:var(--line2);text-underline-offset:3px}
 .site .tag[data-marena]:hover{background:color-mix(in srgb,var(--tone) 46%,var(--paper))}
@@ -531,8 +532,9 @@ body.mopen .mpanel{transform:none;visibility:visible;transition:transform .3s cu
 .mkind,.mmeta{margin:0 0 5px;font:600 9.5px var(--serif);letter-spacing:.16em;text-transform:uppercase;color:var(--faint)}
 .mmeta{margin:7px 0 0}
 .mdoubt{display:inline-block;font:600 12px/18px var(--serif);width:18px;text-align:center;border-radius:50%;background:var(--gold-soft);color:var(--gold-ink);vertical-align:2px;cursor:help}
-.mrow{display:flex;align-items:center;gap:10px;margin-top:11px}
-.mgo{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line2);border-radius:var(--radius);padding:3px 10px;background:none;color:var(--key2);font:13px var(--mono);text-decoration:none;white-space:nowrap;cursor:pointer}
+.mrow{display:flex;align-items:center;gap:9px;margin-top:11px}
+.mgo{display:inline-flex;align-items:center;gap:5px;height:28px;border:1px solid var(--line2);border-radius:var(--radius);padding:0 11px;
+  background:linear-gradient(180deg,rgba(255,255,255,.7),rgba(42,38,32,.05));color:var(--key2);font:12px var(--mono);text-decoration:none;white-space:nowrap;cursor:pointer}
 .mgo:hover{border-color:var(--key);background:var(--hover)}
 .mgo svg{flex:none}
 .mgo.on{background:var(--sel)}
@@ -541,69 +543,97 @@ body.mopen .mpanel{transform:none;visibility:visible;transition:transform .3s cu
 .mplace.st-new{border-color:var(--new-line);background:var(--new-soft)}
 .mplace.st-new b{color:var(--new-ink)}
 .mplace i{font-style:italic}
-.mps{margin-top:18px}
-.mph{display:flex;align-items:baseline;gap:9px;margin:0 0 7px;padding-bottom:5px;border-bottom:1px solid var(--grid);
-  font:600 9.5px var(--serif);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
-.mph i{font:italic 12.5px var(--body);letter-spacing:0;text-transform:none;color:var(--faint)}
 .mnone{font:italic 13px var(--body);color:var(--faint);margin:0}
 .mtext{margin:0;font-size:13.5px;line-height:1.6;color:var(--muted);white-space:pre-wrap;overflow-wrap:anywhere}
 .mlink{border:0;background:none;padding:0;text-align:left;color:var(--ink);cursor:pointer;text-decoration:underline;text-decoration-color:var(--line2);text-underline-offset:3px}
 .mlink:hover{text-decoration-color:var(--ink)}
-/* The window and the calls as a small table, as the Semaphore's board
-   lays out its rows: what each line is, and its date that matters, in a
-   column on the left; the line itself on a track to the right; one row of
-   months over them all, a hairline at each month, and today the gold line
-   straight down every track. The names and dates stood on the strip
-   itself until Mark found them floating over one another and the bars
-   (2026-10-21). See vLifeHTML. */
-.mtl{margin-top:8px}
-.mtr{display:grid;grid-template-columns:136px minmax(0,1fr);border-top:1px solid var(--grid)}
-.mtr.axis{border-top:0}
-.mtl:not(.all) .mtr.more{display:none}
-.mtn{min-width:0;padding:6px 10px 6px 0;font-size:13px;line-height:1.3}
-.mtn b,.mtn i,.mtn span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.mtn b{font:400 13px/1.3 var(--serif);color:var(--ink)}
-.mtn i{font:italic 12.5px/1.3 var(--body);color:var(--muted)}
-.mtn span{margin-top:1px;font:10.5px/1.4 var(--mono);color:var(--key2)}
-.mtr.past .mtn b,.mtr.past .mtn i,.mtr.past .mtn span{color:var(--faint)}
-.mtk{position:relative;overflow:hidden;min-height:34px}
-.mtk > *{position:absolute}
-.mtr.axis .mtk{min-height:18px;overflow:visible}
-.mmo{bottom:3px;padding-left:3px;font:10px/1 var(--mono);color:var(--muted);white-space:nowrap}
-.mmo.jan{color:var(--ink)}
-.mnow{top:0;bottom:0;width:2px;margin-left:-1px;background:var(--gold);z-index:1}
-.mtr.axis .mnow{top:auto;height:7px;bottom:0}
-.mband{top:50%;height:12px;transform:translateY(-50%);min-width:6px;border-radius:4px;border:1px solid rgba(194,56,44,.7)}
+/* A venue's panel is laid out as the Semaphore's, which the Call Board
+   lends over itself (Mark, 2026-10-28; see "the Semaphore's slide-ins" in
+   the script): as wide, so the slice of the Call Board at its head has
+   room for the names and the months, and in the Semaphore's own sizes. */
+.mpanel.mwide{width:640px}
+.mlast{font:11.5px var(--mono);color:var(--muted)}
+/* the venue's slice of the Call Board (see vSnipHTML): its lane, then a
+   row for each call, today a dashed gold line down them all */
+.msnip{margin-top:16px;padding:6px 12px 8px;border:1px solid rgba(154,123,58,.5);border-radius:9px;background:#F7F3E9;box-shadow:inset 0 1px 0 #fff}
+.msax,.msr{display:flex;align-items:stretch}
+.msl{flex:0 0 250px;display:flex;align-items:center;gap:7px;min-width:0;padding-right:10px}
+.mstk{position:relative;flex:1 1 auto;min-width:0}
+.mstk > i,.mstk > span{position:absolute}
+.msax{height:30px;border-bottom:1.5px solid rgba(120,96,58,.4)}
+.msm{bottom:3px;transform:translateX(-50%);font:9.5px var(--mono);color:var(--muted)}
+.msy{top:1px;font:600 10px var(--mono);color:var(--ink)}
+.msbody{position:relative}
+.msgrid{position:absolute;left:250px;right:0;top:0;bottom:0;pointer-events:none}
+.msgrid i{position:absolute;top:0;bottom:0;width:1px;background:rgba(120,96,58,.13)}
+.msgrid i.y{background:rgba(120,96,58,.34)}
+.msgrid b{position:absolute;top:0;bottom:0;border-left:1.5px dashed var(--gold)}
+.msr{height:30px}
+.msr.lane{min-height:36px;height:auto;padding:3px 0;border-bottom:1px solid var(--grid)}
+.msn{min-width:0;font:13px var(--body);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lane .msn{font-weight:600;line-height:1.25;color:var(--ink);white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.msdia{flex:0 0 8px;width:8px;height:8px;background:var(--brok);transform:rotate(45deg)}
+.mschip{flex:0 1 auto;max-width:100px;padding:2px 6px;border-radius:3px;font:600 9.5px var(--mono);color:var(--ink);
+  background:color-mix(in srgb,var(--tone) 55%,#FBF8F1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.msbar{top:10px;height:11px;border-radius:2px;border:1px solid;min-width:4px}
+.msbar.unc{border-style:dashed;border-width:1.5px}
+.msbar.fade{border:0;border-radius:2px 0 0 2px;background:linear-gradient(90deg,var(--fc) 35%,transparent)}
+.msbar2{top:10px;height:11px;background:repeating-linear-gradient(135deg,var(--fc) 0 3px,transparent 3px 6px)}
+.msdot{top:11px;width:9px;height:9px;margin-left:-4.5px;border-radius:50%;border:1.5px solid}
+.mscap{top:6px;width:2px;height:19px;margin-left:-1px;border-radius:1px}
+.msann{top:10px;height:10px;border-radius:99px;border:1.5px dashed;min-width:6px}
+.mstk > .msnone{left:6px;top:50%;transform:translateY(-50%);font:italic 12.5px var(--body);color:var(--faint)}
+.msnote{margin:6px 0 0;font:italic 13px var(--body);color:var(--faint)}
+/* the venue's window on its lane, as the Semaphore's Venues draws it */
+.mband{top:50%;height:12px;transform:translateY(-50%);min-width:6px;border-radius:4px;border:1px solid rgba(194,56,44,.7);z-index:2}
 .mband.st-new{border-color:var(--new-line)}
 .mband.st-board{border-color:var(--line2)}
 .mband.season{border-style:dashed}
 .mband.past{border-color:var(--line)}
 .mband.openl{border-left:none;border-radius:0 4px 4px 0;-webkit-mask-image:linear-gradient(90deg,transparent,#000 30px);mask-image:linear-gradient(90deg,transparent,#000 30px)}
 .mband.openr{border-right:none;border-radius:4px 0 0 4px;-webkit-mask-image:linear-gradient(270deg,transparent,#000 30px);mask-image:linear-gradient(270deg,transparent,#000 30px)}
-.mmeet{top:50%;height:4px;transform:translateY(-50%);background:var(--brok);border-radius:2px}
-.mdia{top:50%;width:10px;height:10px;margin-left:-5px;transform:translateY(-50%) rotate(45deg);background:var(--brok);box-shadow:0 0 0 2px var(--sheet);z-index:2}
-.mdia.unc{background:var(--sheet);border:1.5px dashed var(--brok)}
-.mdia.past{background:var(--faint)}
-.mtmore{display:block;margin:6px 0 0 136px;padding:2px 0;border:0;background:none;color:var(--key2);font:12.5px var(--serif);cursor:pointer;text-decoration:underline;text-decoration-color:var(--line2);text-underline-offset:3px}
-.mtmore:hover{text-decoration-color:var(--ink)}
-/* A call as the rotation cards drew it, and the Semaphore's board still
-   does: one bar from publication to deadline, the publication's blue
-   running into the deadline's purple; the stages of one call one bar, full
-   only to the first deadline and a thin line on to the last, an earlier
-   deadline a tick beside it; dashed where a date is a guess, grey once it
-   is over, faded in where no publication is known and out where no
-   deadline is. */
-.mcb{top:50%;margin-top:-2px;height:4px;min-width:3px;border-radius:2px;background:linear-gradient(90deg,var(--call),#A32E87)}
-.mcb.unc{height:5px;background:none;border:1px dashed var(--call);border-right:2px solid #A32E87}
-.mcb.past{background:var(--line2)}
-.mcb.unc.past{background:none;border-color:var(--line2)}
-.mcb.lead-in{-webkit-mask-image:linear-gradient(90deg,transparent,#000 22px);mask-image:linear-gradient(90deg,transparent,#000 22px)}
-.mcb.run-on{-webkit-mask-image:linear-gradient(270deg,transparent,#000 22px);mask-image:linear-gradient(270deg,transparent,#000 22px)}
-.mcbt{top:50%;margin-top:-1px;height:0;border-top:2px solid #A32E87}
-.mcbt.unc{border-top-style:dashed}
-.mcbt.past{border-top-color:var(--line2)}
-.mcbn{top:50%;margin-top:-6px;width:3px;height:12px;margin-left:-1.5px;border-radius:1px;background:#A32E87;box-shadow:0 0 0 1.5px var(--sheet)}
-.mcbn.past{background:var(--muted)}
+.mband.openl.openr{-webkit-mask-image:linear-gradient(90deg,transparent,#000 30px,#000 calc(100% - 30px),transparent);mask-image:linear-gradient(90deg,transparent,#000 30px,#000 calc(100% - 30px),transparent)}
+.mrun{top:50%;transform:translateY(-50%);margin-left:3px;font:11px/1 var(--mono);color:var(--muted)}
+.mmeet{top:50%;height:12px;margin-top:-6px;border-radius:3px;background:var(--brok);z-index:3}
+.mmeet.past{background:var(--line2)}
+.mdia{top:50%;width:12px;height:12px;margin:-6px 0 0 -6px;background:var(--brok);transform:rotate(45deg);box-shadow:0 0 0 2px #EFE8DA;z-index:4}
+.mdia.unc{background:#F7F3E9;border:1.5px dashed var(--brok)}
+.mdia.st-new{background:var(--new)}
+.mdia.st-new.unc{background:#F7F3E9;border-color:var(--new)}
+.mdia.st-board{background:var(--key2)}
+.mdia.st-board.unc{background:#F7F3E9;border-color:var(--key2)}
+.mdia.past{background:var(--line2);border-color:var(--line2)}
+/* under it, the facts in a grid of two columns, the long ones across */
+.mfacts{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:24px;margin-top:14px}
+.mf{display:grid;grid-template-columns:86px minmax(0,1fr);gap:10px;align-items:baseline;padding:8px 0;border-bottom:1px solid var(--grid)}
+.mf.wide{grid-column:1 / -1}
+.mfk{font:600 9.5px var(--serif);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.mfv{min-width:0;font:14px/1.45 var(--body);color:var(--ink)}
+.mfv i{color:var(--faint)}
+.mbasis{color:var(--muted)}
+/* the four sections, the one it stands in lit; for reading, not pressing */
+.mphseg{display:inline-flex;vertical-align:middle;margin-right:10px;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+.mphseg span{padding:5px 10px;border-right:1px solid var(--line);font:600 9px var(--serif);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.mphseg span:last-child{border-right:none}
+.mphseg span.on{background:var(--ink);color:#F4EFE3}
+.mphseg span.nat{box-shadow:inset 0 0 0 1.5px var(--new-line);color:var(--ink)}
+.mfv .mplsay{font:italic 12.5px var(--body);color:var(--muted)}
+/* and the rest folded, each fold saying what is in it */
+.mfolds{margin-top:10px}
+.mfold{border-bottom:1px solid var(--grid)}
+.mfh{display:flex;align-items:baseline;gap:8px;width:100%;padding:10px 0;border:0;background:none;text-align:left;cursor:pointer;
+  font:600 9.5px var(--serif);letter-spacing:.14em;text-transform:uppercase;color:var(--ink)}
+.mfh i{min-width:0;font:italic 13px var(--body);letter-spacing:0;text-transform:none;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mfh .car{display:inline-block;font-size:9px;color:var(--muted);transition:transform .15s}
+.mfold.open .car{transform:rotate(90deg)}
+.mfb{padding:0 0 12px 17px}
+.mfold:not(.open) .mfb{display:none}
+.mvis{display:grid;grid-template-columns:56px 92px minmax(0,1fr);gap:8px;align-items:baseline;padding:5px 0;border-bottom:1px solid var(--grid);font-size:13.5px}
+.mvd{font:11.5px var(--mono);color:var(--muted)}
+.mgot{justify-self:start;padding:3px 6px 2px;border-radius:3px;font:600 8.5px/1.2 var(--serif);letter-spacing:.12em;text-transform:uppercase;background:rgba(42,38,32,.09);color:var(--muted)}
+.mgot.something{background:rgba(63,122,49,.10);color:#2C5A21}
+.mgot.lead{background:rgba(141,85,69,.16);color:#6E3B2E}
+.mvt{min-width:0;overflow-wrap:anywhere}
 .mlead{display:flex;flex-direction:column;align-items:flex-start;margin:0;padding:4px 0}
 .mlead i{font:italic 12.5px var(--body);color:var(--faint)}
 .mchips{display:flex;flex-wrap:wrap;gap:6px}
@@ -1980,13 +2010,13 @@ function arenaTags(v){
    venue's window is reckoned, and how an arena's dates become bars, is the
    Semaphore's own, read from the file of venue maths at the head of this
    page's script, so that the two say the same of every venue.
-   A venue's panel carries the calls of its arenas under its window, as
-   the rotation cards did, and beside Site the scroll and the note that
-   stood on the venue's row; it leaves out the lines that repeated the
-   window's dates under it, the visits, and Limbo (Mark, 2026-10-21). Every
-   venue here opens one, even one the Semaphore does not have, for the
-   scroll and the note. */
-var PLACE_SAY = { new:'New on the board', board:'Kept on the board', venues:'In Venues', gone:'Removed' };
+   A venue's panel is laid out as the one the Call Board lends over itself
+   from the Semaphore (Mark, 2026-10-28), as wide, its window and calls on
+   one strip, its facts two to a row and the rest folded, with the
+   things that change it left out; beside Site stand the scroll and the
+   note that stood on the venue's row (2026-10-21). Every venue here opens
+   one, even one the Semaphore does not have, for the scroll and the note. */
+var PLACE_SAY = { new:'New on the board' };
 var PHASE_SAY = { arising:'Arising', active:'Active', dying:'Dying', over:'Limbo' };
 var STAGE_NAME = { spotted:'Spotted', contacted:'Contacted', talking:'Talking' };
 var ROLES = { announcement:'announcement window', publication:'publication', deadline:'submission deadline' };
@@ -2008,114 +2038,133 @@ function vPhase(v){ return v.phase || PHASE[vState(v)]; }
 function vGlyph(v){ return '<i class="mgl ' + (v.start ? 'ev' + (v.grade === 'fixed' ? '' : ' unc') : 'win') + '" aria-hidden="true"></i>'; }
 function arenaChip(a){ var tone = arenaTone(a);
   return '<button class="mchip" data-marena="' + esc(a.id) + '"' + (tone ? ' style="--tone:' + esc(tone) + '"' : '') + '>' + esc(a.name) + '</button>'; }
-/* The window, and under it the calls of the arenas the venue serves, each
-   a row of the table drawn above (Mark, 2026-10-21). Three calls are shown
-   at first, the ones that matter now: those open, the nearest deadline
-   first, then those still to open; the others, and those closed in the
-   last half year, wait behind a button, because a cluster opens a dozen
-   topics and drawing them all made the panel a mess. The months span the
-   window, today and the calls shown at first, from half a year back to
-   fifteen months ahead at most; a call beyond them runs off the edge, and
-   its date in the left column still says where it lies. */
-function dShort(iso, unc){
-  var p = iso.split('-');
-  return (unc ? '≈ ' : '') + +p[2] + ' ' + MONTHS[+p[1] - 1] + (+p[0] === new Date().getFullYear() ? '' : ' ’' + p[0].slice(2));
-}
-function callSay(r){
-  var u = function(d){ return d.grade !== 'fixed'; };
-  if (r.state === 'soon') return 'opens ' + dShort(r.open.start, u(r.open));
-  if (r.state === 'closed') return 'closed ' + dShort((r.close || r.open).start, u(r.close || r.open));
-  return r.next ? 'deadline ' + dShort(r.next.start, u(r.next)) : 'open, no deadline';
-}
-function vLifeHTML(v){
-  var w = vWin(v), now = T(todayISO()), calls = [], many = (v.arenas || []).length > 1;
-  (v.arenas || []).map(marketArena).filter(function(a){ return a && !a.frozenAt; }).forEach(function(a){
-    callRuns(a).all.forEach(function(r){
-      calls.push({ a:a, r:r, s:r.open ? T(r.open.start) : T((r.dls[0] || r.close).start) - 21 * DAY,
-                   e:r.close ? T(r.close.end || r.close.start) + DAY : T(r.open.start) + 35 * DAY });
-    });
-  });
-  var when = function(c){ return c.r.state === 'open' ? (c.r.next ? T(c.r.next.start) : 9e15) : c.s; };
-  var live = calls.filter(function(c){ return c.r.state !== 'closed'; })
-    .sort(function(x, y){ return (x.r.state === 'soon') - (y.r.state === 'soon') || when(x) - when(y); });
-  var shut = calls.filter(function(c){ return c.r.state === 'closed'; }).sort(function(x, y){ return y.e - x.e; });
-  var first = live.slice(0, 3);
-  if (!first.length && shut.length) first = shut.splice(0, 1);
-  var rest = live.slice(3).concat(shut.filter(function(c){ return c.e >= now - 183 * DAY; }));
-  if (!w && !first.length) return '';
-  /* the months */
-  var lo = now - 30 * DAY, hi = now + 60 * DAY;
-  if (w){ if (w.from !== null) lo = Math.min(lo, w.from); if (w.to !== null) hi = Math.max(hi, w.to); }
-  first.forEach(function(c){ lo = Math.min(lo, c.s); hi = Math.max(hi, c.e); });
-  lo = Math.max(lo, now - 183 * DAY); hi = Math.min(hi, now + 456 * DAY);
-  var d0 = new Date(lo), d1 = new Date(hi);
-  var t0 = new Date(d0.getFullYear(), d0.getMonth(), 1, 12).getTime(), t1 = new Date(d1.getFullYear(), d1.getMonth() + 1, 1, 12).getTime();
-  var P = function(t){ return ((t - t0) / (t1 - t0) * 100).toFixed(2); }, C = function(x){ return Math.max(0, Math.min(100, x)); };
-  var months = [];
-  for (var m = new Date(t0); m.getTime() < t1; m = new Date(m.getFullYear(), m.getMonth() + 1, 1, 12)) months.push(m);
-  /* a label every month while a month has room for one, else every
-     second or third, always on the quarter's first; the year only at
-     January, written out where the room allows and as ’27 where not. The
-     track is the panel's width less the names: 404 less 52 and 136. */
-  var mpx = 216 / months.length, every = mpx >= 30 ? 1 : mpx >= 15 ? 2 : 3;
-  var grid = 'background:linear-gradient(90deg,' + months.slice(1).map(function(m){ var x = P(m.getTime());
-    return 'transparent calc(' + x + '% - 1px),var(--grid) calc(' + x + '% - 1px),var(--grid) ' + x + '%,transparent ' + x + '%'; }).join(',') + ')';
-  if (months.length < 2) grid = '';
-  var today = '<i class="mnow" style="left:' + P(now + DAY / 2) + '%"></i>';
-  /* a span of days said once: 12–13 Nov, not 12 Nov – 13 Nov */
-  var span2 = function(a, b, unc){
-    if (!b || b === a) return dShort(a, unc);
-    return a.slice(0, 7) === b.slice(0, 7) ? (unc ? '≈ ' : '') + +a.slice(8) + '–' + dShort(b) : dShort(a, unc) + ' – ' + dShort(b);
-  };
-  var row = function(cls, name, track){ return '<div class="mtr' + cls + '"><div class="mtn">' + name + '</div><div class="mtk" style="' + grid + '">' + track + today + '</div></div>'; };
-  var h = '<div class="mtr axis"><div></div><div class="mtk">' + months.map(function(m, i){
-      if (m.getMonth() % every) return '';
-      var yr = '’' + String(m.getFullYear()).slice(2);
-      return '<span class="mmo' + (m.getMonth() === 0 ? ' jan' : '') + '" style="left:' + P(m.getTime()) + '%">'
-        + (m.getMonth() ? MONTHS[m.getMonth()] : mpx * every >= 44 ? 'Jan ' + yr : yr) + '</span>';
-    }).join('') + today + '</div></div>';
-  if (w){
-    var from = w.from === null ? t0 : w.from;
-    var to = w.to === null ? Math.min(t1, Math.max(now, from) + OPEN_RUN * DAY) : w.to + DAY;
-    var past = w.to !== null && w.to + DAY < now;
-    var L = C(+P(from)), R = C(+P(to)), unc = v.grade !== 'fixed';
-    var tr = '<i class="mband' + (past ? ' past' : ' st-' + esc(v.place)) + (w.season ? ' season' : '') + (w.from === null || from < t0 ? ' openl' : '') + (w.to === null ? ' openr' : '')
-      + '" style="left:' + L.toFixed(2) + '%;width:' + Math.max(R - L, .5).toFixed(2) + '%;background:' + heatBG(v, from, to, past ? PLACE_RGB.gone : PLACE_RGB[v.place] || PLACE_RGB.venues) + '"></i>';
-    if (w.ms !== null){
-      if (w.me > w.ms) tr += '<i class="mmeet" style="left:' + P(w.ms) + '%;width:' + (+P(w.me + DAY) - +P(w.ms)).toFixed(2) + '%"></i>';
-      tr += '<i class="mdia' + (w.unc ? ' unc' : '') + (past ? ' past' : '') + '" style="left:' + P(w.ms + DAY / 2) + '%"></i>';
-    }
-    var day = function(t){ return dShort(new Date(t).toISOString().slice(0, 10)); };
-    var span = w.season ? 'expected ' + shortDate(v) : (w.from !== null ? day(w.from) : '…') + ' – ' + (w.to !== null ? day(w.to) : 'open');
-    h += row(past ? ' past' : '', '<b>The venue\'s window</b><span>' + esc(span) + '</span>'
-      + (w.ms !== null && !w.season ? '<span>meets ' + esc(span2(v.start, v.gran === 'range' ? v.end : null, unc)) + '</span>' : ''), tr);
+/* The venue's slice of the Call Board, at the head of its panel, as the
+   Semaphore's own panel draws it (`vSnipHTML` there, copied here, Mark
+   2026-10-28: the panel the Call Board lends over itself is the one to
+   match): the venue's own lane first, its window drawn as on Venues, then
+   the calls of the arenas it serves whose last deadline is still ahead
+   when it opens, or all of them where none is, each arena in its type's
+   colour, its round in force full and the next ones pale. Until then a
+   narrower table of this page's own stood here (2026-10-21). */
+function dtLabel(dt){ return dt.kind === 'call' ? (dt.call || 'Untitled call') : (dt.label || '(untitled)'); }
+/* the venue's window as the Semaphore's `bandHTML` draws it, without the
+   ends to drag, since nothing here changes it */
+function vBandHTML(v, t0, t1){
+  var w = vWin(v); if (!w) return '';
+  var P = function(t){ return (t - t0) / (t1 - t0) * 100; }, C = function(x){ return Math.max(0, Math.min(100, x)); };
+  var now = T(todayISO());
+  var from = w.from === null ? t0 : Math.max(t0, w.from);
+  var to = w.to === null ? Math.min(t1, Math.max(now, w.from === null ? now : w.from) + OPEN_RUN * DAY) : Math.min(t1, w.to + DAY);
+  if (to < t0 || from > t1) return '';
+  var L = C(P(from)), R = C(P(to)), past = w.to !== null && w.to + DAY < now;
+  var h = '<i class="mband st-' + esc(v.place) + (past ? ' past' : '') + (w.season ? ' season' : '') + (w.from === null ? ' openl' : '') + (w.to === null ? ' openr' : '')
+    + '" style="left:' + L.toFixed(2) + '%;width:' + Math.max(R - L, .5).toFixed(2) + '%;background:' + heatBG(v, from, to, past ? PLACE_RGB.gone : PLACE_RGB[v.place] || PLACE_RGB.venues) + '"></i>';
+  if (w.to === null && R < 99) h += '<span class="mrun" style="left:' + R.toFixed(2) + '%" aria-hidden="true">→</span>';
+  if (w.ms !== null){
+    if (w.me > w.ms){ var a = C(P(w.ms)), b = C(P(w.me + DAY));
+      h += '<i class="mmeet' + (past ? ' past' : '') + '" style="left:' + a.toFixed(2) + '%;width:' + Math.max(b - a, .4).toFixed(2) + '%"></i>'; }
+    var x = P(w.ms + DAY / 2);
+    if (x >= 0 && x <= 100) h += '<i class="mdia st-' + esc(v.place) + (w.unc ? ' unc' : '') + (past ? ' past' : '') + '" style="left:' + x.toFixed(2) + '%"></i>';
   }
-  var callRow = function(c, more){
-    var r = c.r, L = C(+P(c.s)), R = C(+P(c.e)), names = [], seen = {};
-    r.all.forEach(function(d){ var n = callBase(d.call || 'Untitled call') || d.call || 'Untitled call'; if (!seen[n]){ seen[n] = 1; names.push(n); } });
-    var tip = c.a.name + ': ' + names.join(', ') + '\n' + (r.open ? 'publication ' + dispDate(r.open) : 'publication not recorded')
-      + ' → ' + (r.close ? 'deadline ' + dispDate(r.close) : 'no deadline recorded') + (r.dls.length > 1 ? '\n' + r.dls.length + ' deadlines: ' + r.dls.map(shortDate).join(', ') : '');
-    var tr = '', d1 = r.dls.length > 1 ? r.dls[0] : null;
-    if (d1){
-      var t1d = T(d1.end || d1.start), S = C(+P(t1d + DAY));
-      if (S > L) tr += '<i class="mcb' + (t1d < now ? ' past' : '') + ([r.open, d1].some(function(d){ return d && d.grade !== 'fixed'; }) ? ' unc' : '') + (r.open && c.s >= t0 ? '' : ' lead-in')
-        + '" style="left:' + L.toFixed(2) + '%;width:' + Math.max(S - L, .3).toFixed(2) + '%"></i>';
-      if (R > S) tr += '<i class="mcbt' + (r.state === 'closed' ? ' past' : '') + (r.close.grade !== 'fixed' ? ' unc' : '')
-        + '" style="left:' + S.toFixed(2) + '%;width:' + (R - S).toFixed(2) + '%"></i>';
-    } else {
-      tr += '<i class="mcb' + (r.state === 'closed' ? ' past' : '') + (r.unc ? ' unc' : '') + (r.open && c.s >= t0 ? '' : ' lead-in') + (r.close && c.e <= t1 ? '' : ' run-on')
-        + '" style="left:' + L.toFixed(2) + '%;width:' + Math.max(R - L, .3).toFixed(2) + '%"></i>';
-    }
-    r.dls.slice(0, -1).forEach(function(d){
-      var x = +P(T(d.start) + DAY / 2);
-      if (x >= L && x <= R) tr += '<i class="mcbn' + (T(d.end || d.start) < now ? ' past' : '') + '" style="left:' + x.toFixed(2) + '%"></i>';
-    });
-    return row((r.state === 'closed' ? ' past' : '') + (more ? ' more' : ''),
-      '<div title="' + esc(tip) + '">' + (many ? '<b>' + esc(c.a.name) + '</b>' : '') + '<i>' + esc(names.join(', ')) + '</i><span>' + esc(callSay(r)) + '</span></div>', tr);
+  return h;
+}
+function vSnipHTML(v){
+  var w = vWin(v), now = T(todayISO());
+  var dl = function(d){ return (d.gran === 'day' || d.gran === 'range') ? T(d.start) : T(d.end || d.start); };
+  var lastT = function(r){ return r.close ? dl(r.close) : T(r.open.end || r.open.start); };
+  var rows = [];
+  venueArenas(v).forEach(function(a){
+    var cr = callRuns(a), tone = arenaTone(a) || '#9C8B66';
+    (cr.last ? [cr.last] : []).concat(cr.live).forEach(function(r){ rows.push({ a:a, r:r, tone:tone, pale:cr.live.indexOf(r) > 0 }); });
+  });
+  var from = w ? (w.from !== null ? w.from : w.ms !== null ? w.ms : w.to) : now;
+  var hit = rows.filter(function(x){ return lastT(x.r) >= from; }), calls = hit.length ? hit : rows;
+  /* the strip runs from the earliest of them to the latest, in whole
+     months, with today on it when today is near */
+  var ts = [];
+  if (w){
+    ts.push(w.from !== null ? w.from : w.to - 42 * DAY, w.to !== null ? w.to + DAY : Math.max(now, w.from) + OPEN_RUN * DAY);
+    if (w.ms !== null) ts.push(w.ms, w.me + DAY);
+  }
+  calls.forEach(function(c){ var r = c.r;
+    if (r.open) ts.push(T(r.open.start));
+    r.dls.forEach(function(d){ ts.push(dl(d)); });
+    if (!r.dls.length && r.anns[0]) ts.push(T(r.anns[0].end || r.anns[0].start)); });
+  var lo = ts.length ? Math.min.apply(null, ts) : now - 30 * DAY, hi = ts.length ? Math.max.apply(null, ts) : now + 120 * DAY;
+  if (now < lo && lo - now < 120 * DAY) lo = now;
+  if (now > hi && now - hi < 60 * DAY) hi = now;
+  var m0 = new Date(lo), m1 = new Date(hi);
+  var t0 = new Date(m0.getFullYear(), m0.getMonth(), 1).getTime();
+  var t1 = new Date(m1.getFullYear(), m1.getMonth() + 1, 1).getTime();
+  if (t1 - t0 < 120 * DAY) t1 = new Date(new Date(t0).getFullYear(), new Date(t0).getMonth() + 4, 1).getTime();
+  var X = function(t){ return Math.max(0, Math.min(100, (t - t0) / (t1 - t0) * 100)); };
+  var pc = function(t){ return X(t).toFixed(2) + '%'; }, wd = function(a, b){ return Math.max(X(b) - X(a), .6).toFixed(2) + '%'; };
+  var axis = '', grid = '', n = 0, d, i;
+  for (d = new Date(t0); d.getTime() < t1; d = new Date(d.getFullYear(), d.getMonth() + 1, 1)) n++;
+  var every = n > 20 ? 3 : 1;
+  for (d = new Date(t0), i = 0; d.getTime() < t1; d = new Date(d.getFullYear(), d.getMonth() + 1, 1), i++){
+    var ma = d.getTime(), mb = new Date(d.getFullYear(), d.getMonth() + 1, 1).getTime();
+    if (i) grid += '<i' + (d.getMonth() === 0 ? ' class="y"' : '') + ' style="left:' + pc(ma) + '"></i>';
+    if (i % every === 0) axis += '<span class="msm" style="left:' + ((X(ma) + X(mb)) / 2).toFixed(2) + '%">' + MONTHS[d.getMonth()][0] + '</span>';
+    if (d.getMonth() === 0 || i === 0) axis += '<span class="msy" style="left:' + pc(ma) + '">' + d.getFullYear() + '</span>';
+  }
+  if (now >= t0 && now < t1) grid += '<b style="left:' + pc(now + DAY / 2) + '" title="today"></b>';
+  var bars = function(c){
+    var r = c.r, tone = c.tone, col = c.pale ? 'color-mix(in srgb,' + tone + ' 42%,#F7F3E9)' : tone, o = r.open ? T(r.open.start) : null;
+    var d1 = r.dls.length ? dl(r.dls[0]) : null, d2 = r.dls.length > 1 ? dl(r.dls[r.dls.length - 1]) : null, h = '';
+    if (!r.dls.length && !r.opens.length && r.anns[0])
+      return '<i class="msann" style="left:' + pc(T(r.anns[0].start)) + ';width:' + wd(T(r.anns[0].start), T(r.anns[0].end || r.anns[0].start) + DAY) + ';border-color:' + tone + '"></i>';
+    if (o !== null && d1 !== null) h += '<i class="msbar' + (r.unc ? ' unc' : '') + '" style="left:' + pc(o) + ';width:' + wd(o, d1) + ';background:' + col + ';border-color:' + tone + '"></i>';
+    else if (o !== null) h += '<i class="msbar fade" style="left:' + pc(o) + ';width:' + wd(o, o + 120 * DAY) + ';--fc:' + col + '"></i>';
+    if (d2 !== null && d2 > d1) h += '<i class="msbar2" style="left:' + pc(d1) + ';width:' + wd(d1, d2) + ';--fc:' + col + '"></i>';
+    if (o !== null) h += '<i class="msdot" style="left:' + pc(o) + ';background:' + col + ';border-color:' + tone + '"></i>';
+    if (d1 !== null) h += '<i class="mscap" style="left:' + pc(d1) + ';background:' + tone + '"></i>';
+    if (d2 !== null && d2 > d1) h += '<i class="mscap" style="left:' + pc(d2) + ';background:' + tone + '"></i>';
+    return h;
   };
-  h += first.map(function(c){ return callRow(c, false); }).join('') + rest.map(function(c){ return callRow(c, true); }).join('');
-  return '<div class="mtl">' + h + '</div>'
-    + (rest.length ? '<button class="mtmore" data-mcalls="' + rest.length + '">' + rest.length + ' more call' + (rest.length === 1 ? '' : 's') + '</button>' : '');
+  var say = function(r){ return [r.open ? (r.opens.length ? 'opens ' : 'expected ') + tDay(T(r.open.start)) : '',
+    r.dls.length ? (r.dls.length > 1 ? 'deadlines ' : 'deadline ') + r.dls.map(function(x){ return tDay(dl(x)); }).join(' → ') : ''].filter(Boolean).join(' · '); };
+  /* the words a call's name shares with its arena's, on the chip beside
+     it, are left off, so two calls of one arena are told apart in the
+     room there is; a name that would be left a word or less stays whole */
+  var own = function(nm, an){ var a = an.toLowerCase().split(/\s+/), w = nm.split(/\s+/), k = 0;
+    while (k < w.length && k < a.length && w[k].toLowerCase() === a[k]) k++; return w.length - k > 1 ? w.slice(k).join(' ') : nm; };
+  var callRow = function(c){ var nm = callBase(dtLabel(c.r.all[0])) || dtLabel(c.r.all[0]);
+    return '<div class="msr" title="' + esc(c.a.name + ' — ' + nm + (say(c.r) ? '\n' + say(c.r) : '')) + '"><span class="msl"><span class="mschip" style="--tone:' + esc(c.tone) + '">' + esc(c.a.name) + '</span>'
+      + '<span class="msn">' + esc(own(nm, c.a.name)) + '</span></span><span class="mstk">' + bars(c) + '</span></div>'; };
+  var none = !venueArenas(v).length ? 'It serves no arena yet.' : !rows.length ? 'Its arenas have no call dates on the board yet.' : '';
+  return '<div class="msnip">'
+    + '<div class="msax"><span class="msl"></span><span class="mstk">' + axis + '</span></div>'
+    + '<div class="msbody"><div class="msgrid">' + grid + '</div>'
+      + '<div class="msr lane"><span class="msl"><i class="msdia"></i><b class="msn">' + esc(v.name) + '</b></span>'
+        + '<span class="mstk">' + (w ? vBandHTML(v, t0, t1) : '<span class="msnone">not dated yet</span>') + '</span></div>'
+      + calls.map(callRow).join('')
+    + '</div>' + (none ? '<p class="msnote">' + none + '</p>' : '')
+  + '</div>';
+}
+/* The window and the event days in words, and whose the window's ends
+   are, as the Semaphore says them (`vFactsHTML` there). */
+function mFact(k, x, wide){ return '<div class="mf' + (wide ? ' wide' : '') + '"><span class="mfk">' + k + '</span><span class="mfv">' + x + '</span></div>'; }
+function vFactsHTML(v){
+  var w = vWin(v), day = function(t){ return esc(fmtDay(new Date(t).toISOString().slice(0, 10))); };
+  var whose = !w ? '' : w.set.from && w.set.to ? '' : w.season ? 'the season, a guess'
+    : (w.set.from ? 'its end ' : w.set.to ? 'its opening ' : '') + 'round the event days';
+  return mFact('Window', w ? (w.from !== null ? day(w.from) : '<i>open before</i>') + ' → ' + (w.to !== null ? day(w.to) : '<i>no end set</i>')
+      + (whose ? ' <i>' + whose + '</i>' : '') : '<i>not set</i>')
+    + mFact('Event days', v.start ? esc((v.grade === 'fixed' ? '' : '≈ ') + dispDate(v)) : '<i>none</i>');
+}
+/* Where it stands: the four sections of Venues, the one it stands in lit,
+   as the Semaphore's panel shows them (`vPlaceHTML` there), to be read and
+   not pressed. A venue whose site this page copies stands in the
+   Semaphore's section for Mark's Place, so none of the four is lit and the
+   line under them says why. */
+function vPlaceHTML(v, s){
+  var here = v.place === 'venues' && !!s, nat = PHASE[vState(v)], ph = v.place === 'new' ? null : here ? 'place' : vPhase(v);
+  var said = here ? 'in Mark’s Place, which copies its partner search every night'
+    : v.place === 'board' ? 'kept on the board' : v.phase && v.phase !== nat ? 'put here by hand; its dates say ' + PHASE_SAY[nat] : '';
+  return '<span class="mphseg">' + ['arising', 'active', 'dying', 'over'].map(function(k){
+      return '<span class="' + (k === ph ? 'on' : k === nat && !ph ? 'nat' : '') + '">' + PHASE_SAY[k] + '</span>'; }).join('') + '</span>'
+    + (said ? '<i class="mplsay">' + said + '</i>' : '');
 }
 /* the scroll and the note of the venue's own call, beside Site */
 function siteTools(s){
@@ -2124,13 +2173,25 @@ function siteTools(s){
   return (doc ? '<a class="mgo" href="' + esc(doc) + '" target="_blank" rel="noopener" title="The call documents">' + SCROLL + 'Call text</a>' : '')
     + '<button class="mgo' + (has ? ' on' : '') + '" data-callnote="' + esc(s.id) + '" title="' + (has ? 'Your notes on this call' : 'Write notes on this call') + '">' + noteIcon(has) + 'Notes</button>';
 }
+/* The rest folded, each fold saying in a word what is in it, as in the
+   Semaphore's panel: the visits, the leads it gave, its other pages and
+   his note. The rhythm is left out, being the Semaphore's reckoning of
+   when Go is next due, and Go is there. A fold opened stays open from
+   venue to venue for as long as the page is. */
+var mFolds = {};
+function mFold(k, title, said, body){
+  return '<section class="mfold' + (mFolds[k] ? ' open' : '') + '"><button class="mfh" data-mfold="' + k + '" aria-expanded="' + !!mFolds[k] + '">'
+    + '<span class="car" aria-hidden="true">▸</span>' + title + (said ? ' <i>' + esc(said) + '</i>' : '') + '</button><div class="mfb">' + body + '</div></section>';
+}
+var VGOT = { nothing:'nothing new', something:'something', lead:'a lead' };
 function venuePanelHTML(v, s){
+  var tools = function(url, title){ return '<div class="mrow">' + (url ? '<a class="mgo" href="' + esc(url) + '" target="_blank" rel="noopener"' + (title ? ' title="' + title + '"' : '') + '>Site ↗</a>' : '') + siteTools(s); };
   if (!v){
     var sh = s.list_url ? linkName({ url:s.list_url }) : '';
     return '<div class="mbody">'
       + '<div class="mhead"><button class="mx" data-mclose="1" aria-label="Close">✕</button>'
         + '<p class="mkind">Venue' + (sh ? ' · ' + esc(sh) : '') + '</p><h2>' + esc(s.name) + '</h2>'
-        + '<div class="mrow">' + (s.list_url ? '<a class="mgo" href="' + esc(s.list_url) + '" target="_blank" rel="noopener">Site ↗</a>' : '') + siteTools(s) + '</div></div>'
+        + tools(s.list_url) + '</div></div>'
       + '<p class="mplace">Not in the Brokerage Semaphore yet, so it has no window and no arenas here.</p>'
       + '</div>'
       + '<div class="mfoot">Added to the Semaphore\'s Venues, it shows its window and calls here.</div>';
@@ -2138,24 +2199,44 @@ function venuePanelHTML(v, s){
   var host = v.url ? linkName({ url:v.url }) : '';
   var leads = [];
   ((market && market.arenas) || []).forEach(function(a){ (a.leads || []).forEach(function(l){ if (l.venueId === v.id) leads.push({ a:a, l:l }); }); });
-  var place = PLACE_SAY[v.place] || PLACE_SAY.venues, limbo = v.place === 'venues' && vPhase(v) === 'over';
+  var visits = (v.visits || []).slice().reverse(), last = visits[0];
+  var since = last ? Math.round((T(todayISO()) - T(last.at.slice(0, 10))) / DAY) : null;
+  var found = visits.filter(function(x){ return x.got === 'something' || x.got === 'lead'; }).length;
+  var yieldSay = !visits.length && !leads.length ? 'not visited yet'
+    : visits.length + ' visit' + (visits.length === 1 ? '' : 's') + (found ? ' · ' + found + ' found' : '') + (leads.length ? ' · ' + leads.length + ' lead' + (leads.length === 1 ? '' : 's') : '');
   return '<div class="mbody">'
     + '<div class="mhead"><button class="mx" data-mclose="1" aria-label="Close">✕</button>'
       + '<p class="mkind">Venue' + (host ? ' · ' + esc(host) : '') + '</p>'
       + '<h2>' + esc(v.name) + (v.doubt ? ' <span class="mdoubt" title="' + esc(v.doubt) + '">?</span>' : '') + '</h2>'
-      + '<div class="mrow">' + (v.url ? '<a class="mgo" href="' + esc(v.url) + '" target="_blank" rel="noopener" title="Opens its site; a visit is recorded with Go in the Semaphore">Site ↗</a>' : '')
-        + siteTools(s) + '</div></div>'
-    + (limbo && !v.doubt ? '' : '<p class="mplace' + (v.place === 'new' ? ' st-new' : '') + '"><b>' + esc(place) + '</b>' + (v.place === 'venues' && !limbo ? esc(PHASE_SAY[vPhase(v)]) : '')
-      + (v.doubt ? '<br><i>The agent is unsure: ' + esc(v.doubt) + '</i>' : '') + '</p>')
-    + '<section class="mps"><p class="mph">Window and calls <i>' + esc(vDateSay(v)) + '</i></p>' + vLifeHTML(v) + '</section>'
-    + (leads.length ? '<section class="mps"><p class="mph">Leads from here</p>' + leads.map(function(x){
-        return '<p class="mlead"><button class="mlink" data-marena="' + esc(x.a.id) + '">' + esc(leadName(x.l)) + '</button>'
-          + '<i>' + esc(x.a.name) + ' · ' + (x.l.doneAt ? 'closed' : STAGE_NAME[stageOf(x.l)]) + '</i></p>'; }).join('') + '</section>' : '')
-    + '<section class="mps"><p class="mph">Serves</p><div class="mchips">'
-      + ((v.arenas || []).map(marketArena).filter(Boolean).map(arenaChip).join('') || '<span class="mnone">no arena</span>') + '</div></section>'
-    + ((v.pages || []).length ? '<section class="mps"><p class="mph">Other pages</p>' + v.pages.map(function(p){
-        return '<div class="mpg"><a href="' + esc(p.url) + '" target="_blank" rel="noopener" title="' + esc(p.url) + '">↗ ' + esc(p.label || linkName(p)) + '</a></div>'; }).join('') + '</section>' : '')
-    + (v.memo ? '<section class="mps"><p class="mph">Your note</p><p class="mtext">' + esc(v.memo) + '</p></section>' : '')
+      + tools(v.url, 'Opens its site; a visit is recorded with Go in the Semaphore')
+        + '<span class="mlast">' + (since === null ? 'not visited yet' : 'last visit ' + (since <= 0 ? 'today' : since === 1 ? 'yesterday' : since + ' days ago')) + '</span></div>'
+    + '</div>'
+    + (v.place === 'new' || v.doubt ? '<p class="mplace' + (v.place === 'new' ? ' st-new' : '') + '">' + (v.place === 'new' ? '<b>' + PLACE_SAY.new + '</b>' : '')
+      + (v.doubt ? (v.place === 'new' ? '<br>' : '') + '<i>The agent is unsure: ' + esc(v.doubt) + '</i>' : '') + '</p>' : '')
+    + vSnipHTML(v)
+    + '<div class="mfacts">'
+      + (v.place === 'new' ? '' : mFact('Where', vPlaceHTML(v, s), true))
+      + vFactsHTML(v)
+      + mFact('Serves', '<span class="mchips">' + ((v.arenas || []).map(marketArena).filter(Boolean).map(arenaChip).join('') || '<span class="mnone">no arena</span>') + '</span>', true)
+      + (v.note ? mFact('Basis', '<span class="mbasis">' + esc(v.note) + '</span>', true) : '')
+    + '</div>'
+    + '<div class="mfolds">'
+      + mFold('visits', 'Visits', yieldSay, visits.length ? visits.map(function(x){
+          var ld = x.leadId && leads.filter(function(y){ return y.l.id === x.leadId; })[0];
+          return '<div class="mvis"><span class="mvd">' + esc(shortDay(x.at.slice(0, 10))) + '</span>'
+            + '<span class="mgot ' + esc(x.got || 'none') + '">' + (x.got ? VGOT[x.got] || esc(x.got) : 'visited') + '</span>'
+            + '<span class="mvt">' + (ld ? '→ <button class="mlink" data-marena="' + esc(ld.a.id) + '">' + esc(leadName(ld.l)) + '</button>' : esc(x.text || '')) + '</span></div>';
+        }).join('') : '<p class="mnone">None yet. Go, in the Semaphore, records each one.</p>')
+      + mFold('leads', 'Leads from here', leads.length ? leads.length + (leads.length === 1 ? ' lead' : ' leads') : 'none',
+        leads.length ? leads.map(function(x){
+          return '<p class="mlead"><button class="mlink" data-marena="' + esc(x.a.id) + '">' + esc(leadName(x.l)) + '</button>'
+            + '<i>' + esc(x.a.name) + ' · ' + (x.l.doneAt ? 'closed' : STAGE_NAME[stageOf(x.l)]) + '</i></p>'; }).join('') : '<p class="mnone">None yet.</p>')
+      + mFold('pages', 'Other pages', (v.pages || []).length ? String(v.pages.length) : 'none',
+        (v.pages || []).length ? v.pages.map(function(p){
+          return '<div class="mpg"><a href="' + esc(p.url) + '" target="_blank" rel="noopener" title="' + esc(p.url) + '">↗ ' + esc(p.label || linkName(p)) + '</a></div>'; }).join('') : '<p class="mnone">None.</p>')
+      + mFold('note', 'Your note', v.memo ? v.memo.replace(/\s+/g, ' ').slice(0, 60) + (v.memo.length > 60 ? '…' : '') : 'empty',
+        v.memo ? '<p class="mtext">' + esc(v.memo) + '</p>' : '<p class="mnone">Written in the Semaphore.</p>')
+    + '</div>'
     + '</div>'
     + '<div class="mfoot">From the Brokerage Semaphore, and changed there.</div>';
 }
@@ -2249,6 +2330,7 @@ function openPanel(kind, id){
   panel.kind = kind; panel.id = id;
   var el = $('#mpanel');
   el.innerHTML = kind === 'arena' ? arenaPanelHTML(it) : venuePanelHTML(it, s);
+  el.classList.toggle('mwide', kind !== 'arena');
   el.scrollTop = 0; var b = el.querySelector('.mbody'); if (b) b.scrollTop = 0;
   requestAnimationFrame(function(){ requestAnimationFrame(function(){
     if (panel.id !== id) return;
@@ -3099,10 +3181,10 @@ function checkNow(btn, more){
 document.addEventListener('click', function(ev){
   /* A venue's name opens its panel and chooses it too, as a press on the
      rest of its row does; an arena's tag only opens the arena's. */
-  var mc = ev.target.closest('[data-mcalls]');
-  if (mc){
-    var all = mc.previousElementSibling.classList.toggle('all'), k = +mc.dataset.mcalls;
-    mc.textContent = all ? 'Fewer calls' : k + ' more call' + (k === 1 ? '' : 's');
+  var mf = ev.target.closest('[data-mfold]');
+  if (mf){
+    var open = mFolds[mf.dataset.mfold] = !mFolds[mf.dataset.mfold];
+    mf.parentNode.classList.toggle('open', open); mf.setAttribute('aria-expanded', String(open));
     return;
   }
   var m = ev.target.closest('[data-msite],[data-mvenue],[data-marena],[data-mclose]');
