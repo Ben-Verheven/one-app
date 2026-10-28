@@ -196,9 +196,15 @@ new and the one under the pointer lost its hover for a frame and faded it
 back in; the Ledger showed the card's new half at a stroke and then slid
 the room after it. Both now write the card's height and the scroller's
 `scrollTop` together, frame by frame, on easeInOutCubic over 320ms
-(`UNFOLD_MS`, once in each room), scrolling only as far as shows the whole
-card. Anything that opens a card in either room should go the same way
-rather than through a redraw. In the Ledger, `byId` searches inside the
+(`UNFOLD_MS`, once in each room); the Ledger scrolls only as far as shows
+the whole card, the Semaphore brings it a little above the middle of the
+view (2026-10-28), since a card stopped flush with the foot was one Mark
+scrolled on from by hand. Anything that opens a card in either room should
+go the same way rather than through a redraw. **Shutting is the same
+movement backwards, contents and all.** Putting the shut line in first and
+folding the empty card after it reads as the lead vanishing, not as it
+closing (Mark, 2026-10-25): keep what it showed while it folds and swap at
+the end, margins folding with it. In the Ledger, `byId` searches inside the
 room and so cannot find `#pane-ledger` itself; reach it from the card with
 `closest`.
 

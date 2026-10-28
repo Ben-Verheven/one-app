@@ -3704,7 +3704,14 @@ function keepPlace(fn){
    enough to show the whole of it, never pushing its head off the top; shut,
    it only scrolls back if its head had gone above the top. Writing height
    and scroll together each frame, with the scroller's own smoothing held off
-   (see notes/animation.md), is what keeps the two moving as one thing. */
+   (see notes/animation.md), is what keeps the two moving as one thing.
+   Shutting used to put the shut line in at once and fold an empty card
+   after it, which read as the lead vanishing (Mark, 2026-10-25), so a lead
+   being shut keeps what it showed, and its open look, while it folds, and
+   takes its shut line only once folded. And an opened lead that had to be
+   scrolled to stopped flush with the foot of the view, which Mark had to
+   scroll on from by hand: it now comes to rest a little above the middle of
+   what can be seen, or at the top when it is taller than that. */
 const UNFOLD_MS=320;
 const easeInOut=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
 /* The room's bar is sticky at the top of its own scroller and covers the
@@ -3722,24 +3729,31 @@ function leadUnfold(lid,pressed){
   cards.forEach(card=>{
     const a=arena(card.dataset.id),l=a&&(a.leads||[]).find(x=>x.id===lid);
     if(!l)return;
-    const h0=card.getBoundingClientRect().height;
+    const h0=card.getBoundingClientRect().height,cs0=getComputedStyle(card);
+    const m0=[parseFloat(cs0.marginTop)||0,parseFloat(cs0.marginBottom)||0];
     const tp=document.createElement('template');
     tp.innerHTML=leadRowHTML(a,l,card.classList.contains('hit'),card.classList.contains('wide'));
     const fresh=tp.content.firstElementChild;
     const run=(card._unfold||0)+1;card._unfold=run;   /* a second press takes over */
+    /* what it showed, kept to fold away if this is the lead being shut */
+    const was={cls:card.className,style:card.getAttribute('style')||'',kids:[...card.childNodes]};
+    const shutting=card===pressed&&card.classList.contains('open')&&!fresh.classList.contains('open');
+    card.style.height='';card.style.overflow='';card.style.marginTop='';card.style.marginBottom='';
     card.className=fresh.className;
     card.setAttribute('style',fresh.getAttribute('style')||'');
     card.innerHTML=fresh.innerHTML;
     growAll(card);
     if(card!==pressed)return;
-    const h1=card.getBoundingClientRect().height;
+    const h1=card.getBoundingClientRect().height,cs1=getComputedStyle(card);
+    const m1=[parseFloat(cs1.marginTop)||0,parseFloat(cs1.marginBottom)||0];
     const sc=card.closest('.cbody')||document.getElementById('semscroll');
     if(!sc)return;
     const pad=18,view=sc.clientHeight,top=pad+scCover(sc);
     const at=card.getBoundingClientRect().top-sc.getBoundingClientRect().top;
     let shift=0;
     if(at<top)shift=at-top;
-    else if(h1>h0&&at+h1>view-pad)shift=Math.min(at+h1-(view-pad),at-top);
+    else if(h1>h0&&at+h1>view-pad)
+      shift=h1>=view-pad-top?at-top:at-(top+(view-pad-top-h1)*.4);
     const top0=sc.scrollTop,top1=Math.max(0,Math.min(top0+shift,sc.scrollHeight-view));
     if(still){sc.scrollTop=top1;return;}
     if(Math.abs(h1-h0)<1&&Math.abs(top1-top0)<1)return;
@@ -3747,14 +3761,20 @@ function leadUnfold(lid,pressed){
        another would otherwise take the 'auto' set here for its own */
     if(sc._sb===undefined)sc._sb=sc.style.scrollBehavior;
     sc.style.scrollBehavior='auto';
+    const shut=shutting?{cls:card.className,style:card.getAttribute('style')||'',kids:[...card.childNodes]}:null;
+    if(shut){card.className=was.cls;card.setAttribute('style',was.style);card.replaceChildren(...was.kids);}
     card.style.height=h0+'px';card.style.overflow='hidden';
     const t0=performance.now();
     const step=now=>{
       if(card._unfold!==run)return;
       const p=Math.min(1,(now-t0)/UNFOLD_MS),e=easeInOut(p);
       card.style.height=(h0+(h1-h0)*e)+'px';
+      /* the open card stands off its neighbours by a few pixels more than
+         a shut line, so a lead folding takes its margins down with it */
+      if(shut){card.style.marginTop=(m0[0]+(m1[0]-m0[0])*e)+'px';card.style.marginBottom=(m0[1]+(m1[1]-m0[1])*e)+'px';}
       if(top1!==top0)sc.scrollTop=top0+(top1-top0)*e;
       if(p<1){requestAnimationFrame(step);return;}
+      if(shut){card.className=shut.cls;card.setAttribute('style',shut.style);card.replaceChildren(...shut.kids);}
       card.style.height='';card.style.overflow='';sc.style.scrollBehavior=sc._sb;
     };
     requestAnimationFrame(step);
