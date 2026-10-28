@@ -658,6 +658,8 @@ const State = {
      "add to description" on an accepted finding puts the passage there for
      Mark to reword, rather than writing it into the Atlas unread. */
   descSeed: null,
+  /* Whose email address is open for writing on the dossier, or null. */
+  mailEdit: null,
   newsKind: "all",
   chips: [],
   opts: { maxHops: 2, strict: 1, weights: [0, 3, 2, 1], decay: 0.6, requireAll: false },
@@ -1065,7 +1067,7 @@ function renderRail() {
 
   /* The edits are behind Edits in the bar now (#14); the bar's button
      carries their count, so it is said again whenever the rail is. */
-  const nEd = Core.getEdits().length;
+  const nEd = Core.getEdits().filter(listedEdit).length;
   $("#editsBtn").textContent = nEd ? `Edits · ${nEd}` : "Edits";
   rail.innerHTML = html;
   $("#railFold").onclick = () => setRailPin(!railPinned);
@@ -1105,8 +1107,12 @@ function renderRail() {
    pane until #14 put it behind Edits in the bar. Said in the words the
    room uses on screen rather than the words the records are keyed by:
    nobody outside this file calls one an "att". */
+/* Addresses and notes are kept on the dossier, one per researcher, and are
+   not edits to the Atlas in the sense this box means; listed here they
+   would bury the rest, and Clear all would take every address with it. */
+const listedEdit = e => e.type !== "email" && e.type !== "note";
 function openEdits() {
-  const eds = Core.getEdits();
+  const eds = Core.getEdits().filter(listedEdit);
   const ETYPE = { att: "keyword", cutAtt: "cut kw", cutSem: "cut link",
                   wAtt: "wt kw", wSem: "wt link", merge: "merge", link: "link",
                   desc: "description", fact: "news", newcomer: "newcomer",
@@ -1134,11 +1140,13 @@ function openEdits() {
   html += `</div><div class="mfoot">
     ${eds.length ? `<button class="sbtn danger" id="clrEdits" style="margin-right:auto">Clear all</button><button class="sbtn" id="expEdits">Export</button>` : ""}
     <button class="sbtn" id="impEdits">Import</button>
+    <button class="sbtn" id="edMail" title="Paste a To line from Outlook to keep many addresses at once">Email addresses…</button>
     <button class="sbtn" id="edClose">Close</button></div>`;
   openModal(html);
   const box = $("#modalbox");
   box.querySelectorAll("[data-undo]").forEach(b => b.onclick = () => { removeEdit(b.dataset.undo); openEdits(); });
   $("#edClose").onclick = closeModal;
+  $("#edMail").onclick = openAddressPaste;
   const ex = $("#expEdits");
   if (ex) ex.onclick = () => {
     const blob = new Blob([JSON.stringify({ v: 1, edits: Core.getEdits() }, null, 2)],
@@ -1163,7 +1171,7 @@ function openEdits() {
     inp.click();
   };
   const cl = $("#clrEdits");
-  if (cl) cl.onclick = () => { Core.setEdits([]); saveEdits(); refresh(); openEdits(); toast("All edits cleared"); };
+  if (cl) cl.onclick = () => { Core.setEdits(Core.getEdits().filter(e => !listedEdit(e))); saveEdits(); refresh(); openEdits(); toast("All edits cleared; addresses and notes kept"); };
 }
 $("#editsBtn").onclick = openEdits;
 
@@ -1674,6 +1682,112 @@ const newcomers = () => Core.getEdits().filter(e => e.type === "newcomer");
    this layer exists rather than a column in the data file. */
 const RANKS = ["Full professor", "Associate professor", "Assistant professor", "Lecturer"];
 const rankOf = name => Core.getEdits().filter(e => e.type === "rank" && e.rL === name).slice(-1)[0] || null;
+
+/* Mark's own two things on a researcher (#16): their email address, and
+   his notes — availability, what they are up to, whatever is worth
+   remembering. Neither is in the data file and neither touches the graph:
+   each is an edit like a rank, one per researcher, the newer replacing the
+   older, so they live where his other edits live, in this browser and in
+   his cloud row behind the login, and never in the public repository. */
+const mineOf = (type, name) => Core.getEdits().filter(e => e.type === type && e.rL === name).slice(-1)[0] || null;
+const emailOf = name => { const e = mineOf("email", name); return e ? e.addr : ""; };
+function setMine(type, name, fields) {
+  const rest = Core.getEdits().filter(e => !(e.type === type && e.rL === name));
+  const keep = Object.values(fields).some(v => String(v || "").trim());
+  Core.setEdits(keep ? [...rest, { id: Math.random().toString(36).slice(2, 9), ts: Date.now(), type, rL: name, ...fields }] : rest);
+  saveEdits();
+}
+
+/* Addresses, out of whatever Outlook put on the clipboard. Copying the To
+   line of a message gives "Name <address>" pairs, separated by semicolons
+   — or by commas, and a name written "Surname, First" carries a comma of
+   its own, which is why a pair is found by its <address> and its name is
+   whatever stands between it and the pair before. An address on its own is
+   kept too, and read for a name out of the part before the @. The text is
+   cut at its semicolons and line ends first: run whole, a bare address
+   before a pair was read as the start of that pair's name and lost. */
+function readAddresses(text) {
+  const out = [];
+  for (const piece of String(text || "").split(/[;\n]+/)) {
+    const pair = /([^<>]*)<\s*([^<>\s@]+@[^<>\s]+?)\s*>/g;
+    let m, rest = piece;
+    while ((m = pair.exec(piece))) {
+      out.push({ name: m[1].replace(/^[\s,]+|[\s,]+$/g, "").replace(/^["']+|["']+$/g, "").trim(), addr: m[2] });
+      rest = rest.replace(m[0], " ");
+    }
+    for (const a of rest.match(/[^\s<>,;"'()]+@[^\s<>,;"'()]+\.[a-z]{2,}/gi) || [])
+      out.push({ name: "", addr: a });
+  }
+  return out;
+}
+/* Which researcher a name means. Outlook writes a colleague "Surname,
+   First" as often as "First Surname", with or without middle initials and
+   accents, so names are compared as bags of plain words: a researcher is a
+   candidate when a word of their name past the first is there, and the
+   one sharing the most words wins, the first initial breaking a tie. A
+   first name that is not theirs rules them out — "Pieter Jansen" is not
+   Bart M. P. Jansen, however the surname agrees. Two left level is no
+   answer: a wrong address is worse than none. */
+const nameWords = s => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase()
+  .split(/[^a-z0-9]+/).filter(Boolean);
+function whoIs(name) {
+  if (!name) return null;
+  const w = nameWords(name.includes(",") ? name.split(",").slice(1).join(" ") + " " + name.split(",")[0] : name);
+  if (!w.length) return null;
+  const has = new Set(w);
+  let best = null, bestScore = 0, tie = false;
+  R.forEach((r, i) => {
+    const rw = nameWords(r.name);
+    if (!rw.slice(1).some(x => x.length > 2 && has.has(x))) return;
+    const given = w.filter(x => !rw.slice(1).includes(x));
+    if (given.length && !given.some(x => x[0] === rw[0][0])) return;
+    const score = rw.filter(x => has.has(x)).length * 2 + (w.some(x => x[0] === rw[0][0]) ? 1 : 0);
+    if (score > bestScore) { best = i; bestScore = score; tie = false; }
+    else if (score === bestScore) tie = true;
+  });
+  return tie ? null : best;
+}
+/* The list a paste turns into, before anything is kept. */
+function readPaste(text) {
+  return readAddresses(text).map(p => {
+    const ri = p.name ? whoIs(p.name) : whoIs(p.addr.split("@")[0].replace(/[._-]+/g, " "));
+    return { ...p, ri, had: ri == null ? "" : emailOf(R[ri].name) };
+  });
+}
+function pasteListHTML(rows) {
+  return rows.map(p => p.ri == null
+    ? `<div class="mrow"><span class="no">?</span><span>${esc(p.name || p.addr)} <span class="hint">· not in the Atlas</span></span><span class="a">${esc(p.addr)}</span></div>`
+    : `<div class="mrow"><span class="ok">✓</span><span>${esc(R[p.ri].name)}${p.had && p.had !== p.addr ? ` <span class="hint">· replaces ${esc(p.had)}</span>` : p.had ? ` <span class="hint">· already kept</span>` : ""}</span><span class="a">${esc(p.addr)}</span></div>`).join("");
+}
+function keepPaste(rows) {
+  const fresh = rows.filter(p => p.ri != null && p.had !== p.addr);
+  const seen = new Set();
+  for (const p of fresh) {
+    if (seen.has(p.ri)) continue; seen.add(p.ri);
+    setMine("email", R[p.ri].name, { addr: p.addr });
+  }
+  return seen.size;
+}
+/* The same paste, for many at once, from Edits in the bar. */
+function openAddressPaste() {
+  openModal(`<div class="mh">Email addresses</div><div class="mb">
+    <div class="hint" style="margin-bottom:8px">In Outlook, start a new email and type the names into To — Outlook fills in each address. Select the whole line, copy it, and paste it here. Nothing is kept until you say so.</div>
+    <textarea class="dedit" id="apaste" rows="4" placeholder="Karen Veroy-Grepl <…>; Jemima Tabeart <…>"></textarea>
+    <div id="alist" style="margin-top:10px"></div></div>
+    <div class="mfoot"><button class="sbtn" id="acancel">Cancel</button><button class="sbtn" id="akeep" disabled>Keep</button></div>`);
+  let rows = [];
+  const read = () => {
+    rows = readPaste($("#apaste").value);
+    $("#alist").innerHTML = pasteListHTML(rows);
+    const n = new Set(rows.filter(p => p.ri != null && p.had !== p.addr).map(p => p.ri)).size;
+    $("#akeep").disabled = !n;
+    $("#akeep").textContent = n ? `Keep ${n} address${n > 1 ? "es" : ""}` : "Keep";
+  };
+  $("#apaste").oninput = read;
+  $("#apaste").focus();
+  $("#acancel").onclick = closeModal;
+  $("#akeep").onclick = () => { const n = keepPaste(rows); closeModal(); toast(`${n} address${n > 1 ? "es" : ""} kept`); };
+}
 /* The rank a Position finding is offering, read out of its own words. The
    agent is told to put it at the front of the summary; a finding worded
    any other way simply offers no rank button and is still there to keep
@@ -1951,6 +2065,8 @@ function openDossier(rid) {
      similarity list redraws this panel with somebody else in it, and a
      half-written paragraph must not follow them there. */
   if (State.descEdit !== rid) State.descEdit = null;
+  if (State.mailEdit !== rid) State.mailEdit = null;
+  noteFlush();
   const r = R[rid];
   const atts = Core.attachmentsOfR(rid);
   const byKind = k => atts.filter(([, a]) => a[3] === k);
@@ -1960,7 +2076,7 @@ function openDossier(rid) {
      sentence as their group rather than to a row of its own. Where nothing
      is recorded a quiet "+ rank" stands at the end of that line instead,
      because a rank the Atlas has never been told is the ordinary case. */
-  const rk = rankOf(r.name);
+  const rk = rankOf(r.name), mail = emailOf(r.name);
   $("#dhead").innerHTML = `
     <span class="rname">${esc(r.name)}</span>
     <div class="raffil" style="margin-top:3px">${rk ? `<button class="rrank" data-drank="${rid}" title="${esc(rankTitle(rk))}">${esc(rk.rank)}</button> · ` : ""}${esc(r.group || "(group unlisted)")} · ${esc(r.cluster)} · ${esc(r.domain)}${r.leader ? " · group leader" : ""}${rk ? "" : ` <button class="ebtn w" data-drank="${rid}" title="Write down whether they are a full, associate or assistant professor">+ rank</button>`}${leftOf(r.name) ? `<span class="an-left">left TU/e · ${yearOf(leftOf(r.name))}</span>` : ""}</div>
@@ -1968,9 +2084,29 @@ function openDossier(rid) {
     <div class="rowbtns" style="margin-top:10px">
       <button class="sbtn" data-dmap="${rid}">Show on map</button>
       <button class="sbtn" data-dwalk="${rid}">Walk from here</button>
-    </div>`;
+      ${mail ? `<a class="sbtn dmailto" href="mailto:${esc(mail)}" title="Write to ${esc(mail)}">✉ Email</a><button class="ebtn w" data-dmail="1" title="Change their address">change</button>`
+        : `<button class="sbtn" data-dmail="1" title="Write down their email address">✉ Email</button>`}
+    </div>${State.mailEdit === rid ? `
+    <div class="dmail">
+      <input type="text" id="dmailin" autocomplete="off" value="${esc(mail)}"
+        placeholder="Their address, or a whole To line pasted from Outlook">
+      <div id="dmaillist"></div>
+      <div class="rowbtns" style="margin-top:8px">
+        <button class="sbtn" data-dmailkeep="1" disabled>Keep</button>
+        <button class="sbtn" data-dmailcancel="1">Cancel</button>
+        ${mail ? `<button class="sbtn danger" data-dmaildrop="1">Remove</button>` : ""}</div>
+      <div class="hint" style="margin-top:6px">To add many at once: in Outlook, type their names into a new email's To line, copy the whole line and paste it here.</div>
+    </div>` : ""}`;
 
   let b = "";
+
+  /* His own notes on them, first, because availability is the first thing
+     he wants to know on opening someone (#16). Typed straight into the box
+     and kept by itself a moment after he stops, or when he leaves it. */
+  const note = mineOf("note", r.name);
+  b += `<div class="sect"><h3>Your notes<span class="dnsaved" id="dnsaved">${note ? "saved " + esc(new Date(note.ts).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })) : ""}</span></h3>
+    <textarea class="dedit dnote" id="dnote" rows="2" data-rl="${esc(r.name)}"
+      placeholder="Availability, what they are up to, anything worth remembering">${esc(note ? note.text : "")}</textarea></div>`;
 
   /* What the web said since the build, as Mark accepted it from News. Kept
      apart from the description on purpose: the description is the
@@ -2168,12 +2304,70 @@ function openDossier(rid) {
     const ta = $("#dtext");
     if (ta) { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); ta.scrollIntoView({ block: "center" }); }
   });
+  const nb = $("#dnote");
+  if (nb) {
+    const fit = () => { nb.style.height = "auto"; nb.style.height = nb.scrollHeight + 2 + "px"; };
+    fit();
+    nb.oninput = () => { fit(); clearTimeout(noteFlush.t); noteFlush.t = setTimeout(noteFlush, 800); };
+    nb.onblur = noteFlush;
+  }
+  const mi = $("#dmailin");
+  if (mi) {
+    const keep = db.querySelector("[data-dmailkeep]"), list = $("#dmaillist");
+    let rows = [];
+    /* One address is this researcher's whatever name it came with: it was
+       typed on their page. Several are a pasted To line, matched by name
+       and shown before anything is kept. */
+    const read = () => {
+      rows = readPaste(mi.value);
+      if (rows.length > 1) {
+        list.innerHTML = pasteListHTML(rows);
+        const n = new Set(rows.filter(p => p.ri != null && p.had !== p.addr).map(p => p.ri)).size;
+        keep.disabled = !n; keep.textContent = n ? `Keep ${n} address${n > 1 ? "es" : ""}` : "Keep";
+      } else {
+        list.innerHTML = "";
+        keep.disabled = !rows.length || rows[0].addr === mail; keep.textContent = "Keep";
+      }
+    };
+    mi.oninput = read; read();
+    mi.focus({ preventScroll: true }); mi.select();
+    mi.onkeydown = ev => { if (ev.key === "Enter" && !keep.disabled) keep.click(); };
+    keep.onclick = ev => {
+      ev.stopPropagation();
+      if (rows.length > 1) { const n = keepPaste(rows); toast(`${n} address${n > 1 ? "es" : ""} kept`); }
+      else if (rows.length) { setMine("email", r.name, { addr: rows[0].addr }); toast("Address kept"); }
+      State.mailEdit = null; openDossier(rid);
+    };
+  }
+  db.querySelectorAll("[data-dmail]").forEach(bn => bn.onclick = ev => {
+    ev.stopPropagation(); State.mailEdit = State.mailEdit === rid ? null : rid; openDossier(rid);
+  });
+  db.querySelectorAll("[data-dmailcancel]").forEach(bn => bn.onclick = ev => {
+    ev.stopPropagation(); State.mailEdit = null; openDossier(rid);
+  });
+  db.querySelectorAll("[data-dmaildrop]").forEach(bn => bn.onclick = ev => {
+    ev.stopPropagation(); setMine("email", r.name, { addr: "" }); State.mailEdit = null; openDossier(rid);
+    toast("Address removed");
+  });
   db.querySelectorAll("[data-sim]").forEach(row => row.onclick = () => openDossier(+row.dataset.sim));
   db.querySelectorAll("[data-drank]").forEach(bn => bn.onclick = () => setRank(rid));
   db.querySelectorAll("[data-dmap]").forEach(bn => bn.onclick = () => { closeDossier(); locateOnMap(rid); });
   db.querySelectorAll("[data-dwalk]").forEach(bn => bn.onclick = () => { closeDossier(); goWalk({ kind: "r", i: rid }); });
 }
-function closeDossier() { State.descEdit = null; $("#dossier").classList.remove("open"); }
+function closeDossier() { noteFlush(); State.descEdit = State.mailEdit = null; $("#dossier").classList.remove("open"); }
+/* Keeps what is in the notes box, if it says something new. Called a
+   moment after typing stops, when the box is left, and before the dossier
+   is drawn again or shut, so a note is never lost to a press elsewhere. */
+function noteFlush() {
+  clearTimeout(noteFlush.t);
+  const nb = document.getElementById("dnote");
+  if (!nb) return;
+  const who = nb.dataset.rl, next = nb.value.trim(), now = mineOf("note", who);
+  if (next === (now ? now.text : "")) return;
+  setMine("note", who, { text: next });
+  const sv = document.getElementById("dnsaved");
+  if (sv) sv.textContent = next ? "saved" : "";
+}
 
 /* One listener for the page, because a selection belongs to the document
    and not to any element: it shows the description's keyword button while

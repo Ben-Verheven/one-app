@@ -493,6 +493,17 @@ summary opens with the rank or pressed in by hand on the dossier, where it
 stands at the front of the affiliation line and says on hover which of the
 two put it there. A new rank replaces the old rather than stacking on it.
 
+Two more records hang off a researcher by name, one each, the newer
+replacing the older, and touch nothing in the graph: their **email
+address** (`email`), behind ✉ Email on the dossier, and Mark's **notes** on
+them (`note`), the box at the top of the dossier, kept a moment after he
+stops typing. The data file has no addresses; they come from a To line
+copied out of Outlook and pasted on any dossier or under Edits, matched to
+researchers by name and shown before anything is kept. Being edits, they
+ride where his other edits ride — this browser and the `atlas` cloud row
+behind the login — and never in the repository. The Edits box leaves both
+out, and its Clear all keeps them.
+
 A keyword is assigned on a researcher's dossier, behind the small **edit**
 on its own keyword heading rather than the graph-wide **Edit graph** — that
 toggle guards cuts and merges, which are careful acts, and writing down

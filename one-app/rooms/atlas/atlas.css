@@ -350,6 +350,22 @@
   border-radius:var(--r);font:13.4px/1.55 var(--sans);color:#33383F;background:var(--panel);
   resize:vertical;outline:none}
 #pane-atlas .dedit:focus{border-color:var(--mine)}
+/* Mark's notes on a researcher: the editor's box, standing open, growing
+   with what he writes. Its ground is the room's paper, a step deeper than
+   the panel, so it reads as a place to write even when empty. */
+#pane-atlas .dnote{display:block;background:var(--paper);min-height:52px;resize:none;overflow:hidden}
+#pane-atlas .dnsaved{font:400 11px var(--sans);letter-spacing:0;text-transform:none;color:var(--faint);margin-left:8px}
+#pane-atlas a.sbtn.dmailto{color:var(--ink);border-color:var(--line2);text-decoration:none;display:inline-block}
+#pane-atlas a.sbtn.dmailto:hover{background:var(--wash)}
+#pane-atlas .dmail{margin-top:10px}
+#pane-atlas .dmail input{width:100%;padding:7px 11px;border:1px solid var(--line2);border-radius:var(--r);
+  background:var(--paper);outline:none}
+#pane-atlas .dmail input:focus{border-color:var(--k1)}
+#pane-atlas .sbtn:disabled{opacity:1;color:var(--ghost);cursor:default;background:var(--panel)}
+#pane-atlas .mrow{display:flex;gap:8px;align-items:baseline;padding:4px 2px;font-size:13px;border-bottom:1px solid var(--line)}
+#pane-atlas .mrow .ok{color:var(--k2);font-weight:600}
+#pane-atlas .mrow .no{color:var(--danger);font-weight:600}
+#pane-atlas .mrow .a{font:11px var(--mono);color:var(--faint);margin-left:auto;padding-left:10px;word-break:break-all}
 #pane-atlas .pub{border:1px solid var(--line);border-radius:9px;padding:11px 14px;margin-bottom:9px}
 #pane-atlas .pub .t{font-weight:500;cursor:pointer}
 #pane-atlas .pub .t:hover{color:var(--k1)}

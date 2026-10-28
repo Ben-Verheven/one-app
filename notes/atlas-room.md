@@ -40,3 +40,18 @@ map, pressing a dot brings it out, since that is where the chosen
 researcher's buttons are. The edits list left the pane for **Edits** in the
 bar, a box with the list, undo, Export, Import and Clear all, because it
 grew with every edit under settings set once and left.
+
+**Email and notes on a researcher** (#16, 2026-10-28). Mark asked how best
+to get the addresses he can see in Outlook. Chosen: paste a whole To line
+from Outlook (type the names into a new message, Outlook resolves each from
+the TU/e address book, copy the line), on any dossier or behind Edits ›
+Email addresses; one address typed on a dossier is that researcher's
+whatever name came with it. Rejected: having the nightly agent look them up
+— it widens the three things he limited the agent to
+([atlas-agent](atlas-agent.md)), needs its gatekeeper re-pasted, and TU/e
+pages often hide addresses. Matching a pasted name must never guess: a
+first name that is not the researcher's rules them out, and two candidates
+level give no answer (checked 2026-10-28 on all 152 names in four Outlook
+forms, none wrong). His notes stand first on the dossier, above
+everything the database says, because availability is the first thing he
+reads on opening someone; rejected, further down after the keywords.
