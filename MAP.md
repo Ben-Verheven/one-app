@@ -423,7 +423,7 @@ putting links in your own order             semaphore.js:5125
 
 ## `rooms/semaphore/semaphore.css`
 
-1556 lines · 118 KB
+1558 lines · 118 KB
 
 ```
 Brokerage Semaphore                                     semaphore.css:1
@@ -438,21 +438,21 @@ brokerage wall                                          semaphore.css:160
 leads                                                   semaphore.css:247
 the three sections                                      semaphore.css:259
 the leads view                                          semaphore.css:280
-a lead moving (see "a lead moving" in semaphore.js)     semaphore.css:374
-Editing in the card                                     semaphore.css:408
-the lead itself                                         semaphore.css:441
-who and the links, side by side ── (see leadPanesHTML)  semaphore.css:516
-one lead card, in both rooms                            semaphore.css:615
-freezer                                                 semaphore.css:815
-arena panel                                             semaphore.css:827
-a venue's window                                        semaphore.css:1009
-Venues: three sections and Limbo                        semaphore.css:1048
-the visit question                                      semaphore.css:1186
-a venue, in the panel                                   semaphore.css:1213
-modals                                                  semaphore.css:1445
-the types, managed (renderTypes                         semaphore.css:1482
-the calendar                                            semaphore.css:1525
-tooltip                                                 semaphore.css:1552
+a lead moving (see "a lead moving" in semaphore.js)     semaphore.css:376
+Editing in the card                                     semaphore.css:410
+the lead itself                                         semaphore.css:443
+who and the links, side by side ── (see leadPanesHTML)  semaphore.css:518
+one lead card, in both rooms                            semaphore.css:617
+freezer                                                 semaphore.css:817
+arena panel                                             semaphore.css:829
+a venue's window                                        semaphore.css:1011
+Venues: three sections and Limbo                        semaphore.css:1050
+the visit question                                      semaphore.css:1188
+a venue, in the panel                                   semaphore.css:1215
+modals                                                  semaphore.css:1447
+the types, managed (renderTypes                         semaphore.css:1484
+the calendar                                            semaphore.css:1527
+tooltip                                                 semaphore.css:1554
 ```
 
 ## `rooms/callboard/callboard.view.js`
@@ -662,4 +662,4 @@ Generated data. Never open, never edit, never upload.
 
 ---
 
-**39034 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.
+**39036 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.
