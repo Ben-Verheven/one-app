@@ -1964,8 +1964,9 @@
     });
     var open = data.leads.filter(function (l) { return !l.doneAt; });
     /* the app's three steps, furthest along first, each a section of its own */
-    var sections = [['talking', 'Talking'], ['contacted', 'Contacted'], ['spotted', 'Spotted']].map(function (s) {
-      var ls = open.filter(function (l) { return l.stage === s[0]; }).sort(byDay);
+    /* and the leads put in Limbo last, as on Leads, each keeping its step */
+    var sections = [['talking', 'Talking'], ['contacted', 'Contacted'], ['spotted', 'Spotted'], [null, 'Limbo']].map(function (s) {
+      var ls = open.filter(function (l) { return s[0] ? !l.limbo && l.stage === s[0] : !!l.limbo; }).sort(byDay);
       return { title: s[1] + '  ·  ' + ls.length + ' lead' + (ls.length === 1 ? '' : 's'), leads: ls };
     }).filter(function (s) { return s.leads.length; });
     var closed = data.leads.filter(function (l) { return !!l.doneAt; }).sort(function (a, b) {

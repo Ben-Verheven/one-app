@@ -293,6 +293,14 @@
 #pane-semaphore .lgrp.k-talking{--st:#7FC08A;--st-ink:#A6DCA9}
 #pane-semaphore .lgrp.k-contacted{--st:#E0A458;--st-ink:#F0C48A}
 #pane-semaphore .lgrp.k-spotted{--st:#8FA3BF;--st-ink:#B9C8DD}
+/* Limbo, the fourth band (Mark, 2026-10-28): Venues' fog, ghost and cobweb
+   (see "Spooky" further down), its pale green standing for a step's colour */
+#pane-semaphore .lgrp.k-limbo{--st:#A6E9CF;--st-ink:#D6EDE4;margin:0;isolation:isolate;overflow:visible}
+#pane-semaphore .lgrp.k-limbo .lgfog{position:absolute;inset:0;z-index:-1;overflow:hidden;border-radius:inherit;pointer-events:none}
+#pane-semaphore .lgrp.k-limbo .lgh{background:none}
+#pane-semaphore .lgrp.k-limbo .lgh .culc{font:600 12px/1 var(--serif);letter-spacing:.42em;text-transform:uppercase;color:var(--lg-ink)}
+#pane-semaphore .lgrp.k-limbo .lgh span:last-child{color:var(--lg-quiet)}
+#pane-semaphore .lgrp.k-limbo .lead.wide .lname{color:#C9DDD6}
 #pane-semaphore .lgrp{border:1px solid color-mix(in srgb,var(--st) 32%,transparent);border-radius:12px;
   background:color-mix(in srgb,var(--st) 5%,transparent);padding-bottom:6px}
 #pane-semaphore .lgh{display:flex;align-items:center;gap:10px;margin:0 0 4px;padding:8px 14px;
@@ -325,12 +333,14 @@
 #pane-semaphore .leadform select{flex:1 1 100%;min-width:0;border:1px solid var(--line);border-radius:var(--radius);
   background:var(--surface);color:var(--ink);padding:6px 8px;font-family:var(--body);font-size:13px}
 /* One line of the table: shut, it is a row of cells with a hairline under
-   it; open, it lifts off the band as a card in its arena's type colour. */
+   it; open, it lifts off the band as a card with its arena's type colour
+   down its edge, on its step's own ground a shade deeper, so an open lead
+   in Talking stays green (Mark, 2026-10-27: it went the panel's brown). */
 #pane-semaphore .lead.wide{margin:0 6px;padding:6px 7px 6px 7px;border:0;border-left:3px solid transparent;
   border-bottom:1px solid var(--grid);border-radius:6px 6px 0 0;background:none}
 #pane-semaphore .lead.wide:hover{background:var(--strip)}
 #pane-semaphore .lead.wide.open{margin:4px 6px 8px;padding:7px 10px 10px 7px;border:1px solid var(--line);
-  border-left:3px solid var(--lead);border-radius:9px;background:var(--panel);box-shadow:0 6px 20px rgba(0,0,0,.28)}
+  border-left:3px solid var(--lead);border-radius:9px;background:color-mix(in srgb,var(--st,var(--panel)) 10%,var(--paper));box-shadow:0 6px 20px rgba(0,0,0,.28)}
 #pane-semaphore .lead.wide>.lhead{display:grid;grid-template-columns:var(--lcols);column-gap:12px;align-items:center}
 #pane-semaphore .lead.wide .lruit{margin:0 0 0 2px}
 #pane-semaphore .lead.wide .lname{font-size:14.5px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -378,7 +388,7 @@
    its own colour for a moment where it lands; a lead new to the list fades
    in. The travel itself is written on each element by the script. */
 #pane-semaphore .lead.lmv-me{position:relative;z-index:4;box-shadow:0 12px 30px rgba(0,0,0,.5)}
-#pane-semaphore .lead.wide.lmv-me{background:var(--panel)}
+#pane-semaphore .lead.wide.lmv-me{background:color-mix(in srgb,var(--st,var(--panel)) 10%,var(--paper))}
 #pane-semaphore .lead.lmv-land{animation:semLeadLand 1.6s ease-out}
 @keyframes semLeadLand{0%{box-shadow:0 0 0 2px var(--lead),0 0 22px color-mix(in srgb,var(--lead) 60%,transparent)}
   100%{box-shadow:0 0 0 2px transparent,0 0 22px transparent}}

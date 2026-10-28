@@ -264,6 +264,12 @@ calls land on the Call Board. What still holds of the board:
   except a shut lead on an upright iPad, which wears this table's line:
   arena tag, title and match cut to a line each, score, day as a pill
   (2026-10-28, chosen over the same card fitted and over two lines).
+- **Limbo, a fourth band at the foot of Leads** (2026-10-28), in Venues'
+  Limbo's fog, chosen from three drawn over a folded band and a button in
+  the head: a lead put aside without being closed, by Limbo between Edit and
+  Complete, keeping its step and going back to it with Bring back. It is
+  owed nothing and leaves the Ledger's board, as he asked; the Excel lists
+  it in a Limbo section of its own after Spotted.
 - **A lead that moves slides there and glows**, the view following it
   (2026-10-21); see [animation](animation.md).
 - A search that finds a lead opens its arena's panel.

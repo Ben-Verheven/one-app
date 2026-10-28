@@ -26,7 +26,7 @@ rooms                                                hub.js:296
 
 ## `shell/bridge.js`
 
-2121 lines · 101 KB
+2122 lines · 102 KB
 
 ```
 Bridge — what the five rooms say to each other.             bridge.js:1
@@ -52,8 +52,8 @@ the zip                                                     bridge.js:1628
 the styles                                                  bridge.js:1682
 the look                                                    bridge.js:1721
 what goes in it                                             bridge.js:1939
-where it goes                                               bridge.js:1982
-on the iPad, links open in DuckDuckGo                       bridge.js:2067
+where it goes                                               bridge.js:1983
+on the iPad, links open in DuckDuckGo                       bridge.js:2068
 ```
 
 ## `shell/boot.js`
@@ -369,7 +369,7 @@ _No section banners._
 
 ## `rooms/semaphore/semaphore.js`
 
-5341 lines · 302 KB
+5369 lines · 304 KB
 
 ```
 Brokerage Semaphore                         semaphore.js:1
@@ -404,27 +404,27 @@ the ruit                                    semaphore.js:3122
 the score                                   semaphore.js:3178
 one lead card, in both rooms                semaphore.js:3231
 a type's colour dot                         semaphore.js:3280
-who and the links, side by side             semaphore.js:3378
-the leads table                             semaphore.js:3395
-leads: one board, three sections            semaphore.js:3585
-a lead opening in place                     semaphore.js:3695
-a lead moving, and the view moving with it  semaphore.js:3802
-leads, lent to the Ledger's board           semaphore.js:4137
-modals                                      semaphore.js:4268
-asking, and saying                          semaphore.js:4271
-the types, managed                          semaphore.js:4312
-dragging in the list of types               semaphore.js:4368
-tooltip                                     semaphore.js:4529
-events                                      semaphore.js:4567
-venues                                      semaphore.js:4709
-typing, and the forms it goes into          semaphore.js:4907
-escape, and closing by clicking away        semaphore.js:5111
-putting links in your own order             semaphore.js:5146
+who and the links, side by side             semaphore.js:3385
+the leads table                             semaphore.js:3402
+leads: one board, three sections            semaphore.js:3592
+a lead opening in place                     semaphore.js:3712
+a lead moving, and the view moving with it  semaphore.js:3819
+leads, lent to the Ledger's board           semaphore.js:4154
+modals                                      semaphore.js:4285
+asking, and saying                          semaphore.js:4288
+the types, managed                          semaphore.js:4329
+dragging in the list of types               semaphore.js:4385
+tooltip                                     semaphore.js:4546
+events                                      semaphore.js:4584
+venues                                      semaphore.js:4729
+typing, and the forms it goes into          semaphore.js:4927
+escape, and closing by clicking away        semaphore.js:5139
+putting links in your own order             semaphore.js:5174
 ```
 
 ## `rooms/semaphore/semaphore.css`
 
-1558 lines · 118 KB
+1568 lines · 119 KB
 
 ```
 Brokerage Semaphore                                     semaphore.css:1
@@ -439,21 +439,21 @@ brokerage wall                                          semaphore.css:160
 leads                                                   semaphore.css:247
 the three sections                                      semaphore.css:259
 the leads view                                          semaphore.css:280
-a lead moving (see "a lead moving" in semaphore.js)     semaphore.css:376
-Editing in the card                                     semaphore.css:410
-the lead itself                                         semaphore.css:443
-who and the links, side by side ── (see leadPanesHTML)  semaphore.css:518
-one lead card, in both rooms                            semaphore.css:617
-freezer                                                 semaphore.css:817
-arena panel                                             semaphore.css:829
-a venue's window                                        semaphore.css:1011
-Venues: three sections and Limbo                        semaphore.css:1050
-the visit question                                      semaphore.css:1188
-a venue, in the panel                                   semaphore.css:1215
-modals                                                  semaphore.css:1447
-the types, managed (renderTypes                         semaphore.css:1484
-the calendar                                            semaphore.css:1527
-tooltip                                                 semaphore.css:1554
+a lead moving (see "a lead moving" in semaphore.js)     semaphore.css:386
+Editing in the card                                     semaphore.css:420
+the lead itself                                         semaphore.css:453
+who and the links, side by side ── (see leadPanesHTML)  semaphore.css:528
+one lead card, in both rooms                            semaphore.css:627
+freezer                                                 semaphore.css:827
+arena panel                                             semaphore.css:839
+a venue's window                                        semaphore.css:1021
+Venues: three sections and Limbo                        semaphore.css:1060
+the visit question                                      semaphore.css:1198
+a venue, in the panel                                   semaphore.css:1225
+modals                                                  semaphore.css:1457
+the types, managed (renderTypes                         semaphore.css:1494
+the calendar                                            semaphore.css:1537
+tooltip                                                 semaphore.css:1564
 ```
 
 ## `rooms/callboard/callboard.view.js`
@@ -663,4 +663,4 @@ Generated data. Never open, never edit, never upload.
 
 ---
 
-**39095 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.
+**39134 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.

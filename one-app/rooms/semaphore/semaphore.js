@@ -2946,9 +2946,9 @@ function noteFormHTML(a,l){
   return '<form class="noteform" data-na="'+a.id+'" data-nl="'+l.id+'">'+
     '<textarea class="grow" name="text" rows="1" placeholder="What has happened?" '+
       'aria-label="What has happened"></textarea>'+
-    '<div class="lfbtn"><span class="lfhint">\u2318\u21A9 to keep</span><span class="sp"></span>'+
+    '<div class="lfbtn"><span class="lfhint">\u21A9 to keep \u00B7 \u2325\u21A9 for a new line</span><span class="sp"></span>'+
       '<button type="button" class="ib" data-act="noteCancel" title="Cancel" aria-label="Cancel">\u2715</button>'+
-      '<button type="submit" class="ib ok" title="Keep \u2014 or \u2318\u21A9" aria-label="Keep">\u2713</button></div>'+
+      '<button type="submit" class="ib ok" title="Keep \u2014 or \u21A9" aria-label="Keep">\u2713</button></div>'+
   '</form>';
 }
 /* Updates were once stamped with a formatted string; new ones carry the day
@@ -3304,10 +3304,12 @@ function leadRowHTML(a,l,hit,say){
   const now=T(todayISO());
   const over=l.due?daysBetween(T(l.due),now):null;
   const done=!!l.doneAt;
-  const due=over!==null&&over>=0&&!done;      /* a closed lead is not owed */
+  /* a lead put in Limbo is not owed either: it is put aside, not now */
+  const limbo=!done&&!!l.limbo;
+  const due=over!==null&&over>=0&&!done&&!limbo;      /* a closed lead is not owed */
   /* within the week: the leads table colours it as coming (Mark chose the
      table with its dates coloured by how near they are, 2026-10-21) */
-  const soon=over!==null&&over<0&&over>=-7&&!done;
+  const soon=over!==null&&over<0&&over>=-7&&!done&&!limbo;
   const st=stageOf(l);
   const ups=l.updates||[];
   const writing=noteEdit.a===a.id&&noteEdit.l===l.id;
@@ -3328,7 +3330,7 @@ function leadRowHTML(a,l,hit,say){
      calendar writes into the edit (`name="due"`) instead of saving at once,
      because a save redraws the card and would throw away everything else
      typed into it. The ruit waits for the same reason. */
-  const near=say&&l.due&&!done?(over>1?' · '+over+' days late':over===1?' · 1 day late':over===0?' · today':''):'';
+  const near=say&&l.due&&!done&&!limbo?(over>1?' · '+over+' days late':over===1?' · 1 day late':over===0?' · today':''):'';
   const when=done
     ? '<span class="lwhen shut" title="Closed">'+(isOutcome(l.outcome)?OUTCOMES[l.outcome].said+' · ':'closed ')+
         esc(shortDay(l.doneAt))+'</span>'
@@ -3360,7 +3362,12 @@ function leadRowHTML(a,l,hit,say){
      word beside Complete (Mark, 2026-10-22: "a bit more prominent"). */
   const editBtn=done?'':'<button class="lact ledit" data-act="leadEdit" '+ids+' '+
       'title="Edit everything on this lead — its name, who, links, addresses and updates">✎ Edit</button>';
-  const headActs=open&&!editing&&!ending?'<span class="lheadacts">'+editBtn+doneBtn+'</span>':'';
+  /* Limbo, between them (Mark, 2026-10-28, from a drawn sheet): a lead put
+     aside without being closed, which keeps its step and comes back to it */
+  const limboBtn=done?'':'<button class="lact llimbo" data-act="leadLimbo" '+ids+' '+
+      'title="'+(limbo?'Back to its step, '+STAGE_NAME[st]:'Put aside without closing it: it keeps its step, and leaves the Ledger\u2019s board')+'">'+
+      (limbo?'Bring back':'Limbo')+'</button>';
+  const headActs=open&&!editing&&!ending?'<span class="lheadacts">'+editBtn+limboBtn+doneBtn+'</span>':'';
   /* While editing the row under the card is the way out of the edit, and
      while Complete is asking how the lead ended it is the three answers. */
   const acts=ending
@@ -3596,13 +3603,16 @@ function paintWall(){
   {
     const all=[];
     for(const a of vis)for(const l of openLeads(a))all.push({a,l});
-    const owed=all.filter(({l})=>l.due&&daysBetween(T(l.due),T(todayISO()))>=0).length;
-    const arenas=new Set(all.map(({a})=>a.id)).size;
+    /* Limbo, a fourth band at the foot (Mark, 2026-10-28): leads put aside
+       without being closed, owed nothing and off the Ledger's board */
+    const live=all.filter(({l})=>!l.limbo),lim=all.filter(({l})=>l.limbo);
+    const owed=live.filter(({l})=>l.due&&daysBetween(T(l.due),T(todayISO()))>=0).length;
+    const arenas=new Set(live.map(({a})=>a.id)).size;
     const adding=leadEdit.a===BOARD;
     let h='<div class="whead lhead">'+
-      (all.length?'<span class="wsay"><b>'+all.length+'</b> lead'+(all.length===1?'':'s')+
+      (all.length?'<span class="wsay"><b>'+live.length+'</b> lead'+(live.length===1?'':'s')+
         ' across <b>'+arenas+'</b> arena'+(arenas===1?'':'s')+
-        (owed?', <b>'+owed+'</b> owed today':'')+'.</span>':'')+
+        (owed?', <b>'+owed+'</b> owed today':'')+(lim.length?', <b>'+lim.length+'</b> in Limbo':'')+'.</span>':'')+
       /* The weekly Excel of every lead (Mark, 2026-10-14). A file written
          for reading elsewhere is a door out of the app, so the bridge
          writes it; this room only asks. */
@@ -3639,7 +3649,7 @@ function paintWall(){
               c.name+(leadSort.k===c.k?'<i aria-hidden="true">'+(leadSort.rev?'▴':'▾')+'</i>':'')+'</button>'
           : '<span class="ltc">'+c.name+'</span>').join('')+'</div>';
       for(const k of STAGES.slice().reverse()){
-        const col=all.filter(({l})=>stageOf(l)===k).sort(order);
+        const col=live.filter(({l})=>stageOf(l)===k).sort(order);
         if(!col.length)continue;
         /* Contacted runs by its two paths while the day orders it, as it did
            on the Ledger's list (Mark, 2026-10-06): both ways first
@@ -3651,6 +3661,13 @@ function paintWall(){
           col.map(({a,l})=>leadRowHTML(a,l,hit.has(l.id),true)).join('')+
         '</section>';
       }
+      /* in the fog of Venues' Limbo; the fog has a box of its own to drift
+         in, so the band need not clip what opens out of a lead in it */
+      if(lim.length)h+='<section class="lgrp k-limbo culimbo"><span class="lgfog" aria-hidden="true"><span class="culfog"></span></span>'+
+          '<p class="lgh" data-mk="g:limbo">'+LIMBO_GHOST+'<span class="culc">Limbo</span><b>'+lim.length+'</b>'+
+            '<span>put aside: not closed, not being worked on now</span></p>'+
+          lim.sort(order).map(({a,l})=>leadRowHTML(a,l,hit.has(l.id),true)).join('')+
+        '</section>';
       h+='</div>';
     }else{
       const shut=vis.reduce((k,a)=>k+doneLeads(a).length,0);
@@ -4153,7 +4170,7 @@ function seed(){
    reminding him of them would be a freezer that does not freeze. */
 function leadsForBoard(){
   const out=[];
-  liveArenas().forEach(a=>openLeads(a).forEach(l=>out.push({
+  liveArenas().forEach(a=>openLeads(a).filter(l=>!l.limbo).forEach(l=>out.push({
     aid:a.id,arena:a.name,tone:arenaTone(a),type:(typeOf(a)||{}).name||'',
     id:l.id,name:leadName(l),project:l.project||'',
     match:l.match||'',coordinator:l.coordinator||'',contact:l.contact||'',email:l.email||'',
@@ -4178,7 +4195,7 @@ function leadsForExcel(){
       coordinator:l.coordinator||'',contact:l.contact||'',email:l.email||'',
       stage:st,kind:st==='contacted'?leadKind(l):'',toResearchers:!!l.toResearchers,toLead:!!l.toLead,
       where:st==='contacted'?'Contacted \u2014 '+KIND_NAME[leadKind(l)]:st==='talking'?'Talking':'Spotted',
-      score:l.score||0,due:l.due||null,doneAt:l.doneAt||null,
+      score:l.score||0,due:l.due||null,doneAt:l.doneAt||null,limbo:l.limbo||null,
       ended:l.doneAt?(isOutcome(l.outcome)?OUTCOMES[l.outcome].name:'Closed'):'',
       links:(l.links||[]).map(k=>({name:linkName(k),url:String(k.url||'')})),
       updates:(l.updates||[]).map(u=>({at:u.at||'',when:updWhen(u),text:u.text||''}))});
@@ -4648,6 +4665,9 @@ document.addEventListener('click',e=>{
       if(l.outcome==='project')leadToProject(ar,l);
       break;}
     case 'leadEndCancel':{leadRedo(cardOf(b));break;}
+    case 'leadLimbo':{const ar=arena(id);if(!ar)break;
+      const l=(ar.leads||[]).find(x=>x.id===b.dataset.l);if(!l||l.doneAt)break;
+      leadMove(cardOf(b),()=>{if(l.limbo)delete l.limbo;else l.limbo=todayISO();restack();});break;}
     /* the button says it worked, in place of a toast over the card */
     case 'copyMail':{const v=b.dataset.v;if(!v)break;
       copyText(v,ok=>{b.textContent=ok?'Copied':'Not copied';
@@ -4911,9 +4931,17 @@ document.addEventListener('input',e=>{
 },true);
 /* ⌘↩ keeps what is being written, heard on the room for the reason the
    tip's mousemove is: a lead begun in the drawer lent over the Ledger is
-   written there too. */
+   written there too. An update is one line of history, so there ↩ alone
+   keeps it and ⌥↩ starts a new line (Mark, 2026-10-27); ⌥↩ is written in
+   by hand, since a browser does not always take it for a new line. */
 document.body.addEventListener('keydown',e=>{
   const t=e.target;
+  if(t&&t.tagName==='TEXTAREA'&&e.key==='Enter'&&!e.isComposing&&t.closest('.noteform')&&!e.metaKey&&!e.ctrlKey&&!e.shiftKey){
+    e.preventDefault();
+    if(e.altKey){t.setRangeText('\n',t.selectionStart,t.selectionEnd,'end');growBox(t);}
+    else t.closest('form').dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));
+    return;
+  }
   if(t&&t.tagName==='TEXTAREA'&&t.classList.contains('grow')&&e.key==='Enter'&&(e.metaKey||e.ctrlKey)){
     e.preventDefault();
     const f=t.closest('form');
