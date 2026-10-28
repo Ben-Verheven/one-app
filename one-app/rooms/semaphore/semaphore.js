@@ -2019,24 +2019,56 @@ const vFolds=new Set();
    in force full and the next ones pale, as on the Call Board. */
 function vSnipHTML(v){
   const w=vWin(v),now=T(todayISO());
-  const dl=d=>T((d.gran==='day'||d.gran==='range')?d.start:(d.end||d.start));
-  const lastT=r=>r.close?dl(r.close):T(r.open.end||r.open.start);
   const rows=[];
-  venueArenas(v).filter(a=>!a.frozenAt).forEach(a=>{
-    const {live,last}=callRuns(a),tone=arenaTone(a)||'#9C8B66';
-    (last?[last]:[]).concat(live).forEach(r=>rows.push({a,r,tone,pale:live.indexOf(r)>0}));
-  });
+  venueArenas(v).filter(a=>!a.frozenAt).forEach(a=>rows.push(...snipRuns(a)));
   const from=w?(w.from!==null?w.from:w.ms!==null?w.ms:w.to):now;
-  const hit=rows.filter(x=>lastT(x.r)>=from),calls=hit.length?hit:rows;
-  /* the strip runs from the earliest of them to the latest, in whole
-     months, with today on it when today is near */
+  const hit=rows.filter(x=>snipLast(x.r)>=from),calls=hit.length?hit:rows;
   const ts=[];
   if(w){
     ts.push(w.from!==null?w.from:w.to-42*DAY,w.to!==null?w.to+DAY:Math.max(now,w.from)+OPEN_RUN*DAY);
     if(w.ms!==null)ts.push(w.ms,w.me+DAY);
   }
-  calls.forEach(({r})=>{if(r.open)ts.push(T(r.open.start));r.dls.forEach(d=>ts.push(dl(d)));if(!r.dls.length&&r.anns[0])ts.push(T(r.anns[0].end||r.anns[0].start));});
-  let lo=ts.length?Math.min(...ts):now-30*DAY,hi=ts.length?Math.max(...ts):now+120*DAY;
+  const none=!venueArenas(v).length?'It serves no arena yet: add one under Serves.':!rows.length?'Its arenas have no call dates on the board yet.':'';
+  return snipFrame(ts,calls,(t0,t1)=>'<div class="sr lane"><span class="sl"><i class="sdia"></i><b class="sn">'+esc(v.name)+'</b></span>'+
+      '<span class="st" data-t0="'+t0+'" data-t1="'+t1+'">'+(w?bandHTML(v,t0,t1,null,''):'<span class="snone">not dated yet</span>')+'</span></div>',none);
+}
+/* An arena's slice of the Call Board, which its panel opens on (Mark,
+   issue 8, 2026-10-28): its calls alone, as the Call Board draws them; the
+   venues serving it are listed under it rather than drawn as lanes here,
+   which Mark chose over the lanes. A new arena being judged has no calls
+   yet, and its row says so. */
+function arenaSnipHTML(a,ghost){
+  const rows=a?snipRuns(a):[];
+  const ghostRow=ghost?()=>'<div class="sr"><span class="sl"><span class="schip sghost">'+esc(ghost)+'</span><span class="sn">no call dates yet</span></span>'+
+    '<span class="st"><span class="snone">the next search for calls fills them in</span></span></div>':null;
+  return snipFrame([],rows,ghostRow,!ghost&&!rows.length?'No call dates on the board yet.':'');
+}
+/* an arena's runs, each in its type's colour, its round in force full and
+   the next ones pale, as on the Call Board */
+function snipRuns(a){
+  const {live,last}=callRuns(a),tone=arenaTone(a)||'#9C8B66';
+  return (last?[last]:[]).concat(live).map(r=>({a,r,tone,pale:live.indexOf(r)>0}));
+}
+const snipDl=d=>T((d.gran==='day'||d.gran==='range')?d.start:(d.end||d.start));
+const snipLast=r=>r.close?snipDl(r.close):T(r.open.end||r.open.start);
+/* Where a date not yet published to the day can fall: the month, quarter,
+   half or year it is known to, or a week either side of a day only
+   guessed. The Call Board draws it the same way, as a soft band (its
+   softSpan, where Mark's choice of 2026-10-28 is told); null for a date
+   published to the day. */
+function snipSoft(d){
+  if(!d||!d.start||d.grade==='fixed')return null;
+  return (d.gran==='day'||d.gran==='range')?[T(d.start)-7*DAY,T(d.end||d.start)+8*DAY]:[T(d.start),T(d.end||d.start)+DAY];
+}
+/* The strip itself: a month axis over the lane given, if any, and the
+   calls, running from the earliest of them to the latest in whole months,
+   with today on it when today is near. The calls bring their own days to
+   `ts`. */
+function snipFrame(ts,calls,lane,none){
+  const now=T(todayISO()),dl=snipDl;
+  calls.forEach(({r})=>{if(r.open)ts.push(T(r.open.start));r.dls.forEach(d=>{ts.push(dl(d));const sp=snipSoft(d);if(sp)ts.push(sp[1]);});
+    if(!r.dls.length&&r.anns[0])ts.push(T(r.anns[0].end||r.anns[0].start));});
+  let lo=ts.length?Math.min(...ts):now-30*DAY,hi=ts.length?Math.max(...ts):now+300*DAY;
   if(now<lo&&lo-now<120*DAY)lo=now;
   if(now>hi&&now-hi<60*DAY)hi=now;
   const m0=new Date(lo),m1=new Date(hi);
@@ -2055,21 +2087,27 @@ function vSnipHTML(v){
   }
   if(now>=t0&&now<t1)grid+='<b style="left:'+pc(now+DAY/2)+'" title="today"></b>';
   const bars=({r,tone,pale})=>{
-    const col=pale?'color-mix(in srgb,'+tone+' 42%,#F7F3E9)':tone,o=r.open?T(r.open.start):null;
-    const d1=r.dls.length?dl(r.dls[0]):null,d2=r.dls.length>1?dl(r.dls[r.dls.length-1]):null;
+    const col=pale?'color-mix(in srgb,'+tone+' 42%,#F7F3E9)':tone;
+    const soft=(sp,dir)=>'<i class="ssoft" style="left:'+pc(sp[0])+';width:'+wd(sp[0],sp[1])+';background:linear-gradient(90deg,'+
+      (dir==='in'?'transparent,'+col:dir==='out'?col+',transparent':'transparent,'+col+' 50%,transparent')+')"></i>';
+    const so=r.open?snipSoft(r.open):null,s1=r.dls.length?snipSoft(r.dls[0]):null,s2=r.dls.length>1?snipSoft(r.dls[r.dls.length-1]):null;
+    const o=r.open?(so?so[1]:T(r.open.start)):null;
+    const d1=r.dls.length?(s1?s1[0]:dl(r.dls[0])):null,d2=r.dls.length>1?(s2?s2[0]:dl(r.dls[r.dls.length-1])):null;
     let h='';
     if(!r.dls.length&&!r.opens.length&&r.anns[0])
-      return '<i class="sann" style="left:'+pc(T(r.anns[0].start))+';width:'+wd(T(r.anns[0].start),T(r.anns[0].end||r.anns[0].start)+DAY)+';border-color:'+tone+'"></i>';
-    if(o!==null&&d1!==null)h+='<i class="sbar'+(r.unc?' unc':'')+'" style="left:'+pc(o)+';width:'+wd(o,d1)+';background:'+col+';border-color:'+tone+'"></i>';
+      return soft([T(r.anns[0].start),T(r.anns[0].end||r.anns[0].start)+DAY],'both');
+    if(so)h+=soft(so,'in');
+    if(o!==null&&d1!==null)h+='<i class="sbar" style="left:'+pc(o)+';width:'+wd(o,d1)+';background:'+col+';border-color:'+tone+'"></i>';
     else if(o!==null)h+='<i class="sbar fade" style="left:'+pc(o)+';width:'+wd(o,o+120*DAY)+';--fc:'+col+'"></i>';
-    if(d2!==null&&d2>d1)h+='<i class="sbar2" style="left:'+pc(d1)+';width:'+wd(d1,d2)+';--fc:'+col+'"></i>';
-    if(o!==null)h+='<i class="sdot" style="left:'+pc(o)+';background:'+col+';border-color:'+tone+'"></i>';
-    if(d1!==null)h+='<i class="scap" style="left:'+pc(d1)+';background:'+tone+'"></i>';
-    if(d2!==null&&d2>d1)h+='<i class="scap" style="left:'+pc(d2)+';background:'+tone+'"></i>';
+    if(s1)h+=soft(s1,d2!==null?'both':'out');
+    if(d2!==null&&d2>d1){const e1=s1?s1[1]:d1;h+='<i class="sbar2" style="left:'+pc(e1)+';width:'+wd(e1,d2)+';--fc:'+col+'"></i>';}
+    if(o!==null&&!so)h+='<i class="sdot" style="left:'+pc(o)+';background:'+col+';border-color:'+tone+'"></i>';
+    if(d1!==null&&!s1)h+='<i class="scap" style="left:'+pc(d1)+';background:'+tone+'"></i>';
+    if(d2!==null&&d2>d1)h+=s2?soft(s2,'out'):'<i class="scap" style="left:'+pc(d2)+';background:'+tone+'"></i>';
     return h;
   };
-  const say=r=>[r.open?(r.opens.length?'opens ':'expected ')+tDay(T(r.open.start)):'',
-    r.dls.length?(r.dls.length>1?'deadlines ':'deadline ')+r.dls.map(d=>tDay(dl(d))).join(' → '):''].filter(Boolean).join(' · ');
+  const say=r=>[r.open?(r.opens.length?'opens ':'expected ')+(snipSoft(r.open)?'≈ ':'')+tDay(T(r.open.start)):'',
+    r.dls.length?(r.dls.length>1?'deadlines ':'deadline ')+r.dls.map(d=>(snipSoft(d)?'≈ ':'')+tDay(dl(d))).join(' → '):''].filter(Boolean).join(' · ');
   /* the words a call's name shares with its arena's, on the chip beside
      it, are left off, so two calls of one arena are told apart in the
      room there is; a name that would be left a word or less stays whole */
@@ -2078,12 +2116,10 @@ function vSnipHTML(v){
   const callRow=x=>{const nm=callBase(dtLabel(x.r.all[0]))||dtLabel(x.r.all[0]);
     return '<div class="sr" title="'+esc(x.a.name+' — '+nm+(say(x.r)?'\n'+say(x.r):''))+'"><span class="sl"><span class="schip" style="--tone:'+esc(x.tone)+'">'+esc(x.a.name)+'</span>'+
       '<span class="sn">'+esc(own(nm,x.a.name))+'</span></span><span class="st">'+bars(x)+'</span></div>';};
-  const none=!venueArenas(v).length?'It serves no arena yet: add one under Serves.':!rows.length?'Its arenas have no call dates on the board yet.':'';
   return '<div class="vsnip">'+
     '<div class="sax"><span class="sl"></span><span class="st">'+axis+'</span></div>'+
     '<div class="sbody"><div class="sgrid">'+grid+'</div>'+
-      '<div class="sr lane"><span class="sl"><i class="sdia"></i><b class="sn">'+esc(v.name)+'</b></span>'+
-        '<span class="st" data-t0="'+t0+'" data-t1="'+t1+'">'+(w?bandHTML(v,t0,t1,null,''):'<span class="snone">not dated yet</span>')+'</span></div>'+
+      (lane?lane(t0,t1):'')+
       calls.map(callRow).join('')+
     '</div>'+(none?'<p class="snote">'+none+'</p>':'')+
   '</div>';
@@ -2284,7 +2320,7 @@ function arenaVenuesHTML(a){
 /* ============ drawer ============ */
 /* `vid` is a venue standing in the drawer in place of an arena, and `vnew`
    the venue being made, with the arena it was begun from */
-const drawer={id:null,vid:null,vnew:null,edit:null,hi:null,editing:false,scope:null};
+const drawer={id:null,vid:null,vnew:null,edit:null,hi:null,editing:false,scope:null,find:null};
 /* which card has its follow-up composer open, which has its link composer open,
    and which one just moved */
 /* leadEdit.a is BOARD while the new-lead form stands on Leads rather than in
@@ -2461,22 +2497,29 @@ function freshSaid(a){
   return n?'<i class="wfresh" title="'+n+' new thing'+(n===1?'':'s')+', marked new below">'+n+' new</i>'+
     '<button class="btn ghost wseen" data-act="seenArena" data-id="'+a.id+'">Seen \u2713</button>':'';
 }
-/* The panel's band of leads. It carried the arena's sweep, the ring that
-   asked the nightly agent and the wait as well, until the rotation of
-   arenas went with the Marketplace (2026-10-14): the venues come round now,
-   and the agent is asked from a Claude session. */
-function rotBarHTML(a){
-  return '<div class="rotbar">'+
-    (freshItems(a).length?'<div class="swept">'+freshSaid(a)+'</div>':'')+
-    '<div class="wbody">'+leadListHTML(a,leadHits(a,S.ui.q.trim().toLowerCase()))+'</div>'+
-  '</div>';
+/* An arena's panel, in the shape of a venue's (Mark, issue 8, 2026-10-28):
+   as wide, opening on its slice of the Call Board, then what is acted on,
+   its next deadline, its leads and its venues, and the rest folded, each
+   fold saying in a word what is in it: its About and links, its brokerage
+   and every date as a list. It opened on its About and brokerage texts,
+   narrow, with the dates last, until then. Site and Reference stand under
+   its name, as on the Call Board's frame (see arenaLinks there): the first
+   link to a web page and the first to a document. */
+const isDocUrl=u=>/\.(pdf|docx?|pptx?|xlsx?)([?#]|$)/i.test(u||'');
+function arenaGoHTML(a){
+  const web=(a.links||[]).filter(l=>/^https?:\/\//i.test(l.url||''));
+  const go=(l,w)=>l?'<a class="vgo" href="'+esc(l.url)+'" target="_blank" rel="noopener" title="'+esc((l.label?l.label+' — ':'')+l.url)+'">'+w+' ↗</a>':'';
+  return go(web.find(l=>!isDocUrl(l.url)),'Site')+go(web.find(l=>isDocUrl(l.url)),'Reference');
+}
+function nextDeadlineHTML(a){
+  const today=todayISO();
+  const d=(a.dates||[]).filter(x=>x.kind==='call'&&x.role==='deadline'&&x.start&&(x.end||x.start)>=today)
+    .sort((x,y)=>(x.end||x.start).localeCompare(y.end||y.start))[0];
+  return d?dateText(d)+' <i>'+esc(dtLabel(d))+'</i>':'<i>none on the board</i>';
 }
 function readHTML(a){
-  const tags=(a.tags||[]).map(t=>'#'+esc(t)).join('<i>\u00B7</i>');
+  const tags=(a.tags||[]).map(t=>'#'+esc(t)).join(' · ');
   const bk=a.brokerage||{notes:'',links:[]};
-  const blocks=panelCard('About',false,a.notes||'',a.links,'editCard',a)+
-               panelCard('Brokerage',true,bk.notes||'',bk.links,'editBrokerage',a)+
-               arenaVenuesHTML(a);
   /* Freezing suspends the rotation entirely, so the panel stops offering the
      parts of it that could not fire — a follow-up or a wait set here would
      promise a return the freezer has already ruled out. Anything already parked
@@ -2489,17 +2532,31 @@ function readHTML(a){
          ' \u2014 kept off the board, and its venues off Venues, unless they serve another arena too.'+parked+'</span>'+
        '<button class="btn" data-act="thaw" data-id="'+a.id+'">Thaw</button></div>'
     :'';
-  return '<div class="cbody">'+
-    '<div class="chead">'+
+  const fold=(k,title,said,body)=>{const open=vFolds.has(k);
+    return '<section class="vfold'+(open?' open':'')+'"><button class="vfh" data-act="vFold" data-f="'+k+'" aria-expanded="'+open+'">'+
+      '<span class="car" aria-hidden="true">▸</span>'+title+(said?' <i>'+esc(said)+'</i>':'')+'</button>'+(open?'<div class="vfb">'+body+'</div>':'')+'</section>';};
+  const nLinks=(a.links||[]).length,nBk=(bk.links||[]).length,nDates=(a.dates||[]).length+venuesOf(a).filter(v=>v.start).length;
+  const about=panelCard('About',false,a.notes||'',a.links,'editCard',a);
+  const brok=panelCard('Brokerage',true,bk.notes||'',bk.links,'editBrokerage',a);
+  return '<div class="cbody vpanel apanel">'+
+    '<div class="chead vchead">'+
       '<button class="x" data-act="closeDrawer" aria-label="Close">\u2715</button>'+
+      '<p class="vkind">Arena'+(typeOf(a)?' · '+esc(typeName(a.typeId)):'')+(tags?' · '+tags:'')+'</p>'+
       '<h2 id="aname">'+esc(a.name)+'</h2>'+
-      '<p class="meta">'+esc(typeName(a.typeId))+(tags?'<i>\u00B7</i>'+tags:'')+'</p>'+
-      '<div class="vchrow">'+arenaAgentHTML(a)+'</div>'+
+      '<div class="vchrow">'+arenaGoHTML(a)+arenaAgentHTML(a)+(freshItems(a).length?'<span class="aswept">'+freshSaid(a)+'</span>':'')+'</div>'+
     '</div>'+
     frozen+
-    '<div class="blocks">'+blocks+(a.frozenAt?'':rotBarHTML(a))+'</div>'+
-    '<div class="rule"></div>'+
-    '<div class="stream">'+streamHTML(a)+'</div>'+
+    arenaSnipHTML(a)+
+    '<div class="vfacts">'+
+      '<div class="vf wide"><span class="vfk">Next deadline</span><span class="vfv">'+nextDeadlineHTML(a)+'</span></div>'+
+    '</div>'+
+    '<div class="blocks">'+(a.frozenAt?'':'<div class="rotbar"><div class="wbody">'+leadListHTML(a,leadHits(a,S.ui.q.trim().toLowerCase()))+'</div></div>')+
+      arenaVenuesHTML(a)+'</div>'+
+    '<div class="afolds">'+
+      fold('a-about','About',(a.notes?'its text':'no text')+(nLinks?', '+nLinks+' link'+(nLinks===1?'':'s'):''),about||'<p class="hint">Nothing yet: Edit gives it a text and links.</p>')+
+      fold('a-brok','Brokerage',(bk.notes?'its text':'no text')+(nBk?', '+nBk+' page'+(nBk===1?'':'s'):''),brok||'<p class="hint">Nothing yet.</p>')+
+      fold('a-dates','Every date',nDates?nDates+', as a list':'none yet','<div class="stream">'+streamHTML(a)+'</div>')+
+    '</div>'+
     '</div>'+
     '<div class="cfoot">'+
       '<button class="btn" data-act="editCard">Edit</button>'+
@@ -2639,6 +2696,8 @@ function renderDrawer(){
   const c=$('#card'),sc=$('#cardScrim');
   const v=drawer.vid?venue(drawer.vid):null;
   const a=v||drawer.vnew?null:arena(drawer.id);
+  if(!a&&!v&&!drawer.vnew&&drawer.find){
+    c.innerHTML=findHTML(drawer.find);c.classList.add('vwide');sc.classList.add('open');c.classList.add('open');return;}
   if(!a&&!v&&!drawer.vnew){c.classList.remove('open');sc.classList.remove('open');c.innerHTML='';return;}
   const body=c.querySelector('.cbody');const top=body?body.scrollTop:0;
   /* a venue's note keeps its caret while the panel is drawn again round it */
@@ -2646,7 +2705,7 @@ function renderDrawer(){
   if(typing&&v&&c.contains(typing))return;
   c.innerHTML=drawer.vnew?venueEditHTML(null,drawer.vnew.aid):
     v?(drawer.editing?venueEditHTML(v):venueReadHTML(v)):(drawer.editing?editHTML(a):readHTML(a));
-  c.classList.toggle('vwide',!!v&&!drawer.editing);
+  c.classList.toggle('vwide',!drawer.editing&&!drawer.vnew);
   c.querySelectorAll('textarea.vmemo').forEach(autoGrow);
   if(v||drawer.vnew){growAll(c);sc.classList.add('open');c.classList.add('open');
     const nb=c.querySelector('.cbody');if(nb)nb.scrollTop=top;return;}
@@ -2659,14 +2718,63 @@ function renderDrawer(){
   if(!drawer.editing)drawCallSpans(a);
 }
 function openDrawer(id,dateId){
-  walk.on=false;walk.id=null;
+  walk.on=false;walk.id=null;drawer.find=null;
   drawer.id=id;drawer.vid=null;drawer.vnew=null;drawer.edit=null;drawer.hi=dateId||null;drawer.editing=false;drawer.scope=null;
+  /* a date asked for is shown in its list, which is folded otherwise */
+  if(dateId)vFolds.add('a-dates');
   renderDrawer();
   refreshAsks();
   /* the panel is fixed inside a box that scrolls; focusing it without this
      asks the browser to bring it into view, and the board jumps to the top */
   $('#card').focus({preventScroll:true});
   if(dateId){const el=$('#card .ln.hi');if(el)el.scrollIntoView({block:'center'});}
+}
+/* A new arena a search suggested, shown as the panel it will become while
+   the Call Board judges it (Mark, issue 17, 2026-10-28): the band at its
+   head goes through the finds as the one on a venue's card does, its site
+   stands under its name, where it goes and Add or No are asked in the
+   green box, and the search's reason is its About. Its slice of the Call
+   Board is empty and says so. The Call Board keeps the judging and hands
+   over what to show and what each press does (`f`), through the bridge;
+   the dark bar at the foot of that room it replaces. */
+function openFind(f){
+  walk.on=false;walk.id=null;closeComposers();
+  drawer.id=null;drawer.vid=null;drawer.vnew=null;drawer.edit=null;drawer.hi=null;drawer.editing=false;drawer.scope=null;
+  drawer.find=f;
+  renderDrawer();
+  $('#card').focus({preventScroll:true});
+}
+/* judging over, or stopped from the Call Board: shut without asking it to
+   stop again */
+function closeFind(){
+  if(!drawer.find)return;
+  drawer.find=null;renderDrawer();
+}
+function findHTML(f){
+  const dots=Array.from({length:Math.min(f.total,40)},(_,i)=>'<i class="'+(i<f.done?'done':i===f.cur?'cur':'')+'"></i>').join('');
+  const host=u=>{try{return new URL(u).hostname.replace(/^www\./,'');}catch(e){return u;}};
+  const web=/^https?:\/\//i.test(f.url||'');
+  return '<div class="cbody vpanel">'+
+    '<div class="vwalk"><span class="vwk">Judging what was found</span>'+
+      '<span class="vwp"><b>'+(f.cur+1)+'</b> of '+f.total+'</span><span class="vwdots" aria-hidden="true">'+dots+'</span><span class="sp"></span>'+
+      '<button data-act="fStep" data-n="-1"'+(f.n>1?'':' disabled')+'>‹ Back</button>'+
+      '<button data-act="fStep" data-n="1"'+(f.n>1?'':' disabled')+'>Skip for now ›</button>'+
+      '<button data-act="fStop">Stop: the rest waits</button></div>'+
+    '<div class="chead vchead">'+
+      '<button class="x" data-act="closeDrawer" aria-label="Close">✕</button>'+
+      '<p class="vkind">New arena · suggested by '+esc(f.from||'a search')+'</p>'+
+      '<h2 id="aname">'+esc(f.name)+'</h2>'+
+      (web?'<a class="fsite" href="'+esc(f.url)+'" target="_blank" rel="noopener"><b>Site</b><span>'+esc(host(f.url))+'</span><em>↗</em></a>'
+        :'<p class="fsite none"><b>Site</b><span>none given</span></p>')+
+    '</div>'+
+    '<div class="vfound"><p class="vfq"><b>New</b><span>'+(f.has?'An arena by this name is on the board already.':'Where does it go?')+'</span></p>'+
+      '<div class="fjudge">'+(f.has?'':'<label>Goes into <select data-ftype aria-label="Its type">'+
+        f.types.map(t=>'<option value="'+esc(t.id)+'"'+(t.id===f.type?' selected':'')+'>'+esc(t.name)+'</option>').join('')+'</select></label>'+
+        '<span class="sp"></span><button class="btn primary" data-act="fJudge" data-v="add" title="Put it on the board as an arena of the type chosen">Add as an arena</button>')+
+        '<button class="btn" data-act="fJudge" data-v="no" title="'+(f.has?'Let the suggestion go':'Not an arena for the board')+'">No</button></div></div>'+
+    (f.why?'<p class="fwhy">“'+esc(f.why)+'”</p>':'')+
+    arenaSnipHTML(null,f.name)+
+    '</div>';
 }
 /* What the agent brought an arena is marked new until its panel has been
    looked at and shut again; it was the arena's sweep that cleared it, until
@@ -2675,8 +2783,11 @@ function closeDrawer(){
   walk.on=false;walk.id=null;
   const a=!drawer.vid&&!drawer.vnew&&arena(drawer.id);
   if(leadEdit.a===VENUE_LEAD)closeComposers();
+  const f=drawer.find;drawer.find=null;
   drawer.id=null;drawer.vid=null;drawer.vnew=null;drawer.edit=null;drawer.hi=null;drawer.editing=false;drawer.scope=null;renderDrawer();
   repaint();
+  /* a new arena shut unjudged leaves the rest waiting, as Stop does */
+  if(f&&f.stop)f.stop();
 }
 
 /* ============ actions ============ */
@@ -4614,6 +4725,10 @@ document.addEventListener('click',e=>{
     case 'openArena':openDrawer(id);break;
     case 'openDate':openDrawer(b.dataset.a,b.dataset.d);break;
     case 'closeDrawer':closeDrawer();break;
+    case 'fJudge':{const f=drawer.find;if(!f)break;const sel=$('#card select[data-ftype]');
+      f.judge(b.dataset.v,sel?sel.value:f.type);break;}
+    case 'fStep':if(drawer.find)drawer.find.step(+b.dataset.n);break;
+    case 'fStop':closeDrawer();break;
     /* A press on a lead's own ground opens or shuts it. Its links, its date
        and the fields of a composer inside it are presses of their own. */
     case 'leadOpen':{
@@ -5077,6 +5192,9 @@ document.addEventListener('change',e=>{
     const n=+el.value;if(n>=1)v.every=n;else delete v.every;
     save();renderAll();return;
   }
+  /* the type a new arena being judged goes into, which the Call Board
+     keeps and moves its dashed row to */
+  if(el.matches&&el.matches('select[data-ftype]')&&drawer.find){drawer.find.retype(el.value);return;}
   if(el.dataset&&el.dataset.vaddarena){
     const v=venue(el.dataset.vaddarena);if(!v||!arena(el.value))return;
     joinVenue(v,el.value);save();renderAll();return;
@@ -5179,7 +5297,7 @@ document.addEventListener('keydown',e=>{
   if(drawer.vnew){drawer.vnew=null;closeDrawer();return;}    /* a venue being made */
   if(drawer.edit){drawer.edit=null;renderDrawer();return;}   /* a date form */
   if(drawer.editing){drawer.editing=false;renderDrawer();return;}  /* the edit face */
-  if(drawer.id||drawer.vid)closeDrawer();                    /* the panel itself, an arena's or a venue's */
+  if(drawer.id||drawer.vid||drawer.find)closeDrawer();      /* the panel itself, an arena's, a venue's or a new arena's */
 });
 document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{
   if(e.target!==m)return;
@@ -5358,6 +5476,10 @@ try{
     /* every lead, closed ones too, for the weekly Excel the bridge writes */
     allLeads:   function(){ return leadsForExcel(); },
     openArena:  function(aid){ if(arena(aid))openDrawer(aid); },
+    /* a new arena being judged on the Call Board, as the panel it will
+       become (see openFind), and its shutting once judging is over */
+    openFind:   function(f){ openFind(f); },
+    closeFind:  function(){ closeFind(); },
     /* ChatGPT's box, for the search named, which the Call Board borrows
        for its search for calls */
     gpt:        function(kind){ openGpt(kind); },

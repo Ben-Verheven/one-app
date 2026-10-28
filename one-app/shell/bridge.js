@@ -430,8 +430,8 @@
      next. It is handed a socket as the Ledger is: reads of the arenas'
      calls and the finds waiting, the arenas in the freezer, the verbs that
      judge a find, mark an arena's new dates seen and thaw one, the drawer
-     lent over the Board for an arena, and ChatGPT's box for its search for
-     calls. The Board is the lazy room, so the socket
+     lent over the Board for an arena and for a new arena being judged, and
+     ChatGPT's box for its search for calls. The Board is the lazy room, so the socket
      cannot be handed over at load, when there is nothing yet to hand it
      to; the Board says when it has been built, and that is when it gets
      it — whether it was opened or only built for a topic the Ledger asked
@@ -459,13 +459,21 @@
         frozen: function () { return S.frozen ? S.frozen() : []; },
         thaw: function (aid) { if (S.thaw) S.thaw(aid); },
         open: showArena,
-        gpt: showGpt
+        gpt: showGpt,
+        find: function (f) { lendDrawer('openFind', f); },
+        unfind: function () { if (S.closeFind) S.closeFind(); }
       });
       refresh();
     });
     Hub.on('semaphore:saved', changed);
     Hub.on('cloud:session', function (on) { if (on && Hub.started('callboard')) refresh(); });
-    Hub.onRoom(function (now) { if (now === 'callboard') { changed(); refresh(); } });
+    /* A new arena being judged is shown in the drawer lent over the Board,
+       and shut when the Board is left, so it is not found open in the
+       Semaphore; coming back draws it again where judging stood. */
+    Hub.onRoom(function (now) {
+      if (now === 'callboard') { changed(); refresh(); }
+      else if (S.closeFind) S.closeFind();
+    });
     /* ChatGPT's answer to the search for calls put on the board: the new
        arenas it brought are judged on the Call Board, so the app goes there
        and starts, and says what landed. */

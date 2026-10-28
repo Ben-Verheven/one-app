@@ -57,8 +57,15 @@ undo it, and what was agreed and is not built yet.
   no partnership from another and were in the way. The full name stays on
   hover, in a search and in its panel.
 - Colour is the arena's own, saturated for the round it is in and pale for
-  the next, as the 2026 and 2027 calls are in Horizon. Dashed is a date not
-  yet published to the day, as on the Semaphore's board.
+  the next, as the 2026 and 2027 calls are in Horizon.
+- **A date not yet published to the day is drawn where it can fall**
+  (2026-10-28): a soft band over the month, quarter or half it is known
+  to, the bar solid only between what is known, the hard tick and the dot
+  kept for a date to the day, and ≈ before its words. It was a dashed,
+  see-through bar, which put a deadline known only to its month on that
+  month's last day with a real deadline's tick. Chosen over a hollow bar
+  for anything uncertain. The Semaphore's slices of the Call Board, on a
+  venue's and an arena's panel, draw it the same way.
 - **An arena's tab is the chart alone** (2026-10-24): the list beside it
   went, as it only said again what the chart says, cut short. The chart
   takes the width, each chip as long as its arena's name, which tells one
@@ -66,12 +73,16 @@ undo it, and what was agreed and is not built yet.
   the dates stand on the chart and on hover. What a search finds in the
   other tabs stands under the chart.
 - **Pressing a call or its arena opens the whole arena where it stands**
-  (2026-10-24): its type, open leads and links, its About (cut at three
-  lines; all of it is in its panel) and every call under one another with
-  its dates on its bar; the other arenas dim. Its Brokerage text and the
-  venues serving it went with the lanes (2026-10-25). Its dates were written in words beside each call
-  at first, the bars bare, and Mark found it annoying (2026-10-25). ✕,
-  Esc or another press shuts it. Chosen over opening it alone with the
+  (2026-10-24): a frame round its own rows, which keep their chips, names
+  and bars where they were, the board's month lines showing through it
+  (2026-10-28), and over them one line: its name and type, **Site** and
+  **Reference** (its first link to a page and its first to a document),
+  Seen, its panel and ✕. The other arenas dim. Its dates show on hover, as
+  on any row. Chosen on 2026-10-28 over a month line of the frame's own
+  and over a frame opening upwards over the arena above. Its About, its
+  count of open leads and its dates written on every bar stood in it until
+  then; Mark found them in the way. A click outside it shuts it and does
+  nothing else, as do ✕ and Esc. Chosen over opening it alone with the
   others put away, which lost its place among them.
 - **Dates said once** (2026-10-25): Mark found them "often superfluous".
   A call's dates stand on its bar, on hover, lit or in an arena opened,
@@ -103,9 +114,10 @@ those of the phases still to build; git's history has the code.
 ## Judging finds (built 2026-10-24)
 
 - **One at a time, before they land.** The board goes to the tab where a
-  find belongs, draws it there with a dashed edge, and a bar at the foot
-  asks: a suggested arena Add, in a type chosen on the bar and guessed from
-  its words, or No. Back and Skip go round the
+  find belongs, draws it there with a dashed edge, and opens it as the
+  panel it will become (2026-10-28; a dark bar along the foot of the room
+  until then): its site under its name, and in the green box a suggested
+  arena Add, in a type chosen there and guessed from its words, or No. Back and Skip go round the
   finds still waiting, in the order of the tabs; Stop leaves them, counted
   on the pill in the search row, which starts again, and dotted on their
   tabs. The ring's count waits for the three searches below.

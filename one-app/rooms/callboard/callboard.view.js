@@ -61,10 +61,6 @@ Hub.markup('callboard', `
   </aside>
 </div>
 
-<!-- A find waiting to be judged: what it is, where it was read, and the
-     choice, at the foot of the room while the board shows it in its tab. -->
-<div class="jbar" id="jbar" role="region" aria-label="Judging what was found" hidden></div>
-
 <div class="scrim" id="scrim"></div>
 <aside class="reader" id="reader" role="dialog" aria-modal="true" aria-labelledby="rdtitle" aria-hidden="true">
   <div class="rd-head">

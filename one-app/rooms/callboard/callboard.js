@@ -174,7 +174,7 @@ function afterSelect(){
    one bar here as there. An arena wears a colour of its own on the chip
    and the bar, saturated for the round it is in and pale for the next, as
    the 2026 and 2027 calls are in Horizon; a date not yet published to the
-   day is dashed, as it is on the Semaphore's board. */
+   day is a soft band over the time it can fall in (see softSpan). */
 const TYPE_TABS=[
   {key:'JU',full:'Joint Undertakings',color:'#7D71B0',test:/\bJU\b|joint\s*undertaking/i},
   {key:'COFUND',full:'Co-funded partnerships',color:'#3C8D6D',test:/co[\s-]*fund/i},
@@ -220,6 +220,18 @@ function whenLong(d){
 /* where a deadline known only to its month falls on the chart: its last
    day, the latest it can be; an opening falls on its first */
 const dlDay=d=>(d.gran==='day'||d.gran==='range')?d.start:(d.end||d.start);
+/* Where a date not yet published to the day can fall, which the chart
+   draws as a soft band rather than a point (Mark, 2026-10-28, chosen over
+   an outline for anything uncertain and over the dashed bar it replaces,
+   which put a deadline known only to its month on that month's last day
+   with the hard tick of a real one): the whole month, quarter, half or
+   year it is known to, or a week either side of a day only guessed.
+   Null for a date published to the day. */
+function softSpan(d){
+  if(!d||!d.start||d.grade==='fixed') return null;
+  const by=(s,n)=>{ const t=d3(s); t.setDate(t.getDate()+n); return t.toISOString().slice(0,10); };
+  return (d.gran==='day'||d.gran==='range')?[by(d.start,-7),by(d.end||d.start,7)]:[d.start,by(d.end||d.start,1)];
+}
 function tabOfType(name){
   if(HORIZON_TYPE.test(name||'')) return null;
   return TYPE_TABS.find(t=>t.test&&t.test.test(name||''))||TYPE_TABS[TYPE_TABS.length-1];
@@ -259,11 +271,13 @@ function readArenas(){
         short:tagName(a.name), name:r.name, color, ink:tone[2], ovColor:color, ovInk:tone[2],
         cluster:p.key, clusterLabel:p.label, nTopics:0, budget:0, unc:!!r.unc,
         opening:from?from.start:null, annEnd:annOnly?r.ann.end:null,
-        d1:dls.length?dlDay(dls[0]):null, d2:dls.length>1?dlDay(dls[dls.length-1]):null, twoStage:dls.length>1};
-      c.tagOpen=from?whenShort(from):'';
+        d1:dls.length?dlDay(dls[0]):null, d2:dls.length>1?dlDay(dls[dls.length-1]):null, twoStage:dls.length>1,
+        sOpen:r.open?softSpan(r.open):null, sD1:dls.length?softSpan(dls[0]):null, sD2:dls.length>1?softSpan(dls[dls.length-1]):null};
+      const say=d=>(softSpan(d)?'≈ ':'')+whenShort(d);
+      c.tagOpen=from?say(from):'';
       c.tagEnd=annOnly?'expected '+whenShort(r.ann)
-        :dls.length>1?whenShort(dls[0])+' → '+whenShort(dls[dls.length-1])
-        :dls.length?whenShort(dls[0]):(from?'opens '+whenShort(from):'');
+        :dls.length>1?say(dls[0])+' → '+say(dls[dls.length-1])
+        :dls.length?say(dls[0]):(from?'opens '+say(from):'');
       p.calls.push(c); p.callById[c.id]=c;
     });
   });
@@ -373,54 +387,68 @@ function arenaEmptyRow(a){
   return r;
 }
 /* Pressing a call or its arena opens the whole arena where it stands
-   (Mark, 2026-10-24): its type, open leads, its links, its About text and
-   every call under one another with its dates standing on its bar; the
-   other arenas dim. The dates were written out in words beside each call
-   at first, while the bars said nothing (2026-10-25). Chosen over opening
-   it alone, the others put away, which lost its place among them. Its
-   brokerage, the text and the venues serving it drawn as lanes, stood here
-   too until the venues went back to the Semaphore (2026-10-25); its panel
-   there has both. The text stops at three lines; all of it is in its
-   panel. */
+   (Mark, 2026-10-24): a frame round its own rows, which keep their chips,
+   names and bars where they were, so the board's month line above stays
+   their timeline, and the board's month lines show through the frame
+   (Mark chose this on 2026-10-28, over a month line of the frame's own and
+   over a frame opening upwards). Over the rows, one line: its name, its type, Site and
+   Reference, Seen, its panel and ✕. Its About text and its open leads stood
+   there too, and every date was written on its bar; Mark found them in the
+   way (issue 5), and the dates now show on a bar as on any other row, on
+   hover. The other arenas dim. A click anywhere outside it shuts it and
+   does nothing else (see "a click outside an arena opened"); before, it
+   opened the arena clicked, which Mark did not mean. */
 function openArena(id){
   P.state.openArena=P.state.openArena===id?null:id;
   buildTimeline(); paintTimeline(); applyFilters();
   const b=document.querySelector('#tl .aopen');
   if(b){ const top=b.getBoundingClientRect().top; if(top<120||top>window.innerHeight-200) b.scrollIntoView({block:'center'}); }
 }
+/* An arena's two links on the frame, by the words Mark uses for them:
+   Site, its first link to a web page, and Reference, its first link to a
+   document. The rest are in its panel. */
+const isDoc=u=>/\.(pdf|docx?|pptx?|xlsx?)([?#]|$)/i.test(u||'');
+function arenaLinks(a){
+  const web=(a.links||[]).filter(l=>/^https?:\/\//i.test(l.url||''));
+  return {site:web.find(l=>!isDoc(l.url))||null,ref:web.find(l=>isDoc(l.url))||null};
+}
 function arenaOpenBlock(a,calls){
   const blk=document.createElement('div'); blk.className='aopen'; blk.dataset.arena=a.id;
   blk.dataset.search=(a.name+' '+calls.map(c=>c.run.names.join(' ')).join(' ')).toLowerCase();
   const tone=calls[0]||{color:'#E6DDC9',ink:'#5C5140'};
-  const web=u=>/^https?:\/\//i.test(u||'');
-  const links=(a.links||[]).filter(l=>web(l.url)).slice(0,4)
-    .map(l=>`<a href="${attr(l.url)}" target="_blank" rel="noopener" title="${attr(l.url)}">${esc(l.label||hostOf(l.url))} ↗</a>`).join('');
-  const fresh=calls.some(c=>c.run.fresh);
+  const {site,ref}=arenaLinks(a);
+  const link=(l,w)=>l?`<a href="${attr(l.url)}" target="_blank" rel="noopener" title="${attr((l.label?l.label+' — ':'')+l.url)}">${w} ↗</a>`:'';
   blk.innerHTML=`<div class="aoh">
-      <span class="cchip achip" style="background:${tone.color};color:${calls[0]?fg(calls[0]):'var(--ink2)'}" title="${attr(a.name)}">${esc(tagName(a.name))}</span>
+      <span class="cchip achip" style="background:${tone.color};color:${calls[0]?fg(calls[0]):'var(--ink2)'}">${esc(a.name)}</span>
       <span class="aoty">${esc(a.type||'')}</span>
-      <span class="aomt">${a.leads} open lead${a.leads===1?'':'s'}</span>
-      <span class="aosp"></span>${links?`<span class="aoln">${links}</span>`:''}
-      <span class="aobt"></span></div>
-    ${a.about?`<div class="aotx"><div><h4>About</h4><p>${esc(a.about)}</p></div></div>`:''}`;
+      ${site||ref?`<span class="aoln">${link(site,'Site')}${link(ref,'Reference')}</span>`:''}
+      <span class="aosp"></span><span class="aobt"></span></div>`;
   const bt=blk.querySelector('.aobt');
-  if(fresh&&calls[0]) bt.appendChild(seenButton(calls[0]));
+  if(calls.some(c=>c.run.fresh)) bt.appendChild(seenButton(calls[0]));
   const panel=document.createElement('button'); panel.className='vbtn dark'; panel.textContent='Its panel ▸';
   panel.title='Everything about '+a.name+', in the Semaphore';
   panel.addEventListener('click',e=>{ e.stopPropagation(); if(ARENA_SRC&&ARENA_SRC.open) ARENA_SRC.open(a.id); });
   const x=document.createElement('button'); x.className='vbtn aox'; x.textContent='✕'; x.setAttribute('aria-label','Close '+a.name);
   x.addEventListener('click',e=>{ e.stopPropagation(); openArena(a.id); });
   bt.append(panel,x);
-  blk.querySelector('.aoh').addEventListener('click',e=>{ if(!e.target.closest('a,button')) openArena(a.id); });
   calls.forEach(c=>{
     const r=document.createElement('div'); r.className='crow aorow'+(c.run.fresh?' fresh':''); r.dataset.call=c.id;
-    r.title=c.run.names.join(', ')+(c.run.was.length?'\n'+c.run.was.join('; '):'');
-    r.innerHTML=`<span class="lbl"><span class="aocn">${esc(c.run.names.join(' · '))}</span></span><span class="track">${barsHTML(c,X,c.color,c.ink,true)}</span>`;
+    r.title=a.name+' — '+c.run.names.join(', ')+(c.run.was.length?'\n'+c.run.was.join('; '):'');
+    r.innerHTML=`<span class="lbl"><span class="cchip w achip" style="background:${c.color};color:${fg(c)}">${esc(a.name)}</span><span class="nm">${esc(c.name)}</span></span><span class="track">${barsHTML(c,X,c.color,c.ink,true)}</span>`;
     blk.appendChild(r);
   });
-  if(!calls.length) blk.insertAdjacentHTML('beforeend','<div class="aonone">No call dates on the board yet.</div>');
+  if(!calls.length) blk.insertAdjacentHTML('beforeend',`<div class="crow aorow"><span class="lbl"><span class="cchip w achip anon">${esc(a.name)}</span><span class="nm anone">no call dates on the board yet</span></span><span class="track"></span></div>`);
   return blk;
 }
+/* A click outside an arena opened shuts it and goes no further, so the
+   arena or call under the pointer is not opened in the same stroke (Mark,
+   issue 5). Only on the chart: the tabs, the search and the reader keep
+   their own presses, and a tab changed shuts the arena anyway. */
+document.getElementById('tl').addEventListener('click',e=>{
+  if(MODE!=='arena'||!P.state.openArena||e.target.closest('.aopen')) return;
+  e.stopPropagation(); e.preventDefault();
+  openArena(P.state.openArena);
+},true);
 /* The arenas in their order, each type's under its name when the tab holds
    more than one type, as OTHER does (Mark, 2026-10-24): the name once, in
    small capitals, over a slim rule in the type's own colour from Types.
@@ -469,8 +497,9 @@ const tabOrder=k=>{ const i=PAGES.findIndex(p=>p.key===k); if(i>=0) return i;
    lands (Mark, 2026-10-24): a new arena suggested, by ChatGPT's search
    for calls or the agent. The Semaphore's Dispatches did this until then.
    Here the board goes to the tab where a find belongs and draws it in
-   place with a dashed edge, not on the board yet, and a bar at the foot
-   says what it is and asks: added, in the type chosen there, or not. Then
+   place with a dashed edge, not on the board yet, and the panel it will
+   become says what it is and asks: added, in the type chosen there, or
+   not (see paintJudge). Then
    the next, in the order of the tabs. Stop leaves the rest waiting,
    counted on the pill in the search row, which starts again. New venues
    were judged here too, drawn on their lanes, until they went back to the
@@ -538,40 +567,30 @@ function judge(key,verb,type){
     if(was){ JUDGE.done++; JUDGE.key=null; readFinds(); showFind(); }
   });
 }
+/* The find on the bar is shown as the panel it will become, the
+   Semaphore's drawer lent over this room (Mark, issue 17, 2026-10-28),
+   which replaced a dark bar along the foot of the room: its site under its
+   name, where it goes and Add or No at its head, Back, Skip and Stop in
+   the band over it. What each press does stays here. */
 function paintJudge(){
-  const pill=document.getElementById('jpill'), bar=document.getElementById('jbar');
+  const pill=document.getElementById('jpill');
   const n=FINDS.length;
   pill.hidden=!n&&!JUDGE.on;
   pill.classList.toggle('on',JUDGE.on);
   pill.textContent=JUDGE.on?'Judging · '+(JUDGE.done+JUDGE.pos+1)+' of '+(JUDGE.done+n)
     :n+(n===1?' find':' finds')+' to judge';
-  pill.title=JUDGE.on?'The find at the foot of the room':'Go through what the searches found, one at a time';
-  document.body.classList.toggle('judging',JUDGE.on);
+  pill.title=JUDGE.on?'The find in the panel on the right':'Go through what the searches found, one at a time';
   paintTabDots();
   const f=judgedFind();
-  if(!f){ bar.hidden=true; bar.innerHTML=''; return; }
-  bar.hidden=false;
-  const total=JUDGE.done+n, cur=JUDGE.done+JUDGE.pos;
-  const dots=Array.from({length:Math.min(total,40)},(_,i)=>`<i class="${i<JUDGE.done?'done':i===cur?'cur':''}"></i>`).join('');
-  const opts=FTYPES.map(t=>`<option value="${attr(t.id)}"${t.id===f.type?' selected':''}>${esc(t.name)}</option>`).join('');
-  const mid=`<span class="jtag">New arena</span>
-      <div class="jname">${esc(f.name)} <span>suggested by ${esc(f.from)}</span></div>
-      <div class="jfor">${f.has?'<b>an arena by this name is on the board already</b>'
-        :`goes into <select class="jsel" aria-label="Its type">${opts}</select>`}</div>
-      ${f.why||f.url?`<div class="jev">${f.why?'“'+esc(f.why)+'”':''}${/^https?:\/\//i.test(f.url)?`<a href="${attr(f.url)}" target="_blank" rel="noopener">${esc(hostOf(f.url))} ↗</a>`:''}</div>`:''}`;
-  const btns=(f.has?'':`<button class="jb pri" data-v="add" title="Put it on the board as an arena of the type chosen">Add as an arena</button>`)+
-      `<button class="jb rem" data-v="no" title="${f.has?'Let the suggestion go':'Not an arena for the board'}">No</button>`;
-  bar.innerHTML=`<div class="jl"><div class="jk">Judging what was found</div>
-      <div class="jprog"><b>${cur+1}</b> of ${total}</div><div class="jdots" aria-hidden="true">${dots}</div></div>
-    <div class="jm">${mid}</div>
-    <div class="jr"><div class="jbtns">${btns}</div>
-      <div class="jnav"><button data-n="-1"${n>1?'':' disabled'}>‹ Back</button><button data-n="1"${n>1?'':' disabled'}>Skip for now ›</button><button data-n="0">Stop: the rest waits</button></div></div>`;
-  const sel=bar.querySelector('.jsel');
-  if(sel) sel.addEventListener('change',()=>{ JUDGE.types[f.key]=sel.value; readFinds(); showFind(); });
-  bar.querySelectorAll('.jb').forEach(b=>b.addEventListener('click',()=>judge(f.key,b.dataset.v,sel?sel.value:f.type)));
-  bar.querySelectorAll('.jnav button').forEach(b=>b.addEventListener('click',()=>{
-    const d=+b.dataset.n; if(d) stepFind(d); else stopJudging();
-  }));
+  if(!f){ if(ARENA_SRC&&ARENA_SRC.unfind) ARENA_SRC.unfind(); return; }
+  if(!ARENA_SRC||!ARENA_SRC.find) return;
+  ARENA_SRC.find({name:f.name,url:f.url,why:f.why,from:f.from,has:f.has,type:f.type,
+    types:FTYPES.map(t=>({id:t.id,name:t.name})),
+    cur:JUDGE.done+JUDGE.pos,total:JUDGE.done+n,done:JUDGE.done,n,
+    judge:(verb,type)=>judge(f.key,verb,type),
+    step:d=>stepFind(d),
+    stop:()=>{ if(JUDGE.on) stopJudging(); },
+    retype:t=>{ JUDGE.types[f.key]=t; readFinds(); showFind(); }});
 }
 const hostOf=u=>{ try{ return new URL(u).hostname.replace(/^www\./,''); }catch(e){ return String(u||''); } };
 document.getElementById('jpill').addEventListener('click',()=>{ if(!JUDGE.on) startJudging(); });
@@ -599,13 +618,13 @@ let topicEls=[], T0, T1, SPAN;
 const X=d=>(d3(d)-T0)/SPAN*100;
 
 const SRC_HORIZON=document.querySelector('.src').innerHTML;
-const SRC_ARENAS='Source: your arenas’ call dates on the Brokerage Semaphore, found by ChatGPT’s search or written by hand. A dashed date is not yet published to the day — confirm on the call’s own page before acting.';
+const SRC_ARENAS='Source: your arenas’ call dates on the Brokerage Semaphore, found by ChatGPT’s search or written by hand. A soft end is a date not yet published to the day, drawn over the time it can fall in — confirm on the call’s own page before acting.';
 function render(){
   document.getElementById('tlaway').innerHTML='';
   if(MODE==='overview') return renderOverview();
   const arena=MODE==='arena';
   document.getElementById('legcolour').textContent=arena
-    ?'colour = the arena · saturated tone = the round it is in, pale tone = the next · dashed = not yet published to the day'
+    ?'colour = the arena · saturated tone = the round it is in, pale tone = the next · a soft end ≈ when it can fall, not yet published to the day'
     :'colour = call series · saturated tone = 2026 call, pale tone = 2027 call';
   document.getElementById('tltxt').textContent='Calls · chronological';
   document.querySelector('.src').innerHTML=arena?SRC_ARENAS:SRC_HORIZON;
@@ -697,32 +716,43 @@ function toggleTopic(row,det,callId,color){
 /* Every day a call's bar reaches, for the chart's span. An arena's call
    may be no more than an expected window, or an opening with no deadline
    recorded yet; a Horizon call is always an opening and one or two. */
-const callDates=c=>[c.opening,c.d1,c.d2,c.annEnd].filter(Boolean);
+const callDates=c=>[c.opening,c.d1,c.d2,c.annEnd].concat(c.sOpen||[],c.sD1||[],c.sD2||[]).filter(Boolean);
 const rgba=(h,a)=>/^#[0-9a-f]{6}$/i.test(h)?'rgba('+[1,3,5].map(i=>parseInt(h.substr(i,2),16)).join(',')+','+a+')':h;
 /* One call's bar, its stages and its two date tags, in the colours the
    chart asks for: a cluster's own chart wears the call series' colours,
    the overview the cluster's. The opening's tag is the cluster chart's
    alone. An arena's call adds three looks a Horizon call never needs: a
-   dashed bar for dates not yet published to the day, a dashed band for a
-   call only expected, and a bar fading out where no deadline is known. */
+   soft band where a date not yet published to the day can fall (see
+   softSpan), the bar running solid only between what is known, a soft
+   band alone for a call only expected, and a bar fading out where no
+   deadline is known. */
 function barsHTML(c,X,col,ink,withOpen){
   let b='';
+  const soft=(sp,dir)=>{ const a=X(sp[0]), w=Math.max(X(sp[1])-a,.8);
+    const g=dir==='in'?`transparent,${col}`:dir==='out'?`${col},transparent`:`transparent,${col} 50%,transparent`;
+    return `<span class="csoft" style="left:${a}%;width:${w}%;background:linear-gradient(90deg,${g})"></span>`; };
   if(c.annEnd){
     const a=X(c.opening), w=Math.max(X(c.annEnd)-a,.8);
-    return `<span class="cann" style="left:${a}%;width:${w}%;border-color:${ink}"></span>
-      <span class="dtag r" style="left:${a+w}%;color:${ink}">${c.tagEnd}</span>`;
+    return soft([c.opening,c.annEnd],'both')+`<span class="dtag r" style="left:${a+w}%;color:${ink}">${c.tagEnd}</span>`;
   }
-  const x0=c.opening?X(c.opening):null, x1=c.d1?X(c.d1):null;
+  /* where the solid bar starts and ends: past a soft opening, short of a
+     soft deadline */
+  const x0=c.opening?X(c.sOpen?c.sOpen[1]:c.opening):null, x1=c.d1?X(c.sD1?c.sD1[0]:c.d1):null;
+  if(c.sOpen) b+=soft(c.sOpen,'in');
   if(x0!==null&&x1!==null)
-    b+=`<span class="cbar${c.unc?' unc':''}" style="left:${x0}%;width:${Math.max(x1-x0,.8)}%;${c.unc?`background:${rgba(col,.3)};border-color:${ink}`:`background:${col}`}"></span>`;
+    b+=`<span class="cbar${c.sD1?' sd':''}${c.sOpen?' so':''}" style="left:${x0}%;width:${Math.max(x1-x0,.8)}%;background:${col}"></span>`;
   else if(x0!==null) b+=`<span class="cbar fade" style="left:${x0}%;width:9%;--fc:${col}"></span>`;
-  if(x0!==null) b+=`<span class="dot" style="left:${x0}%;background:${col};box-shadow:0 0 0 1px ${ink}"></span>`;
-  if(x1!==null) b+=`<span class="cap" style="left:${x1}%;background:${ink}"></span>`;
-  if(c.twoStage) b+=`<span class="cbar2" style="left:${x1}%;width:${Math.max(X(c.d2)-x1,.8)}%;background-color:${col}"></span>
-    <span class="cap" style="left:${X(c.d2)}%;background:${ink}"></span>`;
-  const last=c.twoStage?X(c.d2):(x1!==null?x1:x0);
+  if(c.sD1) b+=soft(c.sD1,c.twoStage?'both':'out');
+  if(x0!==null&&!c.sOpen) b+=`<span class="dot" style="left:${x0}%;background:${col};box-shadow:0 0 0 1px ${ink}"></span>`;
+  if(x1!==null&&!c.sD1) b+=`<span class="cap" style="left:${x1}%;background:${ink}"></span>`;
+  if(c.twoStage){
+    const s1=X(c.sD1?c.sD1[1]:c.d1), s2=X(c.sD2?c.sD2[0]:c.d2);
+    b+=`<span class="cbar2" style="left:${s1}%;width:${Math.max(s2-s1,.8)}%;background-color:${col}"></span>`;
+    b+=c.sD2?soft(c.sD2,'out'):`<span class="cap" style="left:${X(c.d2)}%;background:${ink}"></span>`;
+  }
+  const last=c.twoStage?X(c.sD2?c.sD2[1]:c.d2):(x1!==null?X(c.sD1?c.sD1[1]:c.d1):x0);
   /* with no deadline known, the one tag already says when it opens */
-  if(withOpen&&x0!==null&&x1!==null) b+=`<span class="dtag" style="left:${x0}%;color:${ink||col}">${c.tagOpen||(dm(c.opening)+' ’'+yy(c.opening))}</span>`;
+  if(withOpen&&x0!==null&&x1!==null) b+=`<span class="dtag" style="left:${c.sOpen?X(c.sOpen[0]):x0}%;color:${ink||col}">${c.tagOpen||(dm(c.opening)+' ’'+yy(c.opening))}</span>`;
   b+=`<span class="dtag r" style="left:${last}%;color:${ink||col}">${c.tagEnd||(c.twoStage? dm(c.d1)+' → '+dm(c.d2)+' ’'+yy(c.d2) : dm(c.d1)+' ’'+yy(c.d1))}</span>`;
   return b;
 }

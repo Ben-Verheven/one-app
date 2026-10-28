@@ -61,8 +61,10 @@ calls land on the Call Board. What still holds of the board:
   down (2026-10-15).
 - A window with no end runs six weeks past today and fades out with an
   arrow, on Venues and in its card alike, rather than running to the edge.
-- **Uncertain is a dashed outline**, the one way the whole room draws it
-  (2026-10-07).
+- **Uncertain is a dashed outline** in the room's own drawings (2026-10-07);
+  a call date not yet published to the day is a soft band where it can
+  fall, on the slices of the Call Board in the panels as on the Call Board
+  (2026-10-28, see [call-board](call-board.md)).
 - His own order of the arenas within a type, set in Types, is the order the
   Call Board's tabs list them in.
 - The freezer went to the Call Board (2026-10-25), under each tab's calls,
@@ -205,10 +207,15 @@ calls land on the Call Board. What still holds of the board:
   colour, on Venues. 26 tones, two shades of thirteen hues,
   twice as colourful as the eighteen before them (2026-10-12), the old keys
   kept.
-- An arena's panel holds its About and Brokerage texts, its links in his own
-  order (dragged), its venues, its leads and its call dates, with **Ask
-  agent** at its head. Under its Closed line, its count: leads so far, how
-  many reached Talking, how many became projects.
+- **An arena's panel has a venue's shape** (2026-10-28): as wide, opening
+  on its slice of the Call Board, its calls alone (the venues serving it
+  as lanes there were turned down), with Site, Reference and **Ask agent**
+  under its name; then its next deadline, its leads and its venues, and
+  folded, each fold saying in a word what is in it, its About and links in
+  his own order (dragged), its Brokerage text and pages, and every date as
+  a list. Under its leads' Closed line, its count: leads so far, how many
+  reached Talking, how many became projects. Until then it was narrow and
+  opened on its texts, its dates last.
 
 ## Leads
 

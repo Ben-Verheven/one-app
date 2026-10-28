@@ -254,6 +254,7 @@
 #pane-callboard .dtag{position:absolute;top:-4px;font-family:var(--mono);font-size:9.5px;font-weight:600;white-space:nowrap;
   opacity:0;transition:opacity .12s;background:rgba(249,245,236,.94);padding:1px 4px;border-radius:3px}
 #pane-callboard .dtag.r{transform:translateX(-100%)}
+#pane-callboard .dtag.clash{display:none}
 #pane-callboard .crow:hover .dtag,#pane-callboard .crow.on .dtag{opacity:1}
 #pane-callboard .today{position:absolute;top:32px;bottom:0;width:0;border-left:1.5px dashed var(--umber);z-index:4}
 #pane-callboard .today-tag{position:absolute;top:3px;transform:translateX(-50%);font-family:var(--font);font-size:9px;font-weight:600;
@@ -361,12 +362,13 @@
 #pane-callboard .adl{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--ink);white-space:nowrap;flex:0 0 auto}
 #pane-callboard .adl.unc,#pane-callboard .callhdr .cdl.unc{font-weight:400;font-style:italic;color:var(--ink2)}
 #pane-callboard .ttl.anone{font-style:italic;color:var(--ink3)}
-/* not yet published to the day: dashed, as on the Semaphore's board */
-#pane-callboard .cbar.unc{box-shadow:none;border:1.5px dashed}
+/* Not yet published to the day: a soft band over the time it can fall in,
+   the bar square where it meets one (see softSpan in callboard.js) */
+#pane-callboard .csoft{position:absolute;top:12px;height:12px;min-width:5px;border-radius:6px}
+#pane-callboard .cbar.so{border-top-left-radius:0;border-bottom-left-radius:0}
+#pane-callboard .cbar.sd{border-top-right-radius:0;border-bottom-right-radius:0}
 /* a call open with no deadline known fades out rather than ending */
 #pane-callboard .cbar.fade{box-shadow:none;border-radius:2px 0 0 2px;background:linear-gradient(90deg,var(--fc) 35%,transparent)}
-/* a call only expected: the window it is expected in */
-#pane-callboard .cann{position:absolute;top:13px;height:10px;border-radius:999px;border:1.5px dashed;min-width:6px}
 /* a type of action and the full text say nothing about an arena's call */
 #pane-callboard header.arena .typechips,#pane-callboard header.arena .ftchip{display:none}
 /* An arena's tab is the chart alone (see clearArenaList), which takes the
@@ -393,41 +395,24 @@
 #pane-callboard .crow.typed{box-shadow:inset 3px 0 0 var(--ty)}
 #pane-callboard .crow.typed .lbl{padding-left:9px}
 #pane-callboard .aopen.typed{border-left:4px solid var(--ty)}
-/* An arena opened where it stands (see openArena). Its edge sits outside
-   the chart's own by exactly its border, so its bars stand under the same
-   days as everyone else's. */
-#pane-callboard .aopen{position:relative;margin:6px -1.5px 8px;padding:10px 0 8px;border:1.5px solid var(--umber);border-radius:9px;
-  background:#F3EAD3;box-shadow:0 6px 18px rgba(74,58,30,.16)}
-#pane-callboard .aoh{display:flex;align-items:center;gap:12px;padding:0 14px 8px;cursor:pointer}
+/* An arena opened where it stands (see openArena): a frame round its own
+   rows, drawn as every other row is. Its edge sits outside the chart's own
+   by exactly its border, so its bars stand under the same days as
+   everyone else's, and its ground is thin enough for the month lines
+   behind it to show through, which Mark asked for (2026-10-28). */
+#pane-callboard .aopen{position:relative;margin:6px -1.5px 8px;padding:0 0 4px;border:1.5px solid var(--umber);border-radius:9px;
+  background:rgba(250,246,236,.5);box-shadow:0 6px 18px rgba(74,58,30,.16)}
+#pane-callboard .aoh{display:flex;align-items:center;gap:14px;height:42px;padding:0 8px 0 10px;border-bottom:1px solid var(--line)}
 #pane-callboard .aoh .cchip{font-size:11px;padding:3px 9px;max-width:none}
 #pane-callboard .aoty{font-family:var(--font);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--brass2);white-space:nowrap}
-#pane-callboard .aomt{font-family:var(--mono);font-size:11px;color:var(--ink3);white-space:nowrap}
 #pane-callboard .aosp{flex:1}
-#pane-callboard .aoln{display:flex;gap:12px;min-width:0;overflow:hidden}
-#pane-callboard .aoln a{font-family:var(--font);font-size:10px;letter-spacing:.06em;color:var(--brass2);white-space:nowrap;
-  text-decoration:underline;text-underline-offset:3px}
+#pane-callboard .aoln{display:flex;gap:14px;min-width:0}
+#pane-callboard .aoln a{font-family:var(--font);font-size:10.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--brass2);
+  white-space:nowrap;text-decoration:underline;text-underline-offset:3px}
+#pane-callboard .aoln a:hover{color:var(--ink)}
 #pane-callboard .aobt{display:flex;gap:7px;align-items:center}
 #pane-callboard .aox{width:28px;padding:0}
-#pane-callboard .aotx{display:grid;grid-template-columns:1fr 1fr;gap:22px;padding:6px 14px 10px;border-top:1px solid var(--line);
-  border-bottom:1px solid var(--line)}
-#pane-callboard .aotx>div:only-child{grid-column:1 / -1}
-#pane-callboard .aotx h4{font-family:var(--font);font-size:9.5px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;
-  color:var(--brass2);margin:4px 0 3px}
-#pane-callboard .aotx p{margin:0;font-size:14px;line-height:1.42;color:var(--ink2);white-space:pre-line;
-  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 #pane-callboard .aopen .crow{cursor:default}
-/* the call's name over its dates, so neither is cut short; the bar stays
-   in the middle of the taller row */
-#pane-callboard .aopen .crow{height:46px}
-#pane-callboard .aopen .crow .track{align-self:center;height:37px}
-#pane-callboard .aopen .lbl{flex-direction:column;align-items:stretch;justify-content:center;gap:1px;padding:0 14px}
-#pane-callboard .aocn{min-width:0;display:flex;align-items:center;gap:8px;font-family:var(--body);font-size:14px;color:var(--ink);
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#pane-callboard .aocn>span{overflow:hidden;text-overflow:ellipsis}
-#pane-callboard .aopen .crow:hover .track{background:none}
-/* an arena opened says its calls' dates on their bars, not beside them */
-#pane-callboard .aopen .crow .dtag{opacity:1}
-#pane-callboard .dtag.clash{display:none}
 #pane-callboard .aonone{padding:6px 14px;font-family:var(--body);font-style:italic;font-size:13px;color:var(--ink3)}
 #pane-callboard .vbtn{height:28px;padding:0 10px;white-space:nowrap;border-radius:var(--radius);cursor:pointer;font-family:var(--font);font-size:10px;
   letter-spacing:.07em;color:var(--ink2);border:1px solid rgba(120,96,58,0.3);background:linear-gradient(180deg,#FDFAF3,#F0EADB)}
@@ -439,7 +424,7 @@
    so it reads on any call's colour. */
 #pane-callboard .topic.fresh .bar{box-shadow:0 0 0 1.5px #9db672,0 0 8px rgba(157,182,114,.9)}
 #pane-callboard .topic.fresh .achip{box-shadow:0 0 0 2px var(--panel),0 0 0 3.5px #9db672,0 0 9px rgba(157,182,114,.85)}
-#pane-callboard .crow.fresh .cbar,#pane-callboard .crow.fresh .cann{box-shadow:0 0 0 2px var(--panel),0 0 0 3.5px #9db672,0 0 10px rgba(157,182,114,.9)}
+#pane-callboard .crow.fresh .cbar,#pane-callboard .crow.fresh .csoft{box-shadow:0 0 0 2px var(--panel),0 0 0 3.5px #9db672,0 0 10px rgba(157,182,114,.9)}
 #pane-callboard .seen{flex:0 0 auto;height:22px;padding:0 9px;border-radius:7px;cursor:pointer;white-space:nowrap;
   font-family:var(--font);font-size:10px;letter-spacing:.07em;color:var(--ink2);
   border:1px solid rgba(120,96,58,.3);background:linear-gradient(180deg,#FDFAF3,#F0EADB)}
@@ -465,9 +450,9 @@
 #pane-callboard .frzout:hover{color:var(--ink);background:rgba(154,123,58,.12)}
 /* ══ 10. JUDGING THE FINDS ══
    A find waiting to be judged: its pill in the search row, a dot on its
-   tab, the new arena dashed on its tab's chart, and the bar at the foot of
-   the room; see "judging the finds, one at a time" in callboard.js. The bar
-   is the shell's own dark band, so it reads as the room asking. */
+   tab and the new arena dashed on its tab's chart; the find itself is
+   shown in the Semaphore's drawer, lent over this room (see paintJudge in
+   callboard.js). */
 #pane-callboard .jpill{display:inline-flex;align-items:center;gap:7px;padding:5px 12px;border-radius:999px;cursor:pointer;
   font-family:var(--font);font-size:10px;letter-spacing:.07em;color:#F5ECD8;
   background:linear-gradient(180deg,#463823,#2E2415);border:1px solid var(--umber);white-space:nowrap}
@@ -479,45 +464,4 @@
 #pane-callboard .crow.ghost{cursor:default}
 #pane-callboard .crow.ghost .track{background:rgba(154,123,58,.10);box-shadow:inset 0 0 0 1.5px var(--brass)}
 #pane-callboard .crow.ghost .lbl .cchip.achip{color:var(--ink);background:transparent;border:1.5px dashed var(--umber);max-width:68%;flex-shrink:0}
-#pane-callboard.judging .wrap{padding-bottom:150px}
-#pane-callboard.judging .tl-sticky{max-height:calc(100vh - var(--hdr-h,96px) - 140px)}
-#pane-callboard .jbar{position:fixed;left:0;right:0;bottom:0;z-index:60;display:flex;align-items:stretch;gap:28px;
-  min-height:132px;padding:16px 26px;color:#F5ECD8;background:linear-gradient(180deg,#3A2F1A,#241D10);
-  border-top:1.5px solid rgba(205,176,105,.45);box-shadow:0 -8px 22px rgba(36,29,16,.35)}
-#pane-callboard .jbar[hidden]{display:none}
-#pane-callboard .jl{flex:0 0 150px;display:flex;flex-direction:column;gap:6px}
-#pane-callboard .jk{font-family:var(--font);font-size:9.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#D9C497;line-height:1.5}
-#pane-callboard .jprog{font-family:var(--mono);font-size:11px;color:#E2D4B4}
-#pane-callboard .jprog b{font-family:var(--font);font-size:22px;font-weight:600;color:#F5ECD8;margin-right:6px}
-#pane-callboard .jdots{display:flex;flex-wrap:wrap;gap:4px}
-#pane-callboard .jdots i{display:block;width:7px;height:7px;border-radius:50%;background:#6E5D3A}
-#pane-callboard .jdots i.done{background:#C6AE79}
-#pane-callboard .jdots i.cur{background:transparent;box-shadow:0 0 0 1.5px #F5ECD8}
-#pane-callboard .jm{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
-#pane-callboard .jtag{align-self:flex-start;font-family:var(--mono);font-size:9.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
-  color:#241D10;background:#DDC287;border-radius:3px;padding:1px 6px}
-#pane-callboard .jname{font-family:var(--font);font-size:14px;font-weight:600;letter-spacing:.04em;color:#F5ECD8;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#pane-callboard .jname span{font-family:var(--body);font-style:italic;font-weight:400;font-size:14px;letter-spacing:0;color:#E2D4B4;margin-left:8px}
-#pane-callboard .jfor{display:flex;flex-wrap:wrap;align-items:center;gap:3px 16px;font-family:var(--mono);font-size:11.5px;color:#E2D4B4}
-#pane-callboard .jfor b{color:#F5ECD8;font-weight:600}
-#pane-callboard .jsel{font-family:var(--mono);font-size:11px;color:#F5ECD8;border:1px solid rgba(205,176,105,.45);border-radius:6px;
-  padding:3px 6px;margin-left:6px;background:#2A2215}
-#pane-callboard .jev{font-family:var(--body);font-size:14px;font-style:italic;color:#D9CBAA;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#pane-callboard .jev a{font-style:normal;font-family:var(--font);font-size:10px;letter-spacing:.06em;margin-left:8px;color:#DDC287}
-#pane-callboard .jev a:hover{color:#F5ECD8}
-#pane-callboard .jr{flex:0 0 auto;display:flex;flex-direction:column;justify-content:space-between;align-items:flex-end;gap:10px}
-#pane-callboard .jbtns{display:flex;gap:8px}
-#pane-callboard .jb{height:40px;padding:0 16px;border-radius:8px;cursor:pointer;white-space:nowrap;font-family:var(--font);font-size:11px;
-  letter-spacing:.07em;color:#F5ECD8;background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(0,0,0,.14));border:1px solid rgba(205,176,105,.45)}
-#pane-callboard .jb:hover{border-color:#E4CB86}
-#pane-callboard .jb.pri{color:#241D10;background:linear-gradient(180deg,#E4CB86,#C9A84C);border-color:#E4CB86;font-weight:600}
-#pane-callboard .jb.rem{color:#F0C2B4;border-color:rgba(233,182,166,.5)}
-#pane-callboard .jb.armed{color:#241D10;background:#E9B6A6;border-color:#E9B6A6}
-#pane-callboard .jnav{display:flex;gap:4px}
-#pane-callboard .jnav button{padding:6px 8px;cursor:pointer;background:none;border:0;font-family:var(--font);font-size:10px;letter-spacing:.08em;
-  color:#D9C497;text-decoration:underline;text-underline-offset:3px}
-#pane-callboard .jnav button:hover{color:#F5ECD8}
-#pane-callboard .jnav button:disabled{color:#9C8B66;text-decoration:none;cursor:default}
-@media (hover:none){#pane-callboard .jnav button{padding:12px 10px}}
 

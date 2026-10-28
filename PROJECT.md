@@ -463,7 +463,7 @@ opened there is `.aopen`, and where a tab holds several types each is named
 over its arenas by a `.tyh`. Under a tab's
 calls stands its freezer, `.frz`, the arenas put away as `.frzchip`s. What waits to be judged is counted on `#jpill` and dotted on
 its tab (`.fd`); while judging, the new arena stands dashed in its tab, a
-row `.ghost`, and the bar along the foot of the room is `#jbar`. The decisions behind them are in
+row `.ghost`, and the find itself opens in the Semaphore's drawer, lent over the Board. The decisions behind them are in
 [call-board](notes/call-board.md).
 
 **The Atlas** — `#app` › `header` carries `#tab-search`, `#tab-browse`,
