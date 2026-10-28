@@ -463,26 +463,26 @@ _No section banners._
 
 ## `rooms/callboard/callboard.js`
 
-1661 lines · 91 KB
+1666 lines · 92 KB
 
 ```
 Call Board                                      callboard.js:1
 the ink on a coloured chip                      callboard.js:62
 tabs                                            callboard.js:100
 the arenas' calls                               callboard.js:155
-the tab an arena belongs to                     callboard.js:439
-judging the finds, one at a time                callboard.js:462
-render                                          callboard.js:592
-the freezer                                     callboard.js:796
-the other clusters, while a search is typed     callboard.js:869
-full topic text                                 callboard.js:1037
-why the slide is started two frames late        callboard.js:1140
-overview page                                   callboard.js:1200
-the chronological chart, and dragging its ends  callboard.js:1263
-the topic list under the chart                  callboard.js:1378
-repainting what is already drawn                callboard.js:1521
-controls                                        callboard.js:1559
-what the other rooms may ask for                callboard.js:1621
+the tab an arena belongs to                     callboard.js:444
+judging the finds, one at a time                callboard.js:467
+render                                          callboard.js:597
+the freezer                                     callboard.js:801
+the other clusters, while a search is typed     callboard.js:874
+full topic text                                 callboard.js:1042
+why the slide is started two frames late        callboard.js:1145
+overview page                                   callboard.js:1205
+the chronological chart, and dragging its ends  callboard.js:1268
+the topic list under the chart                  callboard.js:1383
+repainting what is already drawn                callboard.js:1526
+controls                                        callboard.js:1564
+what the other rooms may ask for                callboard.js:1626
 ```
 
 ## `rooms/callboard/callboard.css`
@@ -662,4 +662,4 @@ Generated data. Never open, never edit, never upload.
 
 ---
 
-**39029 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.
+**39034 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.

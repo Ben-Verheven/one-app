@@ -290,7 +290,12 @@ function buildArenaTabs(){
 /* the socket the bridge fills, and again on every change on the other side */
 function arenasArrived(){
   readArenas(); readFinds();
-  if(JUDGE.on) return showFind();
+  /* While judging, a change made elsewhere on the board is drawn where
+     Mark is. Every save went to the find's tab, so Seen pressed on another
+     tab's glowing call, straight after ChatGPT's answer was put on the
+     board, threw him back to the arena being judged, and seemed to do
+     nothing (Mark, 2026-10-26). A find judged moves on by itself (judge). */
+  if(JUDGE.on){ const f=judgedFind(); if(!f||MODE!=='overview'&&(!f.tab||f.tab===P.key)) return showFind(); }
   paintJudge();
   if(pendingTab){ const k=pendingTab; pendingTab=null; if(APAGES.some(p=>p.key===k&&p.tabEl)) return selectArenaTab(k); }
   if(MODE==='arena'){
