@@ -63,7 +63,11 @@ no file under `one-app/`. These are his choices, and what he dropped.
 - **Mark, Bin and Why within reach wherever he is in an entry**
   (2026-10-16): the bar holds at the top of the entry pane, and each entry
   opens at its head. Why, his short note on an entry, is lit in the gold of
-  Marked once anything is written in it (2026-10-18).
+  Marked once anything is written in it (2026-10-18). Bin wears the phone's
+  bin, large and in the brokerage red (2026-10-28).
+- **Binning goes on to the next entry**, and after the last of a venue to
+  the first of the next venue that has any under the same filters, rather
+  than staying on the entry just binned (2026-10-28, `nextVenue`).
 
 ## Venues
 
