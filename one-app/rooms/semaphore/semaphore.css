@@ -923,6 +923,13 @@
 #pane-semaphore .fjudge{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:8px}
 #pane-semaphore .fjudge .sp{flex:1}
 #pane-semaphore .fjudge select{margin-left:6px;padding:4px 8px;border-radius:6px;border:1px solid var(--line);background:var(--field)}
+/* a call text being judged: its opening words, set as the reader sets them */
+#pane-semaphore .ftw{font:italic 15px var(--body);color:var(--ink)}
+#pane-semaphore .ftext{margin-top:14px;padding:14px 18px;border:1px solid var(--line);border-radius:10px;background:var(--field);
+  font:16px/1.55 var(--body);color:var(--ink)}
+#pane-semaphore .ftext h4{margin:0 0 6px;font:600 10px/1.5 var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+#pane-semaphore .ftext p{margin:0 0 8px}
+#pane-semaphore .ftext p.bul{padding-left:16px;text-indent:-12px}
 #pane-semaphore .fwhy{margin-top:12px;font:italic 15px/1.45 var(--body);color:var(--ink)}
 /* the panel's folds, under its leads and venues (see readHTML) */
 #pane-semaphore .afolds{margin-top:14px}
@@ -1499,6 +1506,9 @@
 /* the wording of the search not opened (see openGpt) */
 #pane-semaphore #gptModal [hidden]{display:none}
 #pane-semaphore .gptrow{display:flex;gap:8px;margin:0 0 14px}
+/* the Call Board's two searches, one press apart at the box's head */
+#pane-semaphore .gptpick{display:flex;gap:6px;margin:0 0 14px}
+#pane-semaphore .gptpick .btn[aria-pressed="true"]{color:var(--ink);border-color:var(--key2);background:rgba(221,194,135,.16)}
 #pane-semaphore #gptModal textarea{min-height:90px;margin-bottom:8px}
 #pane-semaphore #gptSaid p{font-family:var(--body);font-size:13.5px;line-height:1.5;margin:8px 0 4px}
 #pane-semaphore #gptSaid .gptok{color:var(--ink)}

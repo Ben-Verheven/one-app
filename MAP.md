@@ -26,7 +26,7 @@ rooms                                                hub.js:296
 
 ## `shell/bridge.js`
 
-2198 lines · 106 KB
+2366 lines · 114 KB
 
 ```
 Bridge — what the five rooms say to each other.             bridge.js:1
@@ -37,24 +37,25 @@ the Call Board's reader, lent the same way                  bridge.js:272
 the topic a project was written for                         bridge.js:332
 Semaphore's arena drawer, lent the same way                 bridge.js:352
 Semaphore's board, on the Call Board                        bridge.js:423
-Semaphore's leads, on the Ledger's board                    bridge.js:489
-the ring                                                    bridge.js:537
-the name                                                    bridge.js:652
-the page change                                             bridge.js:716
-the rooms that keep their own state, on the Ledger's cloud  bridge.js:752
-which copy wins                                             bridge.js:834
-what the room says about itself                             bridge.js:889
-putting two copies together                                 bridge.js:1082
-the agents' inboxes: what the scheduled agents found        bridge.js:1419
-a lead's sheet                                              bridge.js:1566
-open where we left off                                      bridge.js:1636
-the weekly Excel: every lead, open and closed               bridge.js:1647
-the zip                                                     bridge.js:1704
-the styles                                                  bridge.js:1758
-the look                                                    bridge.js:1797
-what goes in it                                             bridge.js:2015
-where it goes                                               bridge.js:2059
-on the iPad, links open in DuckDuckGo                       bridge.js:2144
+Semaphore's leads, on the Ledger's board                    bridge.js:490
+the ring                                                    bridge.js:538
+the name                                                    bridge.js:670
+the page change                                             bridge.js:734
+the rooms that keep their own state, on the Ledger's cloud  bridge.js:770
+which copy wins                                             bridge.js:852
+what the room says about itself                             bridge.js:907
+putting two copies together                                 bridge.js:1100
+the agents' inboxes: what the scheduled agents found        bridge.js:1437
+a lead's sheet                                              bridge.js:1584
+the Horizon check, and the call texts                       bridge.js:1654
+open where we left off                                      bridge.js:1804
+the weekly Excel: every lead, open and closed               bridge.js:1815
+the zip                                                     bridge.js:1872
+the styles                                                  bridge.js:1926
+the look                                                    bridge.js:1965
+what goes in it                                             bridge.js:2183
+where it goes                                               bridge.js:2227
+on the iPad, links open in DuckDuckGo                       bridge.js:2312
 ```
 
 ## `shell/boot.js`
@@ -67,28 +68,28 @@ Boot check  boot.js:1
 
 ## `shell/shell.css`
 
-816 lines · 43 KB
+830 lines · 43 KB
 
 ```
 Shell — the chrome that holds the five rooms.              shell.css:1
 the line of rooms                                          shell.css:55
 the name, written once by the shell                        shell.css:94
-the Atlas's dossier, lent to the other rooms               shell.css:205
-the Call Board's reader, lent the same way                 shell.css:223
-the Semaphore's arena drawer, lent the same way            shell.css:244
-the page change                                            shell.css:267
-stage & panes                                              shell.css:304
-the researcher link, wherever a name is written            shell.css:360
-Palette harmonisation.                                     shell.css:374
-faint was #9D8458                                          shell.css:420
-The ribbon.                                                shell.css:448
-one bar: one height, one control face                      shell.css:464
-the ribbon's ink, said louder than each room says its own  shell.css:530
-Semaphore: already the shape of the thing                  shell.css:600
-the Ledger                                                 shell.css:605
-the Atlas: a 21px italic wordmark                          shell.css:647
-the Call Board: the cluster row is the bar                 shell.css:669
-a lead's sheet, printed                                    shell.css:799
+the Atlas's dossier, lent to the other rooms               shell.css:219
+the Call Board's reader, lent the same way                 shell.css:237
+the Semaphore's arena drawer, lent the same way            shell.css:258
+the page change                                            shell.css:281
+stage & panes                                              shell.css:318
+the researcher link, wherever a name is written            shell.css:374
+Palette harmonisation.                                     shell.css:388
+faint was #9D8458                                          shell.css:434
+The ribbon.                                                shell.css:462
+one bar: one height, one control face                      shell.css:478
+the ribbon's ink, said louder than each room says its own  shell.css:544
+Semaphore: already the shape of the thing                  shell.css:614
+the Ledger                                                 shell.css:619
+the Atlas: a 21px italic wordmark                          shell.css:661
+the Call Board: the cluster row is the bar                 shell.css:683
+a lead's sheet, printed                                    shell.css:813
 ```
 
 ## `rooms/ledger/ledger.view.js`
@@ -365,13 +366,13 @@ The new-todo pane                                          ledger.css:4081
 
 ## `rooms/semaphore/semaphore.view.js`
 
-148 lines · 8 KB
+152 lines · 9 KB
 
 _No section banners._
 
 ## `rooms/semaphore/semaphore.js`
 
-5439 lines · 310 KB
+5678 lines · 329 KB
 
 ```
 Brokerage Semaphore                         semaphore.js:1
@@ -385,47 +386,47 @@ filtering                                   semaphore.js:584
 the board, on the Call Board                semaphore.js:653
 new arenas, waiting to be judged            semaphore.js:676
 ChatGPT's search                            semaphore.js:737
-venues, on screen                           semaphore.js:1273
-asking the agent about one venue            semaphore.js:1389
-the visit question                          semaphore.js:1431
-a venue's window, drawn                     semaphore.js:1485
-dragging a window's ends                    semaphore.js:1521
-Venues: three sections and Limbo            semaphore.js:1616
-dragging a venue into place                 semaphore.js:1746
-what a search found, checked in its card    semaphore.js:1822
-a venue, opened                             semaphore.js:1949
-drawer                                      semaphore.js:2262
-read view: one stream, in time order        semaphore.js:2366
-edit view                                   semaphore.js:2512
-actions                                     semaphore.js:2735
-a call's run                                semaphore.js:2838
-the board, lent to the Call Board           semaphore.js:2853
-leads                                       semaphore.js:2935
-the ruit                                    semaphore.js:3186
-the score                                   semaphore.js:3242
-one lead card, in both rooms                semaphore.js:3295
-a type's colour dot                         semaphore.js:3344
-who and the links, side by side             semaphore.js:3449
-the leads table                             semaphore.js:3466
-leads: one board, three sections            semaphore.js:3656
-a lead opening in place                     semaphore.js:3776
-a lead moving, and the view moving with it  semaphore.js:3883
-leads, lent to the Ledger's board           semaphore.js:4218
-modals                                      semaphore.js:4349
-asking, and saying                          semaphore.js:4352
-the types, managed                          semaphore.js:4393
-dragging in the list of types               semaphore.js:4449
-tooltip                                     semaphore.js:4610
-events                                      semaphore.js:4648
-venues                                      semaphore.js:4809
-typing, and the forms it goes into          semaphore.js:5006
-escape, and closing by clicking away        semaphore.js:5204
-putting links in your own order             semaphore.js:5240
+venues, on screen                           semaphore.js:1471
+asking the agent about one venue            semaphore.js:1587
+the visit question                          semaphore.js:1629
+a venue's window, drawn                     semaphore.js:1683
+dragging a window's ends                    semaphore.js:1719
+Venues: three sections and Limbo            semaphore.js:1814
+dragging a venue into place                 semaphore.js:1944
+what a search found, checked in its card    semaphore.js:2020
+a venue, opened                             semaphore.js:2147
+drawer                                      semaphore.js:2460
+read view: one stream, in time order        semaphore.js:2564
+edit view                                   semaphore.js:2710
+actions                                     semaphore.js:2966
+a call's run                                semaphore.js:3069
+the board, lent to the Call Board           semaphore.js:3084
+leads                                       semaphore.js:3172
+the ruit                                    semaphore.js:3423
+the score                                   semaphore.js:3479
+one lead card, in both rooms                semaphore.js:3532
+a type's colour dot                         semaphore.js:3581
+who and the links, side by side             semaphore.js:3686
+the leads table                             semaphore.js:3703
+leads: one board, three sections            semaphore.js:3893
+a lead opening in place                     semaphore.js:4013
+a lead moving, and the view moving with it  semaphore.js:4120
+leads, lent to the Ledger's board           semaphore.js:4455
+modals                                      semaphore.js:4586
+asking, and saying                          semaphore.js:4589
+the types, managed                          semaphore.js:4630
+dragging in the list of types               semaphore.js:4686
+tooltip                                     semaphore.js:4847
+events                                      semaphore.js:4885
+venues                                      semaphore.js:5048
+typing, and the forms it goes into          semaphore.js:5245
+escape, and closing by clicking away        semaphore.js:5443
+putting links in your own order             semaphore.js:5479
 ```
 
 ## `rooms/semaphore/semaphore.css`
 
-1586 lines · 120 KB
+1596 lines · 121 KB
 
 ```
 Brokerage Semaphore                                     semaphore.css:1
@@ -446,49 +447,51 @@ who and the links, side by side ── (see leadPanesHTML)  semaphore.css:534
 one lead card, in both rooms                            semaphore.css:634
 freezer                                                 semaphore.css:834
 arena panel                                             semaphore.css:846
-a venue's window                                        semaphore.css:1043
-Venues: three sections and Limbo                        semaphore.css:1082
-the visit question                                      semaphore.css:1217
-a venue, in the panel                                   semaphore.css:1244
-modals                                                  semaphore.css:1475
-the types, managed (renderTypes                         semaphore.css:1512
-the calendar                                            semaphore.css:1555
-tooltip                                                 semaphore.css:1582
+a venue's window                                        semaphore.css:1050
+Venues: three sections and Limbo                        semaphore.css:1089
+the visit question                                      semaphore.css:1224
+a venue, in the panel                                   semaphore.css:1251
+modals                                                  semaphore.css:1482
+the types, managed (renderTypes                         semaphore.css:1522
+the calendar                                            semaphore.css:1565
+tooltip                                                 semaphore.css:1592
 ```
 
 ## `rooms/callboard/callboard.view.js`
 
-77 lines · 4 KB
+78 lines · 4 KB
 
 _No section banners._
 
 ## `rooms/callboard/callboard.js`
 
-1790 lines · 98 KB
+2000 lines · 109 KB
 
 ```
 Call Board                                      callboard.js:1
 the ink on a coloured chip                      callboard.js:62
 tabs                                            callboard.js:100
 the arenas' calls                               callboard.js:213
-the tab an arena belongs to                     callboard.js:576
-judging the finds, one at a time                callboard.js:599
-render                                          callboard.js:722
-the freezer                                     callboard.js:936
-the other clusters, while a search is typed     callboard.js:998
-full topic text                                 callboard.js:1166
-why the slide is started two frames late        callboard.js:1269
-overview page                                   callboard.js:1329
-the chronological chart, and dragging its ends  callboard.js:1392
-the topic list under the chart                  callboard.js:1507
-repainting what is already drawn                callboard.js:1650
-controls                                        callboard.js:1688
-what the other rooms may ask for                callboard.js:1750
+the tab an arena belongs to                     callboard.js:583
+judging the finds, one at a time                callboard.js:606
+the official call texts                         callboard.js:759
+the portal, laid over the Work Programme        callboard.js:821
+render                                          callboard.js:912
+the freezer                                     callboard.js:1128
+the other clusters, while a search is typed     callboard.js:1190
+full topic text                                 callboard.js:1358
+why the slide is started two frames late        callboard.js:1468
+overview page                                   callboard.js:1529
+the chronological chart, and dragging its ends  callboard.js:1592
+the topic list under the chart                  callboard.js:1707
+repainting what is already drawn                callboard.js:1850
+controls                                        callboard.js:1888
+what the other rooms may ask for                callboard.js:1950
 ```
 
 ## `rooms/callboard/callboard.css`
 
-460 lines · 37 KB
+483 lines · 39 KB
 
 ```
 Call Board                                       callboard.css:1
@@ -503,6 +506,7 @@ THE CALL BOARD — the Ledger's daylight sibling.  callboard.css:2
 8. THE SHEET DRAWN OUT (full topic text)         callboard.css:305
 9. THE ARENAS' CALLS                             callboard.css:352
 10. JUDGING THE FINDS                            callboard.css:444
+11. THE PORTAL, LAID OVER THE WORK PROGRAMME     callboard.css:465
 ```
 
 ## `rooms/atlas/atlas.view.js`
@@ -664,4 +668,4 @@ Generated data. Never open, never edit, never upload.
 
 ---
 
-**39840 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.
+**40509 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.

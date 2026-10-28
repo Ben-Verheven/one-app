@@ -466,12 +466,13 @@
       refresh();
     });
     Hub.on('semaphore:saved', changed);
-    Hub.on('cloud:session', function (on) { if (on && Hub.started('callboard')) refresh(); });
+    function cloudBack() { var B = Hub.api('callboard'); if (B.cloudBack) B.cloudBack(); }
+    Hub.on('cloud:session', function (on) { if (on && Hub.started('callboard')) { refresh(); cloudBack(); } });
     /* A new arena being judged is shown in the drawer lent over the Board,
        and shut when the Board is left, so it is not found open in the
        Semaphore; coming back draws it again where judging stood. */
     Hub.onRoom(function (now) {
-      if (now === 'callboard') { changed(); refresh(); }
+      if (now === 'callboard') { changed(); refresh(); cloudBack(); }
       else if (S.closeFind) S.closeFind();
     });
     /* ChatGPT's answer to the search for calls put on the board: the new
@@ -609,11 +610,28 @@
   var glyphs = {};
   order.forEach(function (pid) { glyphs[pid] = glyph(pid); });
 
+  /* The finds waiting to be judged on the Call Board, counted beside its
+     mark (Mark, 2026-10-28): new arenas the searches suggested and call
+     texts, wherever he is. The number stands in the ring beside the mark
+     rather than inside it, because a mark not of the room he is in is drawn
+     at 40%, and a count inside it came out as faint as the mark. It walks
+     with the mark, given the same slot. */
+  var countEl = document.createElement('span');
+  countEl.className = 'oa-n';
+  countEl.hidden = true;
+  ring.appendChild(countEl);
+  function ringCount(n) {
+    countEl.hidden = !n;
+    countEl.textContent = n > 99 ? '99+' : String(n || '');
+    countEl.title = n ? n + (n === 1 ? ' find' : ' finds') + ' to judge on the Call Board' : '';
+  }
+
   function place() {
     order.forEach(function (pid, i) {
       var b = glyphs[pid];
       if (!b) return;
       var here = (i === order.length - 1);
+      if (pid === 'callboard') countEl.style.setProperty('--slot', i);
       b.style.setProperty('--slot', i);
       b.classList.toggle('on', here);
       /* the mark at the right point is the room you are in, and that has
@@ -1632,6 +1650,156 @@
 
     return { ready: function () { return !!open(); }, list: list };
   })());
+
+  /* ── the Horizon check, and the call texts ───────────────────────── */
+
+  /* Two tables a plain program fills every night
+     (supabase/10-horizon-check-function.ts): `horizon_topics`, what the
+     EU's portal says today about each topic of the Work Programme, which
+     the Call Board lays over the Work Programme file without ever changing
+     it; and `call_texts`, the official texts of the calls on the board,
+     each judged on the Call Board before it is kept. ChatGPT's search for
+     call texts adds to the second from the app. Both are read through the
+     same connection and on the same terms as the inboxes above, and the
+     Call Board asks for them itself, as the Semaphore asks for its inbox:
+     they are the cloud's, not another room's. */
+  function cloudOpen(hold) {
+    var L = Hub.api('ledger');
+    if (!L || typeof L.signedIn !== 'function' || !L.signedIn()) return null;
+    if (hold.client) return hold.client;
+    var cfg;
+    try { cfg = JSON.parse(localStorage.getItem('pj-cloud-config') || 'null'); } catch (e) { cfg = null; }
+    if (!cfg || !cfg.url || !cfg.key || !window.supabase) return null;
+    try { hold.client = window.supabase.createClient(cfg.url, cfg.key, { accessToken: ledgerToken }); }
+    catch (e) { hold.client = null; }
+    return hold.client;
+  }
+  function answered(cb) {
+    return function (res) {
+      if (res && res.error) { cb(null, res.error.message); return; }
+      cb((res && res.data) || [], null);
+    };
+  }
+
+  var horizonHold = {};
+  Hub.expose('horizon', {
+    ready: function () { return !!cloudOpen(horizonHold); },
+    /* the topics the portal has otherwise than the Work Programme: the
+       few the Board draws differently */
+    changes: function (cb) {
+      var c = cloudOpen(horizonHold);
+      if (!c) { cb(null, 'no cloud connection'); return; }
+      c.from('horizon_topics')
+        .select('id,call,title,status,opening,deadlines,wp_call,wp_opening,wp_deadlines,diff,moved_to,changed_at,seen_at')
+        .neq('diff', '').then(answered(cb)).catch(function (e) { cb(null, e.message); });
+    },
+    /* one topic's notices from the portal, for the reader */
+    notices: function (id, cb) {
+      var c = cloudOpen(horizonHold);
+      if (!c) { cb(null, 'no cloud connection'); return; }
+      c.from('horizon_topics').select('notices').eq('id', id).maybeSingle()
+        .then(function (res) { cb(res && res.data ? res.data.notices || [] : [], res && res.error ? res.error.message : null); })
+        .catch(function (e) { cb(null, e.message); });
+    },
+    seen: function (ids, cb) {
+      var c = cloudOpen(horizonHold);
+      if (!c) { cb('not logged in'); return; }
+      c.from('horizon_topics').update({ seen_at: new Date().toISOString() }).in('id', ids)
+        .then(function (res) { cb(res && res.error ? res.error.message : null); })
+        .catch(function (e) { cb(e.message); });
+    }
+  });
+
+  /* Every text, kept, waiting and turned down, read once and kept here, so
+     the count in the ring, the Call Board and ChatGPT's search for call
+     texts read the same list (a call whose text was turned down is not
+     searched again); read again on every
+     change made through here, and when Mark logs in or comes back to the
+     Board, since another machine may have judged one. */
+  var textsHold = {}, texts = { rows: [], read: false };
+  function textsChanged() {
+    ringRecount();
+    var B = Hub.started('callboard') && Hub.api('callboard');
+    if (B && B.textsChanged) B.textsChanged();
+  }
+  function readTexts(done) {
+    var c = cloudOpen(textsHold);
+    if (!c) { if (done) done('no cloud connection'); return; }
+    c.from('call_texts')
+      .select('id,arena_id,ident,call,title,sections,source,source_url,source_title,read_at,status,created_at')
+      .order('created_at', { ascending: true }).limit(1000)
+      .then(function (res) {
+        if (res && res.error) { if (done) done(res.error.message); return; }
+        texts.rows = (res && res.data) || []; texts.read = true;
+        textsChanged(); if (done) done(null);
+      })
+      .catch(function (e) { if (done) done(e.message); });
+  }
+  /* Whether a text belongs to a call, one rule for both rooms: its arena,
+     and the portal id written in the call's name, matched whole
+     (HORIZON-MSCA-2027-COFUND-01 is not the start of
+     HORIZON-MSCA-2027-COFUND-01-01's call), or, for a text ChatGPT found,
+     the call's own name. A call renamed since loses its text until the
+     name is given back. */
+  function fits(t, arenaId, names) {
+    if (!t || t.arena_id !== arenaId) return false;
+    names = (names || []).map(function (n) { return String(n || ''); });
+    if (t.ident) {
+      var rx = new RegExp('(^|[^A-Z0-9-])' + String(t.ident).replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?![A-Z0-9-])', 'i');
+      return names.some(function (n) { return rx.test(n); });
+    }
+    var k = String(t.call || '').trim().toLowerCase();
+    return !!k && names.some(function (n) { return n.trim().toLowerCase() === k; });
+  }
+  Hub.expose('call-texts', {
+    ready: function () { return !!cloudOpen(textsHold); },
+    list: function () { return texts.rows; },
+    fits: fits,
+    refresh: readTexts,
+    /* `decide` names the status it expects to find, as the inboxes' does,
+       so a text cannot be judged twice from two machines */
+    decide: function (id, status, cb) {
+      var c = cloudOpen(textsHold);
+      if (!c) { cb('not logged in'); return; }
+      c.from('call_texts').update({ status: status, decided_at: new Date().toISOString() })
+        .eq('id', id).eq('status', 'new').select('id')
+        .then(function (res) {
+          if (res && res.error) { cb(res.error.message); return; }
+          if (!res || !res.data || !res.data.length) { readTexts(); cb('already judged somewhere else'); return; }
+          texts.rows.forEach(function (r) { if (r.id === id) r.status = status; });
+          textsChanged(); cb(null);
+        })
+        .catch(function (e) { cb(e.message); });
+    },
+    add: function (rows, cb) {
+      var c = cloudOpen(textsHold);
+      if (!c) { cb('not logged in'); return; }
+      c.from('call_texts').upsert(rows, { onConflict: 'id', ignoreDuplicates: true })
+        .then(function (res) {
+          if (res && res.error) { cb(res.error.message); return; }
+          readTexts(function () { cb(null); });
+        })
+        .catch(function (e) { cb(e.message); });
+    }
+  });
+
+  /* The ring's count: the Semaphore's new arenas waiting, its own and the
+     agent's, and the call texts waiting. */
+  function ringRecount() {
+    var S = Hub.api('semaphore'), n = 0;
+    try { n = (S && S.finds) ? (S.finds().finds || []).length : 0; } catch (e) { n = 0; }
+    n += texts.rows.filter(function (r) { return r.status === 'new'; }).length;
+    ringCount(n);
+  }
+  function ringRead() {
+    var S = Hub.api('semaphore');
+    readTexts();
+    if (S && S.refreshFinds) S.refreshFinds(ringRecount); else ringRecount();
+  }
+  Hub.on('semaphore:saved', ringRecount);
+  Hub.on('cloud:session', function (on) { if (on) ringRead(); else { texts.rows = []; ringRecount(); } });
+  Hub.onRoom(function (now) { if (now === 'callboard') readTexts(); });
+  setTimeout(ringRead, 0);
 
   /* ── open where we left off ───────────────────────────────────────── */
 

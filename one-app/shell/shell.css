@@ -141,6 +141,20 @@ html #pane-callboard .tabs > *:first-child{margin-left:auto}
 .oa-g:focus-visible{outline:1px solid var(--oa-key); outline-offset:1px}
 .oa-g.on{opacity:1}
 .oa-g .g{display:block; transition:transform .4s cubic-bezier(.2,.8,.2,1)}
+/* the finds waiting on the Call Board, beside its mark (bridge.js, the
+   ring): set on the ring and not in the mark, which is drawn at 40% */
+.oa-n{
+  position:absolute; left:17px; top:50%; margin-top:-16px; z-index:1;
+  min-width:13px; height:13px; padding:0 3px; box-sizing:border-box;
+  border-radius:7px; background:#E4CB86; color:#241D10;
+  box-shadow:0 0 0 2px var(--sc-umber);
+  font:700 9px/13px ui-monospace,Menlo,Consolas,monospace; text-align:center;
+  pointer-events:none;
+  transform:translateX(calc(var(--slot,0) * var(--oa-ring-step,29px)));
+  transition:transform .56s cubic-bezier(.62,.03,.2,1);
+}
+#oa-ring.still .oa-n{transition:none}
+.oa-n[hidden]{display:none}
 .oa-g.on .g{transform:scale(1.22)}
 
 /* the five marks, each still its own */

@@ -457,4 +457,27 @@
 #pane-callboard .crow.ghost{cursor:default}
 #pane-callboard .crow.ghost .track{background:rgba(154,123,58,.10);box-shadow:inset 0 0 0 1.5px var(--brass)}
 #pane-callboard .crow.ghost .lbl .cchip.achip{color:var(--ink);background:transparent;border:1.5px dashed var(--umber);max-width:68%;flex-shrink:0}
+/* the dashed mark on the call whose text is being judged, as the new
+   arena's row is dashed: not kept yet */
+#pane-callboard .tghost{flex:0 0 auto;margin-left:8px;padding:0 7px;border:1.5px dashed var(--brass2);border-radius:4px;
+  font-family:var(--font);font-size:9.5px;line-height:1.7;letter-spacing:.08em;text-transform:uppercase;color:var(--brass2);white-space:nowrap}
 
+/* ══ 11. THE PORTAL, LAID OVER THE WORK PROGRAMME ══
+   A topic the portal no longer has, or has moved, struck through where it
+   stands; the struck title in the third ink, not faded, so it still reads
+   (see laying the portal over in callboard.js). */
+#pane-callboard .topic.gone .ttl{text-decoration:line-through;text-decoration-color:#8B3A2E;color:var(--ink3)}
+#pane-callboard .hztag{flex:0 0 auto;margin-left:8px;padding:0 6px;border:1px solid #C79A8F;border-radius:4px;
+  font-family:var(--font);font-size:9.5px;line-height:1.7;letter-spacing:.07em;text-transform:uppercase;color:#8B3A2E;white-space:nowrap}
+#pane-callboard .topic .seen{margin-left:8px}
+/* the call's text, beside its call in an arena opened */
+#pane-callboard .tbtn{flex:0 0 auto;margin-left:8px;height:22px;padding:0 8px;font-size:10px}
+/* the reader: the portal's notices under a topic's links, and a line that
+   heads a list in a call's text */
+#pane-callboard .rd-notes{margin-top:12px;padding:9px 13px;border:1px solid rgba(221,194,135,.35);border-radius:8px;
+  background:rgba(0,0,0,.18);font-family:var(--body);font-size:14.5px;line-height:1.45;color:#EDE3CC}
+#pane-callboard .rd-notes[hidden]{display:none}
+#pane-callboard .rd-notes p{margin:0 0 4px}
+#pane-callboard .rd-notes .rnk{font-family:var(--font);font-size:9.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#DDC287}
+#pane-callboard .rd-notes .rnd{font-family:var(--mono);font-size:11.5px;color:#DDC287;margin-right:10px}
+#pane-callboard .rd-body p.sub{font-weight:600;color:var(--ink)}

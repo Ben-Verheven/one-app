@@ -537,6 +537,13 @@ function arenaOpenBlock(a,calls){
     const r=document.createElement('div'); r.className='crow aorow'+(c.run.fresh?' fresh':''); r.dataset.call=c.id;
     r.title=a.name+' — '+c.run.names.join(', ')+(c.run.was.length?'\n'+c.run.was.join('; '):'');
     r.innerHTML=`<span class="lbl">${tagHTML(a,c,c.short)}<span class="nm">${esc(c.name)}</span></span><span class="track">${barsHTML(c,X,c.color,c.ink,true)}</span>`;
+    const t=keptText(c);
+    if(t){
+      const tb=document.createElement('button'); tb.className='vbtn tbtn'; tb.textContent='▤ Text';
+      tb.title='Read '+(t.title||t.call)+', the call’s official text';
+      tb.addEventListener('click',e=>{ e.stopPropagation(); openText(t,c); });
+      r.querySelector('.nm').after(tb);
+    }
     blk.appendChild(r);
   });
   if(!calls.length) blk.insertAdjacentHTML('beforeend',`<div class="crow aorow"><span class="lbl">${tagHTML(a,null,tagName(a.name))}<span class="nm anone">no call dates on the board yet</span></span><span class="track"></span></div>`);
@@ -609,9 +616,11 @@ const tabOrder=k=>{ const i=PAGES.findIndex(p=>p.key===k); if(i>=0) return i;
    were judged here too, drawn on their lanes, until they went back to the
    Semaphore with the lanes (2026-10-25), where each is put to Mark in its
    own card. Dates are not judged: a new or changed one goes straight on
-   and glows on its call's row until Seen (see arenaRow). A call text, the
-   third kind of find drawn, comes with the search for official call
-   texts. */
+   and glows on its call's row until Seen (see arenaRow). The official
+   text of a call on the board is the second kind (2026-10-28), read on the
+   EU portal by the nightly Horizon check or found by ChatGPT's search for
+   call texts, and kept beside its call only once judged here (see "the
+   official call texts"). */
 const JUDGE={on:false,key:null,pos:0,done:0,types:{}};
 let FINDS=[], FTYPES=[];
 function readFinds(){
@@ -622,7 +631,7 @@ function readFinds(){
   FINDS=(o.finds||[]).filter(f=>f.kind==='arena').map(f=>{
     const type=JUDGE.types[f.key]||f.type, t=FTYPES.find(x=>x.id===type);
     return Object.assign({},f,{type,tab:t?arenaTabKey(f.name,t.name):null});
-  }).sort((x,y)=>tabOrder(x.tab)-tabOrder(y.tab)||x.name.localeCompare(y.name));
+  }).concat(textFinds()).sort((x,y)=>tabOrder(x.tab)-tabOrder(y.tab)||x.name.localeCompare(y.name));
 }
 /* the find on the bar: the one named, or, once that one is judged, the one
    now standing in its place, and after the last the first again */
@@ -664,8 +673,19 @@ function stepFind(d){
 /* Judged: the Semaphore does it and saves, the save comes back here as a
    change, and the next find is the one now standing where this one stood. */
 function judge(key,verb,type){
-  if(!ARENA_SRC||!ARENA_SRC.judge) return;
   const was=JUDGE.on&&judgedFind()&&judgedFind().key===key;
+  /* a text is answered in the cloud, where it waits */
+  if(key.startsWith('text:')){
+    const api=textApi();
+    if(!api){ Hub.note('Log in to the cloud first: the call texts are kept there.',6000); return; }
+    api.decide(key.slice(5),verb==='add'?'kept':'no',err=>{
+      if(err){ Hub.note(err,6000); return; }
+      if(was){ JUDGE.done++; JUDGE.key=null; readFinds(); showFind(); }
+      else { readFinds(); paintJudge(); }
+    });
+    return;
+  }
+  if(!ARENA_SRC||!ARENA_SRC.judge) return;
   ARENA_SRC.judge(key,verb,type,err=>{
     if(err){ Hub.note(err,6000); return; }
     if(was){ JUDGE.done++; JUDGE.key=null; readFinds(); showFind(); }
@@ -688,7 +708,15 @@ function paintJudge(){
   const f=judgedFind();
   if(!f){ if(ARENA_SRC&&ARENA_SRC.unfind) ARENA_SRC.unfind(); return; }
   if(!ARENA_SRC||!ARENA_SRC.find) return;
-  ARENA_SRC.find({name:f.name,url:f.url,why:f.why,from:f.from,has:f.has,type:f.type,
+  const t=f.kind==='text'?f.text:null;
+  ARENA_SRC.find({kind:f.kind,dates:f.dates||[],name:f.name,url:t?t.source_url||'':f.url,why:f.why,from:f.from,has:f.has,type:f.type,
+    text:t?{source:t.source,sourceTitle:t.source_title||'',arena:f.arenaName||'',call:t.ident||t.call,
+      sections:(t.sections||[]).slice(0,2).map(x=>({h:x.h||'',p:(x.p||[]).slice(0,4)})),
+      more:(t.sections||[]).length>2||(t.sections||[]).some(x=>(x.p||[]).length>4)}:null,
+    /* the panel is lent over the whole room, so the reader cannot open
+       above it: it is put aside while the text is read, and closing the
+       reader brings it back on the same find */
+    read:t?()=>{ if(ARENA_SRC.unfind) ARENA_SRC.unfind(); openText(t,f.call,paintJudge); }:null,
     types:FTYPES.map(t=>({id:t.id,name:t.name})),
     cur:JUDGE.done+JUDGE.pos,total:JUDGE.done+n,done:JUDGE.done,n,
     judge:(verb,type)=>judge(f.key,verb,type),
@@ -712,11 +740,173 @@ function paintTabDots(){
   /* and on the triangle's point, since its row may be the one not shown */
   ptEls.forEach((pt,k)=>pt.classList.toggle('fd',!!rowOf(GROUPS[k].g).querySelector('.fd')));
 }
+/* the call a text being judged belongs to, marked on its row with the
+   text's mark dashed, as the new arena's row is dashed: not kept yet */
+function ghostText(rowsEl){
+  const f=judgedFind();
+  if(!f||f.kind!=='text'||!f.call) return;
+  const r=[...rowsEl.querySelectorAll('.crow')].find(x=>x.dataset.call===f.call.id);
+  const nm=r&&r.querySelector('.nm');
+  if(nm) nm.insertAdjacentHTML('afterend','<span class="tghost" title="Its text, not kept yet">▤ Text</span>');
+}
 /* the new arena being judged, as a row of its tab's chart, dashed */
 function ghostArenaRow(rowsEl){
   const f=judgedFind();
   if(!f||f.kind!=='arena'||MODE==='overview'||(f.tab&&f.tab!==P.key)) return;
   rowsEl.insertAdjacentHTML('beforeend',`<div class="crow ghost afirst"><span class="lbl"><span class="cchip w achip">${esc(f.name)}</span><span class="nm anone">a new arena, not on the board yet</span></span><span class="track"></span></div>`);
+}
+
+/* ---------- the official call texts ----------
+   An arena's call can be read in the same reader as a Horizon topic, with
+   a link to where its text came from (Mark, 2026-10-24; built 2026-10-28).
+   The texts are the cloud's, in a table of their own (call_texts), never
+   on the Semaphore's board: two places fill it. The nightly Horizon check
+   copies, word for word, the text of every call on the board that the EU
+   portal carries, found by the portal id written in the call's name; Mark
+   chose that over asking ChatGPT for those too, as exact and free.
+   ChatGPT's search for call texts brings the rest. Either way a text is a
+   find, judged here one at a time, and once kept it opens from the Text
+   beside its call in the arena opened, which Mark chose over a mark on
+   every row of the chart. Which call a text belongs to is the bridge's
+   rule (`fits` in bridge.js), the same for ChatGPT's search. */
+const textApi=()=>{ try{ const a=Hub.api('call-texts'); return a&&a.ready&&a.ready()?a:null; }catch(e){ return null; } };
+const callTexts=()=>{ try{ const a=Hub.api('call-texts'); return (a&&a.list&&a.list())||[]; }catch(e){ return []; } };
+/* whether text `t` is call `c`'s, by the bridge's one rule */
+function textFits(t,c){
+  try{ const a=Hub.api('call-texts'); return !!(a&&a.fits&&c)&&a.fits(t,c.arenaId,[c.name].concat((c.run&&c.run.names)||[])); }
+  catch(e){ return false; }
+}
+const keptText=c=>callTexts().find(t=>t.status==='kept'&&textFits(t,c))||null;
+/* the texts waiting, as finds in the tab of their arena */
+function textFinds(){
+  const arenas=APAGES.flatMap(p=>p.arenas).concat(FZ?FZ.arenas:[]);
+  const calls=ACALLS.concat(FZ?FZ.calls:[]);
+  return callTexts().filter(t=>t.status==='new').map(t=>{
+    const c=calls.find(x=>textFits(t,x))||null, a=c?c.arena:arenas.find(x=>x.id===t.arena_id);
+    const tt=a&&tabOfType(a.type);
+    return {kind:'text',key:'text:'+t.id,text:t,call:c,name:t.title||t.call,arenaName:a?a.name:'',
+      tab:c?c.cluster:(a&&a.frozenAt?'FREEZER':tt?tt.key:null)};
+  });
+}
+/* a text's paragraphs as the reader sets a topic's: a bullet kept, a line
+   heading a list ("Proposals are expected to:") set apart */
+function textBody(secs){
+  return (secs||[]).map(x=>(x.h?`<h3>${esc(x.h)}</h3>`:'')+(x.p||[]).map(p=>
+    p.startsWith('• ')?`<p class="bul">•&nbsp;${esc(p.slice(2))}</p>`
+    :/^[^•].{0,80}:$/.test(p)?`<p class="sub">${esc(p)}</p>`:`<p>${esc(p)}</p>`).join('')).join('');
+}
+function openText(t,c,back){
+  RD_ID=null; RD_BACK=back||null;
+  const a=c&&c.arena, short=a?tagName(a.name):'';
+  document.getElementById('rdtitle').textContent=t.title||t.call;
+  const row=(k,v,mono)=>v?`<tr><td>${k}</td><td${mono?' class="full"':''}>${v}</td></tr>`:'';
+  const from=t.source==='portal'?'Word for word from the Funding &amp; Tenders portal'
+    :'Found by ChatGPT’s search for call texts'+(t.source_title?', from “'+esc(t.source_title)+'”':'');
+  document.getElementById('rdmeta').innerHTML='<table>'
+    +row('Arena',a?esc(short)+(short!==a.name?` <span class="aside">(${esc(a.name)})</span>`:''):'')
+    +row('Call',esc(t.ident||t.call),!!t.ident)
+    +row('Opens',c&&c.tagOpen&&!c.annEnd?esc(c.tagOpen):'')
+    +row('Deadline',c&&c.tagEnd?esc(c.tagEnd):'')
+    +row('Text',from+(t.read_at?', read '+dmy(String(t.read_at).slice(0,10)):''))
+    +'</table>';
+  const links=document.getElementById('rdlinks'); links.innerHTML='';
+  if(/^https?:\/\//i.test(t.source_url||'')) links.appendChild(portalLink(t.source_url,'Call text at its source'));
+  const nt=document.getElementById('rdnotes'); nt.hidden=true; nt.innerHTML='';
+  const body=document.getElementById('rdbody');
+  body.innerHTML=textBody(t.sections)||'<p>This text has no sections.</p>';
+  body.scrollTop=0;
+  slideReader();
+}
+
+/* ---------- the portal, laid over the Work Programme ----------
+   The Work Programme file is the Call Board's Horizon, as adopted, and is
+   never changed. What the EU portal says today about each of its topics
+   is read every night by the Horizon check, a plain program in Supabase
+   (supabase/10-horizon-check-function.ts), into a table of its own, and
+   laid over the file here (Mark, 2026-10-24; built 2026-10-28): a call
+   whose dates the portal gives otherwise is drawn at the portal's dates,
+   glowing until Seen, and says on hover what the Work Programme said; a
+   topic the portal no longer has, or has moved to another call, is struck
+   through where it stands, glowing until Seen and struck for good, which
+   Mark chose over folding such topics into one line under their heading.
+   The portal's notices about dates, eligibility or a cancellation stand in
+   the reader; its other notices (a submission system opening, page limits,
+   success rates) are left out. Topics new to the portal are not shown.
+   When the topics of one call disagree among themselves, the last read
+   gives the call its dates. */
+const HZ={rows:new Map()};
+ALLCALLS.forEach(c=>{ c.wp={opening:c.opening,d1:c.d1,d2:c.d2}; });
+const hzApi=()=>{ try{ const a=Hub.api('horizon'); return a&&a.ready&&a.ready()?a:null; }catch(e){ return null; } };
+const unseen=r=>!!(r&&r.changed_at&&(!r.seen_at||r.seen_at<r.changed_at));
+const dmyOr=d=>d?dmy(d):'—';
+function layHorizon(){
+  ALLCALLS.forEach(c=>{ Object.assign(c,c.wp); c.hz=null; });
+  HZ.rows.forEach(r=>{
+    if(r.diff!=='dates') return;
+    const rec=TOPIC_BY_ID[r.id], c=rec&&rec.call;
+    if(!c) return;
+    const dl=r.deadlines||[];
+    if(r.opening) c.opening=r.opening;
+    if(dl[0]) c.d1=dl[0];
+    if(c.twoStage&&dl[1]) c.d2=dl[1];
+    const h=c.hz||(c.hz={ids:[],fresh:false});
+    h.ids.push(r.id); h.fresh=h.fresh||unseen(r);
+    h.was='The Work Programme said: opens '+dmyOr(c.wp.opening)+', deadline '+
+      (c.twoStage?dmyOr(c.wp.d1)+' → '+dmyOr(c.wp.d2):dmyOr(c.wp.d1));
+  });
+}
+function readHorizon(){
+  const api=hzApi(); if(!api) return;
+  api.changes((rows,err)=>{
+    if(err||!rows) return;
+    HZ.rows=new Map(rows.map(r=>[r.id,r]));
+    layHorizon();
+    if(MODE!=='arena') render();
+  });
+}
+function hzSeen(ids){
+  const api=hzApi();
+  if(!api){ Hub.note('Log in to the cloud first: what the portal said is kept there.',6000); return; }
+  api.seen(ids,err=>{
+    if(err){ Hub.note('Not marked seen — '+err,6000); return; }
+    const now=new Date().toISOString();
+    ids.forEach(id=>{ const r=HZ.rows.get(id); if(r) r.seen_at=now; });
+    layHorizon(); render();
+  });
+}
+function hzSeenButton(ids){
+  const b=document.createElement('button'); b.className='seen'; b.textContent='Seen ✓';
+  b.title='The glow goes';
+  b.addEventListener('click',e=>{ e.stopPropagation(); hzSeen(ids); });
+  return b;
+}
+/* a topic's row, as the portal has it */
+function hzTopic(row,id){
+  const r=HZ.rows.get(id); if(!r) return;
+  if(r.diff==='gone'||r.diff==='moved'){
+    row.classList.add('gone');
+    row.querySelector('.ttl').insertAdjacentHTML('afterend',
+      `<span class="hztag">${r.diff==='moved'?'Moved to '+esc(shortTopicId(r.moved_to||'')):'Gone from the portal'}</span>`);
+    row.title+='\n'+(r.diff==='moved'?'The portal now has it as '+r.moved_to:'The portal no longer has this topic');
+  } else row.title+='\nThe portal gives its call other dates than the Work Programme';
+  if(unseen(r)){ row.classList.add('fresh'); row.appendChild(hzSeenButton([id])); }
+}
+/* the portal's notices worth reading in the reader: about dates,
+   eligibility or a cancellation (Mark, 2026-10-28) */
+const NOTICE=/postpon|extended|extension|cancel|withdrawn|eligib|no longer|reopen|corrigend|deadline (?:is|has been|was|will be) (?:changed|moved|postponed|extended)/i;
+let RD_ID=null, RD_BACK=null;
+function readerNotices(id){
+  const nt=document.getElementById('rdnotes'); nt.hidden=true; nt.innerHTML='';
+  const api=hzApi(); if(!api) return;
+  api.notices(id,list=>{
+    if(RD_ID!==id) return;
+    const keep=(list||[]).filter(n=>n&&NOTICE.test(n.text||''));
+    if(!keep.length) return;
+    nt.innerHTML=`<p class="rnk">From the portal</p>`+keep.slice(0,6).map(n=>{
+      const s=String(n.text); return `<p><span class="rnd">${n.at?esc(dmy(n.at)):''}</span>${esc(s.length>420?s.slice(0,420)+'…':s)}</p>`;
+    }).join('');
+    nt.hidden=false;
+  });
 }
 
 /* ---------- render ---------- */
@@ -788,6 +978,7 @@ function buildLedger(){
           <span class="tbadge">${m.type||'—'}</span>
           <span class="tid">${shortId}</span>
           <span class="ttl">${tp.title}</span>`;
+        hzTopic(row,tp.id);
         const det=document.createElement('div'); det.className='tdetail';
         det.innerHTML=`<table>
           <tr><td>Topic</td><td class="full">${tp.id}</td></tr>
@@ -894,12 +1085,13 @@ function buildTimeline(){
   tl.insertAdjacentHTML('afterbegin',`<div class="plot">${grid}</div>`);
   const rowsEl=document.getElementById('tlrows');
   ghostArenaRow(rowsEl);
-  if(MODE==='arena') buildArenaRows(rowsEl);
+  if(MODE==='arena'){ buildArenaRows(rowsEl); ghostText(rowsEl); }
   else P.calls.forEach(c=>{
     const r=document.createElement('div'); r.className='crow'; r.tabIndex=0; r.setAttribute('role','button');
     r.dataset.call=c.id; r.title=c.id;
     const b=barsHTML(c,X,c.color,c.ink,true);
     r.innerHTML=`<span class="lbl"><span class="cchip w" style="background:${c.color};color:${fg(c)}">${esc(c.short)}</span><span class="nm">${esc(c.name)}</span></span><span class="track">${b}</span>`;
+    if(c.hz){ r.title+='\n'+c.hz.was; if(c.hz.fresh){ r.classList.add('fresh'); r.querySelector('.lbl').appendChild(hzSeenButton(c.hz.ids)); } }
     const act=()=>toggleCall(c.id);
     r.addEventListener('click',act);
     r.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();act();}});
@@ -1241,6 +1433,8 @@ function openReader(topic, call){
           +(ACTION_TYPES[topic.type]?` <span class="aside">(${esc(topic.type)})</span>`:'')
         : '')
     +row('Call',`${esc(call.id)} <span class="aside">(${esc(call.name)})</span>`,1)
+    +row('Portal',(r=>!r?'':r.diff==='gone'?'No longer on the portal'
+      :r.diff==='moved'?'Moved to '+esc(r.moved_to||''):call.hz?esc(call.hz.was):'')(HZ.rows.get(topic.id)))
     +row('Opens',dmy(call.opening),1)
     +row('Deadline',call.twoStage? dmy(call.d1)+' (stage 1) → '+dmy(call.d2)+' (stage 2)'
                                  : dmy(call.d1),1)
@@ -1252,6 +1446,7 @@ function openReader(topic, call){
   const links=document.getElementById('rdlinks');
   links.innerHTML='';
   links.appendChild(portalLink(topicURL(topic.id),'Topic on portal'));
+  RD_ID=topic.id; RD_BACK=null; readerNotices(topic.id);
   const body=document.getElementById('rdbody');
   if(!d){ body.innerHTML='<p>No full text could be extracted for this topic.</p>'; }
   else{
@@ -1266,6 +1461,10 @@ function openReader(topic, call){
     body.innerHTML=h;
   }
   body.scrollTop=0;
+  slideReader();
+  return true;
+}
+function slideReader(){
   /* ── why the slide is started two frames late ──
      Everything above this line is expensive and all of it lands in one
      go: a topic's full text is a few dozen paragraphs of 16.5px serif
@@ -1294,9 +1493,10 @@ function openReader(topic, call){
     try{ document.getElementById('rdclose').focus({preventScroll:true}); }
     catch(e){ document.getElementById('rdclose').focus(); }
   }));
-  return true;
 }
 function closeReader(){
+  const back=RD_BACK; RD_BACK=null;
+  if(back&&JUDGE.on) setTimeout(back,0);
   document.getElementById('reader').classList.remove('open');
   document.getElementById('reader').setAttribute('aria-hidden','true');
   document.getElementById('scrim').classList.remove('open');
@@ -1781,8 +1981,18 @@ Hub.expose('callboard',{
   arenasChanged:function(){ if(ARENA_SRC) arenasArrived(); },
   /* go through what waits to be judged, from the first find, as ChatGPT's
      answer put on the board asks */
-  judge:function(){ if(ARENA_SRC) startJudging(); }
+  judge:function(){ if(ARENA_SRC) startJudging(); },
+  /* the call texts read again from the cloud (bridge.js), and the cloud
+     back after a login or on coming back to the room */
+  textsChanged:function(){
+    readFinds();
+    if(JUDGE.on) return;
+    paintJudge();
+    if(MODE==='arena') render();
+  },
+  cloudBack:function(){ readHorizon(); }
 });
+readHorizon();
 /* The room is built late and only once; the bridge waits for this to
    hand it the arenas. */
 Hub.emit('callboard:ready');

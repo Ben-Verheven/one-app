@@ -68,6 +68,7 @@ Hub.markup('callboard', `
     <h2 id="rdtitle"></h2>
     <div class="rd-meta" id="rdmeta"></div>
     <div class="rd-links" id="rdlinks"></div>
+    <div class="rd-notes" id="rdnotes" hidden></div>
   </div>
   <div class="rd-body" id="rdbody"></div>
 </aside>

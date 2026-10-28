@@ -98,11 +98,15 @@ ITEA 4 ; Programme ; software"></textarea>
   <div class="mbox">
     <h2 data-gk="venues">ChatGPT's search for brokerage</h2>
     <h2 data-gk="calls" hidden>ChatGPT's search for calls</h2>
+    <h2 data-gk="texts" hidden>ChatGPT's search for call texts</h2>
+    <div class="gptpick" data-gk="calls texts" hidden><button class="btn" data-act="gptKind" data-gpick="calls" aria-pressed="true">Calls</button><button class="btn" data-act="gptKind" data-gpick="texts" aria-pressed="false">Call texts</button></div>
     <p class="sub" data-gk="venues"><b>1.</b> Write the file: every arena with its brokerage and links, and its call dates to go by; every venue; and the instructions. Your leads, visits and notes stay out. Give the file to ChatGPT with deep research on, and ask it to do what the file says.</p>
-    <p class="sub" data-gk="calls" hidden><b>1.</b> Write the file: every arena with its call dates and links, and the instructions. Brokerage is the Brokerage Semaphore's own search. Give the file to ChatGPT with deep research on, and ask it to do what the file says.</p>
+    <p class="sub" data-gk="calls" hidden><b>1.</b> Write the file: every arena with its call dates and links, and the instructions; the clusters and missions are left to the nightly Horizon check, and brokerage is the Brokerage Semaphore's own search. Give the file to ChatGPT with deep research on, and ask it to do what the file says.</p>
+    <p class="sub" data-gk="texts" hidden><b>1.</b> Write the file: the calls on your board, open now or opening within six months, whose official text you do not have yet, and the instructions. The texts the EU portal carries come every night by themselves. Give the file to ChatGPT with deep research on, and ask it to do what the file says.</p>
     <div class="gptrow"><button class="btn primary" data-act="gptWrite">Write the file for ChatGPT</button></div>
     <p class="sub" data-gk="venues"><b>2.</b> Paste what ChatGPT gave back, or choose its file. Nothing changes until you press Put on the board. Then each new venue, and each venue it changed, is put to you in its card, one at a time.</p>
     <p class="sub" data-gk="calls" hidden><b>2.</b> Paste what ChatGPT gave back, or choose its file. Nothing changes until you press Put on the board. Then new and corrected call dates go straight on and glow on the Call Board until you press Seen, and each new arena it suggests is put to you there in turn.</p>
+    <p class="sub" data-gk="texts" hidden><b>2.</b> Paste what ChatGPT gave back, or choose its file. Nothing is kept until you press Put on the board. Then each text is put to you on the Call Board in turn, and a text you keep is read from the Text beside its call.</p>
     <textarea id="gptText" placeholder="Paste ChatGPT's answer here"></textarea>
     <div class="gptrow"><label class="btn">Choose its file<input type="file" id="gptFile" accept=".json,.txt,.md,application/json,text/plain" hidden></label></div>
     <div id="gptSaid"></div>

@@ -137,11 +137,13 @@ calls land on the Call Board. What still holds of the board:
 ## Finding things: ChatGPT, and the agent before it
 
 - **ChatGPT's deep research is the searcher** (2026-10-22, and the only one
-  since the agent stopped on 2026-10-23), **as two searches since
+  since the agent stopped on 2026-10-23), **as separate searches since
   2026-10-25, each behind a ChatGPT button where what it finds lands**:
-  the Call Board's for calls (call dates, the calls' own pages, new arenas)
-  and this room's for brokerage (venues and brokerage pages, the call dates
-  given only to go by). Each button writes a file holding every arena,
+  the Call Board's for calls (call dates and new arenas) and, since
+  2026-10-28, for call texts, and this room's for brokerage (venues and
+  brokerage pages, the call dates given only to go by). How the three
+  split the work, and what Mark chose of them on 2026-10-28, is in
+  [call-board](call-board.md). Each button writes a file holding every arena,
   with what its search needs, the venues for brokerage (the removed ones
   as stubs, so they are not brought back), and the instructions. ChatGPT
   hands back a list of changes, not the board again, which is read back
@@ -155,10 +157,9 @@ calls land on the Call Board. What still holds of the board:
   app goes there by itself. Together they can add and correct call dates
   and venues, add an arena to a venue and add a link; they cannot delete,
   rename or rewrite his texts. The leads, his visits and his venue notes
-  stay out of both files. The box is this room's for both, the Call Board
-  borrowing it, since the board both change is kept here. How is at
-  "ChatGPT's search" in semaphore.js; the third search agreed, for
-  official call texts, is in [call-board](call-board.md).
+  stay out of every file. The box is this room's for all three, the Call
+  Board borrowing it, since the board they change is kept here. How is at
+  "ChatGPT's search" in semaphore.js.
 - **Fewer and better** (2026-10-26, reversing "ten false finds rather than
   one real one lost" of 2026-10-23): he would much rather have far fewer
   results that are accurate and relevant, since each costs him usage, so
@@ -173,7 +174,12 @@ calls land on the Call Board. What still holds of the board:
   profiles, no event about meeting people rather than projects, none open
   only to paying members beyond a simple registration; and, where it can
   find out, nothing organisations in the Netherlands clearly cannot take
-  part in and be funded by (2026-10-23). It works in rounds of at most 15
+  part in and be funded by (2026-10-23). Since 2026-10-28 the app holds a
+  gate besides the words: a venue must quote, from its own page, where
+  projects are posted or pitched, and one its own words call an
+  information session, a webinar or a Q&A is left out; a venue on a site
+  Mark's Place can copy brings its list of entries as a page named
+  Entries. It works in rounds of at most 15
   arenas (`GPT_BATCH`), each given to a fresh research agent of its own,
   all run in parallel and asked for in so many words (2026-10-25), and
   merged by a coordinating one, and says before starting if it cannot work

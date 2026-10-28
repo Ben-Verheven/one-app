@@ -113,7 +113,8 @@ Hub.api('ledger')          → { PL, projects(), calls(), save,
                                setTopics, setLeads, leadsChanged(),
                                snapshot(why), signedIn(), token() }
 Hub.api('callboard')       → { topics(), openReader(), closeReader(),
-                               setArenas(o), arenasChanged(), judge() }
+                               setArenas(o), arenasChanged(), judge(),
+                               textsChanged(), cloudBack() }
 Hub.api('semaphore')       → { state(), save(), renderAll(),
                                applyState(obj), leads(),
                                leadVerb(aid, lid, op, val), arenas(), calls(),
@@ -127,6 +128,9 @@ Hub.api('semaphore-inbox') → { ready(), list(cb), decide(id, status, cb),
                                visits(since, cb) }
 Hub.api('atlas-inbox')     → the same first three verbs over the Atlas's inbox
 Hub.api('partner-sites')   → { ready(), list(cb) }, the addresses Mark's Place copies
+Hub.api('horizon')         → { ready(), changes(cb), notices(id, cb), seen(ids, cb) }
+Hub.api('call-texts')      → { ready(), list(), refresh(cb), fits(t, arenaId, names),
+                               decide(id, status, cb), add(rows, cb) }
 ```
 
 A room offers what another room or a tool actually asks for, and nothing
@@ -151,8 +155,8 @@ the board, which the bridge answers with a Ledger restore point. And
 **`callboard:ready`**, once, when the lazy Call Board has been built, which
 is when the bridge hands it the Semaphore's board. And **`semaphore:judge`**,
 with a sentence saying what landed, once the answer to ChatGPT's search for
-calls is on the board, which the bridge answers by going to the Call Board
-and starting to judge the new arenas it found.
+calls is on the board or its texts are in the cloud, which the bridge answers by going to the Call Board
+and starting to judge what it found.
 
 What the bridge actually does: turns any researcher's name, written
 anywhere in any room, into a link that opens the Atlas dossier over the
@@ -168,8 +172,10 @@ links filled in; hands the Call Board the Semaphore's board as it works it
 out — every arena's calls and the new arenas waiting to be judged, with
 the verbs that judge them and mark an arena's new dates seen — and again
 on every save there, with the drawer lent over the Board for an arena and
-ChatGPT's box for the search for calls; draws
-the ring of rooms and the title; runs the page-change animation; and syncs
+ChatGPT's box for the searches for calls and for call texts; reads the
+Horizon check's two tables, below, for the Call Board, and the one rule
+that ties a call text to its call; draws the ring of rooms and the title,
+with the finds waiting to be judged counted beside the Call Board's mark; runs the page-change animation; and syncs
 the Semaphore's board, the Notes room and the Atlas's edits through the
 Supabase credentials the Ledger already holds.
 
@@ -318,10 +324,26 @@ are in `supabase/`. The gatekeepers there are pasted into Supabase by
 hand, so the copy in the repository can be ahead of the one running; the
 Semaphore's is written so that the older one still does no harm.
 
+**The Horizon check is a plain program, not an agent**, like Mark's
+Place's copier: an edge function, `horizon-check`, run by the database's
+own schedule every night (`supabase/9-horizon-check.sql` and
+`10-horizon-check-function.ts`). It reads the EU Funding & Tenders
+portal for every topic of the Work Programme file, as the site serves
+it, and keeps what the portal says in `horizon_topics`: its dates,
+status and notices, and how they differ from the file (other dates, gone,
+moved). The Call Board lays that over the Work Programme, which is never
+changed. It also copies, word for word, the portal's text of every call
+on the Semaphore's board whose name carries a portal id, into
+`call_texts`, where ChatGPT's search for call texts adds the rest from the
+app; each text waits there to be judged on the Call Board. Mark's login
+may only mark a topic seen, judge a text and add ChatGPT's; the program
+writes with the server's key, and its password is made in the database.
+
 **The Semaphore has one agent**, the task **Marketplace agent**, and it
 is turned off: since 2026-10-23 ChatGPT's search does its work, since
-2026-10-25 as two searches, each behind a ChatGPT button where what it
-finds lands: the Call Board's for calls, the Semaphore's for brokerage. The task is kept, and so is its gatekeeper, so that
+2026-10-25 as separate searches, each behind a ChatGPT button where what it
+finds lands: the Call Board's for calls and for call texts, the
+Semaphore's for brokerage. The task is kept, and so is its gatekeeper, so that
 a session can still read the board through it. Turned on, it runs by
 itself every night at about 01:00 his time, a scan that reaches every
 active arena once a week and every frozen one about once a month, and when
@@ -438,7 +460,7 @@ and the agent's task still say the Marketplace; it is the same room.
 |---|---|
 | the room's scroller — the page itself does not scroll | `#semscroll` |
 | the header: Venues and Leads, a pair in the middle; the cloud chip, and the menu under three dots holding + Venue, + Arena, Types and ChatGPT | `header.top`; `.pair` › `#venuesBtn`, `#leadsBtn`; `#semcloud`; `#semMoreBtn` and its `#semMenu` |
-| ChatGPT's search, opened by ChatGPT here for brokerage and lent over the Call Board for calls: the file out, the answer pasted or chosen, what it would change, Put on the board | `#gptModal` › `#gptText`, `#gptFile`, `#gptSaid`, `#gptPut` |
+| ChatGPT's search, opened by ChatGPT here for brokerage and lent over the Call Board for calls and call texts, the two chosen at its head: the file out, the answer pasted or chosen, what it would change, Put on the board | `#gptModal` › `.gptpick`, `#gptText`, `#gptFile`, `#gptSaid`, `#gptPut` |
 | Venues (the Now page until 2026-10-15), Leads (on the wall) | `#now`, `#wall` |
 | Venues: its three tabs, Arising · Active · Dying, and Limbo's apart, for what is over or put there; Mark's Place last and quiet, after the key; a venue new or changed, and the press that goes through them one card at a time; the axis over them, sticky; the heading of each group, Shared then each type; one venue's row, its mark the grip it is dragged by into his own order, its name and the arenas it serves, its strip, and Go, which is the visit (Visited once pressed today) | `.vtabs` › `.vtab`, `.culimbo.vlimbotab`, `.vplacetab`; `.vfnd`, `.vchk`; `.vaxis`; `.vgrp`; `.vgl`, `.vrow.vdragging`; `.vrow` = `.vname` (`.vnmrow` › `.vnm`, `.vchips`) + `.vtrack` + `.vend` (`.vgo`, `.vgo.done`) |
 | a venue's window, on Venues and in its panel: the band, its two ends to drag, the event days, the visits, today | `.vband` (`.st-new`, `.st-board`, `.st-venues`), `.vh`, `.vmeet` and `.vdia`, `.vtick`, `.vnow` |
@@ -456,14 +478,16 @@ tabs (JU, CoFund, CoProg and OTHER), and All with the Freezer; the controls unde
 and `#ovbar`, ChatGPT's search for calls `#gptb` among them; the chronological chart is `#tl` inside `.tl-sticky`, on the
 right of the topic list on a Horizon tab and alone on an arena's tab, with
 what a search finds elsewhere under it in `#tlaway`; a topic opens in
-`#reader`. On an arena's tab a call is a row, `.arow`, whose chip,
+`#reader`, the portal's notices on it in `#rdnotes`. A topic the portal no
+longer has, or has moved, is `.topic.gone` with its `.hztag`; a change the
+portal brought glows (`.fresh`) until its `.seen`. On an arena's tab a call is a row, `.arow`, whose chip,
 `.achip.stag`, names the arena, the first of each arena's rows `.afirst`, and
 one with a new date glows (`.fresh`) until its `.seen` is pressed; an arena
-opened there is `.aopen`, and where a tab holds several types each is named
+opened there is `.aopen`, a call's kept text opening from its `.tbtn`, and where a tab holds several types each is named
 over its arenas by a `.tyh`. The Freezer tab draws every arena put away
 the same way, its tag `.frz`, with a `.thaw` on each. What waits to be judged is counted on `#jpill` and dotted on
 its tab (`.fd`) and on the triangle's point (`.pt.fd`); while judging, the new arena stands dashed in its tab, a
-row `.ghost`, and the find itself opens in the Semaphore's drawer, lent over the Board. The decisions behind them are in
+row `.ghost`, a call whose text is judged carries a dashed `.tghost`, and the find itself opens in the Semaphore's drawer, lent over the Board. The count beside the Call Board's mark in the ring is `.oa-n`. The decisions behind them are in
 [call-board](notes/call-board.md).
 
 **The Atlas** — `#app` › `header` carries `#tab-search`, `#tab-browse`,
@@ -575,7 +599,7 @@ one-app/
     callboard-descriptions.js   the Commission's prose
 partner-watch/        Mark’s Place, a page of its own, and in pocket/ its phone version — see notes/partner-watch.md
 topic-atlas/          the Topic Atlas, a page of its own, and in library.js its two concept libraries, which Mark’s Place reads too — see notes/topic-atlas.md
-supabase/             the database's SQL, the two agents' gatekeepers and Partner Watch's copier
+supabase/             the database's SQL, the two agents' gatekeepers, Partner Watch's copier and the Horizon check
 tools/                the scripts below
 ```
 

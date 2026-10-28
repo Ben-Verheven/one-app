@@ -132,45 +132,85 @@ those of the phases still to build; git's history has the code.
   arena Add, in a type chosen there and guessed from its words, or No. Back and Skip go round the
   finds still waiting, in the order of the tabs; Stop leaves them, counted
   on the pill in the search row, which starts again, and dotted on their
-  tabs. The ring's count waits for the three searches below.
+  tabs.
+- **Counted in the ring** (2026-10-28): a small brass number beside the
+  Call Board's mark, wherever Mark is, the new arenas and call texts
+  waiting. Drawn first inside the mark, it came out as faint as the mark
+  of a room not shown, so it stands beside it.
 - The finds are the new arenas ChatGPT's search for calls suggests, which
   wait on the board itself (`suggested`) until judged, and the agent's,
-  from its inbox in the cloud. A call text, the third kind drawn, comes
-  with the search for call texts. New venues were judged here too until
-  they went back to the Semaphore (2026-10-25).
+  from its inbox in the cloud; and the official call texts (2026-10-28),
+  below. New venues were judged here too until they went back to the
+  Semaphore (2026-10-25).
 - **Dates are not judged**: new and changed ones go straight on and glow on
   their call's row until Seen there, which
   marks the whole arena seen as its panel does; a changed date says on hover
-  what it was. A Pillar 2 arena has no rows of its own here, so its new
-  dates are seen in its panel until Horizon's corrections are laid over the
-  Work Programme (the three searches below).
+  what it was. A Pillar 2 arena's dates are the Work Programme's, which the
+  Horizon check keeps, below; no search writes them since 2026-10-28.
 - **ChatGPT's button for calls is here** (2026-10-25), in the controls,
   and the Semaphore's is the search for brokerage: each search has its
-  button where what it finds lands. Its box is the Semaphore's, lent over
+  button where what it finds lands. The search for call texts is behind
+  the same button (2026-10-28), Calls and Call texts chosen at the head of
+  the box. Its box is the Semaphore's, lent over
   this room, since the board it changes is kept there; Put on the board
   starts judging the new arenas here.
 - The Semaphore's Board, its tray and Dispatches went the same day, and the
   venue calculations Mark's Place copied became one file it reads with the
   Semaphore, `one-app/shell/venues.js`.
 
+## The three searches and the Horizon check (built 2026-10-28)
+
+The first phase agreed on 2026-10-24, drawn on the canvas named above
+and chosen there. How they work is at "ChatGPT's search" in semaphore.js
+and in the Horizon check's own file; what Mark chose:
+
+- **Each finds one thing.** Calls: the call dates of every arena but the
+  clusters' and missions', and the few arenas missing, each with its kind,
+  its call dates and two quotes, one showing a call for international
+  consortia, one that Dutch organisations can join. Brokerage: only venues
+  where projects in the making are described, a quote saying so on each.
+  Call texts: the texts of calls on the board, word for word. A frozen
+  arena is asked only whether a new call is announced, and left out of
+  brokerage. No search writes a cluster's or mission's dates.
+- **The searches overdid it**, and Mark asked that they stop (2026-10-28):
+  calls and brokerage for international consortia TU/e can join, project
+  descriptions, never "getting to know one another". On his real board 43
+  of 93 venues brought had been removed, most of them webinars, info days
+  and conferences, and 53 call dates were guesses written as days with
+  "(expected)" in the name. He chose firmer words and **a gate in the app**
+  that leaves out, saying why, what breaks the rules, over words alone and
+  over a ceiling of finds per round. A doubt written into a call's name is
+  taken out again and the date made uncertain.
+- **Call texts come from the portal first**: the Horizon check copies the
+  text of every call whose name carries an EU portal id (the Joint
+  Undertakings', EIC, MSCA, WIDERA and the like), exact and free, and
+  ChatGPT brings only the rest. Chosen over ChatGPT for all. The parts
+  that matter, word for word, with the whole a link away, over the whole
+  text. Each is judged like any find before it is kept; reading it from
+  the panel puts the panel aside until the reader is shut.
+- **A kept text opens from Text beside its call in an arena opened**, the
+  quieter way, over a mark on every row of the chart.
+- **The Horizon check is a plain program**, as Mark's Place's copier is,
+  on Supabase's schedule, using no Claude. What the portal says is kept
+  apart and laid over the Work Programme, which is never changed. A topic
+  gone from the portal, or moved to another call, is **struck through
+  where it stands**, glowing until Seen and struck for good, chosen over
+  folding such topics into one line. A call the portal dates otherwise is
+  drawn at the portal's dates, glowing until Seen, the Work Programme's on
+  hover. Only the portal's notices about dates, eligibility or a
+  cancellation stand in the reader; topics new to the portal are left out.
+- Two lessons from its first reading (2026-10-28): the portal's search,
+  asked for many calls at once, leaves out a sixth of the topics, so it is
+  asked call by call and a topic is gone only when asking for it by its
+  own id finds nothing too; and a title reused in next year's call is no
+  move, so a topic has moved only when its namesake is new to the portal.
+
 ## Still to build, agreed 2026-10-24, in this order
 
-1. **Three ChatGPT searches** instead of one: calls and their dates,
-   brokerage, and official call texts, which read in the same reader as a
-   topic, with a link to the source. Corrections to Horizon dates and the
-   texts are kept apart from the Work Programme file, laid over it. The
-   portal's own changes (cancelled and moved topics) come in too, and the
-   finds waiting to be judged show as a count on the Board's glyph.
-   *Begun 2026-10-25:* the search for calls (the arenas' call dates, their
-   links and new arenas) has its button here and the search for brokerage
-   stays in the Semaphore. Still to come: the call texts, which Mark wants
-   behind the Call Board's button too, Horizon's own dates and the
-   portal's changes laid over the Work Programme, and the count on the
-   glyph.
-2. **The Ledger**: a project, and a call chip on the beam, picks any call
+1. **The Ledger**: a project, and a call chip on the beam, picks any call
    on the Board; its dates come in as key dates, and a date that changes
    later is offered there, moving the todos tied to it.
-3. **The Topic Atlas inside the Board**: a Topics | Atlas switch by the
+2. **The Topic Atlas inside the Board**: a Topics | Atlas switch by the
    search box, the Atlas's way of searching over every call, Horizon and
    beyond. A plain program as Mark wants it, filters folded behind one
    button, the tuning left on its defaults. COPROG's rows then become the
