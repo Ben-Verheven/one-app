@@ -98,24 +98,43 @@ const dm =s=>d3(s).toLocaleDateString('en-GB',{day:'2-digit',month:'short'});
 const yy =s=>s.slice(2,4);
 
 /* ---------- tabs ----------
-   The tabs stand in two rows that stay put (Mark, 2026-10-25): the
-   clusters and missions on the first, the arenas' tabs and ALL on the
-   second, each row named at its left, so every tab is one press away and
-   in sight. They replaced a roll that showed one row at a time, the
-   others peeking over and under the bar, turned by the wheel or a swipe:
-   the peeking rows were cut off at the bar's edges and read as broken,
-   and a tab in another row was two moves away. All thirteen side by side
-   in one row, before the roll, ran into the room's name on the iPad held
-   sideways. */
+   One row of tabs at a time, chosen by a triangle of three points beside
+   it (Mark, issue 1, 2026-10-28): Horizon's clusters and missions, the
+   Partnerships (the arenas' tabs), and All with the Freezer. Pressing a
+   point turns the triangle until that point faces right, at the row it
+   chose, the way the line of room marks walks the room chosen to its
+   right-hand end, and opens the tab last open in that row. Each point is
+   a mark, as each room is: the sun on the horizon, an EU star, a frost
+   crystal, with the group's name beside the triangle. Of the two drawn,
+   Mark chose this over letters at the points.
+
+   It replaced two rows standing at once, each named at its left
+   (2026-10-25): thirteen codes, all equally loud. Those had replaced a
+   roll showing one row at a time with the others peeking over and under
+   the bar, which were cut off at its edges and read as broken; and all
+   thirteen in one row ran into the room's name on the iPad held sideways.
+   The three rows share one place, the two not chosen kept invisible
+   there, so the place is as wide as the longest and the triangle does not
+   jump sideways when a shorter row comes in. */
 const tabsEl=document.getElementById('tabs');
-tabsEl.innerHTML='<div class="tgrid">'
-  +'<span class="tglab">Horizon</span><div class="trow" data-g="hz" role="tablist" aria-label="Horizon"></div>'
-  +'<span class="tglab" data-g="ar">Arenas</span><div class="tline">'
-  +'<div class="trow" data-g="ar" role="tablist" aria-label="Arenas"></div>'
-  +'<div class="trow tall" data-g="all" role="tablist" aria-label="All calls"></div></div></div>';
+const GROUPS=[{g:'hz',name:'Horizon'},{g:'ar',name:'Partnerships'},{g:'all',name:'All & Freezer'}];
+/* the three marks, each drawn round its point */
+const GROUP_MARKS=[
+  '<path d="M-6 1.5A6 6 0 0 1 6 1.5Z" fill="#E4CB86"/><line x1="-8" y1="3.5" x2="8" y2="3.5" stroke="#E4CB86" stroke-width="1.4" stroke-linecap="round"/>',
+  '<path d="M0-7L1.9-2.3 6.7-2.2 2.9 0.9 4.2 5.7 0 3-4.2 5.7-2.9 0.9-6.7-2.2-1.9-2.3Z" fill="#E4CB86"/>',
+  '<g stroke="#CFE0E6" stroke-width="1.4" stroke-linecap="round"><line x1="0" y1="-7" x2="0" y2="7"/><line x1="-6.1" y1="-3.5" x2="6.1" y2="3.5"/><line x1="-6.1" y1="3.5" x2="6.1" y2="-3.5"/></g>'];
+{
+  const R=17, C=26, at=i=>[C+R*Math.cos(i*2*Math.PI/3),C+R*Math.sin(i*2*Math.PI/3)];
+  tabsEl.innerHTML='<div class="tsel"><div class="tri"><svg width="52" height="52" viewBox="0 0 52 52" role="tablist" aria-label="Groups of tabs">'
+    +'<g class="spin"><polygon points="'+[0,1,2].map(i=>at(i).join(',')).join(' ')+'"/>'
+    +GROUPS.map((g,i)=>'<g class="pt" data-i="'+i+'" tabindex="0" role="tab" aria-label="'+g.name+'" transform="translate('+at(i).join(',')+')">'
+      +'<circle class="hit" r="11"/><g class="mk">'+GROUP_MARKS[i]+'<circle class="pfd" cx="7.5" cy="-7.5" r="2.6"/></g></g>').join('')
+    +'</g></svg></div><span class="glab"></span>'
+    +GROUPS.map(g=>'<div class="trow" data-g="'+g.g+'" role="tablist" aria-label="'+g.name+'"></div>').join('')+'</div>';
+}
 const rowOf=g=>tabsEl.querySelector(`.trow[data-g="${g}"]`);
 const htabEls=PAGES.map((p,i)=>{
-  const b=document.createElement('button'); b.className='tab'; b.setAttribute('role','tab');
+  const b=document.createElement('button'); b.className='tab'; b.setAttribute('role','tab'); b.dataset.k=p.key;
   b.setAttribute('aria-selected', String(i===0));
   b.innerHTML=`<span class="ck">${p.key}</span><span class="cn">${p.label}</span>`;
   b.addEventListener('click',()=>selectPage(i));
@@ -123,15 +142,54 @@ const htabEls=PAGES.map((p,i)=>{
   return b;
 });
 const ovTab=document.createElement('button');
-ovTab.className='tab'; ovTab.setAttribute('role','tab'); ovTab.setAttribute('aria-selected','false');
+ovTab.className='tab'; ovTab.setAttribute('role','tab'); ovTab.setAttribute('aria-selected','false'); ovTab.dataset.k='ALL';
 ovTab.innerHTML=`<span class="ck">ALL</span><span class="cn">Deadline planner</span>`;
 ovTab.addEventListener('click',()=>selectPage(PAGES.length));
 rowOf('all').appendChild(ovTab);
+/* every frozen arena's calls on one chart (see "the freezer") */
+const fzTab=document.createElement('button');
+fzTab.className='tab'; fzTab.setAttribute('role','tab'); fzTab.setAttribute('aria-selected','false'); fzTab.dataset.k='FREEZER';
+fzTab.title='Every arena put away, its calls on the timeline';
+fzTab.innerHTML=`<span class="ck">FREEZER</span><span class="cn">Every arena put away</span>`;
+fzTab.addEventListener('click',()=>selectArenaTab('FREEZER'));
+rowOf('all').appendChild(fzTab);
+
+/* the triangle: which point faces right, and how far it has turned, kept
+   whole so that every turn goes the short way round */
+const spinEl=tabsEl.querySelector('.spin'), glabEl=tabsEl.querySelector('.glab');
+const ptEls=[...tabsEl.querySelectorAll('.pt')];
+let GSEL=-1, TURN=0;
+const LAST={};          /* the tab last open in each row, by its key */
+function showGroup(i){
+  if(GSEL>=0&&i!==GSEL) TURN+=((i-GSEL)%3+3)%3===1?-120:120;
+  GSEL=i;
+  spinEl.style.transform=`rotate(${TURN}deg)`;
+  ptEls.forEach((pt,k)=>{
+    pt.classList.toggle('on',k===i); pt.setAttribute('aria-selected',String(k===i));
+    /* each mark turns back as far as the triangle turns, so it stays upright */
+    pt.querySelector('.mk').style.transform=`rotate(${-TURN}deg) scale(${k===i?1.22:1})`;
+  });
+  glabEl.textContent=GROUPS[i].name;
+  tabsEl.querySelectorAll('.trow').forEach(r=>r.classList.toggle('cur',r.dataset.g===GROUPS[i].g));
+}
+function pickGroup(i){
+  const tabs=[...rowOf(GROUPS[i].g).querySelectorAll('.tab')];
+  if(!tabs.length) return;
+  (tabs.find(t=>t.dataset.k===LAST[GROUPS[i].g])||tabs[0]).click();
+}
+ptEls.forEach((pt,i)=>{
+  pt.addEventListener('click',()=>pickGroup(i));
+  pt.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();pickGroup(i);}});
+});
 
 /* The arenas' tabs come and go with the arenas, so a tab is marked live by
-   which element it is rather than by its place in a row. */
+   which element it is rather than by its place in a row; the triangle
+   turns to the row it stands in, wherever it was chosen from. */
 function markTab(el){
   tabsEl.querySelectorAll('.tab').forEach(t=>t.setAttribute('aria-selected',String(t===el)));
+  const row=el&&el.closest('.trow'); if(!row) return;
+  LAST[row.dataset.g]=el.dataset.k;
+  showGroup(GROUPS.findIndex(x=>x.g===row.dataset.g));
 }
 function selectPage(i){
   if(i===PAGES.length){ MODE='overview'; location.hash='all'; markTab(ovTab); }
@@ -139,7 +197,7 @@ function selectPage(i){
   afterSelect();
 }
 function selectArenaTab(key, openId){
-  const p=APAGES.find(x=>x.key===key&&x.tabEl);
+  const p=arenaPage(key);
   if(!p) return;
   MODE='arena'; P=p; location.hash=key.toLowerCase(); markTab(p.tabEl);
   if(openId&&p.callById[openId]) p.state.openArena=p.callById[openId].arenaId;
@@ -177,17 +235,39 @@ function afterSelect(){
    day is a soft band over the time it can fall in (see softSpan). */
 const TYPE_TABS=[
   {key:'JU',full:'Joint Undertakings',color:'#7D71B0',test:/\bJU\b|joint\s*undertaking/i},
-  {key:'COFUND',full:'Co-funded partnerships',color:'#3C8D6D',test:/co[\s-]*fund/i},
-  {key:'COPROG',full:'Co-programmed partnerships',color:'#A96B45',test:/co[\s-]*prog/i},
+  {key:'CoFund',full:'Co-funded partnerships',color:'#3C8D6D',test:/co[\s-]*fund/i},
+  {key:'CoProg',full:'Co-programmed partnerships',color:'#A96B45',test:/co[\s-]*prog/i},
   {key:'OTHER',full:'Every other arena',color:'#6F7F8F',test:null}];
 const HORIZON_TYPE=/pillar\s*(2|ii)\b|\bclusters?\b|\bmissions?\b/i;
-/* saturated, pale, and an ink for the chip, in the work programme's own manner */
-const ARENA_TONES=[
-  ['#4A88CA','#A6C1F9','#002E59'],['#DD7666','#F5B5A9','#56160F'],['#21A17C','#86D0B3','#03392A'],
-  ['#8B78C8','#C3B6EE','#2A1C58'],['#D2893D','#F0C390','#4A2600'],['#1295AB','#7FCBD8','#033A44'],
-  ['#C2668F','#EDB2CB','#4A1230'],['#8A9A3B','#C9D48A','#2C3308'],['#5F7DB0','#AFC2E2','#16284A'],
-  ['#A8794A','#D9BC98','#3A2410'],['#3BA3A0','#9FD8D5','#0A3735'],['#B0638F','#E0B0CC','#3E1530']];
-let ARENA_SRC=null, APAGES=[], ACALLS=[], pendingTab=null;
+/* An arena wears its type's colour from the Semaphore, as a tag in the
+   Semaphore's own look, so that the two rooms read as one (Mark, issue 2,
+   2026-10-28). Before, the Call Board handed each arena a colour of its
+   own, which meant nothing anywhere else. A call is lighter the further
+   off it is, its bar and its arena's tag on its row alike: the type's full
+   colour within three months, lighter beyond six, lighter again beyond
+   twelve. Mark chose this over full colour for the round a call is in and
+   pale for the next, the rule it replaced. Within one tab every arena may
+   wear the same colour, so the rule between arenas is firmer (callboard.css).
+   A frozen arena's calls are frosted besides. */
+const PAPER='#F7F3E9', FROST='#DDE4E6', NO_TONE='#9C8B66';
+const mixHex=(a,b,t)=>'#'+[1,3,5].map(i=>hex2(parseInt(a.substr(i,2),16)*t+parseInt(b.substr(i,2),16)*(1-t))).join('');
+const toneOf=a=>/^#[0-9a-f]{6}$/i.test((a&&a.tone)||'')?a.tone:NO_TONE;
+function nearness(r){
+  const dl=(r.dls||[])[0], d=dl||r.open||r.ann;
+  if(!d||!d.start) return 1;
+  const months=(d3(dl?dlDay(dl):d.start)-new Date())/(30.4*864e5);
+  return months<=3?1:months<=6?.66:months<=12?.42:.3;
+}
+/* the tag naming an arena on a row: a wash of its colour with the colour
+   itself as a solid edge at its left, as the Semaphore draws an arena; an
+   arena with no call yet wears its type's pale tone */
+function tagHTML(a,c,text){
+  const col=c?c.color:mixHex(toneOf(a),PAPER,.42), fz=!!a.frozenAt;
+  return `<span class="cchip w achip stag${fz?' frz':''}" style="--tone:${col};background:${mixHex(col,PAPER,.3)}">${fz?'<i class="frost"></i>':''}${esc(text)}</span>`;
+}
+let ARENA_SRC=null, APAGES=[], ACALLS=[], FZ=null, pendingTab=null;
+/* an arena's tab, or the Freezer, by its key, while it has a tab */
+const arenaPage=k=>k==='FREEZER'?FZ:APAGES.find(x=>x.key===k&&x.tabEl);
 const allPages=()=>PAGES.concat(APAGES);
 const everyCall=()=>ALLCALLS.concat(ACALLS);
 const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -260,46 +340,59 @@ function readArenas(){
   const q=(PAGES[0]&&PAGES[0].state.q)||'';
   list.forEach(a=>{
     const tt=tabOfType(a.type); if(!tt) return;
-    const p=APAGES.find(x=>x.key===tt.key), tone=ARENA_TONES[p.arenas.length%ARENA_TONES.length];
-    p.arenas.push(a);
-    const start=r=>((r.open||r.ann||(r.dls||[])[0]||{}).start)||'';
-    let live=0;
-    (a.runs||[]).slice().sort((x,y)=>start(x).localeCompare(start(y))).forEach((r,i)=>{
-      const dls=r.dls||[], pale=r.state!=='closed'&&(live++>0);
-      const color=pale?tone[1]:tone[0], from=r.open||r.ann||null, annOnly=!r.open&&!!r.ann&&!dls.length;
-      const c={id:'arena:'+a.id+':'+i, arena:a, arenaId:a.id, run:r, first:i===0,
-        short:tagName(a.name), name:r.name, color, ink:tone[2], ovColor:color, ovInk:tone[2],
-        cluster:p.key, clusterLabel:p.label, nTopics:0, budget:0, unc:!!r.unc,
-        opening:from?from.start:null, annEnd:annOnly?r.ann.end:null,
-        d1:dls.length?dlDay(dls[0]):null, d2:dls.length>1?dlDay(dls[dls.length-1]):null, twoStage:dls.length>1,
-        sOpen:r.open?softSpan(r.open):null, sD1:dls.length?softSpan(dls[0]):null, sD2:dls.length>1?softSpan(dls[dls.length-1]):null};
-      const say=d=>(softSpan(d)?'≈ ':'')+whenShort(d);
-      c.tagOpen=from?say(from):'';
-      c.tagEnd=annOnly?'expected '+whenShort(r.ann)
-        :dls.length>1?say(dls[0])+' → '+say(dls[dls.length-1])
-        :dls.length?say(dls[0]):(from?'opens '+say(from):'');
-      p.calls.push(c); p.callById[c.id]=c;
-    });
+    arenaCalls(APAGES.find(x=>x.key===tt.key),a);
   });
+  /* the Freezer holds every arena put away, Pillar 2's too, each type's
+     together in the order they first come */
+  FZ={key:'FREEZER',label:'Freezer',full:'Every arena put away',clusterColor:FROST,arena:true,frozen:true,unit:'calls',
+    arenas:[],calls:[],callById:{},families:[],destinations:[],meta:{},nTopics:0,tabEl:fzTab,
+    state:(FZ&&FZ.state)||{sel:new Set(),selTopicCall:null,q:'',type:null,closed:new Set()}};
+  const tyOrder=[...new Set(FROZEN.map(a=>a.type||''))];
+  FROZEN.slice().sort((x,y)=>tyOrder.indexOf(x.type||'')-tyOrder.indexOf(y.type||'')).forEach(a=>arenaCalls(FZ,a));
+  FZ.nTopics=FZ.calls.length; FZ.state.q=q;
   APAGES.forEach(p=>{ p.nTopics=p.calls.length; p.state.q=q; });
-  ACALLS=APAGES.flatMap(p=>p.calls);
+  ACALLS=APAGES.flatMap(p=>p.calls);     /* the Freezer's stay out of All and the searches */
   APAGES.forEach(p=>{ if(!OV.known.has(p.key)){ OV.known.add(p.key); OV.clusters.add(p.key); } });
   buildArenaTabs();
+}
+/* one arena's calls on its page, one to a run, in the colour its
+   nearness gives */
+function arenaCalls(p,a){
+  const tone=toneOf(a), ink=readableInk(mixHex(tone,'#2C2418',.45),PAPER);
+  p.arenas.push(a);
+  const start=r=>((r.open||r.ann||(r.dls||[])[0]||{}).start)||'';
+  (a.runs||[]).slice().sort((x,y)=>start(x).localeCompare(start(y))).forEach((r,i)=>{
+    const dls=r.dls||[], near=mixHex(tone,PAPER,nearness(r));
+    const color=a.frozenAt?mixHex(near,FROST,.5):near, from=r.open||r.ann||null, annOnly=!r.open&&!!r.ann&&!dls.length;
+    const c={id:'arena:'+a.id+':'+i, arena:a, arenaId:a.id, run:r, first:i===0,
+      short:tagName(a.name), name:r.name, color, ink, ovColor:color, ovInk:ink,
+      cluster:p.key, clusterLabel:p.label, nTopics:0, budget:0, unc:!!r.unc,
+      opening:from?from.start:null, annEnd:annOnly?r.ann.end:null,
+      d1:dls.length?dlDay(dls[0]):null, d2:dls.length>1?dlDay(dls[dls.length-1]):null, twoStage:dls.length>1,
+      sOpen:r.open?softSpan(r.open):null, sD1:dls.length?softSpan(dls[0]):null, sD2:dls.length>1?softSpan(dls[dls.length-1]):null};
+    const say=d=>(softSpan(d)?'≈ ':'')+whenShort(d);
+    c.tagOpen=from?say(from):'';
+    c.tagEnd=annOnly?'expected '+whenShort(r.ann)
+      :dls.length>1?say(dls[0])+' → '+say(dls[dls.length-1])
+      :dls.length?say(dls[0]):(from?'opens '+say(from):'');
+    p.calls.push(c); p.callById[c.id]=c;
+  });
 }
 function buildArenaTabs(){
   const row=rowOf('ar'); row.innerHTML='';
   /* and a tab with none yet while a new arena of its type is judged there */
   const jf=judgedFind();
-  const shown=APAGES.filter(p=>p.arenas.length||frozenIn(p.key).length||(jf&&jf.tab===p.key));
+  const shown=APAGES.filter(p=>p.arenas.length||(jf&&jf.tab===p.key));
   APAGES.forEach(p=>{ p.tabEl=null; });
   shown.forEach(p=>{
-    const b=document.createElement('button'); b.className='tab'; b.setAttribute('role','tab'); b.title=p.full;
+    const b=document.createElement('button'); b.className='tab'; b.setAttribute('role','tab'); b.title=p.full; b.dataset.k=p.key;
     b.setAttribute('aria-selected',String(MODE==='arena'&&P.key===p.key));
     b.innerHTML=`<span class="ck">${p.key}</span><span class="cn">${p.label}</span>`;
     b.addEventListener('click',()=>selectArenaTab(p.key));
     row.appendChild(b); p.tabEl=b;
   });
-  tabsEl.querySelector('.tglab[data-g="ar"]').hidden=!shown.length;
+  /* with no arena yet, the Partnerships' point has no row to turn to */
+  ptEls[1].classList.toggle('off',!shown.length);
 }
 /* the socket the bridge fills, and again on every change on the other side */
 function arenasArrived(){
@@ -311,15 +404,15 @@ function arenasArrived(){
      nothing (Mark, 2026-10-26). A find judged moves on by itself (judge). */
   if(JUDGE.on){ const f=judgedFind(); if(!f||MODE!=='overview'&&(!f.tab||f.tab===P.key)) return showFind(); }
   paintJudge();
-  if(pendingTab){ const k=pendingTab; pendingTab=null; if(APAGES.some(p=>p.key===k&&p.tabEl)) return selectArenaTab(k); }
+  if(pendingTab){ const k=pendingTab; pendingTab=null; if(arenaPage(k)) return selectArenaTab(k); }
   if(MODE==='arena'){
-    const p=APAGES.find(x=>x.key===P.key&&x.tabEl);
+    const p=arenaPage(P.key);
     if(!p) return selectPage(0);
     P=p; markTab(p.tabEl); render();
   } else if(MODE==='overview') renderOverview();
   else {
-    /* a cluster's sheet stays as it is; only the chart, where its
-       freezer stands, is drawn again */
+    /* a cluster's sheet stays as it is; only the chart, where a new
+       arena being judged stands, is drawn again */
     markTab(htabEls[PAGES.indexOf(P)]);
     buildTimeline(); paintTimeline();
   }
@@ -331,7 +424,7 @@ function arenaRow(c){
   row.dataset.search=(c.arena.name+' '+c.run.names.join(' ')).toLowerCase();
   row.title=c.arena.name+' — '+c.run.names.join(', ');
   row.innerHTML=`<span class="bar" style="background:${c.color}"></span>
-    <span class="cchip w achip" style="background:${c.color};color:${fg(c)}">${esc(c.short)}</span>
+    ${tagHTML(c.arena,c,c.short)}
     <span class="ttl">${esc(c.name)}</span>
     <span class="adl${c.unc?' unc':''}">${esc(c.tagEnd)}</span>`;
   /* A new or changed date, put on the board by a search, is not judged:
@@ -362,13 +455,22 @@ function seenButton(c){
   b.addEventListener('click',e=>{ e.stopPropagation(); if(ARENA_SRC&&ARENA_SRC.seen) ARENA_SRC.seen(c.arenaId); });
   return b;
 }
+/* Thaw, at the end of a frozen arena's first row on the Freezer tab */
+function thawButton(r,a){
+  if(!a.frozenAt) return;
+  const b=document.createElement('button'); b.className='vbtn thaw'; b.textContent='Thaw';
+  b.title='Put '+a.name+' back among the live arenas';
+  b.addEventListener('click',e=>{ e.stopPropagation(); if(ARENA_SRC&&ARENA_SRC.thaw) ARENA_SRC.thaw(a.id); });
+  r.querySelector('.lbl').appendChild(b);
+}
 function arenaChartRow(c,a){
   const r=document.createElement('div');
   r.className='crow arow'+(c.first?' afirst':'')+(c.run.fresh?' fresh':''); r.tabIndex=0; r.setAttribute('role','button');
   r.dataset.call=c.id; r.dataset.arena=a.id; r.dataset.search=(a.name+' '+c.run.names.join(' ')).toLowerCase();
   r.title=a.name+' — '+c.run.names.join(', ')+(c.run.fresh?'\nNew since you last looked'+(c.run.was.length?' — '+c.run.was.join('; '):''):'');
-  r.innerHTML=`<span class="lbl"><span class="cchip w achip" style="background:${c.color};color:${fg(c)}">${esc(c.short)}</span><span class="nm">${esc(c.name)}</span></span><span class="track">${barsHTML(c,X,c.color,c.ink,true)}</span>`;
+  r.innerHTML=`<span class="lbl">${tagHTML(a,c,c.short)}<span class="nm">${esc(c.name)}</span></span><span class="track">${barsHTML(c,X,c.color,c.ink,true)}</span>`;
   if(c.run.fresh) r.querySelector('.lbl').appendChild(seenButton(c));
+  if(c.first) thawButton(r,a);
   const act=()=>openArena(a.id);
   r.addEventListener('click',act);
   r.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();act();}});
@@ -381,7 +483,8 @@ function arenaChartRow(c,a){
 function arenaEmptyRow(a){
   const r=document.createElement('div'); r.className='crow arow afirst'; r.tabIndex=0; r.setAttribute('role','button');
   r.dataset.arena=a.id; r.dataset.search=a.name.toLowerCase(); r.title=a.name+' — no call dates on the board yet';
-  r.innerHTML=`<span class="lbl"><span class="cchip w achip anon">${esc(tagName(a.name))}</span><span class="nm anone">no call dates on the board yet</span></span><span class="track"></span>`;
+  r.innerHTML=`<span class="lbl">${tagHTML(a,null,tagName(a.name))}<span class="nm anone">no call dates on the board yet</span></span><span class="track"></span>`;
+  thawButton(r,a);
   r.addEventListener('click',()=>openArena(a.id));
   r.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openArena(a.id);}});
   return r;
@@ -415,11 +518,10 @@ function arenaLinks(a){
 function arenaOpenBlock(a,calls){
   const blk=document.createElement('div'); blk.className='aopen'; blk.dataset.arena=a.id;
   blk.dataset.search=(a.name+' '+calls.map(c=>c.run.names.join(' ')).join(' ')).toLowerCase();
-  const tone=calls[0]||{color:'#E6DDC9',ink:'#5C5140'};
   const {site,ref}=arenaLinks(a);
   const link=(l,w)=>l?`<a href="${attr(l.url)}" target="_blank" rel="noopener" title="${attr((l.label?l.label+' — ':'')+l.url)}">${w} ↗</a>`:'';
   blk.innerHTML=`<div class="aoh">
-      <span class="cchip achip" style="background:${tone.color};color:${calls[0]?fg(calls[0]):'var(--ink2)'}">${esc(a.name)}</span>
+      ${tagHTML(a,calls[0]||null,a.name)}
       <span class="aoty">${esc(a.type||'')}</span>
       ${site||ref?`<span class="aoln">${link(site,'Site')}${link(ref,'Reference')}</span>`:''}
       <span class="aosp"></span><span class="aobt"></span></div>`;
@@ -434,10 +536,10 @@ function arenaOpenBlock(a,calls){
   calls.forEach(c=>{
     const r=document.createElement('div'); r.className='crow aorow'+(c.run.fresh?' fresh':''); r.dataset.call=c.id;
     r.title=a.name+' — '+c.run.names.join(', ')+(c.run.was.length?'\n'+c.run.was.join('; '):'');
-    r.innerHTML=`<span class="lbl"><span class="cchip w achip" style="background:${c.color};color:${fg(c)}">${esc(a.name)}</span><span class="nm">${esc(c.name)}</span></span><span class="track">${barsHTML(c,X,c.color,c.ink,true)}</span>`;
+    r.innerHTML=`<span class="lbl">${tagHTML(a,c,c.short)}<span class="nm">${esc(c.name)}</span></span><span class="track">${barsHTML(c,X,c.color,c.ink,true)}</span>`;
     blk.appendChild(r);
   });
-  if(!calls.length) blk.insertAdjacentHTML('beforeend',`<div class="crow aorow"><span class="lbl"><span class="cchip w achip anon">${esc(a.name)}</span><span class="nm anone">no call dates on the board yet</span></span><span class="track"></span></div>`);
+  if(!calls.length) blk.insertAdjacentHTML('beforeend',`<div class="crow aorow"><span class="lbl">${tagHTML(a,null,tagName(a.name))}<span class="nm anone">no call dates on the board yet</span></span><span class="track"></span></div>`);
   return blk;
 }
 /* A click outside an arena opened shuts it and goes no further, so the
@@ -450,10 +552,12 @@ document.getElementById('tl').addEventListener('click',e=>{
   openArena(P.state.openArena);
 },true);
 /* The arenas in their order, each type's under its name when the tab holds
-   more than one type, as OTHER does (Mark, 2026-10-24): the name once, in
-   small capitals, over a slim rule in the type's own colour from Types.
-   Chosen over edging each chip in it and over a wash behind the rows. */
+   more than one type, as OTHER and the Freezer do (Mark, 2026-10-24): the
+   name once, in small capitals, beside a square in the type's colour. A
+   slim rule in that colour ran down the rows' left until the tags took the
+   type's colour themselves (2026-10-28). */
 function buildArenaRows(rowsEl){
+  if(P.frozen&&!P.arenas.length) rowsEl.insertAdjacentHTML('beforeend','<div class="aonone">Nothing is put away.</div>');
   const types=new Set(P.arenas.map(a=>a.type||''));
   let ty=null;
   P.arenas.forEach(a=>{
@@ -605,6 +709,8 @@ function paintTabDots(){
     const n=by.get(k); if(n) el.insertAdjacentHTML('beforeend',`<i class="fd" title="${n} find${n===1?'':'s'} to judge here"></i>`); };
   PAGES.forEach((p,i)=>mark(htabEls[i],p.key));
   APAGES.forEach(p=>mark(p.tabEl,p.key));
+  /* and on the triangle's point, since its row may be the one not shown */
+  ptEls.forEach((pt,k)=>pt.classList.toggle('fd',!!rowOf(GROUPS[k].g).querySelector('.fd')));
 }
 /* the new arena being judged, as a row of its tab's chart, dashed */
 function ghostArenaRow(rowsEl){
@@ -624,7 +730,7 @@ function render(){
   if(MODE==='overview') return renderOverview();
   const arena=MODE==='arena';
   document.getElementById('legcolour').textContent=arena
-    ?'colour = the arena · saturated tone = the round it is in, pale tone = the next · a soft end ≈ when it can fall, not yet published to the day'
+    ?'colour = the arena’s type, as on the Semaphore · lighter = further off: full within 3 months, lighter beyond 6 and 12 · a soft end ≈ when it can fall, not yet published to the day'
     :'colour = call series · saturated tone = 2026 call, pale tone = 2027 call';
   document.getElementById('tltxt').textContent='Calls · chronological';
   document.querySelector('.src').innerHTML=arena?SRC_ARENAS:SRC_HORIZON;
@@ -801,7 +907,6 @@ function buildTimeline(){
     r.addEventListener('mouseleave',()=>{if(!P.state.sel.size&&!P.state.selTopicCall)soft(null);showCard([...P.state.sel]);});
     rowsEl.appendChild(r);
   });
-  buildFreezer(rowsEl);
   const now=new Date();
   if(now>T0&&now<T1){
     const x=(now-T0)/SPAN*100;
@@ -829,26 +934,15 @@ document.getElementById('tl').addEventListener('mouseover',e=>{
 });
 
 /* ---------- the freezer ----------
-   The arenas put away stand under the calls of the tab they belong to,
-   behind one line that says how many (Mark, 2026-10-25): the Semaphore
-   kept the freezer under Venues once its Board was gone, a long way from
-   the calls the arenas were put away from. Shut until pressed, since it
-   is somewhere to put things, not somewhere to look. A name opens the
-   arena's panel, which says since when; Thaw puts it back among the
-   live ones. */
-let FROZEN=[], FRZ_OPEN=false;
-const frozenIn=k=>FROZEN.filter(a=>arenaTabKey(a.name,a.type)===k);
-function buildFreezer(rowsEl){
-  const list=frozenIn(P.key);
-  if(!list.length) return;
-  const box=document.createElement('div'); box.className='frz'+(FRZ_OPEN?' open':'');
-  box.innerHTML=`<button class="frzbar" aria-expanded="${FRZ_OPEN}"><i class="frost"></i>Freezer<span>${list.length} arena${list.length===1?'':'s'} put away</span><b>${FRZ_OPEN?'▾':'▸'}</b></button>`
-    +(FRZ_OPEN?'<div class="frzchips">'+list.map(a=>`<span class="frzchip" style="--ty:${attr(a.tone||'#9C8B66')}"><button class="frzname" data-id="${attr(a.id)}" title="${attr(a.name)} — its panel">${esc(tagName(a.name))}</button><button class="frzout" data-id="${attr(a.id)}" title="Put ${attr(a.name)} back among the live arenas">Thaw</button></span>`).join('')+'</div>':'');
-  box.querySelector('.frzbar').addEventListener('click',()=>{ FRZ_OPEN=!FRZ_OPEN; buildTimeline(); paintTimeline(); applyFilters(); });
-  box.querySelectorAll('.frzname').forEach(b=>b.addEventListener('click',()=>{ if(ARENA_SRC&&ARENA_SRC.open) ARENA_SRC.open(b.dataset.id); }));
-  box.querySelectorAll('.frzout').forEach(b=>b.addEventListener('click',()=>{ if(ARENA_SRC&&ARENA_SRC.thaw) ARENA_SRC.thaw(b.dataset.id); }));
-  rowsEl.appendChild(box);
-}
+   Every arena put away has its calls on one chart, the Freezer's, the
+   second tab beside All (Mark, issue 1, 2026-10-28), so a frozen arena
+   whose call comes round again can be seen and thawed: each type's under
+   its name, its tag frosted with a dashed edge, Thaw at the end of its
+   first row. Before, the arenas put away stood as names under the calls
+   of the tab they belonged to, behind one line that said how many
+   (2026-10-25), with no dates; that line went when the Freezer had a tab
+   of its own, so the freezer has one home. */
+let FROZEN=[];
 
 function toggleCall(id){
   const s=P.state.sel;
@@ -1648,8 +1742,8 @@ const hash=(location.hash||'').replace('#','').toLowerCase();
 const start = hash==='all' ? PAGES.length : Math.max(0, PAGES.findIndex(p=>p.key.toLowerCase()===hash));
 /* An arena's tab named in the address cannot open yet: the arenas arrive
    from the bridge a moment after the room is built. It is opened then. */
-const atab=TYPE_TABS.find(t=>t.key.toLowerCase()===hash);
-if(atab) pendingTab=atab.key;
+const atab=hash==='freezer'?'FREEZER':(TYPE_TABS.find(t=>t.key.toLowerCase()===hash)||{}).key;
+if(atab) pendingTab=atab;
 selectPage(start);
 
 

@@ -2917,29 +2917,31 @@ function runTip(r){
    as stored, with how exact each is; the Board writes them its own way. A
    run says whether a date on it is new since the arena was last seen, and
    what a corrected one was, so its row can glow there until Seen. Frozen
-   arenas stay put away. */
+   arenas are handed over apart (frozen, below), for the Call Board's
+   Freezer tab. */
 function callsForBoard(){
-  const day=d=>d?{start:d.start,end:d.end||d.start,gran:d.gran,grade:d.grade==='fixed'?'fixed':'uncertain'}:null;
   const out=[];
   S.types.map(t=>t.id).concat([null]).forEach(id=>
     out.push(...liveArenas().filter(a=>id?a.typeId===id:!typeOf(a)).sort(mineOrder)));
-  return out.map(a=>{
-    const {live,last}=callRuns(a),t=typeOf(a);
-    const runs=(last?[last]:[]).concat(live).map(r=>({
-      name:callBase(dtLabel(r.all[0]))||dtLabel(r.all[0]),
-      names:[...new Set(r.all.map(dtLabel))],
-      open:day(r.opens[0]),ann:day(r.anns[0]),dls:r.dls.map(day),
-      unc:r.unc,state:r.state,
-      fresh:r.all.some(d=>isFresh(a,d)),
-      was:r.all.filter(d=>d.was&&isFresh(a,d)).map(d=>ROLES[d.role].short+' was '+d.was),
-      url:(r.all.find(d=>d.url)||{}).url||'',
-      note:(r.all.find(d=>d.note)||{}).note||''}));
-    /* and what the Call Board shows when the arena is opened there: its
-       About text and its type's colour; its brokerage stays here */
-    return {id:a.id,name:a.name,type:t?t.name:'',tone:arenaTone(a),leads:openLeads(a).length,
-      about:a.notes||'',fresh:freshItems(a).length,
-      links:(a.links||[]).filter(l=>l&&l.url).map(l=>({label:l.label||'',url:l.url})),runs};
-  });
+  return out.map(boardArena);
+}
+function boardArena(a){
+  const day=d=>d?{start:d.start,end:d.end||d.start,gran:d.gran,grade:d.grade==='fixed'?'fixed':'uncertain'}:null;
+  const {live,last}=callRuns(a),t=typeOf(a);
+  const runs=(last?[last]:[]).concat(live).map(r=>({
+    name:callBase(dtLabel(r.all[0]))||dtLabel(r.all[0]),
+    names:[...new Set(r.all.map(dtLabel))],
+    open:day(r.opens[0]),ann:day(r.anns[0]),dls:r.dls.map(day),
+    unc:r.unc,state:r.state,
+    fresh:r.all.some(d=>isFresh(a,d)),
+    was:r.all.filter(d=>d.was&&isFresh(a,d)).map(d=>ROLES[d.role].short+' was '+d.was),
+    url:(r.all.find(d=>d.url)||{}).url||'',
+    note:(r.all.find(d=>d.note)||{}).note||''}));
+  /* and what the Call Board shows when the arena is opened there: its
+     About text and its type's colour; its brokerage stays here */
+  return {id:a.id,name:a.name,type:t?t.name:'',tone:arenaTone(a),leads:openLeads(a).length,
+    about:a.notes||'',fresh:freshItems(a).length,
+    links:(a.links||[]).filter(l=>l&&l.url).map(l=>({label:l.label||'',url:l.url})),runs};
 }
 /* What waits to be judged on the Call Board: every new arena suggested,
    ChatGPT's from the board and the agent's from its table in the cloud
@@ -5470,7 +5472,7 @@ try{
     seen:       function(aid){ const a=arena(aid); if(a){ seeArena(a); save(); renderAll(); } },
     /* the arenas put away, for the freezer the Call Board keeps under each
        tab's calls, and Thaw there */
-    frozen:     function(){ return frozenArenas().map(a=>({id:a.id,name:a.name,type:(typeOf(a)||{}).name||'',tone:arenaTone(a),frozenAt:a.frozenAt})); },
+    frozen:     function(){ return frozenArenas().map(a=>Object.assign(boardArena(a),{frozenAt:a.frozenAt})); },
     thaw:       function(aid){ const a=arena(aid); if(a&&a.frozenAt){ a.frozenAt=null; save(); renderAll(); } },
     leadAdd:    function(aid,v){ return leadAdd(aid,v); },
     /* every lead, closed ones too, for the weekly Excel the bridge writes */

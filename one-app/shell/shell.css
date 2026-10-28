@@ -677,33 +677,44 @@ html #pane-callboard .tabs{align-items:stretch !important; padding-right:22px !i
    face, because the live one has to be marked at the floor of the bar. */
 /* 8px a side, not 10: when the arenas' four tabs joined the one row
    (2026-10-24) it ran into the room's name on the iPad held sideways at 10.
-   They have stood in two rows since (see "tabs" in callboard.js). */
+   One row shows at a time since 2026-10-28, chosen by the triangle (see
+   "tabs" in callboard.js), so the codes are a size larger again. */
 html #pane-callboard .tab{
   color:var(--oa-ctl); background:none; border:0; border-bottom:2px solid transparent;
-  border-radius:0; min-height:0; padding:3px 8px 2px; gap:6px;
+  border-radius:0; min-height:0; padding:3px 10px 2px; gap:6px;
   align-self:stretch; align-items:center; box-shadow:none;
 }
-/* The two rows, each named at its left, the arenas' tabs and ALL sharing
-   the second with a rule between them. */
-html #pane-callboard .tabs .tgrid{
-  display:grid; grid-template-columns:auto auto; grid-template-rows:1fr 1fr;
-  column-gap:12px; align-self:stretch; padding-top:2px;
+/* The triangle, the group's name and its row. The three rows share one
+   place, the two not chosen invisible there rather than gone, so the place
+   keeps the longest row's width and the triangle stays put. */
+html #pane-callboard .tabs .tsel{
+  display:grid; grid-template-columns:52px auto auto; column-gap:10px; align-self:stretch;
 }
-html #pane-callboard .tabs .tglab{
-  align-self:center; justify-self:end; padding-top:1px;
-  font:400 9px var(--sc-serif); letter-spacing:.16em; text-transform:uppercase; color:var(--oa-ctl);
+html #pane-callboard .tabs .trow{grid-area:1 / 3; display:flex; align-items:stretch; visibility:hidden}
+html #pane-callboard .tabs .trow.cur{visibility:visible}
+html #pane-callboard .tabs .glab{
+  align-self:center; min-width:96px; padding-top:1px; white-space:nowrap;
+  font:400 9px var(--sc-serif); letter-spacing:.16em; text-transform:uppercase; color:var(--oa-title);
 }
-html #pane-callboard .tabs .tglab[hidden]{visibility:hidden; display:block}
-html #pane-callboard .tabs .tline,html #pane-callboard .tabs .trow{display:flex; align-items:stretch}
-html #pane-callboard .tabs .trow.tall{margin-left:8px; padding-left:8px; border-left:1px solid rgba(205,176,105,.34)}
+html #pane-callboard .tri{align-self:center; width:52px; height:52px}
+html #pane-callboard .tri svg{display:block; overflow:visible}
+/* the walk of the room marks, in the same time and curve */
+html #pane-callboard .tri .spin{transform-origin:26px 26px; transition:transform .56s cubic-bezier(.62,.03,.2,1)}
+html #pane-callboard .tri polygon{fill:rgba(205,176,105,.07); stroke:rgba(205,176,105,.42); stroke-width:1}
+html #pane-callboard .tri .pt{cursor:pointer; outline:none}
+html #pane-callboard .tri .hit{fill:transparent}
+html #pane-callboard .tri .pt:focus-visible .hit{stroke:var(--oa-title-hi); stroke-width:1}
+html #pane-callboard .tri .mk{opacity:.42; transition:transform .56s cubic-bezier(.62,.03,.2,1), opacity .34s ease}
+html #pane-callboard .tri .pt:hover .mk{opacity:.9}
+html #pane-callboard .tri .pt.on .mk{opacity:1}
+html #pane-callboard .tri .pt.off{cursor:default; pointer-events:none}
+html #pane-callboard .tri .pt.off .mk{opacity:.18}
+/* a find waiting to be judged in a row not shown */
+html #pane-callboard .tri .pfd{fill:#C9A84C; stroke:#241D10; stroke-width:1; display:none}
+html #pane-callboard .tri .pt.fd .pfd{display:block}
+@media (prefers-reduced-motion:reduce){html #pane-callboard .tri .spin, html #pane-callboard .tri .mk{transition:none}}
 html #pane-callboard .tab .cn{display:none}
-html #pane-callboard .tab .ck{font-size:11px; opacity:1; letter-spacing:.08em}
-/* How many topics stand behind each code. It is a number you read, not a
-   decoration, and at half opacity it sat at 2.2:1 on the ribbon — so it
-   keeps its rank by being smaller and a step quieter in colour, not by
-   being half there. */
-html #pane-callboard .tab .cc{font-size:9.5px; opacity:1; color:var(--oa-ctl)}
-html #pane-callboard .tab[aria-selected="true"] .cc{color:var(--oa-title)}
+html #pane-callboard .tab .ck{font-size:12px; opacity:1; letter-spacing:.08em}
 html #pane-callboard .tab:hover{
   color:var(--oa-title-hi); background:rgba(216,205,184,.07); transform:none}
 html #pane-callboard .tab[aria-selected="true"]{

@@ -449,20 +449,21 @@ and the agent's task still say the Marketplace; it is the same room.
 | a venue's panel, wider (`#card.vwide`): what a search found or changed and what to do with it, the Call Board's view of it under that, its facts two to a row, the rest folded; going through what was found, the band over it all | `.vfound` (`.vfch`), `.vsnip` (its lane `.sr.lane`, a call `.sr`), `.vfacts` › `.vf`, `.vfolds` › `.vfold` › `.vfh`; `.vwalk` |
 | the drawer, holding an arena or a venue; an arena's venues in it; a link's cross, and the press that makes a brokerage link a venue; where a venue stands, the four sections tied together with Remove beside them (`.vphseg`); a venue's ask to the agent | `#card` and its `.scrim`; `.avlist` › `.avrow`; `.ldel`, `.lmake`; `.vplace`; `.vagent` |
 
-**The Call Board** — the tabs are the bar, `#hdr` › `.tabs`, two rows in
-`.tgrid`, each named at its left by a `.tglab`: Horizon's clusters on the
-first `.trow`, the arenas' tabs (JU, COFUND, COPROG and OTHER) and All
-calls (`.trow.tall`) on the second; the controls under it are `.hd-controls`
+**The Call Board** — the tabs are the bar, `#hdr` › `.tabs` › `.tsel`:
+the triangle `.tri`, its three points `.pt` (Horizon, Partnerships, All &
+Freezer) turning in `.spin`, the group's name `.glab`, and the three rows
+of tabs, `.trow`, the chosen one `.cur`: Horizon's clusters, the arenas'
+tabs (JU, CoFund, CoProg and OTHER), and All with the Freezer; the controls under it are `.hd-controls`
 and `#ovbar`, ChatGPT's search for calls `#gptb` among them; the chronological chart is `#tl` inside `.tl-sticky`, on the
 right of the topic list on a Horizon tab and alone on an arena's tab, with
 what a search finds elsewhere under it in `#tlaway`; a topic opens in
 `#reader`. On an arena's tab a call is a row, `.arow`, whose chip,
-`.achip`, names the arena, the first of each arena's rows `.afirst`, and
+`.achip.stag`, names the arena, the first of each arena's rows `.afirst`, and
 one with a new date glows (`.fresh`) until its `.seen` is pressed; an arena
 opened there is `.aopen`, and where a tab holds several types each is named
-over its arenas by a `.tyh`. Under a tab's
-calls stands its freezer, `.frz`, the arenas put away as `.frzchip`s. What waits to be judged is counted on `#jpill` and dotted on
-its tab (`.fd`); while judging, the new arena stands dashed in its tab, a
+over its arenas by a `.tyh`. The Freezer tab draws every arena put away
+the same way, its tag `.frz`, with a `.thaw` on each. What waits to be judged is counted on `#jpill` and dotted on
+its tab (`.fd`) and on the triangle's point (`.pt.fd`); while judging, the new arena stands dashed in its tab, a
 row `.ghost`, and the find itself opens in the Semaphore's drawer, lent over the Board. The decisions behind them are in
 [call-board](notes/call-board.md).
 

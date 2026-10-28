@@ -67,9 +67,12 @@ calls land on the Call Board. What still holds of the board:
   (2026-10-28, see [call-board](call-board.md)).
 - His own order of the arenas within a type, set in Types, is the order the
   Call Board's tabs list them in.
-- The freezer went to the Call Board (2026-10-25), under each tab's calls,
-  where Mark found it most at home; it stood under Venues for a day after
-  the Board, whose footnote it was, went.
+- The freezer went to the Call Board (2026-10-25), where Mark found it
+  most at home, since 2026-10-28 as a tab of its own; it stood under
+  Venues for a day after the Board, whose footnote it was, went.
+- **An arena looks the same in both rooms** (2026-10-28): the Call Board
+  draws it in its type's colour and in this room's tag (see
+  [call-board](call-board.md)).
 
 ## Venues
 

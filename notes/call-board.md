@@ -15,15 +15,17 @@ undo it, and what was agreed and is not built yet.
   choosing a Horizon cluster in one press and wants the same for the rest.
 - Nothing may clutter it: every addition was drawn first and chosen
   against at least one quieter way.
-- **The tabs stand in two rows** (2026-10-25): Horizon's on the first,
-  the arenas' and All calls on the second, each row named at its left,
-  every tab in sight and one press away. Mark asked for a sweep after the
-  roll of 2026-10-24 (one group's row in the bar at a time, the others
-  peeking over and under it, turned by the wheel or a swipe) did "not at
-  all work nicely": the peeking rows were cut off at the bar's edges. The
-  thirteen side by side in one row, before the roll, ran into the room's
+- **A triangle chooses the row** (issue 1, 2026-10-28): one row of tabs
+  in the beam at a time, chosen by a three-pointed triangle beside it
+  that turns until the point pressed faces right, like the line of room
+  marks: Horizon (a sun on the horizon), Partnerships (an EU star) and
+  All & Freezer (a frost crystal), the group's name beside it. Chosen
+  over letters at the points. It replaced two rows standing at once
+  (2026-10-25), each named at its left, which had replaced a roll of
+  2026-10-24 whose peeking rows were cut off at the bar's edges and "did
+  not at all work nicely"; the thirteen in one row ran into the room's
   name on the iPad held sideways; three words choosing the row, with no
-  roll, was turned down.
+  roll, was turned down that day.
 - **No counts on the tabs** (2026-10-28): the number of topics or calls
   on each tab went from the beam, on Mark's word. The count under the
   search still stands while a search or a choice narrows the list.
@@ -38,7 +40,8 @@ undo it, and what was agreed and is not built yet.
 
 ## Tabs beyond Horizon
 
-- **JU, COFUND, COPROG and OTHER** (2026-10-24): a tab each for Mark's
+- **JU, CoFund, CoProg and OTHER** (2026-10-24, written so since
+  2026-10-28): a tab each for Mark's
   three big types, Joint Undertakings, co-funded and co-programmed
   partnerships, and one for every other arena. Pillar 2 was the fourth
   main type and goes into the cluster tabs. The types are told apart by
@@ -56,8 +59,14 @@ undo it, and what was agreed and is not built yet.
   like are left off the chips (`tagName` in callboard.js), since they told
   no partnership from another and were in the way. The full name stays on
   hover, in a search and in its panel.
-- Colour is the arena's own, saturated for the round it is in and pale for
-  the next, as the 2026 and 2027 calls are in Horizon.
+- **The Semaphore's colours and tags** (issue 2, 2026-10-28): an arena
+  wears its type's colour from Types, its name in the Semaphore's tag (a
+  wash with a solid edge at its left, in italic), so the two rooms read as
+  one. A call is lighter the further off it is, on its bar and on its
+  tag alike: full within three months, lighter beyond six and twelve.
+  Mark chose that over full for the round a call is in and pale for the
+  next. Before, each arena had a colour of its own here. Since a tab's
+  arenas may now share one colour, the rule between arenas is firmer.
 - **A date not yet published to the day is drawn where it can fall**
   (2026-10-28): a soft band over the month, quarter or half it is known
   to, the bar solid only between what is known, the hard tick and the dot
@@ -89,16 +98,19 @@ undo it, and what was agreed and is not built yet.
   and nowhere else beside it; the line under the chart that said them
   again for an arena's call went. Where an opening's tag and a deadline's
   would overlap on a short bar, the opening's gives way.
-- **The freezer stands under the calls of each tab** (2026-10-25), shut
-  behind one line, a Thaw on each arena, since Mark found it most at home
-  here once the Call Board drew every arena; it stood under the
-  Semaphore's Venues after its Board went.
+- **The Freezer is a tab** (issue 1, 2026-10-28), beside All: every
+  arena put away with its calls on the timeline, each type's under its
+  name, its tag frosted, a Thaw on each. The line under each tab's calls
+  that held the arenas put away as names (2026-10-25) went, so the
+  freezer has one home; before that it stood under the Semaphore's
+  Venues.
 - **Types in OTHER, named once** (2026-10-24): where a tab holds arenas of
   more than one type, each type's name in small capitals over its arenas,
   and a slim rule in its colour from Types down their left. Chosen over the
   chip edged in the type's colour, which left the type to colour alone,
   and over a faint wash behind each type's rows, where two close colours
-  stayed close.
+  stayed close. The slim rule went when the tags took the type's colour
+  (2026-10-28).
 
 ## Brokerage over the calls (2026-10-24 to 10-25)
 
