@@ -17,6 +17,10 @@ Hub.markup('atlas', `
     </nav>
     <div class="spacer"></div>
     <button id="editToggle" class="hbtn" title="Toggle graph editing"><span class="dot" style="background:var(--danger)"></span>&nbsp;Edit graph</button>
+    <!-- Every edit made to the Atlas, with undo, Export and Import. It was a
+         list at the foot of the side pane, which grew with every edit;
+         Mark asked for it behind a button (#14). The count is written in. -->
+    <button id="editsBtn" class="hbtn" type="button" title="Your edits to the Atlas: undo, export, import">Edits</button>
     <button id="aboutBtn" class="hbtn">About</button>
     <!-- The graph itself is a generated file and never changes here; what
          this room has of its own is the edit list, and this says whether

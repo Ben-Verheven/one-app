@@ -507,13 +507,13 @@ THE CALL BOARD — the Ledger's daylight sibling.  callboard.css:2
 
 ## `rooms/atlas/atlas.view.js`
 
-45 lines · 2 KB
+49 lines · 2 KB
 
 _No section banners._
 
 ## `rooms/atlas/atlas.js`
 
-2676 lines · 131 KB
+2735 lines · 135 KB
 
 ```
 Researcher Atlas                                          atlas.js:1
@@ -534,36 +534,37 @@ state                                                     atlas.js:642
 modal                                                     atlas.js:704
 edit actions                                              atlas.js:750
 rail                                                      atlas.js:952
-search mode                                               atlas.js:1115
-BROWSE — the department as it organizes itself            atlas.js:1394
-NEWS — what the scheduled people-agent found on the web   atlas.js:1590
-DOSSIER — one researcher                                  atlas.js:1782
-MAP & WALK — one canvas, two readings                     atlas.js:2146
-canvas                                                    atlas.js:2219
-concentric walk                                           atlas.js:2280
-canvas interaction                                        atlas.js:2409
-walk rail                                                 atlas.js:2476
-SHELL — tabs, edit toggle, about, init.                   atlas.js:2554
-exposed to the hub                                        atlas.js:2636
+edits                                                     atlas.js:1102
+search mode                                               atlas.js:1170
+BROWSE — the department as it organizes itself            atlas.js:1449
+NEWS — what the scheduled people-agent found on the web   atlas.js:1645
+DOSSIER — one researcher                                  atlas.js:1837
+MAP & WALK — one canvas, two readings                     atlas.js:2201
+canvas                                                    atlas.js:2274
+concentric walk                                           atlas.js:2335
+canvas interaction                                        atlas.js:2464
+walk rail                                                 atlas.js:2535
+SHELL — tabs, edit toggle, about, init.                   atlas.js:2613
+exposed to the hub                                        atlas.js:2695
 ```
 
 ## `rooms/atlas/atlas.css`
 
-431 lines · 28 KB
+443 lines · 29 KB
 
 ```
 Researcher Atlas  atlas.css:1
 chrome            atlas.css:36
-narrow            atlas.css:83
-shared bits       atlas.css:107
-sliders           atlas.css:151
-search            atlas.css:161
-browse            atlas.css:225
-map & walk        atlas.css:268
-dossier           atlas.css:301
-popover / modal   atlas.css:352
-edits list        atlas.css:369
-news              atlas.css:382
+narrow            atlas.css:95
+shared bits       atlas.css:119
+sliders           atlas.css:163
+search            atlas.css:173
+browse            atlas.css:237
+map & walk        atlas.css:280
+dossier           atlas.css:313
+popover / modal   atlas.css:364
+edits list        atlas.css:381
+news              atlas.css:394
 ```
 
 ## `rooms/notes/notes.view.js`
@@ -663,4 +664,4 @@ Generated data. Never open, never edit, never upload.
 
 ---
 
-**39300 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.
+**39375 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.

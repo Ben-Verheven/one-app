@@ -463,7 +463,9 @@ row `.ghost`, and the bar along the foot of the room is `#jbar`. The decisions b
 [call-board](notes/call-board.md).
 
 **The Atlas** — `#app` › `header` carries `#tab-search`, `#tab-browse`,
-`#tab-walk` and `#tab-news`; the two columns are `#rail` and `#main`; `#dossier` is the
+`#tab-walk` and `#tab-news`, and `#editsBtn`, which opens the list of edits; the
+settings are `#rail`, folded to the strip `#railOpen` and sliding out over
+`#main` from it unless pinned beside it; `#dossier` is the
 researcher panel, which the bridge also lends to the other four rooms.
 
 The graph is a generated file and is never written to. What the room has

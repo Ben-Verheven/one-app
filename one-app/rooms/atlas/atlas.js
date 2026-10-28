@@ -950,26 +950,73 @@ function addLink(fromKey) {
 }
 
 // ---------- rail -----------------------------------------------------------
-/* The fold is this device's own choice, not the graph's, so it lives in the
-   browser rather than in the edits the cloud carries. */
-const RAILFOLD = "atlas-railfold";
-let railFolded = matchMedia("(pointer:coarse)").matches;
-try { const f = localStorage.getItem(RAILFOLD); if (f !== null) railFolded = f === "1"; } catch (e) {}
+/* The pane is a strip by default, on every device, and slides out OVER the
+   results — when the pointer rests on the strip, or on a press — then back
+   when the pointer leaves it or something else is pressed (#14). It used to
+   stand open beside the results at the desk, taking 340px for settings that
+   are set once and left. Over rather than beside, so the results never
+   move while it comes and goes. Pinned, it stands beside them as it used
+   to. The pin is this device's own choice, not the graph's, so it lives in
+   the browser rather than in the edits the cloud carries; the key is new
+   because the old fold key held every desk's "open" and would have kept
+   the new default from ever reaching it. */
+const RAILPIN = "atlas-railpin";
+let railPinned = false;
+try { railPinned = localStorage.getItem(RAILPIN) === "1"; } catch (e) {}
 const CHEV = d => `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${d}"/></svg>`;
-function setRailFold(f) {
-  railFolded = f;
-  try { localStorage.setItem(RAILFOLD, f ? "1" : "0"); } catch (e) {}
-  $("#body").classList.toggle("folded", f);
+function setRailPin(p) {
+  railPinned = p;
+  try { localStorage.setItem(RAILPIN, p ? "1" : "0"); } catch (e) {}
+  peekRail(false);
+  $("#body").classList.toggle("folded", !p);
+  renderRail();
   /* The map's canvas is sized from its column once, when drawn. */
   if (State.mode === "walk") renderWalk();
 }
+/* A short wait before the pane comes out under a resting pointer, so one
+   passing along the left edge on its way somewhere does not open it, and a
+   longer one before it goes, so a pointer that slips off its edge for a
+   moment does not lose it. */
+let _peekT = 0;
+function peekRail(on) {
+  clearTimeout(_peekT);
+  $("#body").classList.toggle("peek", !!on && !railPinned);
+}
+const isPeek = () => $("#body").classList.contains("peek");
 $("#railOpen").innerHTML = CHEV("M9 6l6 6-6 6") + "<span>Settings</span>";
-$("#railOpen").onclick = () => setRailFold(false);
-$("#body").classList.toggle("folded", railFolded);
+$("#railOpen").onclick = () => peekRail(true);
+[$("#railOpen"), $("#rail")].forEach(el => {
+  el.addEventListener("pointerenter", e => {
+    if (e.pointerType !== "mouse" || railPinned) return;
+    clearTimeout(_peekT);
+    if (!isPeek() && el.id === "railOpen") _peekT = setTimeout(() => peekRail(true), 180);
+  });
+  el.addEventListener("pointerleave", e => {
+    if (e.pointerType !== "mouse" || railPinned) return;
+    clearTimeout(_peekT);
+    /* Not while a word is being typed into it — Browse's filter is in it,
+       and a pointer drifting off the pane is not a reason to take the box
+       away mid-word. */
+    const typing = el.ownerDocument.activeElement;
+    if (isPeek() && !($("#rail").contains(typing) && typing.type === "text"))
+      _peekT = setTimeout(() => peekRail(false), 300);
+  });
+});
+/* A press anywhere else in the room puts it away — except on a dot of the
+   map, whose press brings it out to show who was chosen. */
+$("#app").addEventListener("pointerdown", e => {
+  if (!isPeek()) return;
+  const t = e.target;
+  if ($("#rail").contains(t) || $("#railOpen").contains(t) || (t.closest && t.closest(".mapdot"))) return;
+  peekRail(false);
+});
+$("#body").classList.toggle("folded", !railPinned);
 
 function renderRail() {
   const rail = $("#rail");
-  let html = `<button class="railfold" id="railFold" type="button" title="Fold the settings away" aria-label="Fold the settings away">${CHEV("M15 6l-6 6 6 6")}</button>`;
+  let html = railPinned
+    ? `<button class="railfold" id="railFold" type="button" title="Fold the settings away" aria-label="Fold the settings away">${CHEV("M15 6l-6 6 6 6")}</button>`
+    : `<button class="railfold" id="railFold" type="button" title="Keep the settings open beside the results" aria-label="Keep the settings open beside the results">${CHEV("M9 3h6l-1 6 3 3H7l3-3-1-6zM12 12v9")}</button>`;
   if (State.mode === "search") {
     const o = State.opts;
     html += `<div class="sect"><h3>Layer weights</h3>
@@ -1016,45 +1063,12 @@ function renderRail() {
   if (State.mode === "walk") html += walkRailHTML();
   if (State.mode === "news") html += newsRailHTML();
 
-  // edits panel — always present
-  const eds = Core.getEdits();
-  /* Said in the words the room uses on screen rather than the words the
-     records are keyed by: nobody outside this file calls one an "att". */
-  const ETYPE = { att: "keyword", cutAtt: "cut kw", cutSem: "cut link",
-                  wAtt: "wt kw", wSem: "wt link", merge: "merge", link: "link",
-                  desc: "description", fact: "news", newcomer: "newcomer",
-                  rank: "position" };
-  html += `<hr class="hair"><div class="sect"><h3>Graph edits (${eds.length})</h3>`;
-  html += eds.slice().reverse().map(e => {
-    const what = {
-      cutSem: () => `<b>${esc(e.aL)}</b> — <b>${esc(e.bL)}</b>`,
-      cutAtt: () => `“${esc(e.tL)}” \u2192 ${esc(e.rL)} <span class="badge l${e.layer}">${["", "K", "D", "A"][e.layer]}</span>`,
-      wSem: () => `×${e.w} on <b>${esc(e.aL)}</b> — <b>${esc(e.bL)}</b>`,
-      wAtt: () => `×${e.w} on “${esc(e.tL)}” → ${esc(e.rL)}`,
-      merge: () => `<b>${esc(e.fromL)}</b> ⇒ <b>${esc(e.intoL)}</b>`,
-      link: () => `<b>${esc(e.aL)}</b> ${RELG[e.rel] || "~"} <b>${esc(e.bL)}</b>${e.note ? " · " + esc(e.note) : ""}`,
-      att: () => `“${esc(e.tL)}” \u2192 ${esc(e.rL)} <span class="badge l1" title="declared keyword">K</span>`,
-      desc: () => `${esc(e.rL)} <span class="badge l2" title="description">D</span> <span class="hint">${esc(String(e.text).replace(/\s+/g, " ").slice(0, 46))}${String(e.text).length > 46 ? "\u2026" : ""}</span>`,
-      fact: () => `${esc(e.rL)} <span class="hint">${e.kind === "left" ? "left TU/e" : esc(String(e.text).slice(0, 46)) + (String(e.text).length > 46 ? "\u2026" : "")}</span>`,
-      newcomer: () => `${esc(e.name)} <span class="hint">${esc(e.grp || "")}</span>`,
-      rank: () => `${esc(e.rL)} <span class="hint">${esc(e.rank)}</span>`,
-    }[e.type];
-    return `<div class="editrow"><span class="etype">${ETYPE[e.type] || e.type}</span>
-      <span class="what">${what ? what() : ""}</span>
-      <button class="undo" data-undo="${e.id}">undo</button></div>`;
-  }).join("");
-  if (eds.length || Store.volatile) {
-    html += `<div class="rowbtns" style="margin-top:10px">
-      <button class="sbtn" id="expEdits">Export</button>
-      <button class="sbtn" id="impEdits">Import</button>
-      ${eds.length ? `<button class="sbtn danger" id="clrEdits">Clear all</button>` : ""}</div>`;
-    if (Store.volatile) html += `<div class="hint" style="margin-top:8px;color:var(--danger)">Persistent storage is unavailable here — edits live only in this session. Export to keep them.</div>`;
-  } else {
-    html += `<div class="rowbtns" style="margin-top:10px"><button class="sbtn" id="impEdits">Import edits</button></div>`;
-  }
-  html += `</div>`;
+  /* The edits are behind Edits in the bar now (#14); the bar's button
+     carries their count, so it is said again whenever the rail is. */
+  const nEd = Core.getEdits().length;
+  $("#editsBtn").textContent = nEd ? `Edits · ${nEd}` : "Edits";
   rail.innerHTML = html;
-  $("#railFold").onclick = () => setRailFold(true);
+  $("#railFold").onclick = () => setRailPin(!railPinned);
 
   rail.querySelectorAll("input[data-w]").forEach(inp => inp.oninput = () => {
     State.opts.weights[+inp.dataset.w] = +inp.value;
@@ -1079,7 +1093,52 @@ function renderRail() {
     tf.oninput = () => { State.treeFilter = tf.value; renderBrowse(); };
     if (State.mode === "browse") tf.focus();
   }
-  rail.querySelectorAll("[data-undo]").forEach(b => b.onclick = () => removeEdit(b.dataset.undo));
+  rail.querySelectorAll("[data-walkact]").forEach(b => wireWalkRail(b));
+  rail.querySelectorAll("[data-nkind]").forEach(b => b.onclick = () => {
+    State.newsKind = b.dataset.nkind; renderRail(); renderNews();
+  });
+}
+
+// ---------- edits ----------------------------------------------------------
+/* Every edit made to the Atlas, newest first, each with its undo — and the
+   room's own Export and Import of them. It stood at the foot of the side
+   pane until #14 put it behind Edits in the bar. Said in the words the
+   room uses on screen rather than the words the records are keyed by:
+   nobody outside this file calls one an "att". */
+function openEdits() {
+  const eds = Core.getEdits();
+  const ETYPE = { att: "keyword", cutAtt: "cut kw", cutSem: "cut link",
+                  wAtt: "wt kw", wSem: "wt link", merge: "merge", link: "link",
+                  desc: "description", fact: "news", newcomer: "newcomer",
+                  rank: "position" };
+  let html = `<div class="mh">Your edits to the Atlas \u00b7 ${eds.length}</div><div class="mb">`;
+  html += eds.slice().reverse().map(e => {
+    const what = {
+      cutSem: () => `<b>${esc(e.aL)}</b> — <b>${esc(e.bL)}</b>`,
+      cutAtt: () => `“${esc(e.tL)}” \u2192 ${esc(e.rL)} <span class="badge l${e.layer}">${["", "K", "D", "A"][e.layer]}</span>`,
+      wSem: () => `×${e.w} on <b>${esc(e.aL)}</b> — <b>${esc(e.bL)}</b>`,
+      wAtt: () => `×${e.w} on “${esc(e.tL)}” → ${esc(e.rL)}`,
+      merge: () => `<b>${esc(e.fromL)}</b> ⇒ <b>${esc(e.intoL)}</b>`,
+      link: () => `<b>${esc(e.aL)}</b> ${RELG[e.rel] || "~"} <b>${esc(e.bL)}</b>${e.note ? " · " + esc(e.note) : ""}`,
+      att: () => `“${esc(e.tL)}” \u2192 ${esc(e.rL)} <span class="badge l1" title="declared keyword">K</span>`,
+      desc: () => `${esc(e.rL)} <span class="badge l2" title="description">D</span> <span class="hint">${esc(String(e.text).replace(/\s+/g, " ").slice(0, 46))}${String(e.text).length > 46 ? "\u2026" : ""}</span>`,
+      fact: () => `${esc(e.rL)} <span class="hint">${e.kind === "left" ? "left TU/e" : esc(String(e.text).slice(0, 46)) + (String(e.text).length > 46 ? "\u2026" : "")}</span>`,
+      newcomer: () => `${esc(e.name)} <span class="hint">${esc(e.grp || "")}</span>`,
+      rank: () => `${esc(e.rL)} <span class="hint">${esc(e.rank)}</span>`,
+    }[e.type];
+    return `<div class="editrow"><span class="etype">${ETYPE[e.type] || e.type}</span>
+      <span class="what">${what ? what() : ""}</span>
+      <button class="undo" data-undo="${e.id}">undo</button></div>`;
+  }).join("") || `<div class="hint">None yet. Keywords you assign, descriptions you write, ranks and the news you accept are listed here, each with its undo.</div>`;
+  if (Store.volatile) html += `<div class="hint" style="margin-top:8px;color:var(--danger)">Persistent storage is unavailable here — edits live only in this session. Export to keep them.</div>`;
+  html += `</div><div class="mfoot">
+    ${eds.length ? `<button class="sbtn danger" id="clrEdits" style="margin-right:auto">Clear all</button><button class="sbtn" id="expEdits">Export</button>` : ""}
+    <button class="sbtn" id="impEdits">Import</button>
+    <button class="sbtn" id="edClose">Close</button></div>`;
+  openModal(html);
+  const box = $("#modalbox");
+  box.querySelectorAll("[data-undo]").forEach(b => b.onclick = () => { removeEdit(b.dataset.undo); openEdits(); });
+  $("#edClose").onclick = closeModal;
   const ex = $("#expEdits");
   if (ex) ex.onclick = () => {
     const blob = new Blob([JSON.stringify({ v: 1, edits: Core.getEdits() }, null, 2)],
@@ -1088,8 +1147,7 @@ function renderRail() {
     a.href = URL.createObjectURL(blob); a.download = "atlas-edits.json"; a.click();
     URL.revokeObjectURL(a.href);
   };
-  const im = $("#impEdits");
-  if (im) im.onclick = () => {
+  $("#impEdits").onclick = () => {
     const inp = document.createElement("input");
     inp.type = "file"; inp.accept = "application/json";
     inp.onchange = () => {
@@ -1098,19 +1156,16 @@ function renderRail() {
         try {
           const data = JSON.parse(txt);
           Core.setEdits(data.edits || []);
-          saveEdits(); refresh(); toast(`Imported ${(data.edits || []).length} edits`);
+          saveEdits(); refresh(); openEdits(); toast(`Imported ${(data.edits || []).length} edits`);
         } catch (e) { toast("That file is not an Atlas edits export"); }
       });
     };
     inp.click();
   };
   const cl = $("#clrEdits");
-  if (cl) cl.onclick = () => { Core.setEdits([]); saveEdits(); refresh(); toast("All edits cleared"); };
-  rail.querySelectorAll("[data-walkact]").forEach(b => wireWalkRail(b));
-  rail.querySelectorAll("[data-nkind]").forEach(b => b.onclick = () => {
-    State.newsKind = b.dataset.nkind; renderRail(); renderNews();
-  });
+  if (cl) cl.onclick = () => { Core.setEdits([]); saveEdits(); refresh(); openEdits(); toast("All edits cleared"); };
 }
+$("#editsBtn").onclick = openEdits;
 
 // ---------- search mode ----------------------------------------------------
 function renderSearch() {
@@ -1593,8 +1648,8 @@ function newcomerRow(e) {
 // Tuesday night it goes through six groups for colleagues the Atlas does not
 // have. It leaves findings in a table of its own in the cloud and never
 // touches the edit list: nothing it read becomes part of the Atlas until it
-// is accepted here, and what accepting makes is an ordinary edit — listed in
-// the rail, synced, undone like any other. The same arrangement as
+// is accepted here, and what accepting makes is an ordinary edit — listed
+// under Edits, synced, undone like any other. The same arrangement as
 // Semaphore's Dispatches, for the same reason: a page read too generously
 // costs a line dismissed, not a colleague wrongly marked as gone.
 // ===========================================================================
@@ -2461,6 +2516,10 @@ function wireCanvas(wrap) {
     if (isMap) {
       State.walk.sel = ri; State.walk.hl = ri;
       renderRail(); drawCanvas();
+      /* The pane slides out to show who was chosen. Two frames on, because
+         the rail and the canvas were both just rewritten and a slide that
+         shares their tick loses its first frames (notes/animation.md). */
+      requestAnimationFrame(() => requestAnimationFrame(() => { if (State.walk.sel === ri) peekRail(true); }));
     } else if (State.walk.focus.kind === "r" && State.walk.focus.i === ri) openDossier(ri);
     else goWalk({ kind: "r", i: ri });
   }));
@@ -2570,7 +2629,7 @@ $("#editToggle").onclick = () => {
   document.body.classList.toggle("editing", State.editing);
   $("#editToggle").classList.toggle("on", State.editing);
   toast(State.editing
-    ? "Edit mode — ✕ cuts, ×w reweights; every change is listed in the rail and reversible"
+    ? "Edit mode — ✕ cuts, ×w reweights; every change is listed under Edits and reversible"
     : "Edit mode off — your edits stay applied");
 };
 
@@ -2595,7 +2654,7 @@ $("#aboutBtn").onclick = () => openModal(`
     justification, <span style="font-family:var(--mono)">⌐</span> lexical containment).</p>
     <p style="margin-top:9px"><b>The graph is yours to correct.</b> Turn on <i>Edit graph</i> to cut
     links or attachments, reweight them, merge concepts, or add justified links.
-    Edits persist, are listed in the rail, and can be exported, imported, or undone
+    Edits persist, are listed under <i>Edits</i> in the bar, and can be exported, imported, or undone
     one by one. The underlying build is never touched.</p>
     <p style="margin-top:9px" class="hint">Built ${esc(G.meta.built)} from ${esc(G.meta.source)} ·
     ${R.length} researchers · ${P.length} publications · ${G.terms.length} terms ·
@@ -2605,7 +2664,7 @@ $("#aboutBtn").onclick = () => openModal(`
 
 $("#dclose").onclick = closeDossier;
 document.addEventListener("keydown", e => {
-  if (e.key === "Escape") { closeModal(); closeDossier(); }
+  if (e.key === "Escape") { closeModal(); closeDossier(); peekRail(false); }
 });
 
 let _rsz = null;

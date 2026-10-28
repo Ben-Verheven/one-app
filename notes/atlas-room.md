@@ -26,3 +26,17 @@ the dot, following the pointer at the desk and staying on the dot chosen
 with a press, which is the iPad's way to it. The three departments are
 washed under their dots in the plane's own units. The map's layout — most
 people in one dense cluster on the left — was named and left alone.
+
+**The side pane is a strip that slides out over the results** (#14,
+2026-10-28). Mark asked for it small by default, coming out on a press or
+on hover; of the two he chose both. It waits 180ms under a resting pointer
+before coming out and 300ms after the pointer leaves before going, so a
+pointer crossing the left edge does not open it and one slipping off its
+edge does not lose it; a press anywhere else in the room puts it away, and
+on the iPad, with no hover, the press is the way in. Over the results,
+never beside them, so nothing in the results moves while it comes and
+goes. The pin docks it beside them as it used to stand, per device. On the
+map, pressing a dot brings it out, since that is where the chosen
+researcher's buttons are. The edits list left the pane for **Edits** in the
+bar, a box with the list, undo, Export, Import and Clear all, because it
+grew with every edit under settings set once and left.

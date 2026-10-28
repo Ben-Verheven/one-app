@@ -62,13 +62,13 @@
   overflow-y:auto;scrollbar-gutter:stable;padding:18px 18px 40px}
 #pane-atlas #main{flex:1;min-width:0;overflow-y:auto;position:relative}
 #pane-atlas #main.nopad{overflow:hidden}
-/* On the iPad the rail took 340px from the results for settings that are
-   set once and left (Mark, 2026-10-17), so it folds to a strip that brings
-   it back, drawn as the arenas column folds in Project Watch. It starts
-   folded where the pointer is a finger and open at the desk; either way
-   the fold is kept per device. The chevron floats in the rail's own first
-   line because renderRail rewrites the rail whole, and the strip is a
-   sibling of the rail for the same reason. */
+/* The rail took 340px from the results for settings that are set once and
+   left, on the iPad first (Mark, 2026-10-17) and then at the desk too
+   (#14), so it stands folded to a strip, drawn as the arenas column folds
+   in Project Watch, and slides out over the results from there (`.peek`).
+   Pinned, it stands beside them. The pin or chevron floats in the rail's
+   own first line because renderRail rewrites the rail whole, and the strip
+   is a sibling of the rail for the same reason. */
 #pane-atlas .railfold{float:right;margin:-7px -8px 0 6px;padding:6px 8px;border-radius:5px;
   color:var(--faint);display:flex}
 #pane-atlas .railfold:hover{color:var(--ink);background:var(--wash)}
@@ -77,8 +77,20 @@
   font:600 11px var(--sans);letter-spacing:.8px;text-transform:uppercase}
 #pane-atlas .railopen:hover{color:var(--ink);background:var(--wash)}
 #pane-atlas .railopen span{writing-mode:vertical-rl}
-#pane-atlas #body.folded #rail{display:none}
-#pane-atlas #body.folded .railopen{display:flex}
+#pane-atlas #body{position:relative}
+#pane-atlas #body.folded .railopen{display:flex;position:relative;z-index:7}
+/* Folded, the rail is still there, parked behind the strip and out of
+   reach until it slides out over the results: on top of them rather than
+   beside, so nothing in the results moves while it comes and goes. Hidden
+   the dossier's way, so nothing in it can be tabbed to while it is away. */
+#pane-atlas #body.folded #rail{position:absolute;left:44px;top:0;bottom:0;width:340px;z-index:6;
+  overflow-y:auto;padding:18px 18px 40px;border-right:1px solid var(--line2);
+  transform:translateX(calc(-100% - 44px));visibility:hidden;
+  transition:transform .24s cubic-bezier(0.65,0,0.35,1), visibility 0s linear .24s}
+#pane-atlas #body.folded.peek #rail{transform:none;visibility:visible;
+  box-shadow:10px 0 28px rgba(30,35,45,.16);
+  transition:transform .24s cubic-bezier(0.65,0,0.35,1), visibility 0s}
+#pane-atlas #body.folded.peek .railopen{color:var(--ink);background:var(--wash)}
 
 /* ---------- narrow ----------
    The Atlas was written for a desk and said nothing about anything
