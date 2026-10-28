@@ -32,8 +32,9 @@ const KINDS={brokerage:{name:'Brokerage'},call:{name:'Call'}};
    arena turns about twice as often, a peripheral one about a third as often, and
    the freezer is simply the step past peripheral: one axis, four positions, from
    the work you are in to the work you have put away. Since the Marketplace
-   (2026-10-14) it is the venues serving the arena that it quickens or slows
-   (see vEvery), the rotation of arenas having gone. */
+   (2026-10-14) it was the venues serving the arena that it quickened or
+   slowed, the rotation of arenas having gone, until venues stopped falling
+   due for a visit (2026-10-25). */
 /* Where a lead has got to. Three steps and no more: the point is to know at a
    glance whether anyone has been written to yet, not to run a pipeline. There is
    deliberately no 'agreed' — the moment something is agreed it stops being a
@@ -376,7 +377,6 @@ function migrate(s){
    It is kept in `S.venues`, beside the arenas, and a visit's id is its day,
    so the same visit made on the desk and the iPad is one visit when the two
    copies are put together. */
-const RHYTHM={meeting:2,active:4,dying:7,standing:21};   /* days between visits, by where a venue stands */
 const NOW_BACK=28,NOW_AHEAD=84;   /* the Venues page's strip: four weeks back, twelve ahead (Mark chose the strip of time) */
 const VGOT={nothing:'nothing new',something:'something',lead:'a lead'};
 const PLACES=['new','board','venues','gone'];
@@ -541,6 +541,9 @@ function load(){
   }
 }
 let S=load()||blank();
+/* The search box went from the header (Mark, 2026-10-25); a search left
+   typed in it would narrow every view with nothing on screen to clear it. */
+if(S.ui)S.ui.q='';
 let saveWarned=false;
 function save(){
   if(loadError)return;                       /* refuse to overwrite what we could not read */
@@ -645,21 +648,6 @@ function cleanTags(list){
     seen.add(k);out.push(canonTag(t));
   }
   return out;
-}
-
-/* ============ search ============ */
-/* One box, opened from its button in the header. Typing narrows whichever
-   view is showing; an empty box that loses focus folds back into the button,
-   and a box with words in it stays open, so a narrowed board always shows
-   what narrowed it. */
-function searchChanged(){
-  save();repaint();applyView();
-}
-function applySearchBox(open){
-  const si=$('#search'),b=$('#searchBtn');
-  const show=open||!!S.ui.q;
-  si.hidden=!show;b.hidden=show;
-  if(si.value!==S.ui.q)si.value=S.ui.q;
 }
 
 /* ============ the board, on the Call Board ============
@@ -1347,37 +1335,6 @@ function vPhaseByDates(v){return PHASE[vState(v)];}
 function vPhase(v){return inPlace(v)?'place':v.phase||vPhaseByDates(v);}
 function lastVisit(v){const n=v.visits.length;return n?v.visits[n-1]:null;}
 function vSince(v){const x=lastVisit(v);return x?daysBetween(T(x.at),T(todayISO())):null;}
-/* How often a venue wants a visit. Where it stands sets the base: on its
-   event days every other day, active every four days, dying once a week, a
-   window with no event days and no end every three weeks; one arising, over
-   or undated wants none, nor does one not yet in Venues. The weight of the
-   arenas it serves scales it: a venue serving a central arena comes round
-   more often. What the visits gave scales it last: something found in
-   either of the last two brings it round sooner, three answered visits in
-   a row with nothing new send it further off. A rhythm Mark sets himself
-   (`every`) stands as he set it. */
-function vEvery(v){
-  if(v.every)return v.every;
-  if(!inVenues(v))return null;
-  /* Mark's Place reads it every night, so it never falls due here */
-  if(inPlace(v))return null;
-  /* a section set by hand sets the rhythm too: none in Arising or Limbo */
-  const nat=vState(v),w=vWin(v);
-  const st=!v.phase||v.phase===PHASE[nat]?nat:v.phase==='over'?'over':v.phase==='arising'?'arising':v.phase;
-  const base=st==='active'&&w&&w.ms===null&&w.to===null?RHYTHM.standing:RHYTHM[st];
-  if(!base)return null;
-  const as=venueArenas(v).filter(a=>!a.frozenAt);
-  let e=base*(as.length?Math.min(...as.map(a=>WEIGHTS[weightOf(a)].turn)):1);
-  const said=v.visits.filter(x=>x.got);
-  const last2=said.slice(-2),last3=said.slice(-3);
-  if(last2.some(x=>x.got!=='nothing'))e*=.75;
-  else if(last3.length===3&&last3.every(x=>x.got==='nothing'))e*=1.5;
-  return Math.max(1,Math.round(e));
-}
-function vDue(v){
-  const e=vEvery(v);if(!e)return false;
-  const d=vSince(v);return d===null||d>=e;
-}
 /* what a venue has given: its visits, the ones that found something, and
    the leads started from it */
 function vLeads(v){
@@ -1693,12 +1650,10 @@ function vTrackHTML(v,sp){
   for(const x of v.visits){const t=T(x.at);if(t>=t0&&t<=t1)
     h+='<i class="vtick'+(x.got&&x.got!=='nothing'?' found':'')+'" style="left:'+P(t+DAY/2).toFixed(2)+'%" title="'+esc(shortDay(x.at)+(x.got?' — '+VGOT[x.got]:''))+'"></i>';}
   h+='<i class="vnow" style="left:'+P(now+DAY/2).toFixed(2)+'%"></i>';
-  if(vDue(v))h+='<i class="vpulse" style="left:'+P(now+DAY/2).toFixed(2)+'%" title="Due for a visit"></i>';
   return '<div class="vtrack" data-act="openVenue" data-v="'+v.id+'" data-t0="'+t0+'" data-t1="'+t1+'">'+h+'</div>';
 }
 function nowRow(v,sp,over){
-  const due=vDue(v);
-  return '<div class="vrow'+(due?' due':'')+(over?' over':'')+'" data-vid="'+v.id+'">'+
+  return '<div class="vrow'+(over?' over':'')+'" data-vid="'+v.id+'">'+
     '<div class="vname">'+vGlyph(v)+
       '<span class="vnt"><span class="vnmrow"><button class="vnm" data-act="openVenue" data-v="'+v.id+'" title="'+esc(v.name)+'">'+esc(v.name)+'</button>'+
         (v.place==='new'?'<i class="vfnd">new</i>':hasNews(v)?'<i class="vfnd upd" title="A search changed it: its card says what">changed</i>':'')+'</span>'+
@@ -1835,30 +1790,27 @@ function renderNow(){keepPlace(()=>{
   const{all,by}=nowSections();
   if(!all.length){el.innerHTML=nowEmptyHTML();return;}
   const tab=NOW_TABS[S.ui.nowTab]?S.ui.nowTab:'active';
-  const tabDue=xs=>xs.filter(vDue).length;
   /* what waits to be checked in each tab: the new in Limbo, and anywhere
      a venue a search changed */
   const tabFound=xs=>{const n=xs.filter(v=>v.place==='new').length,c=xs.filter(v=>v.place!=='new'&&isFound(v)).length;
     return (n||c)?'<i class="vtabnew" title="'+(n+c)+' to check">'+[n?n+' new':'',c?c+' changed':''].filter(Boolean).join(' · ')+'</i>':'';};
-  const tabHTML=k=>{const xs=by[k],d=tabDue(xs);
+  const tabHTML=k=>{const xs=by[k];
     return '<button class="vtab t-'+k+(tab===k?' on':'')+'" data-act="nowTab" data-t="'+k+'" aria-pressed="'+(tab===k)+'">'+NOW_TABS[k].name+
-      '<b>'+xs.length+'</b>'+tabFound(xs)+
-      (d?'<i class="vtabdue" title="'+d+' due for a visit">'+d+' due</i>':'')+'</button>';};
-  const shown=by[tab],due=tabDue(shown),found=foundVenues().length;
+      '<b>'+xs.length+'</b>'+tabFound(xs)+'</button>';};
+  const shown=by[tab],found=foundVenues().length;
   let h='<div class="vhead">'+
     '<div class="vtabs" role="group" aria-label="Where the venues stand">'+
       tabHTML('arising')+tabHTML('active')+tabHTML('dying')+'</div>'+
-    /* Mark's Place stands apart too: not a stage of a venue's life, but
-       where its partner search is read */
-    '<div class="vtabs" role="group" aria-label="Copied by Mark\u2019s Place">'+tabHTML('place')+'</div>'+
     /* Limbo stands apart from the three, in its fog: what is over, or put
        there, is not a stage of the work but what is left of it */
     '<button class="culimbo vlimbotab'+(tab==='over'?' on':'')+'" data-act="nowTab" data-t="over" aria-pressed="'+(tab==='over')+'">'+
       '<span class="culfog" aria-hidden="true"></span>'+LIMBO_GHOST+'<span class="culc">Limbo</span><b>'+by.over.length+'</b>'+tabFound(by.over)+'</button>'+
-    '<span class="wsay">'+(tab==='place'?(by.place.length?'Copied every night by Mark\u2019s Place, so none of them comes due for a visit here.':''):tab==='over'?(by.over.length?'Over, or put here by you, each waiting until you delete it \u2014 or drag its end on, or put it in another section from its card.':'Nothing in Limbo.'):
-      due?'<b>'+due+'</b> '+(due===1?'venue here is':'venues here are')+' due for a visit.':'Nothing here is due for a visit.')+'</span>'+
+    '<span class="wsay">'+(tab==='place'?(by.place.length?'Copied every night by Mark\u2019s Place.':''):tab==='over'?(by.over.length?'Over, or put here by you, each waiting until you delete it \u2014 or drag its end on, or put it in another section from its card.':'Nothing in Limbo.'):'')+'</span>'+
     (found?'<button class="btn primary vchk" data-act="walkStart" title="Each new or changed venue in its card, one at a time">Check what was found · '+found+'</button>':'')+
-    '<span class="vkey"><i class="vgl ev"></i>event days<i class="vkbar"></i>window, by how much goes on<i class="vkp"></i>due</span></div>';
+    '<span class="vkey"><i class="vgl ev"></i>event days<i class="vkbar"></i>window, by how much goes on</span>'+
+    /* Mark's Place last and quiet (Mark, 2026-10-25): its venues are read
+       there every night, and this is only where to look them up */
+    '<button class="vplacetab'+(tab==='place'?' on':'')+'" data-act="nowTab" data-t="place" aria-pressed="'+(tab==='place')+'" title="The venues whose partner search Mark\u2019s Place copies">Mark\u2019s Place <b>'+by.place.length+'</b></button></div>';
   h+='<div class="vaxis"><span class="vaxl">'+NOW_TABS[tab].name+'</span><div class="vaxt">'+nowAxisHTML(sp)+'</div><span></span></div>';
   if(!shown.length){h+=tab==='over'?'':'<p class="vnone vtabnone">'+NOW_TABS[tab].none+'</p>';el.innerHTML=h;return;}
   const dated=shown.filter(v=>vWin(v)),undated=shown.filter(v=>!vWin(v));
@@ -2124,15 +2076,6 @@ function snipFrame(ts,calls,lane,none){
     '</div>'+(none?'<p class="snote">'+none+'</p>':'')+
   '</div>';
 }
-function vEveryHTML(v){
-  const auto=v.every?null:vEvery(v);
-  const opts=[0,1,2,3,4,5,7,10,14,21,30,45,60];
-  const why=!inVenues(v)?'it is not in Venues':({arising:'it is arising',over:'it is over',undated:'it has no date'}[vState(v)]||'it rests');
-  return '<select class="vevery" data-vevery="'+v.id+'" aria-label="How often to visit">'+
-    opts.map(n=>'<option value="'+n+'"'+((v.every||0)===n?' selected':'')+'>'+
-      (n?'every '+n+' day'+(n===1?'':'s'):(auto?'by itself — now every '+auto+' day'+(auto===1?'':'s'):'by itself — none while '+why))+
-    '</option>').join('')+'</select>';
-}
 /* The window and the event days in words, and whose the window's ends
    are: Mark's, or given round the event days until he moves them. */
 function vFactsHTML(v){
@@ -2178,7 +2121,7 @@ function venueReadHTML(v){
       '<h2 id="aname">'+esc(v.name)+'</h2>'+
       '<div class="vchrow">'+vGoHTML(v)+(v.url?'':'<button class="vgo none" data-act="vVisit" data-v="'+v.id+'" title="Record today’s visit">Visited today</button>')+vAgentHTML(v)+
         '<span class="vlast">'+(d===null?'not visited yet':'last visit '+(d<=0?'today':d===1?'yesterday':d+' days ago'))+
-          (vEvery(v)?' · every '+vEvery(v)+' d':'')+'</span></div>'+
+          '</span></div>'+
     '</div>'+
     vFoundHTML(v)+
     vSnipHTML(v)+
@@ -2218,7 +2161,6 @@ function venueReadHTML(v){
         '<input name="label" placeholder="Name it — optional" aria-label="Name" autocomplete="off"><button type="submit" class="ib" title="Add" aria-label="Add page">✓</button></form>')+
     fold('note','Your note',v.memo?v.memo.replace(/\s+/g,' ').slice(0,60)+(v.memo.length>60?'…':''):'empty',
       '<textarea class="vmemo" data-vmemo="'+v.id+'" rows="2" placeholder="Anything worth remembering about it">'+esc(v.memo||'')+'</textarea>')+
-    fold('rhythm','Rhythm',vEvery(v)?'every '+vEvery(v)+' day'+(vEvery(v)===1?'':'s'):inVenues(v)?'none now':'none until it is in Venues',vEveryHTML(v))+
     '</div>'+
   '</div>'+
   '<div class="cfoot">'+
@@ -2307,7 +2249,7 @@ function arenaVenuesHTML(a){
   const vs=venuesOf(a);
   const by=v=>{const w=vWin(v);return w&&w.from!==null?w.from:1e15;};
   const rows=vs.slice().sort((x,y)=>by(x)-by(y)||x.name.localeCompare(y.name)).map(v=>
-    '<div class="avrow st-'+v.place+(vState(v)==='over'?' over':'')+(vDue(v)?' due':'')+'">'+vGlyph(v)+
+    '<div class="avrow st-'+v.place+(vState(v)==='over'?' over':'')+'">'+vGlyph(v)+
       '<span class="avt"><button class="vnm" data-act="openVenue" data-v="'+v.id+'">'+esc(v.name)+'</button>'+
         '<i>'+(onTrial(v)?'<b class="avplace">new</b> · ':'')+esc(vDateSay(v))+'</i></span>'+
       '<span class="vend">'+vGoHTML(v)+'</span></div>').join('');
@@ -3807,15 +3749,15 @@ function applyView(){
   const v=S.ui.view;
   $('#wall').hidden=v!=='leads';
   $('#now').hidden=v!=='now';
-  document.querySelectorAll('#viewseg button, #leadsBtn').forEach(b=>
+  document.querySelectorAll('#venuesBtn, #leadsBtn').forEach(b=>
     b.classList.toggle('on',b.dataset.v===v));
-  /* how many venues are due for a visit, on the Venues tab */
-  const tab=document.querySelector('#viewseg button[data-v=now]');
-  if(tab){
-    const n=visibleVenues().filter(vDue).length;
-    tab.querySelector('.tabn')?.remove();
-    if(n)tab.insertAdjacentHTML('beforeend','<span class="tabn">'+n+'</span>');
-  }
+}
+/* The header's menu, which hangs under its button from outside the
+   header: the app's bar is one height and cuts off what falls below it. */
+function semMenu(open){
+  const m=$('#semMenu'),b=$('#semMoreBtn');if(!m||m.hidden===!open)return;
+  m.hidden=!open;b.setAttribute('aria-expanded',String(!!open));b.classList.toggle('on',!!open);
+  if(open){const r=b.getBoundingClientRect();m.style.top=(r.bottom+6)+'px';m.style.left=(r.right-m.offsetWidth)+'px';}
 }
 /* every change to a lead goes through here, so what shows is redrawn in one place */
 /* Rebuilding the room throws away the scroller's place. For an instant the
@@ -4137,7 +4079,7 @@ function closeComposers(){leadEdit={a:null,l:null};
   noteEdit={a:null,l:null};endAsk={a:null,l:null};}
 function renderAll(){
   repaint();
-  renderDrawer();renderAsk();applySearchBox(false);applyView();
+  renderDrawer();renderAsk();applyView();
 }
 
 function newArena(name,typeId,tags){
@@ -4674,7 +4616,7 @@ document.addEventListener('mouseover',e=>{
   const a=arena(el.dataset.a||el.dataset.id);
   const v=el.dataset.tipv&&venue(el.dataset.tipv);
   if(v)txt=v.name+'\n'+vPlaceSay(v)+' \u2014 '+vDateSay(v)+(v.start?'\nevent days '+(v.grade==='fixed'?'':'\u2248 ')+dispDate(v):'')+
-    '\n'+vYieldSay(v)+(vEvery(v)?' \u00B7 every '+vEvery(v)+' d':'');
+    '\n'+vYieldSay(v);
   /* a bar on a card's strip can stand for several calls at once, so it
      brings its own words rather than one date's */
   if(v){}else if(el.dataset.tipt&&a){
@@ -4708,6 +4650,8 @@ document.addEventListener('click',e=>{
   /* an open colour menu takes the press that shuts it, as the Ledger's does,
      unless the press is on a dot, which opens that one instead */
   if(colOpen&&!e.target.closest('.lcolpop,[data-act=typeColMenu]')){colOpen=null;typesShown();return;}
+  /* the header's menu shuts at any press, its own items' included */
+  if(!e.target.closest('[data-act=semMenu]'))semMenu(false);
   const b=e.target.closest('[data-act]');
   if(!b)return;
   const act=b.dataset.act,id=b.dataset.id,a=arena(b.dataset.a||id);
@@ -4720,6 +4664,7 @@ document.addEventListener('click',e=>{
     case 'typeColor':{colOpen=null;const t=S.types.find(t=>t.id===id);
       if(t&&toneHex(b.dataset.v))t.color=b.dataset.v;
       save();typesShown();break;}
+    case 'semMenu':semMenu($('#semMenu').hidden);break;
     case 'addArena':addArena();break;
     case 'openGpt':openGpt();break;
     case 'gptWrite':gptWrite();break;
@@ -4969,7 +4914,6 @@ document.addEventListener('click',e=>{
       save();renderAll();openVenue(v.id);break;}
     case 'editBrokerage':{openDrawer(id);drawer.editing=true;drawer.scope='brokerage';renderDrawer();
       const ta=$('#card textarea[data-field=bknotes]');if(ta)ta.focus();break;}
-    case 'openSearch':applySearchBox(true);$('#search').focus();break;
     case 'openQuick':$('#quickModal').classList.add('open');$('#quickText').focus();break;
     case 'openTypes':renderTypes();$('#typesModal').classList.add('open');break;
     case 'closeModals':closeModals();break;
@@ -5188,15 +5132,7 @@ document.addEventListener('change',e=>{
     const l=(a.leads||[]).find(x=>x.id===el.dataset.lsl);if(!l||l.doneAt)return;
     leadMove(cardOf(el),()=>{leadScore(l,el.value);save();repaint();renderDrawer();});return;
   }
-  /* a venue's rhythm, and another arena it serves */
-  if(el.dataset&&el.dataset.vevery){
-    const v=venue(el.dataset.vevery);if(!v)return;
-    const n=+el.value;if(n>=1)v.every=n;else delete v.every;
-    save();renderAll();return;
-  }
-  /* the type a new arena being judged goes into, which the Call Board
-     keeps and moves its dashed row to */
-  if(el.matches&&el.matches('select[data-ftype]')&&drawer.find){drawer.find.retype(el.value);return;}
+  /* another arena a venue serves */
   if(el.dataset&&el.dataset.vaddarena){
     const v=venue(el.dataset.vaddarena);if(!v||!arena(el.value))return;
     joinVenue(v,el.value);save();renderAll();return;
@@ -5261,15 +5197,6 @@ document.addEventListener('input',e=>{
 document.addEventListener('focusout',e=>{
   if(vNoteT&&e.target.matches&&e.target.matches('textarea.vmemo')){clearTimeout(vNoteT);vNoteT=null;save();}
 });
-$('#search').addEventListener('input',()=>{S.ui.q=$('#search').value;searchChanged();});
-$('#search').addEventListener('blur',()=>applySearchBox(false));
-/* Escape empties the box and folds it away, and goes no further: it is the
-   innermost thing open, so the drawer behind it stays as it was. */
-$('#search').addEventListener('keydown',e=>{
-  if(e.key!=='Escape')return;
-  e.stopPropagation();
-  S.ui.q='';searchChanged();applySearchBox(false);$('#searchBtn').focus();
-});
 $('#quickText').addEventListener('input',()=>{
   const n=$('#quickText').value.split('\n').filter(l=>l.trim()).length;
   $('#quickPrev').textContent=n?n+' arena'+(n===1?'':'s')+' to create':'';
@@ -5287,6 +5214,7 @@ document.addEventListener('keydown',e=>{
     }
     return;
   }
+  if(!$('#semMenu').hidden){semMenu(false);return;}         /* the header's menu */
   if(Cal.isOpen()){Cal.close();return;}                     /* the calendar */
   if(tdDrag){tdCancel();return;}                             /* a type or arena being dragged */
   if(colOpen){colOpen=null;typesShown();return;}             /* a colour menu */

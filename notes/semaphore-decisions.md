@@ -85,10 +85,14 @@ calls land on the Call Board. What still holds of the board:
   one list in bands and over three columns.
 - **Arising · Active · Dying, as tabs** (he was unsure between tabs and
   sections), **Limbo** apart for what is over or put there, and **Mark's
-  Place** in a box
-  of its own between the three and Limbo (2026-10-22): a venue on a site
-  Mark's Place copies stands there whatever its dates say and never falls
-  due, since Mark's Place reads it every night (`inPlace`).
+  Place** (2026-10-22): a venue on a site Mark's Place copies stands there
+  whatever its dates say, since Mark's Place reads it every night
+  (`inPlace`). Since 2026-10-25 Mark's Place is a quiet word at the end of
+  the row, after the key, being only where to look those venues up; it
+  stood in a box of its own between the three and Limbo.
+- **No venue falls due for a visit** (Mark, 2026-10-25): the rhythm, the
+  red ring on today's line, the counts of what was due and the Rhythm
+  fold all went, not needed any more. Go and the visits it records stay.
 - **A fixed order that a visit never changes** (2026-10-15): the venues
   serving two arenas or more first, then each type's own in
   his order of types, each group under a thin band in its type's colour.
@@ -101,14 +105,14 @@ calls land on the Call Board. What still holds of the board:
   venues left the Call Board (2026-10-25). Then where it stands, its
   window, event days, the arenas it serves and the basis, two to a row,
   and the rest folded, each fold saying in a word what is in it: visits,
-  leads from here, other pages, his note, the rhythm. One card everywhere,
+  leads from here, other pages, his note. One card everywhere,
   from Venues and from an arena's panel.
   Of the two widths drawn he chose the wider; the narrow one shortened the
   arenas' names on its timeline.
 - A venue can be put in a section by hand from its panel (Arising · Active ·
   Dying · Limbo, the current one lit) and stays there (`phase`) until the
   section its dates give is chosen again; the panel says where its dates
-  would put it, and its rhythm follows the section chosen.
+  would put it.
 - **Go is the visit** (2026-10-15): recorded at once as the tick on the
   venue's strip, the button then reading **Visited** for the rest of the
   day. Coming back to the app asks what it gave (nothing new, something,
@@ -228,9 +232,12 @@ calls land on the Call Board. What still holds of the board:
   shows the match, with the match and the day quieter than the name. Since
   the rework of 2026-10-21/22 the Semaphore's open lead, below, is ahead of
   the Ledger's card, which keeps its row of buttons.
-- **Leads is not one of the views**: it stands beside the switcher in a
-  button of another kind, rounded, in the leads' clay, the ruit drawn small
-  before the word (2026-10-09).
+- **Venues and Leads, a pair in the middle of the header** (2026-10-25):
+  the same rounded button, height and type, Venues in the board's bone with
+  a venue's diamond, Leads in its clay with the ruit drawn small before the
+  word (2026-10-09), near symmetrical but told apart, being two different
+  things. Everything else in the header but the cloud chip is under a menu
+  of three dots, and the search went: he did not need it there.
 - **The ruit**: Spotted splits into two contact paths (researchers
   contacted, lead contacted) that merge again at Talking, a name to keep,
   drawn at the left of both lines. Pressing Talking lights both paths, and

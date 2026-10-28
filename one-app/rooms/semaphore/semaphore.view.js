@@ -11,48 +11,41 @@ Hub.markup('semaphore', `
     <h1><i class="markglyph"></i>Brokerage Semaphore</h1>
   </div>
   <div class="grow"></div>
-  <!-- Venues: what is on the board, and what Mark moved to Venues, in
-       Arising, Active and Dying, each on one strip of time (2026-10-15),
-       and the way back to it from Leads. It was the Now page until then,
-       and is still "now" in the code. -->
-  <div class="viewseg" id="viewseg">
-    <button data-act="setView" data-v="now">Venues</button>
+  <!-- Venues and Leads, the room's two pages, a matched pair either side
+       of the middle (Mark, 2026-10-25): the same height, shape and type,
+       each in its own colour with its own mark, because they are two
+       different things. Venues is where the brokerage is followed, in
+       Arising, Active, Dying and Limbo, each on one strip of time; it was
+       the Now page until 2026-10-15, and is still "now" in the code. Leads
+       is the work the venues turned up, its ruit drawn small in front of
+       the word (Mark, 2026-10-12). -->
+  <div class="pair">
+    <button class="venuesbtn" id="venuesBtn" data-act="setView" data-v="now"
+            title="The venues you follow, by where each stands"><i class="vbr" aria-hidden="true"></i>Venues</button>
+    <button class="leadsbtn" id="leadsBtn" data-act="setView" data-v="leads"
+            title="Every lead you are pursuing, in the step it has reached"><i class="lbr" aria-hidden="true"><i></i></i>Leads</button>
   </div>
-  <!-- Leads is not a way of looking at the arenas but the work they turned
-       up, so it stands apart from the three, in a button of its own kind,
-       its ruit drawn small in front of the word (Mark, 2026-10-12). -->
-  <button class="leadsbtn" id="leadsBtn" data-act="setView" data-v="leads"
-          title="Every lead you are pursuing, in the step it has reached"><i class="lbr" aria-hidden="true"><i></i></i>Leads</button>
   <div class="grow"></div>
   <div class="actions">
-    <!-- Search is a button until it is wanted, and only then a box: the
-         header keeps its quiet, and a search you have typed keeps the box
-         open, so the board never hides arenas without saying why. -->
-    <button class="btn ghost" id="searchBtn" data-act="openSearch">Search</button>
-    <input id="search" type="search" placeholder="Search\u2026" hidden
-           title="Searches venues, arena names, tags, notes, links, dates and leads">
-    <!-- The types — their order, names, colours, merging them and moving an
-         arena between them — are kept in one place, opened from here. -->
-    <button class="btn" data-act="openTypes">Types</button>
-    <button class="btn primary" data-act="vNew">+ Venue</button>
-    <button class="btn" data-act="addArena">+ Arena</button>
-    <!-- Carrying the board by hand is the Ledger's job, once, for the whole
-         app: its Export writes this board out beside the journal and its
-         Import reads it back. What is left here is the one thing this room
-         can answer for itself — whether its half of the cloud is up — and
-         ChatGPT's file, which is a question put to a searcher, not a copy. -->
-    <!-- ChatGPT's search for brokerage (Mark, 2026-10-22; the calls went to
-         the Call Board's own button on 2026-10-25): a file of the board and
-         the instructions for ChatGPT's deep research, and its answer read
-         back. It is not the Ledger's Export, which carries the board whole:
-         this file carries no leads or visits, and what comes back is a list
-         of changes, each new or changed venue checked in its card. -->
-    <button class="btn" data-act="openGpt"
-            title="Write a file for ChatGPT to search the web for brokerage events and partner-search tools, and read its answer back">ChatGPT</button>
+    <!-- Whether this room's half of the cloud is up stays in sight, as the
+         Ledger's does beside its own menu. Carrying the board by hand is
+         the Ledger's job, once, for the whole app: its Export writes this
+         board out beside the journal and its Import reads it back. -->
     <button class="oa-cloudchip" id="semcloud" type="button" data-state="waiting"
             title="Cloud sync">
       <i aria-hidden="true"></i><span>cloud</span>
     </button>
+    <!-- Everything else, now and then wanted, under one menu (Mark,
+         2026-10-25), the search that stood beside it gone: the types, kept
+         in one place; a new venue or arena; and ChatGPT's search for
+         brokerage (2026-10-22; the calls went to the Call Board's own
+         button on 2026-10-25), a file of the board and the instructions for
+         ChatGPT's deep research, and its answer read back as a list of
+         changes, each new or changed venue checked in its card. -->
+    <div class="semmore">
+      <button class="semmorebtn" id="semMoreBtn" data-act="semMenu" aria-haspopup="true" aria-expanded="false"
+              aria-label="More" title="Types, a new venue or arena, ChatGPT"><svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="2.4"/><circle cx="12" cy="12" r="2.4"/><circle cx="12" cy="19" r="2.4"/></svg></button>
+    </div>
   </div>
 </header>
 
@@ -136,6 +129,17 @@ ITEA 4 ; Programme ; software"></textarea>
     </div>
   </div>
 </div>
+
+<!-- The header's menu, here and not in the header: the app's bar is one
+     height and cuts off whatever hangs below it (see semMenu). -->
+  <div class="semmenu" id="semMenu" role="menu" hidden>
+    <button role="menuitem" data-act="vNew">+ Venue</button>
+    <button role="menuitem" data-act="addArena">+ Arena</button>
+    <button role="menuitem" data-act="openTypes">Types</button>
+    <i class="semsep" aria-hidden="true"></i>
+    <button role="menuitem" data-act="openGpt"
+            title="Write a file for ChatGPT to search the web for brokerage events and partner-search tools, and read its answer back">ChatGPT's search for brokerage</button>
+  </div>
 
 <div id="tip"></div>
 

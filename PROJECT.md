@@ -353,8 +353,7 @@ then takes in as it takes Mark’s Place's leads. The gatekeeper reads the board
 a copy of the room's own `absorbVenues`, so what it writes is in the
 venues' shape with the venues' own ids. What `edit` has no op for it
 cannot do: delete an arena, change an arena's name, type, tags, weight or
-freezer, the types, the leads, or a venue's `place`, `memo`, visits or
-rhythm. A new arena still waits in its inbox, and is judged on the Call Board. What it changed is told
+freezer, the types, the leads, or a venue's `place`, `memo` or visits. A new arena still waits in its inbox, and is judged on the Call Board. What it changed is told
 in its own report, and every write leaves a copy in `app_state_history`.
 
 A second table, **`app_state_history`**, keeps a copy of every upload —
@@ -438,11 +437,11 @@ and the agent's task still say the Marketplace; it is the same room.
 | on screen | in the code |
 |---|---|
 | the room's scroller — the page itself does not scroll | `#semscroll` |
-| the header: Venues, Leads beside it, Search, Types, + Venue, + Arena, ChatGPT and the cloud chip | `header.top`; `#viewseg`, `#leadsBtn`, `#searchBtn` and its box `#search`, `#semcloud` |
+| the header: Venues and Leads, a pair in the middle; the cloud chip, and the menu under three dots holding + Venue, + Arena, Types and ChatGPT | `header.top`; `.pair` › `#venuesBtn`, `#leadsBtn`; `#semcloud`; `#semMoreBtn` and its `#semMenu` |
 | ChatGPT's search, opened by ChatGPT here for brokerage and lent over the Call Board for calls: the file out, the answer pasted or chosen, what it would change, Put on the board | `#gptModal` › `#gptText`, `#gptFile`, `#gptSaid`, `#gptPut` |
 | Venues (the Now page until 2026-10-15), Leads (on the wall) | `#now`, `#wall` |
-| Venues: its three tabs, Arising · Active · Dying, and Limbo's apart, for what is over or put there; a venue new or changed, and the press that goes through them one card at a time; the axis over them, sticky; the heading of each group, Shared then each type; one venue's row, its mark the grip it is dragged by into his own order, its name and the arenas it serves, its strip, and Go, which is the visit (Visited once pressed today) | `.vtabs` › `.vtab`, `.culimbo.vlimbotab`; `.vfnd`, `.vchk`; `.vaxis`; `.vgrp`; `.vgl`, `.vrow.vdragging`; `.vrow` = `.vname` (`.vnmrow` › `.vnm`, `.vchips`) + `.vtrack` + `.vend` (`.vgo`, `.vgo.done`) |
-| a venue's window, on Venues and in its panel: the band, its two ends to drag, the event days, the visits, today, due | `.vband` (`.st-new`, `.st-board`, `.st-venues`), `.vh`, `.vmeet` and `.vdia`, `.vtick`, `.vnow`, `.vpulse` |
+| Venues: its three tabs, Arising · Active · Dying, and Limbo's apart, for what is over or put there; Mark's Place last and quiet, after the key; a venue new or changed, and the press that goes through them one card at a time; the axis over them, sticky; the heading of each group, Shared then each type; one venue's row, its mark the grip it is dragged by into his own order, its name and the arenas it serves, its strip, and Go, which is the visit (Visited once pressed today) | `.vtabs` › `.vtab`, `.culimbo.vlimbotab`, `.vplacetab`; `.vfnd`, `.vchk`; `.vaxis`; `.vgrp`; `.vgl`, `.vrow.vdragging`; `.vrow` = `.vname` (`.vnmrow` › `.vnm`, `.vchips`) + `.vtrack` + `.vend` (`.vgo`, `.vgo.done`) |
+| a venue's window, on Venues and in its panel: the band, its two ends to drag, the event days, the visits, today | `.vband` (`.st-new`, `.st-board`, `.st-venues`), `.vh`, `.vmeet` and `.vdia`, `.vtick`, `.vnow` |
 | the visit question, at the foot of the room after Go | `#vbar` › `.vask.bar` |
 | Leads: the table, its heading of columns that sort, a step's coloured band and Limbo's at the foot, one lead's line, and open, its Who, Links and Updates boxes | `.ltable` › `.lthead` (`.ltc`), `.lgrp` › `.lgh`, `.lgrp.k-limbo`, `article.lead.wide`; `.lpane`, `.lupdpane` |
 | the types, managed — opened by Types: a type's line and its grip, its arenas one per row, its colour dot, the copy that follows a drag | `#typesModal` › `#tylist` › `.tyblock` (`.tyline` › `.tygrip`, `.tyarenas` › `.tyrow`); `.lcolwrap.tycol`; `.tyghost` |
@@ -666,7 +665,7 @@ and the indexes have taken most of the reason for wanting it away.
 maths it shares with Mark's Place — `vWin()`, `vState()`, `vHeat()`, the
 site's reading and `callRuns()` — went to `shell/venues.js` on 2026-10-24,
 when Mark's Place stopped keeping a copy. What the room alone uses stays beside its rendering: `vPhase()`,
-which knows Mark's Place's sites, the rhythm (`vEvery()`), and reading the
+which knows Mark's Place's sites, and reading the
 board itself (`tidyVenue`, `absorbVenues`). The gatekeeper keeps its own
 copy of those last two and of the site's reading, since it runs in the
 cloud.

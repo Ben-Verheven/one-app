@@ -102,12 +102,6 @@
 #pane-semaphore .sw-uncertain{width:9px;height:9px;transform:rotate(45deg);border:1.5px dashed var(--c,var(--brok));border-radius:1px}
 #pane-semaphore .sw-call{width:15px;height:5px;border-radius:2px;background:linear-gradient(90deg,
   var(--r-ann) 0 33%,var(--r-pub) 33% 66%,var(--r-dl) 66% 100%)}
-/* ---------- search ---------- */
-#pane-semaphore #search{border:1px solid var(--line);border-radius:var(--radius);background:var(--field);
-  padding:6px 10px;font-family:var(--body);font-size:13.5px;color:var(--ink);width:190px;min-height:31px;
-  box-shadow:inset 0 1px 2px rgba(0,0,0,.2)}
-#pane-semaphore #search:focus{outline:none;border-color:var(--key);box-shadow:0 0 0 2px rgba(216,205,184,.1)}
-#pane-semaphore #search[hidden],#pane-semaphore #searchBtn[hidden]{display:none}
 #pane-semaphore .empty{padding:60px 0;text-align:center;color:var(--muted);font-size:15px}
 #pane-semaphore .empty .btns{margin-top:14px;display:flex;gap:10px;justify-content:center}
 /* ---------- the sheet ----------
@@ -158,16 +152,17 @@
 #pane-semaphore .card:hover>.chd .cact{opacity:1}
 #pane-semaphore .card>.cbd{padding:12px}
 /* ---------- brokerage wall ---------- */
-#pane-semaphore .viewseg{display:flex;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;
-  background:var(--slab);box-shadow:inset 0 1px 0 rgba(255,255,255,.04)}
-/* The room's own two views. The unlit one is quiet but it is still a control
-   in the ribbon, so it takes the ribbon's quiet rank rather than the room's —
-   the bar's ground is lighter at its top edge than the board's is. */
-#pane-semaphore .viewseg button{padding:6px 15px;font-family:var(--sans);font-size:10.5px;letter-spacing:.13em;
-  text-transform:uppercase;color:var(--oa-ctl);border-right:1px solid var(--line)}
-#pane-semaphore .viewseg button:last-child{border-right:none}
-#pane-semaphore .viewseg button:hover{color:var(--key2)}
-#pane-semaphore .viewseg button.on{background:rgba(216,205,184,.17);color:var(--ink)}
+/* Venues and Leads, a pair (Mark, 2026-10-25): the same rounded button,
+   height and type, Venues in the board's bone with a venue's diamond,
+   Leads in its clay with its ruit. Lit, each fills with its colour. */
+#pane-semaphore .pair{display:flex;align-items:center;gap:10px}
+#pane-semaphore .venuesbtn{display:flex;align-items:center;gap:9px;min-height:31px;padding:5px 16px 5px 13px;
+  border:1px solid rgba(216,205,184,.42);border-radius:999px;background:rgba(216,205,184,.07);
+  font:italic 15px/1 var(--body);color:var(--key2);transition:background .14s,border-color .14s,color .14s}
+#pane-semaphore .venuesbtn:hover{background:rgba(216,205,184,.16);border-color:var(--key2);color:#F4EFE3}
+#pane-semaphore .venuesbtn.on{background:var(--key2);border-color:var(--key2);color:#21180F}
+#pane-semaphore .venuesbtn .vbr{width:7px;height:7px;margin:0 3px 0 2px;flex:0 0 auto;background:currentColor;
+  transform:rotate(45deg);border-radius:1px}
 /* Leads, beside the three views and not one of them (Mark, 2026-10-12): a
    rounded button in the leads' own clay, with their ruit drawn small in
    front of the word — a diamond with the Spotted dot at its left point. Lit,
@@ -185,8 +180,19 @@
 #pane-semaphore .whead{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;margin-bottom:18px}
 #pane-semaphore .wsay{font-family:var(--body);font-size:12.5px;font-style:italic;color:var(--faint)}
 #pane-semaphore .wsay b{font-style:normal;font-weight:400;color:var(--notice-ink)}
-#pane-semaphore .tabn{margin-left:7px;font:9.5px var(--mono);padding:1px 5px;border-radius:99px;
-  background:rgba(42,38,32,.16);color:var(--ink)}
+/* the header's menu: the now-and-then things, under three dots (see the
+   header in semaphore.view.js) */
+#pane-semaphore .semmore{position:relative;display:flex}
+#pane-semaphore .semmorebtn{display:flex;align-items:center;justify-content:center;width:33px;height:31px;
+  border:1px solid var(--line);border-radius:var(--radius);background:var(--slab);color:var(--muted)}
+#pane-semaphore .semmorebtn svg circle{fill:currentColor}
+#pane-semaphore .semmorebtn:hover,#pane-semaphore .semmorebtn.on{border-color:var(--line2);color:var(--key2);background:rgba(216,205,184,.08)}
+#pane-semaphore .semmenu{position:fixed;z-index:60;display:flex;flex-direction:column;
+  min-width:240px;padding:5px;border:1px solid var(--line2);border-radius:var(--radius-lg);background:var(--surface2);box-shadow:var(--shadow)}
+#pane-semaphore .semmenu[hidden]{display:none}
+#pane-semaphore .semmenu button{padding:8px 12px;border-radius:var(--radius);text-align:left;font:14px/1.3 var(--body);color:var(--ink)}
+#pane-semaphore .semmenu button:hover{background:rgba(216,205,184,.1)}
+#pane-semaphore .semsep{height:1px;margin:5px 8px;background:var(--line)}
 /* the name's own cell in the head, which leaves the controls their room */
 #pane-semaphore .wbody{padding:6px}
 /* the links, as a part of their own (wallCard) */
@@ -1087,7 +1093,6 @@
 #pane-semaphore .vkey>i{margin-left:10px}
 #pane-semaphore .vkey .vkbar{width:34px;height:9px;border-radius:4px;border:1px solid rgba(239,91,76,.55);
   background:linear-gradient(90deg,rgba(239,91,76,.2),rgba(239,91,76,.7) 65%,rgba(239,91,76,.25))}
-#pane-semaphore .vkey .vkp{width:11px;height:11px;border-radius:50%;border:2px solid var(--brok)}
 #pane-semaphore .vaxis,#pane-semaphore .vrow{display:grid;grid-template-columns:minmax(220px,330px) minmax(0,1fr) 168px;column-gap:16px}
 #pane-semaphore .vaxis{position:sticky;top:0;z-index:6;align-items:end;background:var(--paper);border-bottom:1px solid var(--line2)}
 #pane-semaphore .vaxl{padding:0 0 5px 2px;font:9.5px var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--faint)}
@@ -1115,7 +1120,13 @@
 #pane-semaphore .vtab.t-active::before{background:var(--brok)}
 #pane-semaphore .vtab.t-dying::before{background:linear-gradient(90deg,rgba(239,91,76,.55),rgba(239,91,76,.1))}
 /* Mark's Place, in a box of its own: the gold of its Marked */
-#pane-semaphore .vtab.t-place::before{width:9px;height:9px;border-radius:50%;background:var(--today)}
+/* Mark's Place, last and quiet: only where to look its venues up */
+#pane-semaphore .vplacetab{align-self:center;display:inline-flex;align-items:center;gap:6px;padding:2px 4px;border-radius:5px;
+  font:italic 12.5px var(--body);color:var(--muted)}
+#pane-semaphore .vplacetab::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--today)}
+#pane-semaphore .vplacetab b{font:10.5px var(--mono);font-weight:400;color:var(--muted)}
+#pane-semaphore .vplacetab:hover{color:var(--key2)}
+#pane-semaphore .vplacetab.on{color:var(--ink);text-decoration:underline;text-decoration-color:var(--line2);text-underline-offset:4px}
 /* Limbo's own tab, apart from the three: the fog of the box it was */
 #pane-semaphore .culimbo.vlimbotab{display:flex;align-items:center;gap:9px;margin:0;height:33px;padding:0 14px;align-self:center;
   font:italic 13px var(--body);color:var(--lg-quiet);isolation:isolate;cursor:pointer}
@@ -1126,7 +1137,6 @@
 #pane-semaphore .culimbo.vlimbotab:hover .culgh{color:#F2FFF9}
 #pane-semaphore .vrows.limbo{--lg-line:rgba(170,215,205,.22)}
 #pane-semaphore .vrows.limbo .vnm{color:#C9DDD6}
-#pane-semaphore .vtabdue{font:italic 11.5px var(--body);letter-spacing:0;text-transform:none;color:var(--notice-ink)}
 /* what a search found waits in Limbo in the lime of everything new, and a
    venue a search changed says so in its own tab (see "what a search
    found, checked in its card") */
@@ -1188,13 +1198,6 @@
 #pane-semaphore .vtick{bottom:6px;width:5px;height:5px;margin-left:-2.5px;border-radius:50%;background:var(--muted)}
 #pane-semaphore .vtick.found{background:var(--todo)}
 #pane-semaphore .vnow{top:4px;bottom:4px;width:2px;margin-left:-1px;background:var(--today);border-radius:1px}
-/* due: a ring of the brokerage red round today's line, breathing */
-#pane-semaphore .vpulse{top:50%;width:18px;height:18px;margin:-9px 0 0 -9px;border-radius:50%;border:2px solid var(--brok);
-  box-shadow:0 0 0 4px var(--brok-soft)}
-@media (prefers-reduced-motion:no-preference){
-  #pane-semaphore .vpulse{animation:vBreathe 2.6s ease-in-out infinite}}
-@keyframes vBreathe{0%,100%{box-shadow:0 0 0 3px var(--brok-soft)}50%{box-shadow:0 0 0 7px rgba(239,91,76,.06)}}
-#pane-semaphore .vrow.due .vnm{color:#FFF7EC}
 #pane-semaphore .vend{display:flex;align-items:center;justify-content:flex-end;gap:8px}
 /* Limbo's Delete was a faint cross that Mark did not find as the way to
    delete a venue (2026-10-17); it is a word now, quiet until pointed at,
@@ -1364,8 +1367,6 @@
 #pane-semaphore .vfb{padding:0 0 12px 17px}
 #pane-semaphore .avplace{font:600 8.5px var(--sans);font-style:normal;letter-spacing:.12em;text-transform:uppercase;color:var(--new-ink)}
 #pane-semaphore .avrow.st-board .avplace{color:var(--key2)}
-#pane-semaphore .vevery{width:100%;height:32px;padding:0 8px;border:1px solid var(--line);border-radius:var(--radius);
-  background:var(--field);font:13.5px var(--body);color:var(--ink)}
 #pane-semaphore .vvis{display:grid;grid-template-columns:56px 92px minmax(0,1fr) 20px;gap:8px;align-items:baseline;
   padding:5px 0;border-bottom:1px solid var(--grid);font-size:13.5px}
 #pane-semaphore .vvd{font:11.5px var(--mono);color:var(--muted)}
