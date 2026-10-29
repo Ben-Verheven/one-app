@@ -49,7 +49,7 @@ const SEARCH = "https://api.tech.ec.europa.eu/search-api/prod/rest/search?apiKey
 const TOPIC_JSON = "https://ec.europa.eu/info/funding-tenders/opportunities/data/topicDetails/";
 const TOPIC_PAGE = "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/";
 const TEXT_AHEAD_DAYS = 183;   // a call opening further off than this gets its text later
-const PARALLEL = 6;            // questions to the portal at once
+const PARALLEL = 3;            // questions to the portal at once
 const BUDGET_MS = 120_000;     // stop asking for texts after this, well inside the 150 s a function may run
 const UA = "Mozilla/5.0 (compatible; OneAppHorizonCheck/1.0; nightly check of Horizon Europe topics for TU/e research support)";
 
@@ -82,6 +82,23 @@ export function wpTopics(text) {
 }
 
 // ── the portal ────────────────────────────────────────────────────────
+// Its answers come gzipped and with no length given, and Supabase's
+// runtime lost every one of them on the first night (2026-10-29: "error
+// reading a body from connection", on all 85 calls and every text), where
+// the same questions asked from elsewhere were answered. So every question
+// asks for the answer unpacked, which the portal honours, and one that
+// still fails is asked twice more after a pause.
+async function ask(url, init = {}) {
+  let last;
+  for (let i = 0; i < 3; i++) {
+    try {
+      const r = await fetch(url, { ...init, headers: { "user-agent": UA, "accept-encoding": "identity", ...(init.headers ?? {}) } });
+      const text = await r.text();
+      return { ok: r.ok, status: r.status, text };
+    } catch (e) { last = e; await new Promise((ok) => setTimeout(ok, 1500 * (i + 1))); }
+  }
+  throw last;
+}
 // Its search service takes the question as a form. Asked for many calls at
 // once it pages unreliably, leaving out about a sixth of the topics while
 // repeating others (tried 2026-10-28: 90 of 509 missing, every one of them
@@ -92,10 +109,10 @@ async function search(query, text = "*", size = 100, page = 1) {
   const f = new FormData();
   f.append("query", new Blob([JSON.stringify(query)], { type: "application/json" }));
   f.append("languages", new Blob(['["en"]'], { type: "application/json" }));
-  const r = await fetch(`${SEARCH}&text=${encodeURIComponent(text)}&pageSize=${size}&pageNumber=${page}`,
-    { method: "POST", body: f, headers: { "user-agent": UA } });
+  const r = await ask(`${SEARCH}&text=${encodeURIComponent(text)}&pageSize=${size}&pageNumber=${page}`,
+    { method: "POST", body: f });
   if (!r.ok) throw new Error(`the portal answered ${r.status}`);
-  return (await r.json()).results ?? [];
+  return JSON.parse(r.text).results ?? [];
 }
 const TOPIC_TYPES = { terms: { type: ["1", "2", "8"] } };
 // A deadline is stored by the portal as a moment in UTC: a deadline at
@@ -179,14 +196,15 @@ async function checkTopics(errors) {
   const wp = wpTopics(wpText);
   const wpIds = new Set(wp.map((t) => t.id));
   const calls = [...new Set(wp.map((t) => t.call))];
-  const found = new Map();
-  for (const list of await pool(calls, (c) => byCall(c).catch((e) => { errors.push(`${c}: ${e.message}`); return null; }))) {
-    for (const t of list ?? []) if (t.id && !found.has(t.id)) found.set(t.id, t);
-  }
+  const found = new Map(), mute = new Set();
+  const lists = await pool(calls, (c) => byCall(c).catch((e) => { errors.push(`${c}: ${e.message}`); mute.add(c); return null; }));
+  for (const list of lists) for (const t of list ?? []) if (t.id && !found.has(t.id)) found.set(t.id, t);
   // A topic the portal would not answer about stays as it stood: one bad
-  // night is not a cancellation.
-  const failed = new Set();
-  const missing = wp.filter((t) => !found.has(t.id));
+  // night is not a cancellation. The topics of a call that got no answer
+  // are not asked about one by one either, which on a night the portal
+  // answers nothing would outlast the time a run is given.
+  const failed = new Set(wp.filter((t) => mute.has(t.call)).map((t) => t.id));
+  const missing = wp.filter((t) => !found.has(t.id) && !failed.has(t.id));
   for (const [i, t] of (await pool(missing, (t) => byId(t.id).catch(() => undefined))).entries()) {
     if (t) found.set(missing[i].id, t);
     else if (t === undefined) failed.add(missing[i].id);
@@ -238,6 +256,10 @@ async function checkTopics(errors) {
 // one text the reader already holds, topic by topic (2026-10-28).
 const ID = /\b(?:HORIZON|DIGITAL|EURATOM)-[A-Z0-9]+(?:-[A-Z0-9]+)*-20\d\d(?:-[A-Z0-9]+)*\b/gi;
 const HORIZON_TYPE = /pillar\s*(2|ii)\b|\bclusters?\b|\bmissions?\b/i;
+// A Work Programme call named short, without its stage ("HORIZON-CL5-2027-04"
+// for HORIZON-CL5-2027-04-Two-Stage), is caught by its shape, as the
+// Semaphore's search for call texts catches it (WP_CALL_ID there).
+const WP_CALL_ID = /\bHORIZON-(?:CL\d|MISS|HLTH|CID|BRIDGING|NATURE|RAISE)-20\d\d-/i;
 export function boardCalls(s, today, wpIds) {
   const types = Object.fromEntries((s.types ?? []).map((t) => [t.id, t.name]));
   const ahead = new Date(Date.parse(today) + TEXT_AHEAD_DAYS * 864e5).toISOString().slice(0, 10);
@@ -249,7 +271,7 @@ export function boardCalls(s, today, wpIds) {
       if (d.kind !== "call" || !d.call) continue;
       for (const id of String(d.call).match(ID) ?? []) {
         const k = id.toUpperCase();
-        if (wpIds?.has(k)) continue;
+        if (wpIds?.has(k) || WP_CALL_ID.test(k)) continue;
         const g = by.get(k) ?? { call: d.call, ds: [] };
         g.ds.push(d); by.set(k, g);
       }
@@ -264,9 +286,9 @@ export function boardCalls(s, today, wpIds) {
   return [...out.values()];
 }
 async function topicText(id) {
-  const r = await fetch(TOPIC_JSON + id.toLowerCase() + ".json", { headers: { "user-agent": UA } });
+  const r = await ask(TOPIC_JSON + id.toLowerCase() + ".json");
   if (!r.ok) return null;
-  const t = (await r.json()).TopicDetails ?? {};
+  const t = JSON.parse(r.text).TopicDetails ?? {};
   return { id: t.identifier ?? id, title: (t.title ?? "").trim(), sections: sections(t.description) };
 }
 async function callTexts(errors, started, wpIds) {
@@ -314,7 +336,11 @@ async function run() {
   const { ids, ...topics } = await checkTopics(errors);
   const texts = await callTexts(errors, started, ids);
   const tally = { ...topics, ...texts };
-  await db.from("horizon_check_log").insert({ ...tally, errors: errors.length ? errors.join("\n") : null });
+  // the same failure on many calls is one line, saying on how many
+  const same = new Map();
+  for (const e of errors) { const why = e.replace(/^[^:]*:\s*/, ""); same.set(why, (same.get(why) ?? []).concat(e)); }
+  const said = [...same].map(([why, es]) => es.length > 3 ? `${es.length} questions: ${why}` : es.join("\n")).join("\n");
+  await db.from("horizon_check_log").insert({ ...tally, errors: said || null });
   return { ...tally, errors };
 }
 
