@@ -139,10 +139,10 @@ calls land on the Call Board. What still holds of the board:
 - **ChatGPT's deep research is the searcher** (2026-10-22, and the only one
   since the agent stopped on 2026-10-23), **as separate searches since
   2026-10-25, each behind a ChatGPT button where what it finds lands**:
-  the Call Board's for calls (call dates and new arenas) and, since
-  2026-10-28, for call texts, and this room's for brokerage (venues and
-  brokerage pages, the call dates given only to go by). How the three
-  split the work, and what Mark chose of them on 2026-10-28, is in
+  the Call Board's for calls (call dates), for new arenas (since
+  2026-10-29) and for call texts (since 2026-10-28), and this room's for
+  brokerage (venues and brokerage pages, the call dates given only to go
+  by). How the four split the work, and what Mark chose of them on 2026-10-28, is in
   [call-board](call-board.md). Each button writes a file holding every arena,
   with what its search needs, the venues for brokerage (the removed ones
   as stubs, so they are not brought back), and the instructions. ChatGPT
@@ -157,24 +157,24 @@ calls land on the Call Board. What still holds of the board:
   app goes there by itself. Together they can add and correct call dates
   and venues, add an arena to a venue and add a link; they cannot delete,
   rename or rewrite his texts. The leads, his visits and his venue notes
-  stay out of every file. The box is this room's for all three, the Call
+  stay out of every file. The box is this room's for all four, the Call
   Board borrowing it, since the board they change is kept here. How is at
   "ChatGPT's search" in semaphore.js.
 - **Fewer and better** (2026-10-26, reversing "ten false finds rather than
   one real one lost" of 2026-10-23): he would much rather have far fewer
   results that are accurate and relevant, since each costs him usage, so
-  doubt now leaves a find out. Both files say first who it is for (TU/e's
-  researchers, seeking calls for international consortia TU/e can join or
-  lead) and that the dates of every call and arena come before all else.
+  doubt now leaves a find out. Every file says first who it is for (TU/e's
+  researchers, seeking calls for consortia, international or national
+  since 2026-10-29, TU/e can join or lead) and that the dates of every call and arena come before all else.
   The rest stands: every arena, frozen ones lightly;
   call dates, and actual brokerage only (matchmaking events and
   partner-search tools, now or announced; never plain info days, conferences
   with no matchmaking, lists of organisations or expected call dates); since
   the purpose is project descriptions, no site listing only partner
   profiles, no event about meeting people rather than projects, none open
-  only to paying members beyond a simple registration; and, where it can
-  find out, nothing organisations in the Netherlands clearly cannot take
-  part in and be funded by (2026-10-23). Since 2026-10-28 the app holds a
+  only to paying members beyond a simple registration; and nothing
+  organisations in the Netherlands cannot take part in and be funded by
+  (2026-10-23), asked since 2026-10-29 of new arenas alone. Since 2026-10-28 the app holds a
   gate besides the words: a venue must quote, from its own page, where
   projects are posted or pitched, and one its own words call an
   information session, a webinar or a Q&A is left out; a venue on a site

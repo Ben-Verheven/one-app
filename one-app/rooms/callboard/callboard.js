@@ -681,9 +681,9 @@ function arenaTabKey(name,type){
 const tabOrder=k=>{ const i=PAGES.findIndex(p=>p.key===k); if(i>=0) return i;
   const j=TYPE_TABS.findIndex(t=>t.key===k); return j>=0?PAGES.length+j:999; };
 /* ---------- judging the finds, one at a time ----------
-   Whatever a search for calls found waits here to be judged before it
-   lands (Mark, 2026-10-24): a new arena suggested, by ChatGPT's search
-   for calls or the agent. The Semaphore's Dispatches did this until then.
+   Whatever a search found waits here to be judged before it lands (Mark,
+   2026-10-24): a new arena suggested, by ChatGPT's search for new arenas
+   or the agent. The Semaphore's Dispatches did this until then.
    Here the board goes to the tab where a find belongs and draws it in
    place with a dashed edge, not on the board yet, and the panel it will
    become says what it is and asks: added, in the type chosen there, or
@@ -803,7 +803,8 @@ function paintJudge(){
 }
 const hostOf=u=>{ try{ return new URL(u).hostname.replace(/^www\./,''); }catch(e){ return String(u||''); } };
 document.getElementById('jpill').addEventListener('click',()=>{ if(!JUDGE.on) startJudging(); });
-/* ChatGPT's search for calls, whose answer brings the finds judged here:
+/* ChatGPT's searches for calls, new arenas and call texts, whose answers
+   bring the dates drawn and the finds judged here:
    the Semaphore holds the arenas' calls and reads the answer, so its box
    is lent over this room (see "ChatGPT's search" in semaphore.js) */
 document.getElementById('gptb').addEventListener('click',()=>{ if(ARENA_SRC&&ARENA_SRC.gpt) ARENA_SRC.gpt(); });

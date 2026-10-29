@@ -522,8 +522,8 @@
       if (now === 'callboard') { changed(); refresh(); cloudBack(); }
       else if (S.closeFind) S.closeFind();
     });
-    /* ChatGPT's answer to the search for calls put on the board: the new
-       arenas it brought are judged on the Call Board, so the app goes there
+    /* ChatGPT's answer to the search for calls or new arenas put on the
+       board: the new arenas it brought are judged on the Call Board, so the app goes there
        and starts, and says what landed. */
     Hub.on('semaphore:judge', function (said) {
       Hub.ensure('callboard');

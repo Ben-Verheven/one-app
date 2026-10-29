@@ -158,7 +158,7 @@ the board, which the bridge answers with a Ledger restore point. And
 **`callboard:ready`**, once, when the lazy Call Board has been built, which
 is when the bridge hands it the Semaphore's board. And **`semaphore:judge`**,
 with a sentence saying what landed, once the answer to ChatGPT's search for
-calls is on the board or its texts are in the cloud, which the bridge answers by going to the Call Board
+calls or new arenas is on the board or its texts are in the cloud, which the bridge answers by going to the Call Board
 and starting to judge what it found.
 
 What the bridge actually does: turns any researcher's name, written
@@ -178,7 +178,7 @@ links filled in; hands the Call Board the Semaphore's board as it works it
 out — every arena's calls and the new arenas waiting to be judged, with
 the verbs that judge them and mark an arena's new dates seen — and again
 on every save there, with the drawer lent over the Board for an arena and
-ChatGPT's box for the searches for calls and for call texts; reads the
+ChatGPT's box for the searches for calls, new arenas and call texts; reads the
 Horizon check's two tables, below, for the Call Board, and the one rule
 that ties a call text to its call; draws the ring of rooms and the title,
 with the finds waiting to be judged counted beside the Call Board's mark; runs the page-change animation; and syncs
@@ -348,7 +348,7 @@ writes with the server's key, and its password is made in the database.
 **The Semaphore has one agent**, the task **Marketplace agent**, and it
 is turned off: since 2026-10-23 ChatGPT's search does its work, since
 2026-10-25 as separate searches, each behind a ChatGPT button where what it
-finds lands: the Call Board's for calls and for call texts, the
+finds lands: the Call Board's for calls, new arenas and call texts, the
 Semaphore's for brokerage. The task is kept, and so is its gatekeeper, so that
 a session can still read the board through it. Turned on, it runs by
 itself every night at about 01:00 his time, a scan that reaches every
@@ -466,7 +466,7 @@ and the agent's task still say the Marketplace; it is the same room.
 |---|---|
 | the room's scroller — the page itself does not scroll | `#semscroll` |
 | the header: Venues and Leads, a pair in the middle; the cloud chip, and the menu under three dots holding + Venue, + Arena, Types and ChatGPT | `header.top`; `.pair` › `#venuesBtn`, `#leadsBtn`; `#semcloud`; `#semMoreBtn` and its `#semMenu` |
-| ChatGPT's search, opened by ChatGPT here for brokerage and lent over the Call Board for calls and call texts, the two chosen at its head: the file out, the answer pasted or chosen, what it would change, Put on the board | `#gptModal` › `.gptpick`, `#gptText`, `#gptFile`, `#gptSaid`, `#gptPut` |
+| ChatGPT's search, opened by ChatGPT here for brokerage and lent over the Call Board for calls, new arenas and call texts, the three chosen at its head: the file out, the answer pasted or chosen, what it would change, Put on the board | `#gptModal` › `.gptpick`, `#gptText`, `#gptFile`, `#gptSaid`, `#gptPut` |
 | Venues (the Now page until 2026-10-15), Leads (on the wall) | `#now`, `#wall` |
 | Venues: its three tabs, Arising · Active · Dying, and Limbo's apart, for what is over or put there; Mark's Place last and quiet, after the key; a venue new or changed, and the press that goes through them one card at a time; the axis over them, sticky; the heading of each group, Shared then each type; one venue's row, its mark the grip it is dragged by into his own order, its name and the arenas it serves, its strip, and Go, which is the visit (Visited once pressed today) | `.vtabs` › `.vtab`, `.culimbo.vlimbotab`, `.vplacetab`; `.vfnd`, `.vchk`; `.vaxis`; `.vgrp`; `.vgl`, `.vrow.vdragging`; `.vrow` = `.vname` (`.vnmrow` › `.vnm`, `.vchips`) + `.vtrack` + `.vend` (`.vgo`, `.vgo.done`) |
 | a venue's window, on Venues and in its panel: the band, its two ends to drag, the event days, the visits, today | `.vband` (`.st-new`, `.st-board`, `.st-venues`), `.vh`, `.vmeet` and `.vdia`, `.vtick`, `.vnow` |

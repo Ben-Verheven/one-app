@@ -137,7 +137,7 @@ those of the phases still to build; git's history has the code.
   Call Board's mark, wherever Mark is, the new arenas and call texts
   waiting. Drawn first inside the mark, it came out as faint as the mark
   of a room not shown, so it stands beside it.
-- The finds are the new arenas ChatGPT's search for calls suggests, which
+- The finds are the new arenas ChatGPT's search for new arenas suggests, which
   wait on the board itself (`suggested`) until judged, and the agent's,
   from its inbox in the cloud; and the official call texts (2026-10-28),
   below. New venues were judged here too until they went back to the
@@ -149,25 +149,30 @@ those of the phases still to build; git's history has the code.
   Horizon check keeps, below; no search writes them since 2026-10-28.
 - **ChatGPT's button for calls is here** (2026-10-25), in the controls,
   and the Semaphore's is the search for brokerage: each search has its
-  button where what it finds lands. The search for call texts is behind
-  the same button (2026-10-28), Calls and Call texts chosen at the head of
-  the box. Its box is the Semaphore's, lent over
+  button where what it finds lands. The searches for call texts
+  (2026-10-28) and for new arenas (2026-10-29) are behind the same button,
+  Calls, New arenas and Call texts chosen at the head of the box. Its box is the Semaphore's, lent over
   this room, since the board it changes is kept there; Put on the board
   starts judging the new arenas here.
 - The Semaphore's Board, its tray and Dispatches went the same day, and the
   venue calculations Mark's Place copied became one file it reads with the
   Semaphore, `one-app/shell/venues.js`.
 
-## The three searches and the Horizon check (built 2026-10-28)
+## The four searches and the Horizon check (built 2026-10-28)
 
 The first phase agreed on 2026-10-24, drawn on the canvas named above
 and chosen there. How they work is at "ChatGPT's search" in semaphore.js
 and in the Horizon check's own file; what Mark chose:
 
 - **Each finds one thing.** Calls: the call dates of every arena but the
-  clusters' and missions', and the few arenas missing, each with its kind,
-  its call dates and two quotes, one showing a call for international
-  consortia, one that Dutch organisations can join. Brokerage: only venues
+  clusters' and missions', and nothing else. New arenas: the few missing,
+  each with its kind, its call dates and two quotes, one showing a call
+  for consortia, one that Dutch organisations can join and be funded in.
+  Split from calls on 2026-10-29, Mark's choice: whether Dutch
+  organisations can join is asked of new arenas alone, an arena on the
+  board being there because he judged it, and the project check of
+  brokerage alone. The same day calls for **national consortia** came to
+  count as much as international ones. Brokerage: only venues
   where projects in the making are described, a quote saying so on each.
   Call texts: the texts of calls on the board, word for word. A frozen
   arena is asked only whether a new call is announced, and left out of

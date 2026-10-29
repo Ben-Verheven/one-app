@@ -372,13 +372,13 @@ The new-todo pane                                          ledger.css:4129
 
 ## `rooms/semaphore/semaphore.view.js`
 
-152 lines · 9 KB
+155 lines · 10 KB
 
 _No section banners._
 
 ## `rooms/semaphore/semaphore.js`
 
-5683 lines · 330 KB
+5745 lines · 333 KB
 
 ```
 Brokerage Semaphore                         semaphore.js:1
@@ -392,42 +392,42 @@ filtering                                   semaphore.js:584
 the board, on the Call Board                semaphore.js:653
 new arenas, waiting to be judged            semaphore.js:676
 ChatGPT's search                            semaphore.js:737
-venues, on screen                           semaphore.js:1475
-asking the agent about one venue            semaphore.js:1591
-the visit question                          semaphore.js:1633
-a venue's window, drawn                     semaphore.js:1687
-dragging a window's ends                    semaphore.js:1723
-Venues: three sections and Limbo            semaphore.js:1818
-dragging a venue into place                 semaphore.js:1948
-what a search found, checked in its card    semaphore.js:2024
-a venue, opened                             semaphore.js:2151
-drawer                                      semaphore.js:2464
-read view: one stream, in time order        semaphore.js:2568
-edit view                                   semaphore.js:2714
-actions                                     semaphore.js:2970
-a call's run                                semaphore.js:3073
-the board, lent to the Call Board           semaphore.js:3088
-leads                                       semaphore.js:3177
-the ruit                                    semaphore.js:3428
-the score                                   semaphore.js:3484
-one lead card, in both rooms                semaphore.js:3537
-a type's colour dot                         semaphore.js:3586
-who and the links, side by side             semaphore.js:3691
-the leads table                             semaphore.js:3708
-leads: one board, three sections            semaphore.js:3898
-a lead opening in place                     semaphore.js:4018
-a lead moving, and the view moving with it  semaphore.js:4125
-leads, lent to the Ledger's board           semaphore.js:4460
-modals                                      semaphore.js:4591
-asking, and saying                          semaphore.js:4594
-the types, managed                          semaphore.js:4635
-dragging in the list of types               semaphore.js:4691
-tooltip                                     semaphore.js:4852
-events                                      semaphore.js:4890
-venues                                      semaphore.js:5053
-typing, and the forms it goes into          semaphore.js:5250
-escape, and closing by clicking away        semaphore.js:5448
-putting links in your own order             semaphore.js:5484
+venues, on screen                           semaphore.js:1537
+asking the agent about one venue            semaphore.js:1653
+the visit question                          semaphore.js:1695
+a venue's window, drawn                     semaphore.js:1749
+dragging a window's ends                    semaphore.js:1785
+Venues: three sections and Limbo            semaphore.js:1880
+dragging a venue into place                 semaphore.js:2010
+what a search found, checked in its card    semaphore.js:2086
+a venue, opened                             semaphore.js:2213
+drawer                                      semaphore.js:2526
+read view: one stream, in time order        semaphore.js:2630
+edit view                                   semaphore.js:2776
+actions                                     semaphore.js:3032
+a call's run                                semaphore.js:3135
+the board, lent to the Call Board           semaphore.js:3150
+leads                                       semaphore.js:3239
+the ruit                                    semaphore.js:3490
+the score                                   semaphore.js:3546
+one lead card, in both rooms                semaphore.js:3599
+a type's colour dot                         semaphore.js:3648
+who and the links, side by side             semaphore.js:3753
+the leads table                             semaphore.js:3770
+leads: one board, three sections            semaphore.js:3960
+a lead opening in place                     semaphore.js:4080
+a lead moving, and the view moving with it  semaphore.js:4187
+leads, lent to the Ledger's board           semaphore.js:4522
+modals                                      semaphore.js:4653
+asking, and saying                          semaphore.js:4656
+the types, managed                          semaphore.js:4697
+dragging in the list of types               semaphore.js:4753
+tooltip                                     semaphore.js:4914
+events                                      semaphore.js:4952
+venues                                      semaphore.js:5115
+typing, and the forms it goes into          semaphore.js:5312
+escape, and closing by clicking away        semaphore.js:5510
+putting links in your own order             semaphore.js:5546
 ```
 
 ## `rooms/semaphore/semaphore.css`
@@ -471,7 +471,7 @@ _No section banners._
 
 ## `rooms/callboard/callboard.js`
 
-2809 lines · 159 KB
+2810 lines · 159 KB
 
 ```
 Call Board                                              callboard.js:1
@@ -481,24 +481,24 @@ the arenas' calls                                       callboard.js:214
 CoProg: the partnerships' own Horizon topics            callboard.js:384
 the tab an arena belongs to                             callboard.js:660
 judging the finds, one at a time                        callboard.js:683
-the official call texts                                 callboard.js:836
-the portal, laid over the Work Programme                callboard.js:898
-render                                                  callboard.js:989
-the freezer                                             callboard.js:1205
-the other clusters, while a search is typed             callboard.js:1267
-full topic text                                         callboard.js:1435
-why the slide is started two frames late                callboard.js:1575
-overview page                                           callboard.js:1636
-the chronological chart, and dragging its ends          callboard.js:1699
-the topic list under the chart                          callboard.js:1814
-repainting what is already drawn                        callboard.js:1957
-the Topic Atlas inside the Board                        callboard.js:1995
-the page of results                                     callboard.js:2195
-the keywords' lines, as the Topic Atlas draws them      callboard.js:2366
-the reader: the Board's own, with what was found in it  callboard.js:2516
-the switch, the keywords, and the filters               callboard.js:2614
-controls                                                callboard.js:2671
-what the other rooms may ask for                        callboard.js:2734
+the official call texts                                 callboard.js:837
+the portal, laid over the Work Programme                callboard.js:899
+render                                                  callboard.js:990
+the freezer                                             callboard.js:1206
+the other clusters, while a search is typed             callboard.js:1268
+full topic text                                         callboard.js:1436
+why the slide is started two frames late                callboard.js:1576
+overview page                                           callboard.js:1637
+the chronological chart, and dragging its ends          callboard.js:1700
+the topic list under the chart                          callboard.js:1815
+repainting what is already drawn                        callboard.js:1958
+the Topic Atlas inside the Board                        callboard.js:1996
+the page of results                                     callboard.js:2196
+the keywords' lines, as the Topic Atlas draws them      callboard.js:2367
+the reader: the Board's own, with what was found in it  callboard.js:2517
+the switch, the keywords, and the filters               callboard.js:2615
+controls                                                callboard.js:2672
+what the other rooms may ask for                        callboard.js:2735
 ```
 
 ## `rooms/callboard/callboard.css`
@@ -675,4 +675,4 @@ Generated data. Never open, never edit, never upload.
 
 ---
 
-**42300 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.
+**42366 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.

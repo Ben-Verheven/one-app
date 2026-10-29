@@ -740,9 +740,10 @@ function hasLink(a,u){
    which he hands to ChatGPT's deep research as it is; what ChatGPT gives
    back is read here and put on the board. Since 2026-10-25 the work is
    split into searches, each behind a button where what it finds lands: the
-   one for calls and the one for call texts on the Call Board, the one for
-   brokerage here (the third agreed in notes/call-board.md, built
-   2026-10-28). Each does one job and leaves the others theirs, and none
+   one for calls, the one for new arenas and the one for call texts on the
+   Call Board, the one for brokerage here (the third agreed in
+   notes/call-board.md, built 2026-10-28; new arenas split from calls on
+   2026-10-29). Each does one job and leaves the others theirs, and none
    does what the nightly Horizon check, a plain program, does: the
    clusters' and missions' dates, and the texts of calls the EU portal
    carries. The board stays this room's, so every file is written and
@@ -768,17 +769,20 @@ function hasLink(a,u){
    besides firmer words the app holds a gate (Mark's choice, over words
    alone and over a ceiling on finds): a venue that cannot quote where
    projects are posted or pitched, a new arena without a quoted call for
-   international consortia that Dutch organisations can join, a venue its
+   consortia that Dutch organisations can join, a venue its
    own words call an information session, a webinar or a Q&A, and a "call"
    that is a work programme or a budget line are left out, saying why
    (gptGate). */
-/* the three searches: the file each writes, the answer it asks for, the
+/* the four searches: the file each writes, the answer it asks for, the
    changes it may make, and the list its links go into; a change that is
    another search's is left out, saying so */
 const GPT_KINDS={
   calls:{name:'calls',file:'call-board-calls-for-chatgpt',answer:'call-board-answer',
     ops:['add_call_date','correct_call_date'],list:'info',
     other:'the Call Board’s ChatGPT, its search for calls'},
+  arenas:{name:'new arenas',file:'call-board-arenas-for-chatgpt',answer:'call-board-arenas-answer',
+    ops:[],list:null,
+    other:'the Call Board’s ChatGPT, its search for new arenas'},
   venues:{name:'brokerage',file:'brokerage-semaphore-for-chatgpt',answer:'semaphore-answer',
     ops:['add_venue','correct_venue','add_venue_arena','add_link'],list:'brokerage',
     other:'the Brokerage Semaphore’s ChatGPT, the search for brokerage'},
@@ -863,8 +867,14 @@ function gptBoard(kind){
     calls:gptTextCalls().map((c,i)=>Object.assign({round:Math.floor(i/GPT_BATCH)+1},c))};
   if(kind==='calls')return {
     file:GPT_KINDS.calls.file,written:todayISO(),
-    arenas:gptArenas('calls').map((a,i)=>Object.assign(base(a,i),{links:links(a.links),call_dates:calls(a,true)})),
-    not_to_suggest:S.arenas.filter(isWpArena).map(a=>a.name).concat((S.suggested||[]).map(x=>x.name))
+    arenas:gptArenas('calls').map((a,i)=>Object.assign(base(a,i),{links:links(a.links),call_dates:calls(a,true)}))
+  };
+  /* every arena by name, the frozen and the clusters' among them, and the
+     ones waiting to be judged, so that none is suggested again */
+  if(kind==='arenas')return {
+    file:GPT_KINDS.arenas.file,written:todayISO(),
+    on_the_board:S.arenas.map(a=>({name:a.name,type:typeName(a.typeId),frozen:!!a.frozenAt})),
+    not_to_suggest:(S.suggested||[]).map(x=>x.name)
   };
   const live=new Set(liveArenas().map(a=>a.id));
   return {
@@ -913,11 +923,16 @@ const GPT_DAY_RULES=[
 '- Dates are written YYYY-MM-DD.',
 '- `gran` says how exact a date is, and must be exactly as exact as the official page: `day`, `range` (several days), `month`, `quarter`, `half`, `year`. A date the page gives only as a month is `"gran": "month"`, `start` the first and `end` the last day of that month; "spring 2027" or "early 2027" is a `quarter` or `half`. **Never turn a month, a season or a guess into a day.** The board draws such a date as a band over the time it can fall in, which is what Mark wants to see.',
 '- `grade` is `fixed` only when an official page states the exact day or days (`day` or `range`); everything else is `uncertain`.'];
-/* who it is for, fewer and better, and the three jobs, the same in every
-   file, so the three searches split the work the same way */
+/* who it is for, fewer and better, and the four jobs, the same in every
+   file, so the four searches split the work the same way. Whether Dutch
+   organisations can join is asked of new arenas alone (Mark, 2026-10-29):
+   an arena on the board is there because he judged it, and asked of every
+   call date the doubt only lost dates. Calls for national consortia count
+   as much as international ones since the same day. */
 function gptHead(kind,title){
   const day=todayISO();
-  const jobs={calls:'**the search for calls** (call dates, and arenas missing from the board)',
+  const jobs={calls:'**the search for calls** (the call dates of the arenas on the board)',
+    arenas:'**the search for new arenas** (programmes and partnerships missing from the board)',
     venues:'**the search for brokerage** (venues: where projects in the making are described and partners are sought)',
     texts:'**the search for call texts** (the official texts of calls already on the board)'};
   return [
@@ -927,13 +942,11 @@ function gptHead(kind,title){
 '',
 '## Who this is for',
 '',
-'Mark works at Eindhoven University of Technology (TU/e) in the Netherlands and supports its researchers. He looks for calls for **international consortia** that TU/e researchers can join as a partner, and sometimes lead, and for the places where such consortia are being formed. Only that: no grants for single researchers or single companies, no start-up or investor schemes, no prizes, no procurement.',
+'Mark works at Eindhoven University of Technology (TU/e) in the Netherlands and supports its researchers. He looks for calls for **consortia**, international or national, that TU/e researchers can join as a partner, and sometimes lead, and for the places where international consortia are being formed. Only that: no grants for single researchers or single companies, no start-up or investor schemes, no prizes, no procurement.',
 '',
 '**Fewer and better.** Every result costs Mark time and usage. He would far rather have a few results that are accurate and plainly relevant than many that are only somewhat relevant. When in doubt, leave it out, and say why in the line for that arena or call. The app reads every result against the rules below and throws away, unread, any that breaks one, so such a result is wasted work. Past searches brought far too much: of 93 brokerage venues Mark removed 43 (webinars, information days, conferences), and dozens of call dates were guesses written as exact days. Do not repeat that.',
 '',
-'**Netherlands eligibility.** Where you can, check that organisations based in the Netherlands can take part and be funded: the Netherlands among the participating countries, or a Dutch funder (such as NWO, ZonMw or RVO) in the call. What Dutch organisations clearly cannot join or be funded in is left out, saying so. When it cannot be found out, keep it as usual.',
-'',
-'**One of three searches.** Mark runs three, each with its own job: '+jobs.calls+', '+jobs.venues+', and '+jobs.texts+'. This is '+jobs[kind]+'. Do only its job: what belongs to another search is thrown away here. A plain program besides checks every night the topics of Horizon Europe\'s clusters and missions on the EU Funding & Tenders portal, their dates and texts, and the texts of calls whose identifier the portal carries; leave those to it.',
+'**One of four searches.** Mark runs four, each with its own job: '+jobs.calls+', '+jobs.arenas+', '+jobs.venues+', and '+jobs.texts+'. This is '+jobs[kind]+'. Do only its job: what belongs to another search is thrown away here. A plain program besides checks every night the topics of Horizon Europe\'s clusters and missions on the EU Funding & Tenders portal, their dates and texts, and the texts of calls whose identifier the portal carries; leave those to it.',
 ''].join('\n');
 }
 function gptFileText(kind){
@@ -950,7 +963,7 @@ function gptFileText(kind){
     return [gptHead('calls','Call Board: research task for ChatGPT, the calls'),
 '## What this is',
 '',
-'The Call Board is Mark\'s map of the calls of European research-funding **arenas**: joint undertakings, co-funded and co-programmed partnerships, EIT communities, Eureka clusters and other programmes ('+n+' arenas in the data). Each arena has its **call dates**. This search keeps them correct and complete, and finds the few arenas that are missing. The arenas Mark has put away are marked `"frozen": true`.',
+'The Call Board is Mark\'s map of the calls of European research-funding **arenas**: joint undertakings, co-funded and co-programmed partnerships, EIT communities, Eureka clusters and other programmes ('+n+' arenas in the data). Each arena has its **call dates**. This search keeps them correct and complete, and nothing else: arenas missing from the board are the search for new arenas\' work. The arenas Mark has put away are marked `"frozen": true`.',
 '',
 '## What to do: every arena, no exceptions',
 '',
@@ -962,8 +975,6 @@ gptRoundsText(ars.map(a=>a.name),'arenas',false),
 '2. **A frozen arena** gets one question only: has a new call been published or officially announced? If so, add its dates; otherwise leave it. Do not correct a frozen arena\'s old dates.',
 '3. Write one line for the arena in `arenas_checked`, also when nothing changed: what you checked and what you found.',
 '',
-'Then, once every arena is done, **new arenas**, only if any truly fit: a programme or partnership that runs its own calls for international consortia, with a call open now or officially announced, that Dutch organisations can join and be funded in, and that is not on the board under any name (check `not_to_suggest` and every arena\'s name). None is a good answer.',
-'',
 '## Rules',
 '',
 '- Use only dates from official pages. Every change carries `source_url`, the page you read it on, and `evidence`, a short quote from that page.',
@@ -973,7 +984,6 @@ GPT_DAY_RULES.join('\n'),
 '- These are not calls, and are thrown away: a work programme, an annual or multiannual plan, a budget line or "envelope", an information day or webinar, a brokerage event (the search for brokerage), and anything entirely over.',
 '- Never delete anything, never rename an arena, never rewrite the `about`. If something on the board looks wrong and you cannot find the right value, say so in that arena\'s line in `arenas_checked`.',
 '- Use the ids exactly as they are written in the data. New things get no id from you.',
-'- A new arena suggested must give: `name`, the short name it goes by itself (for example "Water4All", not "European Partnership Water Security for the Planet"); `kind`, one of joint undertaking, co-funded partnership, co-programmed partnership, EIT community, Art. 185, Eureka, Horizon Europe programme area, other; `url`, its official site; `why`, one sentence saying which call and for whom; `consortia_evidence`, a quote from an official page showing a call for transnational consortia; `netherlands_evidence`, a quote showing that Dutch organisations can take part and be funded; and `call_dates`, its calls\' dates in the shape of `add_call_date` without `arena_id`. One without the two quotes is thrown away.',
 '',
 giveBack,
 F+'json',
@@ -981,16 +991,55 @@ answer([
     {change:'add_call_date',arena_id:'(id)',call:'Call 2027 – full proposal',role:'deadline',gran:'day',start:'2027-04-14',end:'2027-04-14',grade:'fixed',source_url:'https://...',evidence:'Full proposals must be submitted by 14 April 2027'},
     {change:'add_call_date',arena_id:'(id)',call:'Joint Transnational Call 2027',role:'announcement',gran:'quarter',start:'2027-01-01',end:'2027-03-31',grade:'uncertain',source_url:'https://...',evidence:'The next joint call is planned for the first quarter of 2027'},
     {change:'correct_call_date',arena_id:'(id)',date_id:'(id)',set:{start:'2027-03-02',end:'2027-03-02',gran:'day',grade:'fixed'},source_url:'https://...',evidence:'...'}
-  ],'Checked the call page: Call 2027 deadline moved to 14 April.',
-  {new_arena_suggestions:[{name:'Water4All',kind:'co-funded partnership',url:'https://...',why:'Its Joint Transnational Call 2027 funds international research consortia on water security.',
-    consortia_evidence:'Consortia must include at least three partners from three different countries',netherlands_evidence:'NWO participates in this call',
-    call_dates:[{call:'Joint Transnational Call 2027 – pre-proposal',role:'deadline',gran:'day',start:'2027-03-10',end:'2027-03-10',grade:'fixed',source_url:'https://...',evidence:'...'}]}]}),
+  ],'Checked the call page: Call 2027 deadline moved to 14 April.'),
 F,
 '',
 '## The board',
 '',
 F+'json',
 JSON.stringify(gptBoard('calls'),null,1),
+F,
+''].join('\n');
+  }
+  if(kind==='arenas'){
+    const n=S.arenas.length;
+    return [gptHead('arenas','Call Board: research task for ChatGPT, new arenas'),
+'## What this is',
+'',
+'The Call Board is Mark\'s map of the calls of research-funding **arenas**: joint undertakings, co-funded and co-programmed partnerships, EIT communities, Eureka clusters, Horizon Europe\'s clusters and missions, and other programmes ('+n+' arenas on the board, every one named in the data). This search finds the few arenas that are missing, and nothing else: the call dates of the arenas already on the board are the search for calls\' work.',
+'',
+'## What to do',
+'',
+'Look for programmes and partnerships that are not on the board under any name (check every name in `on_the_board` and `not_to_suggest`, and the names they also go by) and that pass all three tests:',
+'',
+'1. **Calls for consortia.** It runs its own calls for consortia, several organisations applying together, **international or national** (a Dutch national programme counts as much as a European partnership). Calls for single researchers or single companies, start-up or investor schemes, prizes and procurement do not count.',
+'2. **A call now.** A call is open now, or officially announced.',
+'3. **Netherlands eligibility.** Organisations based in the Netherlands can take part **and be funded**: the Netherlands among the participating countries, a Dutch funder (such as NWO, ZonMw or RVO) in the call, or a Dutch programme of its own. This is the test that matters most here. What Dutch organisations cannot join or be funded in is left out, and so is one where it cannot be found out on an official page.',
+'',
+'None is a good answer: an empty list is far better than one that only half fits. Write in `searched` a few lines saying where you looked and what you turned down, and why.',
+'',
+'## Rules',
+'',
+'- A new arena suggested must give: `name`, the short name it goes by itself (for example "Water4All", not "European Partnership Water Security for the Planet"); `kind`, one of joint undertaking, co-funded partnership, co-programmed partnership, EIT community, Art. 185, Eureka, Horizon Europe programme area, national programme, other; `url`, its official site; `why`, one sentence saying which call and for whom; `consortia_evidence`, a quote from an official page showing a call for consortia, international or national; `netherlands_evidence`, a quote showing that Dutch organisations can take part and be funded; and `call_dates`, its calls\' dates in the shape of `add_call_date` without `arena_id`. One without the two quotes is thrown away.',
+'- Use only official pages. Every call date carries `source_url`, the page you read it on, and `evidence`, a short quote from that page.',
+GPT_DAY_RULES.join('\n'),
+'- A call\'s name is its own name as the official page gives it, for example "Call 2027" or "JTC 2027 – pre-proposal". **Never put "(expected)", "projected", "indicative", "TBC" or any other doubt into a name**: how sure a date is goes in `gran` and `grade` alone. A call opens (`role`: `publication`) and closes (`deadline`, one per stage, the stage named); one officially announced but not yet published has its expected window (`announcement`).',
+'',
+'## What to give back',
+'',
+'Give back **one JSON object and nothing else in it**, as a downloadable file named `'+K.answer+'-'+day+'.json`; if you cannot make a file, as one json code block. Its shape, with one example:',
+'',
+F+'json',
+JSON.stringify({answer_to:K.file,searched_on:day,searched:'Where you looked, and what you turned down and why.',
+  new_arena_suggestions:[{name:'Water4All',kind:'co-funded partnership',url:'https://...',why:'Its Joint Transnational Call 2027 funds research consortia on water security.',
+    consortia_evidence:'Consortia must include at least three partners from three different countries',netherlands_evidence:'NWO participates in this call',
+    call_dates:[{call:'Joint Transnational Call 2027 – pre-proposal',role:'deadline',gran:'day',start:'2027-03-10',end:'2027-03-10',grade:'fixed',source_url:'https://...',evidence:'...'}]}]},null,1),
+F,
+'',
+'## The board',
+'',
+F+'json',
+JSON.stringify(gptBoard('arenas'),null,1),
 F,
 ''].join('\n');
   }
@@ -1115,7 +1164,7 @@ function gptParse(text){
   const i=body.indexOf('{'),j=body.lastIndexOf('}');
   if(i<0||j<i)throw new Error('there is no answer in it');
   const o=JSON.parse(body.slice(i,j+1));
-  if(!o||typeof o!=='object'||!Array.isArray(o.changes)&&!Array.isArray(o.texts))throw new Error('it holds no list of changes');
+  if(!o||typeof o!=='object'||!Array.isArray(o.changes)&&!Array.isArray(o.texts)&&!Array.isArray(o.new_arena_suggestions))throw new Error('it holds no list of changes');
   if(!Array.isArray(o.changes))o.changes=[];
   return o;
 }
@@ -1151,7 +1200,8 @@ function gptInWay(s,url,from){
    pitched, and its own words must not make it an information session, a
    webinar or a Q&A without a pitch or matchmaking part ("no bilateral
    brokerage advertised" came in as a venue); a new arena must quote a call
-   for international consortia and that Dutch organisations can join; a
+   for consortia, international or national since 2026-10-29, and that
+   Dutch organisations can join; a
    work programme, a budget "envelope" or an event is not a call. */
 const NOT_A_CALL=/\bwork\s*programme\b|\b(?:multi)?annual\s+(?:work\s+)?plan\b|\benvelope\b|\bbudget\s+line\b|\binfo(?:rmation)?\s*(?:day|session)\b|\bwebinar\b|\bbrokerage\b|\bmatchmaking\b/i;
 const INFO_ONLY=/\binfo(?:rmation)?\s*(?:days?|sessions?|events?|webinars?)\b|\bwebinars?\b|\bq\s*&\s*a\b|\bbriefing\b/i;
@@ -1166,7 +1216,7 @@ function gptGate(what,x){
     if(INFO_ONLY.test(words)&&!MATCHING.test(words))return 'its own words make it an information session, a webinar or a Q&A';
     return null;
   }
-  if(gptStr(x.consortia_evidence,400).length<15)return 'it quotes no call for international consortia';
+  if(gptStr(x.consortia_evidence,400).length<15)return 'it quotes no call for consortia';
   if(gptStr(x.netherlands_evidence,400).length<10)return 'it quotes nothing showing Dutch organisations can join';
   return gptHttp(x.url)?null:'it gives no official site';
 }
@@ -1313,8 +1363,7 @@ function gptApply(s,ans,now,kind){
   return out;
 }
 function gptSay(html){const el=$('#gptSaid');if(el)el.innerHTML=html;}
-/* The new arenas the search for calls suggests, listed under its changes
-   so the answer is read whole, each through the gate (gptGate) and with
+/* The new arenas the search for new arenas suggests, each through the gate (gptGate) and with
    the call dates it brings, which land with it if it is added. They are
    not added here: Put on the board sets them waiting, and each is judged
    on the Call Board, its type chosen there (see "new arenas, waiting to be
@@ -1375,8 +1424,16 @@ function gptRead(text){
     if(put)put.disabled=!ok.length;
     return;
   }
+  if(kind==='arenas'){
+    const sugg=gptSuggs(ans),ok=sugg.filter(x=>!x.why).length;
+    gpt={kind,ans,plan:[],sugg,texts:[]};
+    gptSay('<p class="gptok"><b>'+ok+' new arena'+(ok===1?'':'s')+'</b> to judge on the Call Board'+(sugg.length?':':'. None is a good answer too.')+'</p>'+
+      (gptStr(ans.searched)?'<p class="sub">'+esc(gptStr(ans.searched,1200))+'</p>':'')+gptSuggHTML());
+    if(put)put.disabled=!ok;
+    return;
+  }
   const plan=gptApply(JSON.parse(JSON.stringify(S)),ans,new Date().toISOString(),kind);
-  gpt={kind,ans,plan,sugg:kind==='calls'?gptSuggs(ans):[],texts:[]};
+  gpt={kind,ans,plan,sugg:[],texts:[]};
   const ok=plan.filter(r=>r.ok),no=plan.filter(r=>!r.ok);
   const seen=new Set((Array.isArray(ans.arenas_checked)?ans.arenas_checked:[]).map(x=>x&&x.arena_id));
   const asked=gptArenas(kind),missed=asked.filter(a=>!seen.has(a.id));
@@ -1393,11 +1450,12 @@ function gptRead(text){
 }
 /* Put on the real board. A restore point in the Ledger holds the board as
    it was first (the bridge takes it), so the whole round can be undone.
-   After the search for calls the new arenas suggested are set waiting,
-   and the room hands over to the Call Board, where they are judged one at
-   a time and the dates glow (`semaphore:judge`, which the bridge answers
-   by going there). After the search for brokerage each new or changed
-   venue is put to Mark here, in its card. The texts go to the cloud's
+   After the search for new arenas those suggested are set waiting, and
+   the room hands over to the Call Board, where they are judged one at a
+   time (`semaphore:judge`, which the bridge answers by going there); after
+   the search for calls it goes there too, where the new dates glow. After
+   the search for brokerage each new or changed venue is put to Mark here,
+   in its card. The texts go to the cloud's
    table of texts, and are judged on the Call Board the same way. */
 function gptPut(){
   if(!gpt.ans)return;
@@ -1424,9 +1482,9 @@ function gptPut(){
     });
     return;
   }
-  try{Hub.emit('semaphore:keep','before ChatGPT\'s search for '+(kind==='calls'?'calls':'brokerage')+' was put on the board');}catch(e){}
+  try{Hub.emit('semaphore:keep','before ChatGPT\'s search for '+GPT_KINDS[kind].name+' was put on the board');}catch(e){}
   const at=new Date().toISOString();
-  const res=gptApply(S,gpt.ans,at,kind);
+  const res=kind==='arenas'?[]:gptApply(S,gpt.ans,at,kind);
   const n=res.filter(r=>r.ok).length;
   let k=0;
   for(const {x,name,why} of gpt.sugg){
@@ -1438,6 +1496,10 @@ function gptPut(){
   done();
   const said=n+' change'+(n===1?'':'s')+' from ChatGPT '+(n===1?'is':'are')+' on the board';
   const undo='a restore point in the Ledger holds the board as it was before.';
+  if(kind==='arenas'){
+    try{Hub.emit('semaphore:judge',k+' new arena'+(k===1?'':'s')+' from ChatGPT wait'+(k===1?'s':'')+' to be judged. '+undo.charAt(0).toUpperCase()+undo.slice(1));}catch(e){}
+    return;
+  }
   if(kind==='calls'){
     try{Hub.emit('semaphore:judge',said+(k?', and '+k+' new arena'+(k===1?'':'s')+' wait'+(k===1?'s':'')+' to be judged':'')+
       '. New dates glow until you press Seen; '+undo);}catch(e){}
@@ -1449,7 +1511,7 @@ function gptPut(){
 }
 /* the box, for the search named: the Semaphore's own button opens the
    one for brokerage, the Call Board's the one for calls, lent over it,
-   with the one for call texts a press away at its head */
+   with the ones for new arenas and call texts a press away at its head */
 function openGpt(kind){
   closeModals();
   const m=$('#gptModal');if(!m)return;
@@ -3146,7 +3208,7 @@ function judgeFind(key,verb,type,done){
   if(kind==='sugg'){
     const x=(S.suggested||[]).find(y=>y.id===id);if(!x)return end('That suggestion has been judged already.');
     S.suggested=S.suggested.filter(y=>y!==x);
-    /* added, with the call dates the search for calls brought for it, each
+    /* added, with the call dates the search for new arenas brought for it, each
        through the same door as any other date it brings */
     if(verb==='add'&&!arenaNamed(x.name)){
       const a=arenaFrom(x.name,type,x.url,x.why),now=new Date().toISOString();
