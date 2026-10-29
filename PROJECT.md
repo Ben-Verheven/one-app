@@ -110,9 +110,11 @@ Everything cross-room lives in `shell/bridge.js`. Nowhere else.
 
 ```
 Hub.api('ledger')          → { PL, projects(), calls(), save,
-                               setTopics, setLeads, leadsChanged(),
-                               snapshot(why), signedIn(), token() }
-Hub.api('callboard')       → { topics(), openReader(), closeReader(),
+                               setTopics, boardChanged(), setLeads,
+                               leadsChanged(), snapshot(why), signedIn(),
+                               token() }
+Hub.api('callboard')       → { topics(), calls(), openReader(),
+                               openText(arenaId, names), closeReader(),
                                setArenas(o), arenasChanged(), judge(),
                                textsChanged(), cloudBack() }
 Hub.api('semaphore')       → { state(), save(), renderAll(),
@@ -161,8 +163,11 @@ and starting to judge what it found.
 What the bridge actually does: turns any researcher's name, written
 anywhere in any room, into a link that opens the Atlas dossier over the
 top of the room you are in; lends the Call Board's reader the same way, so
-a project written for a Horizon topic reads that topic without leaving the
-Ledger, and fills the socket the Ledger picks a topic from; fills a second
+a project written for a Horizon topic reads that topic, and a call tied to
+an arena's call reads its kept text, without leaving the Ledger; fills the
+socket the Ledger picks a topic or an arena's call from, with the dates the
+Semaphore and the Horizon check have for them now, and tells the Ledger
+when they may have changed, so it can offer the change; fills a second
 socket with the Semaphore's open leads, those in Limbo left out, so the Ledger's board draws them as a
 line of their own, every change made on a lead card there is made on
 the Semaphore's own record, a lead can be started there, a lead's arena

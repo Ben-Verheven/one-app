@@ -328,6 +328,28 @@ function fuzzyRange(startStr,endStr){
   }
   return portion(sd)+' '+MONTHS[sm]+yr(sy)+' to '+portion(ed)+' '+MONTHS[em]+yr(ey);
 }
+/* A key date as exactly as it is known. One copied from the Call Board may
+   be known only to its month, quarter, half or year (`gran`), or only
+   projected to a day (`grade` uncertain); it is said so, with ≈ as the
+   Board says it, and never as a day nobody published. A window set by
+   hand has no `gran` and keeps its loose description. */
+var QUARTERS=['Jan\u2013Mar','Apr\u2013Jun','Jul\u2013Sep','Oct\u2013Dec'];
+function markerWhen(m){
+  if(!m||!m.date||!isIsoDate(m.date))return '';
+  var g=m.gran||'day',d=new Date(m.date+'T00:00:00'),y=d.getFullYear(),mo=d.getMonth();
+  var near=(g!=='day'||m.grade==='uncertain')?'\u2248 ':'';
+  if(g==='month')return near+MONTHS[mo]+' '+y;
+  if(g==='quarter')return near+QUARTERS[Math.floor(mo/3)]+' '+y;
+  if(g==='half')return near+(mo<6?'Jan\u2013Jun ':'Jul\u2013Dec ')+y;
+  if(g==='year')return near+y;
+  if(g==='range')return near+fmtDate(m.date)+' \u2192 '+fmtDate(m.endDate||m.date);
+  if(m.endDate&&m.endDate!==m.date)return fuzzyRange(m.date,m.endDate);
+  return near+fmtDate(m.date);
+}
+/* Whether a key date is a window it can fall anywhere in, rather than a
+   window it stays open through: an opening known only to its quarter is
+   not open for three months. */
+function knownLoosely(m){return !!(m&&m.gran&&m.gran!=='day');}
 /* Relative stamps for note timestamps: short and human up to a week, an
    actual date beyond that — a relative figure stops being useful once you
    are reconciling against a call deadline. */
@@ -1005,6 +1027,9 @@ function newCall(f){
   f=f||{};
   return {id:f.id||cid(),name:f.name||'',title:f.title||'',color:f.color||'',
     solo:!!f.solo,links:f.links||[],markers:f.markers||[],
+    /* The arenas' call on the Call Board this one is, or null: see THE
+       CALL BOARD'S CALLS. */
+    board:f.board||null,
     rows:f.rows||[],order:typeof f.order==='number'?f.order:0,
     created:f.created||nowIso()};
 }
@@ -1158,12 +1183,21 @@ function markerDates(cid){
    the caller can offer it back. */
 function syncAnchored(cid,before){
   var c=calls[cid];if(!c)return [];
+  return followMarkers(c.markers,before,callProjects(cid));
+}
+/* The same for a programme project, whose key dates are its own: a date
+   its topic gives otherwise, taken from the Call Board, moves what is tied
+   to it as a call's does. */
+function syncProjectAnchored(p,before){
+  return followMarkers(p.markers,before,[p]);
+}
+function followMarkers(markers,before,projs){
   var moved=[];
-  (c.markers||[]).forEach(function(m){
+  (markers||[]).forEach(function(m){
     if(!m.id||!m.date||!isIsoDate(m.date))return;
     var was=before[m.id];
     if(!was||was===m.date)return;
-    callProjects(cid).forEach(function(p){
+    projs.forEach(function(p){
       (p.todos||[]).forEach(function(t){
         if(t.done||t.anchorId!==m.id||!t.dueDate)return;
         var to=addDays(m.date,+t.anchorDays||0);
@@ -1589,6 +1623,8 @@ function normalise(){
     if(typeof c.title!=='string')c.title='';
     if(typeof c.color!=='string')c.color='';
     c.solo=!!c.solo;
+    if(!c.board||typeof c.board!=='object'||!c.board.arena)c.board=null;
+    else listOn(c.board,'ids');
     listsOn(c,'links','markers');
     if(typeof c.order!=='number'||isNaN(c.order))c.order=0;
     normaliseRows(c);
@@ -3384,10 +3420,17 @@ var Editors=(function(){
   var partnerList={'new':'np-partner-list',edit:'em-partner-list'};
 
   /* ── Key dates ── */
+  /* A key date copied from the Call Board keeps, through the editor,
+     where it came from and what the Board said (`from`), so that a later
+     change there is still offered against it. How exactly it is known
+     stays only while its dates are left as they came: a day typed by hand
+     is a day. */
   function markerInit(ctx,list){
     markers[ctx]=(list||[]).map(function(m){
       return {id:m.id||mkId(),name:m.name||'',date:m.date||'',endDate:m.endDate||'',
-        isRange:!!m.endDate,color:m.color||'deadline'};
+        isRange:!!m.endDate,color:m.color||'deadline',
+        from:m.kind==='board'||m.kind==='topic'
+          ?{kind:m.kind,gran:m.gran,grade:m.grade,said:m.said,date:m.date||'',endDate:m.endDate||''}:null};
     });
     drawMarkers(ctx);
   }
@@ -3404,9 +3447,19 @@ var Editors=(function(){
   function markerRemove(ctx,i){markers[ctx].splice(i,1);drawMarkers(ctx);}
   function markerCollect(ctx){
     return markers[ctx].filter(function(m){return m.date;}).map(function(m){
-      return {id:m.id,name:m.name.trim()||'Marker',date:m.date,
+      var out={id:m.id,name:m.name.trim()||'Marker',date:m.date,
         endDate:(m.isRange?(m.endDate||''):''),kind:'custom',hard:true,
         color:m.color||'deadline'};
+      var f=m.from;
+      if(f){
+        out.kind=f.kind;
+        if(f.said)out.said=f.said;
+        if(out.date===f.date&&out.endDate===f.endDate){
+          if(f.gran)out.gran=f.gran;
+          if(f.grade)out.grade=f.grade;
+        }
+      }
+      return out;
     });
   }
   function drawMarkers(ctx){
@@ -3442,7 +3495,11 @@ var Editors=(function(){
         +'<input type="text" class="editor-inp" style="flex:2;min-width:160px" '
           +'placeholder="Key date name (e.g. Deadline FPP)" value="'+esc(m.name)+'" '
           +'onchange="PL.markerField(\''+ctx+'\','+i+',\'name\',this.value)" />'
-        +dates+swatches
+        +dates
+        +(m.from&&m.from.kind==='board'?'<span class="mk-from" title="Copied from the Call Board">'
+          +(m.date===m.from.date&&(m.isRange?m.endDate:'')===m.from.endDate&&knownLoosely(m.from)
+            ?esc(markerWhen({date:m.date,endDate:m.endDate,gran:m.from.gran})):'Call Board')+'</span>':'')
+        +swatches
         +'<label class="marker-range" title="Treat as a date range instead of a single day">'
           +'<input type="checkbox" '+(m.isRange?'checked':'')+' '
           +'onchange="PL.markerField(\''+ctx+'\','+i+',\'isRange\',this.checked)" /> Range</label>'
@@ -4578,9 +4635,13 @@ var Beam=(function(){
         +'<span class="beam-dl-when">nothing upcoming</span></div>';
     } else {
       var d=daysUntil(nx.m.date);
-      var open=(d<0&&nx.m.endDate);
+      var loose=knownLoosely(nx.m);
+      var open=(d<0&&nx.m.endDate&&!loose);
       var num,unit;
-      if(open){num='open';unit='closes '+fmtDate(nx.m.endDate);}
+      if(loose||nx.m.grade==='uncertain'){
+        num=d>1?d+' days':'any day';unit=markerWhen(nx.m);
+      }
+      else if(open){num='open';unit='closes '+fmtDate(nx.m.endDate);}
       else if(d===0){num='today';unit=fmtDate(nx.m.date);}
       else if(d===1){num='tomorrow';unit=fmtDate(nx.m.date);}
       else{num=d+' days';unit=fmtDate(nx.m.date);}
@@ -4631,7 +4692,7 @@ var Beam=(function(){
         +(acol?' style="--ac:'+esc(acol)+'"':'')
         +' role="toolbar" aria-label="Calls">'
       +chipsHTML(active)
-      +'<div class="hz-bar-right">'+od+dl+'</div>'
+      +'<div class="hz-bar-right">'+Offers.beamHTML()+od+dl+'</div>'
     +'</div>';
   }
 
@@ -10172,12 +10233,14 @@ var CallCard=(function(){
     var inD=(m.endDate&&d<0)?daysUntil(m.endDate):d;
     var urg=inD<0?'':(inD<=14?' urgent':(inD<=45?' soon':''));
     var when;
-    if(d<0&&m.endDate)when='open now';
+    if(d<0&&m.endDate&&knownLoosely(m))when=daysUntil(m.endDate)>=0?'any day now':'passed';
+    else if(d<0&&m.endDate)when='open now';
     else if(d<0)when='passed';
     else if(d===0)when='today';
     else if(d===1)when='tomorrow';
     else when='in '+d+'d';
-    return '<span class="cp-next'+urg+'">'+esc(m.name||'Deadline')+' <b>'+when+'</b></span>';
+    var loose=(knownLoosely(m)||m.grade==='uncertain')&&d>=0?' <span class="cp-when">'+esc(markerWhen(m))+'</span>':'';
+    return '<span class="cp-next'+urg+'">'+esc(m.name||'Deadline')+' <b>'+when+'</b>'+loose+'</span>';
   }
 
   /* A programme project's next deadline: the first still ahead, or — with
@@ -10249,10 +10312,17 @@ var CallCard=(function(){
         +'<div class="cc-titlewrap">'
           +'<div class="cc-name" style="color:'+col+'">'+esc(fullName)+'</div>'
           +'<div class="cc-deadline">'
+            /* the call on the Call Board this one is, named quietly ahead
+               of its next date, as a programme card names its topic */
+            +(c.board?'<span class="cc-tie" title="The call on the Call Board this one is \u2014 '
+              +esc(c.board.arenaName)+'"><span class="pc-topic-dash">\u2013</span>'
+              +esc(BoardCall.label(c.board))+'</span>':'')
             +(nextM?deadlineTxtHTML(nextM):'<span class="cc-nodate">No key dates yet</span>')
           +'</div>'
+          +Offers.forCall(key)
         +'</div>'
         +'<div class="cc-head-right">'
+          +(c.board?'<span class="cc-links">'+callTextHTML(c)+'</span>':'')
           +Editors.linksDisplayHTML(c.links,'cc-links')
           +'<button type="button" class="cc-info-btn" title="Call info \u2014 notes for this call" '
             +'onclick="PL.openCallInfo(\''+esc(key)+'\');event.stopPropagation()">i</button>'
@@ -10278,6 +10348,9 @@ var CallCard=(function(){
   function editFormHTML(c){
     return '<div class="cc-edit" onclick="event.stopPropagation()">'
       +'<div class="fsec fsec-first">Edit call</div>'
+      /* The programme's projects pick topics, each its own; every other
+         call may be one of the arenas' calls on the Board. */
+      +(c.id!==PROGRAMME_ID?BoardPick.fieldHTML('ce','the call on the Call Board this one is; its dates become the key dates below'):'')
       +'<div class="fg"><label>Short call name <span class="lbl-hint">\u2014 the call\u2019s title</span></label>'
         +'<input type="text" id="ce-name" value="'+esc(c.name||'')+'" /></div>'
       +'<div class="fg"><label>Official call name <span class="lbl-hint">\u2014 shown below the title</span></label>'
@@ -10316,6 +10389,7 @@ var CallCard=(function(){
     render();
     Editors.linkInit('ce',c.links||[]);
     Editors.markerInit('ce',c.markers||[]);
+    if(key!==PROGRAMME_ID)BoardPick.set('ce',c);
     var nm=byId('ce-name');if(nm)nm.focus();
   }
   function cancelEdit(){if(editing){editing=null;render();}}
@@ -10326,6 +10400,15 @@ var CallCard=(function(){
      stale copies. A rename is now just a rename. */
   function saveEdit(key){
     var c=calls[key];if(!c)return;
+    /* Read before anything is written, as the topic is: a name that is
+       not a call on the Board stops the save rather than losing the tie.
+       The key-date rows already hold what the pick brought. */
+    var bp=key!==PROGRAMME_ID&&byId('ce-board')?BoardPick.collect('ce',c):{tie:c.board,same:true};
+    if(!bp){
+      toast('That is not a call on the Call Board \u2014 pick one from the list, or empty the box.');
+      return;
+    }
+    c.board=bp.tie;
     c.name=(byId('ce-name').value||'').trim();
     c.title=(byId('ce-callfull').value||'').trim();
     c.color=editColor||'';
@@ -10336,6 +10419,7 @@ var CallCard=(function(){
     c.links=Editors.linkCollect('ce').map(function(l){return Object.assign({},l);});
     var wasDates=markerDates(c.id);
     c.markers=Editors.markerCollect('ce').map(function(m){return Object.assign({},m);});
+    if(key!==PROGRAMME_ID)BoardCall.retie(BoardPick.swaps('ce'),callProjects(c.id),wasDates);
     var moved=syncAnchored(c.id,wasDates);
     /* A call with a name is a call, not a lone project. */
     if(c.name)c.solo=false;
@@ -10454,7 +10538,7 @@ var CallCard=(function(){
   function closeInfoState(){openInfo=null;Info.unbindOutside();}
 
   return {render:render,openEdit:openEdit,cancelEdit:cancelEdit,saveEdit:saveEdit,
-    setColor:setColor,openInfoTable:openInfoTable,closeInfoTable:closeInfoTable,
+    editingNow:function(){return editing;},setColor:setColor,openInfoTable:openInfoTable,closeInfoTable:closeInfoTable,
     closeInfoState:closeInfoState,isInfoOpen:function(){return openInfo;}};
 })();
 
@@ -10470,12 +10554,30 @@ var CallCard=(function(){
    again on every render would build three and a half megabytes of
    Commission prose in order to print eighteen characters. */
 var Topics=(function(){
-  var listFn=null,openFn=null,cache=null;
+  var listFn=null,openFn=null,cache=null,src={};
 
+  /* Since 2026-10-29 the same socket also carries the arenas' calls a
+     call here may be (THE CALL BOARD'S CALLS, below): their list for the
+     picker, their runs as the Semaphore has them now, the Horizon check's
+     changes, and their texts. */
   function fill(o){
     listFn=(o&&o.list)||null;
     openFn=(o&&o.open)||null;
+    src=o||{};
     cache=null;
+    setTimeout(function(){Offers.changed();},0);
+  }
+  function ask(name,args,none){
+    if(typeof src[name]!=='function')return none;
+    try{return src[name].apply(null,args);}catch(e){console.error(e);return none;}
+  }
+  function calls(){return ask('calls',[],[])||[];}
+  function runs(){return ask('runs',[],[])||[];}
+  function changes(cb){if(typeof src.changes!=='function'){cb(null);return;}ask('changes',[cb]);}
+  function hasText(arena,names){return !!ask('hasText',[arena,names],false);}
+  function openText(arena,names){
+    if(typeof src.openText!=='function'){toast('The Call Board is not available.');return;}
+    ask('openText',[arena,names]);
   }
   /* Asked for when one of the two project forms opens, and not before:
      the first ask is what builds the Board. */
@@ -10497,7 +10599,8 @@ var Topics=(function(){
     if(!openFn){toast('The Call Board is not available.');return;}
     openFn(id);
   }
-  return {fill:fill,all:all,byCode:byCode,open:open};
+  return {fill:fill,all:all,byCode:byCode,open:open,
+    calls:calls,runs:runs,changes:changes,hasText:hasText,openText:openText};
 })();
 
 /* What a project card prints — the topic as it was written down, not as
@@ -10576,7 +10679,8 @@ var TopicPick=(function(){
     function add(suffix,name,date,kind){
       if(!date)return;
       out.push({id:'tp-'+t.id+'-'+suffix,name:name,date:date,endDate:'',
-        kind:'topic',hard:true,color:kind});
+        kind:'topic',hard:true,color:kind,
+        said:{date:date,endDate:'',gran:'day',grade:'fixed'}});
     }
     add('open','Call opens',t.opening,'opening');
     add('d1',t.twoStage?'Stage 1 deadline':'Submission deadline',t.d1,'deadline');
@@ -10600,8 +10704,513 @@ var TopicPick=(function(){
     show(prefix,true);
     onInput(prefix);
   }
-  return {fieldHTML:fieldHTML,show:show,onInput:onInput,collect:collect,set:set};
+  return {fieldHTML:fieldHTML,show:show,onInput:onInput,collect:collect,set:set,
+    markersOf:markersOf};
 })();
+
+/* ══ THE CALL BOARD'S CALLS ═══════════════════════════════════════════
+   Since 2026-10-29 (Mark, phase 4) a call in this room other than the
+   programme may be one of the arenas' calls on the Call Board: a Joint
+   Undertaking's, a co-funded or co-programmed partnership's, any other
+   arena's. The tie is the call's and never a project's, so the projects
+   in a call share its key dates as they always have; Mark chose that over
+   a Board call on every project (canvas "The Call Board, Grown", 7.1).
+   The programme keeps its topics, one to a project, and is offered
+   nothing else; every other call is offered the arenas' calls and never a
+   topic. It is picked in the topic's own box, from the call's Edit call,
+   from any of its projects' editors, or when + Project starts a call.
+
+   What the call keeps is `c.board`: the arena, the call's name as the
+   Board writes it, and the ids of the Board's dates it has been shown.
+   Each key date copied keeps the Board date's id in its own (`cb-` + id),
+   how exactly it is known (`gran`, `grade`) and what the Board said when
+   it was last copied or answered (`said`). A date known only to its month
+   or quarter comes in as that window, never as a made-up day, and a todo
+   tied to it counts from the window's first day: Mark chose the earliest
+   it can fall over the latest (7.2). */
+var BoardCall=(function(){
+  /* The key dates a call on the Board brings: its opening, or the window
+     it is expected in when it has nothing else yet, and every deadline. */
+  function says(d){
+    var loose=!!(d.gran&&d.gran!=='day'&&d.end&&d.end!==d.start);
+    return {date:d.start,endDate:loose?d.end:'',gran:loose?d.gran:'day',
+      grade:d.grade==='uncertain'?'uncertain':'fixed'};
+  }
+  function markersOf(run){
+    var out=[],dls=(run&&run.dls)||[];
+    function add(d,name,color){
+      if(!d||!d.id||!d.start||!isIsoDate(d.start))return;
+      var now=says(d);
+      out.push(Object.assign({id:'cb-'+d.id,name:name,kind:'board',hard:true,color:color},
+        now,{said:Object.assign({},now)}));
+    }
+    if(run&&run.open)add(run.open,'Call opens','opening');
+    else if(run&&run.ann&&!dls.length)add(run.ann,'Call expected','opening');
+    dls.forEach(function(d,i){
+      add(d,dls.length>1?'Stage '+(i+1)+' deadline':'Submission deadline','deadline');
+    });
+    return out;
+  }
+  function tieOf(r){
+    return {arena:r.arena,arenaName:r.arenaName||'',short:r.short||'',name:r.name||'',
+      names:(r.names||[]).slice(),
+      ids:markersOf(r).map(function(m){return m.id.slice(3);})};
+  }
+  function label(t){return t?(t.short?t.short+' \u00b7 ':'')+t.name:'';}
+  function isBoard(m){return !!(m&&m.kind==='board');}
+  /* The call on the Board a tie is, as the Semaphore has it now: the run
+     holding any date it was shown, or failing that the one of its name. */
+  function runOf(tie,runs){
+    if(!tie)return null;
+    var a=(runs||Topics.runs()).filter(function(x){return x.arena===tie.arena;})[0];
+    if(!a)return null;
+    var ids=tie.ids||[];
+    function idsOf(r){return [r.open,r.ann].concat(r.dls||[]).filter(Boolean).map(function(d){return d.id;});}
+    return a.runs.filter(function(r){return idsOf(r).some(function(id){return ids.indexOf(id)>-1;});})[0]
+      ||a.runs.filter(function(r){return r.name===tie.name;})[0]||null;
+  }
+  function same(a,b){
+    return !!a&&!!b&&a.date===b.date&&(a.endDate||'')===(b.endDate||'')
+      &&(a.gran||'day')===(b.gran||'day')&&(a.grade||'fixed')===(b.grade||'fixed');
+  }
+  /* A call usually has key dates of its own before it is tied, typed by
+     hand or laid out by a backbone, with todos tied to them. The Board's
+     take the place of the ones that are plainly the same date (the same
+     name; or the one opening, the one deadline, the stage of the same
+     number), so the call does not carry two of each, and what was tied to
+     the old one is tied to the Board's and moves with it. Anything less
+     plain stays, to be taken off by hand. `swaps` maps a Board date's id
+     to the one it replaced. */
+  function adopt(own,board){
+    var left=own.slice(),swaps={};
+    function take(test){
+      var hits=left.filter(function(m){return test(String(m.name||'').trim());});
+      if(hits.length!==1)return null;
+      left.splice(left.indexOf(hits[0]),1);
+      return hits[0];
+    }
+    var nDl=board.filter(function(b){return b.color==='deadline';}).length;
+    board.forEach(function(b){
+      var nm=b.name.toLowerCase(),st=/^stage (\d)/i.exec(b.name);
+      var h=take(function(n){return n.toLowerCase()===nm;})
+        ||(b.color==='opening'?take(function(n){return /open|launch|publi/i.test(n);}):null)
+        ||(b.color==='deadline'&&nDl===1?take(function(n){return /deadline|submission|close/i.test(n);}):null)
+        ||(st?take(function(n){return new RegExp('stage\\s*'+st[1],'i').test(n);}):null);
+      if(h)swaps[b.id]={from:h.id,name:h.name,date:h.date,marker:h};
+    });
+    return {markers:left.concat(board),swaps:swaps};
+  }
+  /* What was tied to a replaced date is tied to the Board's; `was` gains
+     the old date under the new id, so the following that comes after
+     moves those todos by however far the two differ. */
+  function retie(swaps,projs,was){
+    Object.keys(swaps).forEach(function(id){
+      var sw=swaps[id];
+      was[id]=sw.date;
+      projs.forEach(function(p){(p.todos||[]).forEach(function(t){if(t.anchorId===sw.from)t.anchorId=id;});});
+    });
+  }
+  return {markersOf:markersOf,tieOf:tieOf,label:label,isBoard:isBoard,runOf:runOf,same:same,
+    adopt:adopt,retie:retie};
+})();
+
+/* ── The picker, the topic's own box ──
+   The same native datalist the topic is picked from, and the dates it
+   brings said under it before anything is saved. Picked in Edit call or
+   in + Project's new call, the key-date rows below it are filled there and
+   then, so what will be saved is what is on screen; picked in a project's
+   editor, which has no key dates of its own, the call's are written on
+   Save, and the box says it is the call's. */
+var BoardPick=(function(){
+  var rows=null,swapped={};
+  function all(){
+    if(!rows)rows=Topics.calls();
+    return rows;
+  }
+  function byLabel(v){
+    v=String(v||'').trim().toLowerCase();
+    if(!v)return null;
+    return all().filter(function(r){return BoardCall.label(r).toLowerCase()===v;})[0]||null;
+  }
+  function fieldHTML(prefix,hint){
+    return '<div class="fg" id="'+prefix+'-board-fg">'
+      +'<label>Call Board call <span class="lbl-hint">\u2014 '+esc(hint)+'</span></label>'
+      +'<input type="text" id="'+prefix+'-board" list="'+prefix+'-board-list" '
+        +'autocomplete="off" placeholder="e.g. Chips \u00b7 ECS Global 2027" '
+        +'onfocus="PL.boardFill(\''+prefix+'\')" oninput="PL.boardInput(\''+prefix+'\')" />'
+      +'<datalist id="'+prefix+'-board-list"></datalist>'
+      +'<div class="topic-note" id="'+prefix+'-board-note"></div></div>';
+  }
+  function said(ms){
+    return ms.map(function(m){return m.name+' '+markerWhen(m);}).join(' \u00b7 ');
+  }
+  function fillList(prefix){
+    var dl=byId(prefix+'-board-list');
+    if(!dl||dl._filled)return;
+    rows=null;
+    var rs=all();
+    dl.innerHTML=rs.map(function(r){
+      return '<option value="'+esc(BoardCall.label(r))+'">'+esc(r.tab+' \u00b7 '+r.arenaName)+'</option>';
+    }).join('');
+    dl._filled=true;
+    if(!rs.length){
+      var note=byId(prefix+'-board-note');
+      if(note)note.textContent='The Call Board has no arenas\u2019 calls to pick from.';
+    }
+  }
+  /* The key-date rows of the form the box stands in: the Board's own go,
+     the ones typed by hand stay, and the picked call's come in. */
+  function refill(prefix,r){
+    var ctx=prefix==='ce'?'ce':(prefix==='np'?'np':null);
+    if(!ctx)return;
+    var was=swapped[prefix]||{};
+    var keep=Editors.markerCollect(ctx).filter(function(m){return !BoardCall.isBoard(m);})
+      .concat(Object.keys(was).map(function(id){return was[id].marker;}));
+    var ad=BoardCall.adopt(keep,r?BoardCall.markersOf(r):[]);
+    swapped[prefix]=ad.swaps;
+    Editors.markerInit(ctx,ad.markers);
+  }
+  function swaps(prefix){return swapped[prefix]||{};}
+  /* what the note under the box adds when the Board's dates take the
+     place of the call's own */
+  function inPlace(prefix){
+    var sw=swaps(prefix),names=Object.keys(sw).map(function(id){return sw[id].name;});
+    return names.length?' \u2014 in place of your '+names.join(' and ')+', and what is tied to '
+      +(names.length===1?'it':'them')+' moves with the Board\u2019s':'';
+  }
+  function onInput(prefix){
+    var inp=byId(prefix+'-board'),note=byId(prefix+'-board-note');
+    if(!inp||!note)return;
+    var v=(inp.value||'').trim();
+    if(!v){
+      note.textContent=inp._had?'Emptied: the Call Board\u2019s key dates come off the call on Save.':'';
+      note.classList.remove('bad');
+      if(inp._last||inp._had){inp._last=null;refill(prefix,null);}
+      return;
+    }
+    var r=byLabel(v);
+    note.textContent=r
+      ? (said(BoardCall.markersOf(r))||'The Call Board has no dates on it yet.')
+      : 'No call on the Call Board is called that.';
+    note.classList.toggle('bad',!r);
+    if(!r||inp._last===r)return;
+    inp._last=r;
+    refill(prefix,r);
+    note.textContent+=inPlace(prefix);
+    /* + Project's new call is named after it, unless a name is typed */
+    if(prefix==='np'){
+      var sh=byId('np-call'),full=byId('np-callfull');
+      if(sh&&!sh.value.trim())sh.value=r.short||r.arenaName;
+      if(full&&!full.value.trim())full.value=r.name;
+      PL.npCallName();
+    }
+  }
+  /* What the box says to write: {tie} (null when emptied), or null when
+     what is in it is not a call on the Board. A tie to the same call as
+     before keeps the dates it has been shown. */
+  function collect(prefix,c){
+    var inp=byId(prefix+'-board');
+    var v=inp?(inp.value||'').trim():'';
+    if(!v)return {tie:null};
+    if(c&&c.board&&v.toLowerCase()===BoardCall.label(c.board).toLowerCase())return {tie:c.board,same:true};
+    var r=byLabel(v);
+    if(!r)return null;
+    return {tie:BoardCall.tieOf(r),run:r};
+  }
+  /* The list is filled when the box is first pressed, not when its form
+     opens: asking for it is what builds the Call Board, and most visits
+     to Edit call or + Project are not for this. */
+  function set(prefix,c){
+    var inp=byId(prefix+'-board');
+    if(!inp)return;
+    inp.value=c&&c.board?BoardCall.label(c.board):'';
+    inp._had=!!(c&&c.board);
+    inp._last=null;
+    swapped[prefix]={};
+    var note=byId(prefix+'-board-note');
+    if(note&&c&&c.board)note.textContent=said((c.markers||[]).filter(BoardCall.isBoard));
+  }
+  return {fieldHTML:fieldHTML,fillList:fillList,onInput:onInput,collect:collect,set:set,
+    swaps:swaps};
+})();
+
+/* ── What the Board changed, offered ──
+   A date the Board gives otherwise later, from ChatGPT's search for calls
+   or the nightly Horizon check, is offered on the call or the project
+   rather than made (Mark, 2026-10-29), and so is a date it no longer has,
+   a date it has newly, and a topic gone from the portal or moved to
+   another call. Each is said in a box glowing on the card where the date
+   stands, and counted in brass on the beam, whose list leads to the card:
+   Mark chose both over either alone (7.3). Taking a date moves the key
+   date and the todos tied to it, with Undo, as a date changed by hand
+   does; keeping one leaves it, and is asked again only when the Board
+   changes once more.
+
+   Nothing here is stored but the answers: the list is worked out from
+   the Board whenever something is drawn, and the Horizon check's rows
+   are read from the cloud through the bridge when the room comes into
+   view, since nothing runs while the app is shut. */
+var Offers=(function(){
+  var hz=null,runs=null;
+  function changed(){
+    runs=null;
+    Topics.changes(function(rowsIn){
+      if(rowsIn){hz={};rowsIn.forEach(function(r){hz[r.id]=r;});}
+      redraw();
+    });
+    redraw();
+  }
+  /* A call being edited is not drawn again under the form: the Board
+     saving in the background would put back what was being typed over. */
+  function redraw(){
+    Beam.render();
+    if(Nav.anchor()&&!CallCard.editingNow())CallCard.render();
+    var m=byId('offers-menu');if(m)Menu.refresh(menuHTML());
+  }
+  function tiedCount(projs,mid){
+    var n=0;
+    projs.forEach(function(p){(p.todos||[]).forEach(function(t){if(!t.done&&t.anchorId===mid)n++;});});
+    return n;
+  }
+  function callOffers(c,runs,out){
+    var run=BoardCall.runOf(c.board,runs);
+    if(!run)return;
+    var now={};
+    BoardCall.markersOf(run).forEach(function(m){now[m.id]=m;});
+    (c.markers||[]).forEach(function(m){
+      if(!BoardCall.isBoard(m))return;
+      var to=now[m.id],base=m.said||m;
+      if(!to){
+        /* A date that has passed drops out of the Board's runs by itself,
+           and that is not the Board taking it back. */
+        if(!(m.said&&m.said.gone)&&daysUntil(m.date)>=0)
+          out.push({kind:'removed',call:c.id,mid:m.id,name:m.name,when:markerWhen(m)});
+        return;
+      }
+      if(!BoardCall.same(base,to))
+        out.push({kind:'moved',call:c.id,mid:m.id,name:m.name,from:markerWhen(m),
+          to:{date:to.date,endDate:to.endDate,gran:to.gran,grade:to.grade}});
+    });
+    Object.keys(now).forEach(function(id){
+      if(c.board.ids.indexOf(id.slice(3))>-1||markerById(c,id))return;
+      out.push({kind:'added',call:c.id,mid:id,name:now[id].name,when:markerWhen(now[id]),marker:now[id]});
+    });
+  }
+  function topicOffers(p,out){
+    var r=hz&&hz[p.topicId];
+    if(!r)return;
+    if(r.diff==='gone'||r.diff==='moved'){
+      if(p.topicSeen!==(r.changed_at||'seen'))
+        out.push({kind:r.diff==='gone'?'gone':'topic',pid:p.id,to:r.moved_to||'',at:r.changed_at||'seen'});
+      return;
+    }
+    if(r.diff!=='dates')return;
+    var dl=r.deadlines||[],want={open:r.opening,d1:dl[0],d2:dl[1]},pre='tp-'+p.topicId+'-';
+    (p.markers||[]).forEach(function(m){
+      if(!m.id||m.id.indexOf(pre)!==0)return;
+      var day=want[m.id.slice(pre.length)];
+      if(!day||!isIsoDate(day))return;
+      var to={date:day,endDate:'',gran:'day',grade:'fixed'};
+      if(!BoardCall.same(m.said||m,to))
+        out.push({kind:'moved',pid:p.id,mid:m.id,name:m.name,from:markerWhen(m),to:to});
+    });
+  }
+  /* Worked out afresh at every ask, which is cheap; only the Board's
+     runs are kept, until the Board says it has changed. */
+  function list(){
+    var out=[],seen={};
+    activeProjects().forEach(function(p){
+      if(p.callId===PROGRAMME_ID){topicOffers(p,out);return;}
+      if(seen[p.callId])return;
+      seen[p.callId]=1;
+      var c=calls[p.callId];
+      if(!c||!c.board)return;
+      if(!runs)runs=Topics.runs();
+      callOffers(c,runs,out);
+    });
+    out.forEach(function(o){o.key=[o.kind,o.call||o.pid,o.mid||''].join('|');});
+    return out;
+  }
+  function find(key){return list().filter(function(o){return o.key===key;})[0]||null;}
+  function holderOf(o){return o.call?calls[o.call]:projects[o.pid];}
+  function projsOf(o){return o.call?callProjects(o.call):[projects[o.pid]].filter(Boolean);}
+  function whoOf(o){var h=holderOf(o);return h?(o.call?callName(h):h.name):'';}
+
+  /* the sentence, and the answers it takes */
+  function sentence(o){
+    var n=o.mid?tiedCount(projsOf(o),o.mid):0;
+    var tied=n?(n===1?' 1 todo is tied to it and moves with it.':' '+n+' todos are tied to it and move with it.'):'';
+    var by=o.call?'The Call Board':'The portal';
+    if(o.kind==='moved'){
+      var to=markerWhen(o.to);
+      if(o.from.replace(/^\u2248 /,'')===to)return esc(o.name)+' is now published to the day: '+esc(to)+'.';
+      return by+' gives the '+esc(o.name.toLowerCase())+' as <b>'+esc(to)+'</b>, not '+esc(o.from)+'.'+tied;
+    }
+    if(o.kind==='added')return 'The Call Board now has a '+esc(o.name.toLowerCase())+', <b>'+esc(o.when)+'</b>.';
+    if(o.kind==='removed')return 'The Call Board no longer has the '+esc(o.name.toLowerCase())+' ('+esc(o.when)+').'
+      +(n?' '+n+' todo'+(n===1?' is':'s are')+' tied to it.':'');
+    if(o.kind==='gone')return 'This topic is gone from the portal. Its dates stay as they were.';
+    return 'The portal moved this topic to <b>'+esc(o.to)+'</b>.';
+  }
+  function answers(o){
+    var k=esc(o.key);
+    function b(verb,txt,yes){
+      return '<button type="button" class="named-link cb-offer-btn'+(yes?' cb-offer-yes':'')+'" '
+        +'onclick="PL.offerAnswer(\''+k+'\',\''+verb+'\');event.stopPropagation()">'+esc(txt)+'</button>';
+    }
+    if(o.kind==='moved')return b('take','Take the new date',1)+b('keep','Keep '+o.from);
+    if(o.kind==='added')return b('take','Add it',1)+b('keep','Leave it out');
+    if(o.kind==='removed')return b('take','Take it off',1)+b('keep','Keep it');
+    if(o.kind==='gone')return b('read','Read what the portal last said')+b('keep','Seen');
+    return b('take','Follow it, with its dates',1)+b('keep','Stay on this one');
+  }
+  function boxHTML(o){
+    return '<div class="cb-offer" data-offer="'+esc(o.key)+'">'
+      +'<span>'+sentence(o)+'</span>'
+      +'<span class="cb-offer-acts">'+answers(o)+'</span></div>';
+  }
+  /* the boxes for one project's card, or one call's head */
+  function forProject(pid){
+    return list().filter(function(o){return o.pid===pid;}).map(boxHTML).join('');
+  }
+  function forCall(key){
+    return list().filter(function(o){return o.call===key;}).map(boxHTML).join('');
+  }
+  /* how the topic a project names stands on the portal, for its card */
+  function topicState(p){
+    var r=hz&&p&&p.topicId&&hz[p.topicId];
+    return r&&(r.diff==='gone'||r.diff==='moved')?r:null;
+  }
+
+  /* ── on the beam ── */
+  function beamHTML(){
+    var n=list().length;
+    if(!n)return '';
+    return '<button type="button" class="beam-overdue beam-changes" aria-haspopup="dialog" '
+      +'title="What the Call Board changed on your calls and topics \u2014 show them" '
+      +'onclick="PL.offersOpen(event)"><b>'+n+'</b><span>call change'+(n===1?'':'s')+'</span></button>';
+  }
+  function menuHTML(){
+    var l=list();
+    if(!l.length)return '<div class="cb-offers-none">Nothing the Call Board changed is waiting.</div>';
+    return '<div class="cb-offers-hd">What the Call Board changed</div>'
+      +l.map(function(o){
+        return '<div class="cb-offers-row">'
+          +'<button type="button" class="cb-offers-who" title="Go to it" '
+            +'onclick="PL.offerGo(\''+esc(o.key)+'\')">'+esc(whoOf(o))+'</button>'
+          +boxHTML(o)+'</div>';
+      }).join('');
+  }
+  function openMenu(evt){
+    if(evt){evt.preventDefault();evt.stopPropagation();}
+    Menu.open(evt&&evt.currentTarget,menuHTML(),{id:'offers-menu',cls:'colmenu cb-offers',align:'right',role:'dialog'});
+  }
+  function go(key){
+    var o=find(key);if(!o)return;
+    Menu.close();
+    if(o.pid){Nav.openProject(o.pid,false);return;}
+    if(Nav.anchor()!==o.call)Nav.pressCall(o.call);
+  }
+
+  /* ── the answers ── */
+  function answer(key,verb){
+    var o=find(key);
+    if(!o){toast('That change has been answered already.');redraw();return;}
+    var h=holderOf(o);if(!h)return;
+    if(verb==='read'){Topics.open(projects[o.pid].topicId);return;}
+    if(verb==='keep')keep(o,h);
+    else if(o.kind==='topic')follow(o,h);
+    else take(o,h);
+    save();
+    invalidateDerived();
+    redraw();
+    Board.render();
+  }
+  function keep(o,h){
+    var m=o.mid?markerById(h,o.mid):null;
+    if(o.kind==='moved'&&m)m.said=Object.assign({},o.to);
+    else if(o.kind==='added')h.board.ids.push(o.mid.slice(3));
+    else if(o.kind==='removed'&&m)m.said=Object.assign({},m.said||{},{gone:true});
+    else if(o.kind==='gone')h.topicSeen=o.at;
+    else if(o.kind==='topic')h.topicSeen=o.at;
+  }
+  function take(o,h){
+    var projs=projsOf(o);
+    if(o.kind==='added'){
+      h.markers.push(Object.assign({},o.marker,{said:Object.assign({},o.marker.said)}));
+      h.board.ids.push(o.mid.slice(3));
+      toast(o.name+' added to '+whoOf(o)+' \u2014 '+o.when);
+      return;
+    }
+    if(o.kind==='removed'){
+      var i=h.markers.findIndex(function(m){return m.id===o.mid;});
+      if(i<0)return;
+      var gone=h.markers.splice(i,1)[0];
+      toast(o.name+' taken off '+whoOf(o),{action:'Undo',onAction:function(){
+        h.markers.splice(i,0,gone);save();redraw();Board.render();
+      }});
+      return;
+    }
+    var m=markerById(h,o.mid);if(!m)return;
+    var was={date:m.date,endDate:m.endDate,gran:m.gran,grade:m.grade,said:m.said};
+    var before={};before[m.id]=m.date;
+    m.date=o.to.date;m.endDate=o.to.endDate||'';
+    m.gran=o.to.gran;m.grade=o.to.grade;m.said=Object.assign({},o.to);
+    var moved=followMarkers(h.markers,before,projs);
+    toast(o.name+' is now '+markerWhen(m)
+      +(moved.length?' \u00b7 '+moved.length+' todo'+(moved.length===1?'':'s')+' moved with it':''),
+      {action:'Undo',onAction:function(){
+        Object.assign(m,was);
+        moved.forEach(function(mv){var t=findTodo(mv.pid,mv.eid);if(t){t.dueDate=mv.from;stampEdited(t);}});
+        save();redraw();Board.render();
+      }});
+  }
+  /* A topic moved to another call is followed to it: the project names
+     the new topic, takes its dates, and every todo tied to one of the old
+     topic's dates is tied to the same date of the new one, so it moves
+     with it rather than coming untied. */
+  function follow(o,p){
+    var t=Topics.byCode(o.to);
+    if(!t){toast('The Call Board has no topic '+o.to+'.');return;}
+    var old='tp-'+p.topicId+'-',neu='tp-'+t.id+'-';
+    var undo={topicId:p.topicId,topicCode:p.topicCode,topicTitle:p.topicTitle,
+      markers:p.markers,topicSeen:p.topicSeen,
+      ties:(p.todos||[]).map(function(x){return {t:x,anchorId:x.anchorId};})};
+    var before={};
+    (p.markers||[]).forEach(function(m){if(m.id.indexOf(old)===0)before[neu+m.id.slice(old.length)]=m.date;});
+    (p.todos||[]).forEach(function(x){
+      if(x.anchorId&&x.anchorId.indexOf(old)===0)x.anchorId=neu+x.anchorId.slice(old.length);
+    });
+    p.topicId=t.id;p.topicCode=t.code;p.topicTitle=t.title;
+    p.markers=TopicPick.markersOf(t);
+    var moved=syncProjectAnchored(p,before);
+    toast(p.name+' now follows '+t.id
+      +(moved.length?' \u00b7 '+moved.length+' todo'+(moved.length===1?'':'s')+' moved with it':''),
+      {action:'Undo',onAction:function(){
+        p.topicId=undo.topicId;p.topicCode=undo.topicCode;p.topicTitle=undo.topicTitle;
+        p.markers=undo.markers;p.topicSeen=undo.topicSeen;
+        undo.ties.forEach(function(x){x.t.anchorId=x.anchorId;});
+        moved.forEach(function(mv){var x=findTodo(mv.pid,mv.eid);if(x){x.dueDate=mv.from;stampEdited(x);}});
+        save();redraw();Board.render();
+      }});
+  }
+  return {changed:changed,forProject:forProject,forCall:forCall,
+    topicState:topicState,beamHTML:beamHTML,openMenu:openMenu,go:go,answer:answer};
+})();
+
+/* ── A call's text ──
+   The official text of a call tied to the Board, when one is kept there,
+   opens in the Board's reader lent over this room, as a programme card's
+   topic does. */
+function callTextHTML(c){
+  if(!c||!c.board||!Topics.hasText(c.board.arena,c.board.names))return '';
+  return '<button type="button" class="named-link" title="Read the call\u2019s official text" '
+    +'onclick="PL.callText(\''+esc(c.id)+'\');event.stopPropagation()">Text \u2197</button>';
+}
+function openCallText(key){
+  var c=calls[key];
+  if(c&&c.board)Topics.openText(c.board.arena,c.board.names);
+}
 
 /* ══ THE PROJECT CARD ═════════════════════════════════════════════════
    Its front carries the name, the description, its links, its dated
@@ -10984,10 +11593,7 @@ var ProjectCard=(function(){
   }
 
   /* ── Key-date wording, shared with the marker rows ── */
-  function markerDateStr(m){
-    if(m.endDate&&m.endDate!==m.date)return fuzzyRange(m.date,m.endDate);
-    return fmtDate(m.date);
-  }
+  function markerDateStr(m){return markerWhen(m);}
   /* How near a date is, said as a colour as well as a number. One ladder
      for every date on every project card \u2014 the topic's own deadline and
      the todos' alike \u2014 so a red "in 4d" means the same thing wherever it
@@ -11013,7 +11619,10 @@ var ProjectCard=(function(){
       /* A window that is open is measured to its far end, not its near
          one: "ongoing" in red because it opened months ago would be the
          opposite of the truth. */
-      if(d<=0&&de>=0){txt='ongoing';band=relBand(de);}
+      /* A date known only to its month is not open through it: inside
+         the window it can come any day, and before it the count is to its
+         first day, the one its tied todos count from. */
+      if(d<=0&&de>=0){txt=knownLoosely(m)?'any day now':'ongoing';band=relBand(knownLoosely(m)?0:de);}
       else txt=d>=0?('in '+d+'d'):(Math.abs(d)+'d ago');
     } else txt=d>=0?('in '+d+'d'):(Math.abs(d)+'d ago');
     return ' <span class="mi-rel'+band+'">\u00b7 '+txt+'</span>';
@@ -11032,10 +11641,16 @@ var ProjectCard=(function(){
        Board where a cluster tab is lit above it, and reads as half an
        answer here \u2014 a project card is the only place the topic is named
        at all, and the id is what gets pasted into the portal. */
-    return '<button type="button" class="pc-topic" '
-      +'title="'+esc(t.title||t.code)+' \u2014 read the topic" '
+    /* A topic the portal no longer has, or has moved to another call, is
+       struck through where it stands, as on the Board, and the topic it
+       moved to follows it; what to do about it is offered in the dates. */
+    var hz=Offers.topicState(p);
+    return '<button type="button" class="pc-topic'+(hz?' pc-topic-gone':'')+'" '
+      +'title="'+esc(t.title||t.code)+(hz?' \u2014 '+(hz.diff==='moved'
+        ?'the portal moved it to '+esc(hz.moved_to||''):'gone from the portal'):'')+' \u2014 read the topic" '
       +'onclick="PL.openTopic(\''+esc(p.id)+'\');event.stopPropagation()">'
-      +'<span class="pc-topic-dash">\u2013</span>'+esc(t.id||t.code)+'</button>';
+      +'<span class="pc-topic-dash">\u2013</span>'+esc(t.id||t.code)+'</button>'
+      +(hz&&hz.diff==='moved'&&hz.moved_to?'<span class="pc-topic-to">\u2192 '+esc(hz.moved_to)+'</span>':'');
   }
 
   function html(p,arch){
@@ -11069,6 +11684,10 @@ var ProjectCard=(function(){
     var nextKey=keyMarks.filter(function(m){
       var d=daysUntil(m.date);return d!==null&&d>=0;})[0]
       ||keyMarks[keyMarks.length-1]||null;
+    /* What the portal changed on this project's topic, offered under its
+       dates (see Offers); a project in any other call has its call's
+       offered on the call's own head instead. */
+    var offers=(p.callId===PROGRAMME_ID&&!arch)?Offers.forProject(p.id):'';
     var keyRows=nextKey
       ? '<div class="mi-row mi-row-key"><span class="mi-label mi-label-wide">'
         +esc(nextKey.name||'Key date')+'</span><span class="mi-val">'
@@ -11231,7 +11850,7 @@ var ProjectCard=(function(){
          behind it. */
       +'<div class="proj-row-top">'
       +'<div class="proj-col-people">'+positionsHTML(p)+'</div>'
-      +((keyRows||deadlineRows)
+      +((keyRows||deadlineRows||offers)
         /* Down the programme the dates are the only thing a card has to
            the right of its people, so the box takes the slack instead of
            standing in the middle of the row with a hand's width of
@@ -11239,7 +11858,7 @@ var ProjectCard=(function(){
            the same shape, none of them carrying partners, so they all
            still open on one line. */
         ?'<div class="proj-col-dates'+(byDeadline?' pc-dates-far':'')+'">'
-          +'<div class="pc-deadlines">'+keyRows+deadlineRows+'</div>'
+          +'<div class="pc-deadlines">'+keyRows+deadlineRows+'</div>'+offers
         +'</div>'
         :'')
       +((p.industrial&&(p.coordinator||(p.partners&&p.partners.length)))
@@ -13584,6 +14203,9 @@ var ProjectForm=(function(){
       +'<div id="np-topic-slot"></div>'
       +'<div class="pf-ro" id="np-call-known" hidden></div>'
       +'<div id="np-call-new" hidden>'
+        /* a new call may start from one on the Call Board, which names it
+           and lays out its key dates below */
+        +'<div id="np-board-slot"></div>'
         +'<div class="pf-pair">'
           +'<div class="fg"><label>Short call name</label>'
             +'<input type="text" id="np-call" placeholder="e.g. ITEA" oninput="PL.npCallName()" /></div>'
@@ -13719,6 +14341,7 @@ var ProjectForm=(function(){
       if(c&&!prog)known.innerHTML=knownCallHTML(c);
     }
     if(fresh)fresh.hidden=!!key;
+    if(!key&&byId('np-board'))BoardPick.set('np',null);
     paintWhere('np',null,c);
     footNote();
   }
@@ -13754,6 +14377,8 @@ var ProjectForm=(function(){
        than written out here, so they cannot ask for it differently. */
     var slot=byId('np-topic-slot');
     if(slot)slot.innerHTML=TopicPick.fieldHTML('np');
+    var bslot=byId('np-board-slot');
+    if(bslot)bslot.innerHTML=BoardPick.fieldHTML('np','a call there to start this one from; it names it and brings its dates');
     fillCallSelect();
     Backbone.fillPicker();
     onCallSelect();
@@ -13806,7 +14431,9 @@ var ProjectForm=(function(){
         var maxOrder=-1;
         Object.values(calls).forEach(function(x){
           if(typeof x.order==='number'&&x.order>maxOrder)maxOrder=x.order;});
+        var bp=short?BoardPick.collect('np',null):null;
         c=newCall({name:short,title:full,solo:!short,
+          board:bp&&bp.tie||null,
           markers:Editors.markerCollect('np'),
           links:Editors.linkCollect('npc'),
           order:maxOrder+1});
@@ -13862,7 +14489,10 @@ var ProjectForm=(function(){
          details is the one thing here that CAN be changed: the topic a
          programme project is written for. `pf-apart` sets that off from
          the name and the researchers, which are one thought together. */
-      +(onProg?'<div class="pf-apart">'+TopicPick.fieldHTML('em')+'</div>':'')
+      +(onProg?'<div class="pf-apart">'+TopicPick.fieldHTML('em')+'</div>'
+        /* Anywhere else the box is the call's, and says so: the projects
+           in a call share its key dates, so picking here ties them all. */
+        :'<div class="pf-apart">'+BoardPick.fieldHTML('em',callTie(p))+'</div>')
       +detailHTML(EDIT)
       +fateHTML(p);
     byId('pe').removeAttribute('hidden');
@@ -13878,6 +14508,7 @@ var ProjectForm=(function(){
     Editors.coordInit('edit',p.coordContacts||[]);
     Editors.linkInit('emp',p.links||[]);
     if(onProg)TopicPick.set('em',p);
+    else BoardPick.set('em',calls[p.callId]);
     paintWhere('pe',p,null);
     refreshVeil();
     var el=byId('em-name');
@@ -13907,6 +14538,28 @@ var ProjectForm=(function(){
       p.topicId=topic.topicId;p.topicCode=topic.topicCode;p.topicTitle=topic.topicTitle;
       p.markers=topic.markers;
     }
+    var c=calls[p.callId],moved=[];
+    if(p.callId!==PROGRAMME_ID&&c&&byId('em-board')){
+      var bp=BoardPick.collect('em',c);
+      if(!bp){
+        toast('That is not a call on the Call Board \u2014 pick one from the list, or empty the box.');
+        return;
+      }
+      /* A different call on the Board, or none: the Board's key dates are
+         replaced by the new call's, which take the place of the call's own
+         of the same kind as in Edit call (BoardCall.adopt). A todo tied to
+         a Board date of the call given up comes untied, as when a key date
+         is deleted. */
+      if(!bp.same){
+        var was=markerDates(c.id);
+        var ad=BoardCall.adopt((c.markers||[]).filter(function(m){return !BoardCall.isBoard(m);}),
+          bp.run?BoardCall.markersOf(bp.run):[]);
+        c.board=bp.tie;
+        c.markers=ad.markers;
+        BoardCall.retie(ad.swaps,callProjects(c.id),was);
+        moved=syncAnchored(c.id,was);
+      }
+    }
     var nm=(byId('em-name').value||'').trim();
     if(nm)p.name=nm;
     p.desc=Editors.resNames('edit');
@@ -13926,7 +14579,18 @@ var ProjectForm=(function(){
     var keep=Dossier.openCard();
     CallCard.render();
     if(keep&&q('.pi-fold[data-pid="'+cssEsc(keep)+'"]'))Dossier.open(keep);
-    toast('Project details saved');
+    Beam.render();
+    if(moved.length)offerUndoMoves(moved,'the call\u2019s new key dates');
+    else toast('Project details saved');
+  }
+  /* What the box says it ties, on a project's editor: the call, by name,
+     and how many projects share it. */
+  function callTie(p){
+    var c=calls[p.callId];
+    if(!c||c.solo)return 'the call on the Call Board this project is for; its dates become the key dates';
+    var n=callProjects(c.id).length;
+    return callName(c)+'\u2019s, so for '+(n>1?'all '+n+' of its projects':'its project')
+      +'; its dates become the call\u2019s key dates';
   }
 
   return {openNew:openNew,closeNew:closeNew,create:create,
@@ -14366,6 +15030,8 @@ window.PL={
   onCallSelectChange:ProjectForm.onCallSelect,npCallName:ProjectForm.footNote,
   toggleIndustrial:toggleIndustrial,
   topicInput:TopicPick.onInput,openTopic:openProjectTopic,
+  boardFill:BoardPick.fillList,boardInput:BoardPick.onInput,callText:openCallText,
+  offersOpen:Offers.openMenu,offerGo:Offers.go,offerAnswer:Offers.answer,
   toggleQuickTodo:QuickTodo.toggle,closeQuickTodo:QuickTodo.close,
   projectTodo:QuickTodo.openFor,
   addQuickTodo:QuickTodo.add,quickTodoCall:QuickTodo.onCall,
@@ -14433,6 +15099,9 @@ try{ Hub.expose('ledger',{
   /* The socket the Call Board's topics arrive through — empty until the
      bridge fills it, and the room runs perfectly well with it unfilled. */
   setTopics: Topics.fill,
+  /* Said by the bridge whenever the Board may have changed under the
+     calls and topics tied to it, so what changed is offered again. */
+  boardChanged: function(){ Offers.changed(); },
   /* The socket Semaphore's leads arrive through, and the call that says
      they have changed — both filled and made by the bridge; see THE LEADS
      LINE. */

@@ -1948,11 +1948,11 @@ selectPage(start);
 
 
 /* ---------- what the other rooms may ask for ----------
-   Two questions and one act: which topics are there, what is this one,
-   and open it. The list is flattened here rather than in the bridge
-   because the shape of a page is this room's business — the caller gets
-   one row per topic and never has to know that a cluster holds
-   destinations which hold themes which hold these.
+   Which topics and which arenas' calls are there, and open one: a topic
+   in the reader, or a call's kept text. The list is flattened here rather
+   than in the bridge because the shape of a page is this room's business
+   — the caller gets one row per topic and never has to know that a
+   cluster holds destinations which hold themes which hold these.
 
    This room is the lazy one: nothing is built until it is first opened,
    so a caller reaching for any of this has to ask the Hub to build it
@@ -1970,8 +1970,26 @@ function topicRow(id){
           opening:c.opening||'',d1:c.d1||'',d2:(c.twoStage&&c.d2)||'',
           twoStage:!!c.twoStage};
 }
+/* The arenas' calls the Ledger may tie one of its calls to (Mark,
+   2026-10-29): the calls of every tab but the clusters' and missions',
+   which the Ledger reaches as topics, and none of the Freezer's. A call is
+   a run as this room draws it, its dates as the Semaphore hands them over,
+   ids and all, never formatted here. */
+function callRow(c){
+  return {arena:c.arenaId,arenaName:c.arena.name,short:c.short,tab:c.cluster,
+          name:c.name,names:c.run.names.slice(),open:c.run.open,ann:c.run.ann,dls:c.run.dls.slice()};
+}
 Hub.expose('callboard',{
   topics:function(){ return Object.keys(TOPIC_BY_ID).map(topicRow); },
+  calls:function(){ return ACALLS.map(callRow); },
+  /* a call's kept text, read in the reader as on an arena opened here;
+     false when the call has none */
+  openText:function(arenaId,names){
+    const c=ACALLS.concat(FZ?FZ.calls:[]).find(x=>x.arenaId===arenaId&&x.run.names.some(n=>(names||[]).indexOf(n)>-1));
+    const t=c&&keptText(c);
+    if(!t) return false;
+    openText(t,c); return true;
+  },
   openReader:function(id){ return openReader(id); },
   closeReader:closeReader,
   /* the socket for the Semaphore's arenas: a read of them, and their

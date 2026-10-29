@@ -126,9 +126,14 @@ next amendment on.
   any write to a call's markers and returns what it moved; `offerUndoMoves`
   puts that on a toast with Undo. This is the app's own rule — an act you
   can take back is done and offered back, not put to a question — and it is
-  written down in `Dialog`'s own comment.
-- The hook that must stay hooked is `CallCard.saveEdit`, the one place a
-  call's existing markers are rewritten. The new-project form used to be a
+  written down in `Dialog`'s own comment. A date the Call Board changes is
+  the one exception: Mark asked that it be offered first (see
+  [call-board](call-board.md)), and once taken it follows the same way.
+  A programme project's own key dates follow through
+  `syncProjectAnchored`.
+- The hooks that must stay hooked are where a call's existing markers are
+  rewritten: `CallCard.saveEdit`, the project editor's Call Board box, and
+  the answers to what the Call Board changed. The new-project form used to be a
   second one; it no longer writes a joined call's markers at all (see
   [panes](panes.md)). Anything that ever writes `c.markers` again needs
   the hook.
@@ -138,7 +143,9 @@ without asking (2026-08-28).** Mark asked for "tied to" to be removed
 entirely; told what the following actually buys him, he chose to keep the
 following and drop the button. So a tie is now WRITTEN in exactly two
 places — a backbone laying out a new call, and `retieTodo` re-measuring one
-when he moves the todo by hand — and READ in one, `syncAnchored`. Nothing
+when he moves the todo by hand — and READ in one, `syncAnchored`. It is
+re-pointed, never started, when a Call Board date takes the place of a
+call's own and when a project follows its topic to another call. Nothing
 draws it and nothing says it out loud. `anchorPhrase`, which read a tie
 aloud, and `hardMarkersFor`, which filled the picker, went with the small
 diamond button (`tieBtn`, next to the date) and its menu, because both

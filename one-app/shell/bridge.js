@@ -329,14 +329,39 @@
     if (close) close(); else returnReader();
   }, true);
 
-  /* ── the topic a project was written for ──────────────────────────── */
+  /* ── the topic a project was written for, and the call a call is ──── */
 
   /* The Ledger keeps a programme whose projects are each written for one
-     Horizon topic. It stores the topic's id and what was written on it
-     the day it was picked, so a project card draws without any of this;
-     these two functions are the whole of the rest. The list is asked for
-     only when one of the project forms is opened, which is what keeps the
-     Board unbuilt for anyone who never links a project to a topic. */
+     Horizon topic, and since 2026-10-29 its other calls may each be one of
+     the arenas' calls on the Call Board (Mark, phase 4). It stores what
+     it picked and the dates as they were that day, so a card draws without
+     any of this. The two lists are asked for only when a form is opened,
+     which is what keeps the Board unbuilt for anyone who never ties
+     anything to it.
+
+     What changed since is read without building the Board: an arena's
+     dates from the Semaphore, which is built at load, by the ids the
+     Ledger copied, and a topic's from the Horizon check's table. The Ledger
+     offers each change on the project or the call rather than making it,
+     so it asks again whenever the board is saved, the Ledger comes into
+     view, or Mark logs in. A call's text is the cloud's, judged on the
+     Board: whether one is kept is answered from the list read here, and
+     reading it lends the Board's reader, as a topic does. */
+  function boardRuns() {
+    var S = Hub.api('semaphore');
+    try { return (S && S.calls) ? S.calls() : []; } catch (e) { console.error(e); return []; }
+  }
+  function keptText(arenaId, names) {
+    return texts.rows.some(function (t) { return t.status === 'kept' && fits(t, arenaId, names); });
+  }
+  function showText(arenaId, names) {
+    var api = callboard();
+    if (!api.openText) { Hub.note('The Call Board did not start — see the console'); return; }
+    lendReader();
+    try {
+      if (!api.openText(arenaId, names)) { returnReader(); Hub.note('No text of that call is kept on the Call Board'); }
+    } catch (e) { console.error(e); returnReader(); }
+  }
   (function () {
     var L = Hub.api('ledger');
     if (!L.setTopics) return;
@@ -345,8 +370,30 @@
         var api = callboard();
         return api.topics ? api.topics() : [];
       },
-      open: showTopic
+      open: showTopic,
+      calls: function () {
+        var api = callboard();
+        return api.calls ? api.calls() : [];
+      },
+      /* every arena's runs as the Semaphore works them out, each date with
+         its id */
+      runs: function () {
+        return boardRuns().map(function (a) {
+          return { arena: a.id, arenaName: a.name, runs: a.runs || [] };
+        });
+      },
+      changes: function (cb) {
+        var H = Hub.api('horizon');
+        if (!H.ready || !H.ready()) { cb(null); return; }
+        H.changes(function (rows, err) { cb(err ? null : rows); });
+      },
+      hasText: keptText,
+      openText: showText
     });
+    function changed() { if (L.boardChanged) L.boardChanged(); }
+    Hub.on('semaphore:saved', changed);
+    Hub.on('cloud:session', function (on) { if (on) changed(); });
+    Hub.onRoom(function (now) { if (now === 'ledger') changed(); });
   })();
 
   /* ── Semaphore's arena drawer, lent the same way ─────────────────── */
@@ -1719,6 +1766,8 @@
   var textsHold = {}, texts = { rows: [], read: false };
   function textsChanged() {
     ringRecount();
+    var L = Hub.api('ledger');
+    if (L && L.boardChanged) L.boardChanged();
     var B = Hub.started('callboard') && Hub.api('callboard');
     if (B && B.textsChanged) B.textsChanged();
   }

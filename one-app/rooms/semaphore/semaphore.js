@@ -3091,7 +3091,8 @@ function runTip(r){
    run says whether a date on it is new since the arena was last seen, and
    what a corrected one was, so its row can glow there until Seen. Frozen
    arenas are handed over apart (frozen, below), for the Call Board's
-   Freezer tab. */
+   Freezer tab. Each date keeps its id, by which the Ledger's key dates
+   copied from it find it again when it changes. */
 function callsForBoard(){
   const out=[];
   S.types.map(t=>t.id).concat([null]).forEach(id=>
@@ -3099,7 +3100,7 @@ function callsForBoard(){
   return out.map(boardArena);
 }
 function boardArena(a){
-  const day=d=>d?{start:d.start,end:d.end||d.start,gran:d.gran,grade:d.grade==='fixed'?'fixed':'uncertain'}:null;
+  const day=d=>d?{id:d.id,start:d.start,end:d.end||d.start,gran:d.gran,grade:d.grade==='fixed'?'fixed':'uncertain'}:null;
   const {live,last}=callRuns(a),t=typeOf(a);
   const runs=(last?[last]:[]).concat(live).map(r=>({
     name:callBase(dtLabel(r.all[0]))||dtLabel(r.all[0]),

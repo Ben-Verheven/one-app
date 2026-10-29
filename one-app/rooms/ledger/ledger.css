@@ -522,6 +522,12 @@
 #pane-ledger .beam-overdue span{font-family:var(--font);font-size:9px;letter-spacing:0.1em;
   color:var(--text3);text-transform:uppercase}
 #pane-ledger .beam-overdue:hover b{color:#d66}
+/* What the Call Board changed on the calls and topics tied to it, waiting
+   to be answered: the overdue count's shape in brass rather than red,
+   since nothing here is late, only asked. */
+#pane-ledger .beam-changes b{color:var(--gold2)}
+#pane-ledger .beam-changes span{color:var(--text2)}
+#pane-ledger .beam-changes:hover b{color:#f3dc8e}
 /* The deadline readout is also the way into the full chronological list. */
 #pane-ledger .beam-dl{position:relative;display:flex;flex-direction:column;gap:2px;
   min-width:0;max-width:340px;align-items:flex-end;text-align:right;
@@ -2395,6 +2401,38 @@
 #pane-ledger .topic-note{margin-top:6px;font-family:var(--body);font-size:12.5px;
   line-height:1.45;color:var(--text2);min-height:1.2em}
 #pane-ledger .topic-note.bad{color:var(--warn);font-style:italic}
+/* The call on the Call Board a call is, ahead of its next date, in the
+   colour a programme card names its topic in (see .pc-topic for why that
+   colour and not the room's third rank). */
+#pane-ledger .cc-tie{color:#b49a68;font-family:var(--font);font-size:11px;letter-spacing:0.06em;
+  margin-right:12px}
+#pane-ledger .cp-when{color:var(--text2)}
+/* A change the Board made, offered where the date stands: a gold wash
+   and edge, which glows until it is answered, and the answers as the
+   room's links, the one that takes the change first and in gold. */
+#pane-ledger .cb-offer{display:flex;flex-direction:column;gap:4px;margin-top:8px;padding:7px 11px;
+  background:rgba(232,201,106,0.09);box-shadow:inset 0 0 0 1px rgba(232,201,106,0.42);
+  border-radius:6px;font-family:var(--body);font-size:13.5px;line-height:1.45;color:#e8dcc0}
+#pane-ledger .cb-offer b{color:var(--gold2);font-weight:600}
+#pane-ledger .cb-offer-acts{display:flex;flex-wrap:wrap;gap:2px 16px}
+#pane-ledger .cb-offer-btn{min-height:24px;font-size:12px}
+#pane-ledger button.cb-offer-yes{color:var(--gold2)}
+/* with a change offered under its name the call's head grows, and its
+   right-hand controls stay level with the name rather than drifting down
+   to the middle */
+#pane-ledger .call-card-head:has(.cb-offer) .cc-head-right{align-self:flex-start}
+#pane-ledger .call-card-head .cb-offer{max-width:640px}
+/* the beam's list of them, each under the name of the call or project it
+   is on, which takes you there */
+#pane-ledger .cb-offers{width:500px;padding:4px 0 8px;gap:0}
+#pane-ledger .cb-offers-hd{padding:8px 16px 6px;font-family:var(--font);font-size:11px;
+  letter-spacing:0.1em;text-transform:uppercase;color:var(--text2)}
+#pane-ledger .cb-offers-row{padding:8px 16px 6px;border-top:1px solid rgba(205,176,105,0.16)}
+#pane-ledger .cb-offers-who{padding:0;background:none;border:none;cursor:pointer;
+  font-family:var(--font);font-size:12px;letter-spacing:0.08em;color:var(--gold2)}
+#pane-ledger .cb-offers-who:hover{text-decoration:underline;text-underline-offset:3px}
+#pane-ledger .cb-offers .cb-offer{margin-top:4px}
+#pane-ledger .cb-offers-none{padding:10px 16px;font-family:var(--body);font-style:italic;color:var(--text2)}
 #pane-ledger .solo-wrap .proj-row{border-left:4px solid var(--border2)}
 #pane-ledger .call-card.dragging,#pane-ledger .solo-wrap.dragging{opacity:0.45}
 #pane-ledger .call-card.drag-over,#pane-ledger .solo-wrap.drag-over{outline:2px dashed var(--gold);outline-offset:3px;
@@ -2820,6 +2858,12 @@
   font-family:var(--font);font-size:11.5px;font-weight:400;
   letter-spacing:0.06em;line-height:1.3;color:#b49a68}
 #pane-ledger .pc-topic-dash{margin-right:5px}
+/* A topic gone from the portal or moved to another call, struck through
+   where it stands as on the Board, the topic it moved to beside it. */
+#pane-ledger .pc-topic.pc-topic-gone{color:#d0907e;text-decoration:line-through;
+  text-decoration-thickness:1px}
+#pane-ledger .pc-topic-to{margin-left:8px;font-family:var(--font);font-size:11.5px;
+  letter-spacing:0.06em;color:var(--gold2)}
 #pane-ledger .pc-topic:hover{color:var(--gold2);text-decoration:underline;
   text-underline-offset:3px;text-decoration-thickness:1px}
 #pane-ledger .pc-topic:focus-visible{outline:1px solid currentColor;
@@ -3272,6 +3316,10 @@
 #pane-ledger .marker-range{display:flex;align-items:center;gap:4px;font-family:var(--font);font-size:10px;
   color:var(--text2);cursor:pointer}
 #pane-ledger .marker-range input{accent-color:var(--gold)}
+/* a key date copied from the Call Board says so, and how exactly the
+   Board knows it */
+#pane-ledger .mk-from{font-family:var(--body);font-style:italic;font-size:13px;color:var(--text2);
+  white-space:nowrap}
 /* ══ 16. THE DOSSIER ══
    A card unfolds downward like paper pulled open from its top edge. The
    height is animated with grid-template-rows 0fr→1fr — that is what pushes

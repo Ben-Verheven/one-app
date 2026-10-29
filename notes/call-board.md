@@ -205,12 +205,42 @@ and in the Horizon check's own file; what Mark chose:
   own id finds nothing too; and a title reused in next year's call is no
   move, so a topic has moved only when its namesake is new to the portal.
 
-## Still to build, agreed 2026-10-24, in this order
+## The Ledger takes any call (built 2026-10-29)
 
-1. **The Ledger**: a project, and a call chip on the beam, picks any call
-   on the Board; its dates come in as key dates, and a date that changes
-   later is offered there, moving the todos tied to it.
-2. **The Topic Atlas inside the Board**: a Topics | Atlas switch by the
+The second phase agreed on 2026-10-24, drawn on the canvas named above
+(section 7) and chosen there. How it works is at THE CALL BOARD'S CALLS in
+ledger.js; what Mark chose:
+
+- **The programme picks Horizon topics only, every other call the arenas'
+  calls only** (JU, CoFund, CoProg, OTHER; never a cluster's or mission's,
+  which are topics), in the topic's own box, the dates it brings said
+  under it before Save.
+- **The tie is the Ledger call's** (7.1 A), picked in Edit call or from
+  any of its projects' editors, whose box says it ties the whole call;
+  chosen over a Board call on every project. + Project's new call can
+  start from one, named after it.
+- **The Board's dates take the place of the call's own of the same kind**
+  (the same name, the one opening, the one deadline, a stage of the same
+  number), and what was tied to those moves with the Board's; anything
+  less plain stays, to be taken off by hand. Not asked; said under the
+  box before Save.
+- **A date known only to its month or quarter comes in that way**, ≈ and
+  all, never as a made-up day, and a todo tied to it counts from the
+  first day it can fall on (7.2 A), chosen over the last.
+- **A change is offered, never made** (7.3 C): on the card where the date
+  stands, glowing until answered, and counted in brass on the beam, whose
+  list leads to the card; chosen over either alone. Take moves the key
+  date and its tied todos, with Undo; Keep is asked again only when the
+  Board changes once more. A date the Board adds or drops is offered too.
+  A topic gone or moved is struck through on the card, as on the Board;
+  a moved one is followed with its dates, its todos tied to the new
+  topic's.
+- **Text ↗ on the call** opens its kept text in the Board's reader, lent
+  over the Ledger.
+
+## Still to build, agreed 2026-10-24
+
+1. **The Topic Atlas inside the Board**: a Topics | Atlas switch by the
    search box, the Atlas's way of searching over every call, Horizon and
    beyond. A plain program as Mark wants it, filters folded behind one
    button, the tuning left on its defaults. COPROG's rows then become the
