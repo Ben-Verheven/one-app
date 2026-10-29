@@ -16,7 +16,7 @@ This clone is the only copy worked on. Pages serves only main, so work pushed an
 
 Commit as `Ben-Verheven <299968296+Ben-Verheven@users.noreply.github.com>`. The account refuses pushes that carry a private email.
 
-Don't read the three files in one-app/data/, or the Topic Atlas's `ta-data` line and its library.js: each is one line of raw data, megabytes long, with nothing in it to learn. First 300 characters if you need the shape. The OneDrive way, a whole read ends the session. Here the tools cut it off first (notes/working-here.md), so a slip wastes a little room and nothing more.
+Don't read the three files in one-app/data/, or the Topic Atlas's topics.js and library.js: each is one line of raw data, megabytes long, with nothing in it to learn. First 300 characters if you need the shape. The OneDrive way, a whole read ends the session. Here the tools cut it off first (notes/working-here.md), so a slip wastes a little room and nothing more.
 
 Before touching a part, read its note: notes/INDEX.md lists them, one line each. They hold the bugs already paid for and the design choices I made, which nothing else records.
 
@@ -46,7 +46,7 @@ Run `python3 tools/finish.py`: indexes, lint, and every room asked whether it st
 
 ## Going back to OneDrive (only when I ask)
 
-Copy the repository's one-app/, tools/ and documents into my folder one-app-source-cowork. Then close it there the OneDrive way: finish.py builds in a folder without .git. The project instructions for that way are in one-app-source-cowork/Claude outputs/project-instructions-onedrive.txt.
+Copy the repository's one-app/, topic-atlas/, tools/ and documents into my folder one-app-source-cowork. Then close it there the OneDrive way: finish.py builds in a folder without .git. The project instructions for that way are in one-app-source-cowork/Claude outputs/project-instructions-onedrive.txt.
 
 ## Notes, not memory
 

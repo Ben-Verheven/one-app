@@ -204,6 +204,7 @@ function selectArenaTab(key, openId){
   afterSelect();
 }
 function afterSelect(){
+  if(TA.on) taSet(false,true);
   document.getElementById('ovbar').classList.toggle('on', MODE==='overview');
   document.getElementById('hdr').classList.toggle('arena', MODE==='arena');
   document.getElementById('q').placeholder=MODE==='arena'?'Search arenas and calls…':'Search topic ID or title…';
@@ -334,13 +335,15 @@ function readArenas(){
   try{ list=(ARENA_SRC&&ARENA_SRC.list())||[]; }catch(e){ console.error(e); list=[]; }
   try{ FROZEN=(ARENA_SRC&&ARENA_SRC.frozen&&ARENA_SRC.frozen())||[]; }catch(e){ console.error(e); FROZEN=[]; }
   const before=new Map(APAGES.map(p=>[p.key,p.state]));
-  APAGES=TYPE_TABS.map(t=>({key:t.key,label:t.full,full:t.full,clusterColor:t.color,arena:true,unit:'calls',
-    arenas:[],calls:[],callById:{},families:[],destinations:[],meta:{},nTopics:0,
+  APAGES=TYPE_TABS.map(t=>({key:t.key,label:t.full,full:t.full,clusterColor:t.color,arena:true,unit:t.key==='CoProg'?'topics':'calls',
+    arenas:[],calls:[],trows:t.key==='CoProg'?[]:null,callById:{},families:[],destinations:[],meta:{},nTopics:0,
     state:before.get(t.key)||{sel:new Set(),selTopicCall:null,q:'',type:null,closed:new Set()}}));
   const q=(PAGES[0]&&PAGES[0].state.q)||'';
+  COPROG_RUNS=[]; Object.keys(COPROG_OF).forEach(k=>delete COPROG_OF[k]);
   list.forEach(a=>{
     const tt=tabOfType(a.type); if(!tt) return;
-    arenaCalls(APAGES.find(x=>x.key===tt.key),a);
+    const p=APAGES.find(x=>x.key===tt.key);
+    if(p.trows) coprogTopics(p,a); else arenaCalls(p,a);
   });
   /* the Freezer holds every arena put away, Pillar 2's too, each type's
      together in the order they first come */
@@ -350,7 +353,7 @@ function readArenas(){
   const tyOrder=[...new Set(FROZEN.map(a=>a.type||''))];
   FROZEN.slice().sort((x,y)=>tyOrder.indexOf(x.type||'')-tyOrder.indexOf(y.type||'')).forEach(a=>arenaCalls(FZ,a));
   FZ.nTopics=FZ.calls.length; FZ.state.q=q;
-  APAGES.forEach(p=>{ p.nTopics=p.calls.length; p.state.q=q; });
+  APAGES.forEach(p=>{ p.nTopics=p.calls.length+(p.trows||[]).length; p.state.q=q; });
   ACALLS=APAGES.flatMap(p=>p.calls);     /* the Freezer's stay out of All and the searches */
   APAGES.forEach(p=>{ if(!OV.known.has(p.key)){ OV.known.add(p.key); OV.clusters.add(p.key); } });
   buildArenaTabs();
@@ -378,6 +381,63 @@ function arenaCalls(p,a){
     p.calls.push(c); p.callById[c.id]=c;
   });
 }
+/* ---------- CoProg: the partnerships' own Horizon topics ----------
+   A co-programmed partnership's calls are Horizon topics, so its rows on
+   the CoProg tab are those topics, each with the cluster call it sits in,
+   drawn at that call's dates as the Work Programme and the Horizon check
+   have them (Mark, 2026-10-29, canvas 8.4). Before, they were the dates
+   ChatGPT's search found for the cluster calls named after each
+   partnership; those left the tab, and the search stopped looking for
+   them (GPT_HORIZON in semaphore.js). The Ledger can still tie a call to
+   one of them (COPROG_RUNS), so no tie made before is lost.
+
+   A topic is a partnership's when the Work Programme's own sentence says
+   so, "This topic implements the co-programmed European Partnership on
+   …" or lies "within the scope of" it, naming the partnership by its name
+   on the Semaphore or the short name in its brackets, commas and capitals
+   aside ("AI, data, and robotics" is "AI, Data and Robotics"). Mark chose
+   that over the name anywhere in the topic, measured on 2026-10-29: the
+   sentence found 66 topics, none stray, where the name anywhere brought
+   photonics as one item of a list of manufacturing techniques and
+   textiles in waste topics. A partnership the Work Programme spells
+   otherwise (Textiles for the Future, not "of") finds nothing until its
+   name on the Semaphore is the Work Programme's. Only topics whose call
+   is still open or to come stand on the tab. */
+let COPROG_SENT=null, COPROG_RUNS=[];
+const COPROG_OF={};          /* a topic's id → the partnerships it is, for the Atlas's filter */
+const wordsOf=s=>' '+(String(s||'').toLowerCase().match(/[a-z0-9]+/g)||[]).join(' ')+' ';
+function coprogIds(a){
+  if(!COPROG_SENT){
+    COPROG_SENT={};
+    Object.keys(TOPIC_BY_ID).forEach(id=>{
+      COPROG_SENT[id]=(TOPIC_BY_ID[id].topic.title+'. '+descText(id)).split(/[.;]\s+/)
+        .filter(z=>/co.?programmed/i.test(z)&&/partnership/i.test(z)).map(wordsOf);
+    });
+  }
+  const n=String(a.name||'');
+  const forms=[n.replace(/\s*\([^)]*\)/g,'')].concat((n.match(/\(([^)]+)\)/g)||[]).map(x=>x.slice(1,-1))).map(wordsOf).filter(f=>f.trim());
+  return Object.keys(COPROG_SENT).filter(id=>COPROG_SENT[id].some(z=>forms.some(f=>z.includes(f))));
+}
+function coprogTopics(p,a){
+  p.arenas.push(a);
+  /* its own runs, kept for the Ledger's picker and a text's call */
+  const own={key:p.key,label:p.label,arenas:[],calls:[],callById:{}};
+  arenaCalls(own,a); COPROG_RUNS.push(...own.calls);
+  const tone=toneOf(a), ink=readableInk(mixHex(tone,'#2C2418',.45),PAPER), today=todayISO();
+  const ids=coprogIds(a);
+  ids.forEach(id=>(COPROG_OF[id]=COPROG_OF[id]||[]).push(a.id));
+  ids.map(id=>TOPIC_BY_ID[id]).filter(x=>((x.call.twoStage&&x.call.d2)||x.call.d1||'')>=today)
+    .sort((x,y)=>(x.call.d1||'').localeCompare(y.call.d1||'')||x.topic.id.localeCompare(y.topic.id))
+    .forEach(({topic,call},i)=>{
+      const near=mixHex(tone,PAPER,nearness({dls:[{start:call.d1,gran:'day'}]}));
+      p.trows.push({id:'coprog:'+a.id+':'+topic.id, arena:a, arenaId:a.id, topicId:topic.id, hcall:call,
+        run:{names:[topic.title],fresh:false,was:[]}, first:i===0, short:tagName(a.name), name:topic.title,
+        color:a.frozenAt?mixHex(near,FROST,.5):near, ink, cluster:p.key, clusterLabel:p.label, nTopics:0, budget:0,
+        opening:call.opening, d1:call.d1, d2:call.twoStage?call.d2:null, twoStage:!!call.twoStage});
+    });
+}
+/* the cluster call's own chip, before a partnership's topic */
+const hccHTML=c=>`<span class="hcc" style="background:${c.hcall.color};color:${fg(c.hcall)}" title="${attr(c.hcall.id)}">${esc(c.hcall.short)}</span>`;
 function buildArenaTabs(){
   const row=rowOf('ar'); row.innerHTML='';
   /* and a tab with none yet while a new arena of its type is judged there */
@@ -396,7 +456,7 @@ function buildArenaTabs(){
 }
 /* the socket the bridge fills, and again on every change on the other side */
 function arenasArrived(){
-  readArenas(); readFinds();
+  readArenas(); readFinds(); taStale();
   /* While judging, a change made elsewhere on the board is drawn where
      Mark is. Every save went to the find's tab, so Seen pressed on another
      tab's glowing call, straight after ChatGPT's answer was put on the
@@ -478,12 +538,28 @@ function arenaChartRow(c,a){
   r.addEventListener('mouseleave',()=>showCard([]));
   return r;
 }
+/* A co-programmed partnership's topic (see "CoProg"): its tag opens the
+   partnership where it stands, as an arena's call does; the rest of the
+   row reads the topic, as a Horizon topic's row does. */
+function topicChartRow(c,a){
+  const r=document.createElement('div');
+  r.className='crow arow'+(c.first?' afirst':''); r.tabIndex=0; r.setAttribute('role','button');
+  r.dataset.call=c.id; r.dataset.arena=a.id; r.dataset.search=(a.name+' '+c.topicId+' '+c.name).toLowerCase();
+  r.title=a.name+' — '+c.topicId+' — '+c.name;
+  r.innerHTML=`<span class="lbl">${tagHTML(a,c,c.short)}<span class="nm">${hccHTML(c)}${esc(c.name)}</span></span><span class="track">${barsHTML(c,X,c.color,c.ink,true)}</span>`;
+  r.querySelector('.achip').addEventListener('click',e=>{ e.stopPropagation(); openArena(a.id); });
+  const act=()=>openReader(c.topicId);
+  r.addEventListener('click',act);
+  r.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();act();}});
+  return r;
+}
 /* An arena whose calls are not on the Semaphore's board yet still stands,
    so its absence from the chart says something. */
-function arenaEmptyRow(a){
+function arenaEmptyRow(a,say){
+  say=say||'no call dates on the board yet';
   const r=document.createElement('div'); r.className='crow arow afirst'; r.tabIndex=0; r.setAttribute('role','button');
-  r.dataset.arena=a.id; r.dataset.search=a.name.toLowerCase(); r.title=a.name+' — no call dates on the board yet';
-  r.innerHTML=`<span class="lbl">${tagHTML(a,null,tagName(a.name))}<span class="nm anone">no call dates on the board yet</span></span><span class="track"></span>`;
+  r.dataset.arena=a.id; r.dataset.search=a.name.toLowerCase(); r.title=a.name+' — '+say;
+  r.innerHTML=`<span class="lbl">${tagHTML(a,null,tagName(a.name))}<span class="nm anone">${esc(say)}</span></span><span class="track"></span>`;
   thawButton(r,a);
   r.addEventListener('click',()=>openArena(a.id));
   r.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openArena(a.id);}});
@@ -536,7 +612,8 @@ function arenaOpenBlock(a,calls){
   calls.forEach(c=>{
     const r=document.createElement('div'); r.className='crow aorow'+(c.run.fresh?' fresh':''); r.dataset.call=c.id;
     r.title=a.name+' — '+c.run.names.join(', ')+(c.run.was.length?'\n'+c.run.was.join('; '):'');
-    r.innerHTML=`<span class="lbl">${tagHTML(a,c,c.short)}<span class="nm">${esc(c.name)}</span></span><span class="track">${barsHTML(c,X,c.color,c.ink,true)}</span>`;
+    r.innerHTML=`<span class="lbl">${tagHTML(a,c,c.short)}<span class="nm">${c.topicId?hccHTML(c):''}${esc(c.name)}</span></span><span class="track">${barsHTML(c,X,c.color,c.ink,true)}</span>`;
+    if(c.topicId){ r.addEventListener('click',()=>openReader(c.topicId)); blk.appendChild(r); return; }
     const t=keptText(c);
     if(t){
       const tb=document.createElement('button'); tb.className='vbtn tbtn'; tb.textContent='▤ Text';
@@ -572,11 +649,11 @@ function buildArenaRows(rowsEl){
       ty=a.type||'';
       rowsEl.insertAdjacentHTML('beforeend',`<div class="tyh" style="--ty:${attr(a.tone||'#9C8B66')}" data-ty="${attr(ty)}"><i></i>${esc(ty||'No type')}</div>`);
     }
-    const calls=P.calls.filter(c=>c.arenaId===a.id);
+    const calls=P.calls.concat(P.trows||[]).filter(c=>c.arenaId===a.id);
     const add=el=>{ if(types.size>1){ el.classList.add('typed'); el.style.setProperty('--ty',a.tone||'#9C8B66'); el.dataset.ty=ty; } rowsEl.appendChild(el); };
     if(P.state.openArena===a.id) add(arenaOpenBlock(a,calls));
-    else if(!calls.length) add(arenaEmptyRow(a));
-    else calls.forEach(c=>add(arenaChartRow(c,a)));
+    else if(!calls.length) add(arenaEmptyRow(a,P.trows?'no topic of the Work Programme names it':null));
+    else calls.forEach(c=>add(c.topicId?topicChartRow(c,a):arenaChartRow(c,a)));
   });
 }
 
@@ -780,7 +857,7 @@ const keptText=c=>callTexts().find(t=>t.status==='kept'&&textFits(t,c))||null;
 /* the texts waiting, as finds in the tab of their arena */
 function textFinds(){
   const arenas=APAGES.flatMap(p=>p.arenas).concat(FZ?FZ.arenas:[]);
-  const calls=ACALLS.concat(FZ?FZ.calls:[]);
+  const calls=ACALLS.concat(FZ?FZ.calls:[],COPROG_RUNS);
   return callTexts().filter(t=>t.status==='new').map(t=>{
     const c=calls.find(x=>textFits(t,x))||null, a=c?c.arena:arenas.find(x=>x.id===t.arena_id);
     const tt=a&&tabOfType(a.type);
@@ -1057,7 +1134,7 @@ function barsHTML(c,X,col,ink,withOpen){
 function buildTimeline(){
   document.getElementById('tl').classList.remove('ov','windowed');
   /* a tab whose arenas have no dates yet still gets an axis: the year round today */
-  const dates=P.calls.flatMap(callDates).sort();
+  const dates=P.calls.concat(P.trows||[]).flatMap(callDates).sort();
   if(!dates.length){ const t=todayISO(); dates.push(t.slice(0,4)+'-01-01',t.slice(0,4)+'-12-31'); }
   const first=d3(dates[0]), last=d3(dates[dates.length-1]);
   T0=new Date(first.getFullYear(), first.getMonth(), 1);
@@ -1885,6 +1962,680 @@ function paintOv(quick){
   document.getElementById('famkey').innerHTML='';
 }
 
+/* ===================== the Topic Atlas inside the Board =====================
+   Topics | Atlas, beside the box (Mark, agreed 2026-10-24, built
+   2026-10-29; drawn on the canvas "The Call Board, Grown", section 8).
+   Switched to Atlas, what is typed becomes keywords, each given with Enter
+   as in the Topic Atlas, read as the Topic Atlas reads them, and every call
+   is searched whichever tab is open: the Horizon topics, and the arenas'
+   calls whose official text is kept. The Horizon topics are the Topic
+   Atlas's own, its texts checked against the portal and the ideas its
+   build found in them, and the ranking is its own engine with its
+   libraries: the files its page reads (topic-atlas/topics.js,
+   textutil.js, scorer.js and library.js), so a keyword ranks the topics
+   here as it does there. The Board's own copies of the texts were tried
+   first and were not good enough: one topic's carried another topic's
+   text, which the Topic Atlas had put right, and it came fourth for
+   "digital twin" and "manufacturing". The results are drawn as the Topic Atlas draws them, adjusted
+   to the Board (Mark, 8.5): its card at the full width, because in the
+   sheet's half its lines were cut and the label where the keywords meet
+   spilled over the chart; the call's chip on each card; and over them a
+   strip of when, each result a numbered dot at its deadline, which brings
+   its card into view. Of its rail only the filters stay, folded behind one
+   Filters button, and the tuning stays on the Topic Atlas's defaults with
+   no control for it (Mark, 2026-10-24). A plain program, as Mark wants it:
+   nothing here asks Claude what a text means.
+
+   The four files are fetched the first time the switch is used, as plain
+   scripts beside the app, never at load: the topics alone are five
+   megabytes, and a copy of the app without the folder topic-atlas (the
+   OneDrive one, the single-file build) still starts, and says so here.
+   An arena's call text is not in the Topic Atlas, so which idea it names
+   is read here, once: the longest of an idea's names that starts at a
+   word wins, in the three spellings Mark's Place reads with. A tab
+   pressed leaves Atlas for that tab; the keywords stay, on this device,
+   for the next time. */
+const TA={on:false,chips:[],off:{},filt:{when:'upcoming',until:'',where:[],types:[]},fopen:false,
+  loading:false,failed:false,shown:40,expanded:new Set(),openSnips:new Set(),openNbrs:new Set(),last:null,
+  LIB:null,TU:null,C:null,FIND:null,HZR:null,R:null,S:null,stats:null};
+const TAKEY='callboard.atlas';
+try{
+  const s=JSON.parse(localStorage.getItem(TAKEY)||'null');
+  if(s){
+    if(Array.isArray(s.chips)) TA.chips=s.chips.filter(x=>typeof x==='string');
+    if(s.off&&typeof s.off==='object') TA.off=s.off;
+    if(s.filt&&typeof s.filt==='object') Object.assign(TA.filt,s.filt);
+  }
+}catch(e){ /* storage unavailable: start fresh */ }
+function taSave(){ try{ localStorage.setItem(TAKEY,JSON.stringify({chips:TA.chips,off:TA.off,filt:TA.filt})); }catch(e){} }
+const TAFILES={'library.js':'TOPIC_LIBRARY','textutil.js':'TextUtil','scorer.js':'Scorer','topics.js':'TOPIC_ATLAS_DATA'};
+const taCan=()=>Object.values(TAFILES).every(k=>!!window[k]);
+/* the Topic Atlas's files, one after another, each as a plain script */
+function taLoad(done){
+  if(taCan()||TA.failed) return done();
+  if(TA.loading) return;
+  TA.loading=true;
+  const files=Object.keys(TAFILES).filter(f=>!window[TAFILES[f]]);
+  const next=()=>{
+    const f=files.shift();
+    if(!f){ TA.loading=false; TA.failed=!taCan(); return done(); }
+    const el=document.createElement('script'); el.src='../topic-atlas/'+f;
+    el.onload=next;
+    el.onerror=()=>{ TA.loading=false; TA.failed=true; done(); };
+    document.body.appendChild(el);
+  };
+  next();
+}
+const TASECS=['title','outcome','scope','intro'];
+const TASEC={title:['T','Title'],outcome:['O','Expected Outcome'],scope:['S','Scope'],intro:['I','Where it sits']};
+const TAAXN={method:'method / expertise',domain:'application domain',text:'the words themselves'};
+const TARELN={broader:'broader',narrower:'narrower',related:'related'};
+const TALVL={title:'both in the title',joined:'joined',same:'same sentence',next:'next sentence'};
+const TALVLT={title:'the title names both: counts as joined',joined:'joined: one sentence, few words between, not two items of a list',
+  same:'in the same sentence, not joined',next:'in the next sentence'};
+const TAEX=['digital twins','batteries','machine learning, healthcare','climate adaptation','cybersecurity','photonics','process mining'];
+const taF2=x=>(+x).toFixed(2);
+const taG=()=>window.Scorer||{MTG:{},MTT:{},RELG:{},DEFAULTS:{step:{},weights:{},cap:2}};
+
+/* the ideas a text is read for: each name an idea is found by, three
+   ways, as Mark's Place reads them (`vocab` there): as words made singular,
+   as written for a name marked "=" in the library (arts is not art), and
+   in capitals for an acronym (ML, LCA, EV) */
+function taInit(){
+  if(TA.FIND) return true;
+  if(!taCan()) return false;
+  const L=window.TOPIC_LIBRARY; TA.LIB=L;
+  TA.TU=window.TextUtil.make((L.methods.meta||{}).irregular||{});
+  TA.C=new Map(); [L.methods,L.domains].forEach(lib=>lib.concepts.forEach(c=>TA.C.set(c.id,c)));
+  const F={n:{},l:{},c:{}};
+  TA.C.forEach(c=>(c.extract||[]).concat(c.added||[]).forEach(a=>{
+    let mode='n', k;
+    if(a[0]==='='){ mode='l'; k=TA.TU.tokens(a.slice(1)).map(t=>t.l); }
+    else if(/^[A-Z0-9][A-Z0-9\-]{1,7}s?$/.test(a)&&/[A-Z]/.test(a)){ mode='c'; k=TA.TU.tokens(a).map(t=>t.c); }
+    else k=TA.TU.tokens(a).map(t=>t.n);
+    if(!k.length) return;
+    const list=F[mode][k[0]]||(F[mode][k[0]]=[]), key=k.join(' ');
+    const had=list.find(x=>x.key===key);
+    if(had){ if(!had.ids.includes(c.id)) had.ids.push(c.id); } else list.push({key,k,ids:[c.id]});
+  }));
+  TA.FIND=F;
+  return true;
+}
+/* one record's ideas, each with the places it is named, in the shape the
+   Topic Atlas's records carry them */
+function taConcepts(sections){
+  const out=new Map();
+  TASECS.forEach(sec=>(sections[sec]||[]).forEach((para,p)=>{
+    const tk=TA.TU.tokens(para.text);
+    for(let i=0;i<tk.length;i++){
+      let best=null;
+      for(const mode of ['n','l','c']) for(const x of TA.FIND[mode][tk[i][mode]]||[]){
+        if((best&&x.k.length<=best.k.length)||i+x.k.length>tk.length) continue;
+        let ok=true;
+        for(let j=1;j<x.k.length;j++) if(tk[i+j][mode]!==x.k[j]){ ok=false; break; }
+        if(ok) best=x;
+      }
+      if(!best) continue;
+      const s=tk[i].s, e=tk[i+best.k.length-1].e;
+      best.ids.forEach(c=>{
+        const key=c+'|'+sec;
+        const o=out.get(key)||out.set(key,{c,axis:TA.C.get(c).axis,sec,n:0,hits:[]}).get(key);
+        o.n++; o.hits.push({p,s,e,ph:para.text.slice(s,e)});
+      });
+      i+=best.k.length-1;
+    }
+  }));
+  return [...out.values()];
+}
+const taPara=t=>({text:String(t),boiler:[]});
+/* The Topic Atlas's topics, unpacked as its page unpacks them (they travel
+   compact), each joined to the Board's own topic and call, whose dates the
+   nightly Horizon check keeps; a topic the Board lacks keeps the Topic
+   Atlas's. Unpacked once, then kept. */
+function taHorizon(){
+  if(TA.HZR) return TA.HZR;
+  TA.HZR=window.TOPIC_ATLAS_DATA.topics.map(t=>{
+    const sections={};
+    TASECS.forEach(sec=>{
+      const b=(t.b&&t.b[sec])||[];
+      sections[sec]=(t.s[sec]||[]).map((text,p)=>({text,boiler:b.filter(x=>x[0]===p).map(x=>[x[1],x[2]])}));
+    });
+    const concepts=t.k.filter(([c])=>TA.C.has(c)).map(([c,si,n,flat])=>{
+      const sec=TASECS[si], hits=[];
+      for(let i=0;i<flat.length;i+=3) hits.push({p:flat[i],s:flat[i+1],e:flat[i+2],ph:sections[sec][flat[i]].text.slice(flat[i+1],flat[i+2])});
+      return {c,axis:TA.C.get(c).axis,sec,n,hits};
+    });
+    const f=t.f, b=TOPIC_BY_ID[t.id], fc=f.call||{};
+    const call=b?b.call:{id:fc.id||'',short:shortTopicId(fc.id||''),color:NO_TONE,ink:'#2C2418',
+      opening:fc.opening,d1:fc.deadline,d2:fc.deadline2,twoStage:!!fc.twoStage};
+    return {id:t.id,kind:'topic',title:t.title,f,board:b?b.topic:null,call,sections,concepts,
+      extra:t.x||[],conds:t.ct||[],cancelled:!!(f.status&&f.status.cancelled)};
+  });
+  return TA.HZR;
+}
+/* An arena's call with its official text kept: the text's sections as the
+   Topic Atlas's parts, those about what is expected as its Expected
+   Outcome and the rest as its Scope, the order and headings kept for the
+   reader. The Freezer's stay out, as from every search on the Board. */
+function taArenas(){
+  const out=[];
+  ACALLS.forEach(c=>{
+    const t=keptText(c); if(!t) return;
+    const sections={title:[taPara(t.title||c.name)],outcome:[],scope:[],intro:[]}, disp=[];
+    (t.sections||[]).forEach(x=>{
+      const sec=/outcome|objective|impact|expected/i.test(x.h||'')?'outcome':'scope';
+      (x.p||[]).forEach(p=>{ disp.push({h:x.h||'',sec,i:sections[sec].length}); sections[sec].push(taPara(p)); });
+    });
+    out.push({id:c.id,kind:'call',title:t.title||c.name,c,t,disp,sections,concepts:taConcepts(sections)});
+  });
+  return out;
+}
+/* the engine over every record, made again when the arenas or their texts
+   change; a concept's rarity is counted over these records */
+function taEngine(){
+  if(TA.S) return TA.S;
+  if(!taInit()) return null;
+  const H=taHorizon(), A=taArenas(), R=H.concat(A);
+  /* rarity as the Topic Atlas counts it, its call texts added */
+  const df=Object.assign({},window.TOPIC_ATLAS_DATA.stats.df);
+  A.forEach(r=>new Set(r.concepts.map(o=>o.c)).forEach(c=>{ df[c]=(df[c]||0)+1; }));
+  TA.R=R; TA.stats={N:window.TOPIC_ATLAS_DATA.stats.N+A.length,df};
+  TA.S=window.Scorer.create({libraries:TA.LIB,stats:TA.stats,records:R},TA.TU);
+  return TA.S;
+}
+function taStale(){ TA.S=null; TA.R=null; if(TA.on) taRender(); }
+
+/* where a record stands: its tab or tabs (a co-programmed partnership's
+   topic is in its cluster's and in CoProg), its type, its first deadline,
+   and whether it is closed (the portal no longer having a topic closes it) */
+const taTabs=r=>r.kind==='topic'?[r.board?r.board.page.key:r.f.part.key].concat(COPROG_OF[r.id]?['CoProg']:[]):[r.c.cluster];
+const taDl=r=>r.kind==='topic'?r.call.d1:(r.c.d1||null);
+const taGone=r=>{ if(r.kind!=='topic') return false; const h=HZ.rows.get(r.id); return r.cancelled||(!!h&&h.diff==='gone'); };
+const taClosed=r=>taGone(r)||(!!taDl(r)&&taDl(r)<todayISO());
+const TAPRED={
+  when:r=>TA.filt.when==='all'||!taClosed(r),
+  until:r=>!TA.filt.until||(!!taDl(r)&&taDl(r)<=TA.filt.until),
+  where:r=>!TA.filt.where.length||taTabs(r).some(k=>TA.filt.where.includes(k)),
+  types:r=>!TA.filt.types.length||(r.kind==='topic'&&TA.filt.types.includes((r.f.actionType||{}).code||''))};
+const taPasses=(r,except)=>Object.keys(TAPRED).every(k=>k===except||TAPRED[k](r));
+const taFiltN=()=>[TA.filt.when!=='upcoming',!!TA.filt.until,TA.filt.where.length>0,TA.filt.types.length>0].filter(Boolean).length;
+
+/* ── the page of results ── */
+function taRender(){
+  const el=document.getElementById('taview'), cnt=document.getElementById('count');
+  taFiltersPaint();
+  if(!taCan()){
+    cnt.textContent='';
+    if(TA.failed){ el.innerHTML='<div class="taempty"><h2>The Topic Atlas is not beside the app.</h2><p>The switch reads with the Topic Atlas’s own files, in the folder topic-atlas beside one-app. This copy of the app has none.</p></div>'; return; }
+    el.innerHTML='<div class="taempty"><h2>Reading the Topic Atlas…</h2></div>';
+    taLoad(()=>{ if(TA.on) taRender(); });
+    return;
+  }
+  if(!TA.chips.length){
+    TA.last=null; cnt.textContent='';
+    const n=ACALLS.filter(c=>keptText(c)).length;
+    el.innerHTML=`<div class="taempty"><h2>Which calls fit a researcher?</h2>
+      <p>Type what the researcher works on — a method, an application, a technology — and press <b>Enter</b>, each keyword in turn. Every keyword has to be answered.</p>
+      <p>Each keyword is read as ideas from the Topic Atlas’s two libraries, <span class="cnode a-method">methods &amp; expertise</span> and <span class="cnode a-domain">application domains</span>, and every call is searched, whichever tab is open: the Topic Atlas’s ${window.TOPIC_ATLAS_DATA.topics.length} Horizon topics, and the arenas’ calls whose official text is kept (${n} now). A topic’s code pins that topic.</p>
+      <div class="sugg">${TAEX.map(s=>`<button class="chip" data-try="${attr(s)}">${esc(s)}</button>`).join('')}</div></div>`;
+    taWire(el,null); return;
+  }
+  const S=taEngine(), R=TA.R;
+  const res=S.search(TA.chips,{off:TA.off}); TA.last=res;
+  const all=res.list, list=all.filter(e=>taPasses(R[e.ti]));
+  const closedHidden=TA.filt.when==='upcoming'?all.filter(e=>taClosed(R[e.ti])&&taPasses(R[e.ti],'when')).length:0;
+  const other=all.length-list.length-closedHidden;
+  let h=`<div class="tamap">${taMappingHTML(res)}</div>`;
+  h+=`<div class="rescount"><span>${all.length} reached${TA.chips.length>1?' (every keyword required)':''}</span>`
+    +(closedHidden?`<span>· ${closedHidden} closed <button class="act" data-showclosed>show them</button></span>`:'')
+    +(other>0?`<span>· ${other} outside the filters</span>`:'')+`</div>`;
+  if(!list.length){
+    h+='<div class="taempty"><h2>Nothing to show.</h2>'+(!all.length
+      ?(res.perChip.some(pc=>!pc.entries.length&&!pc.codes.length&&!pc.text)
+        ?'<p>A keyword found nothing — the line above says what it might have meant.</p>'
+        :`<p>Every keyword was read, but no call answers all of them${TA.chips.length>1?'. Remove one, or switch a reading back on in the line above':''}.</p>`)
+      :`<p>The filters hide all ${all.length}. <button class="sbtn" data-freset>clear the filters</button></p>`)+'</div>';
+  } else {
+    const shown=list.slice(0,TA.shown), maxScore=Math.max(...list.map(e=>e.score),1e-9), sw=taSectionWidths(shown);
+    h+=taWhenHTML(shown);
+    h+=`<div class="taresults" style="--ww:${sw.ww}px;--mw:${sw.mw}px">${shown.map((e,i)=>taCardHTML(e,i+1,maxScore,res)).join('')}`
+      +(list.length>TA.shown?`<div style="margin:8px 4px"><button class="sbtn" data-moreres>show ${Math.min(40,list.length-TA.shown)} more</button> <span class="hint">of ${list.length-TA.shown} further down</span></div>`:'')+`</div>`;
+  }
+  el.innerHTML=h;
+  cnt.textContent=list.length?`${list.length} found · every tab`:'';
+  taWire(el,res);
+}
+
+/* how each keyword was read: its ideas, any switched off, the ideas one
+   step away; one no idea answers is looked for as its words */
+function taCnode(id,landing,extra){
+  const c=TA.C.get(id);
+  return `<span class="cnode a-${c.axis}${landing?' landing':''}${extra||''}" title="${attr(taConceptTitle(id))}">${esc(c.label)}</span>`;
+}
+function taConceptTitle(id){
+  const c=TA.C.get(id); if(!c) return '';
+  const an=c.anchors||{}, anch=[...(an.msc||[]),...(an.ccs||[]),...(an.arxiv||[])].slice(0,4).join(' · ');
+  const df=TA.stats.df[id]||0;
+  return `${TAAXN[c.axis]} concept · named in ${df} of ${TA.stats.N} texts here (idf ${taF2(TA.S.idf(id))})`+(anch?` · ${anch}`:'')+(c.note?` — ${c.note}`:'');
+}
+function taMappingHTML(res){
+  const G=taG();
+  return res.perChip.map((pc,ci)=>{
+    let h=`<div class="maprow"><span class="q">${esc(pc.q)}</span><span class="arrow">→</span>`;
+    if(pc.entries.length){
+      h+=pc.entries.map(e=>`<span class="ment" data-toggle="${ci}|${attr(e.c)}" title="${attr(G.MTT[e.mt]+(e.mt!=='exact'&&e.mt!=='alias'?` — via “${e.via}”`:'')+(e.off?' · switched off: click to use it again':' · click to switch this reading off'))}">`
+        +`<span class="pmt">${G.MTG[e.mt]}</span>${taCnode(e.c,true,e.off?' off':'')}`
+        +(e.mt!=='exact'&&e.mt!=='alias'?`<span class="via">via “${esc(e.via)}”</span>`:'')+`</span>`).join(' ');
+      const nb=pc.reachedList.filter(r=>r.d>0);
+      if(nb.length) h+=` <button class="more" data-nbrs="${ci}">${TA.openNbrs.has(ci)?'hide':'+'} ${nb.length} concept${nb.length===1?'':'s'} one step away</button>`;
+    } else if(pc.codes.length){
+      h+=`<span class="reach">topic code — ${pc.codes.length} topic${pc.codes.length===1?'':'s'} pinned to the top</span>`;
+    } else if(pc.text){
+      h+=`<span class="cnode a-text landing" title="${attr(G.MTT.text)}">¶ “${esc(pc.text.nm)}”</span><span class="reach">in neither library — the words themselves, found in ${pc.text.df} text${pc.text.df===1?'':'s'}</span>`;
+    } else {
+      const sug=TA.S.matchChip(pc.q,2).entries.slice(0,6);
+      h+=`<span class="reach" style="color:var(--danger)">no concept and no text answers this</span>`
+        +(sug.length?` <span class="reach">· did you mean</span> ${sug.map(e=>`<button class="chip" data-swap="${ci}" data-to="${attr(TA.C.get(e.c).label)}">${esc(TA.C.get(e.c).label)}</button>`).join(' ')}`:'');
+    }
+    h+='</div>';
+    if(TA.openNbrs.has(ci)&&pc.entries.length){
+      const st=G.DEFAULTS.step, nb=pc.reachedList.filter(r=>r.d>0).map(r=>({r,cost:r.path.reduce((f,s)=>f*st[s.rel],1)}))
+        .sort((a,b)=>b.cost-a.cost||TA.C.get(a.r.c).label.localeCompare(TA.C.get(b.r.c).label));
+      h+=`<div class="nbrs">${nb.map(({r,cost})=>`<span class="nb" title="${attr(r.path.map(s=>TARELN[s.rel]+(s.note?' — '+s.note:'')).join(' → '))}">`
+        +`<span class="prel">${r.path.map(s=>G.RELG[s.rel]).join('')}</span>${taCnode(r.c)}<span class="cost">×${taF2(cost)}</span></span>`).join('')}</div>`;
+    }
+    return h;
+  }).join('');
+}
+
+/* when: every result shown, a numbered dot at its first deadline, over the
+   months from the earliest of them (or today) to the last; a press brings
+   its card into view. An arena's call with no deadline yet stands where it
+   is expected, or opens; a date not yet known to the day wears a ring. */
+function taWhenHTML(list){
+  const pts=list.map((e,i)=>{
+    const r=TA.R[e.ti], c=r.kind==='topic'?r.call:r.c;
+    const at=r.kind==='topic'?c.d1:(c.d1||c.annEnd||c.opening);
+    return at?{i,r,c,at}:null;
+  }).filter(Boolean);
+  if(!pts.length) return '';
+  const today=todayISO(), ds=pts.map(p=>p.at).concat(today).sort();
+  const a=d3(ds[0]), z=d3(ds[ds.length-1]);
+  const T0=new Date(a.getFullYear(),a.getMonth(),1), T1=new Date(z.getFullYear(),z.getMonth()+1,1), W=T1-T0;
+  const Xs=s=>(d3(s)-T0)/W*100;
+  let ax='', gl='';
+  for(let d=new Date(T0); d<T1; d=new Date(d.getFullYear(),d.getMonth()+1,1)){
+    const x=(d-T0)/W*100, nx=(new Date(d.getFullYear(),d.getMonth()+1,1)-T0)/W*100, y=d.getMonth()===0;
+    gl+=`<span class="tgl${y?' y':''}" style="left:${x}%"></span>`;
+    ax+=y?`<i class="y" style="left:${(x+nx)/2}%">${d.getFullYear()}</i>`:`<i style="left:${(x+nx)/2}%">${MON[d.getMonth()][0]}</i>`;
+  }
+  const lanes=[]; let dots='';
+  pts.forEach(p=>{
+    const x=Xs(p.at);
+    let ln=0; while((lanes[ln]||[]).some(v=>Math.abs(v-x)<2.2)) ln++;
+    (lanes[ln]=lanes[ln]||[]).push(x);
+    const soft=p.r.kind==='call'&&!!(p.c.sD1||(!p.c.d1&&(p.c.sOpen||p.c.annEnd)));
+    const ink=p.r.kind==='topic'?fg(p.c):p.c.ink;
+    const when=p.r.kind==='topic'?'deadline '+dmy(p.at):(p.c.tagEnd||dmy(p.at));
+    dots+=`<button class="tdotn${soft?' soft':''}" data-go="${p.i+1}" style="left:${x}%;top:${26+ln*26}px;background:${p.c.color};color:${ink}" title="${attr((p.i+1)+' · '+p.r.title+' · '+when)}">${p.i+1}</button>`;
+  });
+  const t=Xs(today);
+  return `<div class="tawhen"><div class="tl-title">When · each result at its deadline, a press brings its card into view</div>`
+    +`<div class="tastrip" style="height:${26+lanes.length*26+4}px">${gl}<div class="tax">${ax}</div>`
+    +(t>=0&&t<=100?`<span class="ttoday" style="left:${t}%" title="today"></span>`:'')+dots+`</div></div>`;
+}
+
+/* one result, as the Topic Atlas's card: its rank, the call's chip, its
+   title (which opens the reader), the score split by part, the facts, and
+   each keyword's lines */
+function taWhen(r){
+  if(r.kind==='call'){
+    const c=r.c;
+    return c.d1||c.annEnd?(c.tagOpen&&!c.annEnd&&c.opening>todayISO()?`<span class="st-fc">opens ${esc(c.tagOpen)}</span>, `:'')+`deadline ${esc(c.tagEnd)}`:esc(c.tagEnd||'');
+  }
+  const c=r.call, two=c.twoStage?' (stage 1)':'', t=todayISO();
+  if(taGone(r)) return '<span class="closed">no longer on the portal</span>';
+  if(c.d1<t) return `<span class="closed">closed ${dmy(c.d1)}${two}</span>`;
+  if(c.opening>t) return `<span class="st-fc">opens ${dmy(c.opening)}</span>, deadline ${dmy(c.d1)}${two}`;
+  return `<span class="st-open">open</span>, deadline ${dmy(c.d1)}${two}`;
+}
+function taCardHTML(e,rank,maxScore,res){
+  const r=TA.R[e.ti];
+  const base=e.base!=null?e.base:e.score, F=e.near?e.near.F:1, scale=e.sum>0?base/maxScore/e.sum:0;
+  const segs=TASECS.map(s=>`<i class="s-${s}" style="width:${(e.bySec[s]*scale*100).toFixed(1)}%" title="${TASEC[s][1]}: ${taF2(e.bySec[s])}"></i>`).join('')
+    +(F!==1?`<i class="s-near" style="width:${((e.score-base)/maxScore*100).toFixed(1)}%" title="where your keywords meet: ×${taF2(F)}, +${taF2(e.score-base)}"></i>`:'');
+  let chip, facts;
+  if(r.kind==='topic'){
+    const f=r.f, at=f.actionType||{}, pp=(f.budget||{}).perProjectEURm;
+    chip=`<span class="cchip w" style="background:${r.call.color};color:${fg(r.call)}" title="${attr(r.call.id)}">${esc(r.call.short)}</span>`;
+    facts=[`<span class="code">${esc(shortTopicId(r.id))}</span>`,esc(f.part.label),f.destination?esc(f.destination):null,
+      at.code?`<span title="${attr(at.label||at.code)}">${esc(at.code)}</span>`:null,
+      pp?`€${pp[0]===pp[1]?+pp[0]:+pp[0]+'–'+(+pp[1])}M per project`:null,taWhen(r)];
+  } else {
+    chip=tagHTML(r.c.arena,r.c,r.c.short);
+    facts=[esc(r.c.arena.name),'its call text',taWhen(r)];
+  }
+  const meetRows=new Set(taMeetsOf(e).flatMap(({p})=>[p.m.ra,p.m.rb]));
+  const blocks=[];
+  res.perChip.forEach((pc,ci)=>{
+    const rows=e.chips[ci]||[], code=pc.codes.includes(e.ti);
+    if(!rows.length&&!code) return;
+    const key=e.ti+':'+ci, open=TA.expanded.has(key);
+    const shown=rows.map((rw,k)=>({rw,k})).filter(({rw,k})=>open||k<3||meetRows.has(rw));
+    blocks.push({ci,pc,rows:shown,n:rows.length,code,
+      more:shown.length<rows.length?`<button class="showmore" data-more="${key}">show all ${rows.length} lines ↓</button>`:''});
+  });
+  return `<div class="card" id="tacard${rank}"><div class="top"><span class="rank">${rank}</span>${chip}`
+    +`<span class="rname" data-read="${e.ti}">${esc(r.title)}</span>`
+    +`<span class="scorewrap"><span class="sbar" title="the score, split by the part of the text each line came from">${segs}</span><span class="snum">${e.score>0||!e.codeHit?taF2(e.score):'code'}</span></span></div>`
+    +`<div class="raffil">${facts.filter(Boolean).join(' · ')}</div><div class="paths">${blocks.length?taLinesHTML(e,blocks):''}</div></div>`;
+}
+
+/* ── the keywords' lines, as the Topic Atlas draws them ──
+   One grid per card. Each line: how the keyword matched → the ideas it went
+   through → the idea it landed on, then a dotted arrow to the words landed
+   upon, in a column as wide on every card; a line pressed shows its
+   sentence. Where two keywords meet, a bracket joins their words, how they
+   meet beside it, and a press shows that sentence. */
+const TAMEAS=document.createElement('canvas').getContext('2d');
+const taTextW=(s,font)=>{ TAMEAS.font=font; return Math.ceil(TAMEAS.measureText(s).width); };
+const TAFONT={c:'14.5px "Crimson Text", Georgia, serif',cl:'600 14.5px "Crimson Text", Georgia, serif',
+  w:'14px "Crimson Text", Georgia, serif',m:'11px "IBM Plex Mono", monospace',t:'10px "IBM Plex Mono", monospace'};
+const TALANE=12;
+const taBadge=sec=>`<span class="badge s-${sec}" title="${TASEC[sec][1]}">${TASEC[sec][0]}</span>`;
+const taPhrase=rw=>`“${rw.hits[0].ph}”${rw.n>1?` ×${rw.n}`:''}`;
+const taWordsHTML=(rw,meets)=>`${taBadge(rw.sec)}<span class="psrc${meets?' meetw':''}" title="${attr('“'+rw.hits[0].ph+'”'+(rw.n>1?` — ${rw.n} mentions`:'')+(meets?' · meets another keyword':''))}">${esc(taPhrase(rw))}</span>`
+  +(meets?'<i class="marm" aria-hidden="true"></i>':'');
+const taMeetsOf=e=>e.near?e.near.pairs.map((p,k)=>({p,k})).filter(x=>x.p.m&&x.p.m.v>0):[];
+function taPathWidth(rw){
+  const G=taG();
+  let w=6+taTextW(G.MTG[rw.mt],TAFONT.m)+8;
+  if(rw.axis==='text') return w+taTextW(`“${rw.via}”`,TAFONT.cl)+14;
+  const L=rw.path.length;
+  w+=taTextW(TA.C.get(rw.start).label,L?TAFONT.c:TAFONT.cl)+14;
+  rw.path.forEach((st,i)=>{ w+=4+taTextW(`—${G.RELG[st.rel]}→`,TAFONT.m)+8+2+taTextW(TA.C.get(st.c).label,i===L-1?TAFONT.cl:TAFONT.c)+14; });
+  return w;
+}
+function taSectionWidths(list){
+  let ww=0, lanes=0, lw=0;
+  for(const e of list){
+    for(const rows of Object.values(e.chips)) for(const rw of rows) ww=Math.max(ww,taTextW(taPhrase(rw),TAFONT.w));
+    const ms=taMeetsOf(e);
+    lanes=Math.max(lanes,ms.length);
+    for(const {p} of ms) lw=Math.max(lw,taTextW(TALVL[p.m.lvl],TAFONT.t));
+  }
+  return {ww:Math.min(400,Math.max(170,ww+62)),mw:lanes?8+lanes*TALANE+lw+20:0};
+}
+function taPieces(rw){
+  const G=taG();
+  if(rw.axis==='text') return [`<span class="pmt" title="${attr(G.MTT[rw.mt])}">${G.MTG[rw.mt]}</span><span class="cnode a-text landing" title="${attr(G.MTT.text)}">“${esc(rw.via)}”</span>`];
+  const L=rw.path.length;
+  return [`<span class="pmt" title="${attr(G.MTT[rw.mt])}">${G.MTG[rw.mt]}</span>${taCnode(rw.start,!L)}`,
+    ...rw.path.map((st,i)=>`<span class="prel" title="${attr(TARELN[st.rel]+(st.note?' — '+st.note:'')+' · ×'+taF2(G.DEFAULTS.step[st.rel]))}">—${G.RELG[st.rel]}→</span>${taCnode(st.c,i===L-1)}`)];
+}
+function taLinesHTML(e,blocks){
+  const N=e.near, meets=taMeetsOf(e), inMeet=new Set(meets.flatMap(({p})=>[p.m.ra,p.m.rb])), at=new Map();
+  let r=0, h='';
+  blocks.forEach((b,bi)=>{
+    r++;
+    h+=`<div class="lrow lq" style="grid-row:${r}"><span class="qgroup"><b>${esc(b.pc.q)}</b> — ${b.n?`${b.n} line${b.n===1?'':'s'}`:''}${b.code?`${b.n?' · ':''}matches the topic code`:''}</span>`;
+    if(bi===0){
+      h+='<span class="lh lwh">landed-upon words</span>';
+      if(N){
+        const off=N.pairs.filter(p=>!(p.m&&p.m.v>0));
+        const tip=off.length?`not within a sentence of each other: ${off.map(p=>`${TA.chips[p.a]} ↔ ${TA.chips[p.b]}`).join('; ')}`:'';
+        h+=`<span class="lh lmh"${tip?` title="${attr(tip)}"`:''}><span class="qgroup near"><b>where they meet</b> <span class="mono">×${taF2(N.F)}</span></span></span>`;
+      }
+    }
+    h+='</div>';
+    b.rows.forEach(({rw,k})=>{
+      const key=e.ti+':'+b.ci+':'+k, ps=taPieces(rw);
+      const path=ps.map((p,i)=>`<span class="pc${i===ps.length-1?' pl':''}">${p}</span>`).join('')+'<i class="dots" aria-hidden="true"></i>';
+      const mt=inMeet.has(rw);
+      at.set(rw,++r);
+      h+=`<div class="lrow line" style="grid-row:${r}" data-snip="${key}"><span class="lp">${path}</span><span class="lw${mt?' mt':''}"><span class="lw1">${taWordsHTML(rw,mt)}</span></span></div>`;
+      if(TA.openSnips.has(key)) h+=`<div class="lsn" style="grid-row:${++r}">${taSnippetHTML(e.ti,rw.sec,rw.hits[0])}</div>`;
+    });
+    if(b.more) h+=`<div class="lrow lmore" style="grid-row:${++r}"><span class="lp">${b.more}</span></div>`;
+  });
+  const band=`<i class="wband" style="grid-row:1 / ${r+1}" aria-hidden="true"></i>`;
+  const brs=meets.map(({p,k})=>{ const a=at.get(p.m.ra), z=at.get(p.m.rb); return {p,k,top:Math.min(a,z),bot:Math.max(a,z)}; })
+    .filter(x=>x.top&&x.bot&&x.top!==x.bot).sort((x,y)=>(x.bot-x.top)-(y.bot-y.top)||x.top-y.top);
+  const lanes=[];
+  for(const x of brs){
+    let l=0;
+    while((lanes[l]||[]).some(o=>!(x.top>o.bot||x.bot<o.top))) l++;
+    (lanes[l]=lanes[l]||[]).push(x); x.lane=l;
+  }
+  for(const x of brs){
+    const m=x.p.m;
+    const tip=`${TA.chips[x.p.a]} ↔ ${TA.chips[x.p.b]}: ${TALVLT[m.lvl]}${m.words!=null?` · ${m.words} word${m.words===1?'':'s'} between${m.list?', two items of a list':''}`:''} · ${TASEC[m.sec][1]} · click for the sentence`;
+    h+=`<i class="mbr" style="grid-row:${x.top} / ${x.bot};width:${6+x.lane*TALANE}px" aria-hidden="true"></i>`
+      +`<span class="mlw" style="grid-row:${x.top} / ${x.bot};left:${8+lanes.length*TALANE}px"><button class="mlab" data-snip="${e.ti}:n:${x.k}" title="${attr(tip)}">${esc(TALVL[m.lvl])}</button></span>`;
+  }
+  for(const {p,k} of meets) if(TA.openSnips.has(e.ti+':n:'+k)) h+=`<div class="lsn" style="grid-row:${++r}">${taMeetSnippetHTML(e.ti,p.m)}</div>`;
+  const pw=Math.max(300,...blocks.flatMap(b=>b.rows.map(({rw})=>taPathWidth(rw)+56)));
+  return `<div class="lines" style="--pw:${pw}px;grid-template-rows:repeat(${r}, auto)">${band}${h}</div>`;
+}
+const taSentenceOf=(text,s)=>TA.TU.sentences(text).find(([a,b])=>s>=a&&s<b)||[0,text.length];
+const taWhere=(r,sec,p)=>r.kind==='call'&&sec!=='title'?(((r.disp.find(d=>d.sec===sec&&d.i===p)||{}).h)||TASEC[sec][1]):TASEC[sec][1];
+function taSnippetHTML(ti,sec,h){
+  const r=TA.R[ti], text=r.sections[sec][h.p].text, [a,b]=taSentenceOf(text,h.s);
+  let pre=text.slice(a,h.s).replace(/^•\s*/,''), post=text.slice(h.e,b).replace(/\s+$/,'');
+  const lead=pre.length>220, tail=post.length>220;
+  if(lead) pre=pre.slice(-220);
+  if(tail) post=post.slice(0,220);
+  return `<div class="snippet">“${lead?'…':''}${esc(pre)}<mark>${esc(text.slice(h.s,h.e))}</mark>${esc(post)}${tail?'…':''}”`
+    +`<span class="from">${esc(taWhere(r,sec,h.p))} · paragraph ${h.p+1}<button data-read="${ti}">read it ▸</button></span></div>`;
+}
+function taMeetSnippetHTML(ti,m){
+  const r=TA.R[ti];
+  const [x,y]=(m.ha.p<m.hb.p||(m.ha.p===m.hb.p&&m.ha.s<m.hb.s))?[m.ha,m.hb]:[m.hb,m.ha];
+  const piece=(p,hs)=>{
+    const text=r.sections[m.sec][p].text, last=hs[hs.length-1];
+    const a=taSentenceOf(text,hs[0].s)[0], b=taSentenceOf(text,last.s)[1];
+    let pre=text.slice(a,hs[0].s).replace(/^[•◦]\s*/,''), post=text.slice(last.e,b).replace(/\s+$/,'');
+    const lead=pre.length>160, tail=post.length>160;
+    if(lead) pre=pre.slice(-160);
+    if(tail) post=post.slice(0,160);
+    let mid='';
+    hs.forEach((h,i)=>{ mid+=`<mark>${esc(text.slice(h.s,h.e))}</mark>`+(i+1<hs.length?esc(text.slice(h.e,hs[i+1].s)):''); });
+    return `${lead?'…':''}${esc(pre)}${mid}${esc(post)}${tail?'…':''}`;
+  };
+  const body=x.p===y.p?piece(x.p,[x,y]):`${piece(x.p,[x])} <span class="sep">¶</span> ${piece(y.p,[y])}`;
+  const where=m.sec==='title'?'Title':`${esc(taWhere(r,m.sec,x.p))} · ${x.p===y.p?`paragraph ${x.p+1}`:`paragraphs ${x.p+1}–${y.p+1}`}`;
+  const how=m.words!=null?` · ${m.words} word${m.words===1?'':'s'} between${m.list?', two items of a list':''}`:'';
+  return `<div class="snippet near">“${body}”<span class="from">${where} · ${TALVL[m.lvl]}${how}<button data-read="${ti}">read it ▸</button></span></div>`;
+}
+
+/* every press on the page of results */
+function taAdd(list){
+  list.forEach(s=>{ if(!TA.chips.includes(s)) TA.chips.push(s); });
+  TA.shown=40; taSave(); taChipsPaint(); taRender();
+}
+function taWire(el,res){
+  const on=(sel,fn)=>el.querySelectorAll(sel).forEach(b=>b.addEventListener('click',ev=>fn(b,ev)));
+  on('[data-try]',b=>taAdd(b.dataset.try.split(',').map(s=>s.trim()).filter(Boolean)));
+  if(!res) return;
+  on('[data-read]',(b,ev)=>{ ev.stopPropagation(); taOpenReader(+b.dataset.read); });
+  on('[data-more]',b=>{ TA.expanded.add(b.dataset.more); taRender(); });
+  on('[data-moreres]',()=>{ TA.shown+=40; taRender(); });
+  on('[data-snip]',(b,ev)=>{
+    if(ev.target.closest('[data-read]')) return;
+    const k=b.dataset.snip; TA.openSnips.has(k)?TA.openSnips.delete(k):TA.openSnips.add(k); taRender();
+  });
+  on('[data-showclosed]',()=>{ TA.filt.when='all'; taSave(); taRender(); });
+  on('[data-freset]',()=>{ TA.filt={when:'all',until:'',where:[],types:[]}; taSave(); taRender(); });
+  on('[data-toggle]',b=>{
+    const [ci,c]=b.dataset.toggle.split('|'), q=TA.chips[+ci], off=new Set(TA.off[q]||[]);
+    off.has(c)?off.delete(c):off.add(c);
+    if(off.size) TA.off[q]=[...off]; else delete TA.off[q];
+    taSave(); taRender();
+  });
+  on('[data-nbrs]',b=>{ const ci=+b.dataset.nbrs; TA.openNbrs.has(ci)?TA.openNbrs.delete(ci):TA.openNbrs.add(ci); taRender(); });
+  on('[data-swap]',b=>{ const ci=+b.dataset.swap; delete TA.off[TA.chips[ci]]; TA.chips[ci]=b.dataset.to; taSave(); taChipsPaint(); taRender(); });
+  on('[data-go]',b=>{
+    const card=document.getElementById('tacard'+b.dataset.go); if(!card) return;
+    card.scrollIntoView({behavior:'smooth',block:'start'});
+    card.classList.add('flash'); setTimeout(()=>card.classList.remove('flash'),1400);
+  });
+}
+
+/* ── the reader: the Board's own, with what was found in it ──
+   The head is the Board's (a topic's facts and the portal's notices, or a
+   call's); the body is the Topic Atlas's: the score and what it is made
+   of, every idea the text names with the ones counted for the keywords
+   outlined, and the text itself in the Board's type with each idea
+   underlined in its axis's colour, the phrases that count in bold and the
+   sentences where the keywords meet shaded. An idea pressed is added as a
+   keyword. */
+function taParaHTML(text,spans){
+  if(!spans.length) return esc(text);
+  const cuts=new Set([0,text.length]);
+  for(const sp of spans){ cuts.add(Math.max(0,sp.s)); cuts.add(Math.min(text.length,sp.e)); }
+  const pts=[...cuts].sort((a,b)=>a-b);
+  let out='';
+  for(let i=0;i<pts.length-1;i++){
+    const a=pts[i], b=pts[i+1], seg=text.slice(a,b), on=spans.filter(sp=>sp.s<=a&&sp.e>=b);
+    if(!on.length){ out+=esc(seg); continue; }
+    const cls=[...new Set(on.flatMap(sp=>sp.cls.split(' ')))].join(' ');
+    const title=[...new Set(on.map(sp=>sp.title).filter(Boolean))].join(' · ');
+    out+=`<span class="${cls}"${title?` title="${attr(title)}"`:''}>${esc(seg)}</span>`;
+  }
+  return out;
+}
+function taSpansFor(r,sec,p,credited,meets){
+  const sp=[];
+  for(const mt of meets) if(mt.sec===sec&&mt.p===p) sp.push({s:mt.s,e:mt.e,cls:'meet',title:mt.title});
+  for(const o of r.concepts) if(o.sec===sec) for(const h of o.hits) if(h.p===p){
+    const c=TA.C.get(o.c), q=credited.has(sec+'|'+p+'|'+h.s);
+    sp.push({s:h.s,e:h.e,cls:`xc a-${c.axis}${q?' qhit':''}`,title:`${c.label} · ${TAAXN[c.axis]}${q?' · counted for your keywords':''}`});
+  }
+  for(const k of credited.keys()){
+    const [s0,p0,a]=k.split('|');
+    if(s0===sec&&+p0===p&&!sp.some(x=>x.s===+a)) sp.push({s:+a,e:credited.get(k),cls:'xc a-text qhit',title:'your keyword, in the text'});
+  }
+  for(const [a,z] of (r.sections[sec][p].boiler||[])) sp.push({s:a,e:z,cls:'boil',title:'standing text of the work programme: not searched'});
+  return sp;
+}
+function taOpenReader(ti){
+  const r=TA.R[ti]; if(!r) return;
+  const e=TA.last?TA.last.list.find(x=>x.ti===ti):null;
+  if(r.kind==='call') openText(r.t,r.c);
+  else if(!openReader(r.id)){
+    /* a topic the Board lacks: the Topic Atlas's own facts at the head */
+    RD_ID=null; RD_BACK=null;
+    document.getElementById('rdtitle').textContent=r.title;
+    document.getElementById('rdmeta').innerHTML=`<table><tr><td>Topic</td><td class="full">${esc(r.id)}</td></tr><tr><td>Call</td><td class="full">${esc(r.call.id)}</td></tr><tr><td>Deadline</td><td class="full">${dmy(r.call.d1)}</td></tr></table>`;
+    const ln=document.getElementById('rdlinks'); ln.innerHTML=''; ln.appendChild(portalLink(topicURL(r.id),'Topic on portal'));
+    const nt=document.getElementById('rdnotes'); nt.hidden=true; nt.innerHTML='';
+    slideReader();
+  }
+  const credited=new Map();
+  if(e) for(const rows of Object.values(e.chips)) for(const rw of rows) for(const h of rw.hits) credited.set(rw.sec+'|'+h.p+'|'+h.s,h.e);
+  const meets=[];
+  if(e&&e.near) for(const p of e.near.pairs) if(p.m&&p.m.v>0){
+    const title=`where ${TA.chips[p.a]} and ${TA.chips[p.b]} meet: ${TALVL[p.m.lvl]}`;
+    for(const h of [p.m.ha,p.m.hb]){ const [s,en]=taSentenceOf(r.sections[p.m.sec][h.p].text,h.s); meets.push({sec:p.m.sec,p:h.p,s,e:en,title}); }
+  }
+  let b='';
+  if(e&&!(e.score>0)&&e.codeHit) b+='<div class="whybox">Pinned to the top of the list by its code.</div>';
+  else if(e) b+=`<div class="whybox">For your keywords this ${r.kind==='topic'?'topic':'call'} scores <b>${taF2(e.score)}</b>`
+    +(TA.chips.length>1&&e.perChip?` (${TA.chips.map((q,ci)=>`${esc(q)} ${taF2(e.perChip[ci])}`).join(' · ')}${e.near&&e.near.F!==1?`; ×${taF2(e.near.F)} where they meet`:''})`:'')+'. '
+    +'The phrases that count are <span class="xc a-method qhit">set in bold</span> below; every idea found is underlined in its axis’s colour.'
+    +(meets.length?' The sentences where your keywords meet are <span class="meet">shaded</span>.':'')+'</div>';
+  const D=taG().DEFAULTS, weight={};
+  for(const o of r.concepts) weight[o.c]=(weight[o.c]||0)+D.weights[o.sec]*TA.S.idf(o.c)*Math.min(o.n,D.cap);
+  const hitC=new Set(e?Object.values(e.chips).flat().map(rw=>rw.c).filter(Boolean):[]);
+  const secsOf=c=>TASECS.filter(s=>r.concepts.some(o=>o.c===c&&o.sec===s));
+  for(const axis of ['method','domain']){
+    const cs=Object.keys(weight).filter(c=>TA.C.get(c).axis===axis).sort((a,z)=>weight[z]-weight[a]);
+    b+=`<div class="rsec"><h4><span class="tdot a-${axis}"></span>${axis==='method'?'Methods &amp; expertise':'Application domains'} · ${cs.length}</h4>`
+      +(cs.length?`<div class="kwline">${cs.map(c=>`<span class="tcc a-${axis}${hitC.has(c)?' hit':''}" data-addkw="${attr(TA.C.get(c).label)}" title="${attr(taConceptTitle(c)+' · click to search for it')}">${esc(TA.C.get(c).label)}`
+          +` <span class="n">${secsOf(c).map(s=>`<i class="mb s-${s}" title="${TASEC[s][1]}">${TASEC[s][0]}</i>`).join('')}&nbsp;${taF2(weight[c])}</span></span>`).join('')}</div>`
+        :`<div class="hint">None found.</div>`)+'</div>';
+  }
+  const para=(sec,i)=>{
+    const t=r.sections[sec][i].text, bul=t.startsWith('• '), sub=!bul&&/^[^•].{0,80}:$/.test(t);
+    return `<p${bul?' class="bul"':sub?' class="sub"':''}>${taParaHTML(t,taSpansFor(r,sec,i,credited,meets))}</p>`;
+  };
+  if(r.kind==='topic'){
+    if(r.sections.outcome.length) b+='<h3>Expected Outcome</h3>'+r.sections.outcome.map((_,i)=>para('outcome',i)).join('');
+    if(r.sections.scope.length) b+='<h3>Scope</h3>'+r.sections.scope.map((_,i)=>para('scope',i)).join('');
+    r.extra.forEach(x=>{ if(x.paras&&x.paras.length) b+=`<h3>${esc(x.name)}</h3>`+x.paras.map(p=>`<p>${esc(p)}</p>`).join(''); });
+    if(r.sections.intro.length) b+='<h3>Where it sits</h3>'+r.sections.intro.map((_,i)=>para('intro',i)).join('');
+    if(r.conds.length) b+='<h3>Specific conditions</h3><dl>'+r.conds.map(c=>`<dt>${esc(c.label)}</dt><dd>${esc(c.text)}</dd>`).join('')+'</dl>';
+    b+='<p class="hint">The text is the Topic Atlas’s, checked against the Funding &amp; Tenders portal; greyed is the work programme’s standing text, not searched.</p>';
+  } else {
+    let head=null;
+    r.disp.forEach(x=>{
+      if(x.h!==head){ head=x.h; if(head) b+=`<h3>${esc(head)}</h3>`; }
+      b+=para(x.sec,x.i);
+    });
+  }
+  const body=document.getElementById('rdbody');
+  body.innerHTML=`<div class="ta">${b}</div>`;
+  body.scrollTop=0;
+  body.querySelectorAll('[data-addkw]').forEach(el=>el.addEventListener('click',()=>{ closeReader(); taAdd([el.dataset.addkw]); }));
+}
+
+/* ── the switch, the keywords, and the filters ── */
+function taChipsPaint(){
+  const el=document.getElementById('tachips');
+  el.innerHTML=TA.chips.map((c,i)=>`<span class="takw">${esc(c)}<button data-rm="${i}" title="Remove" aria-label="Remove ${attr(c)}">×</button></span>`).join('');
+  el.querySelectorAll('[data-rm]').forEach(b=>b.addEventListener('click',()=>{
+    const [q]=TA.chips.splice(+b.dataset.rm,1); delete TA.off[q];
+    TA.shown=40; taSave(); taChipsPaint(); taRender();
+  }));
+  document.getElementById('taq').placeholder=TA.chips.length?'Add another keyword…':'Type a method, an application or a topic code, then Enter…';
+}
+/* `quiet` is a tab pressed, which draws the room itself afterwards */
+function taSet(on,quiet){
+  TA.on=on;
+  const $=id=>document.getElementById(id);
+  $('hdr').classList.toggle('atlas',on);
+  $('tabox').hidden=!on; $('tafbtn').hidden=!on;
+  document.querySelector('.wrap').hidden=on; $('taview').hidden=!on;
+  document.querySelectorAll('#taseg button').forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.v==='atlas')===on)));
+  if(on){ taChipsPaint(); taRender(); }
+  else{ $('tafilt').hidden=true; if(!quiet) render(); }
+  setHdrH();
+  if(!quiet) window.scrollTo({top:0});
+  if(on) $('taq').focus({preventScroll:true});
+}
+function taFiltersPaint(){
+  const el=document.getElementById('tafilt'), fb=document.getElementById('tafbtn'), n=taFiltN(), F=TA.filt;
+  el.hidden=!(TA.on&&TA.fopen);
+  fb.setAttribute('aria-expanded',String(TA.fopen));
+  fb.textContent='Filters'+(n?' · '+n:'')+(TA.fopen?' ▴':' ▾');
+  if(!TA.fopen){ el.innerHTML=''; return; }
+  const ch=(f,k,lab)=>`<button class="tchip" data-f="${f}" data-k="${attr(k)}" aria-pressed="${F[f].includes(k)}">${esc(lab||k)}</button>`;
+  el.innerHTML=`<span class="seglabel">Which</span><div class="seg"><button data-when="upcoming" aria-pressed="${F.when==='upcoming'}">Open &amp; upcoming</button><button data-when="all" aria-pressed="${F.when==='all'}">All, closed too</button></div>`
+    +`<span class="seglabel">Deadline by</span><input type="date" id="tauntil" value="${attr(F.until)}" aria-label="Deadline by">`
+    +`<span class="seglabel">Where</span><div class="grp">${PAGES.map(p=>ch('where',p.key)).join('')}</div><div class="grp">${TYPE_TABS.map(t=>ch('where',t.key)).join('')}</div>`
+    +`<span class="seglabel">Type of action</span><div class="grp">${['RIA','IA','CSA'].map(t=>ch('types',t)).join('')}</div>`
+    +(n?'<button class="taclear">Clear the filters</button>':'');
+  const again=()=>{ taSave(); taRender(); setHdrH(); };
+  el.querySelectorAll('[data-when]').forEach(b=>b.addEventListener('click',()=>{ F.when=b.dataset.when; again(); }));
+  el.querySelectorAll('[data-f]').forEach(b=>b.addEventListener('click',()=>{
+    const a=F[b.dataset.f], k=b.dataset.k, i=a.indexOf(k); i<0?a.push(k):a.splice(i,1); again();
+  }));
+  el.querySelector('#tauntil').addEventListener('change',e=>{ F.until=e.target.value||''; again(); });
+  const cl=el.querySelector('.taclear'); if(cl) cl.addEventListener('click',()=>{ TA.filt={when:'upcoming',until:'',where:[],types:[]}; again(); });
+}
+document.querySelectorAll('#taseg button').forEach(b=>b.addEventListener('click',()=>taSet(b.dataset.v==='atlas')));
+document.getElementById('tafbtn').addEventListener('click',()=>{ TA.fopen=!TA.fopen; taFiltersPaint(); setHdrH(); });
+const taqEl=document.getElementById('taq');
+taqEl.addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&taqEl.value.trim()){
+    const v=taqEl.value; taqEl.value='';
+    taAdd(v.split(/[,;]+/).map(s=>s.trim()).filter(Boolean));
+  } else if(e.key==='Backspace'&&!taqEl.value&&TA.chips.length){
+    delete TA.off[TA.chips.pop()]; TA.shown=40; taSave(); taChipsPaint(); taRender();
+  }
+});
+document.getElementById('tabox').addEventListener('click',e=>{ if(e.target.id==='tabox'||e.target.id==='tachips') taqEl.focus(); });
+
 /* ---------- controls ---------- */
 const tc=document.getElementById('typechips');
 ['RIA','IA','CSA'].forEach(ty=>{
@@ -1935,7 +2686,7 @@ document.addEventListener('keydown',e=>{
   /* A bare digit only. Alt and a digit is the shell's way between rooms,
      and it used to turn this room's page over on the way past. */
   if(/^[1-9]$/.test(e.key) && !e.altKey && !e.ctrlKey && !e.metaKey
-     && document.activeElement!==qEl && +e.key-1<=PAGES.length) selectPage(+e.key-1);
+     && document.activeElement!==qEl && document.activeElement!==taqEl && +e.key-1<=PAGES.length) selectPage(+e.key-1);
 });
 
 const hash=(location.hash||'').replace('#','').toLowerCase();
@@ -1981,11 +2732,11 @@ function callRow(c){
 }
 Hub.expose('callboard',{
   topics:function(){ return Object.keys(TOPIC_BY_ID).map(topicRow); },
-  calls:function(){ return ACALLS.map(callRow); },
+  calls:function(){ return ACALLS.concat(COPROG_RUNS).map(callRow); },
   /* a call's kept text, read in the reader as on an arena opened here;
      false when the call has none */
   openText:function(arenaId,names){
-    const c=ACALLS.concat(FZ?FZ.calls:[]).find(x=>x.arenaId===arenaId&&x.run.names.some(n=>(names||[]).indexOf(n)>-1));
+    const c=ACALLS.concat(FZ?FZ.calls:[],COPROG_RUNS).find(x=>x.arenaId===arenaId&&x.run.names.some(n=>(names||[]).indexOf(n)>-1));
     const t=c&&keptText(c);
     if(!t) return false;
     openText(t,c); return true;
@@ -2003,7 +2754,7 @@ Hub.expose('callboard',{
   /* the call texts read again from the cloud (bridge.js), and the cloud
      back after a login or on coming back to the room */
   textsChanged:function(){
-    readFinds();
+    readFinds(); taStale();
     if(JUDGE.on) return;
     paintJudge();
     if(MODE==='arena') render();

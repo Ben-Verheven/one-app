@@ -492,7 +492,7 @@ opened there is `.aopen`, a call's kept text opening from its `.tbtn`, and where
 over its arenas by a `.tyh`. The Freezer tab draws every arena put away
 the same way, its tag `.frz`, with a `.thaw` on each. What waits to be judged is counted on `#jpill` and dotted on
 its tab (`.fd`) and on the triangle's point (`.pt.fd`); while judging, the new arena stands dashed in its tab, a
-row `.ghost`, a call whose text is judged carries a dashed `.tghost`, and the find itself opens in the Semaphore's drawer, lent over the Board. The count beside the Call Board's mark in the ring is `.oa-n`. The decisions behind them are in
+row `.ghost`, a call whose text is judged carries a dashed `.tghost`, and the find itself opens in the Semaphore's drawer, lent over the Board. The count beside the Call Board's mark in the ring is `.oa-n`. On CoProg a row is a partnership's Horizon topic, its cluster call's chip `.hcc` before its title. The Atlas switch is `#taseg` beside the box; switched on, `#hdr.atlas`, the keywords stand in `#tabox` (`#tachips`, `#taq`), Filters is `#tafbtn` over `#tafilt`, and the results replace `.wrap` in `#taview`, everything in it under `.ta`: how each keyword was read `.tamap`, the strip of when `.tawhen` with a dot `.tdotn` per result, and the Topic Atlas's cards `.taresults` › `.card`; its reader body is wrapped in `.ta` too. The decisions behind them are in
 [call-board](notes/call-board.md).
 
 **The Atlas** — `#app` › `header` carries `#tab-search`, `#tab-browse`,
@@ -603,7 +603,7 @@ one-app/
     callboard-topics.js         clusters, destinations, topics, calls
     callboard-descriptions.js   the Commission's prose
 partner-watch/        Mark’s Place, a page of its own, and in pocket/ its phone version — see notes/partner-watch.md
-topic-atlas/          the Topic Atlas, a page of its own, and in library.js its two concept libraries, which Mark’s Place reads too — see notes/topic-atlas.md
+topic-atlas/          the Topic Atlas, a page of its own: its topics (topics.js), its two concept libraries (library.js, which Mark’s Place reads too) and its engine (textutil.js, scorer.js), which the Call Board's Atlas switch reads too — see notes/topic-atlas.md
 supabase/             the database's SQL, the two agents' gatekeepers, Partner Watch's copier and the Horizon check
 tools/                the scripts below
 ```

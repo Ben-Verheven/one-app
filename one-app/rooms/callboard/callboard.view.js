@@ -8,7 +8,13 @@ Hub.markup('callboard', `
 <header id="hdr">
   <div class="tabs" id="tabs" role="tablist" aria-label="Clusters"></div>
   <div class="hd-controls" style="padding:10px 20px 11px">
-    <div class="search"><input id="q" type="search" placeholder="Search topic ID or title…" aria-label="Search topics"><button class="clr" id="qclr" aria-label="Clear search">✕</button></div>
+    <div class="search"><input id="q" class="joined" type="search" placeholder="Search topic ID or title…" aria-label="Search topics"><button class="clr" id="qclr" aria-label="Clear search">✕</button></div>
+    <!-- The Atlas switch (Mark, 2026-10-24; built 2026-10-29): switched to
+         Atlas, the box takes keywords, each given with Enter, read as the
+         Topic Atlas reads them, and every call is searched. -->
+    <div class="tabox" id="tabox" hidden><span id="tachips"></span><input id="taq" autocomplete="off" aria-label="Keyword" placeholder="Type a keyword, then Enter…"></div>
+    <div class="taseg" id="taseg" role="group" aria-label="How the box searches"><button data-v="topics" aria-pressed="true">Topics</button><button data-v="atlas" aria-pressed="false">Atlas</button></div>
+    <button class="ftchip tafbtn" id="tafbtn" aria-expanded="false" hidden>Filters ▾</button>
     <div class="typechips" id="typechips" role="group" aria-label="Filter by type of action"></div>
     <button class="ftchip" id="ftchip" aria-pressed="false" title="Also search Expected Outcome and Scope text">＋ full text</button>
     <div id="pills"></div>
@@ -21,6 +27,7 @@ Hub.markup('callboard', `
          the Semaphore. Its box is the Semaphore's, lent over this room. -->
     <button class="gptb" id="gptb" title="Write a file for ChatGPT to search the web for the arenas' call dates and new arenas, and read its answer back">ChatGPT</button>
   </div>
+  <div class="tafilt" id="tafilt" hidden></div>
   <div class="ovbar" id="ovbar">
     <span class="seglabel">Submission deadline between</span>
     <span class="span-readout" id="spanread"></span>
@@ -60,6 +67,8 @@ Hub.markup('callboard', `
     </div>
   </aside>
 </div>
+
+<div class="ta taview" id="taview" hidden></div>
 
 <div class="scrim" id="scrim"></div>
 <aside class="reader" id="reader" role="dialog" aria-modal="true" aria-labelledby="rdtitle" aria-hidden="true">

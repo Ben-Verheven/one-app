@@ -16,6 +16,6 @@
       "Bash(git push origin main)", "Bash(git revert:*)",
       "Bash(cat:*)", "Bash(ls:*)", "Bash(head:*)", "Bash(tail:*)", "Bash(grep:*)", "Bash(wc:*)"
     ],
-    "deny": [ "Read(./one-app/data/**)" ]
+    "deny": [ "Read(./one-app/data/**)", "Read(./topic-atlas/topics.js)" ]
   }
 }

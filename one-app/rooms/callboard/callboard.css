@@ -481,3 +481,209 @@
 #pane-callboard .rd-notes .rnk{font-family:var(--font);font-size:9.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#DDC287}
 #pane-callboard .rd-notes .rnd{font-family:var(--mono);font-size:11.5px;color:#DDC287;margin-right:10px}
 #pane-callboard .rd-body p.sub{font-weight:600;color:var(--ink)}
+
+/* ══ 12. THE ATLAS SWITCH ══
+   The Topic Atlas inside the Board (see "the Topic Atlas inside the
+   Board" in callboard.js): the switch beside the box, the keywords in it,
+   Filters folded, and the results drawn as the Topic Atlas draws them,
+   its own rules brought over under .ta with its own colours, so that
+   nothing of the Board's sheet or chart leaks into them. Two of its names
+   are the Board's for something else and are renamed here: its concept
+   chips are .tcc (the Board's .cchip is a call's chip) and its axis dot
+   .tdot (the Board's .dot is an opening on the chart). */
+#pane-callboard .search input.joined{border-radius:var(--radius) 0 0 var(--radius)}
+#pane-callboard .taseg{display:flex;align-self:stretch;margin-left:-8px;border:1px solid rgba(120,96,58,0.3);border-radius:0 var(--radius) var(--radius) 0;overflow:hidden}
+#pane-callboard .taseg button{border:0;padding:0 12px;font-family:var(--font);font-size:10px;letter-spacing:.07em;cursor:pointer;color:var(--ink2);
+  background:linear-gradient(180deg,#FDFAF3,#F0EADB)}
+#pane-callboard .taseg button+button{border-left:1px solid rgba(120,96,58,0.24)}
+#pane-callboard .taseg button:hover{color:var(--brass2)}
+#pane-callboard .taseg button[aria-pressed="true"]{color:#F6F1E4;background:linear-gradient(180deg,#463823,#2E2415)}
+#pane-callboard .taseg button:disabled{color:var(--ink3);cursor:default}
+#pane-callboard .tabox{display:flex;flex-wrap:wrap;align-items:center;gap:6px;min-width:420px;max-width:640px;min-height:35px;padding:3px 10px;
+  border:1px solid rgba(120,96,58,0.3);border-radius:var(--radius) 0 0 var(--radius);background:#FDFBF4;box-shadow:inset 0 1px 2px rgba(74,58,30,0.10)}
+#pane-callboard .tabox:focus-within{border-color:var(--brass);box-shadow:0 0 0 3px rgba(154,123,58,0.14)}
+#pane-callboard .tabox[hidden],#pane-callboard .tafbtn[hidden],#pane-callboard .tafilt[hidden],#pane-callboard .taview[hidden],#pane-callboard .wrap[hidden]{display:none}
+#pane-callboard .tabox input{flex:1;min-width:180px;border:0;outline:none;background:none;font-family:var(--body);font-size:14px;color:var(--ink);padding:3px 2px}
+#pane-callboard .takw{display:inline-flex;align-items:center;gap:6px;padding:1px 6px 1px 10px;border-radius:99px;border:1px solid rgba(120,96,58,.36);
+  background:var(--panel);font-family:var(--body);font-size:14px;white-space:nowrap}
+#pane-callboard .takw button{border:0;background:none;color:var(--ink3);font-size:15px;line-height:1;cursor:pointer;padding:0 2px}
+#pane-callboard .takw button:hover{color:#A33A2C}
+#pane-callboard .tafbtn[aria-expanded="true"]{color:#F6F1E4;border-color:var(--umber);background:linear-gradient(180deg,#463823,#2E2415)}
+#pane-callboard .tafilt{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;padding:0 20px 12px}
+#pane-callboard .tafilt .grp{display:flex;flex-wrap:wrap;gap:5px}
+#pane-callboard .tafilt input[type=date]{font-family:var(--mono);font-size:11px;color:var(--ink2);padding:4px 8px;border:1px solid rgba(120,96,58,.3);
+  border-radius:var(--radius);background:#FDFBF4}
+#pane-callboard .tafilt .taclear{font-family:var(--font);font-size:10px;letter-spacing:.07em;color:var(--brass2);background:none;border:0;cursor:pointer;
+  text-decoration:underline;text-underline-offset:3px;margin-left:auto}
+
+/* the page of results: the Topic Atlas's colours, then its rules */
+#pane-callboard .ta{--paper:#EFE8D7;--wash:#E6DDC9;--faint:#5C5140;--ghost:#6A5E48;--line2:rgba(120,96,58,0.34);
+  --k1:#7A5E24;--k2:#41705C;--k3:#9E5B24;--k4:#6F6450;--k1w:#EDE3CB;--k2w:#DFEAE2;--k3w:#F2E2D0;--k4w:#E8E1D3;
+  --k1i:#5E4716;--k2i:#2F5646;--k3i:#7A4416;--k4i:#4F4636;--con:#6B5F7E;--conw:#E7E2EC;--coni:#4F4566;
+  --dom:#3F5A78;--domw:#E0E6EE;--domi:#2E4560;--txt:#8A6A2E;--txtw:#F1E6CC;--txti:#6B5020;--danger:#A33A2C;
+  --near:#8A4B66;--nearw:#F1E2E8;--neari:#6B3550;--sans:var(--body);--r:7px}
+#pane-callboard .taview{min-height:60vh;padding:6px 0 70px}
+#pane-callboard .ta button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+#pane-callboard .ta .mono{font-family:var(--mono);font-size:12px}
+#pane-callboard .ta .hint{color:var(--faint);font-size:13.5px}
+#pane-callboard .ta .badge{display:inline-block;font:600 10.5px var(--mono);padding:1px 6px;border-radius:4px;letter-spacing:.3px;line-height:1.5}
+#pane-callboard .ta .badge.s-title{background:var(--k1w);color:var(--k1i)} #pane-callboard .ta .badge.s-outcome{background:var(--k2w);color:var(--k2i)}
+#pane-callboard .ta .badge.s-scope{background:var(--k3w);color:var(--k3i)} #pane-callboard .ta .badge.s-intro{background:var(--k4w);color:var(--k4i)}
+#pane-callboard .ta .cnode{display:inline-block;padding:0 7px;border-radius:5px;font-size:14.5px;line-height:1.55}
+#pane-callboard .ta .cnode.a-method{background:var(--conw);color:var(--coni)}
+#pane-callboard .ta .cnode.a-domain{background:var(--domw);color:var(--domi)}
+#pane-callboard .ta .cnode.a-text{background:var(--txtw);color:var(--txti)}
+#pane-callboard .ta .cnode.landing{font-weight:600}
+#pane-callboard .ta .cnode.off{text-decoration:line-through;opacity:.55}
+#pane-callboard .ta .chip{display:inline-flex;align-items:center;gap:6px;padding:2px 10px;border-radius:99px;font-size:14px;
+  border:1px solid var(--line2);background:var(--panel);white-space:nowrap}
+#pane-callboard .ta .chip:hover{background:var(--wash)}
+#pane-callboard .ta .sbtn{padding:3px 11px;border:1px solid var(--line2);border-radius:var(--r);font-size:13.5px;color:var(--faint);background:var(--panel)}
+#pane-callboard .ta .sbtn:hover{color:var(--ink);background:var(--wash)}
+#pane-callboard .taempty{padding:34px 30px;max-width:760px;color:var(--faint)}
+#pane-callboard .taempty h2{font:600 17px var(--body);color:var(--ink);margin-bottom:8px}
+#pane-callboard .taempty p{margin-bottom:8px}
+#pane-callboard .taempty .sugg{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+/* how each keyword was read */
+#pane-callboard .tamap{padding:4px 30px 2px}
+#pane-callboard .ta .maprow{display:flex;flex-wrap:wrap;align-items:center;gap:5px 6px;margin:4px 0;font-size:14px}
+#pane-callboard .ta .maprow .q{font-weight:600}
+#pane-callboard .ta .maprow .arrow{color:var(--ghost);font-family:var(--mono);font-size:12px}
+#pane-callboard .ta .ment{display:inline-flex;align-items:center;gap:3px;cursor:pointer;border-radius:6px;padding:0 2px}
+#pane-callboard .ta .ment:hover .cnode{box-shadow:inset 0 0 0 1px var(--line2)}
+#pane-callboard .ta .ment .via,#pane-callboard .ta .maprow .reach{font-size:12.5px;color:var(--faint)}
+#pane-callboard .ta .maprow .more{font-size:12.5px;color:var(--faint);border-bottom:1px dashed var(--line2)}
+#pane-callboard .ta .maprow .more:hover{color:var(--ink)}
+#pane-callboard .ta .nbrs{display:flex;flex-wrap:wrap;gap:4px 10px;margin:2px 0 8px 24px;padding:6px 10px;background:var(--panel);
+  border:1px solid var(--line);border-radius:9px;font-size:13.5px}
+#pane-callboard .ta .nbrs .nb{display:inline-flex;align-items:center;gap:3px}
+#pane-callboard .ta .nbrs .cost{font:10.5px var(--mono);color:var(--ghost)}
+#pane-callboard .ta .pmt{font:11px var(--mono);color:var(--ghost);padding:0 3px}
+#pane-callboard .ta .prel{font:11px var(--mono);color:var(--ghost);padding:0 4px;white-space:nowrap}
+#pane-callboard .ta .rescount{color:var(--faint);font-size:14px;margin:8px 32px 4px;display:flex;flex-wrap:wrap;gap:6px 12px;align-items:baseline}
+#pane-callboard .ta .rescount .act{border-bottom:1px dashed var(--line2);color:var(--faint);font-size:13.5px}
+#pane-callboard .ta .rescount .act:hover{color:var(--ink)}
+/* when: each result a numbered dot at its deadline, which brings its card
+   into view */
+#pane-callboard .tawhen{margin:4px 20px 6px;padding:10px 0 8px;border-bottom:1px solid var(--line)}
+#pane-callboard .tawhen .tl-title{margin-bottom:6px}
+#pane-callboard .tastrip{position:relative;margin-top:2px}
+#pane-callboard .tastrip .tax{position:absolute;left:0;right:0;top:0;height:18px;border-bottom:1px solid var(--line-strong)}
+#pane-callboard .tastrip .tax i{position:absolute;top:2px;font-style:normal;font-family:var(--mono);font-size:9.5px;color:var(--ink3);transform:translateX(-50%)}
+#pane-callboard .tastrip .tax i.y{font-weight:600;color:var(--ink2)}
+#pane-callboard .tastrip .tgl{position:absolute;top:18px;bottom:0;width:1px;background:rgba(120,96,58,.12)}
+#pane-callboard .tastrip .tgl.y{background:rgba(120,96,58,.36)}
+#pane-callboard .tastrip .ttoday{position:absolute;top:14px;bottom:0;border-left:1px dashed var(--ink)}
+#pane-callboard .tastrip .tdotn{position:absolute;width:22px;height:22px;margin-left:-11px;border-radius:50%;padding:0;border:0;cursor:pointer;
+  font-family:var(--mono);font-size:10.5px;font-weight:600;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 1px 3px rgba(74,58,30,.3),0 0 0 1.5px var(--panel)}
+#pane-callboard .tastrip .tdotn:hover{transform:scale(1.15)}
+#pane-callboard .tastrip .tdotn.soft{box-shadow:0 0 0 1.5px var(--panel),0 0 0 2.5px currentColor}
+/* the cards */
+#pane-callboard .taresults{padding:4px 20px 10px}
+#pane-callboard .ta .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 18px 12px;margin-bottom:12px;
+  box-shadow:0 1px 2px rgba(30,24,14,.04);scroll-margin-top:calc(var(--hdr-h,96px) + 12px)}
+#pane-callboard .ta .card.flash{box-shadow:0 0 0 2px var(--brass),0 1px 2px rgba(30,24,14,.04)}
+#pane-callboard .ta .card .top{display:flex;align-items:flex-start;gap:12px}
+#pane-callboard .ta .rank{font:12px var(--mono);color:var(--ghost);padding-top:4px;width:22px;flex:none;text-align:right}
+#pane-callboard .ta .card .top .cchip,#pane-callboard .ta .card .top .achip{margin-top:3px}
+#pane-callboard .ta .rname{font:600 17.5px/1.3 var(--body);cursor:pointer;flex:1;min-width:0}
+#pane-callboard .ta .rname:hover{text-decoration:underline}
+#pane-callboard .ta .raffil{color:var(--faint);font-size:14px;margin:3px 0 0 34px}
+#pane-callboard .ta .raffil .code{font:11.5px var(--mono);color:var(--ghost)}
+#pane-callboard .ta .raffil .closed,#pane-callboard .ta .st-closed{color:var(--danger)}
+#pane-callboard .ta .st-open{color:var(--k2i);font-weight:600}
+#pane-callboard .ta .st-fc{color:var(--k1i)}
+#pane-callboard .ta .scorewrap{display:flex;align-items:center;gap:9px;padding-top:4px;flex:none}
+#pane-callboard .ta .sbar{width:130px;height:7px;border-radius:4px;background:var(--wash);overflow:hidden;display:flex}
+#pane-callboard .ta .sbar i{display:block;height:100%}
+#pane-callboard .ta .sbar .s-title{background:var(--k1)} #pane-callboard .ta .sbar .s-outcome{background:var(--k2)}
+#pane-callboard .ta .sbar .s-scope{background:var(--k3)} #pane-callboard .ta .sbar .s-intro{background:var(--k4)} #pane-callboard .ta .sbar .s-near{background:var(--near)}
+#pane-callboard .ta .snum{font:13px var(--mono);color:var(--ink);min-width:36px;text-align:right}
+#pane-callboard .ta .paths{margin:10px 0 0 34px;border-top:1px solid var(--line);padding-top:3px}
+#pane-callboard .ta .qgroup{margin:7px 0 2px;font-size:13.5px;color:var(--ghost)}
+#pane-callboard .ta .qgroup b{color:var(--ink);font-weight:600}
+#pane-callboard .ta .qgroup.near b{color:var(--neari)}
+#pane-callboard .ta .psrc{margin-left:6px;font-size:14px;color:var(--faint);border-bottom:1px dashed var(--line2)}
+#pane-callboard .ta .showmore{font-size:13px;color:var(--faint);padding:2px 6px}
+#pane-callboard .ta .showmore:hover{color:var(--ink)}
+#pane-callboard .ta .snippet{margin:4px 4px 8px 22px;padding:8px 12px;background:var(--wash);border-left:2px solid var(--line2);
+  border-radius:0 7px 7px 0;font-size:14.5px;color:#3A3226;max-width:780px}
+#pane-callboard .ta .snippet mark{background:none;font-weight:700;color:inherit;box-shadow:inset 0 -2px 0 currentColor}
+#pane-callboard .ta .snippet .from{display:block;margin-top:5px;color:var(--ghost);font:11px var(--mono)}
+#pane-callboard .ta .snippet .from button{font:11px var(--mono);color:var(--k1);margin-left:8px}
+#pane-callboard .ta .snippet.near{border-left-color:var(--near)}
+#pane-callboard .ta .snippet .sep{font:11px var(--mono);color:var(--ghost);padding:0 4px}
+/* one grid per card: the paths | the landed-upon words | where they meet */
+#pane-callboard .ta .lines{display:grid;position:relative;
+  grid-template-columns:minmax(0,min(var(--pw,400px),60%)) var(--ww,260px) var(--mw,0px) minmax(0,1fr)}
+#pane-callboard .ta .wband{grid-column:2;background:rgba(120,96,58,.075);border-radius:7px}
+#pane-callboard .ta .lrow{grid-column:1/-1;display:grid;grid-template-columns:subgrid;position:relative;z-index:1;border-radius:6px}
+#pane-callboard .ta .lrow.line{cursor:pointer}
+#pane-callboard .ta .lrow.line:hover{background:rgba(214,201,172,.38)}
+#pane-callboard .ta .lrow.line:hover .psrc{color:var(--ink)}
+#pane-callboard .ta .lp{grid-column:1;align-self:start;display:flex;align-items:center;gap:2px;min-width:0;min-height:27px;padding-left:6px}
+#pane-callboard .ta .pc{display:inline-flex;align-items:center;gap:2px;min-width:0;flex:0 1 auto}
+#pane-callboard .ta .pc.pl{flex-shrink:0}
+#pane-callboard .ta .pc .pmt,#pane-callboard .ta .pc .prel{flex:none}
+#pane-callboard .ta .pc .cnode{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#pane-callboard .ta .dots{flex:1 0 28px;height:0;border-top:1px dotted var(--ghost);margin:0 -7px 0 8px;position:relative}
+#pane-callboard .ta .dots::after{content:"";position:absolute;right:0;top:-3.5px;width:0;height:0;
+  border-left:5px solid var(--ghost);border-top:3px solid transparent;border-bottom:3px solid transparent}
+#pane-callboard .ta .lw{grid-column:2;align-self:start;display:flex;flex-direction:column;min-width:0;padding:0 6px 0 9px}
+#pane-callboard .ta .lw.mt{padding-right:0}
+#pane-callboard .ta .lw1{display:flex;align-items:center;gap:6px;min-width:0;min-height:27px}
+#pane-callboard .ta .lw .psrc{margin-left:0;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#pane-callboard .ta .psrc.meetw{color:var(--neari);border-bottom:1px solid var(--near)}
+#pane-callboard .ta .marm{flex:1 0 10px;height:0;border-top:1.5px solid var(--near);margin-left:2px}
+#pane-callboard .ta .lh{align-self:end;padding-bottom:4px;font:10px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ghost);white-space:nowrap}
+#pane-callboard .ta .lwh{grid-column:2;padding-left:9px}
+#pane-callboard .ta .lmh{grid-column:3;padding-left:6px;color:var(--neari)}
+#pane-callboard .ta .lmh .qgroup.near{display:inline;margin:0;font:inherit;color:var(--neari)}
+#pane-callboard .ta .lmh .qgroup.near b{font-weight:600;color:var(--neari)}
+#pane-callboard .ta .lmh .qgroup.near .mono{font-size:10.5px;letter-spacing:0}
+#pane-callboard .ta .lrow.lq .qgroup{grid-column:1;min-width:0}
+#pane-callboard .ta .lrow.lmore .lp{min-height:0}
+#pane-callboard .ta .lsn{grid-column:1 / 3;position:relative;z-index:1}
+#pane-callboard .ta .mbr{position:absolute;grid-column:3;left:0;top:12.75px;bottom:-14.25px;border:1.5px solid var(--near);border-left:none;
+  border-radius:0 4px 4px 0;z-index:2;pointer-events:none}
+#pane-callboard .ta .mlw{position:absolute;grid-column:3;top:13.5px;bottom:-13.5px;display:flex;align-items:center;z-index:2;pointer-events:none}
+#pane-callboard .ta .mlab{pointer-events:auto;font:10px var(--mono);color:var(--neari);background:var(--nearw);border-radius:4px;padding:1px 6px;white-space:nowrap;cursor:pointer}
+#pane-callboard .ta .mlab:hover{background:var(--near);color:#fff}
+/* in the reader: the score, the ideas found, and the places marked in
+   the text, which keeps the Board's own type */
+#pane-callboard .ta .whybox{background:var(--wash);border-radius:9px;padding:8px 12px;margin-bottom:14px;font-size:14px;line-height:1.5}
+#pane-callboard .ta .rsec{margin:16px 0 4px}
+#pane-callboard .ta .rsec h4{font:600 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ghost);margin-bottom:6px;display:flex;align-items:center;gap:7px}
+#pane-callboard .ta .tdot{display:inline-block;width:8px;height:8px;border-radius:50%;flex:none}
+#pane-callboard .ta .tdot.a-method{background:var(--con)} #pane-callboard .ta .tdot.a-domain{background:var(--dom)}
+#pane-callboard .ta .kwline{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;line-height:1.5}
+#pane-callboard .ta .tcc{display:inline-flex;align-items:center;gap:5px;padding:1px 9px;border-radius:99px;font-size:14px;cursor:pointer;border:1px solid transparent}
+#pane-callboard .ta .tcc.a-method{background:var(--conw);color:var(--coni)}
+#pane-callboard .ta .tcc.a-domain{background:var(--domw);color:var(--domi)}
+#pane-callboard .ta .tcc:hover{border-color:var(--line2)}
+#pane-callboard .ta .tcc .n{font:10.5px var(--mono);opacity:.75;display:inline-flex;align-items:center;gap:1px}
+#pane-callboard .ta .tcc.hit{box-shadow:inset 0 0 0 1.5px currentColor;font-weight:600}
+#pane-callboard .ta .mb{font:600 9px/1.4 var(--mono);font-style:normal;padding:0 3px;border-radius:3px}
+#pane-callboard .ta .mb.s-title{background:var(--k1w);color:var(--k1i)} #pane-callboard .ta .mb.s-outcome{background:var(--k2w);color:var(--k2i)}
+#pane-callboard .ta .mb.s-scope{background:var(--k3w);color:var(--k3i)} #pane-callboard .ta .mb.s-intro{background:var(--k4w);color:var(--k4i)}
+#pane-callboard .ta .xc{border-bottom:1.5px solid;cursor:help}
+#pane-callboard .ta .xc.a-method{border-color:rgba(107,95,126,.55)}
+#pane-callboard .ta .xc.a-domain{border-color:rgba(63,90,120,.5)}
+#pane-callboard .ta .xc.qhit{font-weight:700;background:rgba(201,168,76,.22);border-radius:2px}
+#pane-callboard .ta .boil{color:#7d725f}
+#pane-callboard .ta .meet{background:rgba(138,75,102,.11);border-radius:2px;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+/* CoProg: a partnership's topic carries its cluster call's chip */
+#pane-callboard .crow .nm .hcc{font-family:var(--mono);font-size:10px;font-weight:600;border-radius:3px;padding:1px 5px;margin-right:7px;
+  box-shadow:0 1px 2px rgba(74,58,30,.18)}
+/* while Atlas is on, the box's Topics controls and the planner's bar step
+   aside for the keywords and Filters */
+#pane-callboard #hdr.atlas .search,#pane-callboard #hdr.atlas .typechips,#pane-callboard #hdr.atlas #ftchip,
+#pane-callboard #hdr.atlas #pills,#pane-callboard #hdr.atlas .ovbar{display:none}
+/* on the iPad held upright a card's lines are wider than the card, and
+   scroll sideways inside it rather than squeeze, as in the Topic Atlas */
+@media(max-width:1020px){
+  #pane-callboard .ta .paths{overflow-x:auto}
+  #pane-callboard .ta .lines{min-width:max-content}
+  #pane-callboard .tabox{min-width:300px}
+}

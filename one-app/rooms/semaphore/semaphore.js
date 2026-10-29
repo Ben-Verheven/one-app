@@ -802,8 +802,12 @@ const GPT_PLACE={new:'new on the board, not judged yet',venues:'in Venues: Mark 
 let gpt={kind:'venues',ans:null,plan:null,sugg:[]};
 /* A cluster's or mission's arena: its calls are the Work Programme's,
    kept by the Horizon check, so the search for calls leaves it alone (the
-   Call Board's HORIZON_TYPE says the same of its tabs). */
-const GPT_HORIZON=/pillar\s*(2|ii)\b|\bclusters?\b|\bmissions?\b/i;
+   Call Board's HORIZON_TYPE says the same of its tabs). A co-programmed
+   partnership's too since 2026-10-29: its calls are Horizon topics, which
+   the Call Board's CoProg tab now gathers from the Work Programme by the
+   partnership's name, so the dates ChatGPT found for them went from that
+   tab and the search stops looking for them (Mark, over keeping both). */
+const GPT_HORIZON=/pillar\s*(2|ii)\b|\bclusters?\b|\bmissions?\b|co[\s-]*prog/i;
 const isWpArena=a=>GPT_HORIZON.test((typeOf(a)||{}).name||'');
 /* the arenas each search goes through, in the order of its rounds: for
    calls every arena but the clusters' and missions', the frozen last; for

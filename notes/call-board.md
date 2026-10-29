@@ -1,7 +1,7 @@
 Mark's decisions for the Call Board since it began to take in every call,
 not only Horizon's (2026-10-24). PROJECT.md says how the room works; this
 says what Mark chose and turned down, so a later session does not quietly
-undo it, and what was agreed and is not built yet.
+undo it.
 
 ## What it is for
 
@@ -238,10 +238,34 @@ ledger.js; what Mark chose:
 - **Text ↗ on the call** opens its kept text in the Board's reader, lent
   over the Ledger.
 
-## Still to build, agreed 2026-10-24
+## The Topic Atlas inside the Board (built 2026-10-29)
 
-1. **The Topic Atlas inside the Board**: a Topics | Atlas switch by the
-   search box, the Atlas's way of searching over every call, Horizon and
-   beyond. A plain program as Mark wants it, filters folded behind one
-   button, the tuning left on its defaults. COPROG's rows then become the
-   partnership's own Horizon topics, gathered from the clusters by name.
+The last phase agreed on 2026-10-24, drawn on the canvas named above
+(section 8) and chosen there. How it works is at "the Topic Atlas inside
+the Board" and "CoProg" in callboard.js; what Mark chose:
+
+- **Topics | Atlas beside the box.** Switched to Atlas, the box takes
+  keywords, each given with Enter, read as the Topic Atlas reads them,
+  and every call is searched whichever tab is open: the Topic Atlas's
+  Horizon topics and the arenas' calls whose text is kept. A tab pressed
+  goes back to Topics; the keywords stay on the device.
+- **Just like the Topic Atlas, adjusted to the Board** (8.5), in Mark's
+  words, over the two drawn of the Board's own (8.1: compact rows in the
+  sheet beside a chart of their calls, or across the width; 8.2: opening
+  under the row or in the reader). Drawn, the Topic Atlas's card did not
+  fit the sheet's half (its lines cut, where they meet spilling over the
+  chart), so it takes the full width, with the call's chip on it, and a
+  strip of when over the cards: each a numbered dot at its deadline that
+  brings its card into view, chosen over dots that only show. Its reader
+  is the Board's, with the Topic Atlas's score, ideas and marks inside.
+- **No clutter**: of the Topic Atlas's rail only its filters, folded
+  behind one Filters button (which, deadline by, where, type of action);
+  the tuning stays on its defaults with no control for it, and there is
+  no arithmetic and no Export CSV.
+- **CoProg's rows are each partnership's own Horizon topics** (8.4), each
+  with the cluster call it sits in, gathered by the Work Programme's own
+  sentence naming the partnership (1 A), over its name anywhere in the
+  topic, which brought strays. The dates ChatGPT had found for those
+  partnerships left the tab, and its search for calls no longer asks for
+  them (2 A), over keeping them above the topics. The Ledger can still be
+  tied to them.
