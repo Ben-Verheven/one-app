@@ -1,10 +1,8 @@
 /* The Topic Atlas's engine, the half that ranks topics for keywords
-   (Scorer). It stood inside index.html until
-   2026-10-29, when the Call Board's Atlas switch came to rank with it too:
-   one copy, read by both pages, so the Board ranks exactly as the Topic
-   Atlas does, as library.js keeps their libraries one (see
-   notes/topic-atlas.md). A rebuilt Topic Atlas loads textutil.js and
-   scorer.js rather than writing them back into its page. */
+   (Scorer). It stood inside the
+   Topic Atlas's page until 2026-10-29, when the Call Board's Atlas switch
+   took over its search and the page was retired (see
+   notes/topic-atlas.md). */
 
 /* Ranking topics for a researcher's keywords — the Atlas's search, turned
    around. Shared by the build (examples, checks) and the app.

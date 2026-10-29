@@ -1857,6 +1857,9 @@
     var saved = localStorage.getItem('hub.room');
     if (saved && Hub.pane(saved)) start = saved;
   } catch (e) {}
+  /* The Topic Atlas's old address sends Mark here with #atlas (see
+     topic-atlas/index.html): the Call Board, its Atlas switch on. */
+  if (location.hash === '#atlas' && Hub.pane('callboard')) start = 'callboard';
   moveTo(start, true);
 })();
 

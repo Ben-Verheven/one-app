@@ -39,6 +39,6 @@ goes in.
 | [spines.md](spines.md) | Call deadlines drawn on the board's own rows, the programme's per-project dates beside them, the tie that binds a todo to a key date, and the call backbone that lays out a new call — including the project-level design that was scrapped, and the from-a-call design that replaced it in turn. |
 | [testing.md](testing.md) | test the empty and nearly-empty case, and how to drive a throwaway browser here without wasting an afternoon |
 | [todo-card.md](todo-card.md) | The design of the todo card — what sits on its always-visible row, what the action row says and in what order, and every rearrangement Mark has already rejected. Read before moving anything on it. |
-| [topic-atlas.md](topic-atlas.md) | Mark's Topic Atlas, brought into the repository so Mark's Place shares its concept libraries, and why it stays a plain program |
+| [topic-atlas.md](topic-atlas.md) | Mark's Topic Atlas, its page retired into the Call Board's Atlas switch, its four files the topics' one copy and the libraries Mark's Place shares, and why it stays a plain program |
 | [tools.md](tools.md) | What the One App indexers can and cannot be trusted to say, and the standing practice around them — the part their own docstrings and generated prose do not carry. |
 | [working-here.md](working-here.md) | How work reaches Mark's app since the move to GitHub (2026-10-10) — attaching the repo, pushing, what the proxy refuses — and the hard-won rules of the old OneDrive way, kept for going back. |

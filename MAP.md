@@ -26,7 +26,7 @@ rooms                                                hub.js:296
 
 ## `shell/bridge.js`
 
-2415 lines · 116 KB
+2418 lines · 116 KB
 
 ```
 Bridge — what the five rooms say to each other.             bridge.js:1
@@ -49,13 +49,13 @@ the agents' inboxes: what the scheduled agents found        bridge.js:1484
 a lead's sheet                                              bridge.js:1631
 the Horizon check, and the call texts                       bridge.js:1701
 open where we left off                                      bridge.js:1853
-the weekly Excel: every lead, open and closed               bridge.js:1864
-the zip                                                     bridge.js:1921
-the styles                                                  bridge.js:1975
-the look                                                    bridge.js:2014
-what goes in it                                             bridge.js:2232
-where it goes                                               bridge.js:2276
-on the iPad, links open in DuckDuckGo                       bridge.js:2361
+the weekly Excel: every lead, open and closed               bridge.js:1867
+the zip                                                     bridge.js:1924
+the styles                                                  bridge.js:1978
+the look                                                    bridge.js:2017
+what goes in it                                             bridge.js:2235
+where it goes                                               bridge.js:2279
+on the iPad, links open in DuckDuckGo                       bridge.js:2364
 ```
 
 ## `shell/boot.js`
@@ -471,7 +471,7 @@ _No section banners._
 
 ## `rooms/callboard/callboard.js`
 
-2808 lines · 159 KB
+2809 lines · 159 KB
 
 ```
 Call Board                                              callboard.js:1
@@ -498,7 +498,7 @@ the keywords' lines, as the Topic Atlas draws them      callboard.js:2366
 the reader: the Board's own, with what was found in it  callboard.js:2516
 the switch, the keywords, and the filters               callboard.js:2614
 controls                                                callboard.js:2671
-what the other rooms may ask for                        callboard.js:2733
+what the other rooms may ask for                        callboard.js:2734
 ```
 
 ## `rooms/callboard/callboard.css`
@@ -675,4 +675,4 @@ Generated data. Never open, never edit, never upload.
 
 ---
 
-**42296 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.
+**42300 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.

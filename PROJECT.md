@@ -603,7 +603,7 @@ one-app/
     atlas-graph.js              the graph
     callboard-topics.js         clusters, destinations, topics, calls
 partner-watch/        Mark’s Place, a page of its own, and in pocket/ its phone version — see notes/partner-watch.md
-topic-atlas/          the Topic Atlas, a page of its own: its topics with their texts (topics.js, the only copy, which the Call Board's reader shows), its two concept libraries (library.js, which Mark’s Place reads too) and its engine (textutil.js, scorer.js), which the Call Board's Atlas switch reads too — see notes/topic-atlas.md
+topic-atlas/          the Topic Atlas, its page retired into the Call Board's Atlas switch (its address opens it): its topics with their texts (topics.js, the only copy, which the Call Board's reader shows), its two concept libraries (library.js, which Mark’s Place reads too) and its engine (textutil.js, scorer.js), which the Call Board's Atlas switch reads — see notes/topic-atlas.md
 supabase/             the database's SQL, the two agents' gatekeepers, Partner Watch's copier and the Horizon check
 tools/                the scripts below
 ```

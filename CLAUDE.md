@@ -10,6 +10,8 @@ I am not a programmer. Call me a vibe-coding enthusiast: eager to learn, but not
 
 Do the work yourself. Never hand me a task that needs a programmer. Explain what you did in plain words.
 
+Answer as clearly and simply as this, which worked (2026-10-29): a few short headings; under each, what a thing is and does in a line or two; then what you recommend and one plain question. No code words, and file names only where they help me. Go deeper only when a choice needs it.
+
 ## Working in the repository
 
 This clone is the only copy worked on. Pages serves only main, so work pushed anywhere else never reaches me. The session's start hook already puts the clone on main and pulls (notes/working-here.md); don't run it again. My computer is not needed, and the OneDrive folders are not touched.

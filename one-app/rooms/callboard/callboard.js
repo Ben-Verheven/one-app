@@ -2001,9 +2001,9 @@ function paintOv(quick){
    calls whose official text is kept. The Horizon topics are the Topic
    Atlas's own, its texts checked against the portal and the ideas its
    build found in them, and the ranking is its own engine with its
-   libraries: the files its page reads (topic-atlas/topics.js,
-   textutil.js, scorer.js and library.js), so a keyword ranks the topics
-   here as it does there. The Board's own copies of the texts were tried
+   libraries (topic-atlas/topics.js, textutil.js, scorer.js and
+   library.js), so a keyword ranks the topics as the Topic Atlas's page
+   did; that page was retired the same day, the switch taking its place. The Board's own copies of the texts were tried
    first and were not good enough: one topic's carried another topic's
    text, which the Topic Atlas had put right, and it came fourth for
    "digital twin" and "manufacturing". The results are drawn as the Topic Atlas draws them, adjusted
@@ -2728,6 +2728,7 @@ const start = hash==='all' ? PAGES.length : Math.max(0, PAGES.findIndex(p=>p.key
 const atab=hash==='freezer'?'FREEZER':(TYPE_TABS.find(t=>t.key.toLowerCase()===hash)||{}).key;
 if(atab) pendingTab=atab;
 selectPage(start);
+if(hash==='atlas') taSet(true);
 
 
 /* ---------- what the other rooms may ask for ----------

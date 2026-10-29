@@ -16,7 +16,6 @@ whole point of the design, and it is the only promise this file makes.
 | desk | `https://ben-verheven.github.io/one-app/` | bookmark it |
 | iPad | the same address, in Safari | Share → **Add to Home Screen** |
 | iPhone, Mark’s Place | `https://ben-verheven.github.io/one-app/partner-watch/pocket/` | Share → **Add to Home Screen** |
-| desk, Topic Atlas | `https://ben-verheven.github.io/one-app/topic-atlas/` | bookmark it |
 
 From the home screen, One App and Mark’s Place open full screen, with their own
 icons and without Safari's bars.
@@ -69,7 +68,7 @@ the top-right rail names the room that failed to load.
 |---|---|
 | `one-app/` | the app: the page, the shell, the rooms, the data |
 | `partner-watch/` | Mark’s Place, and in `pocket/` its phone version |
-| `topic-atlas/` | the Topic Atlas |
+| `topic-atlas/` | the Topic Atlas's topics and search, which the Call Board's Atlas switch uses; its old address opens that switch |
 | `supabase/` | the database's scripts, the agents' gatekeepers and Mark’s Place's copier |
 | `tools/` | scripts the assistant runs in its own workspace, never you |
 | `CLAUDE.md` | how the assistant works here |

@@ -1196,7 +1196,7 @@ the two lists at the foot of this file is where those names gather.
 .solo          semaphore.css:562                  semaphore.js:3337
 .something     semaphore.css:1382                 semaphore.js:381 x8
 .soon          semaphore.css:374 x3               ledger.js:7497 x2   semaphore.js:3648
-.sp            semaphore.css:752 x6               semaphore.js:2132 x12   atlas.js:1978 x4   bridge.js:2036 x2
+.sp            semaphore.css:752 x6               semaphore.js:2132 x12   atlas.js:1978 x4   bridge.js:2039 x2
 .spanline      semaphore.css:941                  semaphore.js:2820 x2
 .sr            semaphore.css:1320 x3              semaphore.js:2186 x3
 .ssoft         semaphore.css:1342                 semaphore.js:2245
@@ -1366,12 +1366,12 @@ the two lists at the foot of this file is where those names gather.
 .aosp          callboard.css:418                  callboard.js:599
 .aoty          callboard.css:417                  callboard.js:599
 .aox           callboard.css:424                  callboard.js:609
-.arena         callboard.css:384 x4               semaphore.js:183 x83   callboard.js:152 x24   bridge.js:2028 x5
+.arena         callboard.css:384 x4               semaphore.js:183 x83   callboard.js:152 x24   bridge.js:2031 x5
 .arow          callboard.css:392 x4               callboard.js:528 x5
 .arr           callboard.css:218                  callboard.js:1618
 .arrow         callboard.css:551                  callboard.js:2256
 .aside         callboard.css:334                  callboard.view.js:5 x4   callboard.js:883 x4   semaphore.view.js:5 x2
-.atlas         callboard.css:681                  bridge.js:16 x9   callboard.js:2031 x4   atlas.js:2 x4
+.atlas         callboard.css:681                  bridge.js:16 x10   callboard.js:2031 x5   atlas.js:2 x4
 .band          callboard.css:265 x2               semaphore.js:914 x2   callboard.js:1775 x2
 .band-tag      callboard.css:73 x2                callboard.js:1775 x2
 .bar           callboard.css:173 x7               callboard.js:486 x4   bridge.js:631 x2   notes.view.js:15 x2
@@ -1397,7 +1397,7 @@ the two lists at the foot of this file is where those names gather.
 .cnode         callboard.css:532 x8               callboard.js:2209 x5
 .code          callboard.css:593                  callboard.js:2209 x10   semaphore.view.js:5 x3   ledger.js:10668
 .cost          callboard.css:560                  callboard.js:2276 x3
-.count         callboard.css:73 x2                callboard.js:1060 x11   bridge.js:2003 x8   callboard.view.js:5 x2
+.count         callboard.css:73 x2                callboard.js:1060 x11   bridge.js:2006 x8   callboard.view.js:5 x2
 .crow          callboard.css:240 x26              callboard.js:528 x12
 .csoft         callboard.css:378 x2               callboard.js:1107
 .dark          callboard.css:430 x2               callboard.js:606
@@ -1474,7 +1474,7 @@ the two lists at the foot of this file is where those names gather.
 .presets       callboard.css:133                  callboard.view.js:5 x2   callboard.js:1656 x2
 .q             callboard.css:235 x2               callboard.js:210 x13   atlas.js:732 x5   semaphore.js:2501
 .qhit          callboard.css:673                  callboard.js:2544 x3
-.r             callboard.css:256 x2               atlas.js:731 x83   callboard.js:131 x31   bridge.js:2037 x12
+.r             callboard.css:256 x2               atlas.js:731 x83   callboard.js:131 x31   bridge.js:2040 x12
 .rank          callboard.css:588                  atlas.js:836 x16   callboard.js:2360 x3
 .rd-body       callboard.css:342 x10              callboard.view.js:5
 .rd-close      callboard.css:96 x3                callboard.view.js:5
@@ -1573,7 +1573,7 @@ the two lists at the foot of this file is where those names gather.
 #canvasWrap  atlas.css:281 x3                   atlas.js:2434 x3
 #dbody       atlas.css:324                      atlas.js:2235 x2   atlas.view.js:5
 #dhead       atlas.css:323 x4                   atlas.view.js:5   atlas.js:2080
-#main        atlas.css:63 x4                    ledger.js:2516 x5   atlas.js:1180 x5   bridge.js:2002 x4
+#main        atlas.css:63 x4                    ledger.js:2516 x5   atlas.js:1180 x5   bridge.js:2005 x4
 #modalbox    atlas.css:384 x5                   atlas.js:707 x3   atlas.view.js:5
 #qbar        atlas.css:112 x2                   atlas.js:1182
 #qbox        atlas.css:176 x2                   atlas.js:1182
@@ -1704,7 +1704,7 @@ the two lists at the foot of this file is where those names gather.
 .snum        atlas.css:197 x2                   callboard.js:2362   atlas.js:1280
 .sub         atlas.css:293 x6                   semaphore.view.js:5 x9   bridge.js:597 x5   callboard.js:873 x4
 .sugg        atlas.css:236 x2                   semaphore.js:3135 x2   atlas.js:1210 x2   callboard.js:2209
-.t           atlas.css:370 x10                  atlas.js:59 x32   callboard.js:1309 x27   bridge.js:2039 x5
+.t           atlas.css:370 x10                  atlas.js:59 x32   callboard.js:1309 x27   bridge.js:2042 x5
 .tag         atlas.css:455                      notes.js:717 x20   semaphore.view.js:5 x2   notes.view.js:15 x2
 .tcrumb      atlas.css:268 x3                   atlas.js:1635
 .tcrumbs     atlas.css:266                      atlas.js:1496 x3
@@ -1716,7 +1716,7 @@ the two lists at the foot of this file is where those names gather.
 .tsep        atlas.css:272                      atlas.js:1635
 .tw          atlas.css:242                      atlas.js:1505 x4
 .undo        atlas.css:402 x4                   atlas.js:756 x6   semaphore.js:1711 x2   atlas.view.js:5 x2
-.val         atlas.css:168                      atlas.js:740 x7   bridge.js:1980 x4
+.val         atlas.css:168                      atlas.js:740 x7   bridge.js:1983 x4
 .vchip       atlas.css:146                      atlas.js:2784
 .w           atlas.css:226 x3                   atlas.js:1125 x19   callboard.js:267 x13
 .wcenter     atlas.css:301                      atlas.js:2640
