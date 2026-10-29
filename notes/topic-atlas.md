@@ -11,7 +11,9 @@ scripts are not here) and brought in on 2026-10-21 as `topic-atlas/`.
   topics, its engine and its libraries are four files the page reads,
   `topics.js` (the `ta-data` line until then), `textutil.js`, `scorer.js`
   (both inside the page until then) and `library.js`, and the Call Board
-  fetches the same four the first time the switch is used. A rebuild
+  fetches the same four once it is built. `topics.js` is the only copy of
+  the topics' texts: the Board's own (`data/callboard-descriptions.js`)
+  went the same day, so its reader shows these too. A rebuild
   writes all four there, never back into the page. The Board's own copies
   of the topics' texts were tried first and ranked differently: some carry
   another topic's text, which this build had put right from the portal.

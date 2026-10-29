@@ -6,7 +6,7 @@ file named above them, not of anything else.
 
 ## `index.html`
 
-80 lines · 4 KB
+79 lines · 4 KB
 
 _No section banners._
 
@@ -471,7 +471,7 @@ _No section banners._
 
 ## `rooms/callboard/callboard.js`
 
-2769 lines · 157 KB
+2808 lines · 159 KB
 
 ```
 Call Board                                              callboard.js:1
@@ -487,18 +487,18 @@ render                                                  callboard.js:989
 the freezer                                             callboard.js:1205
 the other clusters, while a search is typed             callboard.js:1267
 full topic text                                         callboard.js:1435
-why the slide is started two frames late                callboard.js:1545
-overview page                                           callboard.js:1606
-the chronological chart, and dragging its ends          callboard.js:1669
-the topic list under the chart                          callboard.js:1784
-repainting what is already drawn                        callboard.js:1927
-the Topic Atlas inside the Board                        callboard.js:1965
-the page of results                                     callboard.js:2163
-the keywords' lines, as the Topic Atlas draws them      callboard.js:2334
-the reader: the Board's own, with what was found in it  callboard.js:2484
-the switch, the keywords, and the filters               callboard.js:2582
-controls                                                callboard.js:2639
-what the other rooms may ask for                        callboard.js:2701
+why the slide is started two frames late                callboard.js:1575
+overview page                                           callboard.js:1636
+the chronological chart, and dragging its ends          callboard.js:1699
+the topic list under the chart                          callboard.js:1814
+repainting what is already drawn                        callboard.js:1957
+the Topic Atlas inside the Board                        callboard.js:1995
+the page of results                                     callboard.js:2195
+the keywords' lines, as the Topic Atlas draws them      callboard.js:2366
+the reader: the Board's own, with what was found in it  callboard.js:2516
+the switch, the keywords, and the filters               callboard.js:2614
+controls                                                callboard.js:2671
+what the other rooms may ask for                        callboard.js:2733
 ```
 
 ## `rooms/callboard/callboard.css`
@@ -673,12 +673,6 @@ Generated data. Never open, never edit, never upload.
 
 Generated data. Never open, never edit, never upload.
 
-## `data/callboard-descriptions.js`
-
-6 lines · 3579 KB
-
-Generated data. Never open, never edit, never upload.
-
 ---
 
-**42264 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.
+**42296 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.

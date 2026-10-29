@@ -1441,7 +1441,32 @@ function showCard(ids){
 const ACTION_TYPES={RIA:'Research and Innovation Action',
                     IA:'Innovation Action',
                     CSA:'Coordination and Support Action'};
-const DESC = window.__CB_DESC();   /* data/callboard-descriptions.js */
+/* A topic's text is the Topic Atlas's (Mark, 2026-10-29): one copy,
+   checked against the portal when it was built, which this room's reader,
+   its full-text search, CoProg's rows and the Atlas switch all read
+   (topic-atlas/topics.js). The Board's own copy of the Commission's prose
+   went with it: some of its topics carried another topic's text, one of
+   them a quantum-computing call under a Galileo topic, which the Topic
+   Atlas had set aside. The file is five megabytes, so it is fetched in the
+   background once this room is built, never at the app's load, and a
+   topic opened before it arrives says so and fills in when it does (Mark
+   chose that wait over a heavier start). Its shape here is the one the
+   old file had: o and s the Expected Outcome's and the Scope's
+   paragraphs, x the other sections, c the conditions, and a note where
+   the text was set aside. */
+let DESC={}, TEXTS='wait';
+function textsArrived(){
+  if(!window.TOPIC_ATLAS_DATA){ TEXTS='none'; return; }
+  DESC={};
+  window.TOPIC_ATLAS_DATA.topics.forEach(t=>{
+    const cap=w=>String(w||'').charAt(0).toUpperCase()+String(w||'').slice(1);
+    DESC[t.id]={o:t.s.outcome||[],s:t.s.scope||[],
+      x:(t.x||[]).map(x=>[x.name,x.paras||[]]).concat((t.tr||[]).filter(r=>r.reason==='footnotes'&&r.paras&&r.paras.length).map(r=>[cap(r.reason),r.paras])),
+      c:(t.ct||[]).map(c=>[c.label,c.text]),
+      note:(t.fl||[]).filter(f=>f.kind==='text-mismatch').map(f=>f.note).join(' ')};
+  });
+  TEXTS='here'; FULLIDX=null; COPROG_SENT=null;
+}
 const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 /* the same, for a value standing inside an attribute's quotes: an address
    a search brought may carry a quote mark of its own */
@@ -1525,7 +1550,12 @@ function openReader(topic, call){
   links.appendChild(portalLink(topicURL(topic.id),'Topic on portal'));
   RD_ID=topic.id; RD_BACK=null; readerNotices(topic.id);
   const body=document.getElementById('rdbody');
-  if(!d){ body.innerHTML='<p>No full text could be extracted for this topic.</p>'; }
+  if(!d||(d.note&&!d.o.length&&!d.s.length)||!(d.o.length||d.s.length||d.x.length||d.c.length)){
+    body.innerHTML=TEXTS==='wait'?'<p class="rdwait">Reading the topics’ texts…</p>'
+      :TEXTS==='none'?'<p>The topics’ texts are in the folder topic-atlas beside the app, which this copy of the app does not have.</p>'
+      :d&&d.note?`<p>The work programme printed another action’s text under this topic, so it is set aside: ${esc(d.note)}</p><p>Read the topic on the portal.</p>`
+      :'<p>No full text could be extracted for this topic.</p>';
+  }
   else{
     const paras=arr=>(arr||[]).map(p=>p.startsWith('• ')
       ? `<p class="bul">•&nbsp;${hl(p.slice(2))}</p>` : `<p>${hl(p)}</p>`).join('');
@@ -1986,10 +2016,10 @@ function paintOv(quick){
    no control for it (Mark, 2026-10-24). A plain program, as Mark wants it:
    nothing here asks Claude what a text means.
 
-   The four files are fetched the first time the switch is used, as plain
-   scripts beside the app, never at load: the topics alone are five
+   The four files are fetched once this room is built, as plain scripts
+   beside the app, never at the app's load: the topics alone are five
    megabytes, and a copy of the app without the folder topic-atlas (the
-   OneDrive one, the single-file build) still starts, and says so here.
+   single-file build) still starts, and says so here.
    An arena's call text is not in the Topic Atlas, so which idea it names
    is read here, once: the longest of an idea's names that starts at a
    word wins, in the three spellings Mark's Place reads with. A tab
@@ -2011,17 +2041,19 @@ function taSave(){ try{ localStorage.setItem(TAKEY,JSON.stringify({chips:TA.chip
 const TAFILES={'library.js':'TOPIC_LIBRARY','textutil.js':'TextUtil','scorer.js':'Scorer','topics.js':'TOPIC_ATLAS_DATA'};
 const taCan=()=>Object.values(TAFILES).every(k=>!!window[k]);
 /* the Topic Atlas's files, one after another, each as a plain script */
+const TAWAIT=[];
 function taLoad(done){
   if(taCan()||TA.failed) return done();
+  TAWAIT.push(done);
   if(TA.loading) return;
   TA.loading=true;
   const files=Object.keys(TAFILES).filter(f=>!window[TAFILES[f]]);
+  const end=failed=>{ TA.loading=false; TA.failed=failed; TAWAIT.splice(0).forEach(f=>f()); };
   const next=()=>{
     const f=files.shift();
-    if(!f){ TA.loading=false; TA.failed=!taCan(); return done(); }
+    if(!f) return end(!taCan());
     const el=document.createElement('script'); el.src='../topic-atlas/'+f;
-    el.onload=next;
-    el.onerror=()=>{ TA.loading=false; TA.failed=true; done(); };
+    el.onload=next; el.onerror=()=>end(true);
     document.body.appendChild(el);
   };
   next();
@@ -2762,6 +2794,13 @@ Hub.expose('callboard',{
   cloudBack:function(){ readHorizon(); }
 });
 readHorizon();
+taLoad(()=>{
+  textsArrived();
+  if(ARENA_SRC) arenasArrived();     /* CoProg's rows are found in the texts */
+  if(FULLTEXT&&!TA.on) MODE==='overview'?buildOvLedger():applyFilters();
+  const rd=document.getElementById('reader');
+  if(RD_ID&&rd.getAttribute('aria-hidden')==='false'&&document.querySelector('#rdbody .rdwait')) openReader(RD_ID);
+});
 /* The room is built late and only once; the bridge waits for this to
    hand it the arenas. */
 Hub.emit('callboard:ready');

@@ -131,8 +131,7 @@ ORDER = ['index.html', 'shell/hub.js', 'shell/bridge.js', 'shell/boot.js',
 for r in ROOMS:
     ORDER += ['rooms/%s/%s.view.js' % (r, r), 'rooms/%s/%s.js' % (r, r),
               'rooms/%s/%s.css' % (r, r)]
-ORDER += ['data/atlas-graph.js', 'data/callboard-topics.js',
-          'data/callboard-descriptions.js']
+ORDER += ['data/atlas-graph.js', 'data/callboard-topics.js']
 
 lines = ['# MAP — where everything is',
          '',

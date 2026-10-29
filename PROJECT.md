@@ -95,7 +95,8 @@ against the real global.
 
 **The Call Board is lazy** (`LAZY = { callboard: 1 }` in `hub.js`). Its
 pane registers at load but its function is not run until the room is
-first opened, because it builds several megabytes of Commission prose.
+first opened, because it builds the whole Work Programme, and fetches
+the topics' texts (the Topic Atlas's, `topic-atlas/topics.js`) only then.
 The other four are built at load because other rooms reach into them
 then. The Board is reached into as well — the Ledger's programme projects
 are each written for one of its topics — but never at load: the bridge
@@ -414,8 +415,8 @@ is what you cannot reach.
 
 4. **`data/*.js` are generated and enormous** — most of the app's weight.
    Never open them, never edit them, never paste them anywhere. Each
-   returns its JSON through a function so the Call Board's prose is still
-   only built on first entry.
+   returns its JSON through a function so the Call Board's topics are
+   still only built on first entry.
 
 ---
 
@@ -601,9 +602,8 @@ one-app/
   data/
     atlas-graph.js              the graph
     callboard-topics.js         clusters, destinations, topics, calls
-    callboard-descriptions.js   the Commission's prose
 partner-watch/        Mark’s Place, a page of its own, and in pocket/ its phone version — see notes/partner-watch.md
-topic-atlas/          the Topic Atlas, a page of its own: its topics (topics.js), its two concept libraries (library.js, which Mark’s Place reads too) and its engine (textutil.js, scorer.js), which the Call Board's Atlas switch reads too — see notes/topic-atlas.md
+topic-atlas/          the Topic Atlas, a page of its own: its topics with their texts (topics.js, the only copy, which the Call Board's reader shows), its two concept libraries (library.js, which Mark’s Place reads too) and its engine (textutil.js, scorer.js), which the Call Board's Atlas switch reads too — see notes/topic-atlas.md
 supabase/             the database's SQL, the two agents' gatekeepers, Partner Watch's copier and the Horizon check
 tools/                the scripts below
 ```
