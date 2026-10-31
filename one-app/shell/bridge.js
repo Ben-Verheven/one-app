@@ -313,17 +313,32 @@
   }
   /* What each fill-in of the Notes room's FILLS becomes on this lead. One
      the lead has nothing for stays in its brackets, so the gap is seen in
-     the email rather than read as a sentence with a word missing. */
-  function fillIn(t, who, x) {
-    var FILL = {
+     the email rather than read as a sentence with a word missing. Square
+     brackets do as curly ones, and "project x" and "call x" are the words
+     Mark types himself (2026-10-31); the call is the lead's arena. Any
+     other word in square brackets is left alone, since those are also how
+     ordinary writing marks an aside. */
+  var FILLED = /\{([^{}\[\]\n]{1,30})\}|\[([^{}\[\]\n]{1,30})\]/g;
+  function fills(who, x) {
+    return {
       'first name': who.split(/\s+/)[0], 'name': who,
-      'project': x.l.project || '', 'programme': x.a.name || '',
+      'project': x.l.project || '', 'project x': x.l.project || '',
+      'programme': x.a.name || '', 'call x': x.a.name || '',
       'organisation': x.l.coordinator || '', 'contact': x.l.contact || ''
     };
-    return String(t || '').replace(/\{([^{}\n]{1,30})\}/g, function (all, w) {
-      var v = FILL[w.toLowerCase()];
+  }
+  function fillIn(t, who, x) {
+    var FILL = fills(who, x);
+    return String(t || '').replace(FILLED, function (all, a, b) {
+      var v = FILL[(a || b).toLowerCase()];
       return v ? v : all;
     });
+  }
+  /* a fill-in still standing after fillIn, i.e. one the lead had nothing for */
+  function unfilled(t, who, x) {
+    var FILL = fills(who, x), left = false;
+    String(t).replace(FILLED, function (all, a, b) { if ((a || b).toLowerCase() in FILL) left = true; return all; });
+    return left;
   }
 
   var mailMenu = null;
@@ -381,7 +396,7 @@
     var said = [];
     if (href.length > 2000) said.push('the text is long, so Outlook may cut its end off');
     if (!addr) said.push('the Atlas has no address for ' + who + ' — add it on their card');
-    if (/\{[^{}\n]{1,30}\}/.test(subject + body)) said.push('a word in brackets had nothing on the lead to fill it');
+    if (unfilled(subject + '\n' + body, who, x)) said.push('a word in brackets had nothing on the lead to fill it');
     if (said.length) Hub.note('Email opened, but ' + said.join('; ') + '.', 9000);
     var S = Hub.api('semaphore');
     if (S && S.leadVerb) S.leadVerb(x.a.id, x.l.id, 'note', 'Emailed ' + who + ': ' + (t.name || 'Untitled'));
