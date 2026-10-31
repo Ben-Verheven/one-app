@@ -69,7 +69,7 @@ Boot check  boot.js:1
 
 ## `shell/shell.css`
 
-864 lines · 45 KB
+867 lines · 45 KB
 
 ```
 Shell — the chrome that holds the five rooms.              shell.css:1
@@ -82,16 +82,16 @@ the page change                                            shell.css:281
 stage & panes                                              shell.css:318
 the researcher link, wherever a name is written            shell.css:374
 the ✉ after a researcher on a lead, and what it opens      shell.css:388
-Palette harmonisation.                                     shell.css:422
-faint was #9D8458                                          shell.css:468
-The ribbon.                                                shell.css:496
-one bar: one height, one control face                      shell.css:512
-the ribbon's ink, said louder than each room says its own  shell.css:578
-Semaphore: already the shape of the thing                  shell.css:648
-the Ledger                                                 shell.css:653
-the Atlas: a 21px italic wordmark                          shell.css:695
-the Call Board: the cluster row is the bar                 shell.css:717
-a lead's sheet, printed                                    shell.css:847
+Palette harmonisation.                                     shell.css:425
+faint was #9D8458                                          shell.css:471
+The ribbon.                                                shell.css:499
+one bar: one height, one control face                      shell.css:515
+the ribbon's ink, said louder than each room says its own  shell.css:581
+Semaphore: already the shape of the thing                  shell.css:651
+the Ledger                                                 shell.css:656
+the Atlas: a 21px italic wordmark                          shell.css:698
+the Call Board: the cluster row is the bar                 shell.css:720
+a lead's sheet, printed                                    shell.css:850
 ```
 
 ## `rooms/ledger/ledger.view.js`
@@ -679,4 +679,4 @@ Generated data. Never open, never edit, never upload.
 
 ---
 
-**42746 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.
+**42749 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.

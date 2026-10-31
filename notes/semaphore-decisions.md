@@ -298,7 +298,8 @@ calls land on the Call Board. What still holds of the board:
   Mark's Place's.
 - **A ✉ after each researcher named under Match** (2026-10-31), on every
   lead, chosen from three drawn over an "Email…" beside PDF (Mark's Place
-  leads only) and the same plus one on every other lead. It opens a menu:
+  leads only) and the same plus one on every other lead; shown only while
+  the lead is open, as he asked the same day. It opens a menu:
   who it goes to, with the address the Atlas holds, and his templates from
   the Notes room ([notes-room](notes-room.md)). A template picked opens the
   email filled in from the lead and writes "Emailed <name>: <template>" into

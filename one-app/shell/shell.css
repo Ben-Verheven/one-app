@@ -397,6 +397,9 @@ html #pane-ledger, html #pane-semaphore, html #pane-callboard{
   margin:0 1px 0 3px; padding:0 3px; border-radius:3px;
   font:inherit; font-style:normal; line-height:1; color:#D8CDB8;
 }
+/* only on a lead that is open (Mark, 2026-10-31): on the shut line it
+   was one more mark in the Match column he reads every day */
+#pane-semaphore .lead:not(.open) .oa-mail{display:none}
 #pane-semaphore .oa-mail:hover,#pane-semaphore .oa-mail:focus-visible{background:rgba(216,205,184,.16); color:#EDE7DC; outline:none}
 .oa-mailmenu{
   position:fixed; z-index:9000; width:300px;
