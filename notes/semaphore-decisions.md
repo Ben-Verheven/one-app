@@ -305,7 +305,8 @@ calls land on the Call Board. What still holds of the board:
   the Notes room ([notes-room](notes-room.md)). A template picked opens the
   email filled in from the lead and writes "Emailed <name>: <template>" into
   Updates; on a lead Mark's Place made, the PDF's print window follows, for
-  him to save and drag in. A page cannot attach a file or save one to
+  him to save and drag in (on the iPad, which blocks a print no press
+  began, from a Save PDF bar at the foot of the page). A page cannot attach a file or save one to
   Downloads unasked, and a silent PDF made by an add-on would be a blurred
   picture; he was told and took the print window.
 - **A lead that moves slides there and glows**, the view following it

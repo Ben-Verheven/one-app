@@ -26,7 +26,7 @@ rooms                                                hub.js:296
 
 ## `shell/bridge.js`
 
-2566 lines · 123 KB
+2592 lines · 125 KB
 
 ```
 Bridge — what the five rooms say to each other.             bridge.js:1
@@ -34,29 +34,29 @@ who the atlas knows, and what they might be called          bridge.js:24
 linkifying                                                  bridge.js:82
 the Atlas's dossier, lent to the other rooms                bridge.js:205
 an email from a lead                                        bridge.js:274
-the Call Board's reader, lent the same way                  bridge.js:433
-the topic a project was written for                         bridge.js:493
-Semaphore's arena drawer, lent the same way                 bridge.js:560
-Semaphore's board, on the Call Board                        bridge.js:631
-Semaphore's leads, on the Ledger's board                    bridge.js:698
-the ring                                                    bridge.js:746
-the name                                                    bridge.js:878
-the page change                                             bridge.js:942
-the rooms that keep their own state, on the Ledger's cloud  bridge.js:978
-which copy wins                                             bridge.js:1060
-what the room says about itself                             bridge.js:1115
-putting two copies together                                 bridge.js:1308
-the agents' inboxes: what the scheduled agents found        bridge.js:1645
-a lead's sheet                                              bridge.js:1792
-the Horizon check, and the call texts                       bridge.js:1849
-open where we left off                                      bridge.js:2001
-the weekly Excel: every lead, open and closed               bridge.js:2015
-the zip                                                     bridge.js:2072
-the styles                                                  bridge.js:2126
-the look                                                    bridge.js:2165
-what goes in it                                             bridge.js:2383
-where it goes                                               bridge.js:2427
-on the iPad, links open in DuckDuckGo                       bridge.js:2512
+the Call Board's reader, lent the same way                  bridge.js:454
+the topic a project was written for                         bridge.js:514
+Semaphore's arena drawer, lent the same way                 bridge.js:581
+Semaphore's board, on the Call Board                        bridge.js:652
+Semaphore's leads, on the Ledger's board                    bridge.js:719
+the ring                                                    bridge.js:767
+the name                                                    bridge.js:899
+the page change                                             bridge.js:963
+the rooms that keep their own state, on the Ledger's cloud  bridge.js:999
+which copy wins                                             bridge.js:1081
+what the room says about itself                             bridge.js:1136
+putting two copies together                                 bridge.js:1329
+the agents' inboxes: what the scheduled agents found        bridge.js:1666
+a lead's sheet                                              bridge.js:1813
+the Horizon check, and the call texts                       bridge.js:1875
+open where we left off                                      bridge.js:2027
+the weekly Excel: every lead, open and closed               bridge.js:2041
+the zip                                                     bridge.js:2098
+the styles                                                  bridge.js:2152
+the look                                                    bridge.js:2191
+what goes in it                                             bridge.js:2409
+where it goes                                               bridge.js:2453
+on the iPad, links open in DuckDuckGo                       bridge.js:2538
 ```
 
 ## `shell/boot.js`
@@ -69,7 +69,7 @@ Boot check  boot.js:1
 
 ## `shell/shell.css`
 
-867 lines · 45 KB
+881 lines · 46 KB
 
 ```
 Shell — the chrome that holds the five rooms.              shell.css:1
@@ -82,16 +82,16 @@ the page change                                            shell.css:281
 stage & panes                                              shell.css:318
 the researcher link, wherever a name is written            shell.css:374
 the ✉ after a researcher on a lead, and what it opens      shell.css:388
-Palette harmonisation.                                     shell.css:425
-faint was #9D8458                                          shell.css:471
-The ribbon.                                                shell.css:499
-one bar: one height, one control face                      shell.css:515
-the ribbon's ink, said louder than each room says its own  shell.css:581
-Semaphore: already the shape of the thing                  shell.css:651
-the Ledger                                                 shell.css:656
-the Atlas: a 21px italic wordmark                          shell.css:698
-the Call Board: the cluster row is the bar                 shell.css:720
-a lead's sheet, printed                                    shell.css:850
+Palette harmonisation.                                     shell.css:439
+faint was #9D8458                                          shell.css:485
+The ribbon.                                                shell.css:513
+one bar: one height, one control face                      shell.css:529
+the ribbon's ink, said louder than each room says its own  shell.css:595
+Semaphore: already the shape of the thing                  shell.css:665
+the Ledger                                                 shell.css:670
+the Atlas: a 21px italic wordmark                          shell.css:712
+the Call Board: the cluster row is the bar                 shell.css:734
+a lead's sheet, printed                                    shell.css:864
 ```
 
 ## `rooms/ledger/ledger.view.js`
@@ -679,4 +679,4 @@ Generated data. Never open, never edit, never upload.
 
 ---
 
-**42718 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.
+**42758 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.

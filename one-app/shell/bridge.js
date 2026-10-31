@@ -351,6 +351,9 @@
     var card = btn.closest('.lead'), x = card && leadOf(card);
     var who = R[+btn.getAttribute('data-rid')];
     if (!x || !who) return;
+    /* the entry read now, while a template is chosen, so the PDF can be
+       printed from inside the next press */
+    if (x.l.entryId) Hub.emit('lead:sheet', { entryId: x.l.entryId, fetch: true });
     var addr = addressOf(who.name);
     var notes = Hub.api('notes'), list = notes && notes.mails ? notes.mails() : [];
     var m = document.createElement('div');
@@ -403,14 +406,32 @@
     if (said.length) Hub.note('Email opened, but ' + said.join('; ') + '.', 9000);
     var S = Hub.api('semaphore');
     if (S && S.leadVerb) S.leadVerb(x.a.id, x.l.id, 'note', 'Emailed ' + who + ': ' + (t.name || 'Untitled'));
-    /* the print window a moment later, so the mail program is on its way
-       before the browser's own window comes up over the page */
-    if (x.l.entryId) {
-      setTimeout(function () {
-        Hub.emit('lead:sheet', { entryId: x.l.entryId, links: x.l.links || [], name: x.l.project || '',
-          done: function (ok, why) { if (!ok) Hub.note('The PDF could not be made: ' + (why || 'unknown reason'), 7000); } });
-      }, 700);
-    }
+    if (!x.l.entryId) return;
+    var sheet = function () {
+      Hub.emit('lead:sheet', { entryId: x.l.entryId, links: x.l.links || [], name: x.l.project || '',
+        done: function (ok, why) { if (!ok) Hub.note('The PDF could not be made: ' + (why || 'unknown reason'), 7000); } });
+    };
+    /* At the desk the print window follows a moment later, so the mail
+       program is on its way before the browser's own window comes up over
+       the page. Safari, on the iPad and the Mac, refuses a print that no
+       press began ("automatisch afdrukken is geblokkeerd", Mark,
+       2026-10-31), so there a Save PDF button waits for him to come back
+       from the email; it stays until pressed or put away. */
+    if (PRINT_ASKS) pdfAsk(sheet); else setTimeout(sheet, 700);
+  }
+  var PRINT_ASKS = navigator.maxTouchPoints > 1 ||
+    (/safari/i.test(navigator.userAgent) && !/chrome|chromium|edg|crios|fxios|android/i.test(navigator.userAgent));
+  function pdfAsk(sheet) {
+    var old = document.querySelector('.oa-pdfask');
+    if (old) old.remove();
+    var bar = document.createElement('div');
+    bar.className = 'oa-pdfask';
+    bar.innerHTML = '<span>The email is open. Save the project\u2019s PDF to attach it.</span>' +
+      '<button type="button" class="oa-pa-go">Save PDF</button>' +
+      '<button type="button" class="oa-pa-x" aria-label="Put away">\u00d7</button>';
+    bar.querySelector('.oa-pa-go').addEventListener('click', function () { bar.remove(); sheet(); });
+    bar.querySelector('.oa-pa-x').addEventListener('click', function () { bar.remove(); });
+    document.body.appendChild(bar);
   }
   document.addEventListener('click', function (e) {
     var b = e.target.closest && e.target.closest('.oa-mail');
@@ -1796,8 +1817,11 @@
        lead's own PDF and Copy for email buttons (2026-10-31). The entry is
        not on the board, so it is read here, on the same terms as the
        sites, and laid out by the same file as there, shell/leadsheet.js.
-       An entry read once is kept for the session. */
-    var entries = {};
+       An entry read once is kept for the session, and kept in hand as well
+       as promised (`got`), so a press can print it at once: Safari prints
+       only from inside a press, and a print begun after a fetch is not
+       (`fetch` reads it in early, for the ✉'s menu). */
+    var entries = {}, got = {};
     function entryOf(id) {
       if (entries[id]) return entries[id];
       var c = open();
@@ -1808,7 +1832,7 @@
           if (r.error || !r.data) throw new Error(r.error ? 'Could not reach it' : 'Entry gone');
           var e = r.data;
           return c.from('partner_sites').select('name').eq('id', e.site).maybeSingle().then(function (s) {
-            return { e: e, site: (s && s.data && s.data.name) || e.site };
+            return (got[id] = { e: e, site: (s && s.data && s.data.name) || e.site });
           });
         })
         .catch(function (err) { delete entries[id]; throw err; }));
@@ -1839,8 +1863,10 @@
     Hub.on('lead:sheet', function (o) {
       if (!o || !o.entryId || typeof LeadSheet === 'undefined') return;
       var done = o.done || function () {};
-      entryOf(o.entryId).then(function (x) { printSheet(x, o.links, o.name); done(true); },
-        function (err) { done(false, (err && err.message) || 'Could not'); });
+      var why = function (err) { done(false, (err && err.message) || 'Could not'); };
+      if (o.fetch) { entryOf(o.entryId).then(function () { done(true); }, why); return; }
+      if (got[o.entryId]) { printSheet(got[o.entryId], o.links, o.name); done(true); return; }
+      entryOf(o.entryId).then(function (x) { printSheet(x, o.links, o.name); done(true); }, why);
     });
 
     return { ready: function () { return !!open(); }, list: list };
