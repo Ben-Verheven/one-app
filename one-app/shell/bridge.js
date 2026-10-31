@@ -417,20 +417,32 @@
        press began ("automatisch afdrukken is geblokkeerd", Mark,
        2026-10-31), so there a Save PDF button waits for him to come back
        from the email; it stays until pressed or put away. */
-    if (PRINT_ASKS) pdfAsk(sheet); else setTimeout(sheet, 700);
+    if (PRINT_ASKS) pdfAsk(sheet, x.l.project); else setTimeout(sheet, 700);
+  }
+  /* The page's own name, put back after a PDF has borrowed the title, and
+     a project's name made fit to name a file. */
+  var APP_TITLE = document.title;
+  function fileName(name) {
+    return String(name || '').replace(/[\\\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ').trim();
   }
   var PRINT_ASKS = navigator.maxTouchPoints > 1 ||
     (/safari/i.test(navigator.userAgent) && !/chrome|chromium|edg|crios|fxios|android/i.test(navigator.userAgent));
-  function pdfAsk(sheet) {
+  /* The iPad names the PDF after the title the page had before the press,
+     not one set in the same moment as the print (Mark, 2026-10-31: his
+     files came out as the app's own name), so the title is the project's
+     from the moment the bar stands, and the app's again if it is put
+     away. */
+  function pdfAsk(sheet, project) {
     var old = document.querySelector('.oa-pdfask');
     if (old) old.remove();
+    if (fileName(project)) document.title = fileName(project);
     var bar = document.createElement('div');
     bar.className = 'oa-pdfask';
     bar.innerHTML = '<span>The email is open. Save the project\u2019s PDF to attach it.</span>' +
       '<button type="button" class="oa-pa-go">Save PDF</button>' +
       '<button type="button" class="oa-pa-x" aria-label="Put away">\u00d7</button>';
     bar.querySelector('.oa-pa-go').addEventListener('click', function () { bar.remove(); sheet(); });
-    bar.querySelector('.oa-pa-x').addEventListener('click', function () { bar.remove(); });
+    bar.querySelector('.oa-pa-x').addEventListener('click', function () { bar.remove(); document.title = APP_TITLE; });
     document.body.appendChild(bar);
   }
   document.addEventListener('click', function (e) {
@@ -1848,8 +1860,7 @@
       var box = document.getElementById('oa-sheet');
       if (!box) { box = document.createElement('div'); box.id = 'oa-sheet'; document.body.appendChild(box); }
       box.innerHTML = LeadSheet.html.apply(null, sheetArgs(x, links));
-      var was = document.title, root = document.documentElement;
-      var file = String(name || '').replace(/[\\\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ').trim();
+      var root = document.documentElement, file = fileName(name);
       document.title = file || LeadSheet.title(x.e) + ' \u2014 ' + x.site;
       root.classList.add('oa-sheeting');
       /* the page's margin is the sheet's own padding; an @page rule cannot
@@ -1857,7 +1868,7 @@
       var page = document.createElement('style');
       page.textContent = '@page{margin:0}';
       document.head.appendChild(page);
-      window.addEventListener('afterprint', function () { document.title = was; root.classList.remove('oa-sheeting'); page.remove(); }, { once: true });
+      window.addEventListener('afterprint', function () { document.title = APP_TITLE; root.classList.remove('oa-sheeting'); page.remove(); }, { once: true });
       window.print();
     }
     Hub.on('lead:sheet', function (o) {
