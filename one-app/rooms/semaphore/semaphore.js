@@ -5048,7 +5048,7 @@ document.addEventListener('click',e=>{
       const was=b.textContent;
       const say=t=>{b.textContent=t;setTimeout(()=>{b.textContent=was;},2200);};
       if(b.dataset.v==='pdf')say('Opening\u2026');
-      Hub.emit('lead:sheet',{entryId:l.entryId,links:l.links||[],how:b.dataset.v,
+      Hub.emit('lead:sheet',{entryId:l.entryId,links:l.links||[],how:b.dataset.v,name:l.project||'',
         done:(ok,why)=>{if(!ok)say(why||'Could not');else if(b.dataset.v==='copy')say('Copied');}});
       break;}
     case 'leadLimbo':{const ar=arena(id);if(!ar)break;

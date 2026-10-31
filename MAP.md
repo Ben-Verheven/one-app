@@ -26,7 +26,7 @@ rooms                                                hub.js:296
 
 ## `shell/bridge.js`
 
-2579 lines · 124 KB
+2583 lines · 125 KB
 
 ```
 Bridge — what the five rooms say to each other.             bridge.js:1
@@ -48,15 +48,15 @@ what the room says about itself                             bridge.js:1115
 putting two copies together                                 bridge.js:1308
 the agents' inboxes: what the scheduled agents found        bridge.js:1645
 a lead's sheet                                              bridge.js:1792
-the Horizon check, and the call texts                       bridge.js:1862
-open where we left off                                      bridge.js:2014
-the weekly Excel: every lead, open and closed               bridge.js:2028
-the zip                                                     bridge.js:2085
-the styles                                                  bridge.js:2139
-the look                                                    bridge.js:2178
-what goes in it                                             bridge.js:2396
-where it goes                                               bridge.js:2440
-on the iPad, links open in DuckDuckGo                       bridge.js:2525
+the Horizon check, and the call texts                       bridge.js:1866
+open where we left off                                      bridge.js:2018
+the weekly Excel: every lead, open and closed               bridge.js:2032
+the zip                                                     bridge.js:2089
+the styles                                                  bridge.js:2143
+the look                                                    bridge.js:2182
+what goes in it                                             bridge.js:2400
+where it goes                                               bridge.js:2444
+on the iPad, links open in DuckDuckGo                       bridge.js:2529
 ```
 
 ## `shell/boot.js`
@@ -679,4 +679,4 @@ Generated data. Never open, never edit, never upload.
 
 ---
 
-**42742 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.
+**42746 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.

@@ -407,7 +407,7 @@
        before the browser's own window comes up over the page */
     if (x.l.entryId) {
       setTimeout(function () {
-        Hub.emit('lead:sheet', { entryId: x.l.entryId, links: x.l.links || [], how: 'pdf',
+        Hub.emit('lead:sheet', { entryId: x.l.entryId, links: x.l.links || [], how: 'pdf', name: x.l.project || '',
           done: function (ok, why) { if (!ok) Hub.note('The PDF could not be made: ' + (why || 'unknown reason'), 7000); } });
       }, 700);
     }
@@ -1817,13 +1817,17 @@
     function sheetArgs(x, links) { return [x.e, x.e.fields || [], x.site, links]; }
     /* Printed alone, as Mark's Place prints it: the shell's print rule
        puts away everything but #oa-sheet, and the page's title is the
-       name the PDF is offered under while the box is open. */
-    function printSheet(x, links) {
+       name the PDF is offered under while the box is open. A lead's
+       PDF is offered under the lead's project name (Mark, 2026-10-31), the
+       name he knows it by, with the characters a file name may not hold
+       taken out; the entry's own name stands in for a lead without one. */
+    function printSheet(x, links, name) {
       var box = document.getElementById('oa-sheet');
       if (!box) { box = document.createElement('div'); box.id = 'oa-sheet'; document.body.appendChild(box); }
       box.innerHTML = LeadSheet.html.apply(null, sheetArgs(x, links));
       var was = document.title, root = document.documentElement;
-      document.title = LeadSheet.title(x.e) + ' \u2014 ' + x.site;
+      var file = String(name || '').replace(/[\\\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ').trim();
+      document.title = file || LeadSheet.title(x.e) + ' \u2014 ' + x.site;
       root.classList.add('oa-sheeting');
       /* the page's margin is the sheet's own padding; an @page rule cannot
          wait on a class, so it is put in for the print and taken out after */
@@ -1838,7 +1842,7 @@
       var done = o.done || function () {};
       var why = function (err) { return (err && err.message) || 'Could not'; };
       if (o.how === 'pdf') {
-        entryOf(o.entryId).then(function (x) { printSheet(x, o.links); done(true); }, function (err) { done(false, why(err)); });
+        entryOf(o.entryId).then(function (x) { printSheet(x, o.links, o.name); done(true); }, function (err) { done(false, why(err)); });
         return;
       }
       var x = read[o.entryId];
