@@ -314,13 +314,23 @@
   /* What each fill-in of the Notes room's FILLS becomes on this lead. One
      the lead has nothing for stays in its brackets, so the gap is seen in
      the email rather than read as a sentence with a word missing. */
-  /* A Horizon cluster is named in an email as the researchers know it,
-     "Horizon CL4", rather than as its arena is kept, "Cluster 4 · Digital
-     & Industry" (Mark, 2026-10-31); the Call Board reads the same number
-     out of the same name to find the cluster's page. */
+  /* A Horizon cluster or mission is named in an email as the researchers
+     know it, short enough for a subject such as "Project opportunity:
+     Horizon CL4 - <project>" (Mark, 2026-10-31), rather than as its arena
+     is kept, "Cluster 4 · Digital & Industry". The Call Board reads the
+     same cluster number out of the same name to find the cluster's page.
+     A mission is known by a word of its name, Cities before Climate since
+     the cities' mission is the climate-neutral one, the first word found
+     deciding; a mission arena with none of these words is Horizon
+     Missions. */
+  var MISSIONS = [[/cit(y|ies)/i, 'Cities'], [/cancer/i, 'Cancer'], [/ocean|water/i, 'Ocean'],
+                  [/soil/i, 'Soil'], [/adapt|climate/i, 'Climate Adaptation']];
   function programmeOf(name) {
-    var m = String(name || '').match(/\bcluster\s*(\d)\b/i);
-    return m ? 'Horizon CL' + m[1] : String(name || '');
+    var n = String(name || ''), m = n.match(/\bcluster\s*(\d)\b/i);
+    if (m) return 'Horizon CL' + m[1];
+    if (!/\bmissions?\b/i.test(n)) return n;
+    var k = MISSIONS.filter(function (x) { return x[0].test(n); });
+    return k.length ? 'Horizon Mission ' + k[0][1] : 'Horizon Missions';
   }
   function fillIn(t, who, x) {
     var FILL = {
