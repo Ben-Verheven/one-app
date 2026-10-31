@@ -251,6 +251,24 @@ the chapter head, the tally set as a running foot, and `.nt-leaves` — two
 page edges showing below. He was offered a sewn spine as well and turned
 it down; it would have fought the coloured row edges for the left margin.
 
+## Email templates — 2026-10-31, his own brief
+
+**A page of their own under How tags relate**, chosen from three drawn
+over a third button in the shelf/tags switch (which would make a choice
+between two ways to a note into a list of places) and over notes tagged
+"email" (which the shelf would count, search and divide into rows). A
+template is a name, a Subject box and a Text box, kept in `mails` apart
+from the notes: no tags, no book, no search. It is what the ✉ on a
+Semaphore lead writes from ([semaphore-decisions](semaphore-decisions.md)).
+
+**Plain boxes, no formatting rail**: a mailto link carries plain words,
+so bold written here would be lost on the way to Outlook.
+
+**Fill-ins are words in curly brackets**, put in by the chips under the
+boxes: first name, name, project, programme (the arena), organisation
+(the coordinator) and contact. He took them with the page. One the lead
+has nothing for stays in its brackets in the email, so the gap shows.
+
 See also [marks-notes](marks-notes.md) for the tag vocabulary the shelf is
 computed from, and [pitfalls](pitfalls.md) for the class-name clash this room
 paid for.

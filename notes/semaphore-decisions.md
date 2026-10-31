@@ -296,6 +296,16 @@ calls land on the Call Board. What still holds of the board:
 - **A lead Mark's Place made can be sent on as an entry is there**
   (2026-10-28): PDF and Copy for email on its Links box, the same sheet as
   Mark's Place's.
+- **A ✉ after each researcher named under Match** (2026-10-31), on every
+  lead, chosen from three drawn over an "Email…" beside PDF (Mark's Place
+  leads only) and the same plus one on every other lead. It opens a menu:
+  who it goes to, with the address the Atlas holds, and his templates from
+  the Notes room ([notes-room](notes-room.md)). A template picked opens the
+  email filled in from the lead and writes "Emailed <name>: <template>" into
+  Updates; on a lead Mark's Place made, the PDF's print window follows, for
+  him to save and drag in. A page cannot attach a file or save one to
+  Downloads unasked, and a silent PDF made by an add-on would be a blurred
+  picture; he was told and took the print window.
 - **A lead that moves slides there and glows**, the view following it
   (2026-10-21); see [animation](animation.md).
 - A search that finds a lead opens its arena's panel.

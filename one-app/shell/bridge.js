@@ -114,6 +114,7 @@
        string, scanning every node twice to find the ones with no names */
     RX.lastIndex = 0;
     var frag = null, last = 0, m;
+    var mailHere = inLeadMatch(tn.parentNode);
     while ((m = RX.exec(text))) {
       var rid = byVariant[m[1].toLowerCase()];
       if (rid === undefined) continue;
@@ -125,6 +126,7 @@
       a.setAttribute('title', 'Atlas — ' + R[rid].name);
       a.textContent = m[1];
       frag.appendChild(a);
+      if (mailHere) frag.appendChild(mailButton(rid));
       last = m.index + m[1].length;
     }
     if (!frag) return false;
@@ -268,6 +270,147 @@
     e.stopPropagation();
     showResearcher(+a.getAttribute('data-rid'));
   }, true);
+
+  /* ── an email from a lead ──────────────────────────────────────────── */
+
+  /* Mark asked on 2026-10-31 for a press on a lead that writes to the
+     researcher it names: a new email in Outlook, its subject and text
+     from one of his templates in the Notes room, with the project's
+     printout saved to attach. Of three places drawn he chose a ✉ after the
+     name under Match, on every lead, so it is put there as the name is
+     made a link, and only in the Semaphore's leads. Whose address it is
+     comes from the Atlas, where he keeps one per researcher.
+
+     The email opens through a mailto link, the one way a page can start
+     an email in whatever mail program the computer has. A page can attach
+     nothing to it, so a lead Mark's Place made also prints its sheet, as
+     its PDF button does, for him to save and drag in. The email opens
+     first, inside the press: a mail program launched after the print
+     window has closed would be a launch with no press behind it, which a
+     browser may refuse. */
+  function inLeadMatch(el) {
+    return !!(el && el.closest && el.closest('#pane-semaphore .lead .lmt'));
+  }
+  function mailButton(rid) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'oa-mail';
+    b.setAttribute('data-rid', rid);
+    b.setAttribute('title', 'Email ' + R[rid].name + ' about this lead');
+    b.textContent = '✉';
+    return b;
+  }
+  function addressOf(name) {
+    var api = Hub.api('atlas'), st = api && api.state ? api.state() : null;
+    var mine = ((st && st.edits) || []).filter(function (e) { return e.type === 'email' && e.rL === name; });
+    return mine.length ? String(mine[mine.length - 1].addr || '').trim() : '';
+  }
+  function leadOf(card) {
+    var api = Hub.api('semaphore'), S = api && api.state ? api.state() : null;
+    var a = S && (S.arenas || []).filter(function (x) { return x.id === card.getAttribute('data-id'); })[0];
+    var l = a && (a.leads || []).filter(function (x) { return x.id === card.getAttribute('data-l'); })[0];
+    return l ? { a: a, l: l } : null;
+  }
+  /* What each fill-in of the Notes room's FILLS becomes on this lead. One
+     the lead has nothing for stays in its brackets, so the gap is seen in
+     the email rather than read as a sentence with a word missing. */
+  function fillIn(t, who, x) {
+    var FILL = {
+      'first name': who.split(/\s+/)[0], 'name': who,
+      'project': x.l.project || '', 'programme': x.a.name || '',
+      'organisation': x.l.coordinator || '', 'contact': x.l.contact || ''
+    };
+    return String(t || '').replace(/\{([^{}\n]{1,30})\}/g, function (all, w) {
+      var v = FILL[w.toLowerCase()];
+      return v ? v : all;
+    });
+  }
+
+  var mailMenu = null;
+  function shutMailMenu() { if (mailMenu) { mailMenu.remove(); mailMenu = null; } }
+  function openMailMenu(btn) {
+    shutMailMenu();
+    var card = btn.closest('.lead'), x = card && leadOf(card);
+    var who = R[+btn.getAttribute('data-rid')];
+    if (!x || !who) return;
+    var addr = addressOf(who.name);
+    var notes = Hub.api('notes'), list = notes && notes.mails ? notes.mails() : [];
+    var m = document.createElement('div');
+    m.className = 'oa-mailmenu';
+    var to = document.createElement('div');
+    to.className = 'oa-mm-to';
+    to.innerHTML = 'To <b></b> · <span></span>';
+    to.querySelector('b').textContent = who.name;
+    to.querySelector('span').textContent = addr || 'no address in the Atlas yet';
+    m.appendChild(to);
+    list.forEach(function (t) {
+      var it = document.createElement('button');
+      it.type = 'button';
+      it.className = 'oa-mm-it';
+      it.innerHTML = '<span></span><i></i>';
+      it.querySelector('span').textContent = t.name || 'Untitled';
+      it.querySelector('i').textContent = fillIn(t.subject, who.name, x) || 'No subject';
+      it.addEventListener('click', function () { shutMailMenu(); sendMail(t, who.name, addr, x); });
+      m.appendChild(it);
+    });
+    var foot = document.createElement('div');
+    foot.className = 'oa-mm-foot';
+    foot.textContent = !list.length
+      ? 'No email templates yet. Write one in Notes, under Email templates.'
+      : x.l.entryId
+        ? 'The project’s PDF is offered for saving as the email opens. Drag it into the email.'
+        : 'This lead did not come from Mark’s Place, so there is no PDF to add.';
+    m.appendChild(foot);
+    document.body.appendChild(m);
+    /* under the ✉, kept inside the window */
+    var r = btn.getBoundingClientRect(), w = m.offsetWidth, h = m.offsetHeight;
+    var left = Math.max(8, Math.min(r.left - 12, window.innerWidth - w - 8));
+    var top = r.bottom + 6 + h > window.innerHeight - 8 ? Math.max(8, r.top - 6 - h) : r.bottom + 6;
+    m.style.left = left + 'px';
+    m.style.top = top + 'px';
+    mailMenu = m;
+  }
+  function sendMail(t, who, addr, x) {
+    var subject = fillIn(t.subject, who, x), body = fillIn(t.body, who, x);
+    var href = 'mailto:' + addr.replace(/[\s<>"?]/g, '') +
+      '?subject=' + encodeURIComponent(subject) +
+      '&body=' + encodeURIComponent(body.replace(/\r?\n/g, '\r\n'));
+    window.location.href = href;
+    /* Outlook cuts a mailto link of much over two thousand characters
+       without saying so; this is the only place that can */
+    var said = [];
+    if (href.length > 2000) said.push('the text is long, so Outlook may cut its end off');
+    if (!addr) said.push('the Atlas has no address for ' + who + ' — add it on their card');
+    if (/\{[^{}\n]{1,30}\}/.test(subject + body)) said.push('a word in brackets had nothing on the lead to fill it');
+    if (said.length) Hub.note('Email opened, but ' + said.join('; ') + '.', 9000);
+    var S = Hub.api('semaphore');
+    if (S && S.leadVerb) S.leadVerb(x.a.id, x.l.id, 'note', 'Emailed ' + who + ': ' + (t.name || 'Untitled'));
+    /* the print window a moment later, so the mail program is on its way
+       before the browser's own window comes up over the page */
+    if (x.l.entryId) {
+      setTimeout(function () {
+        Hub.emit('lead:sheet', { entryId: x.l.entryId, links: x.l.links || [], how: 'pdf',
+          done: function (ok, why) { if (!ok) Hub.note('The PDF could not be made: ' + (why || 'unknown reason'), 7000); } });
+      }, 700);
+    }
+  }
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest && e.target.closest('.oa-mail');
+    if (b) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (mailMenu && mailMenu.__from === b) { shutMailMenu(); return; }
+      openMailMenu(b);
+      if (mailMenu) mailMenu.__from = b;
+      return;
+    }
+    if (mailMenu && !mailMenu.contains(e.target)) shutMailMenu();
+  }, true);
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && mailMenu) { e.stopPropagation(); shutMailMenu(); }
+  }, true);
+  document.addEventListener('scroll', shutMailMenu, true);
+  Hub.onRoom(shutMailMenu);
 
   /* ── the Call Board's reader, lent the same way ────────────────────── */
 

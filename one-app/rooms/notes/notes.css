@@ -292,6 +292,47 @@
 .nt-tie-empty b{color:var(--muted); font-weight:600}
 .nt-tie-empty i{color:var(--muted); font-style:italic}
 
+/* ══ EMAIL TEMPLATES ═════════════════════════════════════════════════
+   The second page that is no list of notes, so it wears the first one's
+   boxes and buttons: a line per template, its name and its subject, that
+   opens in place into the boxes it is written in. */
+.nt-mail{border-bottom:1px solid var(--line)}
+.nt-mail-line{
+  display:flex; align-items:baseline; gap:14px; width:100%;
+  padding:10px 4px; border:0; background:none; cursor:pointer; text-align:left;
+  font:15px var(--sc-body); color:var(--ink);
+}
+.nt-mail-line:hover .nt-mail-nm{color:var(--gold2)}
+.nt-mail-nm{flex:0 0 auto; max-width:40%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.nt-mail-sub{
+  flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  font-style:italic; font-size:13.5px; color:var(--faint2);
+}
+.nt-mail.open .nt-mail-line .nt-mail-sub{visibility:hidden}
+.nt-mail-form{display:flex; flex-direction:column; gap:4px; padding:0 4px 14px}
+.nt-mail-lbl{
+  margin-top:6px; font:600 10.5px var(--sc-serif); letter-spacing:.14em;
+  text-transform:uppercase; color:var(--faint2);
+}
+/* the ties' box grows along a row; stacked here, that growth was height */
+.nt-mail-form .nt-tie-in{flex:none}
+.nt-mail-body{resize:vertical; line-height:1.55; min-height:9rem}
+.nt-mail-foot{display:flex; align-items:center; flex-wrap:wrap; gap:6px; margin-top:8px}
+.nt-mail-foot .nt-mail-lbl{margin:0 4px 0 0}
+.nt-mail-sp{flex:1 1 auto}
+.nt-mail-del{margin-left:0; font-size:13px}
+.nt-mail-new{padding:12px 4px 6px}
+/* a fill-in, wherever it is shown: the word the lead will put there */
+.nt-fill{
+  padding:0 5px; border-radius:4px;
+  background:rgba(201,168,76,.16); color:var(--gold2); font-style:normal;
+}
+.nt-fill-btn{
+  border:1px solid rgba(201,168,76,.38); cursor:pointer;
+  padding:2px 9px; border-radius:999px; font:12.5px var(--sc-body);
+}
+.nt-fill-btn:hover{border-color:var(--gold); background:rgba(201,168,76,.26)}
+
 /* ══ THE OPEN BOOK ═══════════════════════════════════════════════════
    The Books page's frame, remade: the chapter head, the tab strip, and
    one sheet. */

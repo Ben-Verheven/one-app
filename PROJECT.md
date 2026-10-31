@@ -126,7 +126,7 @@ Hub.api('semaphore')       → { state(), save(), renderAll(),
                                frozen(), thaw(aid), leadAdd(aid, v), allLeads(),
                                openArena(aid), gpt(kind), escape() }
 Hub.api('atlas')           → { openDossier(), G, state(), applyState(obj) }
-Hub.api('notes')           → { state(), applyState(obj) }
+Hub.api('notes')           → { state(), applyState(obj), mails() }
 Hub.api('semaphore-inbox') → { ready(), list(cb), decide(id, status, cb),
                                visits(since, cb) }
 Hub.api('atlas-inbox')     → the same first three verbs over the Atlas's inbox
@@ -178,16 +178,22 @@ links filled in; hands the Call Board the Semaphore's board as it works it
 out — every arena's calls and the new arenas waiting to be judged, with
 the verbs that judge them and mark an arena's new dates seen — and again
 on every save there, with the drawer lent over the Board for an arena and
-ChatGPT's box for the searches for calls, new arenas and call texts; reads the
+ChatGPT's box for the searches for calls, new arenas and call texts; puts a
+✉ after every researcher named under a Semaphore lead's Match, which opens
+a new email to that researcher's address in the Atlas, its subject and
+text one of the Notes room's templates filled in from the lead, writes
+that it was sent into the lead's updates, and, for a lead Mark's Place
+made, prints the lead's sheet to attach; reads the
 Horizon check's two tables, below, for the Call Board, and the one rule
 that ties a call text to its call; draws the ring of rooms and the title,
 with the finds waiting to be judged counted beside the Call Board's mark; runs the page-change animation; and syncs
 the Semaphore's board, the Notes room and the Atlas's edits through the
 Supabase credentials the Ledger already holds.
 
-**The Notes room asks the others for nothing and is asked for nothing.**
-It is the one room with no cross-room surface at all; a note there is
-general memory rather than a record hung on one proposal.
+**The Notes room asks the others for nothing, and is asked for one
+thing: its email templates** (`mails()`), for the ✉ on a lead below. A
+note there is general memory rather than a record hung on one proposal,
+so no note is ever handed to another room; a template is no note.
 
 **A new cross-room feature belongs in `bridge.js`.** A room reaching
 directly into another room's internals is the thing this design exists

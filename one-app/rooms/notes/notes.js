@@ -83,7 +83,8 @@ function tagColor(key){
    colour chosen for a tag, and pins, what has been fixed in place inside
    a book. Both are keyed by tag and neither is ever computed, so a blob
    written before they existed simply has none and the room falls back to
-   the arithmetic for everything. A blob written before this still
+   the arithmetic for everything. mails, the email templates, is the same
+   kind of late arrival (see EMAIL TEMPLATES). A blob written before this still
    carries `mode`; it is read by nobody now and left where it lies
    rather than stripped, because rewriting a saved file to delete a key
    is a risk taken for tidiness alone. */
@@ -106,6 +107,7 @@ function load(){
         s.ties=(s.ties instanceof Array)?s.ties:[];
         s.colors=(s.colors&&typeof s.colors==='object')?s.colors:{};
         s.pins=(s.pins&&typeof s.pins==='object')?s.pins:{};
+        s.mails=(s.mails instanceof Array)?s.mails:[];
         return s;
       }}
   }catch(e){console.error('notes: unreadable store',e);}
@@ -114,7 +116,7 @@ function load(){
     Hub.note('Notes could not read its saved data — starting empty, and saving nothing. '
       +'The old blob is untouched under notes.v1 until the cloud or an import brings the notes back.',10000);
   }
-  return {v:1,notes:[],shelf:[],view:'shelf',ties:[],colors:{},pins:{}};
+  return {v:1,notes:[],shelf:[],view:'shelf',ties:[],colors:{},pins:{},mails:[]};
 }
 /* Structural saves — a tag added, a note made or deleted, the shelf
    dragged, the view switched — recompute and repaint at once. Keystroke
@@ -241,7 +243,7 @@ function applyPins(items,keys,idOf){
    date order, and fixing the third month of a chronology in second place
    would be a lie about what the sheet is. */
 function inBook(){
-  return !SQ&&store.view!=='tags'&&cur!=='*'&&cur!=='~'&&cur!=='&';
+  return !SQ&&store.view!=='tags'&&cur!=='*'&&cur!=='~'&&cur!=='&'&&cur!=='@';
 }
 
 /* ══ THE ARITHMETIC ═══════════════════════════════════════════════════
@@ -626,7 +628,8 @@ function subdivide(notes,skip,minN,cap,floor,ctx){
 }
 
 /* ══ WHAT IS OPEN ═════════════════════════════════════════════════════ */
-var cur='*';        /* the open book: a tag key, '*' every note, '~' untagged */
+var cur='*';        /* the open book: a tag key, '*' every note, '~' untagged,
+                       '&' how tags relate, '@' the email templates */
 var curTemp=false;  /* the open book was made from a tag on the spot */
 var curPage=null;   /* the open page tab inside the book, or '*rest' */
 var SQ='';          /* the live search text */
@@ -763,6 +766,7 @@ function renderTagRail(){
     +'" onclick="NT.openBook(\'&\')">'
     +'<span class="nt-b-name">How tags relate</span>'
     +'<span class="nt-b-n">'+(tiesOf().length||'')+'</span></div>';
+  h+=mailsEntry();
   if(t.whole.length){
     h+='<div class="nt-shelf-note">All of these are also: '
       +t.whole.map(function(x){return esc(x.display);}).join(', ')+'.</div>';
@@ -841,6 +845,7 @@ function renderShelf(){
     +'" onclick="NT.openBook(\'&\')">'
     +'<span class="nt-b-name">How tags relate</span>'
     +'<span class="nt-b-n">'+(tiesOf().length||'')+'</span></div>';
+  h+=mailsEntry();
   el('nt-books-wrap').innerHTML=h;
   wireDrag();
 }
@@ -1044,6 +1049,9 @@ function headHTML(name,count,plain){
 
 function renderBook(){
   var box=el('nt-book');
+  /* Checked before the empty shelf, because templates are no notes: a
+     room with none of either can still have its first template written. */
+  if(cur==='@'&&!SQ&&!(writing&&panel.id===writing)){box.innerHTML=mailsHTML();return;}
   if(!store.notes.length&&!SQ){
     box.innerHTML='<div class="nt-empty">'
       +'<span class="nt-nut" aria-hidden="true"></span>'
@@ -1416,6 +1424,130 @@ NT.tieDrop=function(i){
   var ties=tiesOf();
   if(i<0||i>=ties.length)return;
   ties.splice(i,1);
+  save(true);
+};
+
+/* ══ EMAIL TEMPLATES ══════════════════════════════════════════════════
+   A subject and a text for an email to a researcher about a lead. The ✉
+   after a researcher's name on a Semaphore lead opens Outlook with one of
+   them filled in (Mark, 2026-10-31; see "an email from a lead" in
+   bridge.js). They are kept beside the notes in this room's store, so they
+   ride to the cloud with them, and apart from them in `mails`: a template
+   is a tool rather than something remembered, so it carries no tags, is
+   counted in no book and found by no search. Its page stands among the
+   shelf's standing entries, under How tags relate, as Mark chose from
+   three drawn (over a third button in the shelf/tags switch, and over
+   notes tagged "email"). Subject and text are plain boxes with no
+   formatting rail, because a mailto link carries plain words only. */
+function mailsOf(){return (store.mails instanceof Array)?store.mails:(store.mails=[]);}
+function mailById(id){return mailsOf().filter(function(m){return m.id===id;})[0]||null;}
+var mailOpen=null;      /* the template open for writing, by id */
+var mailDropAsk=null;   /* the template whose Delete has been pressed once */
+var mailField=null;     /* the box a fill-in chip writes into: the last one the caret was in */
+/* The words the bridge replaces from the lead when the email opens. The
+   bridge's FILL holds what each one becomes; a word added here is added
+   there. */
+var FILLS=['first name','name','project','programme','organisation','contact'];
+
+function mailsEntry(){
+  return '<div class="nt-b nt-b-special'+(cur==='@'&&!SQ?' on':'')
+    +'" onclick="NT.openBook(\'@\')">'
+    +'<span class="nt-b-name">Email templates</span>'
+    +'<span class="nt-b-n">'+(mailsOf().length||'')+'</span></div>';
+}
+/* a fill-in shown as the chip it was put in with, in the closed line */
+function fillsShown(t){
+  return esc(t).replace(/\{([^{}\n]{1,30})\}/g,function(all,w){
+    return FILLS.indexOf(w.toLowerCase())>=0?'<span class="nt-fill">'+w+'</span>':all;});
+}
+function mailsHTML(){
+  var list=mailsOf();
+  var h=headHTML('Email templates',
+    list.length+(list.length===1?' template':' templates'),true);
+  h+='<div class="nt-sheet nt-notabs">';
+  if(!list.length){
+    h+='<div class="nt-tie-empty">No templates yet. A template is the '
+      +'<b>subject</b> and <b>text</b> of an email. On a lead in the '
+      +'Brokerage Semaphore, the ✉ after a researcher’s name opens Outlook '
+      +'with one of them filled in, written to that researcher.<br><br>'
+      +'Words in curly brackets, such as <span class="nt-fill">first name</span> '
+      +'or <span class="nt-fill">project</span>, are filled in from the lead.</div>';
+  }
+  list.forEach(function(m){
+    var open=mailOpen===m.id;
+    h+='<div class="nt-mail'+(open?' open':'')+'" data-mid="'+esc(m.id)+'">'
+      +'<button class="nt-mail-line" onclick="NT.mailToggle(\''+jsq(m.id)+'\')"'
+      +' aria-expanded="'+open+'">'
+      +'<span class="nt-mail-nm">'+esc(m.name||'Untitled')+'</span>'
+      +'<span class="nt-mail-sub">'+fillsShown(m.subject||'')+'</span></button>';
+    if(open){
+      h+='<div class="nt-mail-form">'
+        +'<label class="nt-mail-lbl" for="nt-mail-name">Name</label>'
+        +'<input id="nt-mail-name" class="nt-tie-in" autocomplete="off"'
+          +' placeholder="what you call it, e.g. First approach"'
+          +' value="'+esc(m.name||'')+'" oninput="NT.mailType(\'name\',this.value)">'
+        +'<label class="nt-mail-lbl" for="nt-mail-subject">Subject</label>'
+        +'<input id="nt-mail-subject" class="nt-tie-in" autocomplete="off"'
+          +' value="'+esc(m.subject||'')+'" onfocus="NT.mailFocus(this)"'
+          +' oninput="NT.mailType(\'subject\',this.value)">'
+        +'<label class="nt-mail-lbl" for="nt-mail-body">Text</label>'
+        +'<textarea id="nt-mail-body" class="nt-tie-in nt-mail-body" rows="9"'
+          +' onfocus="NT.mailFocus(this)"'
+          +' oninput="NT.mailType(\'body\',this.value)">'+esc(m.body||'')+'</textarea>'
+        +'<div class="nt-mail-foot"><span class="nt-mail-lbl">Fill in</span>'
+        +FILLS.map(function(w){
+          /* onmousedown keeps the caret where it was, as the formatting
+             rail's buttons do, so the word lands where it was typed */
+          return '<button class="nt-fill nt-fill-btn" onmousedown="return false"'
+            +' onclick="NT.mailFill(\''+jsq(w)+'\')"'
+            +' title="Put {'+esc(w)+'} where the caret is">'+esc(w)+'</button>';}).join('')
+        +'<span class="nt-mail-sp"></span>'
+        +'<button class="nt-tie-del nt-mail-del" onclick="NT.mailDrop(\''+jsq(m.id)+'\')">'
+          +(mailDropAsk===m.id?'Delete for good?':'Delete')+'</button>'
+        +'<button class="nt-tie-add" onclick="NT.mailToggle(\''+jsq(m.id)+'\')">Done</button>'
+        +'</div></div>';
+    }
+    h+='</div>';
+  });
+  h+='<div class="nt-mail-new"><button class="nt-tie-add" onclick="NT.mailNew()">+ New template</button></div>';
+  return h+'</div>';
+}
+NT.mailNew=function(){
+  var m={id:uid(),name:'',subject:'',body:''};
+  mailsOf().push(m);
+  mailOpen=m.id;mailDropAsk=null;mailField=null;
+  save(true);
+  var f=el('nt-mail-name');if(f)f.focus();
+};
+NT.mailToggle=function(id){
+  mailOpen=mailOpen===id?null:id;mailDropAsk=null;mailField=null;
+  renderBook();renderShelf();
+};
+/* Typing repaints nothing, as in a note: the closed line is out of sight
+   while its template is open, so only the store needs to hear it. */
+NT.mailType=function(field,v){
+  var m=mailById(mailOpen);if(!m)return;
+  m[field]=v;saveSoon();
+  if(field==='name'){
+    var nm=document.querySelector('.nt-mail.open .nt-mail-nm');
+    if(nm)nm.textContent=v||'Untitled';
+  }
+};
+NT.mailFocus=function(box){mailField=box.id;};
+NT.mailFill=function(w){
+  var box=el(mailField||'nt-mail-body');if(!box)return;
+  var t='{'+w+'}',a=box.selectionStart,b=box.selectionEnd;
+  if(a==null){a=b=box.value.length;}
+  box.value=box.value.slice(0,a)+t+box.value.slice(b);
+  box.focus();box.selectionStart=box.selectionEnd=a+t.length;
+  NT.mailType(box.id==='nt-mail-subject'?'subject':'body',box.value);
+};
+/* Delete asks by being pressed twice, in place: a template is a page of
+   writing, and one stray press should not take it. */
+NT.mailDrop=function(id){
+  if(mailDropAsk!==id){mailDropAsk=id;renderBook();return;}
+  store.mails=mailsOf().filter(function(m){return m.id!==id;});
+  mailOpen=null;mailDropAsk=null;
   save(true);
 };
 
@@ -3217,6 +3349,13 @@ function closePop(){var pop=el('nt-pop');
    nothing to import back. A file written before this simply has no
    `notes` key, and importing it leaves the heap alone. */
 Hub.expose('notes',{
+  /* The email templates, for the ✉ on a Semaphore lead (see "an email
+     from a lead" in bridge.js): the one thing this room is asked for. A
+     copy, as state is, so nothing outside can change one. */
+  mails:function(){
+    return mailsOf().map(function(m){
+      return {id:m.id,name:m.name||'',subject:m.subject||'',body:m.body||''};});
+  },
   /* Deep-copied on the way out, because the caller holds the result while
      the room carries on being edited, and a live reference would let a
      note typed after the export change what the export said. */
@@ -3243,7 +3382,8 @@ Hub.expose('notes',{
       /* the three hand-made facts travel with the notes, or an import
          would quietly throw away every colour and every pin */
       colors:(s.colors&&typeof s.colors==='object')?s.colors:{},
-      pins:(s.pins&&typeof s.pins==='object')?s.pins:{}};
+      pins:(s.pins&&typeof s.pins==='object')?s.pins:{},
+      mails:(s.mails instanceof Array)?s.mails:[]};
     var now=Date.now();
     store.notes.forEach(function(n){
       if(!n.id)n.id=uid();
