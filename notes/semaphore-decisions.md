@@ -295,7 +295,8 @@ calls land on the Call Board. What still holds of the board:
   it in a Limbo section of its own after Spotted.
 - **A lead Mark's Place made can be sent on as an entry is there**
   (2026-10-28): PDF and Copy for email on its Links box, the same sheet as
-  Mark's Place's.
+  Mark's Place's. Both went on 2026-10-31, superfluous once the ✉ below
+  printed the sheet; do not put them back without asking.
 - **A ✉ after each researcher named under Match** (2026-10-31), on every
   lead, chosen from three drawn over an "Email…" beside PDF (Mark's Place
   leads only) and the same plus one on every other lead; shown only while

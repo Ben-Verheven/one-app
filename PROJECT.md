@@ -150,9 +150,9 @@ And **`leads:excel`**, from the Excel button on the Semaphore's Leads, which
 the bridge answers by writing every lead (`allLeads()`), open and closed,
 into one .xlsx file — the same file again each time where the browser can
 keep hold of one; the bridge's own comment says how. And **`lead:sheet`**,
-from PDF and Copy for email on a lead Mark's Place made, which the bridge
-answers by reading that entry from Mark's Place's table and laying it out
-as Mark's Place does. And
+from the bridge's own ✉ on a lead Mark's Place made, which the bridge
+answers by reading that entry from Mark's Place's table and printing it
+laid out as Mark's Place does. And
 **`semaphore:keep`**, with a reason, just before ChatGPT's answer is put on
 the board, which the bridge answers with a Ledger restore point. And
 **`callboard:ready`**, once, when the lazy Call Board has been built, which
