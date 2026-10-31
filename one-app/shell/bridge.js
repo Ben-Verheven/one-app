@@ -314,10 +314,18 @@
   /* What each fill-in of the Notes room's FILLS becomes on this lead. One
      the lead has nothing for stays in its brackets, so the gap is seen in
      the email rather than read as a sentence with a word missing. */
+  /* A Horizon cluster is named in an email as the researchers know it,
+     "Horizon CL4", rather than as its arena is kept, "Cluster 4 · Digital
+     & Industry" (Mark, 2026-10-31); the Call Board reads the same number
+     out of the same name to find the cluster's page. */
+  function programmeOf(name) {
+    var m = String(name || '').match(/\bcluster\s*(\d)\b/i);
+    return m ? 'Horizon CL' + m[1] : String(name || '');
+  }
   function fillIn(t, who, x) {
     var FILL = {
       'first name': who.split(/\s+/)[0], 'name': who,
-      'project': x.l.project || '', 'programme': x.a.name || '',
+      'project': x.l.project || '', 'programme': programmeOf(x.a.name),
       'organisation': x.l.coordinator || '', 'contact': x.l.contact || ''
     };
     return String(t || '').replace(/\{([^{}\n]{1,30})\}/g, function (all, w) {

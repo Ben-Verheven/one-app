@@ -265,7 +265,8 @@ Semaphore lead writes from ([semaphore-decisions](semaphore-decisions.md)).
 so bold written here would be lost on the way to Outlook.
 
 **Fill-ins are words in curly brackets**, put in by the chips under the
-boxes: first name, name, project, programme (the arena), organisation
+boxes: first name, name, project, programme (the arena, a Horizon cluster
+written "Horizon CL4"), organisation
 (the coordinator) and contact. He took them with the page. One the lead
 has nothing for stays in its brackets in the email, so the gap shows.
 
