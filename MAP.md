@@ -26,7 +26,7 @@ rooms                                                hub.js:296
 
 ## `shell/bridge.js`
 
-2576 lines · 124 KB
+2561 lines · 123 KB
 
 ```
 Bridge — what the five rooms say to each other.             bridge.js:1
@@ -34,29 +34,29 @@ who the atlas knows, and what they might be called          bridge.js:24
 linkifying                                                  bridge.js:82
 the Atlas's dossier, lent to the other rooms                bridge.js:205
 an email from a lead                                        bridge.js:274
-the Call Board's reader, lent the same way                  bridge.js:430
-the topic a project was written for                         bridge.js:490
-Semaphore's arena drawer, lent the same way                 bridge.js:557
-Semaphore's board, on the Call Board                        bridge.js:628
-Semaphore's leads, on the Ledger's board                    bridge.js:695
-the ring                                                    bridge.js:743
-the name                                                    bridge.js:875
-the page change                                             bridge.js:939
-the rooms that keep their own state, on the Ledger's cloud  bridge.js:975
-which copy wins                                             bridge.js:1057
-what the room says about itself                             bridge.js:1112
-putting two copies together                                 bridge.js:1305
-the agents' inboxes: what the scheduled agents found        bridge.js:1642
-a lead's sheet                                              bridge.js:1789
-the Horizon check, and the call texts                       bridge.js:1859
-open where we left off                                      bridge.js:2011
-the weekly Excel: every lead, open and closed               bridge.js:2025
-the zip                                                     bridge.js:2082
-the styles                                                  bridge.js:2136
-the look                                                    bridge.js:2175
-what goes in it                                             bridge.js:2393
-where it goes                                               bridge.js:2437
-on the iPad, links open in DuckDuckGo                       bridge.js:2522
+the Call Board's reader, lent the same way                  bridge.js:415
+the topic a project was written for                         bridge.js:475
+Semaphore's arena drawer, lent the same way                 bridge.js:542
+Semaphore's board, on the Call Board                        bridge.js:613
+Semaphore's leads, on the Ledger's board                    bridge.js:680
+the ring                                                    bridge.js:728
+the name                                                    bridge.js:860
+the page change                                             bridge.js:924
+the rooms that keep their own state, on the Ledger's cloud  bridge.js:960
+which copy wins                                             bridge.js:1042
+what the room says about itself                             bridge.js:1097
+putting two copies together                                 bridge.js:1290
+the agents' inboxes: what the scheduled agents found        bridge.js:1627
+a lead's sheet                                              bridge.js:1774
+the Horizon check, and the call texts                       bridge.js:1844
+open where we left off                                      bridge.js:1996
+the weekly Excel: every lead, open and closed               bridge.js:2010
+the zip                                                     bridge.js:2067
+the styles                                                  bridge.js:2121
+the look                                                    bridge.js:2160
+what goes in it                                             bridge.js:2378
+where it goes                                               bridge.js:2422
+on the iPad, links open in DuckDuckGo                       bridge.js:2507
 ```
 
 ## `shell/boot.js`
@@ -596,7 +596,7 @@ notes.view.js — the Notes room's furniture.  notes.view.js:1
 
 ## `rooms/notes/notes.js`
 
-3442 lines · 154 KB
+3436 lines · 154 KB
 
 ```
 SMALL TOOLS                                          notes.js:33
@@ -613,26 +613,26 @@ THE OPEN BOOK, DRAWN                                 notes.js:905
 arranging, and the colours                           notes.js:1261
 HOW TAGS RELATE, DRAWN                               notes.js:1293
 EMAIL TEMPLATES                                      notes.js:1430
-the bar a book is made in                            notes.js:1592
-the switch between the two ways in                   notes.js:1669
-THE BAR'S SMALL TRUTHS                               notes.js:1713
-THE PANEL                                            notes.js:1725
-the panel, and its strip                             notes.js:1806
-PASTING                                              notes.js:2007
-the layout a paste is allowed to keep                notes.js:2055
-Word does not put a list on the clipboard as a list  notes.js:2197
-the characters a paste brings that nothing can draw  notes.js:2289
-what a spreadsheet hides, and what its classes say   notes.js:2334
-where a table's rules actually go                    notes.js:2403
-the width of a column is shape, not clothes          notes.js:2458
-copying out                                          notes.js:2655
-a whole note, copied in one press                    notes.js:2769
-TABLES                                               notes.js:2880
-LINKS                                                notes.js:3025
-TAGS                                                 notes.js:3202
-THE POPUP, AND WHERE IT LANDS                        notes.js:3300
-THE ROOM'S SURFACE                                   notes.js:3337
-LISTENERS AND BOOT                                   notes.js:3412
+the bar a book is made in                            notes.js:1586
+the switch between the two ways in                   notes.js:1663
+THE BAR'S SMALL TRUTHS                               notes.js:1707
+THE PANEL                                            notes.js:1719
+the panel, and its strip                             notes.js:1800
+PASTING                                              notes.js:2001
+the layout a paste is allowed to keep                notes.js:2049
+Word does not put a list on the clipboard as a list  notes.js:2191
+the characters a paste brings that nothing can draw  notes.js:2283
+what a spreadsheet hides, and what its classes say   notes.js:2328
+where a table's rules actually go                    notes.js:2397
+the width of a column is shape, not clothes          notes.js:2452
+copying out                                          notes.js:2649
+a whole note, copied in one press                    notes.js:2763
+TABLES                                               notes.js:2874
+LINKS                                                notes.js:3019
+TAGS                                                 notes.js:3196
+THE POPUP, AND WHERE IT LANDS                        notes.js:3294
+THE ROOM'S SURFACE                                   notes.js:3331
+LISTENERS AND BOOT                                   notes.js:3406
 ```
 
 ## `rooms/notes/notes.css`
@@ -679,4 +679,4 @@ Generated data. Never open, never edit, never upload.
 
 ---
 
-**42745 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.
+**42724 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.

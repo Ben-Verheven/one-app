@@ -1448,9 +1448,6 @@ var mailField=null;     /* the box a fill-in chip writes into: the last one the 
    bridge's FILL holds what each one becomes; a word added here is added
    there. */
 var FILLS=['first name','name','project','programme','organisation','contact'];
-/* the same two again in Mark's own words, typed in square brackets rather
-   than put in by a chip: [project x] and [call x] */
-var FILLS_SAID=['project x','call x'];
 
 function mailsEntry(){
   return '<div class="nt-b nt-b-special'+(cur==='@'&&!SQ?' on':'')
@@ -1460,9 +1457,8 @@ function mailsEntry(){
 }
 /* a fill-in shown as the chip it was put in with, in the closed line */
 function fillsShown(t){
-  return esc(t).replace(/\{([^{}\[\]\n]{1,30})\}|\[([^{}\[\]\n]{1,30})\]/g,function(all,a,b){
-    var w=a||b,k=w.toLowerCase();
-    return FILLS.indexOf(k)>=0||FILLS_SAID.indexOf(k)>=0?'<span class="nt-fill">'+w+'</span>':all;});
+  return esc(t).replace(/\{([^{}\n]{1,30})\}/g,function(all,w){
+    return FILLS.indexOf(w.toLowerCase())>=0?'<span class="nt-fill">'+w+'</span>':all;});
 }
 function mailsHTML(){
   var list=mailsOf();
@@ -1475,9 +1471,7 @@ function mailsHTML(){
       +'Brokerage Semaphore, the ✉ after a researcher’s name opens Outlook '
       +'with one of them filled in, written to that researcher.<br><br>'
       +'Words in curly brackets, such as <span class="nt-fill">first name</span> '
-      +'or <span class="nt-fill">project</span>, are filled in from the lead, '
-      +'and so are <span class="nt-fill">project x</span> and '
-      +'<span class="nt-fill">call x</span> in square brackets.</div>';
+      +'or <span class="nt-fill">project</span>, are filled in from the lead.</div>';
   }
   list.forEach(function(m){
     var open=mailOpen===m.id;

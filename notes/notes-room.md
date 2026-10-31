@@ -268,9 +268,6 @@ so bold written here would be lost on the way to Outlook.
 boxes: first name, name, project, programme (the arena), organisation
 (the coordinator) and contact. He took them with the page. One the lead
 has nothing for stays in its brackets in the email, so the gap shows.
-**[project x] and [call x]**, in square brackets, are his own words for
-the project and the arena, asked for the same day; any other word in
-square brackets is left as written.
 
 See also [marks-notes](marks-notes.md) for the tag vocabulary the shelf is
 computed from, and [pitfalls](pitfalls.md) for the class-name clash this room
