@@ -55,3 +55,16 @@ level give no answer (checked 2026-10-28 on all 152 names in four Outlook
 forms, none wrong). His notes stand first on the dossier, above
 everything the database says, because availability is the first thing he
 reads on opening someone; rejected, further down after the keywords.
+
+**What a researcher is part of, and the topics that fit them** (#7 and #8
+of 2026-10-24, built 2026-11-02). Drawn as three: a line of counts under
+the name, that line opening into a list, or a section of its own naming
+everything. Mark chose the section, **In your app**, above his notes:
+every Ledger project and Semaphore lead the researcher is named on, a
+lead's stage beside it, the archived and closed last in a quieter colour.
+Rejected: the counts alone (they say nothing about which), and the line
+that opens (one press too many for what he reads before a call). Beside
+Email, **Horizon topics that fit** takes their keyword chips to the Call
+Board's Atlas switch, replacing what was in its box; the way back,
+**Who could do this?** in a topic's reader, is in
+[call-board](call-board.md).

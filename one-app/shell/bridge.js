@@ -546,6 +546,93 @@
     if (close) close(); else returnReader();
   }, true);
 
+  /* ── a researcher across the rooms, and topics both ways ──────────── */
+
+  /* #7 and #8 of the list of 2026-10-24, built 2026-11-02. The dossier
+     names every Ledger project and Semaphore lead a researcher is on,
+     found as their name is made a link — full name, initial and surname,
+     or a surname only one researcher carries — so a name the page links is
+     a name counted here, and one it does not link is not. A project's
+     people are its researcher list, which `desc` holds, and the names on
+     its positions; a lead's are its Match. */
+  function ridsIn(text) {
+    var out = {}, m;
+    text = String(text || '');
+    if (text.length < 4 || !variants.length) return out;
+    RX.lastIndex = 0;
+    while ((m = RX.exec(text))) {
+      var rid = byVariant[m[1].toLowerCase()];
+      if (rid !== undefined) out[rid] = 1;
+    }
+    return out;
+  }
+  var STAGE_RANK = { talking: 0, contacted: 1, spotted: 2 };
+  function partOf(rid) {
+    var live = [], done = [];
+    var L = Hub.started('ledger') && Hub.api('ledger');
+    if (L && L.projects) {
+      var P = L.projects() || {}, C = (L.calls && L.calls()) || {};
+      Object.keys(P).forEach(function (id) {
+        var p = P[id];
+        if (!p) return;
+        var who = [p.desc || ''].concat((p.positions || []).map(function (x) { return (x && x.name) || ''; }));
+        if (!ridsIn(who.join(', '))[rid]) return;
+        var c = C[p.callId];
+        var x = { where: 'Ledger', what: (p.name || 'Untitled project') + (c && c.name ? ' · ' + c.name : ''),
+                  title: 'Open this project in the Ledger',
+                  go: function () { Hub.go('ledger'); L.PL.openProject(id, false); } };
+        if (p.archived) { x.ended = 'archived'; done.push(x); } else live.push(x);
+      });
+    }
+    var S = Hub.started('semaphore') && Hub.api('semaphore'), st = S && S.state ? S.state() : null;
+    var leads = [];
+    ((st && st.arenas) || []).forEach(function (a) {
+      (a.leads || []).forEach(function (l) {
+        if (!l || !ridsIn(l.match)[rid]) return;
+        /* the old fourth step, agreed, reads as talking, as the Semaphore reads it */
+        var stage = STAGE_RANK[l.stage] !== undefined ? l.stage : (l.stage === 'agreed' ? 'talking' : 'spotted');
+        var x = { where: 'Lead', what: (l.project || 'Untitled lead') + ' · ' + (a.name || ''),
+                  title: 'Open its arena in the Semaphore',
+                  go: function () { Hub.go('semaphore'); if (S.openArena) S.openArena(a.id); } };
+        if (l.doneAt) { x.ended = 'closed'; done.push(x); }
+        else { x.stage = stage; leads.push(x); }
+      });
+    });
+    leads.sort(function (x, y) { return STAGE_RANK[x.stage] - STAGE_RANK[y.stage]; });
+    return live.concat(leads, done);
+  }
+
+  /* "Horizon topics that fit" on a dossier: the Call Board, Atlas
+     switched on, the researcher's keywords in its box. "Who could do
+     this?" in the Board's reader: the Atlas's search on the topic's
+     subjects, kept to the ones the Atlas knows — its concept library is
+     the Topic Atlas's methods library, so a subject is known by the same
+     id — at most five, as five already reach well past one person. */
+  function topicsFit(words) {
+    var B = callboard();
+    if (!B.atlasSearch) { Hub.note('The Call Board did not start — see the console'); return; }
+    Hub.go('callboard');
+    B.atlasSearch(words);
+  }
+  function whoCould(ids) {
+    var A = Hub.api('atlas'), byId = {};
+    ((G && G.concepts) || []).forEach(function (c) { byId[c.id] = c.label; });
+    var words = ids.filter(function (id) { return byId[id]; }).slice(0, 5).map(function (id) { return byId[id]; });
+    if (!words.length) { Hub.note('None of this topic’s subjects is one the Atlas knows'); return; }
+    if (!Hub.pane('atlas') || !A.search) { Hub.note('The Atlas did not start — see the console'); return; }
+    var close = Hub.api('callboard').closeReader;
+    if (close) close();
+    Hub.go('atlas');
+    A.search(words);
+  }
+  (function () {
+    var A = Hub.api('atlas');
+    if (A && A.setPartOf) { A.setPartOf(partOf); A.setTopicsFit(topicsFit); }
+    function wire() { var B = Hub.api('callboard'); if (B && B.setWhoCould) B.setWhoCould(whoCould); }
+    Hub.on('callboard:ready', wire);
+    if (Hub.started('callboard')) wire();
+  })();
+
   /* ── the topic a project was written for, and the call a call is ──── */
 
   /* The Ledger keeps a programme whose projects are each written for one

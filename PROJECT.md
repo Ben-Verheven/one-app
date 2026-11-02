@@ -189,7 +189,11 @@ the Ledger alike, which opens
 a new email to that researcher's address in the Atlas, its subject and
 text one of the Notes room's templates filled in from the lead, writes
 that it was sent into the lead's updates, and, for a lead Mark's Place
-made, prints the lead's sheet to attach; reads the
+made, prints the lead's sheet to attach; fills two sockets on the
+dossier, one listing every Ledger project and Semaphore lead that names
+the researcher, each a way there, and one taking their keywords to the
+Call Board's Atlas switch, and a socket in the Board's reader whose
+"Who could do this?" runs the Atlas's search on the topic's subjects; reads the
 Horizon check's two tables, below, for the Call Board, and the one rule
 that ties a call text to its call; draws the ring of rooms and the title; runs the page-change animation; and syncs
 the Semaphore's board, the Notes room and the Atlas's edits through the

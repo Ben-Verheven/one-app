@@ -2060,6 +2060,15 @@ function relocateSpans(text, tis) {
   return out;
 }
 
+/* Two sockets the bridge fills, so that the dossier can speak of the other
+   rooms without reaching into them (#7 and #8, chosen 2026-11-02).
+   PARTOF answers a name with what it stands on elsewhere in the app: the
+   Ledger's projects and the Semaphore's leads, each with its own way
+   there. TOPICSFIT takes keywords to the Call Board's Atlas switch. Left
+   unfilled — the Atlas opened on its own — neither is drawn. */
+let PARTOF = null, TOPICSFIT = null, partNow = [];
+const PART_STAGE = { talking: "Talking", contacted: "Contacted", spotted: "Spotted" };
+
 function openDossier(rid) {
   /* The editor belongs to one researcher. Walking to a colleague from the
      similarity list redraws this panel with somebody else in it, and a
@@ -2086,6 +2095,7 @@ function openDossier(rid) {
       <button class="sbtn" data-dwalk="${rid}">Walk from here</button>
       ${mail ? `<a class="sbtn dmailto" href="mailto:${esc(mail)}" title="Write to ${esc(mail)}">✉ Email</a><button class="ebtn w" data-dmail="1" title="Change their address">change</button>`
         : `<button class="sbtn" data-dmail="1" title="Write down their email address">✉ Email</button>`}
+      ${TOPICSFIT ? `<button class="sbtn" data-dtopics="${rid}" title="Open the Call Board's Atlas with their keywords filled in">Horizon topics that fit</button>` : ""}
     </div>${State.mailEdit === rid ? `
     <div class="dmail">
       <input type="text" id="dmailin" autocomplete="off" value="${esc(mail)}"
@@ -2099,6 +2109,22 @@ function openDossier(rid) {
     </div>` : ""}`;
 
   let b = "";
+
+  /* What they are part of across the app, every project and lead named,
+     above the notes: Mark chose a section of its own over a line of counts
+     (#7), since the names are what he reads before he calls someone. The
+     ones over and done — an archived project, a closed lead — stand last
+     in a quieter colour. Someone on nothing gets no section at all. */
+  partNow = [];
+  try { partNow = PARTOF ? PARTOF(rid) || [] : []; } catch (e) { console.error(e); }
+  if (partNow.length) {
+    b += `<div class="sect dpart"><h3>In your app</h3>` + partNow.map((x, i) =>
+      `<button class="dpi${x.ended ? " ended" : ""}" data-dpart="${i}" title="${esc(x.title || "")}">`
+      + `<span class="dpw">${esc(x.where)}</span><span class="dpt">${esc(x.what)}</span>`
+      + (x.ended ? `<span class="dpe">${esc(x.ended)}</span>`
+         : x.stage ? `<span class="dps s-${esc(x.stage)}">${esc(PART_STAGE[x.stage] || x.stage)}</span>` : "")
+      + `</button>`).join("") + `</div>`;
+  }
 
   /* His own notes on them, first, because availability is the first thing
      he wants to know on opening someone (#16). Typed straight into the box
@@ -2353,6 +2379,21 @@ function openDossier(rid) {
   db.querySelectorAll("[data-drank]").forEach(bn => bn.onclick = () => setRank(rid));
   db.querySelectorAll("[data-dmap]").forEach(bn => bn.onclick = () => { closeDossier(); locateOnMap(rid); });
   db.querySelectorAll("[data-dwalk]").forEach(bn => bn.onclick = () => { closeDossier(); goWalk({ kind: "r", i: rid }); });
+  db.querySelectorAll("[data-dpart]").forEach(bn => bn.onclick = () => {
+    const x = partNow[+bn.dataset.dpart];
+    if (x && x.go) { closeDossier(); x.go(); }
+  });
+  /* The keywords sent are the chips above, his own among them. Not the
+     spreadsheet cell cut at its commas, as Browse cuts it: some cells are
+     cut by semicolons and "and", and the Board was handed "and e-Humanities"
+     as one keyword. A chip already inside a longer one goes, since the
+     longer one finds what it finds. */
+  db.querySelectorAll("[data-dtopics]").forEach(bn => bn.onclick = () => {
+    const labels = [...new Set(kws.map(([, a]) => T[a[0]].label))];
+    const words = labels.filter(k => !labels.some(o => o !== k && (" " + o.toLowerCase() + " ").includes(" " + k.toLowerCase() + " ")));
+    if (!words.length) { toast("No keywords on record for " + r.name); return; }
+    closeDossier(); TOPICSFIT(words);
+  });
 }
 function closeDossier() { noteFlush(); State.descEdit = State.mailEdit = null; $("#dossier").classList.remove("open"); }
 /* Keeps what is in the notes box, if it says something new. Called a
@@ -2910,6 +2951,19 @@ try{
 try{ Hub.expose('atlas',{
   openDossier: (typeof openDossier==='function')?openDossier:null,
   G:           (typeof G!=='undefined')?G:null,
+  /* the dossier's two sockets, filled by the bridge (see PARTOF) */
+  setPartOf:   function(fn){ PARTOF = fn || null; },
+  setTopicsFit:function(fn){ TOPICSFIT = fn || null; },
+  /* the Search tab with these terms, for a topic's "Who could do this?".
+     Any term rather than all: a topic's five subjects are rarely one
+     person's, and all of them required found nobody. The rail's own
+     switch says so and can put it back. */
+  search:      function(words){
+    State.chips = (words || []).slice();
+    State.opts.requireAll = false;
+    closeDossier();
+    setMode("search");
+  },
   state:       function(){ return { v:1, edits: Core.getEdits() }; },
   /* Replaced rather than merged, as the other rooms are: two edit lists
      both say what the graph should look like, and a half-merge would mean

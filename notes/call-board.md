@@ -267,6 +267,10 @@ the Board" and "CoProg" in callboard.js; what Mark chose:
   behind one Filters button (which, deadline by, where, type of action);
   the tuning stays on its defaults with no control for it, and there is
   no arithmetic and no Export CSV.
+- **Who could do this?** (#8, 2026-11-02), beside Topic on portal in a
+  topic's reader: the researcher Atlas's search, run on the topic's
+  subjects rather than its title's words. Its other half, a researcher's
+  keywords brought here, is in [atlas-room](atlas-room.md).
 - **CoProg's rows are each partnership's own Horizon topics** (8.4), each
   with the cluster call it sits in, gathered by the Work Programme's own
   sentence naming the partnership (1 A), over its name anywhere in the

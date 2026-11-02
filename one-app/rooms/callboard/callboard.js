@@ -1535,6 +1535,12 @@ function openReader(topic, call){
   const links=document.getElementById('rdlinks');
   links.innerHTML='';
   links.appendChild(portalLink(topicURL(topic.id),'Topic on portal'));
+  if(WHO){
+    const w=document.createElement('button'); w.type='button'; w.className='portalink';
+    w.textContent='Who could do this?'; w.title='Search the researcher Atlas for this topic’s subjects';
+    w.addEventListener('click',e=>{ e.stopPropagation(); whoCould(topic.id); });
+    links.appendChild(w);
+  }
   RD_ID=topic.id; RD_BACK=null; readerNotices(topic.id);
   const body=document.getElementById('rdbody');
   if(!d||(d.note&&!d.o.length&&!d.s.length)||!(d.o.length||d.s.length||d.x.length||d.c.length)){
@@ -2162,6 +2168,21 @@ function taEngine(){
   TA.S=window.Scorer.create({libraries:TA.LIB,stats:TA.stats,records:R},TA.TU);
   return TA.S;
 }
+/* "Who could do this?" (#8, 2026-11-02): the topic's subjects as the
+   Topic Atlas found them in its text, methods only, weighed as its card
+   weighs them, so the most telling come first — never the title's words,
+   which are mostly Europe, digital and trust. The bridge keeps those the
+   researcher Atlas knows and runs its search on them. */
+let WHO=null;
+function whoCould(id){
+  const S=taEngine(), r=S&&TA.R.find(x=>x.kind==='topic'&&x.id===id);
+  if(!r){ Hub.note(TEXTS==='wait'?'Still reading the topics’ texts — try again in a moment':'This topic’s subjects are not known'); return; }
+  const D=taG().DEFAULTS, weight={};
+  for(const o of r.concepts) if(o.axis==='method') weight[o.c]=(weight[o.c]||0)+D.weights[o.sec]*S.idf(o.c)*Math.min(o.n,D.cap);
+  const ids=Object.keys(weight).sort((a,z)=>weight[z]-weight[a]);
+  if(!ids.length){ Hub.note('The Topic Atlas found no method or expertise in this topic'); return; }
+  WHO(ids);
+}
 function taStale(){ TA.S=null; TA.R=null; if(TA.on) taRender(); }
 
 /* where a record stands: its tab or tabs (a co-programmed partnership's
@@ -2779,7 +2800,18 @@ Hub.expose('callboard',{
     paintJudge();
     if(MODE==='arena') render();
   },
-  cloudBack:function(){ readHorizon(); }
+  cloudBack:function(){ readHorizon(); },
+  /* the socket for "Who could do this?" in the reader, filled by the
+     bridge; unfilled, the reader has no such button */
+  setWhoCould:function(fn){ WHO=fn||null; },
+  /* Atlas switched on with these keywords in its box, for a researcher's
+     "Horizon topics that fit" (#8). They replace what was there: two
+     people's words together rank for neither. */
+  atlasSearch:function(words){
+    TA.chips=(words||[]).filter(x=>typeof x==='string'&&x.trim()).map(x=>x.trim());
+    TA.off={}; TA.shown=40; TA.expanded.clear();
+    taSave(); taSet(true);
+  }
 });
 readHorizon();
 taLoad(()=>{

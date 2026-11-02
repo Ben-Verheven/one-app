@@ -26,7 +26,7 @@ rooms                                                hub.js:296
 
 ## `shell/bridge.js`
 
-2636 lines · 127 KB
+2723 lines · 132 KB
 
 ```
 Bridge — what the five rooms say to each other.             bridge.js:1
@@ -35,28 +35,29 @@ linkifying                                                  bridge.js:99
 the Atlas's dossier, lent to the other rooms                bridge.js:222
 an email from a lead                                        bridge.js:291
 the Call Board's reader, lent the same way                  bridge.js:489
-the topic a project was written for                         bridge.js:549
-Semaphore's arena drawer, lent the same way                 bridge.js:616
-Semaphore's board, on the Call Board                        bridge.js:687
-Semaphore's leads, on the Ledger's board                    bridge.js:754
-the ring                                                    bridge.js:836
-the name                                                    bridge.js:951
-the page change                                             bridge.js:1015
-the rooms that keep their own state, on the Ledger's cloud  bridge.js:1051
-which copy wins                                             bridge.js:1133
-what the room says about itself                             bridge.js:1188
-putting two copies together                                 bridge.js:1381
-the agents' inboxes: what the scheduled agents found        bridge.js:1718
-a lead's sheet                                              bridge.js:1865
-the Horizon check, and the call texts                       bridge.js:1926
-open where we left off                                      bridge.js:2071
-the weekly Excel: every lead, open and closed               bridge.js:2085
-the zip                                                     bridge.js:2142
-the styles                                                  bridge.js:2196
-the look                                                    bridge.js:2235
-what goes in it                                             bridge.js:2453
-where it goes                                               bridge.js:2497
-on the iPad, links open in DuckDuckGo                       bridge.js:2582
+a researcher across the rooms, and topics both ways         bridge.js:549
+the topic a project was written for                         bridge.js:636
+Semaphore's arena drawer, lent the same way                 bridge.js:703
+Semaphore's board, on the Call Board                        bridge.js:774
+Semaphore's leads, on the Ledger's board                    bridge.js:841
+the ring                                                    bridge.js:923
+the name                                                    bridge.js:1038
+the page change                                             bridge.js:1102
+the rooms that keep their own state, on the Ledger's cloud  bridge.js:1138
+which copy wins                                             bridge.js:1220
+what the room says about itself                             bridge.js:1275
+putting two copies together                                 bridge.js:1468
+the agents' inboxes: what the scheduled agents found        bridge.js:1805
+a lead's sheet                                              bridge.js:1952
+the Horizon check, and the call texts                       bridge.js:2013
+open where we left off                                      bridge.js:2158
+the weekly Excel: every lead, open and closed               bridge.js:2172
+the zip                                                     bridge.js:2229
+the styles                                                  bridge.js:2283
+the look                                                    bridge.js:2322
+what goes in it                                             bridge.js:2540
+where it goes                                               bridge.js:2584
+on the iPad, links open in DuckDuckGo                       bridge.js:2669
 ```
 
 ## `shell/boot.js`
@@ -471,7 +472,7 @@ _No section banners._
 
 ## `rooms/callboard/callboard.js`
 
-2796 lines · 159 KB
+2828 lines · 160 KB
 
 ```
 Call Board                                              callboard.js:1
@@ -487,18 +488,18 @@ render                                                  callboard.js:977
 the freezer                                             callboard.js:1192
 the other clusters, while a search is typed             callboard.js:1254
 full topic text                                         callboard.js:1422
-why the slide is started two frames late                callboard.js:1562
-overview page                                           callboard.js:1623
-the chronological chart, and dragging its ends          callboard.js:1686
-the topic list under the chart                          callboard.js:1801
-repainting what is already drawn                        callboard.js:1944
-the Topic Atlas inside the Board                        callboard.js:1982
-the page of results                                     callboard.js:2182
-the keywords' lines, as the Topic Atlas draws them      callboard.js:2353
-the reader: the Board's own, with what was found in it  callboard.js:2503
-the switch, the keywords, and the filters               callboard.js:2601
-controls                                                callboard.js:2658
-what the other rooms may ask for                        callboard.js:2721
+why the slide is started two frames late                callboard.js:1568
+overview page                                           callboard.js:1629
+the chronological chart, and dragging its ends          callboard.js:1692
+the topic list under the chart                          callboard.js:1807
+repainting what is already drawn                        callboard.js:1950
+the Topic Atlas inside the Board                        callboard.js:1988
+the page of results                                     callboard.js:2203
+the keywords' lines, as the Topic Atlas draws them      callboard.js:2374
+the reader: the Board's own, with what was found in it  callboard.js:2524
+the switch, the keywords, and the filters               callboard.js:2622
+controls                                                callboard.js:2679
+what the other rooms may ask for                        callboard.js:2742
 ```
 
 ## `rooms/callboard/callboard.css`
@@ -530,7 +531,7 @@ _No section banners._
 
 ## `rooms/atlas/atlas.js`
 
-2929 lines · 146 KB
+2983 lines · 149 KB
 
 ```
 Researcher Atlas                                          atlas.js:1
@@ -556,18 +557,18 @@ search mode                                               atlas.js:1178
 BROWSE — the department as it organizes itself            atlas.js:1457
 NEWS — what the scheduled people-agent found on the web   atlas.js:1653
 DOSSIER — one researcher                                  atlas.js:1951
-MAP & WALK — one canvas, two readings                     atlas.js:2395
-canvas                                                    atlas.js:2468
-concentric walk                                           atlas.js:2529
-canvas interaction                                        atlas.js:2658
-walk rail                                                 atlas.js:2729
-SHELL — tabs, edit toggle, about, init.                   atlas.js:2807
-exposed to the hub                                        atlas.js:2889
+MAP & WALK — one canvas, two readings                     atlas.js:2436
+canvas                                                    atlas.js:2509
+concentric walk                                           atlas.js:2570
+canvas interaction                                        atlas.js:2699
+walk rail                                                 atlas.js:2770
+SHELL — tabs, edit toggle, about, init.                   atlas.js:2848
+exposed to the hub                                        atlas.js:2930
 ```
 
 ## `rooms/atlas/atlas.css`
 
-458 lines · 30 KB
+471 lines · 31 KB
 
 ```
 Researcher Atlas  atlas.css:1
@@ -579,9 +580,9 @@ search            atlas.css:172
 browse            atlas.css:236
 map & walk        atlas.css:279
 dossier           atlas.css:312
-popover / modal   atlas.css:379
-edits list        atlas.css:396
-news              atlas.css:409
+popover / modal   atlas.css:392
+edits list        atlas.css:409
+news              atlas.css:422
 ```
 
 ## `rooms/notes/notes.view.js`
@@ -677,4 +678,4 @@ Generated data. Never open, never edit, never upload.
 
 ---
 
-**42927 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.
+**43113 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.
