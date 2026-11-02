@@ -10,12 +10,10 @@ const uid=()=>crypto.randomUUID?crypto.randomUUID():'id'+Math.random().toString(
 /* The dates, a venue's window and shading, a site's reading and a call's
    runs are reckoned in the one file Mark's Place reads as well
    (shell/venues.js), so that the two say the same of every venue. */
-const {MONTHS,DAY,pad,T,todayISO,fmtDay,dispDate,trimYear,shortDay,shortDate,tDay,
-  linkKey,siteKey,sameSite,isSpot,vWin,vState,PHASE,vHeat,heatBG,vDateSay,
+const {MONTHS,DAY,pad,T,todayISO,fmtDay,dispDate,shortDay,shortDate,tDay,
+  linkKey,siteKey,sameSite,vWin,vState,PHASE,heatBG,vDateSay,
   callBase,callRuns,OPEN_RUN,PLACE_RGB}=VenueMaths;
 const lastDay=(y,m)=>new Date(y,m,0).getDate();
-const ymAdd=(ym,n)=>{const[y,m]=ym.split('-').map(Number);const i=y*12+(m-1)+n;return Math.floor(i/12)+'-'+pad(i%12+1);};
-const thisYM=()=>todayISO().slice(0,7);
 
 const GRADES={
   fixed:{name:'Fixed',long:'Published, confirmed'},
@@ -66,7 +64,6 @@ const WEIGHTS={
   peripheral:{name:'Peripheral',turn:3, lift:0, long:'Watched out of diligence. Its venues come round about a third as often.'}
 };
 const weightOf=a=>WEIGHTS[a&&a.weight]?a.weight:'ordinary';
-const weightClass=a=>{const w=weightOf(a);return w==='ordinary'?'':' w-'+w;};
 
 /* stages of a call, in the order they happen */
 const ROLES={
@@ -3015,12 +3012,8 @@ function findHTML(f){
     (findDates(f)?arenaSnipHTML(findDates(f),null):arenaSnipHTML(null,f.name))+
     '</div>';
 }
-/* What the agent brought an arena is marked new until its panel has been
-   looked at and shut again; it was the arena's sweep that cleared it, until
-   the sweep went with the rotation (2026-10-14). */
 function closeDrawer(){
   walk.on=false;walk.id=null;
-  const a=!drawer.vid&&!drawer.vnew&&arena(drawer.id);
   if(leadEdit.a===VENUE_LEAD)closeComposers();
   const f=drawer.find;drawer.find=null;
   drawer.id=null;drawer.vid=null;drawer.vnew=null;drawer.edit=null;drawer.hi=null;drawer.editing=false;drawer.scope=null;renderDrawer();
@@ -3131,21 +3124,6 @@ function linkOf(a,scope,id){const l=linkList(a,scope);return l?l.find(x=>x.id===
 function relinked(){save();repaint();renderDrawer();}
 function wallLinks(a,scope,rows){
   return '<div class="wlinks" data-a="'+a.id+'" data-lks="'+scope+'">'+rows+'</div>';
-}
-/* ---- a call's run ----
-   How the stages of one call, and the calls that share their dates, come
-   together as one bar is reckoned in shell/venues.js ("a call's run"),
-   which the Call Board and Mark's Place read too. */
-/* the calls on one bar, each named once, and the dates the bar runs between */
-function runTip(r){
-  const names=[...new Set(r.all.map(dtLabel))];
-  const span=(r.open?'Publication '+dispDate(r.open):'Publication not recorded')+
-    (r.close?'  →  deadline '+dispDate(r.close):'  →  no deadline recorded');
-  const stages=r.dls.length>1?'\n'+r.dls.length+' deadlines: '+r.dls.map(shortDate).join(', '):'';
-  /* the weeks that count for brokerage: publication to the first deadline */
-  const wk=r.open&&r.dls[0]?Math.round((T(r.dls[0].start)-T(r.open.start))/(7*DAY)):-1;
-  const brk=wk>=0?'\nFor brokerage: '+wk+(wk===1?' week':' weeks')+' to the first deadline':'';
-  return names.join('\n')+'\n'+span+stages+brk+(r.unc?'\nUncertain':'');
 }
 /* ---- the board, lent to the Call Board ----
    The Call Board draws every arena's calls beside the Horizon ones (Mark,

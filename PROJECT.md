@@ -124,7 +124,8 @@ Hub.api('semaphore')       → { state(), save(), renderAll(),
                                finds(), refreshFinds(cb),
                                judge(key, verb, type, cb), seen(aid),
                                frozen(), thaw(aid), leadAdd(aid, v), allLeads(),
-                               openArena(aid), gpt(kind), escape() }
+                               openArena(aid), openFind(f), closeFind(),
+                               gpt(kind), escape() }
 Hub.api('atlas')           → { openDossier(), G, state(), applyState(obj) }
 Hub.api('notes')           → { state(), applyState(obj), mails() }
 Hub.api('semaphore-inbox') → { ready(), list(cb), decide(id, status, cb),

@@ -520,7 +520,7 @@
 #pane-callboard .ta{--paper:#EFE8D7;--wash:#E6DDC9;--faint:#5C5140;--ghost:#6A5E48;--line2:rgba(120,96,58,0.34);
   --k1:#7A5E24;--k2:#41705C;--k3:#9E5B24;--k4:#6F6450;--k1w:#EDE3CB;--k2w:#DFEAE2;--k3w:#F2E2D0;--k4w:#E8E1D3;
   --k1i:#5E4716;--k2i:#2F5646;--k3i:#7A4416;--k4i:#4F4636;--con:#6B5F7E;--conw:#E7E2EC;--coni:#4F4566;
-  --dom:#3F5A78;--domw:#E0E6EE;--domi:#2E4560;--txt:#8A6A2E;--txtw:#F1E6CC;--txti:#6B5020;--danger:#A33A2C;
+  --dom:#3F5A78;--domw:#E0E6EE;--domi:#2E4560;--txtw:#F1E6CC;--txti:#6B5020;--danger:#A33A2C;
   --near:#8A4B66;--nearw:#F1E2E8;--neari:#6B3550;--sans:var(--body);--r:7px}
 #pane-callboard .taview{min-height:60vh;padding:6px 0 70px}
 #pane-callboard .ta button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}

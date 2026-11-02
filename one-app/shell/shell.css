@@ -349,6 +349,21 @@ html:has(#pane-callboard.on.judging) #oa-toasts{bottom:150px}
   transition:opacity .30s ease, transform .42s cubic-bezier(.2,.8,.2,1),
              visibility 0s;
 }
+/* A room that is not showing is only made invisible, and an invisible
+   element's endless animation still runs: Limbo's fog in the Semaphore
+   had the browser redrawing sixty times a second in every room, an iPad's
+   battery spent on a mist nobody could see. It stops where it stands and
+   carries on when its room is shown. `!important`, because each room's
+   own `animation` shorthand is the more specific rule and would set it
+   running again. Nothing in the app waits on an animation's end, so a
+   paused one holds nothing up. A room lending a panel to another
+   (`oa-lending`, below) is on screen without being shown, so it keeps
+   moving. */
+.pane:not(.on):not(.oa-lending) *,
+.pane:not(.on):not(.oa-lending) *::before,
+.pane:not(.on):not(.oa-lending) *::after{
+  animation-play-state:paused !important;
+}
 /* On a tablet the bar has to hold the room's own controls as well, and
    a 300px name in front of them pushes them off the edge. Below this the
    glyph line carries the identification on its own. */

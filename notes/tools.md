@@ -74,4 +74,13 @@ Place's two pages are not in `index.html` and so in no index or lint here:
 cut their inline scripts and styles out and give them the same pass. It
 found the Semaphore's link form two days after its last button had gone.
 
+**And one that reads the running page, not the files** (2026-11-02): each
+room seeded and left alone for five seconds, with Chromium's own counters
+(`Performance.getMetrics` over a CDP session) read before and after.
+`RecalcStyleCount` should barely move; three hundred means something is
+animating at sixty frames a second, and `document.getAnimations()` names
+it and the element it runs on. It found Limbo's fog running in every room
+(see the paused rule in `shell.css`), where every static pass, the crawler
+and the screenshots had all passed.
+
 See also [working-here](working-here.md) and [pitfalls](pitfalls.md).

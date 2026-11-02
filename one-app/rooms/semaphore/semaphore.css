@@ -20,7 +20,7 @@
   --new:#B9E35A; --new-ink:#D9F59A; --new-soft:rgba(185,227,90,.14); --new-line:rgba(185,227,90,.42);
   /* the agent's findings speak in the publication's own indigo; a follow-up
      you set yourself in the todo green. */
-  --notice:#8A8BF0; --notice-ink:#C2C3FF; --notice-line:rgba(138,139,240,.26);
+  --notice:#8A8BF0; --notice-ink:#C2C3FF;
   --todo:#8CC47C; --todo-ink:#BBE0AF; --todo-bg:rgba(140,196,124,.10); --todo-line:rgba(140,196,124,.26);
   --focus:#D8CDB8;
   --slab:linear-gradient(180deg,rgba(255,255,255,.04),rgba(0,0,0,.12));
@@ -127,7 +127,7 @@
   --call:#4646B8;
   --r-ann:#137F9B; --r-pub:#4646B8; --r-dl:#A32E87;
   --today:#9A6A00;
-  --notice:#4646B8; --notice-ink:#33338F; --notice-line:rgba(70,70,184,.24);
+  --notice:#4646B8; --notice-ink:#33338F;
   --todo:#3F7A31; --todo-ink:#2C5A21; --todo-bg:rgba(63,122,49,.10); --todo-line:rgba(63,122,49,.26);
   --new:#6C8E1C; --new-ink:#43590E; --new-soft:rgba(140,190,40,.16); --new-line:rgba(108,142,28,.5);
   --hi:rgba(154,106,0,.16); --hi2:rgba(154,106,0,.45);

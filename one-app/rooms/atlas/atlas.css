@@ -159,7 +159,6 @@
 /* A small button standing for the choice already made — the rank a
    researcher is on record as holding, in the rank picker. */
 #pane-atlas .sbtn.on{color:var(--ink);border-color:var(--line2);background:var(--wash);font-weight:600}
-#pane-atlas hr.hair{border:none;border-top:1px solid var(--line);margin:16px 0}
 /* ---------- sliders ---------- */
 #pane-atlas .wrow{display:flex;align-items:center;gap:10px;margin-bottom:10px}
 #pane-atlas .wrow label{width:86px;flex:none;font-size:12.5px;color:var(--faint);display:flex;

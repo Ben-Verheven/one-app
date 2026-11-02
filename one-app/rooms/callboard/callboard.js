@@ -273,7 +273,7 @@ const allPages=()=>PAGES.concat(APAGES);
 const everyCall=()=>ALLCALLS.concat(ACALLS);
 const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 /* A date as exactly as it is known: a day, or only its month, quarter,
-   half or year. Written short on the chart and in a row, long in a card. */
+   half or year, written short for the chart and a row. */
 function whenShort(d){
   if(!d||!d.start) return '';
   const y='’'+d.start.slice(2,4), m=MON[+d.start.slice(5,7)-1];
@@ -284,18 +284,6 @@ function whenShort(d){
     case 'year': return d.start.slice(0,4);
     case 'range': return dm(d.start)+' – '+dm(d.end)+' '+y;
     default: return dm(d.start)+' '+y;
-  }
-}
-function whenLong(d){
-  if(!d||!d.start) return '';
-  const y=d.start.slice(0,4), m=MON[+d.start.slice(5,7)-1];
-  switch(d.gran){
-    case 'month': return m+' '+y;
-    case 'quarter': return 'Q'+(Math.floor((+d.start.slice(5,7)-1)/3)+1)+' '+y;
-    case 'half': return 'H'+(+d.start.slice(5,7)<7?1:2)+' '+y;
-    case 'year': return y;
-    case 'range': return dmy(d.start)+' – '+dmy(d.end);
-    default: return dmy(d.start);
   }
 }
 /* where a deadline known only to its month falls on the chart: its last
@@ -801,7 +789,6 @@ function paintJudge(){
     stop:()=>{ if(JUDGE.on) stopJudging(); },
     retype:t=>{ JUDGE.types[f.key]=t; readFinds(); showFind(); }});
 }
-const hostOf=u=>{ try{ return new URL(u).hostname.replace(/^www\./,''); }catch(e){ return String(u||''); } };
 document.getElementById('jpill').addEventListener('click',()=>{ if(!JUDGE.on) startJudging(); });
 /* ChatGPT's searches for calls, new arenas and call texts, whose answers
    bring the dates drawn and the finds judged here:
@@ -1092,7 +1079,6 @@ function toggleTopic(row,det,callId,color){
    may be no more than an expected window, or an opening with no deadline
    recorded yet; a Horizon call is always an opening and one or two. */
 const callDates=c=>[c.opening,c.d1,c.d2,c.annEnd].concat(c.sOpen||[],c.sD1||[],c.sD2||[]).filter(Boolean);
-const rgba=(h,a)=>/^#[0-9a-f]{6}$/i.test(h)?'rgba('+[1,3,5].map(i=>parseInt(h.substr(i,2),16)).join(',')+','+a+')':h;
 /* One call's bar, its stages and its two date tags, in the colours the
    chart asks for: a cluster's own chart wears the call series' colours,
    the overview the cluster's. The opening's tag is the cluster chart's

@@ -69,7 +69,7 @@ Boot check  boot.js:1
 
 ## `shell/shell.css`
 
-881 lines · 46 KB
+896 lines · 47 KB
 
 ```
 Shell — the chrome that holds the five rooms.              shell.css:1
@@ -80,18 +80,18 @@ the Call Board's reader, lent the same way                 shell.css:237
 the Semaphore's arena drawer, lent the same way            shell.css:258
 the page change                                            shell.css:281
 stage & panes                                              shell.css:318
-the researcher link, wherever a name is written            shell.css:374
-the ✉ after a researcher on a lead, and what it opens      shell.css:388
-Palette harmonisation.                                     shell.css:439
-faint was #9D8458                                          shell.css:485
-The ribbon.                                                shell.css:513
-one bar: one height, one control face                      shell.css:529
-the ribbon's ink, said louder than each room says its own  shell.css:595
-Semaphore: already the shape of the thing                  shell.css:665
-the Ledger                                                 shell.css:670
-the Atlas: a 21px italic wordmark                          shell.css:712
-the Call Board: the cluster row is the bar                 shell.css:734
-a lead's sheet, printed                                    shell.css:864
+the researcher link, wherever a name is written            shell.css:389
+the ✉ after a researcher on a lead, and what it opens      shell.css:403
+Palette harmonisation.                                     shell.css:454
+faint was #9D8458                                          shell.css:500
+The ribbon.                                                shell.css:528
+one bar: one height, one control face                      shell.css:544
+the ribbon's ink, said louder than each room says its own  shell.css:610
+Semaphore: already the shape of the thing                  shell.css:680
+the Ledger                                                 shell.css:685
+the Atlas: a 21px italic wordmark                          shell.css:727
+the Call Board: the cluster row is the bar                 shell.css:749
+a lead's sheet, printed                                    shell.css:879
 ```
 
 ## `rooms/ledger/ledger.view.js`
@@ -380,56 +380,55 @@ _No section banners._
 
 ## `rooms/semaphore/semaphore.js`
 
-5731 lines · 332 KB
+5709 lines · 331 KB
 
 ```
 Brokerage Semaphore                         semaphore.js:1
 state                                       semaphore.js:5
-how much an arena is worth                  semaphore.js:25
-a type's colour                             semaphore.js:87
-the ui, whole                               semaphore.js:301
-venues                                      semaphore.js:347
-date semantics                              semaphore.js:562
-filtering                                   semaphore.js:584
-the board, on the Call Board                semaphore.js:653
-new arenas, waiting to be judged            semaphore.js:676
-ChatGPT's search                            semaphore.js:737
-venues, on screen                           semaphore.js:1537
-asking the agent about one venue            semaphore.js:1653
-the visit question                          semaphore.js:1695
-a venue's window, drawn                     semaphore.js:1749
-dragging a window's ends                    semaphore.js:1785
-Venues: three sections and Limbo            semaphore.js:1880
-dragging a venue into place                 semaphore.js:2010
-what a search found, checked in its card    semaphore.js:2086
-a venue, opened                             semaphore.js:2213
-drawer                                      semaphore.js:2526
-read view: one stream, in time order        semaphore.js:2630
-edit view                                   semaphore.js:2776
-actions                                     semaphore.js:3032
-a call's run                                semaphore.js:3135
-the board, lent to the Call Board           semaphore.js:3150
-leads                                       semaphore.js:3239
-the ruit                                    semaphore.js:3485
-the score                                   semaphore.js:3541
-one lead card, in both rooms                semaphore.js:3594
-a type's colour dot                         semaphore.js:3643
-who and the links, side by side             semaphore.js:3748
-the leads table                             semaphore.js:3765
-leads: one board, three sections            semaphore.js:3955
-a lead opening in place                     semaphore.js:4075
-a lead moving, and the view moving with it  semaphore.js:4182
-leads, lent to the Ledger's board           semaphore.js:4517
-modals                                      semaphore.js:4648
-asking, and saying                          semaphore.js:4651
-the types, managed                          semaphore.js:4692
-dragging in the list of types               semaphore.js:4748
-tooltip                                     semaphore.js:4909
-events                                      semaphore.js:4947
-venues                                      semaphore.js:5101
-typing, and the forms it goes into          semaphore.js:5298
-escape, and closing by clicking away        semaphore.js:5496
-putting links in your own order             semaphore.js:5532
+how much an arena is worth                  semaphore.js:23
+a type's colour                             semaphore.js:84
+the ui, whole                               semaphore.js:298
+venues                                      semaphore.js:344
+date semantics                              semaphore.js:559
+filtering                                   semaphore.js:581
+the board, on the Call Board                semaphore.js:650
+new arenas, waiting to be judged            semaphore.js:673
+ChatGPT's search                            semaphore.js:734
+venues, on screen                           semaphore.js:1534
+asking the agent about one venue            semaphore.js:1650
+the visit question                          semaphore.js:1692
+a venue's window, drawn                     semaphore.js:1746
+dragging a window's ends                    semaphore.js:1782
+Venues: three sections and Limbo            semaphore.js:1877
+dragging a venue into place                 semaphore.js:2007
+what a search found, checked in its card    semaphore.js:2083
+a venue, opened                             semaphore.js:2210
+drawer                                      semaphore.js:2523
+read view: one stream, in time order        semaphore.js:2627
+edit view                                   semaphore.js:2773
+actions                                     semaphore.js:3025
+the board, lent to the Call Board           semaphore.js:3128
+leads                                       semaphore.js:3217
+the ruit                                    semaphore.js:3463
+the score                                   semaphore.js:3519
+one lead card, in both rooms                semaphore.js:3572
+a type's colour dot                         semaphore.js:3621
+who and the links, side by side             semaphore.js:3726
+the leads table                             semaphore.js:3743
+leads: one board, three sections            semaphore.js:3933
+a lead opening in place                     semaphore.js:4053
+a lead moving, and the view moving with it  semaphore.js:4160
+leads, lent to the Ledger's board           semaphore.js:4495
+modals                                      semaphore.js:4626
+asking, and saying                          semaphore.js:4629
+the types, managed                          semaphore.js:4670
+dragging in the list of types               semaphore.js:4726
+tooltip                                     semaphore.js:4887
+events                                      semaphore.js:4925
+venues                                      semaphore.js:5079
+typing, and the forms it goes into          semaphore.js:5276
+escape, and closing by clicking away        semaphore.js:5474
+putting links in your own order             semaphore.js:5510
 ```
 
 ## `rooms/semaphore/semaphore.css`
@@ -473,34 +472,34 @@ _No section banners._
 
 ## `rooms/callboard/callboard.js`
 
-2810 lines · 159 KB
+2796 lines · 159 KB
 
 ```
 Call Board                                              callboard.js:1
 the ink on a coloured chip                              callboard.js:62
 tabs                                                    callboard.js:100
 the arenas' calls                                       callboard.js:214
-CoProg: the partnerships' own Horizon topics            callboard.js:384
-the tab an arena belongs to                             callboard.js:660
-judging the finds, one at a time                        callboard.js:683
-the official call texts                                 callboard.js:837
-the portal, laid over the Work Programme                callboard.js:899
-render                                                  callboard.js:990
-the freezer                                             callboard.js:1206
-the other clusters, while a search is typed             callboard.js:1268
-full topic text                                         callboard.js:1436
-why the slide is started two frames late                callboard.js:1576
-overview page                                           callboard.js:1637
-the chronological chart, and dragging its ends          callboard.js:1700
-the topic list under the chart                          callboard.js:1815
-repainting what is already drawn                        callboard.js:1958
-the Topic Atlas inside the Board                        callboard.js:1996
-the page of results                                     callboard.js:2196
-the keywords' lines, as the Topic Atlas draws them      callboard.js:2367
-the reader: the Board's own, with what was found in it  callboard.js:2517
-the switch, the keywords, and the filters               callboard.js:2615
-controls                                                callboard.js:2672
-what the other rooms may ask for                        callboard.js:2735
+CoProg: the partnerships' own Horizon topics            callboard.js:372
+the tab an arena belongs to                             callboard.js:648
+judging the finds, one at a time                        callboard.js:671
+the official call texts                                 callboard.js:824
+the portal, laid over the Work Programme                callboard.js:886
+render                                                  callboard.js:977
+the freezer                                             callboard.js:1192
+the other clusters, while a search is typed             callboard.js:1254
+full topic text                                         callboard.js:1422
+why the slide is started two frames late                callboard.js:1562
+overview page                                           callboard.js:1623
+the chronological chart, and dragging its ends          callboard.js:1686
+the topic list under the chart                          callboard.js:1801
+repainting what is already drawn                        callboard.js:1944
+the Topic Atlas inside the Board                        callboard.js:1982
+the page of results                                     callboard.js:2182
+the keywords' lines, as the Topic Atlas draws them      callboard.js:2353
+the reader: the Board's own, with what was found in it  callboard.js:2503
+the switch, the keywords, and the filters               callboard.js:2601
+controls                                                callboard.js:2658
+what the other rooms may ask for                        callboard.js:2721
 ```
 
 ## `rooms/callboard/callboard.css`
@@ -569,21 +568,21 @@ exposed to the hub                                        atlas.js:2889
 
 ## `rooms/atlas/atlas.css`
 
-459 lines · 30 KB
+458 lines · 30 KB
 
 ```
 Researcher Atlas  atlas.css:1
 chrome            atlas.css:36
 narrow            atlas.css:95
 shared bits       atlas.css:119
-sliders           atlas.css:163
-search            atlas.css:173
-browse            atlas.css:237
-map & walk        atlas.css:280
-dossier           atlas.css:313
-popover / modal   atlas.css:380
-edits list        atlas.css:397
-news              atlas.css:410
+sliders           atlas.css:162
+search            atlas.css:172
+browse            atlas.css:236
+map & walk        atlas.css:279
+dossier           atlas.css:312
+popover / modal   atlas.css:379
+edits list        atlas.css:396
+news              atlas.css:409
 ```
 
 ## `rooms/notes/notes.view.js`
@@ -679,4 +678,4 @@ Generated data. Never open, never edit, never upload.
 
 ---
 
-**42774 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.
+**42752 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.
