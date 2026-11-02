@@ -1055,6 +1055,10 @@ function newProject(f){
        contribution tracker's M&CS PM columns until 2026-09-03. */
     piGroups:f.piGroups||[],
     partners:f.partners||[],positions:f.positions||[],links:f.links||[],
+    /* The Semaphore lead this project became, as {arenaId, leadId, arena},
+       for the card's way back to it; null for a project started anywhere
+       else. `arena` is the arena's name on the day, for the link's words. */
+    fromLead:f.fromLead||null,
     rows:f.rows||[],todos:f.todos||[],tracker:f.tracker||null,
     order:typeof f.order==='number'?f.order:0,archived:!!f.archived,
     created:f.created||nowIso()};
@@ -11737,6 +11741,15 @@ var ProjectCard=(function(){
     var parts=[];
     if(ws)parts.push(linkA(ws));
     rest.forEach(function(l){parts.push(linkA(l));});
+    /* The way back to the Semaphore lead this project became, last on the
+       run in the links' own face (Mark chose the band over the dossier,
+       2026-11-02, so it is always in sight). It opens the arena's panel
+       over this room with the lead open, through the bridge. */
+    var fl=p.fromLead;
+    if(fl&&fl.arenaId&&fl.leadId)parts.push('<button type="button" class="named-link" '
+      +'title="The lead this project came from, in the Brokerage Semaphore" '
+      +'onclick="PL.openLead(\''+esc(p.id)+'\');event.stopPropagation()">'
+      +esc((fl.arena?fl.arena+' ':'')+'lead')+' \u2197</button>');
     var linksEnd=parts.length
       ?'<span class="pc-links">'+parts.join('')+'</span>'
       :'';
@@ -14310,6 +14323,28 @@ var ProjectForm=(function(){
   /* What Create is about to do, said before it is pressed. The one thing
      this form can do by surprise is join a call you meant to start, when
      the short name you typed is already in use. */
+  /* The lead's updates are the one thing carried over with no field in the
+     form, so the foot says where they will go. */
+  function leadSaid(){
+    var n=fromLead?fromLead.updates.length:0;
+    return n?' Its '+(n===1?'update goes':n+' updates go')+' into the dossier, under From the lead.':'';
+  }
+  /* One dossier row of the lead's updates, a note to each, named for its
+     day and in the lead's order, oldest first: Mark chose separate notes
+     over one note of them all, which would read as one run of text. */
+  function leadRows(ups){
+    if(!ups||!ups.length)return [];
+    return [newRow({name:'From the lead',notes:ups.map(function(u){
+      var day=isIsoDate(u.at)?u.at:'';
+      var when=day?day+'T12:00:00.000Z':nowIso();
+      /* named as the lead named it, "20 Oct", the year added only when it
+         is not this one */
+      var name=day?(+day.slice(8))+' '+MON3[+day.slice(5,7)-1]
+        +(day.slice(0,4)===isoToday().slice(0,4)?'':' '+day.slice(0,4)):'';
+      return newNote({label:name||String(u.stamp||'').trim()||'Earlier',
+        body:String(u.text).trim(),created:when,edited:when});
+    })})];
+  }
   function footNote(){
     var el=byId('np-foot-note'),extra=byId('np-call-extra');
     if(!el)return;
@@ -14317,17 +14352,18 @@ var ProjectForm=(function(){
     if(extra)extra.hidden=true;
     if(key){
       var c=calls[key];
-      el.textContent=c?'Joins '+callName(c)+'.':'';
+      el.textContent=(c?'Joins '+callName(c)+'.':'')+leadSaid();
       return;
     }
     var inp=byId('np-call'),short=inp?(inp.value||'').trim():'';
-    if(!short){el.textContent='Stands on its own \u2014 no call.';return;}
+    if(!short){el.textContent='Stands on its own \u2014 no call.'+leadSaid();return;}
     var m=Object.values(calls).filter(function(x){
       return !x.solo&&x.name===short;})[0];
     if(extra)extra.hidden=!!m;
     el.textContent=m
       ?'Joins the existing '+callName(m)+' call \u2014 its links and key dates stay as they are.'
       :'Starts a new call, '+short+'.';
+    el.textContent+=leadSaid();
   }
 
   /* Existing calls come first so a new project joins one rather than
@@ -14370,13 +14406,24 @@ var ProjectForm=(function(){
   }
 
   /* `from` is a lead that became a project, handed over by the bridge
-     (Mark, 2026-10-11): its name and links, so the project starts from what
-     the lead already knew. Pressed from the bar it is nothing. */
+     (Mark, 2026-10-11), so the project starts from what the lead already
+     knew. Pressed from the bar it is nothing. Until 2026-11-02 that was its
+     name and links only; Mark asked for the rest (idea 3 of 24 October):
+     the researchers its Match names, as plain rows still to be sorted into
+     groups; its coordinator and main contact, which live behind the
+     Industrial grant tick and so tick it, for him to untick before Create
+     if it is not one; its updates, which have no field here and go into the
+     dossier when the project is made; and the lead itself, for the card's
+     way back. Everything but the updates is in the form to be checked. */
+  var fromLead=null;
   function openNew(from){
     var host=byId('np');if(!host)return;
     if(editing)closeEdit();
     if(newShown)return;
     var lead=(from&&typeof from==='object'&&Array.isArray(from.links))?from:null;
+    fromLead=lead&&(lead.lead||(lead.updates||[]).length)
+      ?{lead:lead.lead||null,updates:(lead.updates||[]).filter(function(u){return u&&String(u.text||'').trim();})}
+      :null;
     prevFocus=document.activeElement;
     newShown=true;
     byId('np-body').innerHTML=
@@ -14385,9 +14432,17 @@ var ProjectForm=(function(){
     host.removeAttribute('hidden');
     Editors.piInit('new',[]);
     Editors.posInit('new',[]);
+    if(lead&&(lead.researchers||[]).length)Editors.seedFromDesc('new',lead.researchers.join(', '));
     Editors.drawTeam('new');
     Editors.partnerInit('new',[]);
-    Editors.coordInit('new',[]);
+    var who=lead&&lead.contact&&(lead.contact.name||lead.contact.email)
+      ?[{id:uid(),name:lead.contact.name||'',email:lead.contact.email||''}]:[];
+    Editors.coordInit('new',who);
+    if(lead&&(lead.coordinator||who.length)){
+      byId('np-industrial').checked=true;
+      byId('np-industrial-section').classList.add('visible');
+      byId('np-coordinator').value=String(lead.coordinator||'').slice(0,160);
+    }
     Editors.linkInit('npc',[]);
     Editors.linkInit('npp',lead?lead.links:[]);
     Editors.markerInit('np',[]);
@@ -14407,6 +14462,7 @@ var ProjectForm=(function(){
     var host=byId('np');
     if(!host||!newShown)return;
     newShown=false;
+    fromLead=null;
     host.setAttribute('hidden','');
     /* Emptied rather than left standing: every id in it is unique to the
        pane, and a hidden second copy of them is how a stale field gets
@@ -14473,13 +14529,20 @@ var ProjectForm=(function(){
       coordinator:ind?(byId('np-coordinator').value||'').trim():'',
       coordContacts:ind?Editors.coordCollect('new'):[],
       partners:ind?Editors.partnerCollect('new'):[],
+      fromLead:fromLead&&fromLead.lead||null,
+      rows:fromLead?leadRows(fromLead.updates):[],
       order:order});
     projects[p.id]=p;
+    var made=fromLead&&fromLead.lead;
     /* The backbone\u2019s todos land after the project exists, dated from the
        key dates it laid out \u2014 so a call created from one arrives with its
        work on it and not only its calendar. */
     var laid=Backbone.applyTodos(p);
     save();
+    if(made){
+      try{Hub.emit('ledger:madeFromLead',{arenaId:made.arenaId,leadId:made.leadId,projectId:p.id,name:p.name});}
+      catch(e){console.error(e);}
+    }
     closeNew();
     Nav.home();
     toast('Project created \u2014 '+p.name
@@ -15052,6 +15115,12 @@ window.PL={
   offersOpen:Offers.openMenu,offerGo:Offers.go,offerAnswer:Offers.answer,
   toggleQuickTodo:QuickTodo.toggle,closeQuickTodo:QuickTodo.close,
   projectTodo:QuickTodo.openFor,
+  /* a project's way back to the lead it came from, opened by the bridge */
+  openLead:function(pid){
+    var p=projects[pid],fl=p&&p.fromLead;
+    if(!fl)return;
+    try{Hub.emit('ledger:openLead',{arenaId:fl.arenaId,leadId:fl.leadId});}catch(e){console.error(e);}
+  },
   addQuickTodo:QuickTodo.add,quickTodoCall:QuickTodo.onCall,
   quickTodoProject:QuickTodo.onProject,quickTodoKey:QuickTodo.nameKey,
   quickTodoUpdateKey:QuickTodo.updateKey,quickTodoMore:QuickTodo.more,

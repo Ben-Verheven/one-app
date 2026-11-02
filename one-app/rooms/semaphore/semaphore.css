@@ -486,6 +486,12 @@
 #pane-semaphore .lead .lwhen:hover{color:var(--key2);border-color:var(--line2);background:var(--sink)}
 #pane-semaphore .lead .lwhen.late{color:var(--todo-ink);border-color:var(--todo-line);opacity:1}
 #pane-semaphore .lead .lwhen.shut{cursor:default;opacity:.7}
+/* The project a closed lead became, named as a link to its card. The day
+   line is a flex box, which swallows the spaces either side of a button, so
+   the gap is given as margin. */
+#pane-semaphore .lead .lwhen .lmade{margin:0 .3em;padding:0;border:0;background:none;font:inherit;color:inherit;
+  cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+#pane-semaphore .lead .lwhen .lmade:hover,#pane-semaphore .lead .lwhen .lmade:focus-visible{color:var(--key2)}
 #pane-semaphore .lead .lwhen input{position:absolute;inset:0;width:100%;height:100%;margin:0;padding:0;
   border:0;background:none;color:transparent;opacity:0;cursor:pointer}
 /* One label gutter for every band under the name — match, links, log — cut to

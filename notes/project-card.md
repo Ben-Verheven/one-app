@@ -33,6 +33,10 @@ refuses to guess at. It sits between Tracker and the links, in their own
 face, and is dropped on an archived card, whose project is out of
 `activeProjects()` and so would not be listed in the pane's own picker.
 
+**A project made from a lead ends the run with its way back**, `2ZERO
+lead ↗`, a link in the links' face like Tracker; why it is on the band and
+not in the dossier is in [semaphore-decisions](semaphore-decisions.md).
+
 **The card is reached by its name, wherever the name is written.** The one
 exception was the board: a project's name on its horizon lane
 (`.hz-proj-name` / `.hz-tag`, carrying `hz-proj-open`) opened the

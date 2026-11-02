@@ -79,6 +79,23 @@
     RX = new RegExp('\\b(' + variants.map(esc).join('|') + ')\\b', 'gi');
   }
 
+  /* The researchers a piece of text names, by their Atlas names, each once,
+     in the order written: what a lead's Match hands to the project it
+     became. Read with the same patterns that make the links, so a name
+     linked on the lead is a name carried over. */
+  function researchersIn(text) {
+    var out = [], seen = {}, m;
+    if (!text || !RX || !variants.length) return out;
+    RX.lastIndex = 0;
+    while ((m = RX.exec(text))) {
+      var rid = byVariant[m[1].toLowerCase()];
+      if (rid === undefined || seen[rid]) continue;
+      seen[rid] = 1;
+      out.push(R[rid].name);
+    }
+    return out;
+  }
+
   /* ── linkifying ───────────────────────────────────────────────────── */
 
   /* `svg` twice over: an HTML page reports its own elements' names in
@@ -763,13 +780,47 @@
 
     /* A lead completed as having become a project, on either side (Mark,
        2026-10-11): projects are the Ledger's, so the Ledger opens its new
-       project with the lead's name and links filled in. A drawer lent over
-       the Ledger is put away first, or the form would open under it. */
+       project filled in from the lead. A drawer lent over the Ledger is put
+       away first, or the form would open under it.
+
+       Since 2026-11-02 the whole lead goes, not only its name and links.
+       Its Match is free text, and the researchers in it are the ones this
+       file already recognises there to make links of, so they are read the
+       same way and handed over by their Atlas names; the rest of the text
+       is a thought about them and stays with the lead. */
     Hub.on('semaphore:project', function (p) {
       if (!L.PL || typeof L.PL.showNewForm !== 'function' || !p) return;
       if (lendingArena && S.escape) S.escape();
       if (Hub.active() !== 'ledger') Hub.go('ledger');
-      try { L.PL.showNewForm({ name: p.name || '', links: p.links || [] }); }
+      try {
+        L.PL.showNewForm({
+          name: p.name || '', links: p.links || [],
+          researchers: researchersIn(p.match || ''),
+          coordinator: p.coordinator || '',
+          contact: (p.contact || p.email) ? { name: p.contact || '', email: p.email || '' } : null,
+          updates: p.updates || [],
+          lead: p.arenaId && p.leadId ? { arenaId: p.arenaId, leadId: p.leadId, arena: p.arena || '' } : null
+        });
+      }
+      catch (e) { console.error(e); }
+    });
+    /* The project made from a lead is written back on the lead, so the
+       closed lead can name it; and each side's link to the other is opened
+       here, since neither room may reach into the other. */
+    Hub.on('ledger:madeFromLead', function (m) {
+      if (!m || !S.leadMade) return;
+      try { S.leadMade(m.arenaId, m.leadId, m.projectId, m.name); }
+      catch (e) { console.error(e); }
+    });
+    Hub.on('ledger:openLead', function (m) {
+      if (!m || !S.openLead) return;
+      lendDrawer('openLead', m);
+    });
+    Hub.on('semaphore:openProject', function (pid) {
+      if (!pid || !L.PL || !L.PL.openProject) return;
+      if (lendingArena && S.escape) S.escape();
+      if (Hub.active() !== 'ledger') Hub.go('ledger');
+      try { L.PL.openProject(pid, false); }
       catch (e) { console.error(e); }
     });
   })();

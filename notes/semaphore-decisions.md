@@ -264,8 +264,17 @@ calls land on the Call Board. What still holds of the board:
   by it.
 - **Complete asks how it ended** (2026-10-11): Became a project, Went
   nowhere, They declined. His word is project, never proposal. A project
-  opens the Ledger's new project with the lead's name and links filled in.
-  A closed lead says how it ended where its day stood.
+  opens the Ledger's new project filled in from the lead. A closed lead
+  says how it ended where its day stood.
+- **A lead's project takes the whole lead** (2026-11-02, idea 3 of 24
+  October, chosen from two drawn): the researchers its Match names, its
+  coordinator and contact (ticking Industrial grant, which he can untick),
+  its updates as a dossier row From the lead, one note per update named for
+  its day (one note of them all was turned down: it read as one run), and
+  a link back, "2ZERO lead ↗", on the card's band rather than in the
+  dossier, so it is always in sight. The closed lead names the project and
+  goes to its card. Score and step stay with the lead; projects made
+  before that day were not changed.
 - **Who and Links, side by side** (2026-10-16; stacked in an arena's
   panel). Who holds the coordinator (the organisation behind the project),
   the main contact and the email address, kept bare, as a button that

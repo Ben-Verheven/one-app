@@ -3553,15 +3553,47 @@ function endLead(l,v){
   return true;
 }
 /* A lead that became a project is said out loud for the Ledger, where
-   projects are kept: the bridge opens the Ledger's new project with the
-   lead's name and links filled in (Mark, 2026-10-11). This room only says so,
-   and knows nothing of where it goes. */
+   projects are kept: the bridge opens the Ledger's new project filled in from
+   the lead (Mark, 2026-10-11). Until 2026-11-02 only the name and the links
+   went, and the researchers, the coordinator, the contact and the updates
+   stayed behind; Mark asked for all of it, and for the project to keep a way
+   back to its lead, so the ids go too. This room only says so, and knows
+   nothing of where it goes. */
 function leadToProject(a,l){
   try{
     if(typeof Hub!=='undefined'&&Hub.emit)Hub.emit('semaphore:project',{
-      name:l.project||'',arena:a.name,
-      links:(l.links||[]).filter(k=>k.url).map(k=>({name:linkName(k),url:k.url}))});
+      name:l.project||'',arena:a.name,arenaId:a.id,leadId:l.id,
+      links:(l.links||[]).filter(k=>k.url).map(k=>({name:linkName(k),url:k.url})),
+      match:l.match||'',coordinator:l.coordinator||'',
+      contact:l.contact||'',email:leadMail(l.email)||'',
+      updates:(l.updates||[]).map(u=>({at:u.at||'',stamp:u.stamp||'',text:u.text}))});
   }catch(e){console.error(e);}
+}
+/* The project a lead became, written back once the Ledger has made it, so
+   the closed lead can name it and go to its card. The name is the one given
+   on the day, kept as a record: a project renamed later is still found by
+   its id. */
+function leadMade(aid,lid,pid,name){
+  const a=arena(aid),l=a&&(a.leads||[]).find(x=>x.id===lid);
+  if(!l||!pid)return false;
+  l.projectId=String(pid);l.projectName=String(name||'');
+  save();renderAll();
+  return true;
+}
+/* A project's way back to the lead it came from: the arena's panel, the
+   lead open in it, its closed record unfolded if it is closed, and the
+   lead's glow so the eye finds it among the others. */
+function openLead(aid,lid){
+  const a=arena(aid),l=a&&(a.leads||[]).find(x=>x.id===lid);
+  if(!a)return false;
+  if(l){leadOpen.add(l.id);if(l.doneAt)closedOpen.add(a.id);}
+  openDrawer(aid);
+  const c=l&&document.querySelector('#card article.lead[data-lid="'+CSS.escape(l.id)+'"]');
+  if(c){
+    c.scrollIntoView({block:'center'});
+    c.classList.add('lmv-land');setTimeout(()=>c.classList.remove('lmv-land'),1700);
+  }
+  return true;
 }
 /* Which of Contacted's two paths a lead is on, for the order of Leads.
    Both ways first: those are the most promising, and Mark asked for them on
@@ -3672,8 +3704,13 @@ function leadRowHTML(a,l,hit,say){
      because a save redraws the card and would throw away everything else
      typed into it. The ruit waits for the same reason. */
   const near=say&&l.due&&!done&&!limbo?(over>1?' · '+over+' days late':over===1?' · 1 day late':over===0?' · today':''):'';
+  /* A lead that became a project names it and goes to its card (Mark,
+     2026-11-02), once the Ledger has said which project that was. */
+  const made=done&&l.outcome==='project'&&l.projectId;
+  const madeLink=made?'became <button type="button" class="lmade" data-act="leadProject" data-p="'+esc(l.projectId)+'" '+
+      'title="Open the project this lead became">'+esc(l.projectName||l.project||'the project')+' ↗</button> · ':'';
   const when=done
-    ? '<span class="lwhen shut" title="Closed">'+(isOutcome(l.outcome)?OUTCOMES[l.outcome].said+' · ':'closed ')+
+    ? '<span class="lwhen shut" title="Closed">'+(made?madeLink:isOutcome(l.outcome)?OUTCOMES[l.outcome].said+' · ':'closed ')+
         esc(shortDay(l.doneAt))+'</span>'
     : editing
     ? '<label class="lwhen set" title="The day to come back to this — click to change it">'+
@@ -5021,6 +5058,8 @@ document.addEventListener('click',e=>{
       if(l.outcome==='project')leadToProject(ar,l);
       break;}
     case 'leadEndCancel':{leadRedo(cardOf(b));break;}
+    /* the project a closed lead became, opened in the Ledger by the bridge */
+    case 'leadProject':{try{Hub.emit('semaphore:openProject',b.dataset.p);}catch(e){console.error(e);}break;}
     case 'leadLimbo':{const ar=arena(id);if(!ar)break;
       const l=(ar.leads||[]).find(x=>x.id===b.dataset.l);if(!l||l.doneAt)break;
       leadMove(cardOf(b),()=>{if(l.limbo)delete l.limbo;else l.limbo=todayISO();restack();});break;}
@@ -5679,6 +5718,10 @@ try{
     frozen:     function(){ return frozenArenas().map(a=>Object.assign(boardArena(a),{frozenAt:a.frozenAt})); },
     thaw:       function(aid){ const a=arena(aid); if(a&&a.frozenAt){ a.frozenAt=null; save(); renderAll(); } },
     leadAdd:    function(aid,v){ return leadAdd(aid,v); },
+    /* a lead and the project it became: the Ledger's word that it made one,
+       and a project's way back to its lead */
+    leadMade:   function(aid,lid,pid,name){ return leadMade(aid,lid,pid,name); },
+    openLead:   function(m){ return !!m&&openLead(m.arenaId,m.leadId); },
     /* every lead, closed ones too, for the weekly Excel the bridge writes */
     allLeads:   function(){ return leadsForExcel(); },
     openArena:  function(aid){ if(arena(aid))openDrawer(aid); },

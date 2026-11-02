@@ -145,8 +145,11 @@ One event, per room that holds a store of its own: **`semaphore:saved`**,
 **`notes:saved`** and **`atlas:saved`**, emitted after every save so the
 bridge can push that room to the cloud. And one from the Ledger,
 **`cloud:session`** (`true` or `false`), when a login starts or ends. And
-**`semaphore:project`**, with a name and links, when a lead is completed as
-having become a project, in the Semaphore or on the Ledger's lead card.
+**`semaphore:project`**, with the whole lead and its ids, when a lead is completed as
+having become a project, in the Semaphore or on the Ledger's lead card;
+**`ledger:madeFromLead`**, when that project has been made, and
+**`ledger:openLead`** and **`semaphore:openProject`**, the two ways between
+a project and the lead it came from.
 And **`leads:excel`**, from the Excel button on the Semaphore's Leads, which
 the bridge answers by writing every lead (`allLeads()`), open and closed,
 into one .xlsx file — the same file again each time where the browser can
@@ -174,8 +177,9 @@ socket with the Semaphore's open leads, those in Limbo left out, so the Ledger's
 line of their own, every change made on a lead card there is made on
 the Semaphore's own record, a lead can be started there, a lead's arena
 opens in the Semaphore's drawer lent over the Ledger as the dossier is, and a
-lead that became a project opens the Ledger's new project with its name and
-links filled in; hands the Call Board the Semaphore's board as it works it
+lead that became a project opens the Ledger's new project filled in from it,
+the researchers its Match names read as its links are, and the project and
+the lead are each given a link to the other; hands the Call Board the Semaphore's board as it works it
 out — every arena's calls and the new arenas waiting to be judged, with
 the verbs that judge them and mark an arena's new dates seen — and again
 on every save there, with the drawer lent over the Board for an arena and
