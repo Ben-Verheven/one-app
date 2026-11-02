@@ -319,14 +319,6 @@ body.drawer .veil{display:block;position:absolute;inset:0;z-index:3;background:r
    carries a note (Mark, 2026-10-18: an empty field and a filled one looked
    alike). */
 #why:not(:placeholder-shown){background:var(--gold-soft);border-color:var(--gold-line)}
-/* who could answer it, under Why (see "who could answer it") */
-.sug{display:flex;gap:8px;align-items:stretch;flex-wrap:wrap;margin-top:6px}
-.sug[hidden]{display:none}
-.sug .l{font:12px var(--serif);color:var(--faint);align-self:center;margin-right:2px}
-.sug button{background:var(--field);border:1px solid var(--line);border-radius:var(--radius);padding:4px 11px 5px;text-align:left;cursor:pointer;display:flex;flex-direction:column}
-.sug button:hover{border-color:var(--gold-line);background:var(--gold-soft)}
-.sug .n{font:13.5px var(--body);color:var(--ink)}
-.sug .w{font:12px var(--serif);color:var(--muted)}
 .tabs{display:flex;gap:20px;border-bottom:1px solid var(--line);margin-top:16px}
 .tabs button{background:none;border:0;border-bottom:2px solid transparent;color:var(--muted);font:14px var(--serif);padding:6px 0;cursor:pointer;margin-bottom:-1px}
 .tabs button.on{color:var(--ink);border-bottom-color:var(--key2)}
@@ -2552,7 +2544,6 @@ function drawDetail(){
     + [['interesting','Mark','M'],['bin','Bin','B']].map(function(a){
         return '<button class="act ' + a[0] + (e.verdict === a[0] ? ' on' : '') + '" data-verdict="' + a[0] + '">' + (a[0] === 'bin' ? BIN : '') + a[1] + '<kbd>' + a[2] + '</kbd></button>'; }).join('')
     + '<input id="why" placeholder="Why? A line for your future self" value="' + esc(e.why || '') + '" aria-label="Why">' + leadBtnHTML(e) + '</div>'
-    + '<div class="sug" id="sug" hidden></div>'
     + (!e.fetched_at ? '' : '<div class="tabs"><button data-tab="fields" class="' + (view.tab === 'fields' ? 'on' : '') + '">From the site</button>'
     + '<button data-tab="orig" class="' + (view.tab === 'orig' ? 'on' : '') + '">Original page</button>'
     + '<button data-tab="hist" class="' + (view.tab === 'hist' ? 'on' : '') + '">History</button></div>');
@@ -2580,124 +2571,9 @@ function drawDetail(){
     if (!(d.versions || []).length) h += '<p class="note">No changes since it was first copied.</p>';
   }
   $('#det').innerHTML = h;
-  if (d) drawSuggest(e);
   markStuck();
 }
 function draw(){ drawSites(); drawFilters(); drawRows(); drawDetail(); }
-
-/* ── who could answer it ───────────────────────────────────────────────
-   Three researchers under the bar who could answer what the entry asks
-   for, each with the words that led to them, and a press writes the name
-   into Why, where Make lead takes it as the matched researcher (Mark,
-   2026-11-02, chosen from three drawn over a bare line of names, which
-   did not say why a name fits, and a list behind the Why field, which is
-   out of sight). It reads only the sentences the search reads as asking
-   (`prep`), since what an entry says of itself is what it will not need
-   from us. Those are matched against the Researcher Atlas's own words,
-   the longest first, and each word found brings in the researchers it is
-   attached to and, one step further at 0.6, those of its neighbours in
-   the graph, weighed by layer as the Atlas weighs them (declared keyword
-   3, description 2, abstract 1) and divided by how many it reaches, so
-   a word everyone carries counts for little. A single word counts only
-   when it is one of a concept's names or reaches at most fifteen people,
-   since "social" or "scientist" said nothing true about anyone when it
-   was tried. Nothing is shown when nobody reaches 1.5, rather than three
-   poor guesses. It is the Atlas's ideas, not its code, as the search is
-   the Topic Atlas's: the Atlas lives inside the One App and this page
-   reads nothing of it but the data file, which is fetched only when an
-   entry is first opened, so the page opens as fast as before. Keywords
-   Mark added in the Atlas himself are in the Atlas's own row and not
-   counted here. No Claude reads anything. */
-var ATL = { idx:null, waiting:null };
-function atlasIndex(G){
-  var IRR = G.meta.irregular || {};
-  function sing(w){
-    if (IRR[w] !== undefined) return IRR[w];
-    if (w.length > 3 && /ies$/.test(w) && 'aeiou'.indexOf(w[w.length - 4]) < 0) return w.slice(0, -3) + 'y';
-    if (w.length > 2 && /s$/.test(w) && !/(ss|us|is|'s)$/.test(w)) return w.slice(0, -1);
-    return w;
-  }
-  /* the Atlas's norm (atlas.js, "normalization") */
-  function norm(s){
-    return String(s || '').normalize('NFKC').toLowerCase().replace(/[‐-―−]/g, '-')
-      .replace(/[‘’“”´`]/g, "'").replace(/\//g, ' ').replace(/[^a-z0-9\- ]+/g, ' ')
-      .replace(/-/g, ' ').split(/\s+/).filter(Boolean).map(sing).join(' ');
-  }
-  var term = {}, alias = {}, adj = {}, byT = {};
-  G.terms.forEach(function(t, i){ if (term[t.norm] === undefined) term[t.norm] = i; });
-  G.concepts.forEach(function(c, i){ [c.label].concat(c.aliases || []).forEach(function(a){ var n = norm(a); if (n && alias[n] === undefined) alias[n] = i; }); });
-  G.sem.forEach(function(s){ var a = s[0] + s[1], b = s[2] + s[3]; (adj[a] = adj[a] || []).push(b); (adj[b] = adj[b] || []).push(a); });
-  G.att.forEach(function(a, ai){ (byT[a[0]] = byT[a[0]] || []).push(ai); });
-  var memo = {};
-  /* who a word or concept reaches, and how strongly */
-  function reach(k){
-    if (memo[k]) return memo[k];
-    var out = {};
-    function add(t, d){ (byT[t] || []).forEach(function(ai){ var a = G.att[ai];
-      out[a[1]] = (out[a[1]] || 0) + [0, 3, 2, 1][a[2]] * (d ? 0.6 : 1) * Math.min(a[9], 2); }); }
-    if (k[0] === 't') add(+k.slice(1), 0);
-    (adj[k] || []).forEach(function(o){ if (o[0] === 't') add(+o.slice(1), 1); });
-    return (memo[k] = out);
-  }
-  return { G:G, norm:norm, term:term, alias:alias, reach:reach };
-}
-function atlasReady(done){
-  if (ATL.idx !== null) return done(ATL.idx);
-  if (ATL.waiting) return ATL.waiting.push(done);
-  ATL.waiting = [done];
-  var s = document.createElement('script');
-  function over(){ var w = ATL.waiting; ATL.waiting = null; w.forEach(function(f){ f(ATL.idx); }); }
-  s.onload = function(){ try { ATL.idx = atlasIndex(window.__ATLAS_G()); } catch(err){ ATL.idx = false; } over(); };
-  s.onerror = function(){ ATL.idx = false; over(); };
-  s.src = '../one-app/data/atlas-graph.js';
-  document.head.appendChild(s);
-}
-var SUG_SKIP = /^(partner|expertise|expert|project|consortium|looking|seek|seeking|need|experience|organization|company|research|proposal|call|topic|social|scientist|engineer|industry|sme|user|stakeholder)$/;
-function suggest(A, e){
-  var asks = [];
-  prep(e).forEach(function(sec){
-    if (!sec.roles) return;
-    sec.roles.forEach(function(r, i){ if (r === 'seek') asks.push(sec.raw.slice(i ? sec.ends[i - 1] : 0, sec.ends[i])); });
-  });
-  var score = {}, words = {};
-  asks.forEach(function(text){
-    var w = A.norm(text.replace(/isation/gi, 'ization')).split(' '), i = 0;
-    while (i < w.length){
-      var hit = null;
-      for (var n = Math.min(5, w.length - i); n >= 1 && !hit; n--){
-        var g = w.slice(i, i + n).join(' ');
-        if (n === 1 && (g.length < 4 || SUG_SKIP.test(g))) continue;
-        if (A.alias[g] !== undefined) hit = ['c' + A.alias[g], g, n];
-        else if (A.term[g] !== undefined && (n > 1 || (g.length >= 6 && Object.keys(A.reach('t' + A.term[g])).length <= 15))) hit = ['t' + A.term[g], g, n];
-      }
-      if (!hit){ i++; continue; }
-      i += hit[2];
-      var r = A.reach(hit[0]), ids = Object.keys(r), rare = 1 / Math.log(2 + ids.length);
-      ids.forEach(function(id){
-        score[id] = (score[id] || 0) + r[id] * rare;
-        var ws = words[id] = words[id] || [];
-        if (ws.indexOf(hit[1]) < 0) ws.push(hit[1]);
-      });
-    }
-  });
-  return Object.keys(score).filter(function(id){ return score[id] >= 1.5; })
-    .sort(function(a, b){ return score[b] - score[a]; }).slice(0, 3)
-    .map(function(id){ return { name:A.G.researchers[id].name, words:words[id].slice(0, 3) }; });
-}
-function drawSuggest(e){
-  atlasReady(function(A){
-    var box = $('#sug');
-    if (!A || !box || view.id !== e.id) return;
-    var list = suggest(A, e);
-    box.hidden = !list.length;
-    if (!list.length) return;
-    box.innerHTML = '<span class="l">Could answer it:</span>' + list.map(function(s){
-      return '<button data-sug="' + esc(s.name) + '" title="Write ' + esc(s.name) + ' into Why"><span class="n">' + esc(s.name) + '</span><span class="w">' + esc(s.words.join(', ')) + '</span></button>'; }).join('');
-    /* under the Why field, where the name goes */
-    var w = $('#why');
-    box.style.marginLeft = w && w.offsetTop === $('.act').offsetTop ? Math.max(0, w.getBoundingClientRect().left - box.getBoundingClientRect().left) + 'px' : '';
-  });
-}
 
 /* ── acting ────────────────────────────────────────────────────────── */
 function patch(e, vals){
@@ -3174,16 +3050,6 @@ document.addEventListener('click', function(ev){
     else if (m.dataset.msite) openPanel('site', m.dataset.msite);
     else openPanel(m.dataset.mvenue ? 'venue' : 'arena', m.dataset.mvenue || m.dataset.marena);
     if (!m.dataset.msite) return;
-  }
-  /* a suggested researcher goes into Why, after whatever is written there */
-  var sg = ev.target.closest('[data-sug]');
-  if (sg){
-    var se = byId[view.id], sw = $('#why');
-    if (!se || !sw) return;
-    var cur = sw.value.trim();
-    if (cur.indexOf(sg.dataset.sug) < 0) sw.value = cur ? cur + '; ' + sg.dataset.sug : sg.dataset.sug;
-    patch(se, { why:sw.value.trim() || null });
-    return;
   }
   var sh = ev.target.closest('[data-sheet]');
   if (sh) return sh.dataset.sheet === 'pdf' ? printSheet(byId[view.id]) : copySheet(byId[view.id], sh);
