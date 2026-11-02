@@ -1271,14 +1271,50 @@
 /* while the card is being edited the ruit waits: a press on it saves at once,
    and the save would redraw the card over what is being typed */
 #pane-ledger .lead-card.lead-editing .lead-ruit{opacity:0.55;pointer-events:none}
-/* What it is over who could fit it. The match is the quiet half — smaller,
-   italic, #bca070 (4.9:1 here) — and is cut to one line while the card is
-   shut and given its whole length once it is open. */
-#pane-ledger .lead-text{display:flex;flex-direction:column;min-width:0}
-#pane-ledger .lead-sub{font-family:var(--body);font-size:12.5px;font-style:italic;line-height:1.35;
+/* What it is beside who could fit it, as the Semaphore's Leads line has
+   them: each cut to one line while the card is shut and given its whole
+   length once it is open. The match is the quiet half — smaller, italic,
+   #bca070 (4.9:1 here). While the card is edited the two fields stand one
+   over the other, as there. */
+#pane-ledger .lead-text{display:flex;flex-direction:row;align-items:baseline;gap:12px;min-width:0}
+#pane-ledger .lead-nm{flex:1 1 55%;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#pane-ledger .lead-sub{flex:1 1 45%;min-width:0;font-family:var(--body);font-size:12.5px;font-style:italic;line-height:1.35;
   color:#bca070;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #pane-ledger .lead-sub.none{font-size:12px}
+#pane-ledger .todo-card-later.open .lead-nm,
 #pane-ledger .todo-card-later.open .lead-sub{white-space:normal;overflow-wrap:break-word}
+#pane-ledger .lead-card.lead-editing .lead-text{flex-direction:column;align-items:stretch;gap:0}
+/* The arena as the Semaphore's tag in its type's colour, inside the
+   project's 170px seat, which stays so the titles stand in one column. */
+#pane-ledger button.lead-arena{background:none;padding-right:12px}
+#pane-ledger .lead-tag{display:inline-block;max-width:100%;box-sizing:border-box;padding:3px 9px;border-radius:99px;
+  overflow:hidden;text-overflow:ellipsis;vertical-align:middle;
+  font-size:11px;letter-spacing:.04em;
+  background:color-mix(in srgb,var(--lead) 24%,transparent);
+  border:1px solid color-mix(in srgb,var(--lead) 55%,transparent);
+  color:color-mix(in srgb,var(--lead) 45%,#fff);transition:border-color .14s}
+#pane-ledger button.lead-arena:hover .lead-tag{border-color:var(--lead)}
+/* Edit, Limbo and Complete at the head of an open lead, as on the
+   Semaphore's, and only there: on a shut line they would be three more
+   marks to read past. */
+#pane-ledger .lead-headacts{display:none;flex-shrink:0;align-items:center;gap:6px;pointer-events:auto}
+#pane-ledger .lead-card.open:not(.lead-editing):not(.lead-ending) .lead-headacts{display:inline-flex}
+#pane-ledger .lead-act{display:inline-flex;align-items:center;gap:6px;min-height:30px;padding:0 11px;
+  border:1px solid var(--border);border-radius:7px;background:none;cursor:pointer;
+  font-family:var(--font);font-size:10.5px;letter-spacing:.08em;color:var(--text2);
+  transition:border-color .14s,color .14s,background-color .14s}
+#pane-ledger .lead-act:hover{border-color:var(--border2);color:var(--gold2)}
+#pane-ledger .lead-act-edit{border-color:var(--gold);color:var(--gold2);font-weight:600}
+#pane-ledger .lead-act-edit:hover{background:rgba(201,168,76,0.1)}
+#pane-ledger .lead-act-done .todo-done-box{width:13px;height:13px;font-size:9px}
+/* Below a wide desk the three took the head's whole width and left the
+   title none, so it stood a letter to a line (an upright iPad, 2026-11-02);
+   there they stand on a line of their own under the head, at its right. */
+@media (max-width:1240px){
+  #pane-ledger .lead-card.open .todo-later-row{flex-wrap:wrap;row-gap:8px}
+  #pane-ledger .lead-card.open .lead-headacts{order:9;flex-basis:100%;justify-content:flex-end}}
+#pane-ledger .lead-act-add{margin-left:auto;min-height:26px;padding:0 9px;
+  border-color:var(--gold);color:var(--gold2);font-weight:600;letter-spacing:.04em;text-transform:none}
 #pane-ledger .lead-card .todo-later-due{font-size:12.5px}
 /* The score: one numbered dot before the day, the Semaphore's own (see "the
    score" in semaphore.js) — red for a 1 through orange, ochre and olive to
@@ -1301,49 +1337,29 @@
   opacity:0;cursor:pointer;font-size:16px}
 #pane-ledger .lead-score:hover{box-shadow:0 0 0 3px rgba(219,184,86,0.18)}
 #pane-ledger .lead-score:focus-within{outline:1px solid var(--gold);outline-offset:2px}
-#pane-ledger .lead-card .todo-later-due{min-width:200px}
+/* The day as the Semaphore's pill, red when owed and amber within the
+   week, as there; the whole date is said on hover. */
+#pane-ledger .lead-card .todo-later-due{min-width:0;padding:2px 8px;border-radius:99px;
+  border:1px solid rgba(180,155,90,0.3);font-style:normal;font-size:12px;color:var(--text2)!important}
+#pane-ledger .lead-card .todo-later-due.todo-due-overdue{color:#ff9a8c!important;
+  border-color:rgba(239,91,76,0.5);background:rgba(239,91,76,0.2)}
+#pane-ledger .lead-card .todo-later-due.todo-due-today,
+#pane-ledger .lead-card .todo-later-due.todo-due-soon{color:#f3cc6e!important;
+  border-color:rgba(240,180,41,0.4);background:rgba(240,180,41,0.12)}
 /* it waits while the card is edited, as the ruit does, for the same reason */
 #pane-ledger .lead-card.lead-editing .lead-score{opacity:0.55;pointer-events:none}
-#pane-ledger .lead-due-short{display:none}
-/* ── A shut lead on an upright iPad: the Semaphore's line ──
-   At this width the ruit's slot, the dot, the arena's 170px, the score and
-   the date's 200px took the row first and left the title about 80px, so a
-   long title stood a word or half a word to a line and one lead filled the
-   screen (issue #9). Mark chose, from a sheet of three, the one line the
-   Semaphore's Leads draws: the arena as a tag in its type's colour, which
-   makes the dot beside it a second saying of the same colour and so it goes;
-   the title and the match side by side, each cut to one line; the day as a
-   pill in its short form, red when owed and amber within the week, as there.
-   An open card goes back to the title over the match, both whole, and
-   keeps everything else it had. The desk keeps its card: it has the room. */
+/* ── On an upright iPad the arena's seat narrows ──
+   At this width the ruit's slot, the arena's 170px, the score and the day
+   took the row first and left the title about 80px, so a long title stood
+   a word or half a word to a line and one lead filled the screen (issue
+   #9). The Semaphore's line was chosen for it then (2026-10-28), and is
+   every lead's since 2026-11-02; here the arena's seat gives up 40px. */
 @media (max-width:900px){
-  #pane-ledger .lead-card:not(.open) .lead-col{display:none}
-  #pane-ledger .lead-card:not(.open) button.todo-later-proj{width:auto;min-width:0;max-width:130px;
-    padding:3px 9px;border-radius:99px;font-size:11px;letter-spacing:.04em;
-    background-image:none;background-color:color-mix(in srgb,var(--lead) 24%,transparent);
-    border:1px solid color-mix(in srgb,var(--lead) 55%,transparent);
-    color:color-mix(in srgb,var(--lead) 45%,#fff)}
-  #pane-ledger .lead-card:not(.open) .lead-text{flex-direction:row;align-items:baseline;gap:12px}
-  #pane-ledger .lead-card:not(.open) .lead-nm{flex:1 1 55%;min-width:0;
-    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  #pane-ledger .lead-card:not(.open) .lead-sub{flex:1 1 45%;min-width:0}
-  #pane-ledger .lead-card:not(.open) .lead-score{margin:0 4px}
-  #pane-ledger .lead-card .todo-later-due{min-width:0}
-  #pane-ledger .lead-card:not(.open) .todo-later-due{padding:2px 8px;border-radius:99px;
-    border:1px solid rgba(180,155,90,0.3);font-style:normal;font-size:12px;color:var(--text2)!important}
-  #pane-ledger .lead-card:not(.open) .lead-due-full{display:none}
-  #pane-ledger .lead-card:not(.open) .lead-due-short{display:inline}
-  #pane-ledger .lead-card:not(.open) .todo-later-due.todo-due-overdue{color:#ff9a8c!important;
-    border-color:rgba(239,91,76,0.5);background:rgba(239,91,76,0.2)}
-  #pane-ledger .lead-card:not(.open) .todo-later-due.todo-due-today,
-  #pane-ledger .lead-card:not(.open) .todo-later-due.todo-due-soon{color:#f3cc6e!important;
-    border-color:rgba(240,180,41,0.4);background:rgba(240,180,41,0.12)}}
-/* The links are a band on the open card, labelled in the gutter. #bca070 for the label: nine pixels of --text3 on this ground is
-   3.5:1, and these are read. */
+  #pane-ledger button.lead-arena{width:130px;min-width:130px}
+  #pane-ledger .lead-card .lead-score{margin:0 4px}}
+/* Who and the links, then the updates, each a band on the open card. */
 #pane-ledger .lead-band{display:flex;gap:12px;align-items:baseline;
   margin-top:11px;padding-top:11px;border-top:1px solid rgba(180,155,90,0.16)}
-#pane-ledger .lead-band-k{flex-shrink:0;width:52px;font-family:var(--font);font-size:9px;
-  letter-spacing:0.12em;text-transform:uppercase;color:#bca070}
 /* Who and the links, each in a sunk box of its own, side by side wherever
    each can have 260px and one over the other below that (see the Leads
    module). The band's own flex gives way to a grid here. Every small word
@@ -1354,6 +1370,10 @@
 #pane-ledger .lead-pane-h{display:flex;align-items:baseline;gap:8px;margin:0 0 4px;font-family:var(--font);
   font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:#bca070}
 #pane-ledger .lead-pane-h b{font-family:var(--body);font-weight:400;font-size:12px;letter-spacing:0}
+#pane-ledger .lead-band.lead-ups{display:block;border-top:0;padding-top:0;margin-top:10px}
+#pane-ledger .lead-ups .lead-pane-h{align-items:center}
+#pane-ledger .lead-ups .substamps{margin-top:2px}
+#pane-ledger .lead-nil{margin:0;padding:4px 0;font-family:var(--body);font-size:13px;font-style:italic;color:#bca070}
 #pane-ledger .lead-ico{flex:0 0 22px;width:22px;height:22px;display:inline-flex;align-items:center;
   justify-content:center;border-radius:6px;background:rgba(10,8,4,0.3);color:#bca070}
 #pane-ledger .lead-ico svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:1.1;
@@ -1376,9 +1396,11 @@
   font-family:var(--font);font-size:9.5px;letter-spacing:0.1em;text-transform:uppercase;color:#bca070;cursor:pointer}
 #pane-ledger .lead-copy:hover{color:var(--gold2);border-color:var(--border)}
 #pane-ledger .lead-links{display:flex;flex-direction:column;gap:1px;margin:0 -6px}
+#pane-ledger .add-substamp-row .lead-link-in{flex:1;min-width:0}
 /* the coordinator over the contact in the edit, each led by its role in the
    gutter's own small capitals so the two are never read as one name */
 #pane-ledger .lead-ed-who{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+#pane-ledger .lead-card.lead-editing .lead-ed-who,#pane-ledger .lead-card.lead-editing .lead-ed-links{flex-direction:column}
 #pane-ledger .lead-who-r{display:flex;align-items:baseline;gap:10px;font-family:var(--body);font-size:13.5px;color:var(--text)}
 #pane-ledger .lead-who-r i{flex:0 0 96px;font-family:var(--font);font-size:9px;
   font-style:normal;letter-spacing:0.12em;text-transform:uppercase;color:#bca070}
@@ -1393,7 +1415,6 @@
 /* only it gives up room, never the name, as in the Marketplace */
 #pane-ledger .lead-link-host{flex:0 1 auto;min-width:0;margin-left:auto;padding-left:10px;font-family:var(--body);
   font-size:12px;font-style:italic;color:#bca070;overflow:hidden;text-overflow:ellipsis}
-#pane-ledger .add-substamp-row .lead-link-in{flex:1;min-width:0}
 /* Editing in place: each fact keeps its seat and its type, and its field is
    drawn there instead — a faint ground and a dashed edge are the only sign.
    The fields and the edit's own bands exist on every card and are shown only
@@ -1408,9 +1429,7 @@
 #pane-ledger .lead-card.lead-editing .lead-nm,
 #pane-ledger .lead-card.lead-editing .lead-sub,
 #pane-ledger .lead-card.lead-editing .todo-actions,
-#pane-ledger .lead-card.lead-editing .lead-band:not(.lead-ed),
-#pane-ledger .lead-card.lead-editing .substamps:not(.lead-ed),
-#pane-ledger .lead-card.lead-editing .add-substamp-wrap{display:none}
+#pane-ledger .lead-card.lead-editing .lead-show{display:none}
 #pane-ledger .lead-in{width:100%;min-width:0;box-sizing:border-box;margin:0;padding:1px 6px;
   border:1px dashed rgba(205,176,105,0.34);border-radius:4px;background:rgba(10,8,4,0.22);
   color:var(--text);resize:none;overflow:hidden}
@@ -1479,12 +1498,6 @@
   font-family:var(--body);font-size:12.5px;color:var(--text2)}
 #pane-ledger .lead-new-more:hover{color:var(--gold2)}
 #pane-ledger .lead-arena-menu{max-height:320px;overflow-y:auto}
-/* ── A lead's colour ──
-   The dot before a lead's arena is the category dot, in the colour of the
-   arena's type. It is chosen in the Semaphore, so here it is a mark and not
-   a button, and must not answer the pointer as the category's button does. */
-#pane-ledger .lead-col{margin:0 2px 0 -6px;cursor:default}
-@media (hover:hover) and (pointer:fine){#pane-ledger .lead-col:hover{border-color:transparent;background:none}}
 /* ── Detail pane: the real todo card, opened under the grid. */
 /* `relative`, because a card the new list has no place for is parked over
    it at the corner it was measured at while it fades — and the corner was

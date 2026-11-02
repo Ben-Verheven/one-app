@@ -8915,13 +8915,13 @@ var TodoCard=(function(){
    same on both sides because there is only one of it. Unfilled, the line
    simply is not drawn, and the room runs as it did.
 
-   A lead is not a todo and the card does not pretend otherwise. It keeps
-   the todo card's shape — the same row, the same open face, the same
-   action row read left to right — so it sits in the list without a second
-   idea of what a card is; but where a todo has its effort, a lead has the
-   three steps Semaphore moves it through, and where a todo has Done and
-   Delete, a lead has Complete, which is all Semaphore lets you do to end
-   one — and which asks how it ended. Its colour is its arena type's, from the
+   A lead is not a todo and the card does not pretend otherwise. It sits in
+   the todo card's frame, so the list holds one idea of what a card is, but
+   inside it is the Semaphore's lead, line and open face alike (Mark,
+   2026-11-02: the lead the same everywhere): where a todo has its effort,
+   a lead has the three steps Semaphore moves it through, and where a todo
+   has Done and Delete, a lead has Complete, which asks how it ended, and
+   Limbo, which puts it aside. Its colour is its arena type's, from the
    Semaphore's own family of tones, chosen there (see "A lead's colour"
    below).
 
@@ -9040,15 +9040,14 @@ var Leads=(function(){
       +'<select aria-label="How valuable this lead is, 1 to 5" '
         +'onchange="PL.leadScore(\''+jsq(key)+'\',this.value,event)">'+opts+'</select></label>';
   }
-  /* the day as a todo card writes it: weekday, then the full date — and
-     beside it the Semaphore's short form, which the stylesheet shows instead
-     on an upright iPad, where the long one alone held 200px of the row */
+  /* the day in the Semaphore's short form, Fri 4 Sep, drawn as its pill
+     (see "One lead, the same everywhere" in notes/semaphore-decisions.md);
+     the whole date is said on hover */
   function dueLabelHTML(iso){
     if(!iso)return 'No date';
     var dt=new Date(iso+'T00:00:00');
-    return '<span class="lead-due-full" style="margin-right:8px">'+DAYS[dt.getDay()]+'</span>'
-      +'<span class="lead-due-full">'+dt.getDate()+' '+MONTHS[dt.getMonth()]+' '+dt.getFullYear()+'</span>'
-      +'<span class="lead-due-short">'+DAYS[dt.getDay()].slice(0,3)+' '+dt.getDate()+' '
+    return '<span class="lead-due-short" title="'+DAYS[dt.getDay()]+' '+dt.getDate()+' '
+        +MONTHS[dt.getMonth()]+' '+dt.getFullYear()+'">'+DAYS[dt.getDay()].slice(0,3)+' '+dt.getDate()+' '
         +MONTHS[dt.getMonth()].slice(0,3)+'</span>';
   }
   function html(l){
@@ -9066,16 +9065,24 @@ var Leads=(function(){
       +'onchange="PL.leadDue(\''+k+'\',this.value,event)" /></span>';
 
     var gap='<span class="todo-actions-gap"></span>';
-    var actions='<div class="todo-actions">'
-      +'<button class="todo-btn todo-btn-primary" onclick="PL.leadOpenBox(\'lnw-'+lid+'\',event)">+ Add update</button>'
-      +'<button class="todo-btn" onclick="PL.leadOpenBox(\'llw-'+lid+'\',event)">+ Link or email</button>'
-      +gap
-      +'<button class="todo-btn todo-btn-quiet" onclick="PL.leadBeginEdit(\''+k+'\',event)">✎ Edit</button>'
-      +'<button class="todo-btn todo-btn-done todo-actions-end" '
+    /* Edit, Limbo and Complete stand at the head of the open card, on the
+       line they change, as on the Semaphore's Leads (Mark, 2026-11-02: the
+       lead the same everywhere). The row of buttons under the head went:
+       + Add update moved onto the Updates box, and links and addresses are
+       added through Edit, as there. Limbo puts the lead aside without
+       closing it, which takes it off this board. */
+    var headActs='<span class="lead-headacts">'
+      +'<button type="button" class="lead-act lead-act-edit" '
+        +'title="Edit everything on this lead — its name, who, links, addresses and updates" '
+        +'onclick="PL.leadBeginEdit(\''+k+'\',event)">✎ Edit</button>'
+      +'<button type="button" class="lead-act" '
+        +'title="Put aside without closing it: it keeps its step, and leaves the Ledger’s board" '
+        +'onclick="PL.leadLimbo(\''+k+'\',event)">Limbo</button>'
+      +'<button type="button" class="lead-act lead-act-done" '
         +'title="Done with this one — say how it ended; it stays in the Brokerage Semaphore’s record" '
         +'onclick="PL.leadDone(\''+k+'\',event)">'
         +'<span class="todo-done-box" aria-hidden="true">✓</span>Complete</button>'
-      +'</div>';
+      +'</span>';
     /* Complete asks how the lead ended before it closes it (Mark, 2026-10-11):
        while `lead-ending` is on, the action row gives way to the three answers
        and Cancel, as Edit gives it to Cancel and Save. */
@@ -9095,16 +9102,15 @@ var Leads=(function(){
     var inp=function(cls,v,ph,extra){
       return '<input type="text" class="lead-in '+cls+'" value="'+esc(v||'')+'" placeholder="'+ph+'" '
         +'aria-label="'+ph+'" autocomplete="off"'+(extra||'')+'>';};
-    var edit=''
-      +'<div class="lead-ed lead-band"><span class="lead-band-k">Who</span><span class="lead-ed-who">'
+    var editWho='<div class="lead-ed lead-ed-who">'
         +'<span class="lead-who-r"><i>Coordinator</i>'
           +inp('lead-ed-co',l.coordinator,'The organisation that started it',' id="lec-'+lid+'"')+'</span>'
         +'<span class="lead-who-r"><i>Contact</i>'
           +inp('lead-ed-ct',l.contact,'Main contact person',' id="let-'+lid+'"')+'</span>'
         +'<span class="lead-who-r"><i>Email</i>'
           +inp('lead-ed-em',l.email,'The contact’s email address',' id="lee-'+lid+'"')+'</span>'
-      +'</span></div>'
-      +'<div class="lead-ed lead-band"><span class="lead-band-k">Links</span><span class="lead-ed-links">'
+      +'</div>';
+    var editLinks='<div class="lead-ed lead-ed-links">'
         +l.links.map(function(x){
           return '<span class="lead-ed-row" data-k="'+esc(x.id)+'">'
             +inp('lead-ed-url',x.url,'https://… or name@…')+inp('lead-ed-label',x.label,'Whose, or what — optional')
@@ -9113,15 +9119,15 @@ var Leads=(function(){
         }).join('')
         +'<span class="lead-ed-row" data-k="new">'
           +inp('lead-ed-url','','https://… or name@… — add a link')+inp('lead-ed-label','','Whose, or what — optional')
-        +'</span></span></div>'
-      +(l.updates.length?'<div class="lead-ed substamps lead-ed-ups">'+l.updates.slice().reverse().map(function(u){
+        +'</span></div>';
+    var editUps=l.updates.length?'<div class="lead-ed lead-ed-ups">'+l.updates.slice().reverse().map(function(u){
           return '<div class="substamp lead-ed-row" data-u="'+(+u.i)+'"><span class="substamp-stamp">'+esc(u.when)+'</span>'
             +'<textarea class="lead-in lead-ed-up" rows="1" aria-label="Update">'+esc(u.text)+'</textarea>'
             +'<button class="substamp-del" title="Take this line out when saved" aria-label="Remove update" '
               +'onclick="PL.leadEditDrop(this,event)">✕</button></div>';
-        }).join('')+'</div>':'')
-      /* Cancel and Save come after everything being edited */
-      +'<div class="lead-ed lead-ed-bar"><span class="sp"></span>'
+        }).join('')+'</div>':'';
+    /* Cancel and Save come after everything being edited */
+    var edit='<div class="lead-ed lead-ed-bar"><span class="sp"></span>'
         +'<button class="todo-btn todo-btn-quiet" onclick="PL.leadCancelEdit(\''+k+'\',event)">Cancel</button>'
         +'<button class="todo-btn todo-btn-primary" onclick="PL.leadSaveEdit(\''+k+'\',event)">Save</button></div>';
     /* Who is behind the project and who to write to there (Mark,
@@ -9135,8 +9141,12 @@ var Leads=(function(){
     var wr=function(ico,v,k){
       return '<p class="lead-w-row"><span class="lead-ico" aria-hidden="true">'+LEAD_ICON[ico]+'</span>'
         +'<span class="lead-w-v">'+esc(v)+'</span><i>'+k+'</i></p>';};
-    var who=(l.coordinator||l.contact||mail)
-      ?'<div class="lead-pane"><p class="lead-pane-h">Who</p>'
+    /* Both boxes stand on every open lead, titled, with a word for an empty
+       one, so a lead with only links keeps its Who box beside them, as the
+       Semaphore's do (2026-10-22). While the lead is edited, every field
+       stands in the box where its fact is read. */
+    var who='<div class="lead-pane"><p class="lead-pane-h">Who</p>'
+        +'<div class="lead-show">'
         +(l.coordinator?wr('org',l.coordinator,'Coordinator'):'')
         +(l.contact?wr('person',l.contact,'Main contact'):'')
         +(mail?'<p class="lead-mail-row"><a class="lead-mail" href="mailto:'+esc(mail)+'" '
@@ -9144,9 +9154,12 @@ var Leads=(function(){
             +'<span class="lead-ico" aria-hidden="true">'+LEAD_ICON.mail+'</span><span>'+esc(mail)+'</span></a>'
           +'<button type="button" class="lead-copy" data-v="'+esc(mail)+'" title="Copy the address" '
             +'onclick="PL.leadCopyMail(this,event)">Copy</button></p>':'')
-      +'</div>':'';
-    var links=l.links.length
-      ?'<div class="lead-pane"><p class="lead-pane-h">Links<b>'+l.links.length+'</b></p><span class="lead-links">'
+        +(l.coordinator||l.contact||mail?'':'<p class="lead-nil">Nobody named yet</p>')
+        +'</div>'+editWho
+      +'</div>';
+    var links='<div class="lead-pane"><p class="lead-pane-h">Links'
+        +(l.links.length?'<b class="lead-show">'+l.links.length+'</b>':'')+'</p>'
+        +(l.links.length?'<span class="lead-links lead-show">'
         +l.links.map(function(x){
           var url=String(x.url||''),isMail=/^mailto:/i.test(url),host='';
           if(isMail)host=url.slice(7);
@@ -9159,32 +9172,38 @@ var Leads=(function(){
             ?'<a class="lead-link" href="'+esc(url)+'" target="_blank" rel="noopener" '
               +'title="'+esc(isMail?'Write to '+host:url)+'" onclick="event.stopPropagation()">'+said+'</a>'
             :'<span class="lead-link dead">'+said+'</span>';
-          return '<span class="lead-link-wrap">'+a
+          /* Copy, as the contact's address has: the page's address, or a
+             bare address to write to, for pasting elsewhere */
+          var copy=url?'<button type="button" class="lead-copy" data-v="'+esc(isMail?host:url)+'" '
+            +'title="Copy '+(isMail?'the address':'the link')+'" onclick="PL.leadCopyMail(this,event)">Copy</button>':'';
+          return '<span class="lead-link-wrap">'+a+copy
             +'<button class="substamp-del" title="Take this link off" aria-label="Remove link" '
               +'onclick="PL.leadLinkDel(\''+k+'\',\''+jsq(x.id)+'\',event)">✕</button></span>';
         }).join('')
-      +'</span></div>':'';
-    var panes=who||links?'<div class="lead-band lead-panes">'+who+links+'</div>':'';
-    var addLink='<div class="add-substamp-wrap" id="llw-'+lid+'"><div class="add-substamp-row">'
-      +'<input type="text" class="add-substamp-input lead-link-in" id="llu-'+lid+'" placeholder="https://… or name@…" '
-        +'aria-label="Link or email address" autocomplete="off" '
-        +'onkeydown="PL.leadLinkKey(event,\''+k+'\')">'
-      +'<input type="text" class="add-substamp-input lead-link-in" id="lll-'+lid+'" placeholder="Whose, or what — optional" '
-        +'aria-label="Name it" autocomplete="off" onkeydown="PL.leadLinkKey(event,\''+k+'\')">'
-      +'<button class="btn btn-sm" onclick="PL.leadAddLink(\''+k+'\',event)">Add</button>'
-      +'</div></div>';
+      +'</span>':'<p class="lead-nil lead-show">None yet</p>')+editLinks+'</div>';
+    var panes='<div class="lead-band lead-panes">'+who+links+'</div>';
+    /* What has happened, newest first, in a box of its own under the two,
+       with + Add update on its head and the line being written straight
+       under it, above the lines already there, as on the Semaphore's lead.
+       Semaphore keeps them oldest first, and the index each one carries is
+       its place THERE. */
     var addNote='<div class="add-substamp-wrap" id="lnw-'+lid+'"><div class="add-substamp-row">'
       +'<textarea class="add-substamp-input" placeholder="What has happened?" id="lnt-'+lid+'" rows="2" '
         +'onkeydown="PL.leadNoteKey(event,\''+k+'\')"></textarea>'
       +'<button class="btn btn-sm" onclick="PL.leadAddNote(\''+k+'\',event)">Add</button>'
       +'</div></div>';
-    /* Newest first, as a todo's updates are; Semaphore keeps them oldest
-       first, and the index each one carries is its place THERE. */
-    var ups=l.updates.length
-      ?'<div class="substamps">'+l.updates.slice().reverse().map(function(u){
-          return substampHTML({stamp:u.when,text:u.text},
-            'PL.leadNoteDel(\''+k+'\','+(+u.i)+',event)');
-        }).join('')+'</div>':'';
+    var ups='<div class="lead-band lead-ups"><div class="lead-pane">'
+      +'<p class="lead-pane-h">Updates'+(l.updates.length?'<b>'+l.updates.length+'</b>':'')
+        +'<button type="button" class="lead-act lead-act-add lead-show" '
+          +'onclick="PL.leadOpenBox(\'lnw-'+lid+'\',event)">+ Add update</button></p>'
+      +'<div class="lead-show">'+addNote
+      +(l.updates.length
+        ?'<div class="substamps">'+l.updates.slice().reverse().map(function(u){
+            return substampHTML({stamp:u.when,text:u.text},
+              'PL.leadNoteDel(\''+k+'\','+(+u.i)+',event)');
+          }).join('')+'</div>'
+        :'<p class="lead-nil">Nothing yet</p>')
+      +'</div>'+editUps+'</div></div>';
 
     var hex=hexOf(l);
     var colTip=(l.type?l.type+' \u2014 ':'')+'the colour of '+l.arena+'\u2019s type, chosen in the Brokerage Semaphore';
@@ -9193,15 +9212,14 @@ var Leads=(function(){
       +'onclick="PL.toggleTodoExpand(this,event)">'
       +'<div class="todo-later-row">'
       +'<span class="lead-ruit-slot">'+ruitHTML(l,key)+'</span>'
-      /* the type's colour, standing where the category stands on a todo;
-         it is chosen in the Semaphore, so here it is only shown */
-      +'<span class="todo-cat lead-col" style="--c:'+hex+'" title="'+esc(colTip)+'">'
-        +'<span class="todo-cat-dot" aria-hidden="true"></span></span>'
       /* The arena is in the project's seat and is the way across, the way a
-         project's name is: it opens that arena in the Semaphore. */
-      +'<button type="button" class="todo-later-proj todo-proj-btn" '
-        +'title="'+esc('Open '+l.arena+' in the Brokerage Semaphore')+'" '
-        +'onclick="PL.leadArena(\''+k+'\',event)">'+esc(l.arena)+'</button>'
+         project's name is: it opens that arena in the Semaphore. It is drawn
+         as the Semaphore's Leads draw it, a tag in its type's colour, which
+         says what the dot before it used to say (2026-11-02); the slot keeps
+         its width so the titles of a list stand in one column. */
+      +'<button type="button" class="todo-later-proj todo-proj-btn lead-arena" '
+        +'title="'+esc('Open '+l.arena+' in the Brokerage Semaphore — '+colTip)+'" '
+        +'onclick="PL.leadArena(\''+k+'\',event)"><span class="lead-tag">'+esc(l.arena)+'</span></button>'
       /* What it is, and under it, quieter, who could fit it — the match is on
          the shut card since Mark asked for it there (2026-10-06), and the
          Match band it had on the open card went with it. */
@@ -9211,10 +9229,11 @@ var Leads=(function(){
         +'<span class="lead-sub'+(l.match?'':' none')+'">'+esc(l.match||'No match yet')+'</span>'
         +'<textarea class="lead-in lead-sub-in" id="lem-'+lid+'" rows="1" placeholder="Who could be a good match?" '
           +'aria-label="Who could be a good match?">'+esc(l.match)+'</textarea></span>'
+      +headActs
       +scoreHTML(l,key)
       +dateLabel
       +'</div>'
-      +'<div class="todo-expand">'+actions+ending+edit+panes+addLink+addNote+ups+'</div>'
+      +'<div class="todo-expand">'+ending+panes+ups+edit+'</div>'
       +'</div>';
   }
   /* Contacted is two paths, and Mark asked on 2026-10-06 for the step to be
@@ -9455,6 +9474,16 @@ var Leads=(function(){
       toast('Lead completed — “'+trunc(l.name,40)+'”',{action:'Undo',onAction:function(){
         change(key,'done');}});
   }
+  /* Limbo takes the lead off this board, so Undo cannot find it here by
+     its card; it asks the Semaphore by the lead's own key instead. */
+  function limbo(key,evt){
+    stopEvt(evt);
+    var l=find(key);if(!l||!sock)return;
+    var i=key.indexOf('|');
+    if(change(key,'limbo',true))
+      toast('Put in Limbo — “'+trunc(l.name,40)+'”',{action:'Undo',onAction:function(){
+        try{sock.change(key.slice(0,i),key.slice(i+1),'limbo',false);}catch(e){console.error(e);}}});
+  }
   function arenaOf(key,evt){
     stopEvt(evt);
     var l=find(key);if(!l||!sock||!sock.open)return;
@@ -9522,17 +9551,6 @@ var Leads=(function(){
     if(evt.key==='Enter'&&!evt.shiftKey){evt.preventDefault();addNote(key,evt);}
   }
   function noteDel(key,i,evt){stopEvt(evt);change(key,'noteDel',i);}
-  function addLink(key,evt){
-    if(evt)evt.stopPropagation();
-    var l=find(key);if(!l)return;
-    var u=byId('llu-'+l.id),n=byId('lll-'+l.id);
-    if(!u||(!u.value.trim()&&!(n&&n.value.trim())))return;
-    change(key,'link',{url:u.value,label:n?n.value:''});
-  }
-  function linkKey(evt,key){
-    evt.stopPropagation();
-    if(evt.key==='Enter'){evt.preventDefault();addLink(key,evt);}
-  }
   function linkDel(key,kid,evt){stopEvt(evt);change(key,'linkDel',kid);}
   /* The contact's address onto the clipboard, the button saying so in its
      own place. The off-screen field first, as the mailing list's copy does,
@@ -9559,10 +9577,10 @@ var Leads=(function(){
     html:html,listHTML:listHTML,COLOR:COLOR,hexOf:hexOf,
     canAdd:canAdd,newHTML:newHTML,newOpen:newOpen,newDrop:newDrop,
     newArenaMenu:newArenaMenu,newArena:newArena,newDue:newDue,newSave:newSave,newLink:newLink,
-    path:path,score:score,due:due,done:done,end:end,endCancel:endCancel,arena:arenaOf,openBox:openBox,
+    path:path,score:score,due:due,done:done,limbo:limbo,end:end,endCancel:endCancel,arena:arenaOf,openBox:openBox,
     beginEdit:beginEdit,cancelEdit:cancelEdit,saveEdit:saveEdit,editDrop:editDrop,
     addNote:addNote,noteKey:noteKey,noteDel:noteDel,
-    addLink:addLink,linkKey:linkKey,linkDel:linkDel,copyMail:copyMail};
+    linkDel:linkDel,copyMail:copyMail};
 })();
 
 /* ══ THE CHECKLIST ═══════════════════════════════════════════════════
@@ -14959,11 +14977,11 @@ window.PL={
   leadMarkClick:Board.leadMarkClick,leadsNewClick:Board.leadsNewClick,
   leadNewArenaMenu:Leads.newArenaMenu,leadNewArena:Leads.newArena,
   leadNewDue:Leads.newDue,leadNewSave:Leads.newSave,leadNewLink:Leads.newLink,
-  leadPath:Leads.path,leadScore:Leads.score,leadDue:Leads.due,leadDone:Leads.done,
+  leadPath:Leads.path,leadScore:Leads.score,leadDue:Leads.due,leadDone:Leads.done,leadLimbo:Leads.limbo,
   leadEnd:Leads.end,leadEndCancel:Leads.endCancel,leadArena:Leads.arena,
   leadOpenBox:Leads.openBox,leadBeginEdit:Leads.beginEdit,leadCancelEdit:Leads.cancelEdit,
   leadSaveEdit:Leads.saveEdit,leadEditDrop:Leads.editDrop,leadAddNote:Leads.addNote,leadNoteKey:Leads.noteKey,
-  leadNoteDel:Leads.noteDel,leadAddLink:Leads.addLink,leadLinkKey:Leads.linkKey,
+  leadNoteDel:Leads.noteDel,
   leadLinkDel:Leads.linkDel,leadCopyMail:Leads.copyMail,
   weeksMenu:Board.weeksMenu,setWeeks:Board.setWeeks,flip:Board.flip,
   toggleAgenda:Board.toggleAgenda,

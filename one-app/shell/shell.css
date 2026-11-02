@@ -393,15 +393,16 @@ html #pane-ledger, html #pane-semaphore, html #pane-callboard{
    otherwise borrow (see "an email from a lead" in bridge.js). */
 /* named with the pane, or the room's reset of every margin and padding
    inside it outranks a bare class */
-#pane-semaphore .oa-mail{
+#pane-semaphore .oa-mail,#pane-ledger .oa-mail{
   border:0; background:none; cursor:pointer;
   margin:0 1px 0 3px; padding:0 3px; border-radius:3px;
   font:inherit; font-style:normal; line-height:1; color:#D8CDB8;
 }
 /* only on a lead that is open (Mark, 2026-10-31): on the shut line it
    was one more mark in the Match column he reads every day */
-#pane-semaphore .lead:not(.open) .oa-mail{display:none}
-#pane-semaphore .oa-mail:hover,#pane-semaphore .oa-mail:focus-visible{background:rgba(216,205,184,.16); color:#EDE7DC; outline:none}
+#pane-semaphore .lead:not(.open) .oa-mail,#pane-ledger .lead-card:not(.open) .oa-mail{display:none}
+#pane-semaphore .oa-mail:hover,#pane-semaphore .oa-mail:focus-visible,
+#pane-ledger .oa-mail:hover,#pane-ledger .oa-mail:focus-visible{background:rgba(216,205,184,.16); color:#EDE7DC; outline:none}
 .oa-mailmenu{
   position:fixed; z-index:9000; width:300px;
   display:flex; flex-direction:column; gap:2px; padding:8px;

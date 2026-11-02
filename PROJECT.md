@@ -180,14 +180,14 @@ out — every arena's calls and the new arenas waiting to be judged, with
 the verbs that judge them and mark an arena's new dates seen — and again
 on every save there, with the drawer lent over the Board for an arena and
 ChatGPT's box for the searches for calls, new arenas and call texts; puts a
-✉ after every researcher named under a Semaphore lead's Match, which opens
+✉ after every researcher named under a lead's Match, on the Semaphore and
+the Ledger alike, which opens
 a new email to that researcher's address in the Atlas, its subject and
 text one of the Notes room's templates filled in from the lead, writes
 that it was sent into the lead's updates, and, for a lead Mark's Place
 made, prints the lead's sheet to attach; reads the
 Horizon check's two tables, below, for the Call Board, and the one rule
-that ties a call text to its call; draws the ring of rooms and the title,
-with the finds waiting to be judged counted beside the Call Board's mark; runs the page-change animation; and syncs
+that ties a call text to its call; draws the ring of rooms and the title; runs the page-change animation; and syncs
 the Semaphore's board, the Notes room and the Atlas's edits through the
 Supabase credentials the Ledger already holds.
 

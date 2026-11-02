@@ -26,7 +26,7 @@ rooms                                                hub.js:296
 
 ## `shell/bridge.js`
 
-2579 lines · 125 KB
+2585 lines · 125 KB
 
 ```
 Bridge — what the five rooms say to each other.             bridge.js:1
@@ -34,29 +34,29 @@ who the atlas knows, and what they might be called          bridge.js:24
 linkifying                                                  bridge.js:82
 the Atlas's dossier, lent to the other rooms                bridge.js:205
 an email from a lead                                        bridge.js:274
-the Call Board's reader, lent the same way                  bridge.js:466
-the topic a project was written for                         bridge.js:526
-Semaphore's arena drawer, lent the same way                 bridge.js:593
-Semaphore's board, on the Call Board                        bridge.js:664
-Semaphore's leads, on the Ledger's board                    bridge.js:731
-the ring                                                    bridge.js:779
-the name                                                    bridge.js:894
-the page change                                             bridge.js:958
-the rooms that keep their own state, on the Ledger's cloud  bridge.js:994
-which copy wins                                             bridge.js:1076
-what the room says about itself                             bridge.js:1131
-putting two copies together                                 bridge.js:1324
-the agents' inboxes: what the scheduled agents found        bridge.js:1661
-a lead's sheet                                              bridge.js:1808
-the Horizon check, and the call texts                       bridge.js:1869
-open where we left off                                      bridge.js:2014
-the weekly Excel: every lead, open and closed               bridge.js:2028
-the zip                                                     bridge.js:2085
-the styles                                                  bridge.js:2139
-the look                                                    bridge.js:2178
-what goes in it                                             bridge.js:2396
-where it goes                                               bridge.js:2440
-on the iPad, links open in DuckDuckGo                       bridge.js:2525
+the Call Board's reader, lent the same way                  bridge.js:472
+the topic a project was written for                         bridge.js:532
+Semaphore's arena drawer, lent the same way                 bridge.js:599
+Semaphore's board, on the Call Board                        bridge.js:670
+Semaphore's leads, on the Ledger's board                    bridge.js:737
+the ring                                                    bridge.js:785
+the name                                                    bridge.js:900
+the page change                                             bridge.js:964
+the rooms that keep their own state, on the Ledger's cloud  bridge.js:1000
+which copy wins                                             bridge.js:1082
+what the room says about itself                             bridge.js:1137
+putting two copies together                                 bridge.js:1330
+the agents' inboxes: what the scheduled agents found        bridge.js:1667
+a lead's sheet                                              bridge.js:1814
+the Horizon check, and the call texts                       bridge.js:1875
+open where we left off                                      bridge.js:2020
+the weekly Excel: every lead, open and closed               bridge.js:2034
+the zip                                                     bridge.js:2091
+the styles                                                  bridge.js:2145
+the look                                                    bridge.js:2184
+what goes in it                                             bridge.js:2402
+where it goes                                               bridge.js:2446
+on the iPad, links open in DuckDuckGo                       bridge.js:2531
 ```
 
 ## `shell/boot.js`
@@ -69,7 +69,7 @@ Boot check  boot.js:1
 
 ## `shell/shell.css`
 
-882 lines · 46 KB
+883 lines · 46 KB
 
 ```
 Shell — the chrome that holds the five rooms.              shell.css:1
@@ -82,16 +82,16 @@ the page change                                            shell.css:267
 stage & panes                                              shell.css:304
 the researcher link, wherever a name is written            shell.css:375
 the ✉ after a researcher on a lead, and what it opens      shell.css:389
-Palette harmonisation.                                     shell.css:440
-faint was #9D8458                                          shell.css:486
-The ribbon.                                                shell.css:514
-one bar: one height, one control face                      shell.css:530
-the ribbon's ink, said louder than each room says its own  shell.css:596
-Semaphore: already the shape of the thing                  shell.css:666
-the Ledger                                                 shell.css:671
-the Atlas: a 21px italic wordmark                          shell.css:713
-the Call Board: the cluster row is the bar                 shell.css:735
-a lead's sheet, printed                                    shell.css:865
+Palette harmonisation.                                     shell.css:441
+faint was #9D8458                                          shell.css:487
+The ribbon.                                                shell.css:515
+one bar: one height, one control face                      shell.css:531
+the ribbon's ink, said louder than each room says its own  shell.css:597
+Semaphore: already the shape of the thing                  shell.css:667
+the Ledger                                                 shell.css:672
+the Atlas: a 21px italic wordmark                          shell.css:714
+the Call Board: the cluster row is the bar                 shell.css:736
+a lead's sheet, printed                                    shell.css:866
 ```
 
 ## `rooms/ledger/ledger.view.js`
@@ -102,7 +102,7 @@ _No section banners._
 
 ## `rooms/ledger/ledger.js`
 
-15123 lines · 691 KB
+15141 lines · 692 KB
 
 ```
 Proposal Ledger                                            ledger.js:1
@@ -197,79 +197,79 @@ Lighting the blocker where it stands                       ledger.js:8812
 THE LEADS LINE                                             ledger.js:8904
 A lead's colour                                            ledger.js:8936
 The card                                                   ledger.js:8998
-A new lead                                                 ledger.js:9270
-What the presses do                                        ledger.js:9416
-THE CHECKLIST                                              ledger.js:9568
-Items                                                      ledger.js:9712
-Per-item updates                                           ledger.js:9842
-Reorder by dragging the grip                               ledger.js:10015
-THE CALL CARD                                              ledger.js:10089
-The turn                                                   ledger.js:10098
-THE CALL INFO TABLE                                        ledger.js:10432
-THE CALL BOARD'S TOPICS                                    ledger.js:10545
-The picker, on both project forms                          ledger.js:10618
-THE CALL BOARD'S CALLS                                     ledger.js:10711
-The picker, the topic's own box                            ledger.js:10817
-What the Board changed, offered                            ledger.js:10937
-on the beam                                                ledger.js:11085
-the answers                                                ledger.js:11115
-A call's text                                              ledger.js:11201
-THE PROJECT CARD                                           ledger.js:11215
-Positions                                                  ledger.js:11222
-The groups, and the PI who leads each                      ledger.js:11285
-Partners                                                   ledger.js:11397
-Mailing the consortium                                     ledger.js:11442
-Key-date wording, shared with the marker rows              ledger.js:11595
-The controls, on the title's own row                       ledger.js:11726
-The grip                                                   ledger.js:11798
-The head band                                              ledger.js:11816
-The three columns                                          ledger.js:11841
-Reordering                                                 ledger.js:11875
-Dragging a position between groups                         ledger.js:11914
-THE BACKBONE                                               ledger.js:12086
-In the new-call form                                       ledger.js:12158
-The editor                                                 ledger.js:12209
-THE DOSSIER                                                ledger.js:12465
-The rows themselves are a RowTable                         ledger.js:12486
-The Completed row                                          ledger.js:12498
-The fold                                                   ledger.js:12637
-Project actions, living on the folded-out face             ledger.js:12720
-THE CONTRIBUTION TRACKER                                   ledger.js:12767
-Migrations, called once at load from runDataMigrations     ledger.js:12807
-Effort                                                     ledger.js:12837
-The head                                                   ledger.js:12888
-The Gantt scale                                            ledger.js:12956
-Rows                                                       ledger.js:12977
-Verticals                                                  ledger.js:13157
-Render                                                     ledger.js:13251
-The label-width handle                                     ledger.js:13299
-Row lookup & mutation                                      ledger.js:13371
-Notes                                                      ledger.js:13499
-Verticals                                                  ledger.js:13538
-Modes                                                      ledger.js:13600
-The board image                                            ledger.js:13620
-Opening                                                    ledger.js:13729
-THE FORMS                                                  ledger.js:13787
-The new-todo pane                                          ledger.js:13832
-The project panes                                          ledger.js:14059
-The name, which leads both panes                           ledger.js:14092
-What the project is, who is on it, what kind it is         ledger.js:14106
-Who is on it                                               ledger.js:14110
-The three sections                                         ledger.js:14130
-Who is on it                                               ledger.js:14146
-What it costs                                              ledger.js:14164
-The grant                                                  ledger.js:14175
-Where it belongs, on the new pane                          ledger.js:14194
-THE SEARCH PALETTE                                         ledger.js:14613
-KEYBOARD                                                   ledger.js:14883
-THE PUBLIC NAMESPACE                                       ledger.js:14922
-BOOT                                                       ledger.js:15069
-WHAT THE OTHER ROOMS MAY ASK FOR                           ledger.js:15088
+A new lead                                                 ledger.js:9289
+What the presses do                                        ledger.js:9435
+THE CHECKLIST                                              ledger.js:9586
+Items                                                      ledger.js:9730
+Per-item updates                                           ledger.js:9860
+Reorder by dragging the grip                               ledger.js:10033
+THE CALL CARD                                              ledger.js:10107
+The turn                                                   ledger.js:10116
+THE CALL INFO TABLE                                        ledger.js:10450
+THE CALL BOARD'S TOPICS                                    ledger.js:10563
+The picker, on both project forms                          ledger.js:10636
+THE CALL BOARD'S CALLS                                     ledger.js:10729
+The picker, the topic's own box                            ledger.js:10835
+What the Board changed, offered                            ledger.js:10955
+on the beam                                                ledger.js:11103
+the answers                                                ledger.js:11133
+A call's text                                              ledger.js:11219
+THE PROJECT CARD                                           ledger.js:11233
+Positions                                                  ledger.js:11240
+The groups, and the PI who leads each                      ledger.js:11303
+Partners                                                   ledger.js:11415
+Mailing the consortium                                     ledger.js:11460
+Key-date wording, shared with the marker rows              ledger.js:11613
+The controls, on the title's own row                       ledger.js:11744
+The grip                                                   ledger.js:11816
+The head band                                              ledger.js:11834
+The three columns                                          ledger.js:11859
+Reordering                                                 ledger.js:11893
+Dragging a position between groups                         ledger.js:11932
+THE BACKBONE                                               ledger.js:12104
+In the new-call form                                       ledger.js:12176
+The editor                                                 ledger.js:12227
+THE DOSSIER                                                ledger.js:12483
+The rows themselves are a RowTable                         ledger.js:12504
+The Completed row                                          ledger.js:12516
+The fold                                                   ledger.js:12655
+Project actions, living on the folded-out face             ledger.js:12738
+THE CONTRIBUTION TRACKER                                   ledger.js:12785
+Migrations, called once at load from runDataMigrations     ledger.js:12825
+Effort                                                     ledger.js:12855
+The head                                                   ledger.js:12906
+The Gantt scale                                            ledger.js:12974
+Rows                                                       ledger.js:12995
+Verticals                                                  ledger.js:13175
+Render                                                     ledger.js:13269
+The label-width handle                                     ledger.js:13317
+Row lookup & mutation                                      ledger.js:13389
+Notes                                                      ledger.js:13517
+Verticals                                                  ledger.js:13556
+Modes                                                      ledger.js:13618
+The board image                                            ledger.js:13638
+Opening                                                    ledger.js:13747
+THE FORMS                                                  ledger.js:13805
+The new-todo pane                                          ledger.js:13850
+The project panes                                          ledger.js:14077
+The name, which leads both panes                           ledger.js:14110
+What the project is, who is on it, what kind it is         ledger.js:14124
+Who is on it                                               ledger.js:14128
+The three sections                                         ledger.js:14148
+Who is on it                                               ledger.js:14164
+What it costs                                              ledger.js:14182
+The grant                                                  ledger.js:14193
+Where it belongs, on the new pane                          ledger.js:14212
+THE SEARCH PALETTE                                         ledger.js:14631
+KEYBOARD                                                   ledger.js:14901
+THE PUBLIC NAMESPACE                                       ledger.js:14940
+BOOT                                                       ledger.js:15087
+WHAT THE OTHER ROOMS MAY ASK FOR                           ledger.js:15106
 ```
 
 ## `rooms/ledger/ledger.css`
 
-4280 lines · 292 KB
+4293 lines · 293 KB
 
 ```
 Proposal Ledger                                            ledger.css:1
@@ -303,73 +303,72 @@ One palette on the board, and it does not move             ledger.css:1123
 The effort strip: one quiet row beneath the grid           ledger.css:1137
 The leads line: Semaphore's open leads, last on the board  ledger.css:1216
 A lead's card                                              ledger.css:1240
-A shut lead on an upright iPad: the Semaphore's line       ledger.css:1308
-Starting a lead from the line                              ledger.css:1440
-A lead's colour                                            ledger.css:1482
-Detail pane: the real todo card, opened under the grid.    ledger.css:1488
-The day's one control row                                  ledger.css:1530
-"You are only seeing one project"                          ledger.css:1543
-The day's leads, folded                                    ledger.css:1564
-A day, braced                                              ledger.css:1592
-11. THE TIMELINE FACE                                      ledger.css:1628
-12. THE TODO CARD                                          ledger.css:1725
-The project name, in a day, is a press                     ledger.css:1754
-Cards travelling                                           ledger.css:1796
-The rest of the day, leaving                               ledger.css:1820
-The category, a dot on the row and a word in the brace     ledger.css:1910
-Waiting on                                                 ledger.css:1942
-Finding the blocker in the list                            ledger.css:1997
-One rhythm down the open card                              ledger.css:2042
-The one picker still on the action row                     ledger.css:2057
-Three weights, so that six controls are not a rank of six  ledger.css:2077
-Done, which is a box you tick                              ledger.css:2098
-Where an update gets written                               ledger.css:2138
-The checklist                                              ledger.css:2169
-The calendar popup                                         ledger.css:2277
-13. THE CALL CARD                                          ledger.css:2305
-The call info table (the card's back face)                 ledger.css:2440
-14. THE NOTE STRIP                                         ledger.css:2517
-The tab                                                    ledger.css:2529
-The panel                                                  ledger.css:2559
-The editable body                                          ledger.css:2583
-Delta: the call info table                                 ledger.css:2602
-Delta: the project dossier                                 ledger.css:2639
-15. THE PROJECT CARD                                       ledger.css:2695
-The grip                                                   ledger.css:2719
-The controls                                               ledger.css:2749
-The controls on the band                                   ledger.css:2760
-The band's right-hand end                                  ledger.css:2790
-The head band                                              ledger.css:2837
-The person-month total                                     ledger.css:2886
-The three columns under the band                           ledger.css:2897
-The rest of the consortium                                 ledger.css:2980
-Mailing the consortium                                     ledger.css:3005
-Positions                                                  ledger.css:3051
-The groups                                                 ledger.css:3064
-Positions & partners editors (forms)                       ledger.css:3158
-One researcher, one row                                    ledger.css:3160
-A PI and the posts under them                              ledger.css:3229
-The block's head                                           ledger.css:3238
-16. THE DOSSIER                                            ledger.css:3323
-17. THE CONTRIBUTION TRACKER                               ledger.css:3428
-The top row                                                ledger.css:3451
-Rows. Work packages read as headers: a lit band            ledger.css:3537
-Notes: one flat strip of tabs, no sections.                ledger.css:3600
-Body: two stacked layers — detail by default               ledger.css:3645
-Editing, in the rows themselves                            ledger.css:3676
-Board mode                                                 ledger.css:3742
-Verticals: use cases and demonstrators                     ledger.css:3761
-18. TOASTS & THE SEARCH PALETTE                            ledger.css:3869
-The dialog                                                 ledger.css:3886
-The backbone shelf                                         ledger.css:3907
-The backbone picker, in the new-call form                  ledger.css:3925
-The backbone editor                                        ledger.css:3935
-The pane shell                                             ledger.css:3996
-the pane's own spacing                                     ledger.css:4047
-The new-todo pane                                          ledger.css:4129
-19. RESPONSIVE                                             ledger.css:4204
-20. MOTION PREFERENCE                                      ledger.css:4238
-21. PRINT                                                  ledger.css:4249
+On an upright iPad the arena's seat narrows                ledger.css:1351
+Starting a lead from the line                              ledger.css:1459
+Detail pane: the real todo card, opened under the grid.    ledger.css:1501
+The day's one control row                                  ledger.css:1543
+"You are only seeing one project"                          ledger.css:1556
+The day's leads, folded                                    ledger.css:1577
+A day, braced                                              ledger.css:1605
+11. THE TIMELINE FACE                                      ledger.css:1641
+12. THE TODO CARD                                          ledger.css:1738
+The project name, in a day, is a press                     ledger.css:1767
+Cards travelling                                           ledger.css:1809
+The rest of the day, leaving                               ledger.css:1833
+The category, a dot on the row and a word in the brace     ledger.css:1923
+Waiting on                                                 ledger.css:1955
+Finding the blocker in the list                            ledger.css:2010
+One rhythm down the open card                              ledger.css:2055
+The one picker still on the action row                     ledger.css:2070
+Three weights, so that six controls are not a rank of six  ledger.css:2090
+Done, which is a box you tick                              ledger.css:2111
+Where an update gets written                               ledger.css:2151
+The checklist                                              ledger.css:2182
+The calendar popup                                         ledger.css:2290
+13. THE CALL CARD                                          ledger.css:2318
+The call info table (the card's back face)                 ledger.css:2453
+14. THE NOTE STRIP                                         ledger.css:2530
+The tab                                                    ledger.css:2542
+The panel                                                  ledger.css:2572
+The editable body                                          ledger.css:2596
+Delta: the call info table                                 ledger.css:2615
+Delta: the project dossier                                 ledger.css:2652
+15. THE PROJECT CARD                                       ledger.css:2708
+The grip                                                   ledger.css:2732
+The controls                                               ledger.css:2762
+The controls on the band                                   ledger.css:2773
+The band's right-hand end                                  ledger.css:2803
+The head band                                              ledger.css:2850
+The person-month total                                     ledger.css:2899
+The three columns under the band                           ledger.css:2910
+The rest of the consortium                                 ledger.css:2993
+Mailing the consortium                                     ledger.css:3018
+Positions                                                  ledger.css:3064
+The groups                                                 ledger.css:3077
+Positions & partners editors (forms)                       ledger.css:3171
+One researcher, one row                                    ledger.css:3173
+A PI and the posts under them                              ledger.css:3242
+The block's head                                           ledger.css:3251
+16. THE DOSSIER                                            ledger.css:3336
+17. THE CONTRIBUTION TRACKER                               ledger.css:3441
+The top row                                                ledger.css:3464
+Rows. Work packages read as headers: a lit band            ledger.css:3550
+Notes: one flat strip of tabs, no sections.                ledger.css:3613
+Body: two stacked layers — detail by default               ledger.css:3658
+Editing, in the rows themselves                            ledger.css:3689
+Board mode                                                 ledger.css:3755
+Verticals: use cases and demonstrators                     ledger.css:3774
+18. TOASTS & THE SEARCH PALETTE                            ledger.css:3882
+The dialog                                                 ledger.css:3899
+The backbone shelf                                         ledger.css:3920
+The backbone picker, in the new-call form                  ledger.css:3938
+The backbone editor                                        ledger.css:3948
+The pane shell                                             ledger.css:4009
+the pane's own spacing                                     ledger.css:4060
+The new-todo pane                                          ledger.css:4142
+19. RESPONSIVE                                             ledger.css:4217
+20. MOTION PREFERENCE                                      ledger.css:4251
+21. PRINT                                                  ledger.css:4262
 ```
 
 ## `rooms/semaphore/semaphore.view.js`
@@ -380,7 +379,7 @@ _No section banners._
 
 ## `rooms/semaphore/semaphore.js`
 
-5709 lines · 331 KB
+5715 lines · 331 KB
 
 ```
 Brokerage Semaphore                         semaphore.js:1
@@ -419,16 +418,16 @@ leads: one board, three sections            semaphore.js:3933
 a lead opening in place                     semaphore.js:4053
 a lead moving, and the view moving with it  semaphore.js:4160
 leads, lent to the Ledger's board           semaphore.js:4495
-modals                                      semaphore.js:4626
-asking, and saying                          semaphore.js:4629
-the types, managed                          semaphore.js:4670
-dragging in the list of types               semaphore.js:4726
-tooltip                                     semaphore.js:4887
-events                                      semaphore.js:4925
-venues                                      semaphore.js:5079
-typing, and the forms it goes into          semaphore.js:5276
-escape, and closing by clicking away        semaphore.js:5474
-putting links in your own order             semaphore.js:5510
+modals                                      semaphore.js:4632
+asking, and saying                          semaphore.js:4635
+the types, managed                          semaphore.js:4676
+dragging in the list of types               semaphore.js:4732
+tooltip                                     semaphore.js:4893
+events                                      semaphore.js:4931
+venues                                      semaphore.js:5085
+typing, and the forms it goes into          semaphore.js:5282
+escape, and closing by clicking away        semaphore.js:5480
+putting links in your own order             semaphore.js:5516
 ```
 
 ## `rooms/semaphore/semaphore.css`
@@ -678,4 +677,4 @@ Generated data. Never open, never edit, never upload.
 
 ---
 
-**42714 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.
+**42758 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.

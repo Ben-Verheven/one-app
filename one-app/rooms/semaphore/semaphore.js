@@ -4616,6 +4616,12 @@ function leadVerb(aid,lid,op,val){
       if(!Array.isArray(l.links))l.links=[];
       l.links.push({id:uid(),label,url});break;}
     case 'linkDel':l.links=(l.links||[]).filter(k=>k.id!==val);break;
+    /* put aside, or brought back to its step, as Limbo on this room's
+       card does (the Ledger's card has the same button since 2026-11-02) */
+    case 'limbo':
+      if(l.doneAt)return false;
+      if(val)l.limbo=todayISO();else delete l.limbo;
+      break;
     default:return false;
   }
   restack();

@@ -278,7 +278,8 @@
      from one of his templates in the Notes room, with the project's
      printout saved to attach. Of three places drawn he chose a ✉ after the
      name under Match, on every lead, so it is put there as the name is
-     made a link, and only in the Semaphore's leads. Whose address it is
+     made a link: in the Semaphore's leads, and since 2026-11-02 in the
+     Ledger's, which draw the same lead the same way. Whose address it is
      comes from the Atlas, where he keeps one per researcher.
 
      The email opens through a mailto link, the one way a page can start
@@ -289,7 +290,7 @@
      window has closed would be a launch with no press behind it, which a
      browser may refuse. */
   function inLeadMatch(el) {
-    return !!(el && el.closest && el.closest('#pane-semaphore .lead .lmt'));
+    return !!(el && el.closest && el.closest('#pane-semaphore .lead .lmt, #pane-ledger .lead-card .lead-sub'));
   }
   function mailButton(rid) {
     var b = document.createElement('button');
@@ -305,10 +306,15 @@
     var mine = ((st && st.edits) || []).filter(function (e) { return e.type === 'email' && e.rL === name; });
     return mine.length ? String(mine[mine.length - 1].addr || '').trim() : '';
   }
+  /* the Ledger's card carries the lead as one key, the arena's id and the
+     lead's joined by a bar */
   function leadOf(card) {
     var api = Hub.api('semaphore'), S = api && api.state ? api.state() : null;
-    var a = S && (S.arenas || []).filter(function (x) { return x.id === card.getAttribute('data-id'); })[0];
-    var l = a && (a.leads || []).filter(function (x) { return x.id === card.getAttribute('data-l'); })[0];
+    var key = String(card.getAttribute('data-lead') || ''), bar = key.indexOf('|');
+    var aid = bar > 0 ? key.slice(0, bar) : card.getAttribute('data-id');
+    var lid = bar > 0 ? key.slice(bar + 1) : card.getAttribute('data-l');
+    var a = S && (S.arenas || []).filter(function (x) { return x.id === aid; })[0];
+    var l = a && (a.leads || []).filter(function (x) { return x.id === lid; })[0];
     return l ? { a: a, l: l } : null;
   }
   /* What each fill-in of the Notes room's FILLS becomes on this lead. One
@@ -348,7 +354,7 @@
   function shutMailMenu() { if (mailMenu) { mailMenu.remove(); mailMenu = null; } }
   function openMailMenu(btn) {
     shutMailMenu();
-    var card = btn.closest('.lead'), x = card && leadOf(card);
+    var card = btn.closest('.lead, .lead-card'), x = card && leadOf(card);
     var who = R[+btn.getAttribute('data-rid')];
     if (!x || !who) return;
     /* the entry read now, while a template is chosen, so the PDF can be

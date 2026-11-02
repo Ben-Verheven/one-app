@@ -235,9 +235,14 @@ calls land on the Call Board. What still holds of the board:
 - **One lead, the same everywhere** (2026-10-06): the Ledger's lead card was
   the standard, shut until pressed, each room keeping its own colours except
   the lead's, which is its arena type's (since 2026-10-11). The shut card
-  shows the match, with the match and the day quieter than the name. Since
-  the rework of 2026-10-21/22 the Semaphore's open lead, below, is ahead of
-  the Ledger's card, which keeps its row of buttons.
+  shows the match, with the match and the day quieter than the name. The
+  rework of 2026-10-21/22 put the Semaphore's lead, below, ahead; on
+  2026-11-02 Mark had the Ledger's card brought up to it: the Leads line,
+  shut (arena tag, title beside match, score, day as a pill), and open,
+  Edit, Limbo and Complete at its head, Who and Links side by side and
+  Updates with + Add update under them. The ✉ and Limbo work there too;
+  Limbo takes the lead off the Ledger's board. Below a wide desk the three
+  buttons take a line of their own under the head.
 - **Venues and Leads, a pair in the middle of the header** (2026-10-25):
   the same rounded button, height and type, Venues in the board's bone with
   a venue's diamond, Leads in its clay with the ruit drawn small before the
@@ -283,10 +288,9 @@ calls land on the Call Board. What still holds of the board:
   ruit at the head of each line, the arena as a tag in its type's colour,
   the day coloured by how near it is. **+ Lead** at the end of its head
   opens the new-lead form with an arena chosen in front, the last one kept,
-  and the lead lands open in Spotted. The Ledger's list keeps its own look,
-  except a shut lead on an upright iPad, which wears this table's line:
-  arena tag, title and match cut to a line each, score, day as a pill
-  (2026-10-28, chosen over the same card fitted and over two lines).
+  and the lead lands open in Spotted. The Ledger's list wears this table's
+  line (first on an upright iPad, 2026-10-28, chosen over the same card
+  fitted and over two lines; everywhere since 2026-11-02).
 - **Limbo, a fourth band at the foot of Leads** (2026-10-28), in Venues'
   Limbo's fog, chosen from three drawn over a folded band and a button in
   the head: a lead put aside without being closed, by Limbo between Edit and
