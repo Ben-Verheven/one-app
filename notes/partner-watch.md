@@ -136,6 +136,12 @@ no file under `one-app/`. These are his choices, and what he dropped.
   field only Mark’s Place reads) and the venue, so the button then reads
   "Lead in" its arena and opens that arena's panel. Which entry-page label
   gives each fact is at `leadFromEntry` in the page.
+- **Three researchers under Why** (2026-11-02), at the desk only: who in
+  the Researcher Atlas could answer what the entry asks for, each name over
+  the words that led to it, a press writing the name into Why for Make
+  lead. Chosen from three drawn, over a bare line of names and a list
+  dropping from the Why field. The phone has none yet, since it does not
+  read which sentences ask. How is at "who could answer it" in the page.
 - **A lead leaves its venue for Leads** (2026-10-22), opened from a small
   button beside Entries: out of its venue's list and counts, under its
   arena's name whatever the filters say, still found by the search. It
@@ -266,10 +272,10 @@ desk, the call notes on either.
 
 ## Kept for later
 
-- Ideas he liked (2026-10-16): an Atlas match for what an entry seeks, a
-  link to the Semaphore arena of its call, pre-sorting from his past flags,
-  a keyword alert, a mark when an entry names a TU/e group. Make lead, from
-  the same list, was built on 2026-10-21.
+- Ideas he liked (2026-10-16): a link to the Semaphore arena of its call,
+  pre-sorting from his past flags, a keyword alert, a mark when an entry
+  names a TU/e group. Make lead, from the same list, was built on
+  2026-10-21, and the Atlas match on 2026-11-02 (under Leads).
 - Reading what the free text says (the project's name, the partners wanted,
   who coordinates), each with the sentence it came from and "not stated"
   where the page says nothing: planned as a second step, for an agent
