@@ -21,102 +21,101 @@ the two lists at the foot of this file is where those names gather.
 
 ## The shell — `shell/shell.css`
 
-93 names.
+92 names.
 
 ```
-#app             shell.css:229 x11                  ledger.view.js:5 x4   callboard.js:1542 x4   ledger.js:3019 x3
-#card            shell.css:276                      semaphore.js:1506 x29   ledger.js:3767 x5   ledger.view.js:5 x4
-#dossier         shell.css:232                      atlas.js:1054 x14   ledger.js:11792 x3   bridge.js:213
-#hdr             shell.css:250                      callboard.js:54 x3   bridge.js:801 x2   ledger.view.js:5
-#modal           shell.css:229                      semaphore.view.js:5 x4   semaphore.js:4627 x4   atlas.js:707 x4
-#oa-ring         shell.css:67 x7                    bridge.js:829
-#oa-sheet        shell.css:890 x4                   bridge.js:1860 x2
-#oa-sweep        shell.css:285 x3                   bridge.js:830
-#oa-title        shell.css:67 x6                    bridge.js:919
-#oa-toasts       shell.css:301 x4                   hub.js:333
-#pane-atlas      shell.css:224 x25                  bridge.js:212 x2
+#app             shell.css:215 x11                  ledger.view.js:5 x4   callboard.js:1542 x4   ledger.js:3019 x3
+#card            shell.css:262                      semaphore.js:1506 x29   ledger.js:3767 x5   ledger.view.js:5 x4
+#dossier         shell.css:218                      atlas.js:1054 x14   ledger.js:11792 x3   bridge.js:213
+#hdr             shell.css:236                      callboard.js:54 x3   bridge.js:801 x2   ledger.view.js:5
+#modal           shell.css:215                      semaphore.view.js:5 x4   semaphore.js:4627 x4   atlas.js:707 x4
+#oa-ring         shell.css:67 x6                    bridge.js:829
+#oa-sheet        shell.css:876 x4                   bridge.js:1843 x2
+#oa-sweep        shell.css:271 x3                   bridge.js:830
+#oa-title        shell.css:67 x6                    bridge.js:902
+#oa-toasts       shell.css:287 x4                   hub.js:333
+#pane-atlas      shell.css:210 x25                  bridge.js:212 x2
 #pane-callboard  shell.css:118 x34                  bridge.js:478
-#pane-ledger     shell.css:385 x19                  bridge.js:818   ledger.js:8627
-#pane-notes      shell.css:823 x11                  bridge.js:1667
-#pane-semaphore  shell.css:267 x24                  bridge.js:292 x3   semaphore.js:4084 x3
-#reader          shell.css:253                      callboard.js:1580 x5   callboard.view.js:5 x2   bridge.js:479
-#root            shell.css:702                      ledger.view.js:5 x2   ledger.js:4839
-#semscroll       shell.css:272                      semaphore.js:4046 x4   semaphore.view.js:5 x2
-#stage           shell.css:320                      callboard.js:1048 x13   semaphore.js:971 x6   ledger.view.js:5 x2
-#toast           shell.css:229                      hub.js:336   atlas.view.js:5   atlas.js:606
-.actions         shell.css:579 x2                   ledger.view.js:5 x2   ledger.js:2213 x2   semaphore.view.js:5
-.atlas-ref       shell.css:391 x2                   bridge.js:96 x3
-.btn             shell.css:586 x6                   semaphore.js:1924 x36   ledger.js:541 x34   ledger.view.js:5 x27
-.btn-collapse    shell.css:718                      ledger.view.js:5 x6
-.calpop          shell.css:273                      semaphore.js:4262
-.ck              shell.css:796                      callboard.js:139 x4   atlas.js:1516 x3
-.clchip          shell.css:586 x2                   callboard.js:1662 x2
-.cn              shell.css:795 x2                   callboard.js:139 x4
-.cur             shell.css:773                      atlas.js:740 x14   semaphore.js:2189 x2   callboard.js:173
-.dot             shell.css:649                      atlas.js:1024 x18   semaphore.view.js:5   semaphore.js:2579
-.fd              shell.css:793                      callboard.js:801 x4
-.ftchip          shell.css:586 x2                   callboard.view.js:5 x3   callboard.js:2674
+#pane-ledger     shell.css:371 x19                  bridge.js:818   ledger.js:8627
+#pane-notes      shell.css:809 x11                  bridge.js:1650
+#pane-semaphore  shell.css:253 x24                  bridge.js:292 x3   semaphore.js:4084 x3
+#reader          shell.css:239                      callboard.js:1580 x5   callboard.view.js:5 x2   bridge.js:479
+#root            shell.css:688                      ledger.view.js:5 x2   ledger.js:4839
+#semscroll       shell.css:258                      semaphore.js:4046 x4   semaphore.view.js:5 x2
+#stage           shell.css:306                      callboard.js:1048 x13   semaphore.js:971 x6   ledger.view.js:5 x2
+#toast           shell.css:215                      hub.js:336   atlas.view.js:5   atlas.js:606
+.actions         shell.css:565 x2                   ledger.view.js:5 x2   ledger.js:2213 x2   semaphore.view.js:5
+.atlas-ref       shell.css:377 x2                   bridge.js:96 x3
+.btn             shell.css:572 x6                   semaphore.js:1924 x36   ledger.js:541 x34   ledger.view.js:5 x27
+.btn-collapse    shell.css:704                      ledger.view.js:5 x6
+.calpop          shell.css:259                      semaphore.js:4262
+.ck              shell.css:782                      callboard.js:139 x4   atlas.js:1516 x3
+.clchip          shell.css:572 x2                   callboard.js:1662 x2
+.cn              shell.css:781 x2                   callboard.js:139 x4
+.cur             shell.css:759                      atlas.js:740 x14   semaphore.js:2189 x2   callboard.js:173
+.dot             shell.css:635                      atlas.js:1024 x18   semaphore.view.js:5   semaphore.js:2579
+.fd              shell.css:779                      callboard.js:801 x4
+.ftchip          shell.css:572 x2                   callboard.view.js:5 x3   callboard.js:2674
 .g               shell.css:143 x2                   atlas.js:788 x19   callboard.js:125 x13   ledger.js:823 x11
-.g-atlas         shell.css:188                      —
-.g-callboard     shell.css:181                      —
-.g-ledger        shell.css:170                      —
-.g-notes         shell.css:213                      —
-.g-semaphore     shell.css:175 x2                   —
-.ghost           shell.css:618 x2                   semaphore.js:1924 x4   callboard.js:821 x2
-.glab            shell.css:774                      callboard.js:132 x2
-.hbtn            shell.css:586 x6                   atlas.view.js:5 x3
-.hd-controls     shell.css:579 x2                   callboard.view.js:5
-.hdr             shell.css:689 x4                   callboard.js:54 x3   bridge.js:801 x2   ledger.view.js:5
-.hdr-mark        shell.css:711                      bridge.js:801   ledger.view.js:5
-.hdr-mark-fl     shell.css:703                      ledger.view.js:5 x2
-.hdr-right       shell.css:579 x5                   ledger.view.js:5
-.hit             shell.css:784 x2                   semaphore.js:3776 x2   callboard.js:131 x2
-.home            shell.css:106 x2                   bridge.js:934   ledger.view.js:5
-.judging         shell.css:314                      callboard.view.js:5 x2
-.lead            shell.css:417                      semaphore.js:378 x49   ledger.js:3969 x33   bridge.js:292 x16
-.markglyph       shell.css:683                      semaphore.view.js:5
-.mk              shell.css:786 x5                   callboard.js:131 x2   ledger.js:59   semaphore.js:5482
-.modal           shell.css:273                      semaphore.view.js:5 x4   semaphore.js:4627 x4   atlas.js:707 x4
-.oa-bar          shell.css:546 x27                  ledger.js:6209 x2   bridge.js:826
-.oa-cloudchip    shell.css:823 x11                  ledger.view.js:5   semaphore.view.js:5   atlas.view.js:5
+.g-atlas         shell.css:174                      —
+.g-callboard     shell.css:167                      —
+.g-ledger        shell.css:156                      —
+.g-notes         shell.css:199                      —
+.g-semaphore     shell.css:161 x2                   —
+.ghost           shell.css:604 x2                   semaphore.js:1924 x4   callboard.js:821 x2
+.glab            shell.css:760                      callboard.js:132 x2
+.hbtn            shell.css:572 x6                   atlas.view.js:5 x3
+.hd-controls     shell.css:565 x2                   callboard.view.js:5
+.hdr             shell.css:675 x4                   callboard.js:54 x3   bridge.js:801 x2   ledger.view.js:5
+.hdr-mark        shell.css:697                      bridge.js:801   ledger.view.js:5
+.hdr-mark-fl     shell.css:689                      ledger.view.js:5 x2
+.hdr-right       shell.css:565 x5                   ledger.view.js:5
+.hit             shell.css:770 x2                   semaphore.js:3776 x2   callboard.js:131 x2
+.home            shell.css:106 x2                   bridge.js:917   ledger.view.js:5
+.judging         shell.css:300                      callboard.view.js:5 x2
+.lead            shell.css:403                      semaphore.js:378 x49   ledger.js:3969 x33   bridge.js:292 x16
+.markglyph       shell.css:669                      semaphore.view.js:5
+.mk              shell.css:772 x5                   callboard.js:131 x2   ledger.js:59   semaphore.js:5482
+.modal           shell.css:259                      semaphore.view.js:5 x4   semaphore.js:4627 x4   atlas.js:707 x4
+.oa-bar          shell.css:532 x27                  ledger.js:6209 x2   bridge.js:826
+.oa-cloudchip    shell.css:809 x11                  ledger.view.js:5   semaphore.view.js:5   atlas.view.js:5
 .oa-g            shell.css:128 x9                   bridge.js:836
-.oa-hidden-mark  shell.css:111                      bridge.js:923
-.oa-lending      shell.css:224 x12                  bridge.js:219 x6
-.oa-mail         shell.css:410 x3                   bridge.js:297 x2
-.oa-mailmenu     shell.css:419                      bridge.js:360
-.oa-mm-foot      shell.css:451                      bridge.js:378
-.oa-mm-it        shell.css:429 x3                   bridge.js:370
-.oa-mm-to        shell.css:426 x2                   bridge.js:362
-.oa-n            shell.css:146 x3                   bridge.js:861
-.oa-pa-go        shell.css:446                      bridge.js:442 x2
-.oa-pa-x         shell.css:450                      bridge.js:443 x2
-.oa-pdfask       shell.css:438                      bridge.js:436 x2
-.oa-sheeting     shell.css:892 x4                   bridge.js:1865 x2
-.oa-squeezed     shell.css:107                      bridge.js:941 x2
-.oa-veiled       shell.css:67                       hub.js:282   bridge.js:1002
-.off             shell.css:789 x2                   semaphore.js:2420 x28   ledger.js:2223 x22   atlas.js:788 x10
+.oa-hidden-mark  shell.css:111                      bridge.js:906
+.oa-lending      shell.css:210 x12                  bridge.js:219 x6
+.oa-mail         shell.css:396 x3                   bridge.js:297 x2
+.oa-mailmenu     shell.css:405                      bridge.js:360
+.oa-mm-foot      shell.css:437                      bridge.js:378
+.oa-mm-it        shell.css:415 x3                   bridge.js:370
+.oa-mm-to        shell.css:412 x2                   bridge.js:362
+.oa-pa-go        shell.css:432                      bridge.js:442 x2
+.oa-pa-x         shell.css:436                      bridge.js:443 x2
+.oa-pdfask       shell.css:424                      bridge.js:436 x2
+.oa-sheeting     shell.css:878 x4                   bridge.js:1848 x2
+.oa-squeezed     shell.css:107                      bridge.js:924 x2
+.oa-veiled       shell.css:67                       hub.js:282   bridge.js:985
+.off             shell.css:775 x2                   semaphore.js:2420 x28   ledger.js:2223 x22   atlas.js:788 x10
 .on              shell.css:142 x11                  semaphore.js:629 x81   ledger.js:1322 x59   notes.js:720 x32
-.open            shell.css:252 x3                   ledger.js:586 x79   semaphore.js:1013 x35   callboard.js:1071 x22
-.pane            shell.css:335 x5                   hub.js:101 x3   bridge.js:104 x3   ledger.js:5750 x2
-.pchip           shell.css:586 x2                   callboard.js:1647 x2
-.pfd             shell.css:792 x2                   callboard.js:131
-.pt              shell.css:783 x7                   notes.js:2570 x6   ledger.js:3911 x5   callboard.js:130 x2
-.run             shell.css:292                      semaphore.js:900 x7   bridge.js:985 x4   atlas.js:1966 x2
-.scrim           shell.css:252 x2                   callboard.js:1580 x3   callboard.view.js:5 x2   semaphore.view.js:5
-.seg             shell.css:653 x5                   semaphore.js:2601 x3   atlas.js:929 x3   callboard.view.js:5 x2
-.spacer          shell.css:737 x2                   atlas.view.js:5
-.spin            shell.css:781 x2                   callboard.js:129 x2
-.still           shell.css:139 x2                   semaphore.js:971 x6   bridge.js:897 x3   ledger.js:1959 x3
-.tab             shell.css:761 x6                   callboard.js:130 x15   semaphore.js:2801 x2   callboard.view.js:5
+.open            shell.css:238 x3                   ledger.js:586 x79   semaphore.js:1013 x35   callboard.js:1071 x22
+.pane            shell.css:321 x5                   hub.js:101 x3   bridge.js:104 x3   ledger.js:5750 x2
+.pchip           shell.css:572 x2                   callboard.js:1647 x2
+.pfd             shell.css:778 x2                   callboard.js:131
+.pt              shell.css:769 x7                   notes.js:2570 x6   ledger.js:3911 x5   callboard.js:130 x2
+.run             shell.css:278                      semaphore.js:900 x7   bridge.js:968 x4   atlas.js:1966 x2
+.scrim           shell.css:238 x2                   callboard.js:1580 x3   callboard.view.js:5 x2   semaphore.view.js:5
+.seg             shell.css:639 x5                   semaphore.js:2601 x3   atlas.js:929 x3   callboard.view.js:5 x2
+.spacer          shell.css:723 x2                   atlas.view.js:5
+.spin            shell.css:767 x2                   callboard.js:129 x2
+.still           shell.css:139                      semaphore.js:971 x6   bridge.js:880 x3   ledger.js:1959 x3
+.tab             shell.css:747 x6                   callboard.js:130 x15   semaphore.js:2801 x2   callboard.view.js:5
 .tabs            shell.css:118 x6                   callboard.js:119 x6   callboard.view.js:5 x3   bridge.js:803
-.tchip           shell.css:586 x2                   callboard.js:997 x7
-.toast           shell.css:304 x2                   hub.js:336   atlas.view.js:5   atlas.js:606
-.top             shell.css:682                      callboard.js:1148 x8   bridge.js:802 x7   ledger.js:464 x6
-.tri             shell.css:778 x15                  callboard.js:128
-.trow            shell.css:772 x2                   atlas.js:1497 x7   callboard.js:133 x4
-.tsel            shell.css:769                      callboard.js:128
-.walking         shell.css:126                      bridge.js:905 x2
-.wrap            shell.css:250                      ledger.view.js:5   callboard.view.js:5   callboard.js:2617
+.tchip           shell.css:572 x2                   callboard.js:997 x7
+.toast           shell.css:290 x2                   hub.js:336   atlas.view.js:5   atlas.js:606
+.top             shell.css:668                      callboard.js:1148 x8   bridge.js:802 x7   ledger.js:464 x6
+.tri             shell.css:764 x15                  callboard.js:128
+.trow            shell.css:758 x2                   atlas.js:1497 x7   callboard.js:133 x4
+.tsel            shell.css:755                      callboard.js:128
+.walking         shell.css:126                      bridge.js:888 x2
+.wrap            shell.css:236                      ledger.view.js:5   callboard.view.js:5   callboard.js:2617
 ```
 
 ## Ledger — `rooms/ledger/ledger.css`
@@ -135,7 +134,7 @@ the two lists at the foot of this file is where those names gather.
 #pj-toasts                ledger.css:3870 x2                 ledger.js:411
 #pjp-input                ledger.css:3978 x2                 ledger.js:14776 x3
 #pjp-results              ledger.css:3982                    ledger.js:14741 x2
-.active                   ledger.css:418 x17                 ledger.js:4811 x24   semaphore.js:152 x13   bridge.js:1817
+.active                   ledger.css:418 x17                 ledger.js:4811 x24   semaphore.js:152 x13   bridge.js:1800
 .add-substamp-input       ledger.css:188 x6                  ledger.js:8237 x12   ledger.view.js:5
 .add-substamp-row         ledger.css:1396 x3                 ledger.js:8236 x3
 .add-substamp-wrap        ledger.css:1408 x4                 ledger.js:8235 x3
@@ -799,7 +798,7 @@ the two lists at the foot of this file is where those names gather.
 .res-item-edit            ledger.css:3166 x3                 ledger.js:3698
 .res-item-pi              ledger.css:3169 x2                 ledger.js:3698
 .res-where                ledger.css:3183 x4                 ledger.js:3706
-.row                      ledger.css:3540 x34                ledger.js:1433 x22   bridge.js:1255 x11   notes.js:992 x11
+.row                      ledger.css:3540 x34                ledger.js:1433 x22   bridge.js:1238 x11   notes.js:992 x11
 .row-body                 ledger.css:3553 x2                 ledger.js:13098 x2
 .row-detail               ledger.css:3648 x3                 ledger.js:13098 x2
 .row-gantt                ledger.css:3649 x6                 ledger.js:13120
@@ -1205,7 +1204,7 @@ the two lists at the foot of this file is where those names gather.
 .solo          semaphore.css:562                  semaphore.js:3377
 .something     semaphore.css:1387                 semaphore.js:378 x8
 .soon          semaphore.css:374 x3               ledger.js:7497 x2   semaphore.js:3683
-.sp            semaphore.css:752 x6               semaphore.js:2191 x12   atlas.js:1978 x4   bridge.js:2224 x2
+.sp            semaphore.css:752 x6               semaphore.js:2191 x12   atlas.js:1978 x4   bridge.js:2200 x2
 .spanline      semaphore.css:941                  semaphore.js:2879 x2
 .sr            semaphore.css:1325 x3              semaphore.js:2245 x3
 .ssoft         semaphore.css:1347                 semaphore.js:2304
@@ -1406,7 +1405,7 @@ the two lists at the foot of this file is where those names gather.
 .cnode         callboard.css:532 x8               callboard.js:2196 x5
 .code          callboard.css:593                  callboard.js:2196 x10   semaphore.view.js:5 x3   semaphore.js:957 x2
 .cost          callboard.css:560                  callboard.js:2263 x3
-.count         callboard.css:73 x2                callboard.js:1048 x11   bridge.js:2191 x8   semaphore.js:1012 x2
+.count         callboard.css:73 x2                callboard.js:1048 x11   bridge.js:2167 x8   semaphore.js:1012 x2
 .crow          callboard.css:240 x26              callboard.js:516 x12
 .csoft         callboard.css:378 x2               callboard.js:1094
 .dark          callboard.css:430 x2               callboard.js:594
@@ -1491,7 +1490,7 @@ the two lists at the foot of this file is where those names gather.
 .rd-links      callboard.css:335 x3               callboard.view.js:5
 .rd-meta       callboard.css:73 x6                callboard.view.js:5
 .rd-notes      callboard.css:477 x5               callboard.view.js:5
-.reach         callboard.css:554                  callboard.js:2251 x4   bridge.js:1844
+.reach         callboard.css:554                  callboard.js:2251 x4   bridge.js:1827
 .readbtn       callboard.css:96 x5                callboard.js:1617
 .reader        callboard.css:314 x2               callboard.js:1580 x5   callboard.view.js:5 x2   bridge.js:479
 .rnd           callboard.css:482                  callboard.js:971
@@ -1582,7 +1581,7 @@ the two lists at the foot of this file is where those names gather.
 #canvasWrap  atlas.css:280 x3                   atlas.js:2434 x3
 #dbody       atlas.css:323                      atlas.js:2235 x2   atlas.view.js:5
 #dhead       atlas.css:322 x4                   atlas.view.js:5   atlas.js:2080
-#main        atlas.css:63 x4                    ledger.js:2516 x5   atlas.js:1180 x5   bridge.js:2190 x4
+#main        atlas.css:63 x4                    ledger.js:2516 x5   atlas.js:1180 x5   bridge.js:2166 x4
 #modalbox    atlas.css:383 x5                   atlas.js:707 x3   atlas.view.js:5
 #qbar        atlas.css:112 x2                   atlas.js:1182
 #qbox        atlas.css:175 x2                   atlas.js:1182
@@ -1642,7 +1641,7 @@ the two lists at the foot of this file is where those names gather.
 .folded      atlas.css:81 x7                    atlas.js:973 x2   callboard.js:1370
 .from        atlas.css:230 x3                   semaphore.js:555 x35   ledger.js:2242 x28   atlas.js:808 x22
 .gp          atlas.css:426                      atlas.js:1907
-.grp         atlas.css:244 x3                   atlas.js:1132 x4   callboard.js:2634 x3   bridge.js:1791
+.grp         atlas.css:244 x3                   atlas.js:1132 x4   callboard.js:2634 x3   bridge.js:1774
 .halo        atlas.css:299                      atlas.js:2652
 .hint        atlas.css:123 x3                   atlas.js:732 x41   semaphore.js:1947 x6   callboard.js:2221 x3
 .hl          atlas.css:287                      callboard.js:1548 x3   atlas.js:2522 x3
@@ -1711,7 +1710,7 @@ the two lists at the foot of this file is where those names gather.
 .snum        atlas.css:196 x2                   callboard.js:2349   atlas.js:1280
 .sub         atlas.css:292 x6                   semaphore.view.js:5 x11   bridge.js:791 x5   callboard.js:861 x4
 .sugg        atlas.css:235 x2                   semaphore.js:3175 x2   atlas.js:1210 x2   callboard.js:2196
-.t           atlas.css:369 x10                  atlas.js:59 x32   callboard.js:1296 x27   bridge.js:2227 x5
+.t           atlas.css:369 x10                  atlas.js:59 x32   callboard.js:1296 x27   bridge.js:2203 x5
 .tag         atlas.css:454                      notes.js:720 x20   semaphore.view.js:5 x2   notes.view.js:15 x2
 .tcrumb      atlas.css:267 x3                   atlas.js:1635
 .tcrumbs     atlas.css:265                      atlas.js:1496 x3
@@ -1723,7 +1722,7 @@ the two lists at the foot of this file is where those names gather.
 .tsep        atlas.css:271                      atlas.js:1635
 .tw          atlas.css:241                      atlas.js:1505 x4
 .undo        atlas.css:401 x4                   atlas.js:756 x6   semaphore.js:1770 x2   atlas.view.js:5 x2
-.val         atlas.css:167                      atlas.js:740 x7   bridge.js:2168 x4
+.val         atlas.css:167                      atlas.js:740 x7   bridge.js:2144 x4
 .vchip       atlas.css:146                      atlas.js:2784
 .w           atlas.css:225 x3                   atlas.js:1125 x19   callboard.js:267 x13
 .wcenter     atlas.css:300                      atlas.js:2640
@@ -1922,11 +1921,11 @@ strength of this list is how a working room loses its paint.
 .ci-row-main       ledger.css:2477     … + '-row-main'      ledger.js:4449
 .ci-row-name       ledger.css:102      … + '-row-name'      ledger.js:4454
 .ci-row-tabs       ledger.css:2492     … + '-row-tabs'      ledger.js:4459
-.g-atlas           shell.css:188       'g-' + …             bridge.js:842
-.g-callboard       shell.css:181       'g-' + …             bridge.js:842
-.g-ledger          shell.css:170       'g-' + …             bridge.js:842
-.g-notes           shell.css:213       'g-' + …             bridge.js:842
-.g-semaphore       shell.css:175       'g-' + …             bridge.js:842
+.g-atlas           shell.css:174       'g-' + …             bridge.js:842
+.g-callboard       shell.css:167       'g-' + …             bridge.js:842
+.g-ledger          shell.css:156       'g-' + …             bridge.js:842
+.g-notes           shell.css:199       'g-' + …             bridge.js:842
+.g-semaphore       shell.css:161       'g-' + …             bridge.js:842
 .k-contacted       semaphore.css:279   'k-' + …             semaphore.js:3776
 .k-spotted         semaphore.css:301   'k-' + …             semaphore.js:3776
 .k-talking         semaphore.css:280   'k-' + …             semaphore.js:3776
@@ -1954,6 +1953,6 @@ strength of this list is how a working room loses its paint.
 
 ---
 
-**1811 names** across 6 stylesheets. 1776 are written somewhere the scan can see;
+**1810 names** across 6 stylesheets. 1775 are written somewhere the scan can see;
 13 are written but never painted, 35 painted but never written — 35 of
 those assembled at runtime from a fragment, and 0 with no explanation at all.

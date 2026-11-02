@@ -133,10 +133,10 @@ those of the phases still to build; git's history has the code.
   finds still waiting, in the order of the tabs; Stop leaves them, counted
   on the pill in the search row, which starts again, and dotted on their
   tabs.
-- **Counted in the ring** (2026-10-28): a small brass number beside the
-  Call Board's mark, wherever Mark is, the new arenas and call texts
-  waiting. Drawn first inside the mark, it came out as faint as the mark
-  of a room not shown, so it stands beside it.
+- **No count in the ring.** A small brass number beside the Call Board's
+  mark counted the finds waiting from 2026-10-28; Mark had it taken off on
+  2026-11-02. Room marks carry no numbers; the pill in the search row is
+  the count.
 - The finds are the new arenas ChatGPT's search for new arenas suggests, which
   wait on the board itself (`suggested`) until judged, and the agent's,
   from its inbox in the cloud; and the official call texts (2026-10-28),

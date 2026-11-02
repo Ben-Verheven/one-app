@@ -851,28 +851,11 @@
   var glyphs = {};
   order.forEach(function (pid) { glyphs[pid] = glyph(pid); });
 
-  /* The finds waiting to be judged on the Call Board, counted beside its
-     mark (Mark, 2026-10-28): new arenas the searches suggested and call
-     texts, wherever he is. The number stands in the ring beside the mark
-     rather than inside it, because a mark not of the room he is in is drawn
-     at 40%, and a count inside it came out as faint as the mark. It walks
-     with the mark, given the same slot. */
-  var countEl = document.createElement('span');
-  countEl.className = 'oa-n';
-  countEl.hidden = true;
-  ring.appendChild(countEl);
-  function ringCount(n) {
-    countEl.hidden = !n;
-    countEl.textContent = n > 99 ? '99+' : String(n || '');
-    countEl.title = n ? n + (n === 1 ? ' find' : ' finds') + ' to judge on the Call Board' : '';
-  }
-
   function place() {
     order.forEach(function (pid, i) {
       var b = glyphs[pid];
       if (!b) return;
       var here = (i === order.length - 1);
-      if (pid === 'callboard') countEl.style.setProperty('--slot', i);
       b.style.setProperty('--slot', i);
       b.classList.toggle('on', here);
       /* the mark at the right point is the room you are in, and that has
@@ -1943,14 +1926,12 @@
   });
 
   /* Every text, kept, waiting and turned down, read once and kept here, so
-     the count in the ring, the Call Board and ChatGPT's search for call
-     texts read the same list (a call whose text was turned down is not
+     the Call Board and ChatGPT's search for call texts read the same list (a call whose text was turned down is not
      searched again); read again on every
      change made through here, and when Mark logs in or comes back to the
      Board, since another machine may have judged one. */
   var textsHold = {}, texts = { rows: [], read: false };
   function textsChanged() {
-    ringRecount();
     var L = Hub.api('ledger');
     if (L && L.boardChanged) L.boardChanged();
     var B = Hub.started('callboard') && Hub.api('callboard');
@@ -2017,23 +1998,18 @@
     }
   });
 
-  /* The ring's count: the Semaphore's new arenas waiting, its own and the
-     agent's, and the call texts waiting. */
-  function ringRecount() {
-    var S = Hub.api('semaphore'), n = 0;
-    try { n = (S && S.finds) ? (S.finds().finds || []).length : 0; } catch (e) { n = 0; }
-    n += texts.rows.filter(function (r) { return r.status === 'new'; }).length;
-    ringCount(n);
-  }
-  function ringRead() {
+  /* The finds and the call texts are read when Mark logs in and at start,
+     so the Call Board finds them ready. Their count beside its mark in the
+     ring went on 2026-11-02, at Mark's asking; the pill in the Board's
+     search row still counts them. */
+  function findsRead() {
     var S = Hub.api('semaphore');
     readTexts();
-    if (S && S.refreshFinds) S.refreshFinds(ringRecount); else ringRecount();
+    if (S && S.refreshFinds) S.refreshFinds(function () {});
   }
-  Hub.on('semaphore:saved', ringRecount);
-  Hub.on('cloud:session', function (on) { if (on) ringRead(); else { texts.rows = []; ringRecount(); } });
+  Hub.on('cloud:session', function (on) { if (on) findsRead(); else texts.rows = []; });
   Hub.onRoom(function (now) { if (now === 'callboard') readTexts(); });
-  setTimeout(ringRead, 0);
+  setTimeout(findsRead, 0);
 
   /* ── open where we left off ───────────────────────────────────────── */
 
