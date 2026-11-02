@@ -531,7 +531,7 @@ _No section banners._
 
 ## `rooms/atlas/atlas.js`
 
-2983 lines · 149 KB
+3015 lines · 151 KB
 
 ```
 Researcher Atlas                                          atlas.js:1
@@ -549,26 +549,26 @@ UI — three interconnected ways in: Search, Browse         atlas.js:588
 tiny helpers                                              atlas.js:593
 persistence                                               atlas.js:610
 state                                                     atlas.js:642
-modal                                                     atlas.js:706
-edit actions                                              atlas.js:752
-rail                                                      atlas.js:954
-edits                                                     atlas.js:1104
-search mode                                               atlas.js:1178
-BROWSE — the department as it organizes itself            atlas.js:1457
-NEWS — what the scheduled people-agent found on the web   atlas.js:1653
-DOSSIER — one researcher                                  atlas.js:1951
-MAP & WALK — one canvas, two readings                     atlas.js:2436
-canvas                                                    atlas.js:2509
-concentric walk                                           atlas.js:2570
-canvas interaction                                        atlas.js:2699
-walk rail                                                 atlas.js:2770
-SHELL — tabs, edit toggle, about, init.                   atlas.js:2848
-exposed to the hub                                        atlas.js:2930
+modal                                                     atlas.js:711
+edit actions                                              atlas.js:757
+rail                                                      atlas.js:963
+edits                                                     atlas.js:1113
+search mode                                               atlas.js:1187
+BROWSE — the department as it organizes itself            atlas.js:1466
+NEWS — what the scheduled people-agent found on the web   atlas.js:1662
+DOSSIER — one researcher                                  atlas.js:1960
+MAP & WALK — one canvas, two readings                     atlas.js:2468
+canvas                                                    atlas.js:2541
+concentric walk                                           atlas.js:2602
+canvas interaction                                        atlas.js:2731
+walk rail                                                 atlas.js:2802
+SHELL — tabs, edit toggle, about, init.                   atlas.js:2880
+exposed to the hub                                        atlas.js:2962
 ```
 
 ## `rooms/atlas/atlas.css`
 
-471 lines · 31 KB
+479 lines · 32 KB
 
 ```
 Researcher Atlas  atlas.css:1
@@ -580,9 +580,9 @@ search            atlas.css:172
 browse            atlas.css:236
 map & walk        atlas.css:279
 dossier           atlas.css:312
-popover / modal   atlas.css:392
-edits list        atlas.css:409
-news              atlas.css:422
+popover / modal   atlas.css:400
+edits list        atlas.css:417
+news              atlas.css:430
 ```
 
 ## `rooms/notes/notes.view.js`
@@ -678,4 +678,4 @@ Generated data. Never open, never edit, never upload.
 
 ---
 
-**43113 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.
+**43153 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.

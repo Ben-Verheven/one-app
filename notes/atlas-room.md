@@ -62,6 +62,8 @@ the name, that line opening into a list, or a section of its own naming
 everything. Mark chose the section, **In your app**, above his notes:
 every Ledger project and Semaphore lead the researcher is named on, a
 lead's stage beside it, the archived and closed last in a quieter colour.
+Seen built, he had it put in a box folded under its head, which says how
+many projects and leads it holds, so his notes are not pushed down.
 Rejected: the counts alone (they say nothing about which), and the line
 that opens (one press too many for what he reads before a call). Beside
 Email, **Horizon topics that fit** takes their keyword chips to the Call

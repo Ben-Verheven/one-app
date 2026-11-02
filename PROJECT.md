@@ -527,7 +527,8 @@ researcher by name and shows under **Since the database** on the dossier
 `newcomer` is someone the build never saw, listed under their group with
 no dossier until the data file is rebuilt. Neither touches the graph. A
 passage reaches the description only by **add to description**, which
-opens the editor with it appended for Mark to reword.
+opens the editor with it appended for Mark to reword; once that is saved,
+the line leaves Since the database until the description is undone.
 
 A researcher's **rank** — full, associate, assistant professor — is an edit
 of the same kind, one per person, and it is the only field of theirs the

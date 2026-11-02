@@ -361,8 +361,16 @@
   background:var(--paper);outline:none}
 #pane-atlas .dmail input:focus{border-color:var(--k1)}
 #pane-atlas .sbtn:disabled{opacity:1;color:var(--ghost);cursor:default;background:var(--panel)}
-/* In your app: a row per project or lead, each a way there. The over and
-   done are set in --ghost, a colour that still reads, never faded. */
+/* In your app: a box, folded under its head, then a row per project or
+   lead, each a way there. The over and done are set in --ghost, a colour
+   that still reads, never faded. */
+#pane-atlas .dpart{border:1px solid var(--line2);border-radius:var(--r);background:var(--paper);padding:0 12px}
+#pane-atlas .dph{display:flex;align-items:baseline;gap:8px;width:100%;padding:8px 0;background:none;border:0;cursor:pointer;
+  text-align:left;font:600 11px var(--sans);letter-spacing:.8px;text-transform:uppercase;color:var(--ghost)}
+#pane-atlas .dph:hover{color:var(--ink)}
+#pane-atlas .dpa{width:10px;flex:none;letter-spacing:0}
+#pane-atlas .dpn{margin-left:auto;font:400 12.5px var(--sans);letter-spacing:0;text-transform:none;color:var(--faint)}
+#pane-atlas .dpl{padding-bottom:8px}
 #pane-atlas .dpi{display:flex;gap:10px;align-items:baseline;width:100%;padding:4px 6px;margin:0 -6px;
   border-radius:var(--r);text-align:left;font:inherit;font-size:14px;color:var(--ink);background:none;border:0;cursor:pointer}
 #pane-atlas .dpi:hover{background:var(--wash)}

@@ -658,6 +658,11 @@ const State = {
      "add to description" on an accepted finding puts the passage there for
      Mark to reword, rather than writing it into the Atlas unread. */
   descSeed: null,
+  /* The "Since the database" line that seed came from, so saving the
+     description takes the line off the list. */
+  descFrom: null,
+  /* Whether the dossier's In your app box is open. */
+  partOpen: false,
   /* Whose email address is open for writing on the dossier, or null. */
   mailEdit: null,
   newsKind: "all",
@@ -878,6 +883,10 @@ function saveDescription(rid, text) {
   const base = (r.descBase && r.descBase !== "nan") ? r.descBase.trim() : "";
   State.descEdit = null;
   const prior = Core.getEdits().filter(e => e.type === "desc" && e.rL === who);
+  /* the "Since the database" lines this description has taken in, kept
+     through a rewrite of it, the one just added among them */
+  const from = State.descFrom; State.descFrom = null;
+  const facts = [...new Set(prior.flatMap(e => e.facts || []).concat(from ? [from] : []))];
   if (next === base) {
     if (prior.length) {
       Core.setEdits(Core.getEdits().filter(e => !(e.type === "desc" && e.rL === who)));
@@ -889,7 +898,7 @@ function saveDescription(rid, text) {
   }
   if (prior.length)
     Core.setEdits(Core.getEdits().filter(e => !(e.type === "desc" && e.rL === who)));
-  addEdit({ type: "desc", rL: who, text: next });
+  addEdit(facts.length ? { type: "desc", rL: who, text: next, facts } : { type: "desc", rL: who, text: next });
   openDossier(rid);
   toast(`Description written for ${who}`);
 }
@@ -2073,7 +2082,7 @@ function openDossier(rid) {
   /* The editor belongs to one researcher. Walking to a colleague from the
      similarity list redraws this panel with somebody else in it, and a
      half-written paragraph must not follow them there. */
-  if (State.descEdit !== rid) State.descEdit = null;
+  if (State.descEdit !== rid) State.descEdit = State.descFrom = null;
   if (State.mailEdit !== rid) State.mailEdit = null;
   noteFlush();
   const r = R[rid];
@@ -2115,15 +2124,23 @@ function openDossier(rid) {
      (#7), since the names are what he reads before he calls someone. The
      ones over and done — an archived project, a closed lead — stand last
      in a quieter colour. Someone on nothing gets no section at all. */
+  /* In a box, folded until pressed (Mark, 2026-11-02): open, it pushed
+     his notes down on every profile. The head says how many of each, so
+     a shut box still answers whether there is anything to open. It stays
+     as he left it from one researcher to the next. */
   partNow = [];
   try { partNow = PARTOF ? PARTOF(rid) || [] : []; } catch (e) { console.error(e); }
   if (partNow.length) {
-    b += `<div class="sect dpart"><h3>In your app</h3>` + partNow.map((x, i) =>
+    const nP = partNow.filter(x => x.where === "Ledger").length, nL = partNow.length - nP;
+    const say = [nP ? nP + (nP > 1 ? " projects" : " project") : "", nL ? nL + (nL > 1 ? " leads" : " lead") : ""].filter(Boolean).join(" · ");
+    b += `<div class="sect dpart"><button class="dph" data-dpopen="1" aria-expanded="${!!State.partOpen}">`
+      + `<span class="dpa">${State.partOpen ? "▾" : "▸"}</span>In your app<span class="dpn">${say}</span></button>`
+      + `<div class="dpl"${State.partOpen ? "" : " hidden"}>` + partNow.map((x, i) =>
       `<button class="dpi${x.ended ? " ended" : ""}" data-dpart="${i}" title="${esc(x.title || "")}">`
       + `<span class="dpw">${esc(x.where)}</span><span class="dpt">${esc(x.what)}</span>`
       + (x.ended ? `<span class="dpe">${esc(x.ended)}</span>`
          : x.stage ? `<span class="dps s-${esc(x.stage)}">${esc(PART_STAGE[x.stage] || x.stage)}</span>` : "")
-      + `</button>`).join("") + `</div>`;
+      + `</button>`).join("") + `</div></div>`;
   }
 
   /* His own notes on them, first, because availability is the first thing
@@ -2139,7 +2156,12 @@ function openDossier(rid) {
      database's words or his, and this is neither — so it says where each
      line came from and when he took it, and "add to description" is the
      only road from here into his own text. */
-  const facts = factsOf(r.name);
+  /* A line he has put into the description leaves this list: the
+     description now says it (Mark, 2026-11-02). It is hidden, not dropped:
+     the fact edit is what stops News offering the same finding again, and
+     undoing the description brings the line back. */
+  const descNow = mineOf("desc", r.name), folded = new Set((descNow && descNow.facts) || []);
+  const facts = factsOf(r.name).filter(e => !folded.has(e.id));
   if (facts.length) {
     b += `<div class="sect an-since"><h3>Since the database</h3>` + facts.slice().reverse().map(e => {
       const said = e.detail || e.quote;
@@ -2298,7 +2320,7 @@ function openDossier(rid) {
     if (ta) { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }
   });
   db.querySelectorAll("[data-dcancel]").forEach(bn => bn.onclick = ev => {
-    ev.stopPropagation(); State.descEdit = null; openDossier(rid);
+    ev.stopPropagation(); State.descEdit = State.descFrom = null; openDossier(rid);
   });
   db.querySelectorAll("[data-dsave]").forEach(bn => bn.onclick = ev => {
     ev.stopPropagation(); saveDescription(rid, $("#dtext") ? $("#dtext").value : "");
@@ -2326,6 +2348,7 @@ function openDossier(rid) {
     const e = Core.getEdits().find(x => x.id === bn.dataset.fdesc);
     if (!e) return;
     State.descSeed = [val(R[rid].desc) || "", e.detail].filter(Boolean).join("\n\n");
+    State.descFrom = e.id;
     State.descEdit = rid; openDossier(rid);
     const ta = $("#dtext");
     if (ta) { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); ta.scrollIntoView({ block: "center" }); }
@@ -2379,6 +2402,15 @@ function openDossier(rid) {
   db.querySelectorAll("[data-drank]").forEach(bn => bn.onclick = () => setRank(rid));
   db.querySelectorAll("[data-dmap]").forEach(bn => bn.onclick = () => { closeDossier(); locateOnMap(rid); });
   db.querySelectorAll("[data-dwalk]").forEach(bn => bn.onclick = () => { closeDossier(); goWalk({ kind: "r", i: rid }); });
+  db.querySelectorAll("[data-dpopen]").forEach(bn => bn.onclick = ev => {
+    ev.stopPropagation();
+    const list = bn.nextElementSibling, open = !State.partOpen;
+    State.partOpen = open;
+    bn.setAttribute("aria-expanded", String(open));
+    bn.querySelector(".dpa").textContent = open ? "▾" : "▸";
+    if (open) { list.hidden = false; slideKids(list, true); }
+    else slideKids(list, false, () => { list.hidden = true; });
+  });
   db.querySelectorAll("[data-dpart]").forEach(bn => bn.onclick = () => {
     const x = partNow[+bn.dataset.dpart];
     if (x && x.go) { closeDossier(); x.go(); }
@@ -2395,7 +2427,7 @@ function openDossier(rid) {
     closeDossier(); TOPICSFIT(words);
   });
 }
-function closeDossier() { noteFlush(); State.descEdit = State.mailEdit = null; $("#dossier").classList.remove("open"); }
+function closeDossier() { noteFlush(); State.descEdit = State.mailEdit = State.descFrom = null; $("#dossier").classList.remove("open"); }
 /* Keeps what is in the notes box, if it says something new. Called a
    moment after typing stops, when the box is left, and before the dossier
    is drawn again or shut, so a note is never lost to a press elsewhere. */
