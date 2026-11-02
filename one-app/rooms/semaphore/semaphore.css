@@ -1121,11 +1121,16 @@
 #pane-semaphore .vtab:hover{color:var(--key2)}
 #pane-semaphore .vtab.on{background:rgba(216,205,184,.17);color:var(--ink)}
 #pane-semaphore .vtab b{font:11px var(--mono);letter-spacing:0;color:var(--muted)}
-/* a mark of where in a venue's life each tab is: rising, full, falling */
-#pane-semaphore .vtab::before{content:"";align-self:center;width:14px;height:8px;border-radius:2px}
-#pane-semaphore .vtab.t-arising::before{background:linear-gradient(90deg,rgba(239,91,76,.1),rgba(239,91,76,.55))}
-#pane-semaphore .vtab.t-active::before{background:var(--brok)}
-#pane-semaphore .vtab.t-dying::before{background:linear-gradient(90deg,rgba(239,91,76,.55),rgba(239,91,76,.1))}
+/* a little figure for where in a venue's life each tab is, all three in the
+   room's red: one rising from its ashes, one in his prime, one bent over
+   his stick. Mark asked for figures in one colour in place of the three
+   shaded bars (2026-11-02). A mask draws them, so the colour is the
+   room's own and turns with the light theme. */
+#pane-semaphore .vtab::before{content:"";align-self:center;width:20px;height:16px;background:var(--brok);
+  -webkit-mask:var(--fig) center/contain no-repeat;mask:var(--fig) center/contain no-repeat}
+#pane-semaphore .vtab.t-arising{--fig:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 16' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='10' cy='3' r='1.7' fill='black' stroke='none'/%3E%3Cpath d='M10 5.2v5M10 6.4L6.3 2.8M10 6.4l3.7-3.6'/%3E%3Cpath d='M3.5 15.2c-.6-2 .9-2.6.5-4.4 1.6.9 2.2 2.3 2.2 3 .4-1.4 1.6-2.4 1.4-4 1.5 1.2 2.4 2.9 2.4 4.2.4-1.2 1.4-2 1.3-3.4 1.4 1 2.1 2.4 2.1 3.6.5-.9 1.3-1.4 1.6-2.6 1 1 1.6 2.2 1.1 3.6z' fill='black' stroke='none'/%3E%3C/svg%3E")}
+#pane-semaphore .vtab.t-active{--fig:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 16' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='10' cy='2.5' r='1.9' fill='black' stroke='none'/%3E%3Cpath d='M10 5v5.2M10 6.4L4.8 4.3M10 6.4l5.2-2.1M10 10.2l-3.6 4.8M10 10.2l3.6 4.8'/%3E%3C/svg%3E")}
+#pane-semaphore .vtab.t-dying{--fig:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 16' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='6.6' cy='6.4' r='1.7' fill='black' stroke='none'/%3E%3Cpath d='M8.3 7.4c2 .1 3.1 1.5 3.4 3.8M11.7 11.2l-1.3 3.9M11.7 11.2l1.6 3.9M9.4 8.3l-2.9 2.3M6.5 10.6l-.6 4.5'/%3E%3C/svg%3E")}
 /* Mark's Place, in a box of its own: the gold of its Marked */
 /* Mark's Place, last and quiet: only where to look its venues up */
 #pane-semaphore .vplacetab{align-self:center;display:inline-flex;align-items:center;gap:6px;padding:2px 4px;border-radius:5px;
