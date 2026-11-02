@@ -3092,6 +3092,45 @@ document.addEventListener('click', function(ev){
 document.addEventListener('change', function(ev){
   if (ev.target.id === 'why'){ var e = byId[view.id]; if (e) patch(e, { why:ev.target.value.trim() || null }); }
 });
+/* A researcher's name typed in Why is finished as it is typed, the rest
+   of the name standing selected after the cursor the way an address bar
+   finishes an address: typing on overwrites it, → Enter or Tab keeps it,
+   Esc and backspace take it away (Mark, 2026-11-02). It replaced three
+   researchers suggested under Why from what the entry asks for, built the
+   same day and not wanted. A name is finished from its start, first name
+   first, and from the start of Why or after a comma or semicolon, so
+   "good fit; Mar" finishes too. The names are the Researcher Atlas's,
+   from its data file, loaded the first time Why is pressed rather than
+   with the page. */
+var WHO = null;
+document.addEventListener('focusin', function(ev){
+  if (ev.target.id !== 'why' || WHO) return;
+  WHO = [];
+  var s = document.createElement('script');
+  s.onload = function(){ try { WHO = window.__ATLAS_G().researchers.map(function(r){ return r.name; })
+    .sort(function(a, b){ return a.localeCompare(b); }); } catch(e){} };
+  s.src = '../one-app/data/atlas-graph.js';
+  document.head.appendChild(s);
+});
+document.addEventListener('input', function(ev){
+  var w = ev.target;
+  if (w.id !== 'why' || !WHO || !WHO.length || !/^insert(Text|CompositionText)?$/.test(ev.inputType || 'insertText')) return;
+  var v = w.value, at = w.selectionStart;
+  if (at !== v.length || w.selectionEnd !== at) return;
+  var cut = Math.max(v.lastIndexOf(';'), v.lastIndexOf(',')) + 1, lead = v.slice(cut).match(/^\s*/)[0].length;
+  var typed = v.slice(cut + lead);
+  if (typed.length < 2) return;
+  var f = fold(typed), name = WHO.find(function(n){ return fold(n).indexOf(f) === 0; });
+  if (!name || name.length === typed.length) return;
+  w.value = v.slice(0, cut + lead) + name;
+  w.setSelectionRange(v.length, w.value.length);
+});
+document.addEventListener('keydown', function(ev){
+  var w = ev.target;
+  if (w.id !== 'why' || w.selectionEnd !== w.value.length || w.selectionStart === w.selectionEnd) return;
+  if (ev.key === 'Enter'){ ev.preventDefault(); w.setSelectionRange(w.value.length, w.value.length); }
+  else if (ev.key === 'Escape'){ ev.preventDefault(); w.value = w.value.slice(0, w.selectionStart); }
+});
 /* Asked again after every drawing of the entry, because answering it
    draws the bar afresh while the pane stays scrolled down. */
 function markStuck(){

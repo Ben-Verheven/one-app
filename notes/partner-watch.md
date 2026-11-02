@@ -70,6 +70,10 @@ no file under `one-app/`. These are his choices, and what he dropped.
   opens at its head. Why, his short note on an entry, is lit in the gold of
   Marked once anything is written in it (2026-10-18). Bin wears the phone's
   bin, large and in the brokerage red (2026-10-28).
+- **A researcher's name typed in Why is finished for him** (2026-11-02),
+  at the desk, from the Researcher Atlas's names. Three researchers
+  suggested under Why from what the entry asks for, the Atlas match kept
+  for later since 2026-10-16, were built the same day and not wanted.
 - **Binning goes on to the next entry**, rather than staying on the entry
   just binned; after the last of a venue the reader empties and the drawer
   of venues and entries opens, for him to choose where next (2026-10-28,
@@ -266,7 +270,7 @@ desk, the call notes on either.
 
 ## Kept for later
 
-- Ideas he liked (2026-10-16): an Atlas match for what an entry seeks, a
+- Ideas he liked (2026-10-16): a
   link to the Semaphore arena of its call, pre-sorting from his past flags,
   a keyword alert, a mark when an entry names a TU/e group. Make lead, from
   the same list, was built on 2026-10-21.
