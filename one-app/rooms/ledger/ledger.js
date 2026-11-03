@@ -3280,7 +3280,7 @@ var Notes=(function(){
     }
   }
 
-  return {strip:strip,bindDrag:bindDrag,
+  return {strip:strip,bindDrag:bindDrag,caretToEnd:caretToEnd,
     pokeAfterEdit:pokeAfterEdit,focusAfterRender:focusAfterRender};
 })();
 
@@ -11765,10 +11765,12 @@ var ProjectCard=(function(){
        filled face, Edit quiet beside it, and the dossier's chevron alone
        in the card's top-right corner.
 
-       The chevron keeps no word. It is the one control whose drawer opens
-       somewhere else entirely — at the foot of the card — so it is set
-       apart from the pair it would otherwise be read with, and it turns
-       over when the drawer is out.
+       The drawer's button is the one control whose drawer opens somewhere
+       else entirely — at the foot of the card — so it is set apart from
+       the pair it would otherwise be read with, and its chevron turns over
+       when the drawer is out. It was a bare chevron until 2026-11-03, when
+       Mark asked for it a size larger and named: it says Log now, which is
+       what the drawer has become (see THE DOSSIER).
 
        Both Tracker and Edit are on an archived card too: Restore lives
        inside the edit form, so a card without them would be a card there
@@ -11819,11 +11821,11 @@ var ProjectCard=(function(){
         +'title="Edit this project \u2014 its details, and archiving or deleting it" '
         +'aria-label="Edit '+esc(p.name)+'" '
         +'onclick="PL.piEditProject(\''+esc(p.id)+'\',event)">Edit</button>'
-      +'<button type="button" class="pc-btn pc-btn-icon pc-dossier" '
-        +'title="'+(isOpen?'Close the dossier':'Open the dossier \u2014 the project\u2019s rows and notes')+'" '
-        +'aria-label="'+(isOpen?'Close':'Open')+' the dossier for '+esc(p.name)+'" '
+      +'<button type="button" class="pc-btn pc-dossier" '
+        +'title="'+(isOpen?'Close the log':'Open the log \u2014 the project\u2019s entries, by time or by row')+'" '
+        +'aria-label="'+(isOpen?'Close':'Open')+' the log for '+esc(p.name)+'" '
         +'onclick="PL.toggleFold(\''+esc(p.id)+'\',event)">'
-        +'<span class="pc-dossier-chev">\u25be</span></button>'
+        +'Log<span class="pc-dossier-chev">\u25be</span></button>'
     +'</span>';
 
     /* ── The grip ──
@@ -12508,6 +12510,17 @@ var Dossier=(function(){
   var openCard=null;
   var openDone={},doneAll={};
   var DONE_SHOWN=12;   // newest this many; the rest wait behind a chip
+  /* The drawer reads two ways over the same rows and notes (2026-11-03,
+     Mark's ask): as a log, every note on one list newest first with its
+     time on it, or as the rows it always was. Which one is up is a habit
+     of the person at the desk rather than a fact about the project, so it
+     is kept in this browser only and never reaches the journal or the
+     cloud. */
+  var VIEW_KEY='pj-log-view';
+  var view=(function(){try{return localStorage.getItem(VIEW_KEY)==='rows'?'rows':'time';}
+    catch(e){return 'time';}})();
+  var composing=null;  // the project whose "file under" choice is showing
+  var nameFocus=null;  // the entry just filed, whose name is owed the caret
 
   /* Takes a project or its id: the adapter is handed a ctx (the id),
      while the internal callers already hold the object. */
@@ -12523,6 +12536,17 @@ var Dossier=(function(){
     grip:true,             /* a dedicated handle, so the title stays a field */
     renameOnAdd:true,
     addRowAt:'top',        /* new rows land where the eye is */
+    /* A new note starts named for the moment it was written, as an entry
+       started from the log does, so the two views name a note the same
+       way and the rename box opens on the time, ready to be typed over. */
+    addNote:function(pid,rowId){
+      var r=rows(pid).find(function(x){return x.id===rowId;});
+      if(!r)return null;
+      var n=newNote({});
+      n.label=fmtAbs(n.created);
+      listOn(r,'notes').push(n);
+      return n.id;
+    },
     rerender:rerender
   });
 
@@ -12637,25 +12661,184 @@ var Dossier=(function(){
       +'</div>'+panel+'</div>';
   }
 
+  /* ── The log ──
+     Every note in every row, on one list, newest first. Each entry wears
+     the time it was written, the row it is filed under in that row's
+     colour, its name and its body, all editable where they stand. It is
+     the same notes the rows hold, read in another order: nothing is
+     copied, so an entry written here is a tab on its row in the other
+     view, and the other way round. */
+  function logEntries(p){
+    var out=[];
+    rows(p).forEach(function(r,ri){
+      (r.notes||[]).forEach(function(n,ni){out.push({r:r,n:n,k:ri*10000+ni});});
+    });
+    /* A note with no stamp cannot be placed in time, so it goes to the
+       bottom rather than pretending to be the newest. */
+    return out.sort(function(a,b){
+      var ca=a.n.created||'',cb=b.n.created||'';
+      if(ca!==cb)return ca<cb?1:-1;
+      return a.k-b.k;
+    });
+  }
+  function entryHTML(pid,e){
+    var r=e.r,n=e.n,host=RowTable.hostId('pi',pid,r.id);
+    var C="'"+jsq(pid)+"','"+jsq(r.id)+"','"+jsq(n.id)+"'";
+    var tip=(n.created?'Written '+fmtAbs(n.created):'')
+      +(n.edited&&n.edited!==n.created?'\nEdited '+fmtAbs(n.edited):'');
+    return '<div class="pi-log-entry" style="--rt-col:'+safeColor(r.color)+'" data-note-id="'+esc(n.id)+'">'
+      +'<div class="pi-log-head">'
+        +'<span class="pi-log-when" title="'+esc(tip)+'">'+esc(n.created?fmtAbs(n.created):'No time recorded')+'</span>'
+        +'<span class="pi-log-row" title="Filed under '+esc(r.name||'Untitled')+'">'
+          +'<span class="pi-log-dot"></span>'+esc(r.name||'Untitled')+'</span>'
+        +'<input type="text" class="pi-log-name" value="'+esc(n.label||'')+'" '
+          +'data-orig="'+esc(n.label||'')+'" placeholder="Name this entry\u2026" '
+          +'onchange="PL.logRename('+C+',this.value)" '
+          +'onkeydown="PL.logNameKey(event,this)" onclick="event.stopPropagation()" />'
+        +'<button type="button" class="pi-row-del" title="Delete this entry" '
+          +'onclick="PL.rtDelNote(\'pi\','+C+',event)">\u2715</button>'
+      +'</div>'
+      +'<div class="note-rte pi-log-body" contenteditable="true" '
+        +'data-note-host="'+esc(host)+'" data-note-id="'+esc(n.id)+'" '
+        +'oninput="PL.rtNoteInput(this)" onpaste="PL.rtNotePaste(this,event)" '
+        +'onblur="PL.rtNoteBlur(this)" onclick="PL.openRichLink(event)" '
+        +'onkeydown="PL.logKey(this,event)">'+toEditableHTML(n.body||'')+'</div>'
+    +'</div>';
+  }
+  /* A new entry is filed before it is written: the row it goes under is
+     the first question, then its name, which starts as the time and is
+     handed the caret already selected so a proper name simply types over
+     it. A new row can be named right here, for an entry that fits none. */
+  function composeHTML(pid){
+    var J="'"+jsq(pid)+"'";
+    var cats=rows(projects[pid]).map(function(r){
+      return '<button type="button" class="pi-cat" style="--rt-col:'+safeColor(r.color)+'" '
+        +'onclick="PL.logFile('+J+',\''+jsq(r.id)+'\',event)">'
+        +'<span class="pi-log-dot"></span>'+esc(r.name||'Untitled')+'</button>';
+    }).join('');
+    return '<div class="pi-compose" onclick="event.stopPropagation()">'
+      +'<div class="pi-compose-lbl">File the new entry under</div>'
+      +'<div class="pi-compose-cats">'+cats
+        +'<input type="text" class="pi-cat-new" placeholder="New row\u2026" '
+          +'title="Type a name for a new row and press Enter" '
+          +'onkeydown="PL.logNewRowKey(event,'+J+',this)" />'
+        +'<button type="button" class="pi-compose-cancel" title="Don\u2019t add an entry" '
+          +'onclick="PL.logCancel('+J+',event)">Cancel</button>'
+      +'</div></div>';
+  }
+  function logHTML(pid){
+    var list=logEntries(projects[pid]);
+    return '<div class="pi-log">'
+      +(composing===pid?composeHTML(pid):'')
+      +(list.length
+        ? list.map(function(e){return entryHTML(pid,e);}).join('')
+        : (composing===pid?'':'<div class="pi-empty">Nothing logged yet. Press + Entry to write the first one.</div>'))
+      +'</div>';
+  }
+  function setView(pid,v,evt){
+    stopEvt(evt);
+    view=(v==='rows')?'rows':'time';
+    composing=null;
+    try{localStorage.setItem(VIEW_KEY,view);}catch(e){}
+    rerender(pid);
+  }
+  function startEntry(pid,evt){
+    stopEvt(evt);
+    composing=(composing===pid)?null:pid;
+    rerender(pid);
+    var box=composing&&q('.pi-fold[data-pid="'+cssEsc(pid)+'"] .pi-cat-new');
+    /* With no rows yet the new-row box is the only choice there is, so
+       the caret goes straight to it. */
+    if(box&&!rows(projects[pid]).length)box.focus();
+  }
+  function cancelEntry(pid,evt){
+    stopEvt(evt);
+    composing=null;rerender(pid);
+  }
+  function fileEntry(pid,rowId,evt){
+    stopEvt(evt);
+    var r=rows(projects[pid]).find(function(x){return x.id===rowId;});
+    if(!r)return;
+    var n=newNote({});
+    n.label=fmtAbs(n.created);
+    listOn(r,'notes').push(n);
+    composing=null;
+    nameFocus=n.id;
+    save();rerender(pid);
+  }
+  function newRowKey(ev,pid,el){
+    if(ev.key==='Escape'){ev.preventDefault();ev.stopPropagation();cancelEntry(pid);return;}
+    if(ev.key!=='Enter')return;
+    ev.preventDefault();
+    var name=(el.value||'').trim();
+    if(!name){el.focus();return;}
+    var list=rowsOf(projects[pid]);
+    var r=newRow({name:name,color:TITLE_COLORS[list.length%TITLE_COLORS.length]});
+    list.unshift(r);           // where + Row puts one, so both views agree
+    fileEntry(pid,r.id);
+  }
+  function renameEntry(pid,rowId,noteId,val){
+    var r=rows(projects[pid]).find(function(x){return x.id===rowId;});
+    var n=r&&(r.notes||[]).find(function(x){return x.id===noteId;});
+    var lbl=(val||'').trim();
+    if(!n||!lbl||lbl===n.label)return;
+    n.label=lbl;stampEdited(n);save();
+  }
+  /* Enter names the entry and moves on to writing it; Escape puts the
+     name back. Handled here so the room's own Escape does not read the
+     same press as "fold the card away". */
+  function nameKey(ev,el){
+    if(ev.key==='Enter'){
+      ev.preventDefault();
+      var body=el.closest('.pi-log-entry');
+      body=body&&q('.pi-log-body',body);
+      el.blur();
+      if(body){body.focus();Notes.caretToEnd(body);}
+    }else if(ev.key==='Escape'){
+      ev.preventDefault();ev.stopPropagation();
+      el.value=el.getAttribute('data-orig')||'';el.blur();
+    }
+  }
+  /* The body takes the row view's chords; Escape only lets go of it,
+     since an entry here has no panel to close. */
+  function bodyKey(el,ev){
+    if(ev.key==='Escape'){ev.preventDefault();ev.stopPropagation();el.blur();return;}
+    RowTable.onKey(el,ev);
+  }
+
   function faceHTML(pid){
     var p=projects[pid];if(!p)return '';
     var list=rows(p);
-    var doneHtml=doneRowHTML(pid);
+    var byTime=(view==='time');
+    var doneHtml=byTime?'':doneRowHTML(pid);
     var rowsHtml=list.length
       ? RowTable.rowsHTML('pi',pid)
       : (doneHtml?'':'<div class="pi-empty">No rows yet. Add one to start taking notes on this project.</div>');
     var nNotes=list.reduce(function(a,r){return a+r.notes.length;},0);
     var meta=list.length
       ?'<span class="pi-head-meta">'+list.length+(list.length===1?' row':' rows')
-        +(nNotes?' \u00b7 '+nNotes+(nNotes===1?' note':' notes'):'')+'</span>'
+        +(nNotes?' \u00b7 '+nNotes+(nNotes===1?' entry':' entries'):'')+'</span>'
       :'';
+    var J="'"+jsq(pid)+"'";
+    function sw(v,label,tip){
+      return '<button type="button" class="pi-view'+(view===v?' on':'')+'" title="'+tip+'" '
+        +'aria-pressed="'+(view===v)+'" '
+        +'onclick="PL.logView('+J+',\''+v+'\',event)">'+label+'</button>';
+    }
     return '<div class="pi-face">'
       +'<div class="pi-head">'
-        +'<div class="pi-head-title">Dossier'+meta+'</div>'
-        +'<button type="button" class="pi-addrow" title="Add a new row" '
-          +'onclick="PL.rtAddRow(\'pi\',\''+esc(pid)+'\');event.stopPropagation()">+ Row</button>'
+        +'<div class="pi-head-title">Log'+meta+'</div>'
+        +'<span class="pi-views">'
+          +sw('time','By time','Every entry on one list, newest first')
+          +sw('rows','By row','The entries filed in their rows')
+        +'</span>'
+        +(byTime
+          ? '<button type="button" class="pi-addrow" title="Write a new entry, filed under a row" '
+            +'onclick="PL.logEntry('+J+',event)">+ Entry</button>'
+          : '<button type="button" class="pi-addrow" title="Add a new row" '
+            +'onclick="PL.rtAddRow(\'pi\',\''+esc(pid)+'\');event.stopPropagation()">+ Row</button>')
       +'</div>'
-      +'<div class="pi-rows">'+rowsHtml+doneHtml+'</div>'
+      +(byTime?logHTML(pid):'<div class="pi-rows">'+rowsHtml+doneHtml+'</div>')
       /* The foot the three project actions used to stand on is gone. Edit
          is a button on the card's own rail now, and archiving and
          deleting are inside the form it opens: they are things you do to
@@ -12720,6 +12903,13 @@ var Dossier=(function(){
     if(!body){CallCard.render();return;}
     body.innerHTML=faceHTML(pid);
     bindRowDrag(pid);
+    /* The entry just filed opens with its name selected — the time it was
+       given — so the first key typed replaces it with a proper name. */
+    if(nameFocus){
+      var nm=q('.pi-log-entry[data-note-id="'+cssEsc(nameFocus)+'"] .pi-log-name',el);
+      nameFocus=null;
+      if(nm){try{nm.focus({preventScroll:true});}catch(e){nm.focus();}nm.select();}
+    }
   }
   function onOutside(e){
     if(!openCard)return;
@@ -12792,6 +12982,8 @@ var Dossier=(function(){
   return {faceHTML:faceHTML,isOpen:isOpen,toggleFold:toggleFold,open:open,close:close,
     rerender:rerender,rebindOpen:rebindOpen,openCard:function(){return openCard;},
     toggleDone:toggleDone,showAllDone:showAllDone,reopenTodo:reopenTodo,
+    setView:setView,startEntry:startEntry,cancelEntry:cancelEntry,fileEntry:fileEntry,
+    newRowKey:newRowKey,renameEntry:renameEntry,nameKey:nameKey,bodyKey:bodyKey,
     archive:archive,del:del};
 })();
 
@@ -15101,6 +15293,9 @@ window.PL={
   toggleFold:Dossier.toggleFold,
   piToggleDone:Dossier.toggleDone,piShowAllDone:Dossier.showAllDone,
   piReopen:Dossier.reopenTodo,
+  logView:Dossier.setView,logEntry:Dossier.startEntry,logCancel:Dossier.cancelEntry,
+  logFile:Dossier.fileEntry,logNewRowKey:Dossier.newRowKey,logRename:Dossier.renameEntry,
+  logNameKey:Dossier.nameKey,logKey:Dossier.bodyKey,
   piArchive:Dossier.archive,piDelete:Dossier.del,
   piEditProject:ProjectForm.openEdit,piSaveEdit:ProjectForm.saveEdit,
   piCancelEdit:ProjectForm.closeEdit,

@@ -2797,6 +2797,10 @@
    says which of its two faces you are looking at. */
 #pane-ledger .pc-dossier-chev{display:inline-block;font-size:11px;line-height:1;
   transition:transform 0.42s cubic-bezier(0.32,0.72,0.28,1)}
+/* A size up from the band's other controls since it carries a word, Log,
+   at Mark's ask (2026-11-03): the bare chevron was the smallest thing on
+   the card for the drawer he opens most. */
+#pane-ledger .pc-dossier{gap:6px;min-height:27px;padding:3px 11px;font-size:11.5px}
 #pane-ledger .pi-fold.pi-open .pc-dossier-chev{transform:rotate(180deg)}
 #pane-ledger .pi-fold.pi-open .pc-dossier{color:var(--gold2);border-color:var(--gold);
   background:rgba(201,168,76,0.12)}
@@ -3376,6 +3380,58 @@
   padding:4px 10px;transition:all 0.13s}
 #pane-ledger .pi-addrow:hover{color:var(--gold2);border-color:var(--gold);background:rgba(201,168,76,0.1)}
 #pane-ledger .pi-rows{display:flex;flex-direction:column}
+/* The two readings of the drawer, a pair of buttons with the one that is
+   up lit, in the head beside the add button it decides. */
+#pane-ledger .pi-views{display:inline-flex;flex-shrink:0;border:1px solid rgba(160,140,90,0.28);
+  border-radius:var(--radius);overflow:hidden}
+#pane-ledger .pi-view{font-family:var(--font);font-size:10px;letter-spacing:0.06em;cursor:pointer;
+  color:#bca070;background:transparent;border:none;padding:4px 10px;transition:all 0.13s}
+#pane-ledger .pi-view+.pi-view{border-left:1px solid rgba(160,140,90,0.28)}
+#pane-ledger .pi-view.on{color:var(--gold2);background:rgba(201,168,76,0.14)}
+/* The log: one entry under another, each edged in its row's colour so the
+   list still says at a glance what kind of note each one is. */
+#pane-ledger .pi-log{display:flex;flex-direction:column}
+#pane-ledger .pi-log-entry{border-top:1px solid rgba(201,168,76,0.14);background:var(--bg);
+  border-left:3px solid var(--rt-col,var(--gold));padding:0.55rem 1.2rem 0.65rem 1rem}
+#pane-ledger .pi-log-entry:first-child{border-top:none}
+#pane-ledger .pi-log-entry:focus-within{background:rgba(201,168,76,0.05)}
+#pane-ledger .pi-log-head{display:flex;align-items:center;gap:12px}
+/* #bca070 rather than --text3, for the reason the hover label gives: small
+   letterspaced type in --text3 does not hold up on this ground. */
+#pane-ledger .pi-log-when{flex-shrink:0;white-space:nowrap;font-family:var(--font);font-size:10px;
+  letter-spacing:0.06em;color:#bca070}
+#pane-ledger .pi-log-row{flex-shrink:0;max-width:180px;display:inline-flex;align-items:center;gap:6px;
+  font-family:var(--body);font-size:13px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#pane-ledger .pi-log-dot{flex-shrink:0;width:10px;height:10px;border-radius:50%;
+  background:var(--rt-col,var(--gold));border:1px solid rgba(0,0,0,0.25)}
+#pane-ledger .pi-log-name{flex:1;min-width:0;font-family:var(--body);font-size:15px;font-weight:600;
+  color:var(--text);background:transparent;border:none;border-bottom:1px solid transparent;padding:2px 0;
+  transition:border-color 0.15s}
+#pane-ledger .pi-log-name:focus{outline:none;border-bottom-color:var(--gold)}
+#pane-ledger .pi-log-name::placeholder{color:#bca070;font-style:italic;font-weight:400}
+#pane-ledger .pi-log-body{font-size:14.5px;line-height:1.6;min-height:26px;padding:3px 0 0}
+/* The "file under" choice that opens over the list when an entry is
+   started: the rows as chips in their own colours, then a box to name a
+   new one. */
+#pane-ledger .pi-compose{padding:0.7rem 1.2rem 0.8rem;background:rgba(201,168,76,0.06);
+  border-bottom:1px solid rgba(201,168,76,0.2)}
+#pane-ledger .pi-compose-lbl{font-family:var(--font);font-size:10px;letter-spacing:0.1em;
+  text-transform:uppercase;color:#bca070}
+#pane-ledger .pi-compose-cats{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin-top:8px}
+#pane-ledger .pi-cat{display:inline-flex;align-items:center;gap:7px;cursor:pointer;
+  font-family:var(--body);font-size:14px;color:var(--text);background:rgba(0,0,0,0.18);
+  border:1px solid var(--rt-col,var(--gold));border-radius:999px;padding:4px 13px;transition:background 0.13s}
+#pane-ledger .pi-cat-new{width:170px;font-family:var(--body);font-size:14px;color:var(--text);
+  background:transparent;border:1px dashed rgba(160,140,90,0.45);border-radius:999px;padding:4px 13px}
+#pane-ledger .pi-cat-new:focus{outline:none;border-color:var(--gold)}
+#pane-ledger .pi-cat-new::placeholder{color:#bca070;font-style:italic}
+#pane-ledger .pi-compose-cancel{font-family:var(--font);font-size:10px;letter-spacing:0.06em;cursor:pointer;
+  color:#bca070;background:transparent;border:none;padding:4px 8px;margin-left:auto}
+@media (hover:hover) and (pointer:fine){
+#pane-ledger .pi-view:not(.on):hover{color:var(--gold2);background:rgba(201,168,76,0.08)}
+#pane-ledger .pi-cat:hover{background:color-mix(in srgb,var(--rt-col,transparent) 18%,rgba(0,0,0,0.18))}
+#pane-ledger .pi-compose-cancel:hover{color:var(--gold2)}
+#pane-ledger .pi-log-name:hover{border-bottom-color:rgba(201,168,76,0.4)}}
 #pane-ledger .pi-empty{padding:1.4rem 1rem}
 #pane-ledger .pi-row{border-top:1px solid rgba(201,168,76,0.14);background:var(--bg);
   transition:background 0.15s,opacity 0.15s}
@@ -4266,7 +4322,7 @@
 #pane-ledger{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 #pane-ledger #root{max-width:100%;padding:0}
 #pane-ledger .hdr-mark{color:#333!important;text-shadow:none!important}
-#pane-ledger #pj-toasts,#pane-ledger #pj-palette,#pane-ledger .hz-beam,#pane-ledger .ct-sheet,#pane-ledger .hdr-right,#pane-ledger .pf-host,#pane-ledger .inline-form,#pane-ledger .btn,#pane-ledger .prt-mail,#pane-ledger .btn-collapse,#pane-ledger .cc-footer,#pane-ledger .board-only,#pane-ledger .todo-actions,#pane-ledger .note-add,#pane-ledger .note-del,#pane-ledger .pi-done-tools,#pane-ledger .ci-row-del,#pane-ledger .ci-addrow,#pane-ledger .pi-row-del,#pane-ledger .pi-addrow,#pane-ledger .pi-row-drag,#pane-ledger .pc-btn,#pane-ledger .proj-row-handle,#pane-ledger .pos-drag-ghost{display:none!important}
+#pane-ledger #pj-toasts,#pane-ledger #pj-palette,#pane-ledger .hz-beam,#pane-ledger .ct-sheet,#pane-ledger .hdr-right,#pane-ledger .pf-host,#pane-ledger .inline-form,#pane-ledger .btn,#pane-ledger .prt-mail,#pane-ledger .btn-collapse,#pane-ledger .cc-footer,#pane-ledger .board-only,#pane-ledger .todo-actions,#pane-ledger .note-add,#pane-ledger .note-del,#pane-ledger .pi-done-tools,#pane-ledger .ci-row-del,#pane-ledger .ci-addrow,#pane-ledger .pi-row-del,#pane-ledger .pi-addrow,#pane-ledger .pi-views,#pane-ledger .pi-compose,#pane-ledger .pi-row-drag,#pane-ledger .pc-btn,#pane-ledger .proj-row-handle,#pane-ledger .pos-drag-ghost{display:none!important}
 #pane-ledger .proj-row,#pane-ledger .call-card,#pane-ledger .todo-card-later,#pane-ledger .ci-table,#pane-ledger .pi-face{
     background:#fff!important;color:#1a1a1a!important;border-color:#bbb!important;
     box-shadow:none!important;break-inside:avoid;page-break-inside:avoid}

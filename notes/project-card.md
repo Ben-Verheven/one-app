@@ -5,7 +5,7 @@ Mechanics are commented in `ledger.js` → THE PROJECT CARD and painted in
 
 **One head band, carrying the title and the controls.** Left: the name,
 its topic, then `Tracker`, `+ Todo` and the project's links. Right: the
-person-month total, `Edit`, and the dossier's chevron. Below the band, the
+person-month total, `Edit`, and the dossier's `Log ▾` button. Below the band, the
 columns — who is on it, what is due, who it is with. **There is no foot
 row**: it read well and cost every card forty points of height while the
 band beside the title stood empty.
@@ -14,7 +14,7 @@ band beside the title stood empty.
 and the links should be the same kind of thing, and offered the honest
 version of "same" — put a departure arrow on Tracker too. I argued they
 should NOT be the same and **he overruled it**: Tracker now wears the same
-form as the links, arrow and all, and only the dossier's chevron is still
+form as the links, arrow and all, and only the dossier's `Log ▾` is still
 a boxed control. Edit is bare text. The pile before that was the mistake:
 a filled button, two bordered ones and a boxed chevron beside two
 underlined links, five weights inside four centimetres. Mark: **"This is
@@ -58,6 +58,18 @@ me to this project". **When the drawer is being left shut it has to be
 shut FIRST**: `Dossier.openCard` outlives leaving a call, so a card opened
 earlier in the same call renders open again the moment `CallCard` redraws
 — and the caller who asked for no drawer would get somebody else's.
+
+## The dossier is a log, 2026-11-03
+
+Mark asked for the drawer's button a size up and named `Log`, and for the
+drawer to read two ways: **By time**, every note in every row on one list,
+newest first, each showing when it was written, the row it is filed under,
+its name and its body, all editable in place; or **By row**, the rows as
+they were. Same notes either way, nothing copied. `+ Entry` asks the row
+first (any row, or a new one named there), then opens the entry with its
+name set to the time and selected, so a proper name types over it. A note
+added from the row view is named for the time too. Which view is up is
+kept per browser, not in the journal. The Completed row shows only By row.
 
 ## Saying which card a jump landed on, 2026-09-11
 
