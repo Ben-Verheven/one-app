@@ -3741,10 +3741,12 @@ function leadRowHTML(a,l,hit,say){
   const editBtn=done?'':'<button class="lact ledit" data-act="leadEdit" '+ids+' '+
       'title="Edit everything on this lead — its name, who, links, addresses and updates">✎ Edit</button>';
   /* Limbo, between them (Mark, 2026-10-28, from a drawn sheet): a lead put
-     aside without being closed, which keeps its step and comes back to it */
+     aside without being closed, which keeps its step and comes back to it.
+     The button says what it does, Limbofy (Mark, issue #24): "Limbo" alone
+     read as the name of a place rather than a thing to press. */
   const limboBtn=done?'':'<button class="lact llimbo" data-act="leadLimbo" '+ids+' '+
       'title="'+(limbo?'Back to its step, '+STAGE_NAME[st]:'Put aside without closing it: it keeps its step, and leaves the Ledger\u2019s board')+'">'+
-      (limbo?'Bring back':'Limbo')+'</button>';
+      (limbo?'Bring back':'Limbofy')+'</button>';
   const headActs=open&&!editing&&!ending?'<span class="lheadacts">'+editBtn+limboBtn+doneBtn+'</span>':'';
   /* While editing the row under the card is the way out of the edit, and
      while Complete is asking how the lead ended it is the three answers. */
@@ -3810,7 +3812,7 @@ function leadRowHTML(a,l,hit,say){
               leadScoreHTML(a,l,done)+when+
             '</div>')+
       '</div>';
-  return '<article class="lead k-'+st+(say?' wide':'')+(due?' due':'')+(done?' done':'')+(hit?' hit':'')+
+  return '<article class="lead k-'+st+(say?' wide':'')+(due?' due':'')+(done?' done':'')+(hit?' hit':'')+(limbo?' limbo':'')+
       (open?' open':'')+(editing?' editing':'')+(tone?' toned':'')+
       '"'+(tone?' style="--tone:'+esc(tone)+'"':'')+' data-lid="'+l.id+'" data-act="leadOpen" '+ids+'>'+
     /* Shut, a lead is its ruit beside two lines: what it is, and under it,
@@ -5060,9 +5062,12 @@ document.addEventListener('click',e=>{
     case 'leadEndCancel':{leadRedo(cardOf(b));break;}
     /* the project a closed lead became, opened in the Ledger by the bridge */
     case 'leadProject':{try{Hub.emit('semaphore:openProject',b.dataset.p);}catch(e){console.error(e);}break;}
+    /* A lead sent to Limbo shuts as it goes (Mark, issue #24): it is put
+       aside, and it used to land in Limbo still open, its boxes spread over
+       the band as if it were being worked on. Bring back leaves it open. */
     case 'leadLimbo':{const ar=arena(id);if(!ar)break;
       const l=(ar.leads||[]).find(x=>x.id===b.dataset.l);if(!l||l.doneAt)break;
-      leadMove(cardOf(b),()=>{if(l.limbo)delete l.limbo;else l.limbo=todayISO();restack();});break;}
+      leadMove(cardOf(b),()=>{if(l.limbo)delete l.limbo;else{l.limbo=todayISO();leadOpen.delete(l.id);}restack();});break;}
     /* the button says it worked, in place of a toast over the card */
     case 'copyMail':{const v=b.dataset.v;if(!v)break;
       copyText(v,ok=>{b.textContent=ok?'Copied':'Not copied';

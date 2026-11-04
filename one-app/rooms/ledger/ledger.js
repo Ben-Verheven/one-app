@@ -9069,11 +9069,11 @@ var Leads=(function(){
       +'onchange="PL.leadDue(\''+k+'\',this.value,event)" /></span>';
 
     var gap='<span class="todo-actions-gap"></span>';
-    /* Edit, Limbo and Complete stand at the head of the open card, on the
+    /* Edit, Limbofy and Complete stand at the head of the open card, on the
        line they change, as on the Semaphore's Leads (Mark, 2026-11-02: the
        lead the same everywhere). The row of buttons under the head went:
        + Add update moved onto the Updates box, and links and addresses are
-       added through Edit, as there. Limbo puts the lead aside without
+       added through Edit, as there. Limbofy puts the lead aside without
        closing it, which takes it off this board. */
     var headActs='<span class="lead-headacts">'
       +'<button type="button" class="lead-act lead-act-edit" '
@@ -9081,7 +9081,7 @@ var Leads=(function(){
         +'onclick="PL.leadBeginEdit(\''+k+'\',event)">✎ Edit</button>'
       +'<button type="button" class="lead-act" '
         +'title="Put aside without closing it: it keeps its step, and leaves the Ledger’s board" '
-        +'onclick="PL.leadLimbo(\''+k+'\',event)">Limbo</button>'
+        +'onclick="PL.leadLimbo(\''+k+'\',event)">Limbofy</button>'
       +'<button type="button" class="lead-act lead-act-done" '
         +'title="Done with this one — say how it ended; it stays in the Brokerage Semaphore’s record" '
         +'onclick="PL.leadDone(\''+k+'\',event)">'

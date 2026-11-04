@@ -239,9 +239,9 @@ calls land on the Call Board. What still holds of the board:
   rework of 2026-10-21/22 put the Semaphore's lead, below, ahead; on
   2026-11-02 Mark had the Ledger's card brought up to it: the Leads line,
   shut (arena tag, title beside match, score, day as a pill), and open,
-  Edit, Limbo and Complete at its head, Who and Links side by side and
-  Updates with + Add update under them. The ✉ and Limbo work there too;
-  Limbo takes the lead off the Ledger's board. Below a wide desk the three
+  Edit, Limbofy and Complete at its head, Who and Links side by side and
+  Updates with + Add update under them. The ✉ and Limbofy work there too;
+  Limbofy takes the lead off the Ledger's board. Below a wide desk the three
   buttons take a line of their own under the head.
 - **Venues and Leads, a pair in the middle of the header** (2026-10-25):
   the same rounded button, height and type, Venues in the board's bone with
@@ -302,10 +302,12 @@ calls land on the Call Board. What still holds of the board:
   fitted and over two lines; everywhere since 2026-11-02).
 - **Limbo, a fourth band at the foot of Leads** (2026-10-28), in Venues'
   Limbo's fog, chosen from three drawn over a folded band and a button in
-  the head: a lead put aside without being closed, by Limbo between Edit and
+  the head: a lead put aside without being closed, by Limbofy between Edit and
   Complete, keeping its step and going back to it with Bring back. It is
   owed nothing and leaves the Ledger's board, as he asked; the Excel lists
-  it in a Limbo section of its own after Spotted.
+  it in a Limbo section of its own after Spotted. Since issue #24
+  (2026-11-04) the button says Limbofy, the lead shuts as it goes there,
+  and it wears Limbo's green and mist, in an arena's panel too.
 - **A lead Mark's Place made can be sent on as an entry is there**
   (2026-10-28): PDF and Copy for email on its Links box, the same sheet as
   Mark's Place's. Both went on 2026-10-31, superfluous once the ✉ below

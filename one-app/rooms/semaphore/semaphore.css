@@ -697,6 +697,18 @@
 #pane-semaphore #card .lead.k-spotted{--rc:#56657A}
 #pane-semaphore #card .lead.k-contacted{--rc:#8E5F22}
 #pane-semaphore #card .lead.k-talking{--rc:#3F7A4A}
+/* A lead in Limbo wears Limbo's colours, wherever it stands (Mark, issue
+   #24): its edge and its ruit in the band's pale spectral green rather than
+   its arena's and its step's, and opened on Leads, the mist's cold ground
+   instead of the warm paper that made it look like a lead still being
+   worked. The arena tag keeps its type's colour, as it says whose lead it
+   is. In an arena's panel, where it still stands in its step, the green is
+   taken down to read on the light paper, and its ground tinted with it. */
+#pane-semaphore .lead.limbo{--rc:#A6E9CF;border-left-color:#A6E9CF}
+#pane-semaphore .lead.wide.limbo:not(.open){border-left-color:transparent}
+#pane-semaphore .lead.wide.limbo.open{border-color:rgba(170,215,205,.3);border-left-color:#A6E9CF;
+  background:linear-gradient(180deg,#1B2023,#15181B)}
+#pane-semaphore #card .lead.limbo{--rc:#3C7A66;border-left-color:#3C7A66;background:color-mix(in srgb,#A6E9CF 22%,var(--field))}
 #pane-semaphore .lruit line{stroke:var(--ltrack);stroke-width:1.3}
 #pane-semaphore .lruit line.on{stroke:var(--rc)}
 #pane-semaphore .ldot{position:absolute;width:16px;height:16px;margin:-8px 0 0 -8px;padding:0;
