@@ -278,6 +278,19 @@ body.pw-selecting #toast{bottom:calc(var(--sb) + 68px)}
 #sheet-body .pw-page.pw-from-l{animation:pwFromL .24s cubic-bezier(.2,.8,.2,1)}
 .pw-of{display:block;margin-bottom:6px;font-size:13px;color:var(--label2)}
 .pw-of .pw-flags{display:inline-flex;margin:0 0 0 10px}
+/* On the entry the tags are read at a glance before the text, so they
+   stand larger than in the list and each in a tint of its own colour, the
+   ink darkened to read on it: as coloured words the size of the count
+   beside them, Marked and Seeks partners were easy to miss (Mark,
+   2026-11-04, issue #30). */
+.pw-of .pw-flags{gap:6px 8px;vertical-align:1px}
+.pw-of .pw-flags span{padding:4px 11px;border-radius:99px;font-size:15px;font-weight:600;line-height:1.2;background:#ECE5D7;gap:4px}
+.pw-of .pw-flags svg{width:15px;height:15px}
+.pw-of .pw-flags .seeks,.pw-of .pw-flags .gone{background:#F7DED8;color:#A02C25}
+.pw-of .pw-flags .offers{background:#E2E2F5}
+.pw-of .pw-flags .interesting{background:#F5E3BC;color:#7A4700}
+.pw-of .pw-flags .chg{background:#F1E7C2}
+.pw-of .pw-flags .newtag{background:#DDEBD3;color:#276623}
 #sheet .pw-page h2{font:700 28px/1.15 var(--ui);margin:0 0 6px}
 .pw-dsub{margin:0 0 4px;font-size:17px;color:var(--label2)}
 .pw-meta{margin:0;font-size:13px;color:var(--label3);overflow-wrap:anywhere}
@@ -328,6 +341,10 @@ a.pw-cell{text-decoration:none}
 #sheet .pw-txt p{margin:0 0 .75em}
 #sheet .pw-txt p.none{color:var(--label3);font-style:italic}
 #sheet .pw-plain{margin:16px 2px 0;font-size:15px;color:var(--label2);line-height:1.4}
+/* While its text loads, an entry keeps a screen's room for it, so what
+   follows the text (Open on the Site, Why) is not shown for a moment
+   under the title and then pushed away (issue #30). */
+#sheet .pw-plain.pw-wait{min-height:100vh}
 .pw-fold summary{min-height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 14px 0 16px;list-style:none;cursor:pointer;color:var(--label)}
 .pw-fold summary::-webkit-details-marker{display:none}
 .pw-fold summary::after{content:"";width:8px;height:8px;border-right:2px solid #5A5A5F;border-bottom:2px solid #5A5A5F;transform:rotate(-45deg);transition:transform .15s}
@@ -1121,7 +1138,7 @@ function pwBody(host, e){
     host.appendChild(el('p', 'pw-plain', e.needs_fetch ? 'Only the list line is in so far. The full entry page is copied at the next night\'s run.' : 'Only the list line is in: the site would not give the full entry page. The check at the top asks for it again.'));
     return;
   }
-  if (!d){ host.appendChild(el('p', 'pw-plain', d === null ? 'The entry could not be loaded. Go back and pull down on the list to try again.' : 'Loading the entry…')); return; }
+  if (!d){ host.appendChild(el('p', 'pw-plain' + (d === null ? '' : ' pw-wait'), d === null ? 'The entry could not be loaded. Go back and pull down on the list to try again.' : 'Loading the entry…')); return; }
   var parts = pwSplit(d.fields || []);
   if (!parts.long.length) host.appendChild(el('p', 'pw-plain', 'This entry has no long text; everything it says is in the details below.'));
   parts.long.forEach(function(f){
@@ -1251,17 +1268,32 @@ function pwOpen(id){
   });
   pwDrawArenas(); pwDrawRows();
   if (e.fetched_at && !pwDetail[id]){
-    Promise.all([
-      rest('partner_entries?select=fields,page_text&id=eq.' + encodeURIComponent(id)),
-      rest('partner_entry_versions?select=page_text,saved_at,copied_at&order=saved_at.desc&entry_id=eq.' + encodeURIComponent(id))
-    ]).then(function(r){
-      pwDetail[id] = { fields:((r[0] || [])[0] || {}).fields, page_text:((r[0] || [])[0] || {}).page_text, versions:r[1] || [] };
-    }, function(err){ pwDetail[id] = null; console.error(err); }).then(function(){
+    pwFetch(id).then(null, function(err){ pwDetail[id] = null; console.error(err); }).then(function(){
       var host = $('#pw-body');
       if (pwOpenId === id && host && $('#sheet').classList.contains('up')) pwBody(host, e);
       if (pwDetail[id] === null) delete pwDetail[id];
     });
   }
+  /* The entries either side are fetched now, while this one is read. A
+     binned entry turned to the next one while its text was still on the
+     way, so for a moment the page held only the title over Open on the
+     Site, and then the text pushed that down: Mark saw it as a jump to
+     the links before the entry itself (2026-11-04, issue #30). */
+  [list[at + 1], list[at - 1]].forEach(function(n){ if (at >= 0 && n) pwFetch(n.id).catch(function(){}); });
+}
+var pwFetching = {};
+function pwFetch(id){
+  var e = pwById[id];
+  if (pwFetching[id]) return pwFetching[id];
+  if (!e || !e.fetched_at || pwDetail[id]) return Promise.resolve();
+  var run = pwFetching[id] = Promise.all([
+    rest('partner_entries?select=fields,page_text&id=eq.' + encodeURIComponent(id)),
+    rest('partner_entry_versions?select=page_text,saved_at,copied_at&order=saved_at.desc&entry_id=eq.' + encodeURIComponent(id))
+  ]).then(function(r){
+    pwDetail[id] = { fields:((r[0] || [])[0] || {}).fields, page_text:((r[0] || [])[0] || {}).page_text, versions:r[1] || [] };
+  });
+  run.then(null, function(){}).then(function(){ delete pwFetching[id]; });
+  return run;
 }
 /* Back to the list: the entry slides away to the right, as it came. */
 function pwBack(){
@@ -1272,11 +1304,13 @@ function pwBack(){
 }
 /* The next entry down the list as it was when this one was opened, so a
    binned entry leaving the list does not move the place. At the foot the
-   sheet closes on the list. */
+   sheet closes on the list, drawn afresh: it was last drawn when the entry
+   opened, so the last one binned still stood in it (Mark, 2026-11-04,
+   issue #30). */
 function pwNext(e, list){
   var i = list.indexOf(e), n = i >= 0 ? list[i + 1] : null;
   if (n) pwTurn(n.id, 'r');
-  else { shut(); toast('That was the last one in this list'); }
+  else { pwDrawArenas(); pwDrawRows(); shut(); toast('That was the last one in this list'); }
 }
 function pwTurn(id, from){
   pwOpen(id);

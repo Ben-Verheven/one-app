@@ -211,7 +211,7 @@ body.drawer .veil{display:block;position:absolute;inset:0;z-index:3;background:r
 .st.newtag{border-color:var(--new-line);color:var(--new-ink)}
 .st.gone{color:var(--warn-ink);border-color:var(--warn-line)}
 .empty{padding:22px 16px;color:var(--muted);font-size:14px}
-.det{padding:18px 28px 40px;max-width:1120px;container-type:inline-size;container-name:entry}
+.det{--det-w:1120px;padding:18px 28px 40px;max-width:var(--det-w);container-type:inline-size;container-name:entry}
 #detwrap{background:var(--sheet)}
 /* The scrollbar's room is kept whether or not the entry is long enough to
    scroll. A desk with a mouse shows a real scrollbar, and the entry, short
@@ -247,6 +247,11 @@ body.drawer .veil{display:block;position:absolute;inset:0;z-index:3;background:r
 .sec .txt p.none{color:var(--faint);font-style:italic}
 .sec.lead .txt{font-size:17px}
 .dhead{display:flex;gap:14px;align-items:flex-start}
+/* Over the entry the tags stand a size up from the list's, Seeks partners
+   ruled round as Marked is, because at the list's size Mark missed them
+   on the iPad (2026-11-04, issue #30). */
+.dhead .tags .kind,.dhead .tags .st{font-size:14px;padding:3px 10px;border-radius:5px}
+.dhead .tags .kind.seeks{border:1px solid rgba(194,56,44,.45)}
 .dtitle{font:400 23px/1.25 var(--serif);margin:6px 0 0;text-wrap:balance}
 .dsub{color:var(--muted);font-size:14px;margin-top:3px}
 .dshare{display:flex;gap:6px;flex:none}
@@ -354,16 +359,20 @@ body.drawer.leads .rd-leads{background:rgba(141,85,69,.12)}
   body{min-width:0}
   #total{display:none}
   #sbox{min-width:220px}
-  .det{max-width:700px}
+  .det{--det-w:700px}
   .dtitle{font-size:26px}
   .sec .txt,.sec.lead .txt{font-size:18px;line-height:1.65}
 }
 /* The page turn (see turnPage). The pane takes vertical scrolling for
    itself and leaves sideways movement to the page, and the page in motion
    is a sheet with edges, so two of them side by side read as two pages
-   rather than one smear of text. */
+   rather than one smear of text. The sheet is the whole reader's width,
+   its text held where it stands by the padding: the column alone, on the
+   iPad narrower than the screen, slid as a page cut out of it, with bare
+   paper either side (Mark, 2026-11-04, issue #30). */
 #detwrap{position:relative;overflow-x:hidden;touch-action:pan-y pinch-zoom}
-.det.turning{background:var(--sheet);min-height:100%;box-shadow:0 0 0 1px var(--grid),0 6px 28px rgba(42,38,32,.16);will-change:transform}
+.det.turning{background:var(--sheet);min-height:100%;box-shadow:0 0 0 1px var(--grid),0 6px 28px rgba(42,38,32,.16);will-change:transform;
+  max-width:none;padding-left:calc(max(0px,(100% - var(--det-w)) / 2) + 28px);padding-right:calc(max(0px,(100% - var(--det-w)) / 2) + 28px)}
 .det.ghost{position:absolute;left:0;right:0;pointer-events:none;z-index:3}
 .banner{padding:8px 18px;background:var(--brok-soft);color:var(--warn-ink);font-size:13.5px;flex:none}
 /* ── the search's results (see "the search" in the script) ────────────
