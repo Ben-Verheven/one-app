@@ -228,7 +228,11 @@ calls land on the Call Board. What still holds of the board:
   his own order (dragged), its Brokerage text and pages, and every date as
   a list. Under its leads' Closed line, its count: leads so far, how many
   reached Talking, how many became projects. Until then it was narrow and
-  opened on its texts, its dates last.
+  opened on its texts, its dates last. On its slice a call's tag and
+  name, cut short, are read whole by hovering over them, or on the iPad
+  by a tap, standing over the strip rather than taking width from it for
+  good (issue 23, 2026-11-04): Mark wanted them readable without losing
+  the timeline.
 
 ## Leads
 

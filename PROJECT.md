@@ -124,7 +124,7 @@ Hub.api('semaphore')       → { state(), save(), renderAll(),
                                finds(), refreshFinds(cb),
                                judge(key, verb, type, cb), seen(aid),
                                frozen(), thaw(aid), leadAdd(aid, v), allLeads(),
-                               openArena(aid), openFind(f), closeFind(),
+                               openArena(aid), setTexts(o), openFind(f), closeFind(),
                                gpt(kind), escape() }
 Hub.api('atlas')           → { openDossier(), G, state(), applyState(obj) }
 Hub.api('notes')           → { state(), applyState(obj), mails() }
@@ -169,7 +169,8 @@ What the bridge actually does: turns any researcher's name, written
 anywhere in any room, into a link that opens the Atlas dossier over the
 top of the room you are in; lends the Call Board's reader the same way, so
 a project written for a Horizon topic reads that topic, and a call tied to
-an arena's call reads its kept text, without leaving the Ledger; fills the
+an arena's call reads its kept text, without leaving the Ledger, and so
+does a call's row in an arena's or a venue's panel; fills the
 socket the Ledger picks a topic or an arena's call from, with the dates the
 Semaphore and the Horizon check have for them now, and tells the Ledger
 when they may have changed, so it can offer the change; fills a second
@@ -488,7 +489,7 @@ and the agent's task still say the Marketplace; it is the same room.
 | the visit question, at the foot of the room after Go | `#vbar` › `.vask.bar` |
 | Leads: the table, its heading of columns that sort, a step's coloured band and Limbo's at the foot, one lead's line, and open, its Who, Links and Updates boxes | `.ltable` › `.lthead` (`.ltc`), `.lgrp` › `.lgh`, `.lgrp.k-limbo`, `article.lead.wide`; `.lpane`, `.lupdpane` |
 | the types, managed — opened by Types: a type's line and its grip, its arenas one per row, its colour dot, the copy that follows a drag | `#typesModal` › `#tylist` › `.tyblock` (`.tyline` › `.tygrip`, `.tyarenas` › `.tyrow`); `.lcolwrap.tycol`; `.tyghost` |
-| a venue's panel, wider (`#card.vwide`): what a search found or changed and what to do with it, the Call Board's view of it under that, its facts two to a row, the rest folded; going through what was found, the band over it all | `.vfound` (`.vfch`), `.vsnip` (its lane `.sr.lane`, a call `.sr`), `.vfacts` › `.vf`, `.vfolds` › `.vfold` › `.vfh`; `.vwalk` |
+| a venue's panel, wider (`#card.vwide`): what a search found or changed and what to do with it, the Call Board's view of it under that, its facts two to a row, the rest folded; going through what was found, the band over it all | `.vfound` (`.vfch`), `.vsnip` (its lane `.sr.lane`, a call `.sr.call`, read whole as `.full` by a tap, its kept text from `.snt`), `.vfacts` › `.vf`, `.vfolds` › `.vfold` › `.vfh`; `.vwalk` |
 | the drawer, holding an arena or a venue; an arena's venues in it; a link's cross, and the press that makes a brokerage link a venue; where a venue stands, the four sections tied together with Remove beside them (`.vphseg`); a venue's ask to the agent | `#card` and its `.scrim`; `.avlist` › `.avrow`; `.ldel`, `.lmake`; `.vplace`; `.vagent` |
 
 **The Call Board** — the tabs are the bar, `#hdr` › `.tabs` › `.tsel`:
@@ -503,8 +504,9 @@ what a search finds elsewhere under it in `#tlaway`; a topic opens in
 longer has, or has moved, is `.topic.gone` with its `.hztag`; a change the
 portal brought glows (`.fresh`) until its `.seen`. On an arena's tab a call is a row, `.arow`, whose chip,
 `.achip.stag`, names the arena, the first of each arena's rows `.afirst`, and
-one with a new date glows (`.fresh`) until its `.seen` is pressed; an arena
-opened there is `.aopen`, a call's kept text opening from its `.tbtn`, and where a tab holds several types each is named
+one with a new date glows (`.fresh`) until its `.seen` is pressed; pressing
+a row opens its arena's panel, the Semaphore's drawer lent over the Board,
+and where a tab holds several types each is named
 over its arenas by a `.tyh`. The Freezer tab draws every arena put away
 the same way, its tag `.frz`, with a `.thaw` on each. What waits to be judged is counted on `#jpill` and dotted on
 its tab (`.fd`) and on the triangle's point (`.pt.fd`); while judging, the new arena stands dashed in its tab, a

@@ -2228,8 +2228,8 @@ const vFolds=new Set();
 /* The calls a venue is for: those of its arenas whose last deadline is
    still ahead when it opens, since a brokerage event is for proposals
    still to be written, or
-   all of them where none is. Each arena wears its type's colour, its round
-   in force full and the next ones pale, as on the Call Board. */
+   all of them where none is. Each arena wears its type's colour, lighter
+   the further off a call is, as on the Call Board (snipRuns). */
 function vSnipHTML(v){
   const w=vWin(v),now=T(todayISO());
   const rows=[];
@@ -2256,11 +2256,31 @@ function arenaSnipHTML(a,ghost){
     '<span class="st"><span class="snone">the next search for calls fills them in</span></span></div>':null;
   return snipFrame([],rows,ghostRow,!ghost&&!rows.length?'No call dates on the board yet.':'');
 }
-/* an arena's runs, each in its type's colour, its round in force full and
-   the next ones pale, as on the Call Board */
+/* An arena's runs in the Call Board's colours, which since issue 23
+   (2026-11-04) are the same here to the shade: its type's colour, full
+   within three months, lighter beyond six and twelve (nearness there),
+   frosted for an arena put away, its ticks and its tag's edge in a dark
+   ink of that colour, and its tag the very colour of its bar. The round
+   in force full and the next ones pale stood here after the Call Board
+   had left that rule (2026-10-28), so a call's bar was one colour in the
+   panel and another on the Board. */
+const SNIP_PAPER='#F7F3E9';
+const hexMix=(a,b,t)=>'#'+[1,3,5].map(i=>Math.round(parseInt(a.substr(i,2),16)*t+parseInt(b.substr(i,2),16)*(1-t)).toString(16).padStart(2,'0')).join('');
+/* the room's ink on a colour, or black where the ink would read under 4.5 */
+function snipInk(bg){
+  const L=h=>{const v=[1,3,5].map(i=>{const c=parseInt(h.substr(i,2),16)/255;return c<=.03928?c/12.92:Math.pow((c+.055)/1.055,2.4);});
+    return .2126*v[0]+.7152*v[1]+.0722*v[2];};
+  return (L(bg)+.05)/(L('#2C2418')+.05)>=4.5?'#2C2418':'#000000';
+}
 function snipRuns(a){
-  const {live,last}=callRuns(a),tone=arenaTone(a)||'#9C8B66';
-  return (last?[last]:[]).concat(live).map(r=>({a,r,tone,pale:live.indexOf(r)>0}));
+  const {live,last}=callRuns(a),tone=/^#[0-9a-f]{6}$/i.test(arenaTone(a))?arenaTone(a):'#9C8B66',now=T(todayISO());
+  const near=r=>{const dl=r.dls[0],d=dl||r.open;if(!d||!d.start)return 1;
+    const m=((dl?snipDl(dl):T(d.start))-now)/(30.4*DAY);return m<=3?1:m<=6?.66:m<=12?.42:.3;};
+  const ink=hexMix(tone,'#2C2418',.45);
+  return (last?[last]:[]).concat(live).map(r=>{
+    const c=hexMix(tone,SNIP_PAPER,near(r)),col=a.frozenAt?hexMix(c,'#DDE4E6',.5):c;
+    return {a,r,tone:ink,col,on:snipInk(col)};
+  });
 }
 const snipDl=d=>T((d.gran==='day'||d.gran==='range')?d.start:(d.end||d.start));
 const snipLast=r=>r.close?snipDl(r.close):T(r.open.end||r.open.start);
@@ -2299,8 +2319,7 @@ function snipFrame(ts,calls,lane,none){
     if(d.getMonth()===0||i===0)axis+='<span class="sy" style="left:'+pc(a)+'">'+d.getFullYear()+'</span>';
   }
   if(now>=t0&&now<t1)grid+='<b style="left:'+pc(now+DAY/2)+'" title="today"></b>';
-  const bars=({r,tone,pale})=>{
-    const col=pale?'color-mix(in srgb,'+tone+' 42%,#F7F3E9)':tone;
+  const bars=({r,tone,col})=>{
     const soft=(sp,dir)=>'<i class="ssoft" style="left:'+pc(sp[0])+';width:'+wd(sp[0],sp[1])+';background:linear-gradient(90deg,'+
       (dir==='in'?'transparent,'+col:dir==='out'?col+',transparent':'transparent,'+col+' 50%,transparent')+')"></i>';
     const so=r.open?snipSoft(r.open):null,s1=r.dls.length?snipSoft(r.dls[0]):null,s2=r.dls.length>1?snipSoft(r.dls[r.dls.length-1]):null;
@@ -2310,7 +2329,7 @@ function snipFrame(ts,calls,lane,none){
     if(!r.dls.length&&!r.opens.length&&r.anns[0])
       return soft([T(r.anns[0].start),T(r.anns[0].end||r.anns[0].start)+DAY],'both');
     if(so)h+=soft(so,'in');
-    if(o!==null&&d1!==null)h+='<i class="sbar" style="left:'+pc(o)+';width:'+wd(o,d1)+';background:'+col+';border-color:'+tone+'"></i>';
+    if(o!==null&&d1!==null)h+='<i class="sbar" style="left:'+pc(o)+';width:'+wd(o,d1)+';background:'+col+';border-color:'+col+'"></i>';
     else if(o!==null)h+='<i class="sbar fade" style="left:'+pc(o)+';width:'+wd(o,o+120*DAY)+';--fc:'+col+'"></i>';
     if(s1)h+=soft(s1,d2!==null?'both':'out');
     if(d2!==null&&d2>d1){const e1=s1?s1[1]:d1;h+='<i class="sbar2" style="left:'+pc(e1)+';width:'+wd(e1,d2)+';--fc:'+col+'"></i>';}
@@ -2326,9 +2345,16 @@ function snipFrame(ts,calls,lane,none){
      room there is; a name that would be left a word or less stays whole */
   const own=(nm,an)=>{const a=an.toLowerCase().split(/\s+/),w=nm.split(/\s+/);let i=0;
     while(i<w.length&&i<a.length&&w[i].toLowerCase()===a[i])i++;return w.length-i>1?w.slice(i).join(' '):nm;};
-  const callRow=x=>{const nm=callBase(dtLabel(x.r.all[0]))||dtLabel(x.r.all[0]);
-    return '<div class="sr" title="'+esc(x.a.name+' — '+nm+(say(x.r)?'\n'+say(x.r):''))+'"><span class="sl"><span class="schip" style="--tone:'+esc(x.tone)+'">'+esc(x.a.name)+'</span>'+
-      '<span class="sn">'+esc(own(nm,x.a.name))+'</span></span><span class="st">'+bars(x)+'</span></div>';};
+  /* A call's row: its arena's tag and its name, cut short to the strip's
+     margin, are read whole by hovering over them, or on the iPad by a tap
+     (snipFull), standing over the strip until the pointer leaves or the
+     tap is repeated (Mark, issue 23, 2026-11-04: names and tags readable
+     without giving up the timeline). Its kept text on the Call Board, if
+     any, opens from ▤ Text beside its name (boardTexts). */
+  const callRow=x=>{const nm=callBase(dtLabel(x.r.all[0]))||dtLabel(x.r.all[0]),names=[...new Set(x.r.all.map(dtLabel))];
+    const txt=boardTexts&&boardTexts.has(x.a.id,names)?'<button class="btn ghost snt" data-act="callText" data-a="'+esc(x.a.id)+'" data-names="'+esc(JSON.stringify(names))+'" title="Read the call’s official text, kept on the Call Board">▤ Text</button>':'';
+    return '<div class="sr call" title="'+esc(x.a.name+' — '+nm+(say(x.r)?'\n'+say(x.r):''))+'"><span class="sl" data-act="snipFull"><span class="schip" style="--tone:'+esc(x.tone)+';background:'+x.col+';color:'+x.on+'">'+esc(x.a.name)+'</span>'+
+      '<span class="sn">'+esc(own(nm,x.a.name))+'</span>'+txt+'</span><span class="st">'+bars(x)+'</span></div>';};
   return '<div class="vsnip">'+
     '<div class="sax"><span class="sl"></span><span class="st">'+axis+'</span></div>'+
     '<div class="sbody"><div class="sgrid">'+grid+'</div>'+
@@ -2705,8 +2731,9 @@ function freshSaid(a){
    fold saying in a word what is in it: its About and links, its brokerage
    and every date as a list. It opened on its About and brokerage texts,
    narrow, with the dates last, until then. Site and Reference stand under
-   its name, as on the Call Board's frame (see arenaLinks there): the first
-   link to a web page and the first to a document. */
+   its name, as they stood on the Call Board's frame of an arena opened
+   until issue 23: the first link to a web page and the first to a
+   document. */
 const isDocUrl=u=>/\.(pdf|docx?|pptx?|xlsx?)([?#]|$)/i.test(u||'');
 function arenaGoHTML(a){
   const web=(a.links||[]).filter(l=>/^https?:\/\//i.test(l.url||''));
@@ -2970,7 +2997,7 @@ function findTextHTML(f){
     '</div>'+
     '<div class="vfound"><p class="vfq"><b>New</b><span>The text of a call on your board: '+esc(x.arena||'')+(x.call?' · '+esc(x.call):'')+'</span></p>'+
       '<div class="fjudge"><span class="ftw">Word for word, with the whole a link away</span><span class="sp"></span>'+
-        '<button class="btn primary" data-act="fJudge" data-v="add" title="Keep it beside its call, to read from the arena opened on the Call Board">Keep it with the call</button>'+
+        '<button class="btn primary" data-act="fJudge" data-v="add" title="Keep it beside its call, to read from its arena’s panel">Keep it with the call</button>'+
         '<button class="btn" data-act="fJudge" data-v="no" title="Not this text; it does not come back">No</button></div></div>'+
     '<div class="ftext">'+(x.sections||[]).map(s=>(s.h?'<h4>'+esc(s.h)+'</h4>':'')+(s.p||[]).map(para).join('')).join('')+
       '<button class="btn" data-act="fRead">'+(x.more?'Read it all ▸':'Read it in the reader ▸')+'</button></div>';
@@ -3136,6 +3163,12 @@ function wallLinks(a,scope,rows){
    arenas are handed over apart (frozen, below), for the Call Board's
    Freezer tab. Each date keeps its id, by which the Ledger's key dates
    copied from it find it again when it changes. */
+/* A call's text kept on the Call Board, offered from its row on an
+   arena's or a venue's strip: the bridge hands over whether one is kept
+   and how to read it (setTexts below). It opened from the frame of an
+   arena opened on the Call Board until Mark had the frame taken away
+   (issue 23, 2026-11-04); without the bridge no row offers one. */
+let boardTexts=null;
 function callsForBoard(){
   const out=[];
   S.types.map(t=>t.id).concat([null]).forEach(id=>
@@ -4990,6 +5023,10 @@ document.addEventListener('click',e=>{
     case 'gptKind':openGpt(b.dataset.gpick);break;
     case 'gptPut':gptPut();break;
     case 'openArena':openDrawer(id);break;
+    /* the panel is put away for the reader, which is the Call Board's */
+    case 'callText':{const names=JSON.parse(b.dataset.names||'[]'),aid=b.dataset.a;closeDrawer();if(boardTexts)boardTexts.open(aid,names);break;}
+    /* a name cut short, read whole by a tap where nothing hovers */
+    case 'snipFull':if(matchMedia('(hover:none)').matches)b.closest('.sr').classList.toggle('full');break;
     case 'openDate':openDrawer(b.dataset.a,b.dataset.d);break;
     case 'closeDrawer':closeDrawer();break;
     case 'fJudge':{const f=drawer.find;if(!f)break;const sel=$('#card select[data-ftype]');
@@ -5730,6 +5767,7 @@ try{
     /* every lead, closed ones too, for the weekly Excel the bridge writes */
     allLeads:   function(){ return leadsForExcel(); },
     openArena:  function(aid){ if(arena(aid))openDrawer(aid); },
+    setTexts:   function(o){ boardTexts=o; },
     /* a new arena being judged on the Call Board, as the panel it will
        become (see openFind), and its shutting once judging is over */
     openFind:   function(f){ openFind(f); },

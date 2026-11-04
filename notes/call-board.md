@@ -61,9 +61,12 @@ undo it.
   hover, in a search and in its panel.
 - **The Semaphore's colours and tags** (issue 2, 2026-10-28): an arena
   wears its type's colour from Types, its name in the Semaphore's tag (a
-  wash with a solid edge at its left, in italic), so the two rooms read as
-  one. A call is lighter the further off it is, on its bar and on its
-  tag alike: full within three months, lighter beyond six and twelve.
+  solid edge at its left, in italic), so the two rooms read as one. A call
+  is lighter the further off it is, on its bar and on its tag alike: full
+  within three months, lighter beyond six and twelve. Since issue 23
+  (2026-11-04) the tag is the very colour of its bar, no longer a pale
+  wash of it, and an arena's panel draws its calls in the same colours
+  and tags; it still drew the round in force full and the next pale.
   Mark chose that over full for the round a call is in and pale for the
   next. Before, each arena had a colour of its own here. Since a tab's
   arenas may now share one colour, the rule between arenas is firmer.
@@ -81,21 +84,21 @@ undo it.
   arena from another at a glance, and the call named more fully beside it;
   the dates stand on the chart and on hover. What a search finds in the
   other tabs stands under the chart.
-- **Pressing a call or its arena opens the whole arena where it stands**
-  (2026-10-24): a frame round its own rows, which keep their chips, names
-  and bars where they were, the board's month lines showing through it
-  (2026-10-28), and over them one line: its name and type, **Site** and
-  **Reference** (its first link to a page and its first to a document),
-  Seen, its panel and ✕. The other arenas dim. Its dates show on hover, as
-  on any row. Chosen on 2026-10-28 over a month line of the frame's own
-  and over a frame opening upwards over the arena above. Its About, its
-  count of open leads and its dates written on every bar stood in it until
-  then; Mark found them in the way. A click outside it shuts it and does
-  nothing else, as do ✕ and Esc. Chosen over opening it alone with the
-  others put away, which lost its place among them.
+- **Pressing a call or its arena opens its panel and nothing else** (issue
+  23, 2026-11-04): the Semaphore's drawer, lent over the Board. From
+  2026-10-24 the press opened the arena where it stood, a frame round its
+  own rows with a line over them (name, type, Site, Reference, Seen, its
+  panel and ✕) and the other arenas dimmed; Mark found the frame
+  superfluous, the panel holding all of it.
+- **An arena's calls in the panel's order** (issue 23, 2026-11-04): the
+  last one closed, then those open, the nearest deadline first, then those
+  still to open, on the Board as in the panel, so the most pressing stand
+  on top. They were in the order they open.
+- **The months stay in view** (issue 25, 2026-11-04): the chart's month
+  scale sticks at the top while its rows scroll under it, on every tab.
 - **Dates said once** (2026-10-25): Mark found them "often superfluous".
-  A call's dates stand on its bar, on hover, lit or in an arena opened,
-  and nowhere else beside it; the line under the chart that said them
+  A call's dates stand on its bar, on hover or lit, and nowhere else
+  beside it; the line under the chart that said them
   again for an arena's call went. Where an opening's tag and a deadline's
   would overlap on a short bar, the opening's gives way.
 - **The Freezer is a tab** (issue 1, 2026-10-28), beside All: every
@@ -193,8 +196,9 @@ and in the Horizon check's own file; what Mark chose:
   that matter, word for word, with the whole a link away, over the whole
   text. Each is judged like any find before it is kept; reading it from
   the panel puts the panel aside until the reader is shut.
-- **A kept text opens from Text beside its call in an arena opened**, the
-  quieter way, over a mark on every row of the chart.
+- **A kept text opens from Text beside its call in its arena's panel**
+  (in the frame of an arena opened until issue 23), the quieter way, over
+  a mark on every row of the chart.
 - **The Horizon check is a plain program**, as Mark's Place's copier is,
   on Supabase's schedule, using no Claude. What the portal says is kept
   apart and laid over the Work Programme, which is never changed. A topic

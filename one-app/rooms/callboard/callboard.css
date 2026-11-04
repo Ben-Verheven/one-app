@@ -147,7 +147,8 @@
 #pane-callboard .wrap{display:grid;grid-template-columns:minmax(420px,1fr) minmax(520px,1fr)}
 #pane-callboard .wrap > *{min-width:0}
 @media(max-width:1020px){#pane-callboard .wrap{grid-template-columns:minmax(0,1fr)}
-#pane-callboard .tl-sticky{position:static!important;max-height:none!important}}
+#pane-callboard .tl-sticky{position:static!important;max-height:none!important;overflow:visible!important}
+#pane-callboard .tl .tl-axis{top:var(--hdr-h,96px)}}
 /* Below this the two-column minimums are themselves wider than the window. */
 @media(max-width:1150px) and (min-width:1021px){
   #pane-callboard .wrap{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
@@ -230,7 +231,14 @@
    number, which is how the two used to fall out of step. */
 #pane-callboard .tl.ov{--gutter:196px}
 #pane-callboard .plot{position:absolute;left:var(--gutter);right:0;top:0;bottom:0;pointer-events:none;z-index:0}
-#pane-callboard .tl-axis{position:relative;height:32px;border-bottom:1.5px solid rgba(120,96,58,0.4);z-index:1}
+/* The months stay over the chart while its rows scroll under them (Mark,
+   issue 25, 2026-11-04), so a call far down still has its months above
+   it. The chart's scroller is .tl-sticky, so the scale sticks at its top,
+   raised by that box's own padding, which a row otherwise showed through
+   above it; where the chart stands in the page instead (under 1020px,
+   above) it sticks under the room's bar. It wears the sheet's ground, so
+   the rows pass under it rather than through it. */
+#pane-callboard .tl-axis{position:sticky;top:-16px;height:32px;border-bottom:1.5px solid rgba(120,96,58,0.4);z-index:2;background:var(--panel)}
 #pane-callboard .gline{position:absolute;top:32px;bottom:0;width:1px;background:rgba(120,96,58,0.13)}
 #pane-callboard .gline.q{background:rgba(120,96,58,0.24)}
 #pane-callboard .gline.year{background:rgba(120,96,58,0.5);width:1.5px}
@@ -362,9 +370,9 @@
    and the names do. */
 #pane-callboard .topic.afirst{border-top:1.5px solid var(--line-strong)}
 #pane-callboard .crow.afirst{box-shadow:inset 0 1.5px 0 rgba(120,96,58,.58)}
-/* An arena's tag is the Semaphore's (see tagHTML in callboard.js): a wash
-   of its colour, that colour as a solid edge at its left, its name in the
-   ink of the text round it. A frozen arena's edge is dashed and frosted. */
+/* An arena's tag is in the Semaphore's shape and its bar's colour (see
+   tagHTML in callboard.js): a solid edge at its left, its name in italic.
+   A frozen arena's edge is dashed and frosted. */
 #pane-callboard .cchip.stag{min-width:0;text-align:left;padding:1px 9px 2px 8px;font-family:var(--body);font-size:14.5px;
   font-style:italic;font-weight:400;line-height:1.3;color:var(--ink);border-left:3px solid var(--tone);border-radius:0 7px 7px 0;box-shadow:none}
 #pane-callboard .cchip.stag.frz{border-left-style:dashed}
@@ -396,7 +404,7 @@
 #pane-callboard .crow .nm.anone{font-style:italic;color:var(--ink3)}
 #pane-callboard .cchip.anon{color:var(--ink2);background:transparent;border:1px solid var(--line-strong)}
 #pane-callboard .crow .seen{margin-left:auto}
-#pane-callboard .crow.hidden,#pane-callboard .aopen.hidden,#pane-callboard .tyh.folded{display:none}
+#pane-callboard .crow.hidden,#pane-callboard .tyh.folded{display:none}
 /* Where a tab holds arenas of more than one type, as OTHER and the Freezer
    do, each type is named once over its arenas (Mark, 2026-10-24). The slim
    rule in its colour down their left went when the tags took that colour
@@ -404,31 +412,10 @@
 #pane-callboard .tyh{display:flex;align-items:center;gap:7px;height:22px;margin-top:8px;font-family:var(--font);font-size:9px;
   font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3)}
 #pane-callboard .tyh i{width:8px;height:8px;border-radius:2px;background:var(--ty)}
-#pane-callboard .aopen.typed{border-left:4px solid var(--ty)}
-/* An arena opened where it stands (see openArena): a frame round its own
-   rows, drawn as every other row is. Its edge sits outside the chart's own
-   by exactly its border, so its bars stand under the same days as
-   everyone else's, and its ground is thin enough for the month lines
-   behind it to show through, which Mark asked for (2026-10-28). */
-#pane-callboard .aopen{position:relative;margin:6px -1.5px 8px;padding:0 0 4px;border:1.5px solid var(--umber);border-radius:9px;
-  background:rgba(250,246,236,.5);box-shadow:0 6px 18px rgba(74,58,30,.16)}
-#pane-callboard .aoh{display:flex;align-items:center;gap:14px;height:42px;padding:0 8px 0 10px;border-bottom:1px solid var(--line)}
-#pane-callboard .aoh .cchip{font-size:11px;padding:3px 9px;max-width:none}
-#pane-callboard .aoty{font-family:var(--font);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--brass2);white-space:nowrap}
-#pane-callboard .aosp{flex:1}
-#pane-callboard .aoln{display:flex;gap:14px;min-width:0}
-#pane-callboard .aoln a{font-family:var(--font);font-size:10.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--brass2);
-  white-space:nowrap;text-decoration:underline;text-underline-offset:3px}
-#pane-callboard .aoln a:hover{color:var(--ink)}
-#pane-callboard .aobt{display:flex;gap:7px;align-items:center}
-#pane-callboard .aox{width:28px;padding:0}
-#pane-callboard .aopen .crow{cursor:default}
 #pane-callboard .aonone{padding:6px 14px;font-family:var(--body);font-style:italic;font-size:13px;color:var(--ink3)}
 #pane-callboard .vbtn{height:28px;padding:0 10px;white-space:nowrap;border-radius:var(--radius);cursor:pointer;font-family:var(--font);font-size:10px;
   letter-spacing:.07em;color:var(--ink2);border:1px solid rgba(120,96,58,0.3);background:linear-gradient(180deg,#FDFAF3,#F0EADB)}
 #pane-callboard .vbtn:hover{color:var(--brass2);border-color:var(--brass)}
-#pane-callboard .vbtn.dark{color:#F6F1E4;border-color:var(--umber);background:linear-gradient(180deg,#463823,#2E2415)}
-#pane-callboard .vbtn.dark:hover{color:#FFF8E6;background:linear-gradient(180deg,#54432A,#3A2E1C)}
 /* An arena's call with a new date glows until Seen (see arenaRow), in the
    green the Semaphore gave everything new, ringed in the sheet's own ground
    so it reads on any call's colour. */
@@ -470,8 +457,6 @@
 #pane-callboard .hztag{flex:0 0 auto;margin-left:8px;padding:0 6px;border:1px solid #C79A8F;border-radius:4px;
   font-family:var(--font);font-size:9.5px;line-height:1.7;letter-spacing:.07em;text-transform:uppercase;color:#8B3A2E;white-space:nowrap}
 #pane-callboard .topic .seen{margin-left:8px}
-/* the call's text, beside its call in an arena opened */
-#pane-callboard .tbtn{flex:0 0 auto;margin-left:8px;height:22px;padding:0 8px;font-size:10px}
 /* the reader: the portal's notices under a topic's links, and a line that
    heads a list in a call's text */
 #pane-callboard .rd-notes{margin-top:12px;padding:9px 13px;border:1px solid rgba(221,194,135,.35);border-radius:8px;

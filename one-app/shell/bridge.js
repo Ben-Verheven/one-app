@@ -794,6 +794,8 @@
   (function () {
     var S = Hub.api('semaphore');
     if (!S.calls) return;
+    /* a call's kept text, read from its row in an arena's panel */
+    if (S.setTexts) S.setTexts({ has: keptText, open: showText });
     function changed() {
       var B = Hub.api('callboard');
       if (B.arenasChanged) B.arenasChanged();

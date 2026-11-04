@@ -200,8 +200,8 @@ function selectArenaTab(key, openId){
   const p=arenaPage(key);
   if(!p) return;
   MODE='arena'; P=p; location.hash=key.toLowerCase(); markTab(p.tabEl);
-  if(openId&&p.callById[openId]) p.state.openArena=p.callById[openId].arenaId;
   afterSelect();
+  if(openId&&p.callById[openId]) openArena(p.callById[openId].arenaId);
 }
 function afterSelect(){
   if(TA.on) taSet(false,true);
@@ -230,10 +230,9 @@ function afterSelect(){
 
    The rows come from the Semaphore through the bridge, which hands over
    the runs the Semaphore itself works out, so the stages of one call are
-   one bar here as there. An arena wears a colour of its own on the chip
-   and the bar, saturated for the round it is in and pale for the next, as
-   the 2026 and 2027 calls are in Horizon; a date not yet published to the
-   day is a soft band over the time it can fall in (see softSpan). */
+   one bar here as there, in the order its panel draws them; an arena's
+   colour and how near a call is are told below; a date not yet published
+   to the day is a soft band over the time it can fall in (see softSpan). */
 const TYPE_TABS=[
   {key:'JU',full:'Joint Undertakings',color:'#7D71B0',test:/\bJU\b|joint\s*undertaking/i},
   {key:'CoFund',full:'Co-funded partnerships',color:'#3C8D6D',test:/co[\s-]*fund/i},
@@ -259,12 +258,16 @@ function nearness(r){
   const months=(d3(dl?dlDay(dl):d.start)-new Date())/(30.4*864e5);
   return months<=3?1:months<=6?.66:months<=12?.42:.3;
 }
-/* the tag naming an arena on a row: a wash of its colour with the colour
-   itself as a solid edge at its left, as the Semaphore draws an arena; an
-   arena with no call yet wears its type's pale tone */
+/* The tag naming an arena on a row, in the Semaphore's shape (a solid edge
+   at its left, the name in italic) and in its call's own colour, the very
+   colour of the bar beside it, edged in the ink of the bar's deadline
+   tick (Mark, issue 23, 2026-11-04). It was a pale wash of that colour
+   until then, so the tag and the bar of one call did not read as one. An
+   arena with no call yet wears its type's pale tone. */
 function tagHTML(a,c,text){
   const col=c?c.color:mixHex(toneOf(a),PAPER,.42), fz=!!a.frozenAt;
-  return `<span class="cchip w achip stag${fz?' frz':''}" style="--tone:${col};background:${mixHex(col,PAPER,.3)}">${fz?'<i class="frost"></i>':''}${esc(text)}</span>`;
+  const edge=c?c.ink:readableInk(mixHex(toneOf(a),'#2C2418',.45),PAPER);
+  return `<span class="cchip w achip stag${fz?' frz':''}" style="--tone:${edge};background:${col};color:${readableInk('#2C2418',col)}">${fz?'<i class="frost"></i>':''}${esc(text)}</span>`;
 }
 let ARENA_SRC=null, APAGES=[], ACALLS=[], FZ=null, pendingTab=null;
 /* an arena's tab, or the Freezer, by its key, while it has a tab */
@@ -346,13 +349,17 @@ function readArenas(){
   APAGES.forEach(p=>{ if(!OV.known.has(p.key)){ OV.known.add(p.key); OV.clusters.add(p.key); } });
   buildArenaTabs();
 }
-/* one arena's calls on its page, one to a run, in the colour its
-   nearness gives */
+/* One arena's calls on its page, one to a run, in the colour its nearness
+   gives, and in the order the Semaphore hands them over, which is the
+   order its panel draws them: the last call closed, then those open, the
+   nearest deadline first, then those still to open (callRuns, in
+   venues.js). Mark asked for the most pressing on top, as in the panel
+   (issue 23, 2026-11-04); they were sorted by their opening here, which
+   put a call opening soon over one closing next week. */
 function arenaCalls(p,a){
   const tone=toneOf(a), ink=readableInk(mixHex(tone,'#2C2418',.45),PAPER);
   p.arenas.push(a);
-  const start=r=>((r.open||r.ann||(r.dls||[])[0]||{}).start)||'';
-  (a.runs||[]).slice().sort((x,y)=>start(x).localeCompare(start(y))).forEach((r,i)=>{
+  (a.runs||[]).forEach((r,i)=>{
     const dls=r.dls||[], near=mixHex(tone,PAPER,nearness(r));
     const color=a.frozenAt?mixHex(near,FROST,.5):near, from=r.open||r.ann||null, annOnly=!r.open&&!!r.ann&&!dls.length;
     const c={id:'arena:'+a.id+':'+i, arena:a, arenaId:a.id, run:r, first:i===0,
@@ -527,7 +534,7 @@ function arenaChartRow(c,a){
   return r;
 }
 /* A co-programmed partnership's topic (see "CoProg"): its tag opens the
-   partnership where it stands, as an arena's call does; the rest of the
+   partnership's panel, as an arena's call does; the rest of the
    row reads the topic, as a Horizon topic's row does. */
 function topicChartRow(c,a){
   const r=document.createElement('div');
@@ -553,76 +560,16 @@ function arenaEmptyRow(a,say){
   r.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openArena(a.id);}});
   return r;
 }
-/* Pressing a call or its arena opens the whole arena where it stands
-   (Mark, 2026-10-24): a frame round its own rows, which keep their chips,
-   names and bars where they were, so the board's month line above stays
-   their timeline, and the board's month lines show through the frame
-   (Mark chose this on 2026-10-28, over a month line of the frame's own and
-   over a frame opening upwards). Over the rows, one line: its name, its type, Site and
-   Reference, Seen, its panel and ✕. Its About text and its open leads stood
-   there too, and every date was written on its bar; Mark found them in the
-   way (issue 5), and the dates now show on a bar as on any other row, on
-   hover. The other arenas dim. A click anywhere outside it shuts it and
-   does nothing else (see "a click outside an arena opened"); before, it
-   opened the arena clicked, which Mark did not mean. */
+/* Pressing a call or its arena opens the arena's panel, the Semaphore's
+   drawer lent over the Board, and nothing else (Mark, issue 23,
+   2026-11-04): the panel draws its calls on a strip of time of its own,
+   with its Site and Reference, Seen and each call's kept text. Until then
+   the press opened the arena where it stood, a frame round its own rows
+   with a line of its own over them and the other arenas dimmed, and the
+   panel opened from that line; Mark found the frame superfluous. */
 function openArena(id){
-  P.state.openArena=P.state.openArena===id?null:id;
-  buildTimeline(); paintTimeline(); applyFilters();
-  const b=document.querySelector('#tl .aopen');
-  if(b){ const top=b.getBoundingClientRect().top; if(top<120||top>window.innerHeight-200) b.scrollIntoView({block:'center'}); }
+  if(ARENA_SRC&&ARENA_SRC.open) ARENA_SRC.open(id);
 }
-/* An arena's two links on the frame, by the words Mark uses for them:
-   Site, its first link to a web page, and Reference, its first link to a
-   document. The rest are in its panel. */
-const isDoc=u=>/\.(pdf|docx?|pptx?|xlsx?)([?#]|$)/i.test(u||'');
-function arenaLinks(a){
-  const web=(a.links||[]).filter(l=>/^https?:\/\//i.test(l.url||''));
-  return {site:web.find(l=>!isDoc(l.url))||null,ref:web.find(l=>isDoc(l.url))||null};
-}
-function arenaOpenBlock(a,calls){
-  const blk=document.createElement('div'); blk.className='aopen'; blk.dataset.arena=a.id;
-  blk.dataset.search=(a.name+' '+calls.map(c=>c.run.names.join(' ')).join(' ')).toLowerCase();
-  const {site,ref}=arenaLinks(a);
-  const link=(l,w)=>l?`<a href="${attr(l.url)}" target="_blank" rel="noopener" title="${attr((l.label?l.label+' — ':'')+l.url)}">${w} ↗</a>`:'';
-  blk.innerHTML=`<div class="aoh">
-      ${tagHTML(a,calls[0]||null,a.name)}
-      <span class="aoty">${esc(a.type||'')}</span>
-      ${site||ref?`<span class="aoln">${link(site,'Site')}${link(ref,'Reference')}</span>`:''}
-      <span class="aosp"></span><span class="aobt"></span></div>`;
-  const bt=blk.querySelector('.aobt');
-  if(calls.some(c=>c.run.fresh)) bt.appendChild(seenButton(calls[0]));
-  const panel=document.createElement('button'); panel.className='vbtn dark'; panel.textContent='Its panel ▸';
-  panel.title='Everything about '+a.name+', in the Semaphore';
-  panel.addEventListener('click',e=>{ e.stopPropagation(); if(ARENA_SRC&&ARENA_SRC.open) ARENA_SRC.open(a.id); });
-  const x=document.createElement('button'); x.className='vbtn aox'; x.textContent='✕'; x.setAttribute('aria-label','Close '+a.name);
-  x.addEventListener('click',e=>{ e.stopPropagation(); openArena(a.id); });
-  bt.append(panel,x);
-  calls.forEach(c=>{
-    const r=document.createElement('div'); r.className='crow aorow'+(c.run.fresh?' fresh':''); r.dataset.call=c.id;
-    r.title=a.name+' — '+c.run.names.join(', ')+(c.run.was.length?'\n'+c.run.was.join('; '):'');
-    r.innerHTML=`<span class="lbl">${tagHTML(a,c,c.short)}<span class="nm">${c.topicId?hccHTML(c):''}${esc(c.name)}</span></span><span class="track">${barsHTML(c,X,c.color,c.ink,true)}</span>`;
-    if(c.topicId){ r.addEventListener('click',()=>openReader(c.topicId)); blk.appendChild(r); return; }
-    const t=keptText(c);
-    if(t){
-      const tb=document.createElement('button'); tb.className='vbtn tbtn'; tb.textContent='▤ Text';
-      tb.title='Read '+(t.title||t.call)+', the call’s official text';
-      tb.addEventListener('click',e=>{ e.stopPropagation(); openText(t,c); });
-      r.querySelector('.nm').after(tb);
-    }
-    blk.appendChild(r);
-  });
-  if(!calls.length) blk.insertAdjacentHTML('beforeend',`<div class="crow aorow"><span class="lbl">${tagHTML(a,null,tagName(a.name))}<span class="nm anone">no call dates on the board yet</span></span><span class="track"></span></div>`);
-  return blk;
-}
-/* A click outside an arena opened shuts it and goes no further, so the
-   arena or call under the pointer is not opened in the same stroke (Mark,
-   issue 5). Only on the chart: the tabs, the search and the reader keep
-   their own presses, and a tab changed shuts the arena anyway. */
-document.getElementById('tl').addEventListener('click',e=>{
-  if(MODE!=='arena'||!P.state.openArena||e.target.closest('.aopen')) return;
-  e.stopPropagation(); e.preventDefault();
-  openArena(P.state.openArena);
-},true);
 /* The arenas in their order, each type's under its name when the tab holds
    more than one type, as OTHER and the Freezer do (Mark, 2026-10-24): the
    name once, in small capitals, beside a square in the type's colour. A
@@ -638,9 +585,8 @@ function buildArenaRows(rowsEl){
       rowsEl.insertAdjacentHTML('beforeend',`<div class="tyh" style="--ty:${attr(a.tone||'#9C8B66')}" data-ty="${attr(ty)}"><i></i>${esc(ty||'No type')}</div>`);
     }
     const calls=P.calls.concat(P.trows||[]).filter(c=>c.arenaId===a.id);
-    const add=el=>{ if(types.size>1){ el.classList.add('typed'); el.style.setProperty('--ty',a.tone||'#9C8B66'); el.dataset.ty=ty; } rowsEl.appendChild(el); };
-    if(P.state.openArena===a.id) add(arenaOpenBlock(a,calls));
-    else if(!calls.length) add(arenaEmptyRow(a,P.trows?'no topic of the Work Programme names it':null));
+    const add=el=>{ if(types.size>1){ el.classList.add('typed'); el.dataset.ty=ty; } rowsEl.appendChild(el); };
+    if(!calls.length) add(arenaEmptyRow(a,P.trows?'no topic of the Work Programme names it':null));
     else calls.forEach(c=>add(c.topicId?topicChartRow(c,a):arenaChartRow(c,a)));
   });
 }
@@ -831,8 +777,9 @@ function ghostArenaRow(rowsEl){
    chose that over asking ChatGPT for those too, as exact and free.
    ChatGPT's search for call texts brings the rest. Either way a text is a
    find, judged here one at a time, and once kept it opens from the Text
-   beside its call in the arena opened, which Mark chose over a mark on
-   every row of the chart. Which call a text belongs to is the bridge's
+   beside its call in its arena's panel (in the frame of an arena opened
+   here until issue 23), which Mark chose over a mark on every row of the
+   chart. Which call a text belongs to is the bridge's
    rule (`fits` in bridge.js), the same for ChatGPT's search. */
 const textApi=()=>{ try{ const a=Hub.api('call-texts'); return a&&a.ready&&a.ready()?a:null; }catch(e){ return null; } };
 const callTexts=()=>{ try{ const a=Hub.api('call-texts'); return (a&&a.list&&a.list())||[]; }catch(e){ return []; } };
@@ -990,7 +937,6 @@ function render(){
   document.getElementById('tltxt').textContent='Calls · chronological';
   document.querySelector('.src').innerHTML=arena?SRC_ARENAS:SRC_HORIZON;
   if(arena) clearArenaList(); else buildLedger();
-  if(arena&&P.state.openArena&&!P.arenas.some(a=>a.id===P.state.openArena)) P.state.openArena=null;
   buildTimeline(); buildFamKey();
   const qEl=document.getElementById('q'); qEl.value=P.state.q;
   document.getElementById('qclr').style.display=P.state.q?'block':'none';
@@ -1213,12 +1159,11 @@ function applyFilters(){
   if(P.arena){
     /* An arena's tab has no list (see clearArenaList): the words typed
        keep the chart's rows whose arena or call they name. */
-    document.querySelectorAll('#tlrows > .arow, #tlrows > .aopen').forEach(r=>{
+    document.querySelectorAll('#tlrows > .arow').forEach(r=>{
       const hit=!st.q||r.dataset.search.includes(st.q);
       r.classList.toggle('hidden',!hit);
       if(!hit) return;
-      if(r.classList.contains('aopen')) visible+=r.querySelectorAll('.aorow').length;
-      else if(r.dataset.call&&(!st.sel.size||st.sel.has(r.dataset.call))) visible++;
+      if(r.dataset.call&&(!st.sel.size||st.sel.has(r.dataset.call))) visible++;
     });
     paintTypeHeads();
     const away=paintElsewhere(visible);
@@ -1350,17 +1295,16 @@ function paintElsewhere(visible){
     e.textContent='Nothing in any tab matches this search.'; elsewhereEl.appendChild(e);}
   return n;
 }
-/* Calls picked by hand light and the rest dim; an arena opened dims the
-   rows outside it. */
+/* Calls picked by hand light and the rest dim. */
 function paintTimeline(){
-  const st=P.state, open=MODE==='arena'&&!!st.openArena;
+  const st=P.state;
   const focus=st.sel.size?st.sel:(st.selTopicCall?new Set([st.selTopicCall]):null);
   document.querySelectorAll('#tl .crow').forEach(r=>{
     if(r.classList.contains('ghost')) return;
     const on=!!focus&&focus.has(r.dataset.call);
     r.classList.toggle('on',on);
-    r.classList.toggle('dim',(!!focus&&!on)||(open&&r.classList.contains('arow')));
-    if(on||r.classList.contains('aorow')) untangle(r);
+    r.classList.toggle('dim',!!focus&&!on);
+    if(on) untangle(r);
   });
   paintTypeHeads();
 }
@@ -2720,7 +2664,6 @@ document.addEventListener('keydown',e=>{
     qEl.value=''; qClr.style.display='none';
     tc.querySelectorAll('.tchip').forEach(x=>x.setAttribute('aria-pressed','false'));
     topicEls.forEach(t=>{t.row.classList.remove('sel');t.det.classList.remove('open');});
-    if(P.state.openArena){ P.state.openArena=null; buildTimeline(); }
     applyFilters(); paintTimeline(); paintPills(); showCard([]);
   }
   /* A bare digit only. Alt and a digit is the shell's way between rooms,
@@ -2774,8 +2717,8 @@ function callRow(c){
 Hub.expose('callboard',{
   topics:function(){ return Object.keys(TOPIC_BY_ID).map(topicRow); },
   calls:function(){ return ACALLS.concat(COPROG_RUNS).map(callRow); },
-  /* a call's kept text, read in the reader as on an arena opened here;
-     false when the call has none */
+  /* a call's kept text, read in the reader, from the Ledger or an arena's
+     panel; false when the call has none */
   openText:function(arenaId,names){
     const c=ACALLS.concat(FZ?FZ.calls:[],COPROG_RUNS).find(x=>x.arenaId===arenaId&&x.run.names.some(n=>(names||[]).indexOf(n)>-1));
     const t=c&&keptText(c);
