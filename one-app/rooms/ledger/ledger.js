@@ -887,6 +887,19 @@ function substampHTML(s,delCall){
     +(delCall?'<button class="substamp-del" title="Remove" onclick="'+delCall+'">\u2715</button>':'')
     +'</div>';
 }
+/* A key pressed in the box an update is written in, a todo's or a lead's.
+   Enter alone adds the line and Alt+Enter starts a new one inside it, as on
+   the Semaphore's lead (Mark, issue #28); Shift+Enter still makes a new line
+   too, as it did. Alt+Enter is written in by hand, since a browser does not
+   take it for a new line in a box. True when the line is to be added. */
+function updateKey(evt){
+  if(evt.key!=='Enter'||evt.isComposing||evt.metaKey||evt.ctrlKey||evt.shiftKey)return false;
+  evt.preventDefault();
+  if(!evt.altKey)return true;
+  var t=evt.target;
+  t.setRangeText('\n',t.selectionStart,t.selectionEnd,'end');
+  return false;
+}
 function toEditableHTML(html){
   if(!html)return '';
   return linkifyRichHTML(html);
@@ -6178,6 +6191,7 @@ var Board=(function(){
     var fresh=(key!==hoverCell);
     if(fresh){
       hoverCell=key;
+      litKey=null;
       clearFlight();
       pop.classList.remove('hz-lbl-flying');
       unflyMarks();
@@ -6221,6 +6235,32 @@ var Board=(function(){
        pointer travel would be a label that never settles. */
     if(fresh)flyDots(pop,byId('horizon-container'));
   }
+  /* ── The row under the pointer ──
+     The label describes the whole cell, but once the pointer is on one of
+     its marks that mark's own line is lit, so a shape of four dots can be
+     read dot by dot (Mark, issue #29). A label of one line is left alone:
+     there is nothing for it to tell apart. Keyed like `measureFlight`, off
+     the attributes rather than through a selector, and it only writes when
+     the mark under the pointer changes, so a repeat mousemove still costs
+     nothing and the label never flinches. */
+  var litKey=null;
+  function lightRow(target){
+    var pop=byId('hz-hover');
+    if(!pop||pop.style.display==='none')return;
+    var m=target&&target.closest&&target.closest('.hz-mark,.hz-dl'),key=null;
+    if(m){
+      var lead=m.getAttribute('data-lead');
+      key=lead!==null?'|'+lead:m.getAttribute('data-pid')+'|'+m.getAttribute('data-eid');
+    }
+    if(key===litKey)return;
+    litKey=key;
+    var rows=qa('.hz-lbl-row',pop);
+    rows.forEach(function(r){
+      var d=q('.hz-lbl-dot',r);
+      r.classList.toggle('hz-lbl-row-on',!!key&&rows.length>1&&!!d
+        &&(d.getAttribute('data-pid')+'|'+d.getAttribute('data-eid'))===key);
+    });
+  }
   /* Which day column the pointer is in, read off the track itself — it
      carries the window it was drawn for, so this needs no shared state and
      stays right when the window length changes under it. */
@@ -6249,7 +6289,7 @@ var Board=(function(){
       p.classList.remove('hz-lbl-flying');}
     clearFlight();
     unflyMarks();
-    hoverCell=null;
+    hoverCell=null;litKey=null;
   }
   /* ── Slices ── */
   function todosOnDay(iso){
@@ -7236,7 +7276,7 @@ var Board=(function(){
       if(row&&row.classList.contains('hz-leads-row')){
         var lc=cellAt(track,ev.clientX);
         if(!lc){hideHover();return;}
-        showCellHover(track,null,lc.iso,lc);return;
+        showCellHover(track,null,lc.iso,lc);lightRow(ev.target);return;
       }
       var pid=row&&(row.getAttribute('data-pid')
         ||(function(){var b=q('.hz-proj-open,[data-pid]',row);return b&&b.getAttribute('data-pid');})());
@@ -7246,6 +7286,7 @@ var Board=(function(){
       var cell=pid&&cellAt(track,ev.clientX);
       if(!cell){hideHover();return;}
       showCellHover(track,pid,cell.iso,cell);
+      lightRow(ev.target);
     });
     host.addEventListener('mouseleave',hideHover);
     host.addEventListener('pointerdown',function(ev){
@@ -8192,13 +8233,15 @@ var TodoCard=(function(){
        the design: what this card is FOR, then what changes it, then what
        ends it.
 
-       The two things it is for lead, because the left edge is where a hand
-       goes first and the row's leading pixels are the only prominence
-       nothing has to be given. Add update is the loudest control on the
-       card — the room's own primary face, and the one press Mark makes
-       most — with Checklist item plain-bordered beside it. Before this
-       they were the fourth and fifth of nine identical pills, behind a
-       state that is not a verb at all.
+       What it is for leads, because the left edge is where a hand goes
+       first and the row's leading pixels are the only prominence nothing
+       has to be given. That was Add update, the one press Mark makes most,
+       with Checklist item beside it; the update's box now stands open
+       under the checklist whenever the card is, and its own Add update is
+       the loudest control on the card (Mark, issue #28), so Checklist item
+       leads the row alone. Before 2026-08-28 they were the fourth and
+       fifth of nine identical pills, behind a state that is not a verb at
+       all.
 
        Then Edit, used as often as either but changing what is already
        there rather than adding to it: a ghost, no border until the
@@ -8223,7 +8266,6 @@ var TodoCard=(function(){
        nothing. */
     var gap='<span class="todo-actions-gap"></span>';
     var actions='<div class="todo-actions">'
-      +'<button class="todo-btn todo-btn-primary" onclick="PL.toggleAddUpdate(\'asw-'+pid+'-'+eid+'\',event)">+ Add update</button>'
       +'<button class="todo-btn" onclick="PL.focusChkAdd(\''+pid+'\',\''+eid+'\',event)">\u2611 Checklist item</button>'
       +gap
       +'<button class="todo-btn todo-btn-quiet" onclick="PL.beginEditTodo(\''+pid+'\',\''+eid+'\',event)">\u270e Edit</button>'
@@ -8238,9 +8280,9 @@ var TodoCard=(function(){
 
     var addUpdate='<div class="add-substamp-wrap" id="asw-'+pid+'-'+eid+'">'
       +'<div class="add-substamp-row">'
-      +'<textarea class="add-substamp-input" placeholder="Add an update\u2026" id="sub-'+pid+'-'+eid+'" '
+      +'<textarea class="add-substamp-input" placeholder="Add an update \u2014 Enter to add it, Alt+Enter for a new line" id="sub-'+pid+'-'+eid+'" '
         +'onkeydown="PL.subStampKey(event,\''+pid+'\',\''+eid+'\')" rows="2"></textarea>'
-      +'<button class="btn btn-sm" onclick="PL.addSubStamp(\''+pid+'\',\''+eid+'\',event)">Add</button>'
+      +'<button class="todo-btn todo-btn-primary" onclick="PL.addSubStamp(\''+pid+'\',\''+eid+'\',event)">Add update</button>'
       +'</div></div>';
 
     var dueLabel='No date';
@@ -8673,14 +8715,6 @@ var TodoCard=(function(){
       d.className='substamps';d.innerHTML=inner;exp.appendChild(d);
     }
   }
-  function toggleAddUpdate(wrapId,evt){
-    if(evt)evt.stopPropagation();
-    var wrap=byId(wrapId);if(!wrap)return;
-    wrap.classList.toggle('open');
-    if(wrap.classList.contains('open')){
-      var inp=q('.add-substamp-input',wrap);if(inp)inp.focus();
-    }
-  }
   function addSubStamp(pid,eid,evt){
     if(evt)evt.stopPropagation();
     var e=findTodo(pid,eid);if(!e)return;
@@ -8689,12 +8723,10 @@ var TodoCard=(function(){
     listOn(e,'subStamps').push({stamp:ts(),text:inp.value.trim()});
     inp.value='';save();
     refreshSubStamps(pid,eid,e);
-    var wrap=byId('asw-'+pid+'-'+eid);
-    if(wrap)wrap.classList.remove('open');
   }
   function subStampKey(evt,pid,eid){
     evt.stopPropagation();
-    if(evt.key==='Enter'&&!evt.shiftKey){evt.preventDefault();addSubStamp(pid,eid,evt);}
+    if(updateKey(evt))addSubStamp(pid,eid,evt);
   }
   function delSubStamp(pid,eid,idx,evt){
     if(evt)evt.stopPropagation();
@@ -8896,7 +8928,7 @@ var TodoCard=(function(){
   }
 
   return {html:html,catMenu:catMenu,setCat:setCat,toggleExpand:toggleExpand,
-    toggleAddUpdate:toggleAddUpdate,addSubStamp:addSubStamp,subStampKey:subStampKey,
+    addSubStamp:addSubStamp,subStampKey:subStampKey,
     delSubStamp:delSubStamp,
     updateDue:updateDue,toggleDone:toggleDone,del:del,
     beginEdit:beginEdit,cancelEdit:cancelEdit,saveEdit:saveEdit,
@@ -9187,26 +9219,27 @@ var Leads=(function(){
       +'</span>':'<p class="lead-nil lead-show">None yet</p>')+editLinks+'</div>';
     var panes='<div class="lead-band lead-panes">'+who+links+'</div>';
     /* What has happened, newest first, in a box of its own under the two,
-       with + Add update on its head and the line being written straight
-       under it, above the lines already there, as on the Semaphore's lead.
-       Semaphore keeps them oldest first, and the index each one carries is
-       its place THERE. */
+       with the line being written standing open at its top, above the lines
+       already there, as on the Semaphore's lead. It waited behind a
+       + Add update on the box's head until Mark asked for it to be there,
+       ready, whenever the lead is open (issue #28); its own Add update keeps
+       the line, and with the box always there an empty history needs no
+       "Nothing yet". Semaphore keeps them oldest first, and the index each
+       one carries is its place THERE. */
     var addNote='<div class="add-substamp-wrap" id="lnw-'+lid+'"><div class="add-substamp-row">'
-      +'<textarea class="add-substamp-input" placeholder="What has happened?" id="lnt-'+lid+'" rows="2" '
+      +'<textarea class="add-substamp-input" placeholder="What has happened? Enter to add it, Alt+Enter for a new line" id="lnt-'+lid+'" rows="2" '
         +'onkeydown="PL.leadNoteKey(event,\''+k+'\')"></textarea>'
-      +'<button class="btn btn-sm" onclick="PL.leadAddNote(\''+k+'\',event)">Add</button>'
+      +'<button type="button" class="lead-act lead-act-add" onclick="PL.leadAddNote(\''+k+'\',event)">Add update</button>'
       +'</div></div>';
     var ups='<div class="lead-band lead-ups"><div class="lead-pane">'
-      +'<p class="lead-pane-h">Updates'+(l.updates.length?'<b>'+l.updates.length+'</b>':'')
-        +'<button type="button" class="lead-act lead-act-add lead-show" '
-          +'onclick="PL.leadOpenBox(\'lnw-'+lid+'\',event)">+ Add update</button></p>'
+      +'<p class="lead-pane-h">Updates'+(l.updates.length?'<b>'+l.updates.length+'</b>':'')+'</p>'
       +'<div class="lead-show">'+addNote
       +(l.updates.length
         ?'<div class="substamps">'+l.updates.slice().reverse().map(function(u){
             return substampHTML({stamp:u.when,text:u.text},
               'PL.leadNoteDel(\''+k+'\','+(+u.i)+',event)');
           }).join('')+'</div>'
-        :'<p class="lead-nil">Nothing yet</p>')
+        :'')
       +'</div>'+editUps+'</div></div>';
 
     var hex=hexOf(l);
@@ -9493,14 +9526,6 @@ var Leads=(function(){
     var l=find(key);if(!l||!sock||!sock.open)return;
     sock.open(l.aid);
   }
-  function openBox(id,evt){
-    if(evt)evt.stopPropagation();
-    var w=byId(id);if(!w)return;
-    w.classList.toggle('open');
-    if(w.classList.contains('open')){
-      var f=q('input,textarea',w);if(f)f.focus();
-    }
-  }
   function cardOf(key){
     var l=find(key);return l?byId('lead-'+l.id):null;
   }
@@ -9548,11 +9573,14 @@ var Leads=(function(){
     if(evt)evt.stopPropagation();
     var l=find(key);if(!l)return;
     var t=byId('lnt-'+l.id);if(!t||!t.value.trim())return;
-    change(key,'note',t.value);
+    if(!change(key,'note',t.value))return;
+    /* The card is drawn afresh with an empty box; the caret goes back into
+       it, so a second line can follow the first without the mouse. */
+    t=byId('lnt-'+l.id);if(t)t.focus({preventScroll:true});
   }
   function noteKey(evt,key){
     evt.stopPropagation();
-    if(evt.key==='Enter'&&!evt.shiftKey){evt.preventDefault();addNote(key,evt);}
+    if(updateKey(evt))addNote(key,evt);
   }
   function noteDel(key,i,evt){stopEvt(evt);change(key,'noteDel',i);}
   function linkDel(key,kid,evt){stopEvt(evt);change(key,'linkDel',kid);}
@@ -9581,7 +9609,7 @@ var Leads=(function(){
     html:html,listHTML:listHTML,COLOR:COLOR,hexOf:hexOf,
     canAdd:canAdd,newHTML:newHTML,newOpen:newOpen,newDrop:newDrop,
     newArenaMenu:newArenaMenu,newArena:newArena,newDue:newDue,newSave:newSave,newLink:newLink,
-    path:path,score:score,due:due,done:done,limbo:limbo,end:end,endCancel:endCancel,arena:arenaOf,openBox:openBox,
+    path:path,score:score,due:due,done:done,limbo:limbo,end:end,endCancel:endCancel,arena:arenaOf,
     beginEdit:beginEdit,cancelEdit:cancelEdit,saveEdit:saveEdit,editDrop:editDrop,
     addNote:addNote,noteKey:noteKey,noteDel:noteDel,
     linkDel:linkDel,copyMail:copyMail};
@@ -15234,7 +15262,7 @@ window.PL={
   leadNewDue:Leads.newDue,leadNewSave:Leads.newSave,leadNewLink:Leads.newLink,
   leadPath:Leads.path,leadScore:Leads.score,leadDue:Leads.due,leadDone:Leads.done,leadLimbo:Leads.limbo,
   leadEnd:Leads.end,leadEndCancel:Leads.endCancel,leadArena:Leads.arena,
-  leadOpenBox:Leads.openBox,leadBeginEdit:Leads.beginEdit,leadCancelEdit:Leads.cancelEdit,
+  leadBeginEdit:Leads.beginEdit,leadCancelEdit:Leads.cancelEdit,
   leadSaveEdit:Leads.saveEdit,leadEditDrop:Leads.editDrop,leadAddNote:Leads.addNote,leadNoteKey:Leads.noteKey,
   leadNoteDel:Leads.noteDel,
   leadLinkDel:Leads.linkDel,leadCopyMail:Leads.copyMail,
@@ -15251,7 +15279,7 @@ window.PL={
 
   /* todo cards */
   toggleTodoExpand:TodoCard.toggleExpand,
-  toggleAddUpdate:TodoCard.toggleAddUpdate,addSubStamp:TodoCard.addSubStamp,
+  addSubStamp:TodoCard.addSubStamp,
   subStampKey:TodoCard.subStampKey,delSubStamp:TodoCard.delSubStamp,
   updateTodoDue:TodoCard.updateDue,toggleTodoDone:TodoCard.toggleDone,
   deleteTodo:TodoCard.del,

@@ -65,14 +65,18 @@ Left to right it is a sentence: what the card is FOR, then what changes it,
 then what ends it.
 
 ```
-[+ Add update] [☑ Checklist item] │ Edit  ·  Make conditional     [☑ Done] │ ✕ Delete
+[☑ Checklist item] │ Edit  ·  Make conditional     [☑ Done] │ ✕ Delete
 ```
 
-- **The two things it is for lead**, because the left edge is the only
-  prominence nothing has to be given. Mark asked for this explicitly and
-  then corrected me when I put them on the RIGHT — his words: the left is
-  "where action should take place in a sense". Add update is the loudest
-  control on the card and Checklist item is plain-bordered beside it.
+- **What it is for leads**, because the left edge is the only prominence
+  nothing has to be given. Mark asked for this explicitly and then
+  corrected me when I put Add update and Checklist item on the RIGHT — his
+  words: the left is "where action should take place in a sense". Add
+  update left the row on 2026-11-04 (issue #28): Mark asked for the update
+  box to stand open whenever the card does, ready to type into, with the
+  button that opened it now the one that adds the line. That Add update,
+  at the box's bottom edge, keeps the primary weight and is still the
+  loudest control on the card.
 - **Three weights, not one** (`todo-btn-primary` / plain `todo-btn` /
   `todo-btn-quiet`), which is what makes six controls sortable at a glance
   where nine identical pills were not. `todo-btn-quiet` drops the border,
@@ -142,8 +146,8 @@ was wrong on any one line and the whole would not settle.
 
 - **The update box** was inheriting the form family's 82px `min-height` and
   `resize:none`, so eighty pixels of empty ground sat in the middle of the
-  card. Two lines now, with a resize handle, and the Add button aligned to
-  its bottom edge rather than stretching to its height.
+  card. Two lines now, with a resize handle, and the Add update button
+  aligned to its bottom edge rather than stretching to its height.
 - **The edit bar's two dates** were inheriting `width:100%` and each took a
   line, standing the bar five rows deep. 126px each; the whole bar is one
   line at 820px.

@@ -240,7 +240,7 @@ calls land on the Call Board. What still holds of the board:
   2026-11-02 Mark had the Ledger's card brought up to it: the Leads line,
   shut (arena tag, title beside match, score, day as a pill), and open,
   Edit, Limbofy and Complete at its head, Who and Links side by side and
-  Updates with + Add update under them. The ✉ and Limbofy work there too;
+  Updates under them. The ✉ and Limbofy work there too;
   Limbofy takes the lead off the Ledger's board. Below a wide desk the three
   buttons take a line of their own under the head.
 - **Venues and Leads, a pair in the middle of the header** (2026-10-25):
@@ -283,8 +283,11 @@ calls land on the Call Board. What still holds of the board:
   end. Chosen over a little contact card with links as tiles, and over
   compact labelled rows. Both boxes are always there, each titled, with a
   Copy on every link (2026-10-22).
-- **Each button stands on what it changes** (2026-10-21/22): + Add update on
-  the Updates box's head, the line written straight under it; Edit, a
+- **Each button stands on what it changes** (2026-10-21/22): the line an
+  update is written in straight under the Updates box's head, standing open
+  whenever the lead is, with its own Add update to keep it, Enter doing the
+  same and Alt+Enter making a new line (issue #28, 2026-11-04; it waited
+  behind a + Add update on the head until then); Edit, a
   proper button, and Complete at the card's head; no row of buttons in
   between. Edit is the single way to add links and addresses (+ Link or
   email went), and while editing, every field stands in the box where its

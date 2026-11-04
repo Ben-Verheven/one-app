@@ -2533,9 +2533,8 @@ let leadLastArena=null;
 let leadEdit={a:null,l:null};
 /* the lead whose Complete is asking how it ended, which is about the moment */
 let endAsk={a:null,l:null};
-/* the update being written, and the leads showing their whole history —
-   both are about the moment, so neither is remembered */
-let noteEdit={a:null,l:null};
+/* the leads showing their whole history, which is about the moment, so it
+   is not remembered */
 const updOpen=new Set();
 /* Closed leads are a record, not a queue, so they are put away behind one line
    and only come out when asked for. Keyed by arena, and kept out of the board's
@@ -3278,14 +3277,17 @@ function leadFormLinkHTML(){
     '<input class="ln3 lnl" name="label" placeholder="Whose, or what \u2014 optional" aria-label="Name the link" autocomplete="off">'+
   '</div>';
 }
-/* One line of history, written where the last one was read. */
+/* One line of history, written where the last one was read. It stands open
+   whenever the lead does, ready to be written in, and its Add update keeps
+   the line (Mark, issue #28): it used to wait behind an Add update on the
+   box's head, and the line it opened had a cross to put it away again, which
+   a box that is always there has no use for. */
 function noteFormHTML(a,l){
   return '<form class="noteform" data-na="'+a.id+'" data-nl="'+l.id+'">'+
     '<textarea class="grow" name="text" rows="1" placeholder="What has happened?" '+
       'aria-label="What has happened"></textarea>'+
-    '<div class="lfbtn"><span class="lfhint">\u21A9 to keep \u00B7 \u2325\u21A9 for a new line</span><span class="sp"></span>'+
-      '<button type="button" class="ib" data-act="noteCancel" title="Cancel" aria-label="Cancel">\u2715</button>'+
-      '<button type="submit" class="ib ok" title="Keep \u2014 or \u21A9" aria-label="Keep">\u2713</button></div>'+
+    '<div class="lfbtn"><span class="lfhint">\u21A9 to add \u00B7 \u2325\u21A9 for a new line</span><span class="sp"></span>'+
+      '<button type="submit" class="lact prim" title="Add this line \u2014 or \u21A9">Add update</button></div>'+
   '</form>';
 }
 /* Updates were once stamped with a formatted string; new ones carry the day
@@ -3408,11 +3410,12 @@ function leadPanesHTML(a,l,shut,editing){
   '</div>';
 }
 /* What has happened, newest first, in a box of its own under the two, with
-   + Add update on its head and the line being written straight under it,
-   above the lines already there (Mark, 2026-10-21: "add update right above
-   the update pane"). The button stood in a row at the top of the card, and
-   the line it opened came up there, apart from the history it joins. */
-function leadUpdHTML(a,l,shut,writing,editing){
+   the line being written straight under its head, above the lines already
+   there (Mark, 2026-10-21: "add update right above the update pane"). The
+   button that opened it stood in a row at the top of the card, and the line
+   came up there, apart from the history it joins; since issue #28 the line
+   is simply open there on every lead that is not closed. */
+function leadUpdHTML(a,l,shut,editing){
   const ups=l.updates||[];
   if(shut&&!ups.length)return '';
   /* While the lead is edited every line is its own field, in this same box;
@@ -3425,7 +3428,7 @@ function leadUpdHTML(a,l,shut,writing,editing){
   const more=updOpen.has(l.id),ids='data-id="'+a.id+'" data-l="'+l.id+'"';
   const rows=(more?ups.map((u,i)=>[u,i]):ups.map((u,i)=>[u,i]).slice(-UPD_SHOWN)).reverse();
   return leadBoxHTML('Updates',ups.length,
-    (writing?'<div class="lnew">'+noteFormHTML(a,l)+'</div>':'')+
+    (shut?'':'<div class="lnew">'+noteFormHTML(a,l)+'</div>')+
     (rows.length
       ? '<div class="lupd">'+rows.map(([u,i])=>
           '<p class="lurow"><span class="lud">'+esc(updWhen(u))+'</span><span>'+esc(u.text||'')+'</span>'+
@@ -3436,8 +3439,8 @@ function leadUpdHTML(a,l,shut,writing,editing){
                 (more?'fewer':(ups.length-UPD_SHOWN)+' earlier')+'</button>'
             : '')+
         '</div>'
-      : writing?'':'<p class="lnil">Nothing yet</p>'),
-    shut||writing?'':'<button class="lact prim lphb" data-act="noteAdd" '+ids+'>+ Add update</button>','lupdpane');
+      : ''),
+    null,'lupdpane');
 }
 /* Through a selected, off-screen field first, as the Ledger's mailing list
    copies, because that works from file:// in every browser the app opens
@@ -3685,7 +3688,6 @@ function leadRowHTML(a,l,hit,say){
   const soon=over!==null&&over<0&&over>=-7&&!done&&!limbo;
   const st=stageOf(l);
   const ups=l.updates||[];
-  const writing=noteEdit.a===a.id&&noteEdit.l===l.id;
   /* Editing happens in the card itself (Mark, 2026-10-06): the card keeps
      its look and every fact on it becomes the field that holds it — the name,
      the match, each link's address and name, each update. It used to be swapped
@@ -3693,7 +3695,7 @@ function leadRowHTML(a,l,hit,say){
   const editing=!done&&leadEdit.a===a.id&&leadEdit.l===l.id;
   /* Complete asks how the lead ended before it closes it (see OUTCOMES) */
   const ending=!done&&endAsk.a===a.id&&endAsk.l===l.id;
-  const open=leadOpen.has(l.id)||writing||editing||ending;
+  const open=leadOpen.has(l.id)||editing||ending;
   const ids='data-id="'+a.id+'" data-l="'+l.id+'"';
   /* the day, set where it is read; the invisible field over the label opens
      the calendar. Short on the quiet line of a card a few hundred pixels
@@ -3770,7 +3772,7 @@ function leadRowHTML(a,l,hit,say){
      right half of a wide card empty and gave the contact no address; a link
      said neither what kind it was nor where it went. A press inside either
      box keeps the card open, so an address can be selected. */
-  const panes=leadPanesHTML(a,l,done,editing)+leadUpdHTML(a,l,done,writing,editing);
+  const panes=leadPanesHTML(a,l,done,editing)+leadUpdHTML(a,l,done,editing);
   /* the venue it was found at, which opens it. Not for a lead Mark’s Place
      made (`entryId`): its venue is the arena's own, named just above it,
      and its first update says where it came from (Mark, 2026-10-22). */
@@ -4187,7 +4189,7 @@ function leadUnfold(lid,pressed){
 function leadRedo(card,set){
   const lid=card&&card.dataset.lid;
   const loose=leadEdit.l==='new';
-  const was=[noteEdit.l,leadEdit.l,endAsk.l].filter(k=>k&&k!=='new'&&k!==lid);
+  const was=[leadEdit.l,endAsk.l].filter(k=>k&&k!=='new'&&k!==lid);
   closeComposers();if(set)set();
   if(!card||!card.isConnected||loose){repaint();renderDrawer();return;}
   was.forEach(k=>{
@@ -4386,13 +4388,8 @@ function focusLead(){
   const el=document.querySelector('.leadform textarea[name=project],.lead.editing textarea[name=project]');
   if(el){el.focus({preventScroll:true});el.select();}
 }
-function focusNote(){
-  growAll();
-  const el=document.querySelector('.noteform textarea[name=text]');
-  if(el)el.focus({preventScroll:true});
-}
 function closeComposers(){leadEdit={a:null,l:null};
-  noteEdit={a:null,l:null};endAsk={a:null,l:null};}
+  endAsk={a:null,l:null};}
 function renderAll(){
   repaint();
   renderDrawer();renderAsk();applyView();
@@ -5077,9 +5074,6 @@ document.addEventListener('click',e=>{
       const l=(ar.leads||[]).find(x=>x.id===b.dataset.l);if(!l)break;
       l.links=(l.links||[]).filter(k=>k.id!==b.dataset.k);
       save();leadUnfold(l.id,cardOf(b));break;}
-    case 'noteAdd':{leadRedo(cardOf(b),()=>{noteEdit={a:id,l:b.dataset.l};leadOpen.add(b.dataset.l);});
-      focusNote();break;}
-    case 'noteCancel':{leadRedo(cardOf(b));break;}
     case 'updMore':{const k=b.dataset.l;
       if(updOpen.has(k))updOpen.delete(k);else updOpen.add(k);
       leadUnfold(k,cardOf(b));break;}
@@ -5363,13 +5357,19 @@ document.addEventListener('submit',e=>{
     const a=arena(nf.dataset.na);if(!a)return;
     const l=(a.leads||[]).find(x=>x.id===nf.dataset.nl);if(!l)return;
     const text=nf.elements.text.value.trim();
+    /* an empty box is not a line, and the box stays where it is */
+    if(!text)return;
+    const where=nf.closest('#card')?'#card ':'#semscroll ';
     leadMove(cardOf(nf),()=>{
-      if(text){
-        if(!Array.isArray(l.updates))l.updates=[];
-        l.updates.push({at:todayISO(),text});
-      }
+      if(!Array.isArray(l.updates))l.updates=[];
+      l.updates.push({at:todayISO(),text});
       closeComposers();restack();
     });
+    /* The lead is drawn afresh with an empty box, and the caret is put back
+       in it, so a second line can follow the first without reaching for the
+       mouse. */
+    const box=document.querySelector(where+'article.lead[data-lid="'+CSS.escape(l.id)+'"] .noteform textarea');
+    if(box)box.focus({preventScroll:true});
     return;
   }
   const df=e.target.closest('.leadform');
@@ -5540,8 +5540,8 @@ document.addEventListener('keydown',e=>{
   if(colOpen){colOpen=null;typesShown();return;}             /* a colour menu */
   if(Ask.isOpen()){Ask.shut();return;}                       /* the question */
   if(document.querySelector('.modal.open')){closeModals();return;}   /* a sheet */
-  if(leadEdit.a||noteEdit.a||endAsk.a){  /* a composer, put away in its own card */
-    const k=noteEdit.l||leadEdit.l||endAsk.l;
+  if(leadEdit.a||endAsk.a){  /* a composer, put away in its own card */
+    const k=leadEdit.l||endAsk.l;
     leadRedo(k&&k!=='new'&&document.querySelector('#pane-semaphore article.lead[data-lid="'+CSS.escape(k)+'"]'));return;
   }
   if(drawer.vnew){drawer.vnew=null;closeDrawer();return;}    /* a venue being made */

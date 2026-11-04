@@ -1019,7 +1019,14 @@
 /* `align-items:baseline` and not centre: the mark and the number are one
    line tall and the text may be two, and a row is read along its first
    line. --lbl-mark is the column the marks and the numbers hang from. */
-#pane-ledger .hz-lbl-row{display:flex;align-items:baseline;gap:9px;min-width:0}
+#pane-ledger .hz-lbl-row{display:flex;align-items:baseline;gap:9px;min-width:0;border-radius:3px}
+/* The line of the mark the pointer is on (`lightRow`). A ground and not a
+   border, and spread by a shadow rather than padding, so lighting a line
+   moves nothing in the label; its title steps up from --text2 to --text,
+   the contrast set as colour. */
+#pane-ledger .hz-lbl-row-on{background:rgba(205,176,105,0.13);
+  box-shadow:0 0 0 4px rgba(205,176,105,0.13)}
+#pane-ledger .hz-lbl-row-on .hz-lbl-txt{color:var(--text)}
 /* The board's two marks at label size — a circle for work planned into the
    day, a diamond for a deadline landing on it. Same shapes, same colours,
    so the label is the dots you are pointing at and needs no key. The
@@ -2157,12 +2164,13 @@
    handle now instead of refusing one, so the occasional long update can
    be given the room rather than being typed through a slot.
 
-   The Add button sits at the box's bottom edge rather than stretching to
-   its height: a control that grows when the field beside it grows is
-   claiming to be as important as what is being written into it. */
+   The Add update button sits at the box's bottom edge rather than
+   stretching to its height: a control that grows when the field beside it
+   grows is claiming to be as important as what is being written into it.
+   The box stands open whenever its card does (issue #28); it used to wait
+   behind a button that opened it. */
 #pane-ledger .add-substamp-wrap{margin-top:0}
-#pane-ledger .add-substamp-wrap:not(.open) .add-substamp-row{display:none}
-#pane-ledger .add-substamp-wrap.open .add-substamp-row{display:flex;gap:6px;margin-top:6px;
+#pane-ledger .add-substamp-row{display:flex;gap:6px;margin-top:6px;
   align-items:flex-end}
 #pane-ledger textarea.add-substamp-input{min-height:46px;resize:vertical;line-height:1.45}
 #pane-ledger .todo-edit-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;
