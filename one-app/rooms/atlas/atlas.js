@@ -493,6 +493,24 @@ const Core = (() => {
     return out;
   }
 
+  /* Whole words that begin with a fragment. "eco" is a beginning, not a
+     word: it matched only "eco-informatics" and found one researcher,
+     while "ecology" and "economics" were in the graph all along. Read off
+     the words as written, so the suggestion is offered in a spelling the
+     graph actually has. */
+  function completions(q, cap = 15) {
+    const raw = String(q || "").trim().toLowerCase();
+    if (raw.length < 3 || /\s/.test(raw)) return [];
+    const seen = new Set(), out = [];
+    const take = s => {
+      for (const w of String(s).toLowerCase().split(/[^a-z0-9-]+/))
+        if (w.length > raw.length && w.startsWith(raw) && !seen.has(w)) { seen.add(w); out.push(w); }
+    };
+    T.forEach(t => take(t.label));
+    aliasList.forEach(take);
+    return out.sort((a, b) => a.length - b.length).slice(0, cap);
+  }
+
   // ---------- traversal ---------------------------------------------------
   // BFS from every match, over semantic edges, up to maxHops. Reaching a
   // term node collects its attachments. A hit = one full path:
@@ -648,7 +666,7 @@ const Core = (() => {
 
   return { norm, parseKey, label, resolveC,
            setEdits, getEdits, attSig, semSigOf,
-           suggestions, search,
+           suggestions, completions, search,
            neighborhood, attachmentsOfTerm, attachmentsOfR,
            conceptsOfTerm, termsOfConcept, previewPlacement,
            T, C, R, P, att: att };
@@ -1281,6 +1299,55 @@ function renderSearch() {
   renderSearchResultsOnly();
 }
 
+/* A keyword that enters the graph but reaches only a few researchers is
+   offered better words beside it: whole words it is the beginning of
+   ("eco" → ecology), then the nearest labels the empty view already
+   suggests. Each one is tried on its own first and kept only if it
+   reaches more people, with that number on it, so a suggestion is never
+   a guess Mark has to test. Without it "modeling + eco" came back empty
+   and said nothing about why. A keyword with no entry point at all is
+   left to the empty view, which already suggests for it. */
+function widerHTML(res) {
+  let html = "";
+  const reach = pc => new Set(pc.hits.map(h => h.rid)).size;
+  /* Thin is a keyword under five researchers, a fragment (a beginning of
+     words that is no word of its own, like "eco"), or, when the whole
+     search finds under five, the narrowest keyword in it: "modeling + eco"
+     found one researcher while "eco" alone reached six. */
+  const live = res.perChip.filter(pc => pc.matches.length);
+  const narrowest = res.list.length < 5 && live.length > 1
+    ? live.reduce((a, b) => reach(b) < reach(a) ? b : a) : null;
+  res.perChip.forEach(pc => {
+    if (!pc.matches.length) return;
+    const n = reach(pc), comp = Core.completions(pc.q), w = " " + pc.q.trim().toLowerCase() + " ";
+    const fragment = comp.length > 0 && !Core.T.some(t => (" " + t.label.toLowerCase() + " ").includes(w));
+    if (n >= 5 && !fragment && pc !== narrowest) return;
+    const seen = new Set([Core.norm(pc.q)]), better = [];
+    /* A fragment's whole words are offered whatever they reach — "eco"
+       meant ecology or economics, and that each finds fewer people than
+       "eco-informatics" does is no reason to hide them. Other labels must
+       reach more than the keyword does, and must share a word or a stem
+       with it: on spelling distance alone "eco" was offered IoT and UML.
+       A label that is a whole sentence typed into one cell is not a word
+       to search with, so only short ones are offered. */
+    const cands = [...(fragment ? comp.map(c => ({ c, free: true })) : []),
+      ...Core.suggestions(pc.q, 15).filter(s => s.score > 1).map(s => ({ c: s.lbl, free: false }))];
+    for (const { c, free } of cands) {
+      const k = Core.norm(c);
+      if (seen.has(k) || c.length > 32 || k.split(" ").length > 3) continue;
+      seen.add(k);
+      const m = reach(Core.search([c], State.opts).perChip[0]);
+      if (m > 0 && (free || m > n)) better.push({ c, m });
+    }
+    better.sort((a, b) => b.m - a.m).splice(6);
+    if (!better.length) return;
+    html += `<div class="thin"><span class="hint">“${esc(pc.q)}” reaches ${n} researcher${n === 1 ? "" : "s"}. Perhaps:</span>
+      ${better.map(b => `<button class="chip clickable" data-swap="${esc(pc.q)}" data-to="${esc(b.c)}"
+        title="Search “${esc(b.c)}” instead: it reaches ${b.m} researcher${b.m === 1 ? "" : "s"} on its own">${esc(b.c)} · ${b.m}</button>`).join("")}</div>`;
+  });
+  return html;
+}
+
 function renderSearchResultsOnly() {
   const out = $("#results");
   if (!out) return;
@@ -1310,6 +1377,7 @@ function renderSearchResultsOnly() {
   const shown = res.list.length;
   html += `<div class="rescount">${entry} &nbsp;→&nbsp; ${shown} researcher${shown === 1 ? "" : "s"} reached
     ${State.opts.requireAll && State.chips.length > 1 ? " (all terms required)" : ""}</div>`;
+  html += widerHTML(res);
 
   if (!shown) {
     html += `<div class="empty"><h2>No researcher reached.</h2>`;
@@ -1336,6 +1404,12 @@ function renderSearchResultsOnly() {
   if (res.list.length > 40) html += `<div class="hint" style="margin:6px 4px">…and ${res.list.length - 40} more, further out.</div>`;
   out.innerHTML = html;
   wireResults(out, res);
+  /* the suggestions above the cards swap a keyword as the empty view's do */
+  out.querySelectorAll(".thin [data-swap]").forEach(b => b.onclick = () => {
+    const i = State.chips.indexOf(b.dataset.swap);
+    if (i >= 0) State.chips[i] = b.dataset.to;
+    renderSearch();
+  });
 }
 
 function cardHTML(e, res, maxScore) {

@@ -533,7 +533,7 @@ _No section banners._
 
 ## `rooms/atlas/atlas.js`
 
-3084 lines · 155 KB
+3158 lines · 159 KB
 
 ```
 Researcher Atlas                                          atlas.js:1
@@ -544,33 +544,33 @@ edit overlay                                              atlas.js:62
 indexes (rebuilt whenever edits change)                   atlas.js:121
 filing a hand-assigned keyword                            atlas.js:235
 matching                                                  atlas.js:321
-traversal                                                 atlas.js:496
-search: group hits per researcher, score for ordering     atlas.js:537
-neighborhood (walk mode)                                  atlas.js:638
-UI — three interconnected ways in: Search, Browse         atlas.js:657
-tiny helpers                                              atlas.js:662
-persistence                                               atlas.js:679
-state                                                     atlas.js:711
-modal                                                     atlas.js:780
-edit actions                                              atlas.js:826
-rail                                                      atlas.js:1032
-edits                                                     atlas.js:1182
-search mode                                               atlas.js:1256
-BROWSE — the department as it organizes itself            atlas.js:1535
-NEWS — what the scheduled people-agent found on the web   atlas.js:1731
-DOSSIER — one researcher                                  atlas.js:2029
-MAP & WALK — one canvas, two readings                     atlas.js:2537
-canvas                                                    atlas.js:2610
-concentric walk                                           atlas.js:2671
-canvas interaction                                        atlas.js:2800
-walk rail                                                 atlas.js:2871
-SHELL — tabs, edit toggle, about, init.                   atlas.js:2949
-exposed to the hub                                        atlas.js:3031
+traversal                                                 atlas.js:514
+search: group hits per researcher, score for ordering     atlas.js:555
+neighborhood (walk mode)                                  atlas.js:656
+UI — three interconnected ways in: Search, Browse         atlas.js:675
+tiny helpers                                              atlas.js:680
+persistence                                               atlas.js:697
+state                                                     atlas.js:729
+modal                                                     atlas.js:798
+edit actions                                              atlas.js:844
+rail                                                      atlas.js:1050
+edits                                                     atlas.js:1200
+search mode                                               atlas.js:1274
+BROWSE — the department as it organizes itself            atlas.js:1609
+NEWS — what the scheduled people-agent found on the web   atlas.js:1805
+DOSSIER — one researcher                                  atlas.js:2103
+MAP & WALK — one canvas, two readings                     atlas.js:2611
+canvas                                                    atlas.js:2684
+concentric walk                                           atlas.js:2745
+canvas interaction                                        atlas.js:2874
+walk rail                                                 atlas.js:2945
+SHELL — tabs, edit toggle, about, init.                   atlas.js:3023
+exposed to the hub                                        atlas.js:3105
 ```
 
 ## `rooms/atlas/atlas.css`
 
-479 lines · 32 KB
+480 lines · 32 KB
 
 ```
 Researcher Atlas  atlas.css:1
@@ -579,12 +579,12 @@ narrow            atlas.css:95
 shared bits       atlas.css:119
 sliders           atlas.css:162
 search            atlas.css:172
-browse            atlas.css:236
-map & walk        atlas.css:279
-dossier           atlas.css:312
-popover / modal   atlas.css:400
-edits list        atlas.css:417
-news              atlas.css:430
+browse            atlas.css:237
+map & walk        atlas.css:280
+dossier           atlas.css:313
+popover / modal   atlas.css:401
+edits list        atlas.css:418
+news              atlas.css:431
 ```
 
 ## `rooms/notes/notes.view.js`
@@ -680,4 +680,4 @@ Generated data. Never open, never edit, never upload.
 
 ---
 
-**43502 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.
+**43577 lines of code** across 20 files, plus three generated data files that are not counted here and must never be uploaded anywhere.

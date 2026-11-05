@@ -179,6 +179,7 @@
 #pane-atlas #qinput{flex:1;min-width:180px;border:none;outline:none;font-size:14.5px;background:none;
   padding:3px}
 #pane-atlas #results{padding:0 30px 60px;max-width:1020px}
+#pane-atlas .thin{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin:-6px 2px 14px}
 #pane-atlas .rescount{color:var(--faint);font-size:12.5px;margin:4px 2px 14px}
 #pane-atlas .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;
   padding:16px 20px 14px;margin-bottom:14px}
