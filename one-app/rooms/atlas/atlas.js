@@ -517,8 +517,9 @@ const Core = (() => {
         const a = att[h.ai];
         const contrib = weights[a[2]] * Math.pow(decay, h.d) * MTQ[h.mt] * h.w
                         * Math.min(a[9], 2);
-        e.score += contrib;
-        e.sl[a[2]] += contrib;
+        const g = ((e.lay = e.lay || {})[ci] = e.lay[ci] || [0, 0, 0, 0].map(() => ({ sum: 0, best: 0 })))[a[2]];
+        g.sum += contrib;
+        if (contrib > g.best) g.best = contrib;
         (e.chips[ci] = e.chips[ci] || []).push(h);
       }
       for (const rid of pc.names) {
@@ -538,6 +539,37 @@ const Core = (() => {
         perChip.every((pc, ci) =>
           (e.chips[ci] && e.chips[ci].length) || pc.names.includes(e.rid)
           || pc.said.includes(e.rid)));
+    }
+    /* Every hit used to be added to the score, so a researcher with many
+       abstracts outranked a specialist on volume alone: for "ml" one
+       researcher reached 23 different words and scored 27, against 3 for a
+       keyword that simply says the thing. So each keyword's evidence now
+       counts per kind — declared keywords, description, abstracts — and
+       within a kind at most twice its best hit: more of the same can
+       double a hit but not outweigh a better one. With every keyword
+       required, a researcher's score is the geometric mean of the
+       keywords' totals, the Topic Atlas's rule (topic-atlas/scorer.js), so
+       someone has to answer each keyword rather than one of them loudly;
+       with any keyword it stays their sum. The Topic Atlas's rarity weight
+       is left out: at one hop a keyword's hits sit under one concept, so it
+       would scale each keyword's total by a single factor, and a geometric
+       mean is not reordered by that. The layer bar is scaled to the
+       score so its segments still add up to the number beside it. */
+    const geo = requireAll && chips.length > 1;
+    for (const e of list) {
+      e.perChip = perChip.map((pc, ci) => {
+        let t = 0;
+        for (let L = 1; L <= 3; L++) {
+          const g = e.lay && e.lay[ci] && e.lay[ci][L];
+          if (!g) continue;
+          const v = Math.min(g.sum, 2 * g.best);
+          t += v; e.sl[L] += v;
+        }
+        return t;
+      });
+      const sum = e.perChip.reduce((x, y) => x + y, 0);
+      e.score = geo ? Math.pow(e.perChip.reduce((x, y) => x * Math.max(y, 1e-9), 1), 1 / chips.length) : sum;
+      if (sum > 0) for (let L = 1; L <= 3; L++) e.sl[L] *= e.score / sum;
     }
     // order hits inside each chip group: layer asc? No — by contribution desc,
     // then depth asc; the display keeps both dimensions visible regardless.
