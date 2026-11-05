@@ -343,10 +343,47 @@ const Core = (() => {
     return prev[lb];
   }
 
+  /* British and American spellings of one word. The graph keeps both as
+     they were written, so "modeling" reached 25 researchers and
+     "modelling" 43, and neither found the other's. A typed word is
+     therefore also looked up in its other spelling. The normaliser itself
+     is not changed: the stored norms were made by the build's, and keys
+     that differ from them would stop matching. A spelling that no word in
+     the graph has simply finds nothing, so each rule can only add the
+     twin, never a stranger. */
+  const SPELL = [
+    [/^(\w{2,})el(ing|ed|er)$/, "$1ell$2"], [/^(\w{3,})ell(ing|ed|er)$/, "$1el$2"],
+    [/^(\w{3,})iz(e|ed|es|ing|ation|ational|er)$/, "$1is$2"],
+    [/^(\w{3,})is(e|ed|es|ing|ation|ational|er)$/, "$1iz$2"],
+    [/^(\w{2,})yz(e|ed|ing|er)$/, "$1ys$2"], [/^(\w{2,})ys(e|ed|ing|er)$/, "$1yz$2"],
+    [/^(\w{3,})our(s|ed|al|ing)?$/, "$1or$2"], [/^(\w{2,}[^o])or(al|ed|ing)?$/, "$1our$2"],
+    [/^(\w{2,})tre$/, "$1ter"], [/^(\w{2,}[^e])ter$/, "$1tre"],
+    [/^(\w{3,})ogue$/, "$1og"], [/^(\w{3,})og$/, "$1ogue"],
+    [/^(defen|licen|offen)ce$/, "$1se"], [/^(defen|licen|offen)se$/, "$1ce"],
+  ];
+  function spellings(nm) {
+    let out = [""];
+    for (const w of nm.split(" ")) {
+      const alt = new Set([w]);
+      for (const [re, to] of SPELL) if (re.test(w)) alt.add(w.replace(re, to));
+      out = out.flatMap(p => [...alt].map(a => p ? p + " " + a : a)).slice(0, 8);
+    }
+    return out;
+  }
+
   function matchQuery(q, strict) {
     // strict: 0 exact/alias only · 1 + containment/words · 2 + fuzzy
     const nm = norm(q);
     if (!nm) return { nm, matches: [] };
+    const out = [], seen = new Set();
+    for (const v of spellings(nm))
+      for (const m of matchOne(v, Math.min(strict, 1)))
+        if (!seen.has(m.k)) { seen.add(m.k); out.push(m); }
+    if (!out.length && strict >= 2) out.push(...matchOne(nm, strict));
+    return { nm, matches: out };
+  }
+
+  function matchOne(nm, strict) {
     const out = [], seen = new Set();
     const push = (k, mt, via) => {
       if (!seen.has(k)) { seen.add(k); out.push({ k, mt, via }); }
@@ -393,7 +430,7 @@ const Core = (() => {
       hits.sort((a, b) => a[0] - b[0] || a[1] - b[1]).slice(0, 10)
         .forEach(h => push(h[2], "fuzzy", h[3]));
     }
-    return { nm, matches: out };
+    return out;
   }
 
   // researcher-name match (independent of the graph)
