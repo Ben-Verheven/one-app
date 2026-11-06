@@ -163,6 +163,11 @@ those of the phases still to build; git's history has the code.
 
 ## The four searches and the Horizon check (built 2026-10-28)
 
+Since 2026-11-06 three: the search for brokerage went, its work the Venue
+agent's, and the search for calls looks only at the arenas that matter now
+(see [semaphore-decisions](semaphore-decisions.md), "Finding things"); so
+a frozen arena is no longer asked anything.
+
 The first phase agreed on 2026-10-24, drawn on the canvas named above
 and chosen there. How they work is at "ChatGPT's search" in semaphore.js
 and in the Horizon check's own file; what Mark chose:

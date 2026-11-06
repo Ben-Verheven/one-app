@@ -23,8 +23,8 @@ Hub.markup('callboard', `
          along (see "judging the finds, one at a time" in callboard.js) -->
     <button class="jpill" id="jpill" hidden></button>
     <!-- ChatGPT's search for calls (Mark, 2026-10-25): the arenas' call
-         dates, here where they are drawn; the search for brokerage stays in
-         the Semaphore. Its box is the Semaphore's, lent over this room. -->
+         dates, here where they are drawn; brokerage is the Venue agent's
+         since 2026-11-06. Its box is the Semaphore's, lent over this room. -->
     <button class="gptb" id="gptb" title="Write a file for ChatGPT to search the web for the arenas' call dates and new arenas, and read its answer back">ChatGPT</button>
   </div>
   <div class="tafilt" id="tafilt" hidden></div>

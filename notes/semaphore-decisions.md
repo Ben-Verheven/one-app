@@ -134,7 +134,23 @@ calls land on the Call Board. What still holds of the board:
   new venue, with days of its own after the old one's, and the stub is never
   re-dated onto it (`siteInWay` in the gatekeeper).
 
-## Finding things: ChatGPT, and the agent before it
+## Finding things: ChatGPT for the calls, the Venue agent for venues
+
+- **ChatGPT is the source of truth for the calls, Claude finds the venues**
+  (Mark, 2026-11-06). ChatGPT keeps its searches for call dates, new
+  arenas and call texts; its search for brokerage was dispensed with, and
+  the Marketplace agent came back as the **Venue agent**: every night it
+  takes the calls ChatGPT put on the board as given and looks for venues
+  for the ones that matter now, never touching a call date. It keeps track
+  of what it did in its log, each look OK or FAILED, and a failed look is
+  tried again a week later. **The ones that matter now** (the same day,
+  for the search for calls too, which had gone through some eighty arenas):
+  a live arena with a round of calls within six months ahead or closed in
+  the last six, Central always, Peripheral and frozen never; the agent adds
+  the clusters' and missions' arenas. "How much it matters" in an arena's
+  panel is Mark's lever for it. How the agent works is in PROJECT.md; what
+  follows is the history before that day, and the rules for what counts as
+  a venue, which the agent's instruction keeps.
 
 - **ChatGPT's deep research is the searcher** (2026-10-22, and the only one
   since the agent stopped on 2026-10-23), **as separate searches since

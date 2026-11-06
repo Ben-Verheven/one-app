@@ -192,7 +192,6 @@
 #pane-semaphore .semmenu[hidden]{display:none}
 #pane-semaphore .semmenu button{padding:8px 12px;border-radius:var(--radius);text-align:left;font:14px/1.3 var(--body);color:var(--ink)}
 #pane-semaphore .semmenu button:hover{background:rgba(216,205,184,.1)}
-#pane-semaphore .semsep{height:1px;margin:5px 8px;background:var(--line)}
 /* the name's own cell in the head, which leaves the controls their room */
 #pane-semaphore .wbody{padding:6px}
 /* the links, as a part of their own (wallCard) */

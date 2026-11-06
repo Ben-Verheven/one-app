@@ -361,39 +361,39 @@ app; each text waits there to be judged on the Call Board. Mark's login
 may only mark a topic seen, judge a text and add ChatGPT's; the program
 writes with the server's key, and its password is made in the database.
 
-**The Semaphore has one agent**, the task **Marketplace agent**, and it
-is turned off: since 2026-10-23 ChatGPT's search does its work, since
-2026-10-25 as separate searches, each behind a ChatGPT button where what it
-finds lands: the Call Board's for calls, new arenas and call texts, the
-Semaphore's for brokerage. The task is kept, and so is its gatekeeper, so that
-a session can still read the board through it. Turned on, it runs by
-itself every night at about 01:00 his time, a scan that reaches every
-active arena once a week and every frozen one about once a month, and when
-Mark asks a Claude session for something. That session starts a session of its own with the
+**The Semaphore has one agent**, the task **Venue agent** (called the
+Marketplace agent until 2026-11-06, turned off from 2026-10-23 to then,
+while ChatGPT's search for brokerage did its work). Since then the work is
+split by who is the source of truth: ChatGPT's searches, behind the Call
+Board's ChatGPT button, keep the calls (their dates, new arenas and call
+texts), and the agent takes the call dates on the board as given and looks
+only for venues. It runs by itself every night at about 01:00 his time, and
+when Mark asks a Claude session for something. That session starts a session of its own with the
 task's instruction and his request at its end: a firing with the request
 as its text runs the instruction alone first, and twice the request that
 came after was refused as untrusted. Fired by hand with nothing to do, the
-agent waits. **Its job is to put things on the board** (since 2026-10-15):
-call dates as published, which simply stand there, and venues — brokerage
-events and partner searches where projects in the making and their
-leaders can be found — which land as `new` and wait in the Semaphore's
-Venues, in the section its dates give and marked new, until Mark, in each
-one's card, puts it in a section or removes it. It keeps what
-is on the board correct, but where a venue stands is his: it deletes only
-a venue still new, its own find gone wrong, and never one he removed
-(the gatekeeper refuses both). Since Mark judges everything it brings, it
-leans to completeness: anything with matchmaking goes on the board, a
-month-only date as a dashed guess, a few misfires accepted. Its rules are
-in the task's instruction, and
-[semaphore-decisions](notes/semaphore-decisions.md) says why. Ask agent
-on a venue's panel, or at the head of an arena's (since 2026-10-15, for its
-call dates above all), puts a moment on it (`askAt`) that the scan takes
-first, and the app takes the ask off once the agent's log shows a look at
-that venue or arena after it. The gatekeeper's `board` gives it the whole board but
-the leads, venues and all, and `edit` lets it add and correct venues, add
-an arena or a page to one, add, change and delete call dates, and change
-the arenas' links and two texts, straight on the board, which the room
-then takes in as it takes Mark’s Place's leads. The gatekeeper reads the board through
+agent waits. **It looks at the arenas that matter now**, the same rule as
+the search for calls (`inFocus` in semaphore.js), with the clusters' and
+missions' arenas besides: those not looked at yet, those looked at
+successfully two weeks ago (one week when a deadline is within eight
+weeks), and those whose last look failed a week ago, about six a night.
+**Its memory is its log** in `semaphore_agent_log`: every look ends in a
+line whose note begins OK: or FAILED:, which the gatekeeper's `watchlist`
+hands back the next night as `agent_last`. What it adds — venues where
+projects in the making are described, by the strict rules of 2026-10-26
+in [semaphore-decisions](notes/semaphore-decisions.md) — lands as `new`
+and waits in the Semaphore's Venues, in the section its dates give and
+marked new, until Mark, in each one's card, puts it in a section or
+removes it. Where a venue stands is his: it deletes only a venue still
+new, its own find gone wrong, and never one he removed (the gatekeeper
+refuses both). Its rules are in the task's instruction. Ask agent
+on a venue's panel, or at the head of an arena's, puts a moment on it
+(`askAt`) that the round takes first, and the app takes the ask off once
+the agent's log shows a look at that venue or arena after it. The
+gatekeeper's `board` gives it the whole board but the leads, and `edit`
+could still add and correct call dates and the arenas' links and texts,
+as the Marketplace agent did; the instruction forbids those, the calls
+being ChatGPT's. The gatekeeper reads the board through
 a copy of the room's own `absorbVenues`, so what it writes is in the
 venues' shape with the venues' own ids. What `edit` has no op for it
 cannot do: delete an arena, change an arena's name, type, tags, weight or
@@ -481,8 +481,8 @@ and the agent's task still say the Marketplace; it is the same room.
 | on screen | in the code |
 |---|---|
 | the room's scroller — the page itself does not scroll | `#semscroll` |
-| the header: Venues and Leads, a pair in the middle; the cloud chip, and the menu under three dots holding + Venue, + Arena, Types and ChatGPT | `header.top`; `.pair` › `#venuesBtn`, `#leadsBtn`; `#semcloud`; `#semMoreBtn` and its `#semMenu` |
-| ChatGPT's search, opened by ChatGPT here for brokerage and lent over the Call Board for calls, new arenas and call texts, the three chosen at its head: the file out, the answer pasted or chosen, what it would change, Put on the board | `#gptModal` › `.gptpick`, `#gptText`, `#gptFile`, `#gptSaid`, `#gptPut` |
+| the header: Venues and Leads, a pair in the middle; the cloud chip, and the menu under three dots holding + Venue, + Arena and Types | `header.top`; `.pair` › `#venuesBtn`, `#leadsBtn`; `#semcloud`; `#semMoreBtn` and its `#semMenu` |
+| ChatGPT's search, lent over the Call Board for calls, new arenas and call texts, the three chosen at its head: the file out, the answer pasted or chosen, what it would change, Put on the board | `#gptModal` › `.gptpick`, `#gptText`, `#gptFile`, `#gptSaid`, `#gptPut` |
 | Venues (the Now page until 2026-10-15), Leads (on the wall) | `#now`, `#wall` |
 | Venues: its three tabs, Arising · Active · Dying, and Limbo's apart, for what is over or put there; Mark's Place last and quiet, after the key; a venue new or changed, and the press that goes through them one card at a time; the axis over them, sticky; the heading of each group, Shared then each type; one venue's row, its mark the grip it is dragged by into his own order, its name and the arenas it serves, its strip, and Go, which is the visit (Visited once pressed today) | `.vtabs` › `.vtab`, `.culimbo.vlimbotab`, `.vplacetab`; `.vfnd`, `.vchk`; `.vaxis`; `.vgrp`; `.vgl`, `.vrow.vdragging`; `.vrow` = `.vname` (`.vnmrow` › `.vnm`, `.vchips`) + `.vtrack` + `.vend` (`.vgo`, `.vgo.done`) |
 | a venue's window, on Venues and in its panel: the band, its two ends to drag, the event days, the visits, today | `.vband` (`.st-new`, `.st-board`, `.st-venues`), `.vh`, `.vmeet` and `.vdia`, `.vtick`, `.vnow` |

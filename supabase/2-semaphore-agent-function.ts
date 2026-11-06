@@ -7,7 +7,8 @@
 //              texts) and the venues (the events and partner-search tools he
 //              visits, each serving one or more arenas)
 //   watchlist  the same, trimmed, with when the agent last looked at each
-//              arena and venue, and the suggestions it made lately
+//              arena and venue and what it noted then, and the suggestions
+//              it made lately
 //   edit       change the board itself: add, correct and delete call dates;
 //              put new venues on the board, marked new until Mark deals
 //              with them, and correct and re-date venues, the arenas they
@@ -190,10 +191,18 @@ async function watchlist() {
   const link = (l: any) => ({ label: l?.label ?? "", url: l?.url ?? "" });
 
   const { data: log } = await db
-    .from("semaphore_agent_log").select("arena_id,run,checked_at")
+    .from("semaphore_agent_log").select("arena_id,run,checked_at,found,note")
     .order("checked_at", { ascending: false }).limit(3000);
+  // The Venue agent (2026-11-06) starts each night with no memory of the
+  // last, and Mark asked that it retry in a week a look that failed: so
+  // besides when it last looked it is given what it noted then, which
+  // says whether that look succeeded.
   const last: Record<string, string> = {};
-  for (const r of log ?? []) last[r.arena_id] ??= r.checked_at;
+  const said: Record<string, { found: number; note: string | null }> = {};
+  for (const r of log ?? []) {
+    last[r.arena_id] ??= r.checked_at;
+    said[r.arena_id] ??= { found: r.found ?? 0, note: r.note ?? null };
+  }
 
   const name: Record<string, string> = Object.fromEntries((s.arenas ?? []).map((a: any) => [a.id, a.name]));
   const arenas = (s.arenas ?? []).map((a: any) => ({
@@ -214,6 +223,7 @@ async function watchlist() {
       start: d.start, end: d.end, grade: d.grade, note: d.note ?? "",
     })),
     agent_checked_at: last[a.id] ?? null,
+    agent_last: said[a.id] ?? null,
     ask_at: a.askAt ?? null,
   }));
   // A venue's visits are Mark's: only the day of the last one is passed on,
@@ -226,6 +236,7 @@ async function watchlist() {
     pages: (v.pages ?? []).map(link),
     last_visit: v.visits.length ? v.visits[v.visits.length - 1].at : null,
     agent_checked_at: last["venue:" + v.id] ?? null,
+    agent_last: said["venue:" + v.id] ?? null,
     ask_at: v.askAt ?? null,
   }));
 
